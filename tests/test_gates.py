@@ -158,7 +158,7 @@ def test_gate_unitary_correct(op, op_name):
         pytest.skip("Skipping operation.")
 
     if device_name not in ["lightning.qubit", "lightning.gpu"] and op == qml.PCPhase:
-        pytest.skip("PCPhase only supported on lightning.gpu.")
+        pytest.skip("PCPhase only supported on lightning.qubit and lightning.gpu.")
 
     wires = len(op[2]["wires"])
 
@@ -227,7 +227,7 @@ def test_gate_unitary_correct_lt(op, op_name):
         pytest.skip("Skipping operation.")
 
     if device_name not in ["lightning.qubit", "lightning.gpu"] and op == qml.PCPhase:
-        pytest.skip("PCPhase only supported on lightning.gpu.")
+        pytest.skip("PCPhase only supported on lightning.qubit and lightning.gpu.")
 
     wires = len(op[2]["wires"])
 
@@ -530,7 +530,7 @@ def test_controlled_qubit_gates(operation, n_qubits, control_value, adjoint, tol
     operation = qml.adjoint(operation) if adjoint else operation
 
     if device_name not in ["lightning.qubit", "lightning.gpu"] and op == qml.PCPhase:
-        pytest.skip("PCPhase only supported on lightning.gpu.")
+        pytest.skip("PCPhase only supported on lightning.qubit and lightning.gpu.")
 
     for n_wires in range(num_wires + 1, num_wires + 4):
         wire_lists = list(itertools.permutations(range(0, n_qubits), n_wires))

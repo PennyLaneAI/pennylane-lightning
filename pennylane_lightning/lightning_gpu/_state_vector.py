@@ -264,9 +264,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
                 # PCPhase has hyperparameters for dimension
                 hyper = [float(i) for i in base_operation.hyperparameters["dimension"]]
                 param = np.array(operation.parameters + hyper)
-                method(control_wires, control_values, target_wires, adjoint, param)
-            else:
-                method(control_wires, control_values, target_wires, adjoint, param)
+            method(control_wires, control_values, target_wires, adjoint, param)
 
         else:  # apply gate as an n-controlled matrix
             method = getattr(state, "applyControlledMatrix")
@@ -354,9 +352,8 @@ class LightningGPUStateVector(LightningBaseStateVector):
                     # PCPhase has hyperparameters for dimension
                     hyper = [float(i) for i in op_adjoint_base.hyperparameters["dimension"]]
                     param = np.array(op_adjoint_base.parameters + hyper)
-                    method(wires, invert_param, param)
-                else:
-                    method(wires, invert_param, param)
+
+                method(wires, invert_param, param)
             elif (
                 isinstance(op_adjoint_base, qml.ops.Controlled) and not self._mpi_handler.use_mpi
             ):  # MPI backend does not have native controlled gates support

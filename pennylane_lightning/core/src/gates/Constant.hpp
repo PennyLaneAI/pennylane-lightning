@@ -27,9 +27,14 @@ namespace Pennylane::Gates::Constant {
 /**
  * @brief List of multi-qubit gates
  */
-[[maybe_unused]] constexpr std::array multi_qubit_gates{GateOperation::MultiRZ};
+[[maybe_unused]] constexpr std::array multi_qubit_gates{
+    GateOperation::MultiRZ,
+    GateOperation::PCPhase
+};
 [[maybe_unused]] constexpr std::array controlled_multi_qubit_gates{
-    ControlledGateOperation::MultiRZ};
+    ControlledGateOperation::MultiRZ,
+    ControlledGateOperation::PCPhase
+};
 /**
  * @brief List of multi-qubit generators
  */
@@ -241,7 +246,6 @@ using GateNWires = typename std::pair<GateOperation, std::size_t>;
     GateNWires{GateOperation::DoubleExcitationMinus, 4},
     GateNWires{GateOperation::DoubleExcitationPlus, 4},
     GateNWires{GateOperation::GlobalPhase, 1},
-    GateNWires{GateOperation::PCPhase, 1},
 };
 
 using CGateNWires = typename std::pair<ControlledGateOperation, std::size_t>;
@@ -270,7 +274,6 @@ using CGateNWires = typename std::pair<ControlledGateOperation, std::size_t>;
     CGateNWires{ControlledGateOperation::DoubleExcitationMinus, 4},
     CGateNWires{ControlledGateOperation::DoubleExcitationPlus, 4},
     CGateNWires{ControlledGateOperation::GlobalPhase, 1},
-    CGateNWires{ControlledGateOperation::PCPhase, 1},
 };
 
 /**

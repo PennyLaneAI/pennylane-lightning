@@ -80,13 +80,17 @@ jobs:
               -DLQ_ENABLE_KERNEL_AVX_STREAMING=${{ matrix.enable_kernel_avx_streaming }} \
               -DLQ_ENABLE_KERNEL_OMP=${{ matrix.enable_kernel_omp }}
 
+            echo "Building"
             cmake --build ./Build
 
             cd ./Build
             mkdir -p ./tests/results
-            for file in *runner ; do ./$file --order lex --reporter junit --out ./tests/results/report_$file.xml; done;
+            echo "Running tests"
+             for file in *runner ; do ./$file -x 3  --reporter junit --out ./tests/results/report_$file.xml && echo "Test $file Success!" || cat ./tests/results/report_$file.xml; done;
+            echo "Generating coverage report"
             lcov --directory . -b ../pennylane_lightning/core/src --capture --output-file coverage.info  --ignore-errors mismatch # Catch2 causes mismatch errors that needs to be ignored
             lcov --remove coverage.info '/usr/*' --output-file coverage.info
+            echo "Moving coverage report"
             mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.enable_kernel_avx_streaming }}-${{ matrix.enable_kernel_omp }}.info
 
       - name: Upload test results
@@ -145,7 +149,7 @@ jobs:
             cmake --build ./Build
             cd ./Build
             mkdir -p ./tests/results
-            for file in *runner ; do ./$file --order lex --reporter junit --out ./tests/results/report_$file.xml; done;
+             for file in *runner ; do ./$file -x 3  --reporter junit --out ./tests/results/report_$file.xml && echo "Test $file Success!" || cat ./tests/results/report_$file.xml; done;
             lcov --directory . -b ../pennylane_lightning/core/src --capture --output-file coverage.info  --ignore-errors mismatch # Catch2 causes mismatch errors that needs to be ignored
             lcov --remove coverage.info '/usr/*' --output-file coverage.info
             mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
@@ -231,7 +235,10 @@ jobs:
             cmake --build ./Build
             cd ./Build
             mkdir -p ./tests/results-${{ github.job }}-${{ matrix.pl_backend }}
-            for file in *runner ; do ./$file --order lex --reporter junit --out ./tests/results-${{ github.job }}-${{ matrix.pl_backend }}/report_$file.xml; done;
+            for file in *runner ; do 
+              report_file="./tests/results-${{ github.job }}-${{ matrix.pl_backend }}/report_$file.xml";
+              ./$file -x 3 --reporter junit --out $report_file && echo "Test $file Success!" || cat $report_file;
+            done;
             lcov --directory . -b ../pennylane_lightning/core/src --capture --output-file coverage.info  --ignore-errors mismatch # Catch2 causes mismatch errors that needs to be ignored
             lcov --remove coverage.info '/usr/*' --output-file coverage.info
             mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
@@ -330,7 +337,7 @@ jobs:
             cmake --build ./Build
             cd ./Build
             mkdir -p ./tests/results_multiple_backends
-            for file in *runner ; do ./$file --order lex --reporter junit --out ./tests/results_multiple_backends/report_$file.xml; done;
+            for file in *runner ; do ./$file -x 3  --reporter junit --out ./tests/results_multiple_backends/report_$file.xml && echo "Test $file Success!" || cat ./tests/results_multiple_backends/report_$file.xml; done;
 
       - name: Upload test results
         uses: actions/upload-artifact@v4

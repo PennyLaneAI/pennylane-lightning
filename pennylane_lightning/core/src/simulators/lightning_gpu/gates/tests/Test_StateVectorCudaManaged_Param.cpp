@@ -1392,9 +1392,12 @@ TEMPLATE_TEST_CASE("LightningGPU::applyMultiRZ", "[LightningGPU_Param]", float,
 
 TEMPLATE_TEST_CASE("LightningGPU::applyPCPhase", "[LightningGPU_Param]", float,
                    double) {
-
     /*
         The circuit for this test is as follows:
+        - default.qubit (PennyLane-0.41.0.dev56)
+        - lightning.gpu (PennyLane_Lightning_GPU-0.41.0.dev46)
+        - lightning.qubit (PennyLane_Lightning-0.41.0.dev46)
+
 
         ``` python
         import pennylane as qml
@@ -1405,9 +1408,15 @@ TEMPLATE_TEST_CASE("LightningGPU::applyPCPhase", "[LightningGPU_Param]", float,
             [qml.Hadamard(i) for i in range(n_wires)]
 
             if use_controls:
-                qml.ctrl(qml.PCPhase(0.27, dim = 3, wires=tgts), control=[0],
-       control_values=[1]) elif use_adj: qml.adjoint(qml.PCPhase(0.27, dim = 3,
-       wires=tgts)) else: qml.PCPhase(0.27, dim = 3, wires=tgts)
+                qml.ctrl(
+                    qml.PCPhase(0.27, dim = 3, wires=tgts), 
+                    control=[0],
+                    control_values=[1]
+               ) 
+            elif use_adj: 
+                qml.adjoint(qml.PCPhase(0.27, dim = 3, wires=tgts)) 
+            else: 
+                qml.PCPhase(0.27, dim = 3, wires=tgts)
 
             return qml.state()
 

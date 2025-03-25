@@ -832,7 +832,7 @@ class TestControlledOps:
         np.random.seed(0)
 
         if device_name not in ["lightning.qubit", "lightning.gpu"] and operation == qml.PCPhase:
-            pytest.skip("PCPhase only supported on lightning.gpu.")
+            pytest.skip("PCPhase only supported on lightning.qubit and lightning.gpu.")
 
         for n_wires in range(num_wires + 1, num_wires + 4):
             wire_lists = list(itertools.permutations(range(0, n_qubits), n_wires))
