@@ -48,7 +48,7 @@ from pennylane.tape import QuantumScript
 from pennylane.transforms.core import TransformProgram
 from pennylane.typing import Result
 
-from pennylane_lightning.core.lightning_base import (
+from pennylane_lightning.core.base.lightning_base import (
     LightningBase,
     QuantumTape_or_Batch,
     Result_or_ResultBatch,

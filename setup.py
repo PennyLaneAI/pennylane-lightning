@@ -178,7 +178,7 @@ with open(os.path.join("pennylane_lightning", "core", "_version.py"), encoding="
 packages_list = ["pennylane_lightning." + backend]
 
 if backend == "lightning_qubit":
-    packages_list += ["pennylane_lightning.core"]
+    packages_list += ["pennylane_lightning.core", "pennylane_lightning.core.base"]
 
 info = {
     "version": version,
@@ -190,17 +190,5 @@ info = {
     "cmdclass": {"build_ext": CMakeBuild},
     "ext_package": "pennylane_lightning",
 }
-
-if backend == "lightning_qubit":
-    info.update(
-        {
-            "package_data": {
-                "pennylane_lightning.core": [
-                    os.path.join("src", "*"),
-                    os.path.join("src", "**", "*"),
-                ]
-            },
-        }
-    )
 
 setup(**(info))

@@ -32,7 +32,7 @@ from pennylane.measurements import CountsMP, SampleMeasurement, Shots
 from pennylane.typing import TensorLike
 
 # pylint: disable=ungrouped-imports
-from pennylane_lightning.core._measurements_base import LightningBaseMeasurements
+from pennylane_lightning.core.base._measurements_base import LightningBaseMeasurements
 
 
 class LightningKokkosMeasurements(

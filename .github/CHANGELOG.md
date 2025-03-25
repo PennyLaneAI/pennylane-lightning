@@ -11,16 +11,19 @@
 
 ### Improvements
 
+* Remove dispensable C++ source code in Lightning wheels.
+  [(#1098)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1098)
+
 * Use cuquantum API for calculating expectation value of Pauli sentences in Lightning-GPU.
   [(#1104)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1104)
 
 * Hide internal C++ APIs in Lightning docs.
   [(#1096)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1096)
 
-* Implemented the `jaxpr_jvp` method to compute the jvp of a jaxpr using `lightning.qubit`.
+* Implement the `jaxpr_jvp` method to compute the jvp of a jaxpr using `lightning.qubit`.
   This method currently only support the adjoint differentiation method.
-  [(#1087)](https://github.com/PennyLaneAI/pennylane/pull/1087)
-  [(#1106)](https://github.com/PennyLaneAI/pennylane/pull/1106)
+  [(#1087)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1087)
+  [(#1106)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1106)
 
 * Modify expval of named operators in Lightning-Qubit for in-place computation of expectation value, to avoid creating an intermediate statevector
   [(#1079)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/1079)
@@ -36,10 +39,10 @@
 * Expand test structure to efficiently handle sparse data.
   [(#1085)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1085)
   
-* Removed redundant `reset_state` calls for circuit execution when state vector is freshly initialized.
+* Remove redundant `reset_state` calls for circuit execution when state vector is freshly initialized.
   [(#1076)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1076)
 
-* Added support for sparse `qml.QubitUnitary` gates for `lightning.qubit`, `lightning.gpu`, and `lightning.kokkos` backends.
+* Add support for sparse `qml.QubitUnitary` gates for `lightning.qubit`, `lightning.gpu`, and `lightning.kokkos` backends.
   [(#1068)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1068).
 
 * Introduce a generalized sparse gate selection system via the `_observable_is_sparse` method in the base measurement class, enabling future expansion for any number of sparse observables.
@@ -762,7 +765,7 @@ Ali Asadi, Astral Cai, Ahmed Darwish, Amintor Dusko, Vincent Michaud-Rioux, Luis
   [(#750)](https://github.com/PennyLaneAI/pennylane-lightning/pull/750)
 
 * Rationalize MCM tests, removing most end-to-end tests from the native MCM test file, but keeping one that validates multiple mid-circuit measurements with any allowed return.
-  [(#754)](https://github.com/PennyLaneAI/pennylane/pull/754)
+  [(#754)](https://github.com/PennyLaneAI/pennylane-lightning/pull/754)
 
 * Rename `lightning.tensor` C++ libraries.
   [(#755)](https://github.com/PennyLaneAI/pennylane-lightning/pull/755)
