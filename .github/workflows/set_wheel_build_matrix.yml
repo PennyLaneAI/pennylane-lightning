@@ -14,6 +14,9 @@ on:
       python_version:
         description: "Python versions."
         value: ${{ jobs.set-builder-matrix.outputs.python_version }}
+      python_version_gpu:
+        description: "Python versions for GPU runners."
+        value: ${{ jobs.set-builder-matrix.outputs.python_version_gpu }}
       exec_model:
         description: "The execution model for Kokkos."
         value: ${{ jobs.set-builder-matrix.outputs.exec_model }}
@@ -45,6 +48,22 @@ jobs:
               --min-version=3.${{ env.PYTHON3_MIN_VERSION }} \
               --max-version=3.${{ env.PYTHON3_MAX_VERSION }} --range)" >> $GITHUB_OUTPUT
           fi
+      - name: Python version for GPU runners
+        id: pyvergpu
+        run: |
+          if [[ ${{ inputs.event_name }} == 'pull_request' ]]; then
+            echo "python_version=$(python3 scripts/gen_pyver_matrix.py \
+              --min-version=3.${{ env.PYTHON3_MIN_VERSION }} \
+              --max-version=3.${{ env.PYTHON3_MAX_VERSION }})" >> $GITHUB_OUTPUT
+          elif [[ ${{ github.event_name }} != 'release' && ${{ github.ref }} == 'refs/heads/master' ]]; then
+            echo "python_version=$(python3 scripts/gen_pyver_matrix.py \
+              --min-version=3.${{ env.PYTHON3_MIN_VERSION }} \
+              --max-version=3.${{ env.PYTHON3_MAX_VERSION }})" >> $GITHUB_OUTPUT
+          else
+            echo "python_version=$(python3 scripts/gen_pyver_matrix.py \
+              --min-version=3.${{ env.PYTHON3_MIN_VERSION }} \
+              --max-version=3.${{ env.PYTHON3_MAX_VERSION }} --range)" >> $GITHUB_OUTPUT
+          fi
 
       - name: Kokkos execution strategy
         id: exec_model
@@ -56,5 +75,6 @@ jobs:
 
     outputs:
       python_version: ${{ steps.pyver.outputs.python_version }}
+      python_version_gpu: ${{ steps.pyvergpu.outputs.python_version_gpu }}
       exec_model: ${{ steps.exec_model.outputs.exec_model }}
       kokkos_version: ${{ steps.kokkos_version.outputs.kokkos_version }}

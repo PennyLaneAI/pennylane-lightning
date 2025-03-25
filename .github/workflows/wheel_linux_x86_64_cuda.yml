@@ -40,7 +40,7 @@ jobs:
         arch: [x86_64]
         pl_backend: ["lightning_gpu", "lightning_tensor"]
         cuda_version: ["12"]
-        cibw_build: ${{ fromJson(needs.set_wheel_build_matrix.outputs.python_version) }}
+        cibw_build: ${{ fromJson(needs.set_wheel_build_matrix.outputs.python_version_gpu) }}
         container_img: ["quay.io/pypa/manylinux_2_28_x86_64"]
     timeout-minutes: 30
     name: Linux::${{ matrix.arch }} - ${{ matrix.pl_backend }} CUDA ${{ matrix.cuda_version }} (Python ${{ fromJson('{"cp310-*":"3.10","cp311-*":"3.11","cp312-*":"3.12","cp313-*":"3.13" }')[matrix.cibw_build] }})
@@ -128,7 +128,7 @@ jobs:
         arch: [x86_64]
         pl_backend: ["lightning_gpu", "lightning_tensor"]
         cuda_version: ["12"]
-        cibw_build: ${{ fromJson(needs.set_wheel_build_matrix.outputs.python_version) }}
+        cibw_build: ${{ fromJson(needs.set_wheel_build_matrix.outputs.python_version_gpu) }}
     runs-on: ubuntu-latest
     permissions:
       id-token: write
