@@ -20,6 +20,7 @@ import math
 import numpy as np
 import pennylane as qml
 import pytest
+import scipy as sp
 from conftest import LightningDevice, LightningStateVector, device_name  # tested device
 from pennylane.tape import QuantumScript
 from pennylane.wires import Wires
@@ -515,4 +516,6 @@ def test_operation_is_sparse_is_false_for_not_supported_devices():
 
     wires = 2
     state_vector = LightningStateVector(wires)
-    assert state_vector._operation_is_sparse == False
+    assert (
+        state_vector._operation_is_sparse(qml.QubitUnitary(sp.sparse.eye(wires), wires=0)) == False
+    )
