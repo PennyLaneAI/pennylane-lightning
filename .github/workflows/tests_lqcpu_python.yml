@@ -82,7 +82,8 @@ jobs:
 
       - name: Get required Python packages
         run: |
-          python -m pip install -r requirements-dev.txt
+          python -m pip install -r requirements-tests.txt
+          python -m pip install build
 
       - name: Create device wheel ${{ inputs.lightning-version }}
         run: |
@@ -152,7 +153,8 @@ jobs:
         run: |
           WHEEL_NAME=$(cat ${{ github.workspace }}/${{ matrix.pl_backend }}-${{ matrix.blas }}_name.txt)
           mv ${{ github.workspace }}/wheel_${{ matrix.pl_backend }}-${{ matrix.blas }}.whl ${{ github.workspace }}/$WHEEL_NAME
-          python -m pip install -r requirements-dev.txt
+          python -m pip install -r requirements-tests.txt
+          python -m pip install "jax[cpu]==0.4.28; python_version<='3.12'"
           python -m pip install openfermionpyscf
           python -m pip install semantic-version
           python -m pip install ${{ github.workspace }}/$WHEEL_NAME --no-deps --force-reinstall

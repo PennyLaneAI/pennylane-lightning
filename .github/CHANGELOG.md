@@ -11,9 +11,15 @@
 * Incorporate sparse kernels to the Lightning-Qubit python layers and expand testing.
   [(#1094)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1094)
 
+* Add support for Python 3.13.
+  [(#1001)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1001)
+
 ### Breaking changes
 
 ### Improvements
+
+* Use cuquantum API for calculating expectation value of Pauli sentences in Lightning-GPU.
+  [(#1104)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1104)
 
 * Hide internal C++ APIs in Lightning docs.
   [(#1096)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1096)
@@ -158,6 +164,7 @@ Pietropaolo Frisoni,
 Christina Lee,
 Joseph Lee,
 Luis Alfredo Nuñez Meneses,
+Lee J. O'Riordan,
 Andrija Paurevic,
 Alex Preciado,
 Shuli Shu
