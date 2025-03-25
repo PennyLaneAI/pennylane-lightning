@@ -33,7 +33,7 @@ import pennylane as qml
 from pennylane.measurements import CountsMP, SampleMeasurement, Shots
 from pennylane.typing import TensorLike
 
-from pennylane_lightning.core._measurements_base import LightningBaseMeasurements
+from pennylane_lightning.core.base._measurements_base import LightningBaseMeasurements
 
 
 class LightningMeasurements(LightningBaseMeasurements):  # pylint: disable=too-few-public-methods

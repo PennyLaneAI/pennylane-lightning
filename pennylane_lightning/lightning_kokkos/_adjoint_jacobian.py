@@ -33,7 +33,7 @@ import numpy as np
 from pennylane.tape import QuantumTape
 
 # pylint: disable=ungrouped-imports
-from pennylane_lightning.core._adjoint_jacobian_base import LightningBaseAdjointJacobian
+from pennylane_lightning.core.base._adjoint_jacobian_base import LightningBaseAdjointJacobian
 
 
 class LightningKokkosAdjointJacobian(LightningBaseAdjointJacobian):

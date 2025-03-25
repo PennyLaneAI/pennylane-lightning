@@ -590,7 +590,7 @@ class LightningBase(Device):
         # pylint: disable=import-outside-toplevel
         import jax
 
-        from pennylane_lightning.core.jaxpr_jvp import (
+        from pennylane_lightning.core.base.jaxpr_jvp import (
             convert_jaxpr_to_tape,
             get_output_shapes,
             validate_args_tangents,
