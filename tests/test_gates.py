@@ -523,7 +523,7 @@ def test_controlled_sparse_qubit_unitary(n_wires, n_qubits, control_value, tol):
     """Test that a sparse ControlledQubitUnitary is correctly applied to a state"""
 
     if device_name != "lightning.qubit":
-        pytest.skip("Skipping tests if not lightning.qubit.")
+        pytest.skip("Skipping tests if sparse ControlledQubitUnitary is not supported")
 
     dev = qml.device(device_name, wires=n_qubits)
 
