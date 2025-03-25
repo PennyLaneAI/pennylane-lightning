@@ -33,7 +33,7 @@ on:
 env:
   TF_VERSION: 2.16.2
   KERAS_VERSION: 3.9.0
-  TORCH_VERSION: 2.5.1+cpu
+  TORCH_VERSION: 2.3.1+cpu
   COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --no-flaky-report -p no:warnings --tb=native"
   GCC_VERSION: 11
   OMP_NUM_THREADS: "2"

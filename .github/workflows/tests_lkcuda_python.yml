@@ -34,7 +34,7 @@ env:
   CI_CUDA_ARCH: 86
   TF_VERSION: 2.16.2
   KERAS_VERSION: 3.9.0
-  TORCH_VERSION: 2.5.1+cpu
+  TORCH_VERSION: 2.3.1+cpu
   COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:./coverage.xml --no-flaky-report -p no:warnings --tb=native"
 
 concurrency:
@@ -242,7 +242,7 @@ jobs:
       - name: Install ML libraries for interfaces
         run: |
           python -m pip install --upgrade torch==$TORCH_VERSION -f https://download.pytorch.org/whl/cpu/torch_stable.html
-          python -m pip install --upgrade tensorflow~=$TF_VERSION keras~=$TF_VERSION
+          python -m pip install --upgrade tensorflow~=$TF_VERSION keras~=$KERAS_VERSION
 
       - name: Install backend device
         if: ${{ matrix.pl_backend != 'all'}}
