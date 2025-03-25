@@ -326,11 +326,8 @@ class StateVectorCudaManaged
                 BaseType::getDataBuffer().getDevTag().getStreamID(),
                 getCublasCaller());
         } else if (opName == "PCPhase") {
-
-            const std::size_t dimension = static_cast<std::size_t>(params[1]);
-
             const PrecisionT phase = params[0];
-
+            const auto dimension = static_cast<std::size_t>(params[1]);
             const CFP_t upper_complex{std::cos(phase), std::sin(phase)};
             const CFP_t lower_complex{std::cos(phase), -std::sin(phase)};
 
@@ -348,7 +345,6 @@ class StateVectorCudaManaged
 
             applyDevicePermutationGate_({}, diagonal.data(), {}, combined_tgts,
                                         {}, adjoint);
-
         } else if (native_gates_.find(opName) != native_gates_.end()) {
             applyParametricPauliGate_({opName}, ctrls, tgts, params.front(),
                                       adjoint);
@@ -444,11 +440,8 @@ class StateVectorCudaManaged
             applyParametricPauliGeneralGate_(names, ctrlsInt, ctrls_valuesInt,
                                              tgtsInt, 2 * params[0], adjoint);
         } else if (opName == "PCPhase") {
-
-            const std::size_t dimension = static_cast<std::size_t>(params[1]);
-
             const PrecisionT phase = params[0];
-
+            const auto dimension = static_cast<std::size_t>(params[1]);
             const CFP_t upper_complex{std::cos(phase), std::sin(phase)};
             const CFP_t lower_complex{std::cos(phase), -std::sin(phase)};
 
@@ -460,7 +453,6 @@ class StateVectorCudaManaged
 
             applyDevicePermutationGate_({}, diagonal.data(), controlled_wires,
                                         tgt_wires, controlled_values, adjoint);
-
         } else if (native_gates_.find(opName) != native_gates_.end()) {
             applyParametricPauliGeneralGate_({opName}, ctrlsInt,
                                              ctrls_valuesInt, tgtsInt,
