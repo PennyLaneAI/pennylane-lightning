@@ -43,7 +43,7 @@ using namespace Pennylane::LightningTensor::TNCuda;
 using namespace Pennylane::LightningTensor::TNCuda::Gates;
 using namespace Pennylane::LightningTensor::TNCuda::Util;
 } // namespace
-///@endcond
+/// @endcond
 
 namespace Pennylane::LightningTensor::TNCuda {
 /**

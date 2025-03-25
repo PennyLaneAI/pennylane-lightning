@@ -21,6 +21,7 @@
 #include <utility>
 
 namespace Pennylane::Gates {
+/// @cond DEV
 /**
  * @brief Enum class for all gate operations
  */
@@ -195,4 +196,5 @@ enum class ControlledSparseMatrixOperation : uint32_t {
     END
 };
 
+/// @endcond
 } // namespace Pennylane::Gates

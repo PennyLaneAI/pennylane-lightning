@@ -30,6 +30,7 @@
 #include "GateOperation.hpp"
 #include "Macros.hpp"
 
+/// @cond DEV
 namespace Pennylane::Util {
 inline auto createWires(Pennylane::Gates::GateOperation op,
                         std::size_t num_qubits) -> std::vector<std::size_t> {
@@ -223,3 +224,4 @@ auto inline createAllWires(std::size_t n_qubits,
 }
 
 } // namespace Pennylane::Util
+/// @endcond
