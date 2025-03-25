@@ -36,6 +36,8 @@
 #include "PauliGenerator.hpp"
 #include "Util.hpp" // exp2, INVSQRT2
 
+#define M_PI 3.14159265358979323846 /* pi */
+
 /// @cond DEV
 namespace {
 using namespace Pennylane::Gates;
@@ -713,7 +715,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                                           const std::size_t num_qubits,
                                           const std::vector<std::size_t> &wires,
                                           const bool inverse) {
-        applyNCPauliX(arr, num_qubits, {}, {}, wires, inverse);
+        applyNCRX(arr, num_qubits, {}, {}, wires, inverse, M_PI / 2);
     }
 
     template <class PrecisionT>

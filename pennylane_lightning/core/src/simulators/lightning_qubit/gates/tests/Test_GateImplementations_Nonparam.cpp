@@ -31,7 +31,8 @@
  * @file Test_GateImplementations_Nonparam.cpp
  *
  * This file contains tests for non-parameterized gates. List of such gates are
- * [PauliX, PauliY, PauliZ, Hadamard, S, SX, T, CNOT, SWAP, CZ, Toffoli, CSWAP, MyGateImplementation].
+ * [PauliX, PauliY, PauliZ, Hadamard, S, SX, T, CNOT, SWAP, CZ, Toffoli, CSWAP,
+ * MyGateImplementation].
  */
 
 /// @cond DEV
@@ -133,20 +134,26 @@ PENNYLANE_RUN_TEST(PauliX);
 
 template <typename PrecisionT, class GateImplementation>
 void testApplyMyGateImplementation() {
+    // Test using |000> state
     using ComplexT = std::complex<PrecisionT>;
-    const std::size_t num_qubits = 3;
-    DYNAMIC_SECTION(GateImplementation::name
-                    << ", MyGateImplementation - " << PrecisionToName<PrecisionT>::value) {
-        for (std::size_t index = 0; index < num_qubits; index++) {
-            auto st = createZeroState<ComplexT>(num_qubits);
+    const size_t num_qubits = 3;
 
-            GateImplementation::applyMyGateImplementation(st.data(), num_qubits, {index},
-                                            false);
+    constexpr ComplexT z(0.0, 0.0);
+    constexpr ComplexT p(1.0 / std::sqrt(2), 0.0);
+    constexpr ComplexT m(0.0, -1.0 / std::sqrt(2));
 
-            std::string expected_str("000");
-            expected_str[index] = '1';
-            REQUIRE(st == approx(createProductState<PrecisionT>(expected_str)));
-        }
+    const std::vector<std::vector<ComplexT>> expected_results = {
+        {p, z, z, z, m, z, z, z},
+        {p, z, m, z, z, z, z, z},
+        {p, m, z, z, z, z, z, z}};
+
+    for (size_t index = 0; index < num_qubits; index++) {
+        auto st = createZeroState<ComplexT>(num_qubits);
+
+        GateImplementation::applyMyGateImplementation(st.data(), num_qubits,
+                                                      {index}, false);
+
+        CHECK(st == approx(expected_results[index]));
     }
 }
 PENNYLANE_RUN_TEST(MyGateImplementation);

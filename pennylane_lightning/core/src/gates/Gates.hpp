@@ -1228,8 +1228,10 @@ static constexpr auto getGeneratorIsingZZ() -> std::vector<ComplexT<T>> {
  */
 template <template <typename...> class ComplexT, typename T>
 static constexpr auto getMyGateImplementation() -> std::vector<ComplexT<T>> {
-    return {ZERO<ComplexT, T>(), ONE<ComplexT, T>(), ONE<ComplexT, T>(),
-            ZERO<ComplexT, T>()};
+    return {INVSQRT2<ComplexT, T>(),
+            -(IMAG<ComplexT, T>()) * (INVSQRT2<ComplexT, T>()),
+            -(IMAG<ComplexT, T>()) * (INVSQRT2<ComplexT, T>()),
+            INVSQRT2<ComplexT, T>()};
 }
 template <template <typename...> class ComplexT, typename T>
 std::vector<ComplexT<T>> getMatrix(const GateOperation gate_op,
