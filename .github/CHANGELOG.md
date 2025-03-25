@@ -279,6 +279,9 @@ Shuli Shu
 
 ### Bug fixes
 
+* Fix the development wheel upload step for Python 3.13 by following the same syntax as for the other Python wheels.
+  [(#1111)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1111)
+
 * Fix Python CUDA dependencies by adding path to `nvidia/nvjitlink/lib` to RPATH.
   [(#1031)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1031)
 
@@ -335,6 +338,7 @@ Christina Lee,
 Joseph Lee,
 Anton Naim Ibrahim,
 Luis Alfredo Nuñez Meneses,
+Lee J. O'Riordan,
 Mudit Pandey,
 Andrija Paurevic,
 Shuli Shu,
