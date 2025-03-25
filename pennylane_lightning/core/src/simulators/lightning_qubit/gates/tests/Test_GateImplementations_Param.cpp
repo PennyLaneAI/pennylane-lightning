@@ -2427,7 +2427,7 @@ void testApplyPCPhase() {
     const ParamT angle = 0.27;
     const ParamT dimension = 3;
 
-    std::vector<ComplexT> expected_results(1 << num_qubits,
+    std::vector<ComplexT> expected_results(1U << num_qubits,
                                            {0.34074447, 0.0943038});
 
     DYNAMIC_SECTION(GateImplementation::name
@@ -2453,7 +2453,7 @@ void testApplyPCPhase() {
                     << ", PCPhase (0,2) |+++> - "
                     << PrecisionToName<PrecisionT>::value) {
         auto st = createPlusState<PrecisionT>(num_qubits);
-        std::vector<ComplexT> expected_results(1 << num_qubits,
+        std::vector<ComplexT> expected_results(1U << num_qubits,
                                                {0.34074447, 0.0943038});
 
         if (inverse) {
