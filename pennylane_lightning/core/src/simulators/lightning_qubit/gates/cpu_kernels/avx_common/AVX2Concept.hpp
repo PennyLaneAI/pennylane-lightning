@@ -25,7 +25,7 @@
 #include <type_traits>
 
 namespace Pennylane::LightningQubit::Gates::AVXCommon {
-///@cond DEV
+/// @cond DEV
 namespace Internal {
 template <typename T> struct AVX2Intrinsic {
     static_assert(std::is_same_v<T, float> || std::is_same_v<T, double>);
@@ -37,7 +37,7 @@ template <> struct AVX2Intrinsic<double> {
     using Type = __m256d;
 };
 } // namespace Internal
-///@endcond
+/// @endcond
 
 template <typename T> struct AVX2Concept {
     using PrecisionT = T;

@@ -34,12 +34,14 @@ constexpr uint32_t ThreadBitShift = 8U;
 /// @endcond
 
 namespace Pennylane::LightningQubit::Util {
+/// @cond DEV
 enum class Threading : uint8_t {
     SingleThread,
     MultiThread,
     END,
     BEGIN = SingleThread,
 };
+/// @endcond
 
 /**
  * @brief Compute dispatch key using threading and memory information.

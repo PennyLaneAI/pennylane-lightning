@@ -27,6 +27,7 @@
 #include <utility>
 #include <vector>
 
+/// @cond DEV
 namespace Pennylane::Util {
 
 template <typename ComplexT, typename IndexT = std::size_t>
@@ -335,3 +336,4 @@ void write_CSR_vectors(SparseMatrixCSR<ComplexT, IndexT> &matrix,
 }
 
 }; // namespace Pennylane::Util
+/// @endcond

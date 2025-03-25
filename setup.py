@@ -177,6 +177,9 @@ with open(os.path.join("pennylane_lightning", "core", "_version.py"), encoding="
 
 packages_list = ["pennylane_lightning." + backend]
 
+if backend == "lightning_qubit":
+    packages_list += ["pennylane_lightning.core"]
+
 info = {
     "version": version,
     "packages": find_namespace_packages(include=packages_list),

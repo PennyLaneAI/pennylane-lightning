@@ -23,6 +23,7 @@
 #include "Macros.hpp"
 
 namespace Pennylane::LightningQubit::Gates::AVXCommon {
+/// @cond DEV
 template <typename PrecisionT, std::size_t packed_size> struct CompileMask {
     static_assert(sizeof(PrecisionT) == std::numeric_limits<std::size_t>::max(),
                   "Unsupported type and/or packed size.");
@@ -100,5 +101,5 @@ template <__mmask8 k>
 PL_FORCE_INLINE __m512d blend(const __m512d &a, const __m512d &b) {
     return _mm512_mask_blend_pd(k, a, b);
 }
-
+/// @endcond
 } // namespace Pennylane::LightningQubit::Gates::AVXCommon

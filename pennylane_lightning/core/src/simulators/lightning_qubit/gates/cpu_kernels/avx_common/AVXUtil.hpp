@@ -25,6 +25,7 @@
 
 #include <cstdlib>
 
+/// @cond DEV
 namespace Pennylane::LightningQubit::Gates::AVXCommon {
 using Pennylane::Util::fillLeadingOnes;
 using Pennylane::Util::fillTrailingOnes;
@@ -57,6 +58,7 @@ template <> struct AVXIntrinsic<double, 8> {
     using Type = __m512d;
 };
 #endif
+/// @endcond
 
 /**
  * @brief one or minus one parity for reverse wire in packed data.
@@ -174,6 +176,7 @@ template <> struct ImagFactor<double, 8> {
 // LCOV_EXCL_STOP
 #endif
 
+/// @cond DEV
 template <typename PrecisionT, std::size_t packed_size> struct Set1;
 #ifdef PL_USE_AVX2
 template <> struct Set1<float, 8> {
@@ -282,6 +285,7 @@ constexpr __m512i setr512i(int64_t  e0, int64_t  e1, int64_t  e2, int64_t  e3,
 }
 // LCOV_EXCL_STOP
 #endif
+/// @endcond
 // clang-format on
 
 /**
