@@ -144,8 +144,8 @@ jobs:
           cmake --build ./Build
           cd ./Build
           mkdir -p ./tests/results
-          for file in *runner ; do ./$file -x 3  --reporter junit --out ./tests/results/report_$file.xml && echo "Test $file Success!" || cat ./tests/results/report_$file.xml; done;
-          for file in *runner_mpi ; do mpirun -np 2 ./$file -x 3 --reporter junit --out ./tests/results/report_$file.xml && echo "Test $file Success!" || cat ./tests/results/report_$file.xml; done;
+          for file in *runner ; do ./$file  --reporter junit --out ./tests/results/report_$file.xml && echo "Test $file Success!" || cat ./tests/results/report_$file.xml; done;
+          for file in *runner_mpi ; do mpirun -np 2 ./$file --reporter junit --out ./tests/results/report_$file.xml && echo "Test $file Success!" || cat ./tests/results/report_$file.xml; done;
 
           lcov --directory . -b ../pennylane_lightning/src --capture --output-file coverage.info
           lcov --remove coverage.info '/usr/*' --output-file coverage.info

@@ -150,7 +150,7 @@ jobs:
           mkdir -p ./tests/results_${{ github.job }}_${{ matrix.pl_backend }}
           for file in *runner ; do 
             report_file="./tests/results_${{ github.job }}_${{ matrix.pl_backend }}/report_$file.xml";
-            ./$file -x 3 --reporter junit --out $report_file && echo "Test $file Success!" || cat $report_file;
+            ./$file --reporter junit --out $report_file && echo "Test $file Success!" || cat $report_file;
           done;
           lcov --directory . -b ../pennylane_lightning/core/src --capture --output-file coverage.info
           lcov --remove coverage.info '/usr/*' --output-file coverage.info
