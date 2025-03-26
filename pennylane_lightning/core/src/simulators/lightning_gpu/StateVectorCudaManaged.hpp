@@ -331,27 +331,17 @@ class StateVectorCudaManaged
             const CFP_t upper_complex{std::cos(phase), std::sin(phase)};
             const CFP_t lower_complex{std::cos(phase), -std::sin(phase)};
 
-            std::vector<CFP_t> diagonal(
-                Pennylane::Util::exp2(tgts.size() + ctrls.size()),
-                lower_complex);
+            std::vector<CFP_t> diagonal(Pennylane::Util::exp2(wires.size()),lower_complex);
 
-            std::fill(diagonal.begin(), diagonal.begin() + dimension,
-                      upper_complex);
-
-            std::vector<std::size_t> combined_tgts(tgts.size() + ctrls.size());
-            std::copy(ctrls.begin(), ctrls.end(), combined_tgts.begin());
-            std::copy(tgts.begin(), tgts.end(),
-                      combined_tgts.begin() + ctrls.size());
-
-            applyDevicePermutationGate_({}, diagonal.data(), {}, combined_tgts,
-                                        {}, adjoint);
+            std::fill(diagonal.begin(), diagonal.begin() + dimension,upper_complex);
+            applyDevicePermutationGate_({}, diagonal.data(), {}, wires, {}, adjoint);
         } else if (native_gates_.find(opName) != native_gates_.end()) {
-            applyParametricPauliGate_({opName}, ctrls, tgts, params.front(),
+            applyParametricPauliGate_({opName}, {}, wires, params.front(),
                                       adjoint);
         } else if (opName == "Rot" || opName == "CRot") {
             auto rot_matrix =
                 cuGates::getRot<CFP_t>(params[0], params[1], params[2]);
-            applyDeviceMatrixGate_(rot_matrix.data(), ctrls, tgts, adjoint);
+            applyDeviceMatrixGate_(rot_matrix.data(), {}, wires, adjoint);
         } else if (opName == "Matrix") {
             applyDeviceMatrixGate_(gate_matrix.data(), ctrls, tgts, adjoint);
         } else if (par_gates_.find(opName) != par_gates_.end()) {

@@ -2045,6 +2045,35 @@ TEMPLATE_TEST_CASE(
                     approx(sv1.getDataVector()).margin(margin));
         }
     }
+
+    DYNAMIC_SECTION(" N-controlled PCPhase - "
+                    << "controls = {" << control << ", " << wire0 << ", "
+                    << wire1 << "} "
+                    << ", wires = {" << wire2 << ", " << wire3 << "} - "
+                    << PrecisionToName<PrecisionT>::value) {
+        std::vector<std::size_t> wires = {control, wire0, wire1, wire2, wire3};
+        std::sort(wires.begin(), wires.end());
+
+        const PrecisionT dim = 3;
+        const ComplexT e = {std::cos(param), std::sin(param)};
+        std::vector<ComplexT> matrix(16, 0.0);
+        matrix[0] = e;
+        matrix[5] = e;
+        matrix[10] = e;
+        matrix[15] = std::conj(e);
+
+        if (std::adjacent_find(wires.begin(), wires.end()) == wires.end()) {
+            sv0.applyControlledMatrix(matrix.data(), {control, wire0, wire1},
+                                      std::vector<bool>{true, false, true},
+                                      {wire2, wire3}, inverse);
+            sv1.applyOperation(
+                "PCPhase", std::vector<std::size_t>{control, wire0, wire1},
+                std::vector<bool>{true, false, true},
+                std::vector<std::size_t>{wire2, wire3}, inverse, {param, dim});
+            REQUIRE(sv0.getDataVector() ==
+                    approx(sv1.getDataVector()).margin(margin));
+        }
+    }
 }
 
 TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyControlledGlobalPhase",
@@ -2081,76 +2110,5 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyControlledGlobalPhase",
         tmp *= ComplexT(sv_data[j]);
         CHECK((real(result_sv[j])) == Approx(real(tmp)));
         CHECK((imag(result_sv[j])) == Approx(imag(tmp)));
-    }
-}
-
-TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyControlledPCPhase",
-                   "[StateVectorCudaManaged_Param]", float, double) {
-    using ComplexT = StateVectorCudaManaged<TestType>::ComplexT;
-    const std::size_t num_qubits = 3;
-    const bool inverse = GENERATE(false, true);
-
-    StateVectorCudaManaged<TestType> sv{num_qubits};
-    sv.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
-                       {{0}, {1}, {2}}, {false, false, false});
-
-    const TestType phase = 0.27;
-    const TestType dimension = 3;
-
-    std::vector<TestType> params{phase, dimension};
-
-    std::vector<bool> ctrl_vals = {1};
-
-    const auto init_state = sv.getDataVector();
-
-    SECTION("Apply using controls and dispatcher") {
-        std::vector<ComplexT> expected_results(1 << num_qubits,
-                                               {0.34074447, 0.0943038});
-        if (inverse) {
-            for (auto &val : expected_results) {
-                val = std::conj(val);
-            }
-        }
-
-        DYNAMIC_SECTION("PCPhase 0.27 1,2"
-                        << " inverse = " << inverse) {
-
-            for (std::size_t j = 0; j < 4; j++) {
-                expected_results[j] = ComplexT{0.35355339, 0.0};
-            }
-
-            StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
-                                                       init_state.size()};
-            std::vector<std::size_t> ctrls = {0};
-
-            sv_direct.applyOperation("PCPhase", ctrls, ctrl_vals, {1, 2},
-                                     inverse, params);
-
-            expected_results[3] = std::conj(expected_results[3]);
-            expected_results[7] = std::conj(expected_results[7]);
-
-            CHECK(sv_direct.getDataVector() ==
-                  Pennylane::Util::approx(expected_results));
-        }
-
-        DYNAMIC_SECTION("PCPhase 0.27 0,2"
-                        << " inverse = " << inverse) {
-
-            for (auto index : {0, 1, 4, 5}) {
-                expected_results[index] = ComplexT{0.35355339, 0.0};
-            }
-
-            StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
-                                                       init_state.size()};
-            std::vector<std::size_t> ctrls = {1};
-
-            sv_direct.applyOperation("PCPhase", ctrls, ctrl_vals, {0, 2},
-                                     inverse, params);
-
-            expected_results[7] = std::conj(expected_results[7]);
-
-            CHECK(sv_direct.getDataVector() ==
-                  Pennylane::Util::approx(expected_results));
-        }
     }
 }

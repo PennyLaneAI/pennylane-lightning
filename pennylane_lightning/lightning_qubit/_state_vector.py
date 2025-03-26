@@ -136,11 +136,10 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
             param = base_operation.parameters
 
             if isinstance(base_operation, qml.PCPhase):
-                hyper = [float(i) for i in base_operation.hyperparameters["dimension"]]
-                param = np.array(base_operation.parameters + hyper[:1])
+                hyper = float(base_operation.hyperparameters["dimension"][0])
+                param = np.array([base_operation.parameters[0], hyper])
 
             method(control_wires, control_values, target_wires, adjoint, param)
-
         else:  # apply gate as an n-controlled matrix
             method = getattr(state, "applyControlledMatrix")
             method(
@@ -231,8 +230,8 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
                 param = op_adjoint_base.parameters
 
                 if isinstance(op_adjoint_base, qml.PCPhase):
-                    hyper = [float(i) for i in op_adjoint_base.hyperparameters["dimension"]]
-                    param = np.array(op_adjoint_base.parameters + hyper[:1])
+                    hyper = float(op_adjoint_base.hyperparameters["dimension"][0])                    
+                    param = np.array([op_adjoint_base.parameters[0], hyper])
 
                 method(wires, invert_param, param)
             elif isinstance(op_adjoint_base, qml.ops.Controlled):  # apply n-controlled gate

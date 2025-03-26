@@ -2043,6 +2043,12 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                                const std::vector<std::size_t> &wires,
                                bool inverse, ParamT angle, ParamT dim) {
 
+        const auto dim_size_t = static_cast<std::size_t>(std::round(dim));
+
+        PL_ABORT_IF(dim_size_t < 0 || dim_size_t > 1U << num_qubits,
+                    "The dimension of the PCPhase gate must be a positive "
+                    "integer and less than or equal to statevector size.");
+        
         const PrecisionT phase = inverse ? -angle : angle;
         const std::complex<PrecisionT> upper_complex = {std::cos(phase),
                                                         std::sin(phase)};
@@ -2055,7 +2061,6 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                                                             matrix_dim);
 
         // Fill diagonal
-        const auto dim_size_t = static_cast<std::size_t>(dim);
         for (std::size_t i = 0; i < dim_size_t; i++) {
             matrixPCPhase[i * matrix_dim + i] = upper_complex;
         }

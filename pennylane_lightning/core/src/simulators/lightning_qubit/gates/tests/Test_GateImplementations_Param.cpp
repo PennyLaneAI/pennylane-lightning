@@ -2431,6 +2431,20 @@ void testApplyPCPhase() {
                                            {0.34074447, 0.0943038});
 
     DYNAMIC_SECTION(GateImplementation::name
+                    << ", PCPhase PL_ABORT_IF - "
+                    << PrecisionToName<PrecisionT>::value) {
+        auto st = createPlusState<PrecisionT>(num_qubits);
+
+        const ParamT wrong_dim = GENERATE(-1, 1U << num_qubits + 1);
+        REQUIRE_THROWS_WITH(
+            GateImplementation::applyPCPhase(st.data(), num_qubits, {0, 1},
+                                            inverse, angle, wrong_dim),
+            Catch::Contains("The dimension of the PCPhase gate must be a "
+                            "positive integer and less than or equal to "
+                            "statevector size."));
+    }
+
+    DYNAMIC_SECTION(GateImplementation::name
                     << ", PCPhase (1,2) |+++> - "
                     << PrecisionToName<PrecisionT>::value) {
         auto st = createPlusState<PrecisionT>(num_qubits);

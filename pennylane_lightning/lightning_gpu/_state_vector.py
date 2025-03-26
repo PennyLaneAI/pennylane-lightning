@@ -262,10 +262,10 @@ class LightningGPUStateVector(LightningBaseStateVector):
             param = operation.parameters
             if isinstance(base_operation, qml.PCPhase):
                 # PCPhase has hyperparameters for dimension
-                hyper = [float(i) for i in base_operation.hyperparameters["dimension"]]
-                param = np.array(operation.parameters + hyper)
+                hyper = float(base_operation.hyperparameters["dimension"][0])
+                param = np.array([base_operation.parameters[0], hyper])
+                
             method(control_wires, control_values, target_wires, adjoint, param)
-
         else:  # apply gate as an n-controlled matrix
             method = getattr(state, "applyControlledMatrix")
             method(
@@ -334,6 +334,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
             else:
                 op_adjoint_base = operation
                 invert_param = False
+                
             name = op_adjoint_base.name
             method = getattr(state, name, None)
             wires = list(operation.wires)
@@ -347,11 +348,10 @@ class LightningGPUStateVector(LightningBaseStateVector):
                 )
             elif method is not None:  # apply specialized gate
                 param = operation.parameters
-
                 if isinstance(op_adjoint_base, qml.PCPhase):
                     # PCPhase has hyperparameters for dimension
-                    hyper = [float(i) for i in op_adjoint_base.hyperparameters["dimension"]]
-                    param = np.array(op_adjoint_base.parameters + hyper)
+                    hyper = float(op_adjoint_base.hyperparameters["dimension"][0])
+                    param = np.array([op_adjoint_base.parameters[0], hyper])
 
                 method(wires, invert_param, param)
             elif (
