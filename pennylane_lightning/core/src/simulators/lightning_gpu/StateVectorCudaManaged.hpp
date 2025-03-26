@@ -339,12 +339,12 @@ class StateVectorCudaManaged
             applyDevicePermutationGate_({}, diagonal.data(), {}, wires, {},
                                         adjoint);
         } else if (native_gates_.find(opName) != native_gates_.end()) {
-            applyParametricPauliGate_({opName}, {}, wires, params.front(),
+            applyParametricPauliGate_({opName}, ctrls, tgts, params.front(),
                                       adjoint);
         } else if (opName == "Rot" || opName == "CRot") {
             auto rot_matrix =
                 cuGates::getRot<CFP_t>(params[0], params[1], params[2]);
-            applyDeviceMatrixGate_(rot_matrix.data(), {}, wires, adjoint);
+            applyDeviceMatrixGate_(rot_matrix.data(), ctrls, tgts, adjoint);
         } else if (opName == "Matrix") {
             applyDeviceMatrixGate_(gate_matrix.data(), ctrls, tgts, adjoint);
         } else if (par_gates_.find(opName) != par_gates_.end()) {
