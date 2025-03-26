@@ -329,7 +329,8 @@ class StateVectorCudaManaged
             const PrecisionT phase = params[0];
             const auto dimension = static_cast<std::size_t>(params[1]);
             const CFP_t upper_complex{std::cos(phase), std::sin(phase)};
-            const CFP_t lower_complex{std::cos(phase), -std::sin(phase)};
+            const CFP_t lower_complex =
+                Pennylane::LightningGPU::Util::Conj(upper_complex);
 
             std::vector<CFP_t> diagonal(Pennylane::Util::exp2(wires.size()),
                                         lower_complex);

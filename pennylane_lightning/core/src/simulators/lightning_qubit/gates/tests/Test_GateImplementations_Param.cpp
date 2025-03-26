@@ -2425,10 +2425,13 @@ void testApplyPCPhase() {
     bool inverse = GENERATE(false, true);
     const std::size_t num_qubits = 3;
     const ParamT angle = 0.27;
-    const ParamT dimension = 3;
 
-    std::vector<ComplexT> expected_results(1U << num_qubits,
-                                           {0.34074447, 0.0943038});
+    ComplexT expected_value{0.34074447, -0.0943038d};
+    if (inverse) {
+        expected_value = std::conj(expected_value);
+    }
+
+    std::vector<ComplexT> expected_results(1U << num_qubits, expected_value);
 
     DYNAMIC_SECTION(GateImplementation::name
                     << ", PCPhase PL_ABORT_IF - "
@@ -2444,45 +2447,54 @@ void testApplyPCPhase() {
                             "statevector size."));
     }
 
-    DYNAMIC_SECTION(GateImplementation::name
-                    << ", PCPhase (1,2) |+++> - "
-                    << PrecisionToName<PrecisionT>::value) {
-        auto st = createPlusState<PrecisionT>(num_qubits);
+    SECTION("Testing multiples dimensions") {
+        const ParamT dimension = GENERATE(0, 1, 2, 3, 4);
 
-        if (inverse) {
-            for (auto &val : expected_results) {
-                val = std::conj(val);
+        DYNAMIC_SECTION(GateImplementation::name
+                        << ", PCPhase (1,2) |+++> - "
+                        << PrecisionToName<PrecisionT>::value) {
+            auto st = createPlusState<PrecisionT>(num_qubits);
+
+            GateImplementation::applyPCPhase(st.data(), num_qubits, {1, 2},
+                                             inverse, angle, dimension);
+
+            for (std::size_t i = 0;
+                 i < static_cast<std::size_t>(std::round(dimension)); ++i) {
+                expected_results[i] = std::conj(expected_results[i]);
+                expected_results[i + 4] = std::conj(expected_results[i + 4]);
             }
+
+            REQUIRE(st == approx(expected_results).margin(1e-7));
         }
+        DYNAMIC_SECTION(GateImplementation::name
+                        << ", PCPhase (0,2) |+++> - "
+                        << PrecisionToName<PrecisionT>::value) {
+            auto st = createPlusState<PrecisionT>(num_qubits);
 
-        GateImplementation::applyPCPhase(st.data(), num_qubits, {1, 2}, inverse,
-                                         angle, dimension);
+            GateImplementation::applyPCPhase(st.data(), num_qubits, {0, 2},
+                                             inverse, angle, dimension);
 
-        expected_results[3] = std::conj(expected_results[3]);
-        expected_results[7] = std::conj(expected_results[7]);
-
-        REQUIRE(st == approx(expected_results).margin(1e-7));
-    }
-    DYNAMIC_SECTION(GateImplementation::name
-                    << ", PCPhase (0,2) |+++> - "
-                    << PrecisionToName<PrecisionT>::value) {
-        auto st = createPlusState<PrecisionT>(num_qubits);
-        std::vector<ComplexT> expected_results(1U << num_qubits,
-                                               {0.34074447, 0.0943038});
-
-        if (inverse) {
-            for (auto &val : expected_results) {
-                val = std::conj(val);
+            auto dimension_size =
+                static_cast<std::size_t>(std::round(dimension));
+            std::vector<std::size_t> conj_indexs;
+            if (dimension_size == 1) {
+                conj_indexs = {0, 2};
+            } else if (dimension_size == 2) {
+                conj_indexs = {0, 1, 2, 3};
+            } else if (dimension_size == 3) {
+                conj_indexs = {0, 1, 2, 3, 4, 6};
+            } else if (dimension_size == 4) {
+                conj_indexs = {0, 1, 2, 3, 4, 5, 6, 7};
+            } else {
+                conj_indexs = {};
             }
+
+            for (const auto &index : conj_indexs) {
+                expected_results[index] = std::conj(expected_results[index]);
+            }
+
+            REQUIRE(st == approx(expected_results).margin(1e-7));
         }
-
-        GateImplementation::applyPCPhase(st.data(), num_qubits, {0, 2}, inverse,
-                                         angle, dimension);
-
-        expected_results[5] = std::conj(expected_results[5]);
-        expected_results[7] = std::conj(expected_results[7]);
-
-        REQUIRE(st == approx(expected_results).margin(1e-7));
     }
 }
 PENNYLANE_RUN_TEST(PCPhase);
@@ -2951,17 +2963,22 @@ TEMPLATE_TEST_CASE(
                     << PrecisionToName<PrecisionT>::value) {
         bool inverse = GENERATE(false, true);
         PrecisionT param = GENERATE(-1.5, -0.5, 0, 0.5, 1.5);
-        PrecisionT dimension = 3.0;
+        PrecisionT dimension = GENERATE(0, 1, 2, 3, 4);
 
         std::vector<std::size_t> wires = {control, wire0, wire1, wire2, wire3};
         std::sort(wires.begin(), wires.end());
 
-        const ComplexT e = {std::cos(param), std::sin(param)};
+        const ComplexT e = {std::cos(param), -std::sin(param)};
         std::vector<ComplexT> matrix(16, 0.0);
         matrix[0] = e;
         matrix[5] = e;
         matrix[10] = e;
-        matrix[15] = std::conj(e);
+        matrix[15] = e;
+
+        for (std::size_t i = 0;
+             i < static_cast<std::size_t>(std::round(dimension)); i++) {
+            matrix[i * 5] = std::conj(e);
+        }
 
         if (std::adjacent_find(wires.begin(), wires.end()) == wires.end()) {
             auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
