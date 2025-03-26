@@ -2426,7 +2426,7 @@ void testApplyPCPhase() {
     const std::size_t num_qubits = 3;
     const ParamT angle = 0.27;
 
-    ComplexT expected_value{0.34074447, -0.0943038d};
+    ComplexT expected_value{0.34074447, -0.0943038};
     if (inverse) {
         expected_value = std::conj(expected_value);
     }
