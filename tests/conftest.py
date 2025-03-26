@@ -293,3 +293,12 @@ def validate_measurements(func, shots, results1, results2):
         return
 
     validate_others(shots, results1, results2)
+
+
+# This hook is called to add info to test report header
+def pytest_report_header():
+    return [
+        "",
+        "PennyLane-Lightning Test Suite",
+        f"::: Device: {device_name:<17} :::",
+    ]

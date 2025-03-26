@@ -109,6 +109,15 @@ def dev(request):
     return LightningDevice(wires=request.param[0], c_dtype=request.param[1])
 
 
+@pytest.fixture()
+def enable_disable_plxpr():
+    """Fixture to enable and disable the plxpr capture"""
+    pytest.importorskip("jax")
+    qml.capture.enable()
+    yield
+    qml.capture.disable()
+
+
 class TestHelpers:
     """Unit tests for helper functions"""
 
@@ -513,6 +522,7 @@ class TestExecution:
                 ExecutionConfig(
                     grad_on_execution=None,
                     use_device_gradient=False,
+                    use_device_jacobian_product=False,
                     device_options=_default_device_options,
                 ),
             ),
@@ -522,6 +532,7 @@ class TestExecution:
                     gradient_method="adjoint",
                     grad_on_execution=True,
                     use_device_gradient=True,
+                    use_device_jacobian_product=True,
                     device_options=_default_device_options,
                 ),
             ),
@@ -535,6 +546,7 @@ class TestExecution:
                 ExecutionConfig(
                     grad_on_execution=None,
                     use_device_gradient=False,
+                    use_device_jacobian_product=False,
                     device_options={
                         "c_dtype": np.complex64,
                         "batch_obs": False,
@@ -556,6 +568,7 @@ class TestExecution:
                     gradient_method="backprop",
                     use_device_gradient=False,
                     grad_on_execution=False,
+                    use_device_jacobian_product=False,
                     device_options=_default_device_options,
                 ),
             ),
@@ -568,6 +581,84 @@ class TestExecution:
         del new_config.device_options["rng"]
 
         assert new_config == expected_config
+
+    @pytest.mark.skipif(
+        device_name == "lightning.tensor",
+        reason="lightning.tensor device supports new device options",
+    )
+    def test_preprocess_incorrect_device_config(self):
+        """Test that an error is raised if the device options are not valid"""
+        config = ExecutionConfig(
+            device_options={
+                "is_wrong_option": True,
+            }
+        )
+        device = LightningDevice(wires=2)
+        with pytest.raises(qml.DeviceError, match="device option is_wrong_option"):
+            _ = device.preprocess(config)
+
+    @pytest.mark.skipif(
+        device_name == "lightning.tensor",
+        reason="lightning.tensor device doesn't have support for program capture.",
+    )
+    @pytest.mark.parametrize("postselect_mode", ["hw-like", "fill-shots"])
+    def test_sbs_and_postselect_warning(self, enable_disable_plxpr, postselect_mode):
+        """Test that a warning is raised if post-selection is used with single branch statistics."""
+        device = LightningDevice(wires=1)
+        config = ExecutionConfig(
+            mcm_config=MCMConfig(
+                mcm_method="single-branch-statistics", postselect_mode=postselect_mode
+            )
+        )
+
+        with pytest.warns(
+            UserWarning,
+            match="Setting 'postselect_mode' is not supported with mcm_method='single-branch-",
+        ):
+            _ = device.preprocess(config)
+
+    @pytest.mark.skipif(
+        device_name == "lightning.tensor",
+        reason="lightning.tensor device doesn't have support for program capture.",
+    )
+    def test_preprocess_invalid_mcm_method_error(self, enable_disable_plxpr):
+        """Test that an error is raised if mcm_method is invalid."""
+        device = LightningDevice(wires=1)
+        config = ExecutionConfig(mcm_config=MCMConfig(mcm_method="foo"))
+
+        with pytest.raises(qml.DeviceError, match="mcm_method='foo' is not supported"):
+            _ = device.preprocess(config)
+
+    @pytest.mark.skipif(
+        device_name == "lightning.tensor",
+        reason="lightning.tensor device doesn't have support for program capture.",
+    )
+    def test_transform_program(self, enable_disable_plxpr):
+        """Test that the transform program returned by preprocess has the correct transforms."""
+        dev = LightningDevice(wires=1)
+
+        # Default config
+        config = ExecutionConfig()
+        program, _ = dev.preprocess(execution_config=config)
+        assert len(program) == 2
+        # pylint: disable=protected-access
+        assert program[0].transform == qml.defer_measurements._transform
+        assert program[1].transform == qml.transforms.decompose._transform
+
+        # mcm_method="deferred"
+        config = ExecutionConfig(mcm_config=MCMConfig(mcm_method="deferred"))
+        program, _ = dev.preprocess(execution_config=config)
+        assert len(program) == 2
+        # pylint: disable=protected-access
+        assert program[0].transform == qml.defer_measurements._transform
+        assert program[1].transform == qml.transforms.decompose._transform
+
+        # mcm_method="single-branch-statistics"
+        config = ExecutionConfig(mcm_config=MCMConfig(mcm_method="single-branch-statistics"))
+        program, _ = dev.preprocess(execution_config=config)
+        assert len(program) == 1
+        # pylint: disable=protected-access
+        assert program[0].transform == qml.transforms.decompose._transform
 
     @pytest.mark.skipif(
         device_name == "lightning.tensor", reason="lightning.tensor does not support adjoint"

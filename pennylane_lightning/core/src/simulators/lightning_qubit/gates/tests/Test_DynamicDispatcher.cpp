@@ -185,3 +185,51 @@ TEMPLATE_TEST_CASE("DynamicDispatcher::applyMatrix", "[DynamicDispatcher]",
                                 Catch::Contains("SingleQubitOp"));
     }
 }
+
+TEMPLATE_TEST_CASE("DynamicDispatcher::applySparseMatrix",
+                   "[DynamicDispatcher]", float, double) {
+    using PrecisionT = TestType;
+    std::mt19937_64 re{1337};
+
+    SECTION("Throw an exception for a kernel not registered") {
+        const std::size_t num_qubits = 3;
+        auto st = createProductState<PrecisionT>("000");
+
+        auto &dispatcher = DynamicDispatcher<TestType>::getInstance();
+
+        std::vector<std::complex<PrecisionT>> values(4, 0.0);
+        std::vector<std::size_t> col_idx(4, 0.0);
+        std::vector<std::size_t> row_map(5, 0.0);
+
+        REQUIRE_THROWS_WITH(dispatcher.applySparseMatrix(
+                                Pennylane::Gates::KernelType::None, st.data(),
+                                num_qubits, row_map.data(), col_idx.data(),
+                                values.data(), {0}, false),
+                            Catch::Contains("is not registered") &&
+                                Catch::Contains("SparseMultiQubitOp"));
+    }
+}
+
+TEMPLATE_TEST_CASE("DynamicDispatcher::applyControlledSparseMatrix",
+                   "[DynamicDispatcher]", float, double) {
+    using PrecisionT = TestType;
+    std::mt19937_64 re{1337};
+
+    SECTION("Throw an exception for a kernel not registered") {
+        const std::size_t num_qubits = 3;
+        auto st = createProductState<PrecisionT>("000");
+
+        auto &dispatcher = DynamicDispatcher<TestType>::getInstance();
+
+        std::vector<std::complex<PrecisionT>> values(4, 0.0);
+        std::vector<std::size_t> col_idx(4, 0.0);
+        std::vector<std::size_t> row_map(5, 0.0);
+
+        REQUIRE_THROWS_WITH(dispatcher.applyControlledSparseMatrix(
+                                Pennylane::Gates::KernelType::None, st.data(),
+                                num_qubits, row_map.data(), col_idx.data(),
+                                values.data(), {1}, {true}, {0}, false),
+                            Catch::Contains("is not registered") &&
+                                Catch::Contains("NCSparseMultiQubitOp"));
+    }
+}

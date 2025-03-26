@@ -29,9 +29,12 @@
 #include "Error.hpp"
 #include "Util.hpp"
 // LCOV_EXCL_START
+
+/// @cond DEV
 namespace {
 using namespace Pennylane::Util;
-}
+} // namespace
+/// @endcond
 
 #ifndef CUDA_UNSAFE
 

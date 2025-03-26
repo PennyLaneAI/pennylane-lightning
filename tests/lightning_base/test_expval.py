@@ -14,6 +14,8 @@
 """
 Tests for process and execute (expval calculation).
 """
+import itertools
+
 # pylint: disable=too-many-arguments, redefined-outer-name
 import numpy as np
 import pennylane as qml
@@ -171,6 +173,51 @@ class TestExpval:
         reference_val = calculate_reference(tape)
 
         assert np.allclose(calculated_val, reference_val, tol)
+
+    @pytest.mark.parametrize(
+        "n_op_wires, wires",
+        [
+            [1, [3]],
+            [2, [1, 3]],
+            [3, [2, 7, 4]],
+            [4, [0, 3, 7, 6]],
+            [5, [0, 4, 3, 1, 6]],
+            [6, [6, 1, 2, 5, 4, 3]],
+            [7, [6, 3, 2, 7, 1, 4, 0]],
+            [8, [7, 5, 6, 4, 3, 0, 1, 2]],
+        ],
+    )
+    @pytest.mark.parametrize("dtype", [np.complex64, np.complex128])
+    def test_hermitian_arbitrary_size_expectation(self, dtype, theta, phi, n_op_wires, wires, tol):
+        """Tests the expectation value of an arbitrary size Hermitian matrix."""
+        if device_name == "lightning.tensor" and n_op_wires > 1:
+            pytest.skip(
+                "lightning.tensor does not support Hermitian matrices with n_op_wires not equal to 1"
+            )
+        n_qubits = 8
+        dev = LightningDevice(wires=n_qubits, c_dtype=dtype)
+        mat = np.random.rand(2**n_op_wires, 2**n_op_wires) + 1j * np.random.rand(
+            2**n_op_wires, 2**n_op_wires
+        )
+        mat = mat + mat.conj().T
+
+        tape = qml.tape.QuantumScript(
+            [
+                qml.RX(theta, wires=0),
+                qml.RX(phi, wires=1),
+                qml.RX(theta + phi, wires=2),
+                qml.RX(theta, wires=3),
+                qml.RX(phi, wires=4),
+                qml.RX(theta + phi, wires=5),
+                qml.RX(phi, wires=6),
+                qml.RX(theta + phi, wires=7),
+            ],
+            [qml.expval(qml.Hermitian(mat, wires=wires))],
+        )
+        calculated_val = process_and_execute(dev, tape)
+        reference_val = calculate_reference(tape)
+
+        assert np.allclose(calculated_val, reference_val, tol if dtype == np.complex128 else 1e-5)
 
     def test_hamiltonian_expectation(self, theta, phi, tol, dev):
         """Tests a Hamiltonian."""
@@ -330,6 +377,60 @@ class TestTensorExpval:
             qml.CNOT(wires=[0, 1])
             qml.CNOT(wires=[1, 2])
             qml.expval(qml.PauliZ(0) @ qml.Hadamard(1) @ qml.PauliY(2))
+
+        calculated_val = process_and_execute(dev, tape)
+        reference_val = calculate_reference(tape)
+
+        tol = 1e-5 if dev.c_dtype == np.complex64 else 1e-7
+
+        assert np.allclose(calculated_val, reference_val, tol)
+
+    def test_permute_order(self, theta, phi, varphi, dev, tol):
+        """Tests a tensor product with permuted term order."""
+
+        subroutine = [
+            qml.RX(theta, wires=[0]),
+            qml.RX(phi, wires=[1]),
+            qml.RX(varphi, wires=[2]),
+            qml.CNOT(wires=[0, 1]),
+            qml.CNOT(wires=[1, 2]),
+        ]
+
+        ob1 = qml.PauliZ(0) @ qml.X(1) @ qml.PauliY(2)
+        ob2 = qml.PauliY(2) @ qml.X(1) @ qml.PauliZ(0)
+
+        tape1 = qml.tape.QuantumScript(subroutine, [qml.expval(ob1)])
+        tape2 = qml.tape.QuantumScript(subroutine, [qml.expval(ob2)])
+
+        calculated_val_1 = process_and_execute(dev, tape1)
+        calculated_val_2 = process_and_execute(dev, tape2)
+        reference_val = calculate_reference(tape1)
+
+        tol = 1e-5 if dev.c_dtype == np.complex64 else 1e-7
+
+        assert np.allclose(calculated_val_1, calculated_val_2, tol)
+        assert np.allclose(calculated_val_1, reference_val, tol)
+
+    def test_hamiltonian(self, theta, phi, varphi, dev, tol):
+        """Tests the expectation value of a Hamiltonian with multiple pauli words and coefficients."""
+
+        subroutine = [
+            qml.RX(theta, wires=[0]),
+            qml.RX(phi, wires=[1]),
+            qml.RX(varphi, wires=[2]),
+            qml.CNOT(wires=[0, 1]),
+            qml.CNOT(wires=[1, 2]),
+        ]
+
+        ob1 = qml.PauliZ(0) @ qml.X(1) @ qml.PauliY(2)
+        ob2 = qml.PauliY(0) @ qml.Z(1) @ qml.PauliX(2)
+        ob3 = qml.Identity(0) @ qml.X(1)
+        ob4 = qml.PauliY(2) @ qml.Z(1)
+        ob5 = qml.PauliZ(2)
+
+        tape = qml.tape.QuantumScript(
+            subroutine, [qml.expval(0.3 * ob1 + 0.4 * ob2 + 0.5 * ob3 + 0.6 * ob4 + 0.7 * ob5)]
+        )
 
         calculated_val = process_and_execute(dev, tape)
         reference_val = calculate_reference(tape)

@@ -379,6 +379,7 @@ template <class PrecisionT> struct applyNC2QubitOpFunctor {
     }
 };
 
+/// @cond DEV
 #define GATEENTRY3(xx, yy) xx << 3 | yy
 #define GATETERM3(xx, yy, vyy) matrix(GATEENTRY3(xx, yy)) * vyy
 #define GATESUM3(xx)                                                           \
@@ -386,6 +387,7 @@ template <class PrecisionT> struct applyNC2QubitOpFunctor {
         GATETERM3(xx, 0B010, v010) + GATETERM3(xx, 0B011, v011) +              \
         GATETERM3(xx, 0B100, v100) + GATETERM3(xx, 0B101, v101) +              \
         GATETERM3(xx, 0B110, v110) + GATETERM3(xx, 0B111, v111)
+/// @endcond
 
 template <class PrecisionT> struct apply3QubitOpFunctor {
     using ComplexT = Kokkos::complex<PrecisionT>;
@@ -506,6 +508,7 @@ template <class PrecisionT> struct applyNC3QubitOpFunctor {
     }
 };
 
+/// @cond DEV
 #define GATEENTRY4(xx, yy) xx << 4 | yy
 #define GATETERM4(xx, yy, vyy) matrix(GATEENTRY4(xx, yy)) * vyy
 #define GATESUM4(xx)                                                           \
@@ -517,6 +520,7 @@ template <class PrecisionT> struct applyNC3QubitOpFunctor {
         GATETERM4(xx, 0B1010, v1010) + GATETERM4(xx, 0B1011, v1011) +          \
         GATETERM4(xx, 0B1100, v1100) + GATETERM4(xx, 0B1101, v1101) +          \
         GATETERM4(xx, 0B1110, v1110) + GATETERM4(xx, 0B1111, v1111)
+/// @endcond
 
 template <class PrecisionT> struct apply4QubitOpFunctor {
     using ComplexT = Kokkos::complex<PrecisionT>;
@@ -604,6 +608,7 @@ template <class PrecisionT> struct apply4QubitOpFunctor {
     }
 };
 
+/// @cond DEV
 #define GATEENTRY5(xx, yy) xx << 5 | yy
 #define GATETERM5(xx, yy, vyy) matrix(GATEENTRY5(xx, yy)) * vyy
 #define GATESUM5(xx)                                                           \
@@ -623,6 +628,7 @@ template <class PrecisionT> struct apply4QubitOpFunctor {
         GATETERM5(xx, 0B11010, v11010) + GATETERM5(xx, 0B11011, v11011) +      \
         GATETERM5(xx, 0B11100, v11100) + GATETERM5(xx, 0B11101, v11101) +      \
         GATETERM5(xx, 0B11110, v11110) + GATETERM5(xx, 0B11111, v11111)
+/// @endcond
 template <class PrecisionT> struct apply5QubitOpFunctor {
     using ComplexT = Kokkos::complex<PrecisionT>;
     using KokkosComplexVector = Kokkos::View<ComplexT *>;

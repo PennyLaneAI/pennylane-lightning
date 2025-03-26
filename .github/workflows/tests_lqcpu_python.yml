@@ -82,7 +82,8 @@ jobs:
 
       - name: Get required Python packages
         run: |
-          python -m pip install -r requirements-dev.txt
+          python -m pip install -r requirements-tests.txt
+          python -m pip install build
 
       - name: Create device wheel ${{ inputs.lightning-version }}
         run: |
@@ -152,7 +153,8 @@ jobs:
         run: |
           WHEEL_NAME=$(cat ${{ github.workspace }}/${{ matrix.pl_backend }}-${{ matrix.blas }}_name.txt)
           mv ${{ github.workspace }}/wheel_${{ matrix.pl_backend }}-${{ matrix.blas }}.whl ${{ github.workspace }}/$WHEEL_NAME
-          python -m pip install -r requirements-dev.txt
+          python -m pip install -r requirements-tests.txt
+          python -m pip install "jax[cpu]==0.4.28; python_version<='3.12'"
           python -m pip install openfermionpyscf
           python -m pip install semantic-version
           python -m pip install ${{ github.workspace }}/$WHEEL_NAME --no-deps --force-reinstall
@@ -220,10 +222,10 @@ jobs:
         run: |
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
           # Remove `python -m` to avoid running tests with relative modules
-          PL_DEVICE=${DEVICENAME} pytest -n auto tests/ -k "not unitary_correct" \
+          PL_DEVICE=${DEVICENAME} pytest -n auto tests/ -k "not unitary_correct and not compare_sparse_and_dense_operations" \
             $COVERAGE_FLAGS --store-durations --splits 4 --group ${{ matrix.group }} \
             --durations-path='.github/workflows/python_lightning_qubit_test_durations.json' --splitting-algorithm=least_duration
-          PL_DEVICE=${DEVICENAME} pytest tests/ -k "unitary_correct" $COVERAGE_FLAGS --cov-append
+          PL_DEVICE=${DEVICENAME} pytest tests/ -k "unitary_correct or compare_sparse_and_dense_operations" $COVERAGE_FLAGS --cov-append
 
       - name: Upload test durations
         uses: actions/upload-artifact@v4

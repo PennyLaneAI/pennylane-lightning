@@ -23,18 +23,21 @@
 #include <cstdint>
 #include <memory>
 
+/// @cond DEV
 namespace {
 struct BitWidth {
     static constexpr uint32_t b64 = 64U;
     static constexpr uint32_t b32 = 32U;
 };
 } // namespace
+/// @endcond
 
 // LCOV_EXCL_START
 namespace Pennylane::Util {
 /**
  * @brief Enum class for defining CPU memory alignments
  */
+/// @cond DEV
 enum class CPUMemoryModel : uint8_t {
     Unaligned,
     Aligned256,
@@ -42,6 +45,7 @@ enum class CPUMemoryModel : uint8_t {
     END,
     BEGIN = Unaligned,
 };
+/// @endcond
 
 /**
  * @brief Compute alignment of a given data pointer

@@ -7,7 +7,25 @@ name = "PennyLane_Lightning"
 description = "PennyLane-Lightning plugin"
 readme = "README.rst"
 requires-python = ">=3.10"
-classifiers = [ "Development Status :: 4 - Beta", "Environment :: Console", "Intended Audience :: Science/Research", "License :: OSI Approved :: Apache Software License", "Natural Language :: English", "Operating System :: MacOS :: MacOS X", "Operating System :: Microsoft :: Windows", "Operating System :: POSIX", "Operating System :: POSIX :: Linux", "Programming Language :: Python", "Programming Language :: Python :: 3", "Programming Language :: Python :: 3 :: Only", "Programming Language :: Python :: 3.10", "Programming Language :: Python :: 3.11", "Programming Language :: Python :: 3.12", "Topic :: Scientific/Engineering :: Physics",]
+classifiers = [ 
+    "Development Status :: 4 - Beta", 
+    "Environment :: Console", 
+    "Intended Audience :: Science/Research", 
+    "License :: OSI Approved :: Apache Software License", 
+    "Natural Language :: English", 
+    "Operating System :: MacOS :: MacOS X", 
+    "Operating System :: Microsoft :: Windows", 
+    "Operating System :: POSIX", 
+    "Operating System :: POSIX :: Linux", 
+    "Programming Language :: Python", 
+    "Programming Language :: Python :: 3", 
+    "Programming Language :: Python :: 3 :: Only", 
+    "Programming Language :: Python :: 3.10", 
+    "Programming Language :: Python :: 3.11", 
+    "Programming Language :: Python :: 3.12", 
+    "Programming Language :: Python :: 3.13", 
+    "Topic :: Scientific/Engineering :: Physics",
+]
 dependencies = ["pennylane>=0.40", "scipy-openblas32>0.3.26"]
 dynamic = [ "version",]
 [[project.maintainers]]
@@ -27,3 +45,10 @@ Homepage = "https://github.com/PennyLaneAI/pennylane-lightning"
 
 [project.entry-points."pennylane.plugins"]
 "lightning.qubit" = "pennylane_lightning.lightning_qubit:LightningQubit"
+
+[tool.bandit]
+targets = "pennylane_lightning"
+exclude_dirs = ["tests"]
+skips = [
+    "B101", # We are okay with using asserts in source code as we do not compile optimized bytecode of pennylane
+]

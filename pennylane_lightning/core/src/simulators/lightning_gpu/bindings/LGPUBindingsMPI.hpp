@@ -46,9 +46,11 @@ using Pennylane::LightningGPU::StateVectorCudaMPI;
 namespace py = pybind11;
 
 namespace Pennylane::LightningGPU {
+/// @cond DEV
 using StateVectorMPIBackends =
     Pennylane::Util::TypeList<StateVectorCudaMPI<float>,
                               StateVectorCudaMPI<double>, void>;
+/// @endcond
 
 /**
  * @brief Get a gate kernel map for a statevector.
@@ -318,4 +320,4 @@ void registerBackendSpecificInfoMPI(py::module_ &m) {
             "MPI Scatter.");
 }
 } // namespace Pennylane::LightningGPU
-  /// @endcond
+/// @endcond

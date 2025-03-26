@@ -1,24 +1,53 @@
 # Release 0.41.0-dev
 
 ### New features since last release
+
 * Implement new C++ kernels for efficient in-place multiplication of sparse matrices to state vectors, supporting both controlled and non-controlled gates, and add comprehensive tests for this new functionality.
-  [#1085](https://github.com/PennyLaneAI/pennylane-lightning/pull/1085)
+  [(#1085)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1085)
+
+* Integrate sparse kernels into the Lightning-Qubit dynamic dispatcher, enhance the Python layers, and expand the testing process for dense and sparse operations.
+  [(#1094)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1094)
+
+* Add support for Python 3.13.
+  [(#1001)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1001)
 
 ### Breaking changes
 
 ### Improvements
 
+* Use cuquantum API for calculating expectation value of Pauli sentences in Lightning-GPU.
+  [(#1104)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1104)
+
+* Hide internal C++ APIs in Lightning docs.
+  [(#1096)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1096)
+
+* Implemented the `jaxpr_jvp` method to compute the jvp of a jaxpr using `lightning.qubit`.
+  This method currently only support the adjoint differentiation method.
+  [(#1087)](https://github.com/PennyLaneAI/pennylane/pull/1087)
+  [(#1106)](https://github.com/PennyLaneAI/pennylane/pull/1106)
+
+* Modify expval of named operators in Lightning-Qubit for in-place computation of expectation value, to avoid creating an intermediate statevector
+  [(#1079)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/1079)
+  [(#565)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/565)
+
+* Device (`"lightning.qubit"`, `"lightning.gpu"`, `"lightning.kokkos"`) pre-processing is now included in the 
+  execution pipeline when program capture is enabled.
+  [(#1084)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1084)
+  
+* Hide anonymous namespaces in Lightning docs.
+  [(#1097)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1097)
+
 * Expand test structure to efficiently handle sparse data.
-  [#1085](https://github.com/PennyLaneAI/pennylane-lightning/pull/1085)
+  [(#1085)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1085)
   
 * Removed redundant `reset_state` calls for circuit execution when state vector is freshly initialized.
   [(#1076)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1076)
 
 * Added support for sparse `qml.QubitUnitary` gates for `lightning.qubit`, `lightning.gpu`, and `lightning.kokkos` backends.
-  [#1068](https://github.com/PennyLaneAI/pennylane-lightning/pull/1068).
+  [(#1068)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1068).
 
 * Introduce a generalized sparse gate selection system via the `_observable_is_sparse` method in the base measurement class, enabling future expansion for any number of sparse observables.
-  [#1068](https://github.com/PennyLaneAI/pennylane-lightning/pull/1068).
+  [(#1068)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1068).
 
 * Optimize the copy of a input state-vector into the LGPU #1071 
   [(#1071)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1071)
@@ -86,6 +115,9 @@
 
 ### Bug fixes
 
+* Fix the development wheel upload step for Python 3.13 by following the same syntax as for the other Python wheels.
+  [(#1111)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1111)
+
 * Fix the `test_preprocess` test skip condition for `lightning.tensor`.
   [(#1092)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1092)
 
@@ -124,12 +156,15 @@
 
 This release contains contributions from (in alphabetical order):
 
+Saeed Bohloul,
 Astral Cai,
 Yushao Chen,
 Amintor Dusko,
+Pietropaolo Frisoni,
 Christina Lee,
 Joseph Lee,
 Luis Alfredo Nuñez Meneses,
+Lee J. O'Riordan,
 Andrija Paurevic,
 Alex Preciado,
 Shuli Shu
@@ -307,6 +342,7 @@ Christina Lee,
 Joseph Lee,
 Anton Naim Ibrahim,
 Luis Alfredo Nuñez Meneses,
+Mudit Pandey,
 Andrija Paurevic,
 Shuli Shu,
 Raul Torres,

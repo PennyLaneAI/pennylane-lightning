@@ -27,6 +27,7 @@
 #include <utility>
 #include <vector>
 
+/// @cond DEV
 namespace Pennylane::Util {
 
 template <typename ComplexT, typename IndexT = std::size_t>
@@ -165,7 +166,7 @@ struct SparseMatrixCSR {
 
         num_rows = dimension;
         num_cols = dimension;
-        row_map.resize(num_rows + 1);
+        row_map.assign(1, 0);
         col_idx.clear();
         values.clear();
 
@@ -208,15 +209,19 @@ struct SparseMatrixCSR {
         // fill the CSR format
         IndexT current_row = 0;
         for (const auto &[row, col, val] : nonzeros) {
-            while (current_row < row) {
-                row_map[current_row + 1] = col_idx.size();
+            while (row > current_row) {
+                row_map.push_back(values.size());
                 current_row++;
             }
             col_idx.push_back(col);
             values.push_back(val);
         }
-        // finish the last row
-        row_map[current_row + 1] = col_idx.size();
+
+        // Add remaining row map values (for empty rows at the end)
+        while (current_row < num_rows) {
+            row_map.push_back(values.size());
+            current_row++;
+        }
 
         // Approximate unitary by normalizing rows.
         for (IndexT i = 0; i < num_rows; ++i) {
@@ -335,3 +340,4 @@ void write_CSR_vectors(SparseMatrixCSR<ComplexT, IndexT> &matrix,
 }
 
 }; // namespace Pennylane::Util
+/// @endcond

@@ -19,7 +19,6 @@
 
 // Ignore invalid warnings for compile-time checks without kernel specifics
 // NOLINTBEGIN
-
 #include <cstdint>
 #include <deque>
 #include <functional>
@@ -48,14 +47,16 @@ using Pennylane::Util::PairHash;
 /// @endcond
 
 namespace Pennylane::LightningQubit::KernelMap {
-///@cond DEV
+/// @cond DEV
 namespace Internal {
 int assignKernelsForGateOp();
 int assignKernelsForGeneratorOp();
 int assignKernelsForMatrixOp();
+int assignKernelsForSparseMatrixOp();
 int assignKernelsForControlledGateOp();
 int assignKernelsForControlledGeneratorOp();
 int assignKernelsForControlledMatrixOp();
+int assignKernelsForControlledSparseMatrixOp();
 
 template <class Operation> struct AssignKernelForOp;
 
@@ -67,6 +68,9 @@ template <> struct AssignKernelForOp<Pennylane::Gates::GeneratorOperation> {
 };
 template <> struct AssignKernelForOp<Pennylane::Gates::MatrixOperation> {
     static inline const int dummy = assignKernelsForMatrixOp();
+};
+template <> struct AssignKernelForOp<Pennylane::Gates::SparseMatrixOperation> {
+    static inline const int dummy = assignKernelsForSparseMatrixOp();
 };
 template <>
 struct AssignKernelForOp<Pennylane::Gates::ControlledGateOperation> {
@@ -80,10 +84,14 @@ template <>
 struct AssignKernelForOp<Pennylane::Gates::ControlledMatrixOperation> {
     static inline const int dummy = assignKernelsForControlledMatrixOp();
 };
+template <>
+struct AssignKernelForOp<Pennylane::Gates::ControlledSparseMatrixOperation> {
+    static inline const int dummy = assignKernelsForControlledSparseMatrixOp();
+};
 } // namespace Internal
-///@endcond
+/// @endcond
 
-///@cond DEV
+/// @cond DEV
 class DispatchElement final {
   private:
     KernelType kernel_;
@@ -190,8 +198,9 @@ class PriorityDispatchSet {
         ordered_vec_.erase(begin, end);
     }
 };
-///@endcond
+/// @endcond
 
+/// @cond DEV
 /**
  * @brief A dummy type used as a tag for a function.
  */
@@ -210,6 +219,7 @@ constexpr static AllThreading all_threading{};
  * @brief A dummy variable used as a tag for indicating all memory models.
  */
 constexpr static AllMemoryModel all_memory_model{};
+/// @endcond
 
 /**
  * @brief This class manages all data related to kernel map statevector uses.
