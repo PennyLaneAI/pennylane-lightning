@@ -1434,12 +1434,9 @@ TEMPLATE_TEST_CASE("LightningGPU::applyPCPhase", "[LightningGPU_Param]", float,
     StateVectorCudaManaged<TestType> sv{num_qubits};
     sv.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
                        {{0}, {1}, {2}}, {false, false, false});
-
     const TestType phase = 0.27;
     const TestType dimension = 3;
-
     std::vector<TestType> params{phase, dimension};
-
     const auto init_state = sv.getDataVector();
     const bool inverse = GENERATE(false, true);
 
@@ -1471,9 +1468,7 @@ TEMPLATE_TEST_CASE("LightningGPU::applyPCPhase", "[LightningGPU_Param]", float,
 
             StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
                                                        init_state.size()};
-
             sv_direct.applyOperation("PCPhase", {0, 2}, inverse, params);
-
             expected_results[5] = std::conj(expected_results[5]);
             expected_results[7] = std::conj(expected_results[7]);
 
