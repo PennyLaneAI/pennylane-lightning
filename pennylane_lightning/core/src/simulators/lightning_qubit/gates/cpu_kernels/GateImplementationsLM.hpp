@@ -240,6 +240,14 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         ControlledMatrixOperation::NCMultiQubitOp,
     };
 
+    constexpr static std::array implemented_sparse_matrices = {
+        SparseMatrixOperation::SparseMultiQubitOp,
+    };
+
+    constexpr static std::array implemented_controlled_sparse_matrices = {
+        ControlledSparseMatrixOperation::NCSparseMultiQubitOp,
+    };
+
     static std::size_t parity_2_offset(const std::vector<std::size_t> &parity,
                                        const std::size_t k) {
         std::size_t offset{0U};
@@ -539,6 +547,18 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                  core_function);
     }
 
+    /**
+     * @brief Apply a sparse matrix to the statevector.
+     * @tparam PrecisionT Floating point precision of underlying statevector
+     * data
+     * @tparam IndexT Index type
+     * @param arr Pointer to the statevector.
+     * @param num_qubits Number of qubits.
+     * @param row_map_ptr Pointer to the row map.
+     * @param col_idx_ptr Pointer to the columns indexes
+     * @param values_ptr Pointer to the values.
+     * @param wires Wires the gate applies to.
+     */
     template <class PrecisionT, class IndexT = std::size_t>
     static void applyMultiQubitSparseOp(
         std::complex<PrecisionT> *arr, std::size_t num_qubits,

@@ -226,19 +226,6 @@ void assignKernelsForGeneratorOp_Default() {
                                all_memory_model, all_qubit_numbers,
                                KernelType::LM);
 }
-void assignKernelsForMatrixOp_Default() {
-    auto &instance = OperationKernelMap<MatrixOperation>::getInstance();
-
-    instance.assignKernelForOp(MatrixOperation::SingleQubitOp, all_threading,
-                               all_memory_model, all_qubit_numbers,
-                               KernelType::LM);
-    instance.assignKernelForOp(MatrixOperation::TwoQubitOp, all_threading,
-                               all_memory_model, all_qubit_numbers,
-                               KernelType::LM);
-    instance.assignKernelForOp(MatrixOperation::MultiQubitOp, all_threading,
-                               all_memory_model, all_qubit_numbers,
-                               KernelType::LM);
-}
 void assignKernelsForControlledGateOp_Default() {
     auto &instance = OperationKernelMap<ControlledGateOperation>::getInstance();
 
@@ -376,6 +363,19 @@ void assignKernelsForControlledGeneratorOp_Default() {
                                all_threading, all_memory_model,
                                all_qubit_numbers, KernelType::LM);
 }
+void assignKernelsForMatrixOp_Default() {
+    auto &instance = OperationKernelMap<MatrixOperation>::getInstance();
+
+    instance.assignKernelForOp(MatrixOperation::SingleQubitOp, all_threading,
+                               all_memory_model, all_qubit_numbers,
+                               KernelType::LM);
+    instance.assignKernelForOp(MatrixOperation::TwoQubitOp, all_threading,
+                               all_memory_model, all_qubit_numbers,
+                               KernelType::LM);
+    instance.assignKernelForOp(MatrixOperation::MultiQubitOp, all_threading,
+                               all_memory_model, all_qubit_numbers,
+                               KernelType::LM);
+}
 void assignKernelsForControlledMatrixOp_Default() {
     auto &instance =
         OperationKernelMap<ControlledMatrixOperation>::getInstance();
@@ -389,5 +389,20 @@ void assignKernelsForControlledMatrixOp_Default() {
     instance.assignKernelForOp(ControlledMatrixOperation::NCMultiQubitOp,
                                all_threading, all_memory_model,
                                all_qubit_numbers, KernelType::LM);
+}
+void assignKernelsForSparseMatrixOp_Default() {
+    auto &instance = OperationKernelMap<SparseMatrixOperation>::getInstance();
+
+    instance.assignKernelForOp(SparseMatrixOperation::SparseMultiQubitOp,
+                               all_threading, all_memory_model,
+                               all_qubit_numbers, KernelType::LM);
+}
+void assignKernelsForControlledSparseMatrixOp_Default() {
+    auto &instance =
+        OperationKernelMap<ControlledSparseMatrixOperation>::getInstance();
+
+    instance.assignKernelForOp(
+        ControlledSparseMatrixOperation::NCSparseMultiQubitOp, all_threading,
+        all_memory_model, all_qubit_numbers, KernelType::LM);
 }
 } // namespace Pennylane::LightningQubit::KernelMap::Internal
