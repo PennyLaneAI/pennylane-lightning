@@ -45,6 +45,12 @@ namespace Pennylane::Gates::Constant {
 [[maybe_unused]] constexpr std::array multi_qubit_matrix_ops{
     MatrixOperation::MultiQubitOp,
 };
+/**
+ * @brief List of multi-qubit sparse matrix operations
+ */
+[[maybe_unused]] constexpr std::array sparse_multi_qubit_matrix_ops{
+    SparseMatrixOperation::SparseMultiQubitOp,
+};
 
 /**
  * @brief Gate names
@@ -197,6 +203,23 @@ using CMatrixView =
     CMatrixView{ControlledMatrixOperation::NCSingleQubitOp, "NCSingleQubitOp"},
     CMatrixView{ControlledMatrixOperation::NCTwoQubitOp, "NCTwoQubitOp"},
     CMatrixView{ControlledMatrixOperation::NCMultiQubitOp, "NCMultiQubitOp"},
+};
+
+/**
+ * @brief Sparse matrix names.
+ */
+using SparseMatrixView =
+    typename std::pair<SparseMatrixOperation, std::string_view>;
+[[maybe_unused]] constexpr std::array sparse_matrix_names = {
+    SparseMatrixView{SparseMatrixOperation::SparseMultiQubitOp,
+                     "SparseMultiQubitOp"},
+};
+
+using CSparseMatrixView =
+    typename std::pair<ControlledSparseMatrixOperation, std::string_view>;
+[[maybe_unused]] constexpr std::array controlled_sparse_matrix_names = {
+    CSparseMatrixView{ControlledSparseMatrixOperation::NCSparseMultiQubitOp,
+                      "NCSparseMultiQubitOp"},
 };
 
 /**
