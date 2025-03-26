@@ -36,8 +36,6 @@
 #include "PauliGenerator.hpp"
 #include "Util.hpp" // exp2, INVSQRT2
 
-#define M_PI 3.14159265358979323846 /* pi */
-
 /// @cond DEV
 namespace {
 using namespace Pennylane::Gates;
@@ -715,7 +713,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                                           const std::size_t num_qubits,
                                           const std::vector<std::size_t> &wires,
                                           const bool inverse) {
-        applyNCRX(arr, num_qubits, {}, {}, wires, inverse, M_PI / 2);
+        applyNCMyGateImplementation(arr, num_qubits, {}, {}, wires, inverse);
     }
 
     template <class PrecisionT>
@@ -1058,6 +1056,41 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                       std::complex<PrecisionT>{-imag(v1) * js, real(v1) * js};
             arr[i1] = std::complex<PrecisionT>{-imag(v0) * js, real(v0) * js} +
                       c * v1;
+        };
+        if (controlled_wires.empty()) {
+            applyNC1<PrecisionT, ParamT, decltype(core_function), false>(
+                arr, num_qubits, controlled_wires, controlled_values, wires,
+                core_function);
+        } else {
+            applyNC1<PrecisionT, ParamT, decltype(core_function), true>(
+                arr, num_qubits, controlled_wires, controlled_values, wires,
+                core_function);
+        }
+    }
+
+    template <class PrecisionT>
+    static void applyNCMyGateImplementation(
+        std::complex<PrecisionT> *arr, const std::size_t num_qubits,
+        const std::vector<std::size_t> &controlled_wires,
+        const std::vector<bool> &controlled_values,
+        const std::vector<std::size_t> &wires,
+        [[maybe_unused]] const bool inverse) {
+        using ParamT = PrecisionT;
+        constexpr static auto isqrt2 = INVSQRT2<PrecisionT>();
+        const PrecisionT shift = (inverse) ? -1.0 : 1.0;
+        auto core_function = [shift](std::complex<PrecisionT> *arr,
+                                     const std::size_t i0,
+                                     const std::size_t i1) {
+            const std::complex<PrecisionT> v0 = arr[i0];
+            const std::complex<PrecisionT> v1 = arr[i1];
+
+            const PrecisionT new_r0 = v0.real() + (shift * v1.imag());
+            const PrecisionT new_i0 = v0.imag() - (shift * v1.real());
+            const PrecisionT new_r1 = v1.real() + (shift * v0.imag());
+            const PrecisionT new_i1 = v1.imag() - (shift * v0.real());
+
+            arr[i0] = isqrt2 * std::complex<PrecisionT>(new_r0, new_i0);
+            arr[i1] = isqrt2 * std::complex<PrecisionT>(new_r1, new_i1);
         };
         if (controlled_wires.empty()) {
             applyNC1<PrecisionT, ParamT, decltype(core_function), false>(
