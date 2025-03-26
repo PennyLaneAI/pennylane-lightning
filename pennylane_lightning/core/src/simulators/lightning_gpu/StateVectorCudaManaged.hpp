@@ -331,10 +331,13 @@ class StateVectorCudaManaged
             const CFP_t upper_complex{std::cos(phase), std::sin(phase)};
             const CFP_t lower_complex{std::cos(phase), -std::sin(phase)};
 
-            std::vector<CFP_t> diagonal(Pennylane::Util::exp2(wires.size()),lower_complex);
+            std::vector<CFP_t> diagonal(Pennylane::Util::exp2(wires.size()),
+                                        lower_complex);
 
-            std::fill(diagonal.begin(), diagonal.begin() + dimension,upper_complex);
-            applyDevicePermutationGate_({}, diagonal.data(), {}, wires, {}, adjoint);
+            std::fill(diagonal.begin(), diagonal.begin() + dimension,
+                      upper_complex);
+            applyDevicePermutationGate_({}, diagonal.data(), {}, wires, {},
+                                        adjoint);
         } else if (native_gates_.find(opName) != native_gates_.end()) {
             applyParametricPauliGate_({opName}, {}, wires, params.front(),
                                       adjoint);

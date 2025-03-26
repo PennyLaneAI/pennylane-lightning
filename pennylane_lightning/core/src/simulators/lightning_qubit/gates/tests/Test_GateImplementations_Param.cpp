@@ -2438,7 +2438,7 @@ void testApplyPCPhase() {
         const ParamT wrong_dim = GENERATE(-1, 1U << num_qubits + 1);
         REQUIRE_THROWS_WITH(
             GateImplementation::applyPCPhase(st.data(), num_qubits, {0, 1},
-                                            inverse, angle, wrong_dim),
+                                             inverse, angle, wrong_dim),
             Catch::Contains("The dimension of the PCPhase gate must be a "
                             "positive integer and less than or equal to "
                             "statevector size."));

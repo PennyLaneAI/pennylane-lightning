@@ -290,7 +290,7 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
                 param = op_adjoint_base.parameters
 
                 if isinstance(op_adjoint_base, qml.PCPhase):
-                    hyper = float(op_adjoint_base.hyperparameters["dimension"][0])                    
+                    hyper = float(op_adjoint_base.hyperparameters["dimension"][0])
                     param = np.array([op_adjoint_base.parameters[0], hyper])
 
                 method(wires, invert_param, param)

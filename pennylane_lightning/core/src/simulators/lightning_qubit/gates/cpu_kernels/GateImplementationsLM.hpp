@@ -2068,7 +2068,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         PL_ABORT_IF(dim_size_t < 0 || dim_size_t > 1U << num_qubits,
                     "The dimension of the PCPhase gate must be a positive "
                     "integer and less than or equal to statevector size.");
-        
+
         const PrecisionT phase = inverse ? -angle : angle;
         const std::complex<PrecisionT> upper_complex = {std::cos(phase),
                                                         std::sin(phase)};

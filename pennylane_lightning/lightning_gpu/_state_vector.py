@@ -278,7 +278,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
                 # PCPhase has hyperparameters for dimension
                 hyper = float(base_operation.hyperparameters["dimension"][0])
                 param = np.array([base_operation.parameters[0], hyper])
-                
+
             method(control_wires, control_values, target_wires, adjoint, param)
         else:  # apply gate as an n-controlled matrix
             method = getattr(state, "applyControlledMatrix")
@@ -348,7 +348,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
             else:
                 op_adjoint_base = operation
                 invert_param = False
-                
+
             name = op_adjoint_base.name
             method = getattr(state, name, None)
             wires = list(operation.wires)

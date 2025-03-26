@@ -86,8 +86,7 @@ auto createParams(Pennylane::Gates::GateOperation op)
     case 1:
         return {static_cast<PrecisionT>(0.312)};
     case 2:
-        return {static_cast<PrecisionT>(0.312),
-                static_cast<PrecisionT>(0.563)};
+        return {static_cast<PrecisionT>(0.312), static_cast<PrecisionT>(0.563)};
     case 3:
         return {static_cast<PrecisionT>(0.128), static_cast<PrecisionT>(-0.563),
                 static_cast<PrecisionT>(1.414)};
