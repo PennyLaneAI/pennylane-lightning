@@ -2435,7 +2435,7 @@ void testApplyPCPhase() {
                     << PrecisionToName<PrecisionT>::value) {
         auto st = createPlusState<PrecisionT>(num_qubits);
 
-        const ParamT wrong_dim = GENERATE(-1, 1U << num_qubits + 1);
+        const ParamT wrong_dim = GENERATE(-1, (1U << num_qubits) + 1);
         REQUIRE_THROWS_WITH(
             GateImplementation::applyPCPhase(st.data(), num_qubits, {0, 1},
                                              inverse, angle, wrong_dim),
