@@ -81,6 +81,7 @@ jobs:
           path: main
 
       - uses: actions/setup-python@v5
+        id: setup_python
         name: Setup Python
         with:
           python-version: '3.10'
