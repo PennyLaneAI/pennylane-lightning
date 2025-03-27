@@ -1390,6 +1390,111 @@ TEMPLATE_TEST_CASE("LightningGPU::applyMultiRZ", "[LightningGPU_Param]", float,
     }
 }
 
+TEMPLATE_TEST_CASE("LightningGPU::applyPCPhase", "[LightningGPU_Param]", float,
+                   double) {
+    /*
+        The circuit for this test is as follows:
+        - default.qubit (PennyLane-0.41.0.dev56)
+        - lightning.gpu (PennyLane_Lightning_GPU-0.41.0.dev46)
+        - lightning.qubit (PennyLane_Lightning-0.41.0.dev46)
+
+
+        ``` python
+        import pennylane as qml
+        import numpy as np
+
+        tgts = [1, 2]
+        def circuit(use_controls=False, use_adj=False):
+            [qml.Hadamard(i) for i in range(n_wires)]
+
+            if use_controls:
+                qml.ctrl(
+                    qml.PCPhase(0.27, dim = 3, wires=tgts),
+                    control=[0],
+                    control_values=[1]
+               )
+            elif use_adj:
+                qml.adjoint(qml.PCPhase(0.27, dim = 3, wires=tgts))
+            else:
+                qml.PCPhase(0.27, dim = 3, wires=tgts)
+
+            return qml.state()
+
+        n_wires = 3
+        dev = qml.device('lightning.gpu', wires=n_wires)
+        qnode_gpu = qml.QNode(circuit, dev)
+        res = qnode_gpu(use_controls=False, use_adj=False)
+        print(np.round(res, 12))
+
+        ```
+    */
+    using cp_t = std::complex<TestType>;
+    const std::size_t num_qubits = 3;
+
+    StateVectorCudaManaged<TestType> sv{num_qubits};
+    sv.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
+                       {{0}, {1}, {2}}, {false, false, false});
+    const TestType phase = 0.27;
+    const bool inverse = GENERATE(false, true);
+    const TestType dimension = GENERATE(0, 1, 2, 3, 4);
+
+    std::vector<TestType> params{phase, dimension};
+    const auto init_state = sv.getDataVector();
+
+    cp_t expected_value = {0.34074447, -0.0943038};
+    if (inverse) {
+        expected_value = std::conj(expected_value);
+    }
+
+    std::vector<cp_t> expected_results(1 << num_qubits, expected_value);
+
+    DYNAMIC_SECTION("PCPhase 0.27 1,2"
+                    << " inverse = " << inverse) {
+
+        StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
+                                                   init_state.size()};
+
+        sv_direct.applyOperation("PCPhase", {1, 2}, inverse, params);
+
+        for (std::size_t i = 0;
+             i < static_cast<std::size_t>(std::round(dimension)); ++i) {
+            expected_results[i] = std::conj(expected_results[i]);
+            expected_results[i + 4] = std::conj(expected_results[i + 4]);
+        }
+
+        CHECK(sv_direct.getDataVector() ==
+              Pennylane::Util::approx(expected_results));
+    }
+    DYNAMIC_SECTION("PCPhase 0.27 0,2"
+                    << " inverse = " << inverse) {
+
+        StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
+                                                   init_state.size()};
+        sv_direct.applyOperation("PCPhase", {0, 2}, inverse, params);
+
+        auto dimension_size = static_cast<std::size_t>(std::round(dimension));
+        std::vector<std::size_t> conj_indexs;
+        if (dimension_size == 1) {
+            conj_indexs = {0, 2};
+        } else if (dimension_size == 2) {
+            conj_indexs = {0, 1, 2, 3};
+        } else if (dimension_size == 3) {
+            conj_indexs = {0, 1, 2, 3, 4, 6};
+        } else if (dimension_size == 4) {
+            conj_indexs = {0, 1, 2, 3, 4, 5, 6, 7};
+        } else {
+            conj_indexs = {};
+        }
+
+        for (const auto &index : conj_indexs) {
+            expected_results[index] = std::conj(expected_results[index]);
+        }
+
+        CHECK(sv_direct.getDataVector() ==
+              Pennylane::Util::approx(expected_results));
+    }
+}
+
 // NOLINTNEXTLINE: Avoid complexity errors
 TEMPLATE_TEST_CASE("LightningGPU::applyOperation 1 wire",
                    "[LightningGPU_Param]", float, double) {
@@ -1948,6 +2053,40 @@ TEMPLATE_TEST_CASE(
                 "MultiRZ", std::vector<std::size_t>{control, wire0, wire1},
                 std::vector<bool>{true, false, true},
                 std::vector<std::size_t>{wire2, wire3}, inverse, {param});
+            REQUIRE(sv0.getDataVector() ==
+                    approx(sv1.getDataVector()).margin(margin));
+        }
+    }
+
+    DYNAMIC_SECTION(" N-controlled PCPhase - "
+                    << "controls = {" << control << ", " << wire0 << ", "
+                    << wire1 << "} "
+                    << ", wires = {" << wire2 << ", " << wire3 << "} - "
+                    << PrecisionToName<PrecisionT>::value) {
+        std::vector<std::size_t> wires = {control, wire0, wire1, wire2, wire3};
+        std::sort(wires.begin(), wires.end());
+
+        const PrecisionT dim = GENERATE(0, 1, 2, 3, 4);
+        const ComplexT e = {std::cos(param), -std::sin(param)};
+        std::vector<ComplexT> matrix(16, 0.0);
+        matrix[0] = e;
+        matrix[5] = e;
+        matrix[10] = e;
+        matrix[15] = e;
+
+        for (std::size_t i = 0; i < static_cast<std::size_t>(std::round(dim));
+             i++) {
+            matrix[i * 5] = std::conj(e);
+        }
+
+        if (std::adjacent_find(wires.begin(), wires.end()) == wires.end()) {
+            sv0.applyControlledMatrix(matrix.data(), {control, wire0, wire1},
+                                      std::vector<bool>{true, false, true},
+                                      {wire2, wire3}, inverse);
+            sv1.applyOperation(
+                "PCPhase", std::vector<std::size_t>{control, wire0, wire1},
+                std::vector<bool>{true, false, true},
+                std::vector<std::size_t>{wire2, wire3}, inverse, {param, dim});
             REQUIRE(sv0.getDataVector() ==
                     approx(sv1.getDataVector()).margin(margin));
         }
