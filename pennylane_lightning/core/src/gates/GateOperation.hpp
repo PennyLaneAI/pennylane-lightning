@@ -68,7 +68,7 @@ enum class GateOperation : uint32_t {
     /* Multi-qubit gates */
     MultiRZ,
     GlobalPhase,
-    MyGateImplementation,
+    VGate,
     /* END (placeholder) */
     END
 };

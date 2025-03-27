@@ -275,9 +275,9 @@ struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
 
 template <class PrecisionT, class ParamT, class GateImplementation>
 struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
-                             GateOperation::MyGateImplementation> {
+                             GateOperation::VGate> {
     constexpr static auto value =
-        &GateImplementation::template applyMyGateImplementation<PrecisionT>;
+        &GateImplementation::template applyVGate<PrecisionT>;
 };
 
 template <class PrecisionT, class ParamT, class GateImplementation,

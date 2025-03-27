@@ -32,7 +32,7 @@
  *
  * This file contains tests for non-parameterized gates. List of such gates are
  * [PauliX, PauliY, PauliZ, Hadamard, S, SX, T, CNOT, SWAP, CZ, Toffoli, CSWAP,
- * MyGateImplementation].
+ * VGate].
  */
 
 /// @cond DEV
@@ -133,7 +133,7 @@ void testApplyPauliX() {
 PENNYLANE_RUN_TEST(PauliX);
 
 template <typename PrecisionT, class GateImplementation>
-void testApplyMyGateImplementation() {
+void testApplyVGate() {
     // Test using |000> state
     using ComplexT = std::complex<PrecisionT>;
     const size_t num_qubits = 3;
@@ -150,13 +150,13 @@ void testApplyMyGateImplementation() {
     for (size_t index = 0; index < num_qubits; index++) {
         auto st = createZeroState<ComplexT>(num_qubits);
 
-        GateImplementation::applyMyGateImplementation(st.data(), num_qubits,
+        GateImplementation::applyVGate(st.data(), num_qubits,
                                                       {index}, false);
 
         CHECK(st == approx(expected_results[index]));
     }
 }
-PENNYLANE_RUN_TEST(MyGateImplementation);
+PENNYLANE_RUN_TEST(VGate);
 
 template <typename PrecisionT, class GateImplementation>
 void testApplyPauliY() {

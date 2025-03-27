@@ -90,7 +90,7 @@ def op(op_name):
         "CRZ": [qml.CRZ, [], {"phi": 0.123, "wires": [0, 1]}],
         "Hadamard": [qml.Hadamard, [], {"wires": [0]}],
         "PauliX": [qml.PauliX, [], {"wires": [0]}],
-        "MyGateImplementation": [qml.MyGateImplementation, [], {"wires": [0]}],
+        "VGate": [qml.VGate, [], {"wires": [0]}],
         "PauliY": [qml.PauliY, [], {"wires": [0]}],
         "PauliZ": [qml.PauliZ, [], {"wires": [0]}],
         "CRot": [

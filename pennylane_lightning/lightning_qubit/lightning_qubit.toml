@@ -58,7 +58,7 @@ SWAP                   = { properties = [ "invertible", "controllable", "differe
 Toffoli                = { properties = [ "invertible",                 "differentiable" ] }
 T                      = { properties = [ "invertible", "controllable", "differentiable" ] }
 SX                     = { properties = [ "invertible", "controllable", "differentiable" ] }
-MyGateImplementation   = { }
+VGate   = { }
 
 # Operations supported by the execution in Python but not directly supported by the backend
 [pennylane.operators.gates]

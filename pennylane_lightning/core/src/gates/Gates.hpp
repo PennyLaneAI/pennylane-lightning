@@ -1218,16 +1218,16 @@ static constexpr auto getGeneratorIsingZZ() -> std::vector<ComplexT<T>> {
 }
 
 /**
- * @brief Create a matrix representation of the MyGateImplementation gate data
+ * @brief Create a matrix representation of the VGate gate data
  * in row-major format.
  *
  * @tparam ComplexT Complex class.
  * @tparam T Required precision of gate (`float` or `double`).
  * @return constexpr std::vector<ComplexT<T>> Return constant expression
- * of MyGateImplementation data.
+ * of VGate data.
  */
 template <template <typename...> class ComplexT, typename T>
-static constexpr auto getMyGateImplementation() -> std::vector<ComplexT<T>> {
+static constexpr auto getVGate() -> std::vector<ComplexT<T>> {
     return {INVSQRT2<ComplexT, T>(),
             -(IMAG<ComplexT, T>()) * (INVSQRT2<ComplexT, T>()),
             -(IMAG<ComplexT, T>()) * (INVSQRT2<ComplexT, T>()),
@@ -1317,8 +1317,8 @@ std::vector<ComplexT<T>> getMatrix(const GateOperation gate_op,
         return getCSWAP<ComplexT, T>();
     case GateOperation::Toffoli:
         return getToffoli<ComplexT, T>();
-    case GateOperation::MyGateImplementation:
-        return getMyGateImplementation<ComplexT, T>();
+    case GateOperation::VGate:
+        return getVGate<ComplexT, T>();
     default:
         PL_ABORT("This GateOperation does not have a corresponding matrix.");
     }
