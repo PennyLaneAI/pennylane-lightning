@@ -1,8 +1,12 @@
 # Release 0.41.0-dev
 
 ### New features since last release
+
 * Implement new C++ kernels for efficient in-place multiplication of sparse matrices to state vectors, supporting both controlled and non-controlled gates, and add comprehensive tests for this new functionality.
-  [#1085](https://github.com/PennyLaneAI/pennylane-lightning/pull/1085)
+  [(#1085)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1085)
+
+* Integrate sparse kernels into the Lightning-Qubit dynamic dispatcher, enhance the Python layers, and expand the testing process for dense and sparse operations.
+  [(#1094)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1094)
 
 * Add support for Python 3.13.
   [(#1001)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1001)
@@ -13,6 +17,9 @@
 
 * Add `PSWAP` gate native implementation to PennyLane-Lightning devices. 
   [(#1088)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1088)
+
+* Add native support for `qml.PCPhase` for `lightning.qubit` and `lightning.gpu`.
+  [(#1107)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1107)
 
 * Use cuquantum API for calculating expectation value of Pauli sentences in Lightning-GPU.
   [(#1104)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1104)

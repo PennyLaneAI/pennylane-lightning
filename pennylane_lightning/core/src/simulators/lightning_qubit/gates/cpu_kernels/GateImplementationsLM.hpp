@@ -155,6 +155,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         GateOperation::MultiRZ,
         GateOperation::GlobalPhase,
         GateOperation::PSWAP,
+        GateOperation::PCPhase,
     };
 
     constexpr static std::array implemented_controlled_gates = {
@@ -184,6 +185,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         ControlledGateOperation::MultiRZ,
         ControlledGateOperation::GlobalPhase,
         ControlledGateOperation::PSWAP,
+        ControlledGateOperation::PCPhase,
     };
 
     constexpr static std::array implemented_generators = {
@@ -238,6 +240,14 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         ControlledMatrixOperation::NCSingleQubitOp,
         ControlledMatrixOperation::NCTwoQubitOp,
         ControlledMatrixOperation::NCMultiQubitOp,
+    };
+
+    constexpr static std::array implemented_sparse_matrices = {
+        SparseMatrixOperation::SparseMultiQubitOp,
+    };
+
+    constexpr static std::array implemented_controlled_sparse_matrices = {
+        ControlledSparseMatrixOperation::NCSparseMultiQubitOp,
     };
 
     static std::size_t parity_2_offset(const std::vector<std::size_t> &parity,
@@ -539,6 +549,18 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                  core_function);
     }
 
+    /**
+     * @brief Apply a sparse matrix to the statevector.
+     * @tparam PrecisionT Floating point precision of underlying statevector
+     * data
+     * @tparam IndexT Index type
+     * @param arr Pointer to the statevector.
+     * @param num_qubits Number of qubits.
+     * @param row_map_ptr Pointer to the row map.
+     * @param col_idx_ptr Pointer to the columns indexes
+     * @param values_ptr Pointer to the values.
+     * @param wires Wires the gate applies to.
+     */
     template <class PrecisionT, class IndexT = std::size_t>
     static void applyMultiQubitSparseOp(
         std::complex<PrecisionT> *arr, std::size_t num_qubits,
@@ -2018,6 +2040,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         applyNCN(arr, num_qubits, controlled_wires, controlled_values, wires,
                  core_function);
     }
+
     template <class PrecisionT, class ParamT>
     static void
     applyGlobalPhase(std::complex<PrecisionT> *arr, std::size_t num_qubits,
@@ -2060,6 +2083,58 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             applyNC1<PrecisionT, PrecisionT, decltype(core_function), true>(
                 arr, num_qubits, controlled_wires, controlled_values, {target},
                 core_function);
+        }
+    }
+
+    template <class PrecisionT, class ParamT>
+    static void applyPCPhase(std::complex<PrecisionT> *arr,
+                             std::size_t num_qubits,
+                             const std::vector<std::size_t> &wires,
+                             bool inverse, ParamT angle, ParamT dim) {
+        applyNCPCPhase(arr, num_qubits, {}, {}, wires, inverse, angle, dim);
+    }
+
+    template <class PrecisionT, class ParamT>
+    static void applyNCPCPhase(std::complex<PrecisionT> *arr,
+                               std::size_t num_qubits,
+                               const std::vector<std::size_t> &controlled_wires,
+                               const std::vector<bool> &controlled_values,
+                               const std::vector<std::size_t> &wires,
+                               bool inverse, ParamT angle, ParamT dim) {
+
+        const auto dim_size_t = static_cast<std::size_t>(std::round(dim));
+
+        PL_ABORT_IF(dim_size_t < 0 || dim_size_t > 1U << num_qubits,
+                    "The dimension of the PCPhase gate must be a positive "
+                    "integer and less than or equal to statevector size.");
+
+        const PrecisionT phase = inverse ? -angle : angle;
+        const std::complex<PrecisionT> upper_complex = {std::cos(phase),
+                                                        std::sin(phase)};
+        const std::complex<PrecisionT> lower_complex = std::conj(upper_complex);
+
+        // Matrix
+        const std::size_t matrix_dim = Pennylane::Util::exp2(wires.size());
+
+        std::vector<std::complex<PrecisionT>> matrixPCPhase(matrix_dim *
+                                                            matrix_dim);
+
+        // Fill diagonal
+        for (std::size_t i = 0; i < dim_size_t; i++) {
+            matrixPCPhase[i * matrix_dim + i] = upper_complex;
+        }
+        for (std::size_t i = dim_size_t; i < matrix_dim; i++) {
+            matrixPCPhase[i * matrix_dim + i] = lower_complex;
+        }
+
+        if (controlled_wires.empty()) {
+            applyMultiQubitOp<PrecisionT>(arr, num_qubits, matrixPCPhase.data(),
+                                          wires, false);
+
+        } else {
+            applyNCMultiQubitOp<PrecisionT>(
+                arr, num_qubits, matrixPCPhase.data(), controlled_wires,
+                controlled_values, wires, false);
         }
     }
 

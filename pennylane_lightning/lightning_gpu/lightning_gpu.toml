@@ -59,6 +59,7 @@ MultiRZ                = { properties = [ "invertible", "controllable", "differe
 QubitUnitary           = { properties = [ "invertible", "controllable"                   ] }
 GlobalPhase            = { properties = [ "invertible", "controllable", "differentiable" ] }
 PSWAP                  = { properties = [ "invertible", "controllable", "differentiable" ] }
+PCPhase                = { properties = [ "invertible", "controllable"                   ] }
 
 # Operations supported by the execution in Python but not directly supported by the backend
 [pennylane.operators.gates]

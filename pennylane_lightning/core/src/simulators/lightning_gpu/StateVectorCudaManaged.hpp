@@ -325,6 +325,20 @@ class StateVectorCudaManaged
                 BaseType::getDataBuffer().getDevTag().getDeviceID(),
                 BaseType::getDataBuffer().getDevTag().getStreamID(),
                 getCublasCaller());
+        } else if (opName == "PCPhase") {
+            const PrecisionT phase = params[0];
+            const auto dimension = static_cast<std::size_t>(params[1]);
+            const CFP_t upper_complex{std::cos(phase), std::sin(phase)};
+            const CFP_t lower_complex =
+                Pennylane::LightningGPU::Util::Conj(upper_complex);
+
+            std::vector<CFP_t> diagonal(Pennylane::Util::exp2(wires.size()),
+                                        lower_complex);
+
+            std::fill(diagonal.begin(), diagonal.begin() + dimension,
+                      upper_complex);
+            applyDevicePermutationGate_({}, diagonal.data(), {}, wires, {},
+                                        adjoint);
         } else if (native_gates_.find(opName) != native_gates_.end()) {
             applyParametricPauliGate_({opName}, ctrls, tgts, params.front(),
                                       adjoint);
@@ -419,7 +433,20 @@ class StateVectorCudaManaged
             const std::vector<std::string> names(tgtsInt.size(), "I");
             applyParametricPauliGeneralGate_(names, ctrlsInt, ctrls_valuesInt,
                                              tgtsInt, 2 * params[0], adjoint);
+        } else if (opName == "PCPhase") {
+            const PrecisionT phase = params[0];
+            const auto dimension = static_cast<std::size_t>(params[1]);
+            const CFP_t upper_complex{std::cos(phase), std::sin(phase)};
+            const CFP_t lower_complex{std::cos(phase), -std::sin(phase)};
 
+            std::vector<CFP_t> diagonal(Pennylane::Util::exp2(tgt_wires.size()),
+                                        lower_complex);
+
+            std::fill(diagonal.begin(), diagonal.begin() + dimension,
+                      upper_complex);
+
+            applyDevicePermutationGate_({}, diagonal.data(), controlled_wires,
+                                        tgt_wires, controlled_values, adjoint);
         } else if (native_gates_.find(opName) != native_gates_.end()) {
             applyParametricPauliGeneralGate_({opName}, ctrlsInt,
                                              ctrls_valuesInt, tgtsInt,
