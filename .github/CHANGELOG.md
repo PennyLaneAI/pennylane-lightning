@@ -11,7 +11,7 @@
 
 ### Improvements
 
-* Add `PSWAP` gate implementation to PennyLane-Lightning. 
+* Add `PSWAP` gate native implementation to PennyLane-Lightning devices. 
   [(#1088)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1088)
 
 * Use cuquantum API for calculating expectation value of Pauli sentences in Lightning-GPU.
