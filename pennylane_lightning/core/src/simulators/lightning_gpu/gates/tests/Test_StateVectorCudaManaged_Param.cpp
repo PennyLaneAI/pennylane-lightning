@@ -1450,7 +1450,6 @@ TEMPLATE_TEST_CASE("LightningGPU::applyPCPhase", "[LightningGPU_Param]", float,
 
     DYNAMIC_SECTION("PCPhase 0.27 1,2"
                     << " inverse = " << inverse) {
-
         StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
                                                    init_state.size()};
 
@@ -1467,7 +1466,6 @@ TEMPLATE_TEST_CASE("LightningGPU::applyPCPhase", "[LightningGPU_Param]", float,
     }
     DYNAMIC_SECTION("PCPhase 0.27 0,2"
                     << " inverse = " << inverse) {
-
         StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
                                                    init_state.size()};
         sv_direct.applyOperation("PCPhase", {0, 2}, inverse, params);
