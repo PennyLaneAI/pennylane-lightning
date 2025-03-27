@@ -820,6 +820,7 @@ class TestControlledOps:
             qml.DoubleExcitationPlus,
             qml.MultiRZ,
             qml.GlobalPhase,
+            qml.PCPhase,
         ],
     )
     @pytest.mark.parametrize("control_value", [False, True])
@@ -829,6 +830,9 @@ class TestControlledOps:
         threshold = 250 if device_name != "lightning.tensor" else 5
         num_wires = max(operation.num_wires, 1)
         np.random.seed(0)
+
+        if device_name not in ["lightning.qubit", "lightning.gpu"] and operation == qml.PCPhase:
+            pytest.skip("PCPhase only supported on lightning.qubit and lightning.gpu.")
 
         for n_wires in range(num_wires + 1, num_wires + 4):
             wire_lists = list(itertools.permutations(range(0, n_qubits), n_wires))
@@ -840,6 +844,14 @@ class TestControlledOps:
                 control_wires = all_wires[num_wires:]
                 init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
                 init_state /= np.linalg.norm(init_state)
+
+                if operation.num_params == 0:
+                    operation_params = []
+                else:
+                    operation_params = tuple([0.1234] * operation.num_params) + (target_wires,)
+                    if operation == qml.PCPhase:
+                        # Hyperparameter for PCPhase is the dimension of the control space
+                        operation_params = (0.1234, 2) + (target_wires,)
 
                 ops = [
                     qml.StatePrep(init_state, wires=range(n_qubits)),
@@ -860,7 +872,7 @@ class TestControlledOps:
                 else:
                     ops += [
                         qml.ctrl(
-                            operation(*tuple([0.1234] * operation.num_params), target_wires),
+                            operation(*operation_params),
                             control_wires,
                             control_values=(
                                 [control_value or bool(i % 2) for i, _ in enumerate(control_wires)]
