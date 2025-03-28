@@ -210,6 +210,7 @@ jobs:
         run: |
           cd main
           python -m pip install -r requirements-tests.txt
+          python -m pip install "jax[cpu]==0.4.28; python_version<='3.12'" openfermionpyscf
 
       - name: Checkout PennyLane for release or latest build
         if: inputs.pennylane-version == 'release' || inputs.pennylane-version == 'latest'

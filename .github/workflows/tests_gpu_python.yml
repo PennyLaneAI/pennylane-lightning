@@ -135,16 +135,18 @@ jobs:
       - name: Install required packages
         run: |
           python -m pip install -r requirements-tests.txt
-          python -m pip install cmake
+          python -m pip install "jax[cpu]==0.4.28; python_version<='3.12'" cmake openfermionpyscf
 
       - name: Install required lightning_gpu only packages
         if: matrix.pl_backend == 'lightning_gpu'
         run: |
+          # Required for CUQUANTUM_SDK path
           python -m pip install custatevec-cu${{ matrix.cuda_version }}
 
       - name: Install required lightning_tensor only packages
         if: matrix.pl_backend == 'lightning_tensor'
         run: |
+          # Required for CUQUANTUM_SDK path
           python -m pip install cutensornet-cu${{ matrix.cuda_version }}
 
       - name: Checkout PennyLane for release or latest build
