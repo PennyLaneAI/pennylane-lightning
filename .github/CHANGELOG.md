@@ -118,6 +118,9 @@
 
 ### Bug fixes
 
+* Add missing GH workflow step id, python setup, and virtual environment for aarch64 cuda.
+  [(#1113)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1113)
+
 * Fix the development wheel upload step for Python 3.13 by following the same syntax as for the other Python wheels.
   [(#1111)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1111)
 
