@@ -148,6 +148,7 @@ jobs:
           path: main
 
       - uses: actions/setup-python@v5
+        id: setup_python
         name: Install Python
         with:
           python-version: '3.10'
@@ -199,7 +200,14 @@ jobs:
           cmake --build ./Build --verbose
           cd ./Build
           mkdir -p ./tests/results_${{ github.job }}_${{ matrix.pl_backend }}
-          for file in *runner ; do ./$file --order lex --reporter junit --out ./tests/results_${{ github.job }}_${{ matrix.pl_backend }}/report_$file.xml; done;
+          test_status=0
+          for file in *runner ; do 
+            ./$file --reporter junit --out ./tests/results_${{ github.job }}_${{ matrix.pl_backend }}/report_$file.xml && echo "Test $file Success!" || { cat ./tests/results_${{ github.job }}_${{ matrix.pl_backend }}/report_$file.xml; test_status=1; }
+          done
+          if [ $test_status -ne 0 ]; then
+            echo "Test failed"
+            exit 1
+          fi
           lcov --directory . -b ../pennylane_lightning/core/src --capture --output-file coverage.info
           lcov --remove coverage.info '/usr/*' --output-file coverage.info
           mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}.info

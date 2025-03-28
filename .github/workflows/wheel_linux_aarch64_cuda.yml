@@ -98,9 +98,42 @@ jobs:
           echo "version=$(echo  ${{ matrix.cibw_build }} | tr -cd '[:digit:].' | sed 's/./&./1')" >> $GITHUB_OUTPUT
 
       - uses: actions/setup-python@v5
+        id: setup_python
         name: Install Python
         with:
           python-version: ${{ steps.pyvs.outputs.version }}
+
+      - name: Setup Python virtual environment
+        id: setup_venv
+        env:
+          VENV_NAME: ${{ github.workspace }}/venv_${{ steps.setup_python.outputs.python-version }}_${{ github.sha }}_${{ matrix.pl_backend }}
+        run: |
+          # Clear any pre-existing venvs
+          rm -rf venv_*
+
+          # Create new venv for this workflow_run
+          python --version
+          python -m venv ${{ env.VENV_NAME }}
+
+          # Add the venv to PATH for subsequent steps
+          echo ${{ env.VENV_NAME }}/bin >> $GITHUB_PATH
+
+          # Adding venv name as an output for subsequent steps to reference if needed
+          source ${{ env.VENV_NAME }}/bin/activate
+          echo "venv_name=${{ env.VENV_NAME }}" >> $GITHUB_OUTPUT
+          echo "Python_ROOT_DIR=${{ env.VENV_NAME }}" >> $GITHUB_ENV
+          echo "Python3_ROOT_DIR=${{ env.VENV_NAME }}" >> $GITHUB_ENV
+
+      - name: Display Python-Path
+        id: python_path
+        run: |
+          py_path=$(which python)
+          echo "Python Interpreter Path => $py_path"
+          echo "python=$py_path" >> $GITHUB_OUTPUT
+
+          pip_path=$(which python)
+          echo "PIP Path => $pip_path"
+          echo "pip=$pip_path" >> $GITHUB_OUTPUT
 
       - name: Test wheels
         run: |
@@ -117,7 +150,6 @@ jobs:
             # MCM tests are slow and skipped. get_c_interface() API is not supported with current test setup and skipped.
             PL_DEVICE=${DEVICENAME} python -m pytest tests/ -k "not test_supported_linux_platform_gpu and not test_native_mcm"
           fi
-          
 
       - name: Validate wheels
         run: |

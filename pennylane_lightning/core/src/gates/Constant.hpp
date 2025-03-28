@@ -27,9 +27,10 @@ namespace Pennylane::Gates::Constant {
 /**
  * @brief List of multi-qubit gates
  */
-[[maybe_unused]] constexpr std::array multi_qubit_gates{GateOperation::MultiRZ};
+[[maybe_unused]] constexpr std::array multi_qubit_gates{GateOperation::MultiRZ,
+                                                        GateOperation::PCPhase};
 [[maybe_unused]] constexpr std::array controlled_multi_qubit_gates{
-    ControlledGateOperation::MultiRZ};
+    ControlledGateOperation::MultiRZ, ControlledGateOperation::PCPhase};
 /**
  * @brief List of multi-qubit generators
  */
@@ -44,6 +45,12 @@ namespace Pennylane::Gates::Constant {
  */
 [[maybe_unused]] constexpr std::array multi_qubit_matrix_ops{
     MatrixOperation::MultiQubitOp,
+};
+/**
+ * @brief List of multi-qubit sparse matrix operations
+ */
+[[maybe_unused]] constexpr std::array sparse_multi_qubit_matrix_ops{
+    SparseMatrixOperation::SparseMultiQubitOp,
 };
 
 /**
@@ -86,7 +93,8 @@ using GateView = typename std::pair<GateOperation, std::string_view>;
     GateView{GateOperation::DoubleExcitationMinus, "DoubleExcitationMinus"},
     GateView{GateOperation::DoubleExcitationPlus, "DoubleExcitationPlus"},
     GateView{GateOperation::MultiRZ, "MultiRZ"},
-    GateView{GateOperation::GlobalPhase, "GlobalPhase"}};
+    GateView{GateOperation::GlobalPhase, "GlobalPhase"},
+    GateView{GateOperation::PCPhase, "PCPhase"}};
 
 using CGateView = typename std::pair<ControlledGateOperation, std::string_view>;
 [[maybe_unused]] constexpr std::array controlled_gate_names = {
@@ -119,6 +127,7 @@ using CGateView = typename std::pair<ControlledGateOperation, std::string_view>;
               "DoubleExcitationPlus"},
     CGateView{ControlledGateOperation::MultiRZ, "MultiRZ"},
     CGateView{ControlledGateOperation::GlobalPhase, "GlobalPhase"},
+    CGateView{ControlledGateOperation::PCPhase, "PCPhase"},
 };
 
 /**
@@ -197,6 +206,23 @@ using CMatrixView =
     CMatrixView{ControlledMatrixOperation::NCSingleQubitOp, "NCSingleQubitOp"},
     CMatrixView{ControlledMatrixOperation::NCTwoQubitOp, "NCTwoQubitOp"},
     CMatrixView{ControlledMatrixOperation::NCMultiQubitOp, "NCMultiQubitOp"},
+};
+
+/**
+ * @brief Sparse matrix names.
+ */
+using SparseMatrixView =
+    typename std::pair<SparseMatrixOperation, std::string_view>;
+[[maybe_unused]] constexpr std::array sparse_matrix_names = {
+    SparseMatrixView{SparseMatrixOperation::SparseMultiQubitOp,
+                     "SparseMultiQubitOp"},
+};
+
+using CSparseMatrixView =
+    typename std::pair<ControlledSparseMatrixOperation, std::string_view>;
+[[maybe_unused]] constexpr std::array controlled_sparse_matrix_names = {
+    CSparseMatrixView{ControlledSparseMatrixOperation::NCSparseMultiQubitOp,
+                      "NCSparseMultiQubitOp"},
 };
 
 /**
@@ -356,6 +382,7 @@ using GateNParams = typename std::pair<GateOperation, std::size_t>;
     GateNParams{GateOperation::CSWAP, 0},
     GateNParams{GateOperation::MultiRZ, 1},
     GateNParams{GateOperation::GlobalPhase, 1},
+    GateNParams{GateOperation::PCPhase, 2},
 };
 
 /**
@@ -388,6 +415,7 @@ using CGateNParams = typename std::pair<ControlledGateOperation, std::size_t>;
     CGateNParams{ControlledGateOperation::DoubleExcitationPlus, 1},
     CGateNParams{ControlledGateOperation::MultiRZ, 1},
     CGateNParams{ControlledGateOperation::GlobalPhase, 1},
+    CGateNParams{ControlledGateOperation::PCPhase, 2},
 };
 } // namespace Pennylane::Gates::Constant
 /// @endcond

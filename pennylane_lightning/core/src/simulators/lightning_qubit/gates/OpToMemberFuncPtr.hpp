@@ -273,6 +273,13 @@ struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
         &GateImplementation::template applyGlobalPhase<PrecisionT, ParamT>;
 };
 
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
+                             GateOperation::PCPhase> {
+    constexpr static auto value =
+        &GateImplementation::template applyPCPhase<PrecisionT, ParamT>;
+};
+
 template <class PrecisionT, class ParamT, class GateImplementation,
           ControlledGateOperation gate_op>
 struct ControlledGateOpToMemberFuncPtr {
@@ -440,6 +447,12 @@ struct ControlledGateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
                                        ControlledGateOperation::GlobalPhase> {
     constexpr static auto value =
         &GateImplementation::template applyNCGlobalPhase<PrecisionT, ParamT>;
+};
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct ControlledGateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
+                                       ControlledGateOperation::PCPhase> {
+    constexpr static auto value =
+        &GateImplementation::template applyNCPCPhase<PrecisionT, ParamT>;
 };
 
 /**
@@ -708,7 +721,6 @@ struct MatrixOpToMemberFuncPtr {
     static_assert(sizeof(PrecisionT) == std::numeric_limits<std::size_t>::max(),
                   "Unrecognized matrix operation");
 };
-
 template <class PrecisionT, class GateImplementation>
 struct MatrixOpToMemberFuncPtr<PrecisionT, GateImplementation,
                                MatrixOperation::SingleQubitOp> {
@@ -728,11 +740,27 @@ struct MatrixOpToMemberFuncPtr<PrecisionT, GateImplementation,
         &GateImplementation::template applyMultiQubitOp<PrecisionT>;
 };
 
+/**
+ * @brief Sparse matrix operation to member function pointer
+ */
+template <class PrecisionT, class GateImplementation,
+          SparseMatrixOperation mat_op>
+struct SparseMatrixOpToMemberFuncPtr {
+    static_assert(sizeof(PrecisionT) == std::numeric_limits<std::size_t>::max(),
+                  "Unrecognized sparse matrix operation");
+};
+template <class PrecisionT, class GateImplementation>
+struct SparseMatrixOpToMemberFuncPtr<
+    PrecisionT, GateImplementation, SparseMatrixOperation::SparseMultiQubitOp> {
+    constexpr static auto value =
+        &GateImplementation::template applyMultiQubitSparseOp<PrecisionT>;
+};
+
 template <class PrecisionT, class GateImplementation,
           ControlledMatrixOperation mat_op>
 struct ControlledMatrixOpToMemberFuncPtr {
     static_assert(sizeof(PrecisionT) == std::numeric_limits<std::size_t>::max(),
-                  "Unrecognized matrix operation");
+                  "Unrecognized controlled matrix operation");
 };
 template <class PrecisionT, class GateImplementation>
 struct ControlledMatrixOpToMemberFuncPtr<
@@ -754,6 +782,20 @@ struct ControlledMatrixOpToMemberFuncPtr<
         &GateImplementation::template applyNCMultiQubitOp<PrecisionT>;
 };
 
+template <class PrecisionT, class GateImplementation,
+          ControlledSparseMatrixOperation mat_op>
+struct ControlledSparseMatrixOpToMemberFuncPtr {
+    static_assert(sizeof(PrecisionT) == std::numeric_limits<std::size_t>::max(),
+                  "Unrecognized controlled sparse matrix operation");
+};
+template <class PrecisionT, class GateImplementation>
+struct ControlledSparseMatrixOpToMemberFuncPtr<
+    PrecisionT, GateImplementation,
+    ControlledSparseMatrixOperation::NCSparseMultiQubitOp> {
+    constexpr static auto value =
+        &GateImplementation::template applyNCMultiQubitSparseOp<PrecisionT>;
+};
+
 /// @cond DEV
 namespace Internal {
 /**
@@ -762,8 +804,7 @@ namespace Internal {
  */
 template <class SVType, class ParamT, std::size_t num_params>
 struct GateMemFuncPtr {
-    static_assert(num_params < 2 || num_params == 3,
-                  "The given num_params is not supported.");
+    static_assert(num_params < 4, "The given num_params is not supported.");
 };
 /**
  * @brief Function pointer type for a gate operation without parameters.
@@ -777,6 +818,13 @@ template <class SVType, class ParamT> struct GateMemFuncPtr<SVType, ParamT, 0> {
 template <class SVType, class ParamT> struct GateMemFuncPtr<SVType, ParamT, 1> {
     using Type = void (SVType::*)(const std::vector<std::size_t> &, bool,
                                   ParamT);
+};
+/**
+ * @brief Function pointer type for a gate operation with two parameters.
+ */
+template <class SVType, class ParamT> struct GateMemFuncPtr<SVType, ParamT, 2> {
+    using Type = void (SVType::*)(const std::vector<std::size_t> &, bool,
+                                  ParamT, ParamT);
 };
 /**
  * @brief Function pointer type for a gate operation with three parameters.
@@ -798,8 +846,7 @@ using GateMemFuncPtrT =
  */
 template <class PrecisionT, class ParamT, std::size_t num_params>
 struct GateFuncPtr {
-    static_assert(num_params < 2 || num_params == 3,
-                  "The given num_params is not supported.");
+    static_assert(num_params < 4, "The given num_params is not supported.");
 };
 
 /**
@@ -819,6 +866,16 @@ struct GateFuncPtr<PrecisionT, ParamT, 1> {
                           const std::vector<std::size_t> &, bool, ParamT);
 };
 /**
+ * @brief Pointer type for a gate operation with two parameters
+ */
+template <class PrecisionT, class ParamT>
+struct GateFuncPtr<PrecisionT, ParamT, 2> {
+    using Type = void (*)(std::complex<PrecisionT> *, std::size_t,
+                          const std::vector<std::size_t> &, bool, ParamT,
+                          ParamT);
+};
+
+/**
  * @brief Pointer type for a gate operation with three parameters
  */
 template <class PrecisionT, class ParamT>
@@ -833,8 +890,7 @@ struct GateFuncPtr<PrecisionT, ParamT, 3> {
  */
 template <class PrecisionT, class ParamT, std::size_t num_params>
 struct ControlledGateFuncPtr {
-    static_assert(num_params < 2 || num_params == 3,
-                  "The given num_params is not supported.");
+    static_assert(num_params < 4, "The given num_params is not supported.");
 };
 template <class PrecisionT, class ParamT>
 struct ControlledGateFuncPtr<PrecisionT, ParamT, 0> {
@@ -850,6 +906,15 @@ struct ControlledGateFuncPtr<PrecisionT, ParamT, 1> {
                           const std::vector<bool> &,
                           const std::vector<std::size_t> &, bool, ParamT);
 };
+template <class PrecisionT, class ParamT>
+struct ControlledGateFuncPtr<PrecisionT, ParamT, 2> {
+    using Type = void (*)(std::complex<PrecisionT> *, std::size_t,
+                          const std::vector<std::size_t> &,
+                          const std::vector<bool> &,
+                          const std::vector<std::size_t> &, bool, ParamT,
+                          ParamT);
+};
+
 template <class PrecisionT, class ParamT>
 struct ControlledGateFuncPtr<PrecisionT, ParamT, 3> {
     using Type = void (*)(std::complex<PrecisionT> *, std::size_t,
@@ -891,6 +956,28 @@ template <class PrecisionT> struct MatrixFuncPtr {
  */
 template <class PrecisionT> struct ControlledMatrixFuncPtr {
     using Type = void (*)(std::complex<PrecisionT> *, std::size_t,
+                          const std::complex<PrecisionT> *,
+                          const std::vector<std::size_t> &,
+                          const std::vector<bool> &,
+                          const std::vector<std::size_t> &, bool);
+};
+
+/**
+ * @brief Pointer type for a sparse matrix operation
+ */
+template <class PrecisionT, class IndexT> struct SparseMatrixFuncPtr {
+    using Type = void (*)(std::complex<PrecisionT> *, std::size_t,
+                          const IndexT *, const IndexT *,
+                          const std::complex<PrecisionT> *,
+                          const std::vector<std::size_t> &, bool);
+};
+
+/**
+ * @brief Pointer type for a controlled sparse matrix operation
+ */
+template <class PrecisionT, class IndexT> struct ControlledSparseMatrixFuncPtr {
+    using Type = void (*)(std::complex<PrecisionT> *, std::size_t,
+                          const IndexT *, const IndexT *,
                           const std::complex<PrecisionT> *,
                           const std::vector<std::size_t> &,
                           const std::vector<bool> &,
@@ -943,6 +1030,20 @@ using ControlledMatrixFuncPtrT =
 /// @endcond
 
 /**
+ * @brief Convenient type alias for SparseMatrixfuncPtr.
+ */
+template <class PrecisionT, class IndexT>
+using SparseMatrixFuncPtrT =
+    typename Internal::SparseMatrixFuncPtr<PrecisionT, IndexT>::Type;
+
+/**
+ * @brief Convenient type alias for SparseControlledMatrixFuncPtrT.
+ */
+template <class PrecisionT, class IndexT>
+using ControlledSparseMatrixFuncPtrT =
+    typename Internal::ControlledSparseMatrixFuncPtr<PrecisionT, IndexT>::Type;
+
+/**
  * @defgroup Call gate operation with provided arguments
  *
  * @tparam PrecisionT Floating point type for the state-vector.
@@ -977,6 +1078,18 @@ inline void callGateOps(GateFuncPtrT<PrecisionT, ParamT, 1> func,
                         const std::vector<ParamT> &params) {
     PL_ASSERT(params.size() == 1);
     func(data, num_qubits, wires, inverse, params[0]);
+}
+
+/**
+ * @brief Overload for a gate operation for two parameters
+ */
+template <class PrecisionT, class ParamT>
+inline void callGateOps(GateFuncPtrT<PrecisionT, ParamT, 2> func,
+                        std::complex<PrecisionT> *data, std::size_t num_qubits,
+                        const std::vector<std::size_t> &wires, bool inverse,
+                        const std::vector<ParamT> &params) {
+    PL_ASSERT(params.size() == 2);
+    func(data, num_qubits, wires, inverse, params[0], params[1]);
 }
 
 /**
@@ -1018,6 +1131,19 @@ callControlledGateOps(ControlledGateFuncPtrT<PrecisionT, ParamT, 1> func,
     PL_ASSERT(params.size() == 1);
     func(data, num_qubits, controlled_wires, controlled_values, wires, inverse,
          params[0]);
+}
+
+template <class PrecisionT, class ParamT>
+inline void
+callControlledGateOps(ControlledGateFuncPtrT<PrecisionT, ParamT, 2> func,
+                      std::complex<PrecisionT> *data, std::size_t num_qubits,
+                      const std::vector<std::size_t> &controlled_wires,
+                      const std::vector<bool> &controlled_values,
+                      const std::vector<std::size_t> &wires, bool inverse,
+                      const std::vector<ParamT> &params) {
+    PL_ASSERT(params.size() == 2);
+    func(data, num_qubits, controlled_wires, controlled_values, wires, inverse,
+         params[0], params[1]);
 }
 
 template <class PrecisionT, class ParamT>
@@ -1066,6 +1192,12 @@ callGeneratorOps(GeneratorFuncPtrT<PrecisionT> func,
 /**
  * @brief Call a matrix operation.
  * @tparam PrecisionT Floating point type for the state-vector.
+ * @param func Function pointer for the gate operation.
+ * @param data Data pointer the gate is applied to
+ * @param num_qubits The number of qubits of the state-vector.
+ * @param matrix The matrix the gate applies.
+ * @param wires Wires the gate applies to.
+ * @param adj If true, we apply the adjoint of the gate.
  */
 template <class PrecisionT>
 inline void callMatrixOp(MatrixFuncPtrT<PrecisionT> func,
@@ -1078,6 +1210,14 @@ inline void callMatrixOp(MatrixFuncPtrT<PrecisionT> func,
 /**
  * @brief Call a controlled matrix operation.
  * @tparam PrecisionT Floating point type for the state-vector.
+ * @param func Function pointer for the gate operation.
+ * @param data Data pointer the gate is applied to
+ * @param num_qubits The number of qubits of the state-vector.
+ * @param matrix The matrix the gate applies.
+ * @param controlled_wires Wires controlling the gate.
+ * @param controlled_values Values of the control wires.
+ * @param wires Wires the gate applies to.
+ * @param adj If true, we apply the adjoint of the gate.
  */
 template <class PrecisionT>
 inline void
@@ -1089,6 +1229,58 @@ callControlledMatrixOp(ControlledMatrixFuncPtrT<PrecisionT> func,
                        const std::vector<std::size_t> &wires, bool adj) {
     return func(data, num_qubits, matrix, controlled_wires, controlled_values,
                 wires, adj);
+}
+
+/**
+ * @brief Call a sparse matrix operation.
+ * @tparam PrecisionT Floating point type for the state-vector.
+ * @tparam IndexT Index type for the sparse matrix.
+ * @param func Function pointer for the gate operation.
+ * @param data Data pointer the gate is applied to
+ * @param num_qubits The number of qubits of the state-vector.
+ * @param row_map_ptr Pointer to the row map of the sparse matrix.
+ * @param col_idx_ptr Pointer to the column index of the sparse matrix.
+ * @param values_ptr Pointer to the values of the sparse matrix.
+ * @param wires Wires the gate applies to.
+ * @param adj If true, we apply the adjoint of the gate.
+ */
+template <class PrecisionT, class IndexT = std::size_t>
+inline void
+callSparseMatrixOp(SparseMatrixFuncPtrT<PrecisionT, IndexT> func,
+                   std::complex<PrecisionT> *data, std::size_t num_qubits,
+                   const IndexT *row_map_ptr, const IndexT *col_idx_ptr,
+                   const std::complex<PrecisionT> *values_ptr,
+                   const std::vector<std::size_t> &wires, bool adj = false) {
+    return func(data, num_qubits, row_map_ptr, col_idx_ptr, values_ptr, wires,
+                adj);
+}
+
+/**
+ * @brief Call a controlled sparse matrix operation.
+ * @tparam PrecisionT Floating point type for the state-vector.
+ * @tparam IndexT Index type for the sparse matrix.
+ * @param func Function pointer for the gate operation.
+ * @param data Data pointer the gate is applied to
+ * @param num_qubits The number of qubits of the state-vector.
+ * @param row_map_ptr Pointer to the row map of the sparse matrix.
+ * @param col_idx_ptr Pointer to the column index of the sparse matrix.
+ * @param values_ptr Pointer to the values of the sparse matrix.
+ * @param controlled_wires Wires controlling the gate.
+ * @param controlled_values Values of the control wires.
+ * @param wires Wires the gate applies to.
+ * @param adj If true, we apply the adjoint of the gate.
+ */
+template <class PrecisionT, class IndexT = std::size_t>
+inline void callControlledSparseMatrixOp(
+    ControlledSparseMatrixFuncPtrT<PrecisionT, IndexT> func,
+    std::complex<PrecisionT> *data, std::size_t num_qubits,
+    const IndexT *row_map_ptr, const IndexT *col_idx_ptr,
+    const std::complex<PrecisionT> *values_ptr,
+    const std::vector<std::size_t> &controlled_wires,
+    const std::vector<bool> &controlled_values,
+    const std::vector<std::size_t> &wires, bool adj = false) {
+    return func(data, num_qubits, row_map_ptr, col_idx_ptr, values_ptr,
+                controlled_wires, controlled_values, wires, adj);
 }
 
 } // namespace Pennylane::LightningQubit::Gates

@@ -192,6 +192,20 @@ class LightningGPUStateVector(LightningBaseStateVector):
 
         return arr
 
+    # pylint: disable=unused-argument
+    @staticmethod
+    def _operation_is_sparse(operation):
+        """Check if the operation is a sparse matrix operation.
+
+        Args:
+            operation (_): operation to check
+
+        Returns:
+            bool: True if the operation is a sparse matrix operation, False otherwise
+        """
+        # Currently there is not support for sparse matrices in the LightningGPU device.
+        return False
+
     def _apply_state_vector(self, state, device_wires, use_async: bool = False):
         """Initialize the state vector on GPU with a specified state on host.
         Note that any use of this method will introduce host-overheads.
@@ -253,11 +267,18 @@ class LightningGPUStateVector(LightningBaseStateVector):
             base_operation = operation.base
 
         method = getattr(state, f"{base_operation.name}", None)
+
         control_wires = list(operation.control_wires)
         control_values = operation.control_values
         target_wires = list(operation.target_wires)
+
         if method:  # apply n-controlled specialized gate
             param = operation.parameters
+            if isinstance(base_operation, qml.PCPhase):
+                # PCPhase has hyperparameters for dimension
+                hyper = float(base_operation.hyperparameters["dimension"][0])
+                param = np.array([base_operation.parameters[0], hyper])
+
             method(control_wires, control_values, target_wires, adjoint, param)
         else:  # apply gate as an n-controlled matrix
             method = getattr(state, "applyControlledMatrix")
@@ -327,6 +348,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
             else:
                 op_adjoint_base = operation
                 invert_param = False
+
             name = op_adjoint_base.name
             method = getattr(state, name, None)
             wires = list(operation.wires)
@@ -340,6 +362,11 @@ class LightningGPUStateVector(LightningBaseStateVector):
                 )
             elif method is not None:  # apply specialized gate
                 param = operation.parameters
+                if isinstance(op_adjoint_base, qml.PCPhase):
+                    # PCPhase has hyperparameters for dimension
+                    hyper = float(op_adjoint_base.hyperparameters["dimension"][0])
+                    param = np.array([op_adjoint_base.parameters[0], hyper])
+
                 method(wires, invert_param, param)
             elif (
                 isinstance(op_adjoint_base, qml.ops.Controlled) and not self._mpi_handler.use_mpi
