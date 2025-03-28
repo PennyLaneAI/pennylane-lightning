@@ -37,7 +37,7 @@ from pennylane.tape import QuantumScript
 from pennylane.wires import Wires
 
 # pylint: disable=ungrouped-imports
-from pennylane_lightning.core.base._state_vector_base import LightningBaseStateVector
+from pennylane_lightning.lightning_base._state_vector import LightningBaseStateVector
 
 from ._measurements import LightningMeasurements
 

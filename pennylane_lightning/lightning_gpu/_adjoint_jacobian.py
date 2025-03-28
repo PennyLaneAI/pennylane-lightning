@@ -53,8 +53,8 @@ from pennylane.tape import QuantumTape
 from scipy.sparse import csr_matrix
 
 # pylint: disable=ungrouped-imports
-from pennylane_lightning.core.base._adjoint_jacobian_base import LightningBaseAdjointJacobian
-from pennylane_lightning.core.base._serialize import QuantumScriptSerializer
+from pennylane_lightning.lightning_base._adjoint_jacobian import LightningBaseAdjointJacobian
+from pennylane_lightning.lightning_base._serialize import QuantumScriptSerializer
 
 
 class LightningGPUAdjointJacobian(LightningBaseAdjointJacobian):

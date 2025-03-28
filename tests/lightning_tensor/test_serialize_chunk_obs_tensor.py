@@ -19,7 +19,7 @@ import pytest
 from conftest import LightningDevice as ld
 from conftest import device_name
 
-from pennylane_lightning.core.base._serialize import QuantumScriptSerializer
+from pennylane_lightning.lightning_base._serialize import QuantumScriptSerializer
 
 if device_name != "lightning.tensor":
     pytest.skip("Skipping tests for the LightningTensor class.", allow_module_level=True)

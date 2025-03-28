@@ -28,7 +28,7 @@ from pennylane.devices.modifiers import simulator_tracking, single_tape_support
 from pennylane.tape import QuantumScript, QuantumTape
 from pennylane.typing import Result, ResultBatch, TensorLike
 
-from ._measurements_base import LightningBaseMeasurements
+from ._measurements import LightningBaseMeasurements
 
 Result_or_ResultBatch = Union[Result, ResultBatch]
 QuantumTapeBatch = Sequence[QuantumTape]
@@ -590,7 +590,7 @@ class LightningBase(Device):
         # pylint: disable=import-outside-toplevel
         import jax
 
-        from pennylane_lightning.core.base.jaxpr_jvp import (
+        from pennylane_lightning.lightning_base.jaxpr_jvp import (
             convert_jaxpr_to_tape,
             get_output_shapes,
             validate_args_tangents,

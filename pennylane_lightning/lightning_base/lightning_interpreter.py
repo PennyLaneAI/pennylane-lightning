@@ -23,8 +23,8 @@ from pennylane.capture.primitives import adjoint_transform_prim, ctrl_transform_
 from pennylane.measurements import MidMeasureMP, Shots
 from pennylane.tape.plxpr_conversion import CollectOpsandMeas
 
-from ._measurements_base import LightningBaseMeasurements
-from ._state_vector_base import LightningBaseStateVector
+from ._measurements import LightningBaseMeasurements
+from ._state_vector import LightningBaseStateVector
 
 
 class LightningInterpreter(PlxprInterpreter):

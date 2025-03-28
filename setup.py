@@ -178,11 +178,11 @@ with open(os.path.join("pennylane_lightning", "core", "_version.py"), encoding="
 packages_list = ["pennylane_lightning." + backend]
 
 if backend == "lightning_qubit":
-    packages_list += ["pennylane_lightning.core", "pennylane_lightning.core.base"]
+    packages_list += ["pennylane_lightning.lightning_base", "pennylane_lightning.core"]
 
 info = {
     "version": version,
-    "packages": find_namespace_packages(include=packages_list),
+    "packages": find_namespace_packages(exclude=["pennylane_lightning.core.src"], include=packages_list),
     "include_package_data": True,
     "ext_modules": (
         [] if os.environ.get("SKIP_COMPILATION", False) else [CMakeExtension(f"{backend}_ops")]

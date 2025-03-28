@@ -25,7 +25,7 @@ from pennylane.measurements import ExpectationMP, MeasurementProcess, StateMP
 from pennylane.operation import Operation
 from pennylane.tape import QuantumTape
 
-from pennylane_lightning.core.base._serialize import QuantumScriptSerializer
+from pennylane_lightning.lightning_base._serialize import QuantumScriptSerializer
 
 
 class LightningBaseAdjointJacobian(ABC):
