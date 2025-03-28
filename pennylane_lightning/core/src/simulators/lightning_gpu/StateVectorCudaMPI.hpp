@@ -889,7 +889,7 @@ class StateVectorCudaMPI final
             gate_cache_.add_gate(gate_key, cuGates::getGeneratorPSWAP<CFP_t>());
         }
         applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
-                               wires, adjoint);
+                              wires, adjoint);
         return static_cast<PrecisionT>(1.0);
     }
 
