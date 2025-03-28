@@ -834,7 +834,7 @@ def test_integration(returns):
     def casted_to_array_def(params):
         return np.array(qnode_def(params))
 
-    def casted_to_array_lightning(params):GeneratorPSW
+    def casted_to_array_lightning(params):
         return np.array(qnode_lightning(params))
 
     j_def = qml.jacobian(casted_to_array_def)(params)
