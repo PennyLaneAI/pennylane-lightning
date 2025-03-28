@@ -1382,6 +1382,12 @@ class StateVectorCudaMPI final
                  std::forward<decltype(adjoint)>(adjoint),
                  std::forward<decltype(params[0])>(params[0]));
          }},
+        {"PSWAP",
+         [&](auto &&wires, auto &&adjoint, auto &&params) {
+             applyPSWAP(std::forward<decltype(wires)>(wires),
+                        std::forward<decltype(adjoint)>(adjoint),
+                        std::forward<decltype(params[0])>(params[0]));
+         }},
         // LCOV_EXCL_START
         {"Rot",
          [&](auto &&wires, auto &&adjoint, auto &&params) {
