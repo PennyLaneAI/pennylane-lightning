@@ -794,6 +794,7 @@ def circuit_ansatz(params, wires):
     qml.DoubleExcitationMinus(params[27], wires=[wires[2], wires[0], wires[1], wires[3]])
     qml.RX(params[28], wires=wires[0])
     qml.RX(params[29], wires=wires[1])
+    qml.PSWAP(params[29], wires=wires[1])
 
 
 @pytest.mark.parametrize(
