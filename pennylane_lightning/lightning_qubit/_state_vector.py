@@ -139,12 +139,18 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
             base_operation = operation.base
 
         method = getattr(state, f"{base_operation.name}", None)
+
         control_wires = list(operation.control_wires)
         control_values = operation.control_values
         target_wires = list(operation.target_wires)
 
         if method is not None:  # apply n-controlled specialized gate
-            param = operation.parameters
+            param = base_operation.parameters
+
+            if isinstance(base_operation, qml.PCPhase):
+                hyper = float(base_operation.hyperparameters["dimension"][0])
+                param = np.array([base_operation.parameters[0], hyper])
+
             method(control_wires, control_values, target_wires, adjoint, param)
         else:  # apply gate as an n-controlled matrix
             method = getattr(state, "applyControlledMatrix")
@@ -245,6 +251,7 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
             else:
                 op_adjoint_base = operation
                 invert_param = False
+
             name = op_adjoint_base.name
             method = getattr(state, name, None)
             wires = list(operation.wires)
@@ -280,7 +287,12 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
                         False,
                     )
             elif method is not None:  # apply specialized gate
-                param = operation.parameters
+                param = op_adjoint_base.parameters
+
+                if isinstance(op_adjoint_base, qml.PCPhase):
+                    hyper = float(op_adjoint_base.hyperparameters["dimension"][0])
+                    param = np.array([op_adjoint_base.parameters[0], hyper])
+
                 method(wires, invert_param, param)
             elif isinstance(op_adjoint_base, qml.ops.Controlled):  # apply n-controlled gate
                 self._apply_lightning_controlled(op_adjoint_base, invert_param)

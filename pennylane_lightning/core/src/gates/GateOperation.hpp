@@ -68,6 +68,7 @@ enum class GateOperation : uint32_t {
     /* Multi-qubit gates */
     MultiRZ,
     GlobalPhase,
+    PCPhase,
     /* END (placeholder) */
     END
 };
@@ -102,6 +103,7 @@ enum class ControlledGateOperation : uint32_t {
     /* Multi-qubit gates */
     MultiRZ,
     GlobalPhase,
+    PCPhase,
     /* END (placeholder) */
     END
 };
