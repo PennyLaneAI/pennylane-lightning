@@ -794,7 +794,7 @@ def circuit_ansatz(params, wires):
     qml.DoubleExcitationMinus(params[27], wires=[wires[2], wires[0], wires[1], wires[3]])
     qml.RX(params[28], wires=wires[0])
     qml.RX(params[29], wires=wires[1])
-    qml.PSWAP(params[29], wires=wires[1])
+    qml.PSWAP(params[29], wires=[wires[0], wires[1]])
 
 
 @pytest.mark.parametrize(
@@ -834,7 +834,7 @@ def test_integration(returns):
     def casted_to_array_def(params):
         return np.array(qnode_def(params))
 
-    def casted_to_array_lightning(params):
+    def casted_to_array_lightning(params):GeneratorPSW
         return np.array(qnode_lightning(params))
 
     j_def = qml.jacobian(casted_to_array_def)(params)

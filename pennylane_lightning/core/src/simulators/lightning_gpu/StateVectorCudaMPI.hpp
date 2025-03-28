@@ -888,7 +888,7 @@ class StateVectorCudaMPI final
         if (!gate_cache_.gateExists(gate_key)) {
             gate_cache_.add_gate(gate_key, cuGates::getGeneratorPSWAP<CFP_t>());
         }
-        applyDeviceMatrixGate_(gate_cache_.get_gate_device_ptr(gate_key), {},
+        applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
                                wires, adjoint);
         return static_cast<PrecisionT>(1.0);
     }
