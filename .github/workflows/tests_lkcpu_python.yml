@@ -262,6 +262,8 @@ jobs:
 
       - name: Run PennyLane-Lightning unit tests
         run: |
+          # FIXME(v0.41.0): Remove pytest-split in favor of requirements-tests.txt
+          python -m pip install pytest-split
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
           # Remove `python -m` to avoid running tests with relative modules
           PL_DEVICE=${DEVICENAME} pytest tests/ $COVERAGE_FLAGS --splits 7 --group ${{ matrix.group }} \
