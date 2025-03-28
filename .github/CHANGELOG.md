@@ -15,6 +15,9 @@
 
 ### Improvements
 
+* Add `PSWAP` gate native implementation to PennyLane-Lightning devices. 
+  [(#1088)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1088)
+
 * Add native support for `qml.PCPhase` for `lightning.qubit` and `lightning.gpu`.
   [(#1107)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1107)
 
@@ -36,7 +39,7 @@
 * Device (`"lightning.qubit"`, `"lightning.gpu"`, `"lightning.kokkos"`) pre-processing is now included in the 
   execution pipeline when program capture is enabled.
   [(#1084)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1084)
-  
+
 * Hide anonymous namespaces in Lightning docs.
   [(#1097)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1097)
 
@@ -173,7 +176,8 @@ Luis Alfredo Nuñez Meneses,
 Lee J. O'Riordan,
 Andrija Paurevic,
 Alex Preciado,
-Shuli Shu
+Shuli Shu,
+Jake Zaia
 
 ---
 

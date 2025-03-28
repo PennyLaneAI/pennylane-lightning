@@ -204,6 +204,16 @@ TEMPLATE_TEST_CASE("Generators::applyGeneratorIsingZZ", "[GateGenerators]",
                              "IsingZZ", msb_2qbit);
 }
 
+TEMPLATE_TEST_CASE("Generators::applyGeneratorPSWAP", "[GateGenerators]", float,
+                   double) {
+    PLGPU_MPI_TEST_GENERATOR(TestType, num_qubits, applyGeneratorPSWAP, "PSWAP",
+                             lsb_2qbit);
+    PLGPU_MPI_TEST_GENERATOR(TestType, num_qubits, applyGeneratorPSWAP, "PSWAP",
+                             mlsb_2qbit);
+    PLGPU_MPI_TEST_GENERATOR(TestType, num_qubits, applyGeneratorPSWAP, "PSWAP",
+                             msb_2qbit);
+}
+
 TEMPLATE_TEST_CASE("Generators::applyGeneratorControlledPhaseShift",
                    "[GateGenerators]", float, double) {
     PLGPU_MPI_TEST_GENERATOR(TestType, num_qubits,

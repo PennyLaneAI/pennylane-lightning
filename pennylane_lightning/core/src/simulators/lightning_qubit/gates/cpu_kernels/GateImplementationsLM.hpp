@@ -154,6 +154,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         GateOperation::DoubleExcitationPlus,
         GateOperation::MultiRZ,
         GateOperation::GlobalPhase,
+        GateOperation::PSWAP,
         GateOperation::PCPhase,
     };
 
@@ -183,6 +184,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         ControlledGateOperation::DoubleExcitationPlus,
         ControlledGateOperation::MultiRZ,
         ControlledGateOperation::GlobalPhase,
+        ControlledGateOperation::PSWAP,
         ControlledGateOperation::PCPhase,
     };
 
@@ -1731,6 +1733,43 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                                     angle);
     }
 
+    template <class PrecisionT, class ParamT>
+    static void applyNCPSWAP(std::complex<PrecisionT> *arr,
+                             std::size_t num_qubits,
+                             const std::vector<std::size_t> &controlled_wires,
+                             const std::vector<bool> &controlled_values,
+                             const std::vector<std::size_t> &wires,
+                             bool inverse, ParamT angle) {
+        const std::complex<PrecisionT> phase =
+            std::exp(std::complex<PrecisionT>(0, inverse ? -angle : angle));
+        auto core_function = [phase](std::complex<PrecisionT> *arr,
+                                     [[maybe_unused]] const std::size_t i00,
+                                     const std::size_t i01,
+                                     const std::size_t i10,
+                                     [[maybe_unused]] const std::size_t i11) {
+            arr[i10] *= phase;
+            arr[i01] *= phase;
+            std::swap(arr[i10], arr[i01]);
+        };
+        if (controlled_wires.empty()) {
+            applyNC2<PrecisionT, ParamT, decltype(core_function), false>(
+                arr, num_qubits, controlled_wires, controlled_values, wires,
+                core_function);
+        } else {
+            applyNC2<PrecisionT, ParamT, decltype(core_function), true>(
+                arr, num_qubits, controlled_wires, controlled_values, wires,
+                core_function);
+        }
+    }
+
+    template <class PrecisionT, class ParamT>
+    static void applyPSWAP(std::complex<PrecisionT> *arr,
+                           std::size_t num_qubits,
+                           const std::vector<std::size_t> &wires, bool inverse,
+                           ParamT angle) {
+        applyNCPSWAP(arr, num_qubits, {}, {}, wires, inverse, angle);
+    }
+
     /* Four-qubit gates*/
 
     /**
@@ -2062,7 +2101,6 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                                const std::vector<bool> &controlled_values,
                                const std::vector<std::size_t> &wires,
                                bool inverse, ParamT angle, ParamT dim) {
-
         const auto dim_size_t = static_cast<std::size_t>(std::round(dim));
 
         PL_ABORT_IF(dim_size_t < 0 || dim_size_t > 1U << num_qubits,
@@ -2604,8 +2642,39 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                                                     wires, adj);
     }
 
+    template <class PrecisionT>
+    [[nodiscard]] static auto
+    applyNCGeneratorPSWAP(std::complex<PrecisionT> *arr, std::size_t num_qubits,
+                          const std::vector<std::size_t> &controlled_wires,
+                          const std::vector<bool> &controlled_values,
+                          const std::vector<std::size_t> &wires,
+                          [[maybe_unused]] const bool adj) -> PrecisionT {
+        using ComplexT = std::complex<PrecisionT>;
+        constexpr ComplexT zero{0.0};
+        auto core_function =
+            [zero](ComplexT *arr, const std::size_t i00, const std::size_t i01,
+                   const std::size_t i10, const std::size_t i11) {
+                arr[i00] = zero;
+                arr[i11] = zero;
+                std::swap(arr[i10], arr[i01]);
+            };
+        applyNCGenerator2<PrecisionT, decltype(core_function)>(
+            arr, num_qubits, controlled_wires, controlled_values, wires,
+            core_function);
+        // NOLINTNEXTLINE(readability-magic-numbers)
+        return static_cast<PrecisionT>(1.0);
+    }
+
+    template <class PrecisionT>
+    [[nodiscard]] static auto
+    applyGeneratorPSWAP(std::complex<PrecisionT> *arr, std::size_t num_qubits,
+                        const std::vector<std::size_t> &wires, bool adj)
+        -> PrecisionT {
+        return applyNCGeneratorPSWAP(arr, num_qubits, {}, {}, wires, adj);
+    }
+
     /**
-     * @brief Apply a single-qubit generator with controls to the
+     * @brief Apply a four-qubit generator with controls to the
      * statevector.
      *
      * @tparam PrecisionT Floating point precision of underlying statevector
