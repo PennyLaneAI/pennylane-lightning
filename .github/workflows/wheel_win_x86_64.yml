@@ -145,7 +145,7 @@ jobs:
           CIBW_BUILD_FRONTEND: build
 
         run: |
-          # Prone lightning_tensor src files to be included in the wheel
+          # Prune lightning_tensor src files to be included in the wheel
           echo "prune pennylane_lightning/core/src/simulators/lightning_tensor" >> MANIFEST.in
           cat MANIFEST.in
           python -m cibuildwheel --output-dir wheelhouse
