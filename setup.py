@@ -182,7 +182,7 @@ if backend == "lightning_qubit":
 
 info = {
     "version": version,
-    "packages": find_namespace_packages(exclude=["pennylane_lightning.core"], include=packages_list),
+    "packages": find_namespace_packages(include=packages_list),
     "include_package_data": True,
     "ext_modules": (
         [] if os.environ.get("SKIP_COMPILATION", False) else [CMakeExtension(f"{backend}_ops")]

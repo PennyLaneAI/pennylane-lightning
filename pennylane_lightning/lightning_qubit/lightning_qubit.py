@@ -38,9 +38,7 @@ from pennylane.devices.preprocess import (
 from pennylane.measurements import MidMeasureMP
 from pennylane.operation import DecompositionUndefinedError, Operator
 from pennylane.ops import Conditional, PauliRot, Prod, SProd, Sum
-from pennylane.tape import QuantumScript
 from pennylane.transforms.core import TransformProgram
-from pennylane.typing import Result
 
 from pennylane_lightning.lightning_base.lightning_base import (
     LightningBase,

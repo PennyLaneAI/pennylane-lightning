@@ -482,13 +482,11 @@ class LightningGPU(LightningBase):
 
         Note that this function can return measurements for non-commuting observables simultaneously.
         """
-        if (
-            self._mpi_handler
-            and self._mpi_handler.use_mpi
-            and circuit.shots
-            and (any(isinstance(op, MidMeasureMP) for op in circuit.operations))
-        ):
-            raise qml.DeviceError("Lightning-GPU-MPI does not support Mid-circuit measurements.")
+        if circuit.shots and (any(isinstance(op, MidMeasureMP) for op in circuit.operations)):
+            if self._mpi_handler and self._mpi_handler.use_mpi:
+                raise qml.DeviceError(
+                    "Lightning-GPU-MPI does not support Mid-circuit measurements."
+                )
 
         return super().simulate(
             circuit,
@@ -497,7 +495,7 @@ class LightningGPU(LightningBase):
         )
 
     @staticmethod
-    def get_c_interface(self):
+    def get_c_interface():
         """Returns a tuple consisting of the device name, and
         the location to the shared object with the C/C++ device implementation.
         """
