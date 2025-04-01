@@ -15,7 +15,13 @@
 
 ### Improvements
 
-* Add `PSWAP` gate native implementation to PennyLane-Lightning devices. 
+* Update TF, Keras and Torch versions in the CIs based on PennyLane's pinned versions.
+  [(#1112)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1112)
+
+* Build Lightning-GPU and Lightning-Tensor wheels against Python 3.10 and 3.13 on non-release PRs.
+  [(#1112)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1112)
+
+* Add `PSWAP` gate native implementation to PennyLane-Lightning devices.
   [(#1088)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1088)
 
 * Add native support for `qml.PCPhase` for `lightning.qubit` and `lightning.gpu`.
@@ -120,6 +126,9 @@
 ### Documentation
 
 ### Bug fixes
+
+* Fix the stable/stable issue with missing `pytest-split`.
+  [(#1112)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1112)
 
 * Add missing GH workflow step id, python setup, and virtual environment for aarch64 cuda.
   [(#1113)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1113)
