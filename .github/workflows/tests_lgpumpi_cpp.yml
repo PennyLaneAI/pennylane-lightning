@@ -21,10 +21,10 @@ on:
       - ready_for_review
     paths:
       - .github/workflows/tests_lgpumpi_cpp.yml
-      - pennylane_lightning/core/src/**
-      - '!pennylane_lightning/core/src/simulators/lightning_kokkos/**'
-      - '!pennylane_lightning/core/src/simulators/lightning_qubit/**'
-      - '!pennylane_lightning/core/src/simulators/lightning_tensor/**'
+      - pennylane_lightning/core/**
+      - '!pennylane_lightning/core/simulators/lightning_kokkos/**'
+      - '!pennylane_lightning/core/simulators/lightning_qubit/**'
+      - '!pennylane_lightning/core/simulators/lightning_tensor/**'
 
 env:
   COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:./coverage.xml --no-flaky-report -p no:warnings --tb=native"
@@ -152,7 +152,7 @@ jobs:
             echo "Tests failed. Exiting with error code."
             exit 1
           fi
-          lcov --directory . -b ../pennylane_lightning/src --capture --output-file coverage.info
+          lcov --directory . -b ../pennylane_lightning/core --capture --output-file coverage.info
           lcov --remove coverage.info '/usr/*' --output-file coverage.info
           mv coverage.info coverage-${{ github.job }}-lightning_gpu_${{ matrix.mpilib }}.info
 

@@ -28,7 +28,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath("doc")), "doc"))
 # For obtaining all relevant C++ source files
 currdir = Path(__file__).resolve().parent  # PROJECT_SOURCE_DIR/docs
 PROJECT_SOURCE_DIR = currdir.parent
-CPP_SOURCE_DIR = PROJECT_SOURCE_DIR.joinpath("pennylane_lightning/core/src")
+CPP_SOURCE_DIR = PROJECT_SOURCE_DIR.joinpath("pennylane_lightning/core")
 CPP_EXCLUDE_DIRS = ["tests", "benchmarks"]  # relative to CPP_SOURCE_DIR
 
 

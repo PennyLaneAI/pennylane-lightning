@@ -121,7 +121,7 @@ endif()
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 # All CMakeLists.txt in subdirectories use pennylane_lightning_compile_options and pennylane_lightning_external_libs
-add_subdirectory(pennylane_lightning/core/src)
+add_subdirectory(pennylane_lightning/core)
 
 #####################################################
 # Maintain for dependent external package development
@@ -142,12 +142,12 @@ foreach(BACKEND ${PL_BACKEND})
                                                         )
 endforeach()
 
-target_include_directories(pennylane_lightning  INTERFACE "$<INSTALL_INTERFACE:${PROJECT_SOURCE_DIR}/pennylane_lightning/core/src;include>")
+target_include_directories(pennylane_lightning  INTERFACE "$<INSTALL_INTERFACE:${PROJECT_SOURCE_DIR}/pennylane_lightning/core;include>")
 
 #####################################################
 if(ENABLE_PYTHON)
     message(STATUS "ENABLE_PYTHON is ON.")
-    pybind11_add_module("${PL_BACKEND}_ops" "pennylane_lightning/core/src/bindings/Bindings.cpp")
+    pybind11_add_module("${PL_BACKEND}_ops" "pennylane_lightning/core/bindings/Bindings.cpp")
 
     set(CMAKE_BUILD_RPATH_USE_ORIGIN ON)
     if("${PL_BACKEND}" STREQUAL "lightning_gpu" OR "${PL_BACKEND}" STREQUAL "lightning_tensor")
@@ -190,7 +190,7 @@ install(TARGETS pennylane_lightning
 )
 
 install(DIRECTORY
-    ${PROJECT_SOURCE_DIR}/pennylane_lightning/core/src
+    ${PROJECT_SOURCE_DIR}/pennylane_lightning/core
     DESTINATION include/pennylane_lightning/core/
 )
 

@@ -165,20 +165,20 @@ class CMakeBuild(build_ext):
             destination = os.path.join(os.getcwd(), f"build_{backend}")
             shutil.copy(source, destination)
     
-        if backend in ("lightning_kokkos", "lightning_qubit"):
+        if backend in ("lightning_ kokkos", "lightning_qubit"):
             if platform.system() in ["Linux", "Darwin"]:
                 shared_lib_ext = {"Linux": ".so", "Darwin": ".dylib"}[platform.system()]
                 source = os.path.join(f"{extdir}", f"lib{backend}_catalyst{shared_lib_ext}")
                 destination = os.path.join(os.getcwd(), self.build_temp)
                 shutil.copy(source, destination)
 
-with open(os.path.join("pennylane_lightning", "core", "_version.py"), encoding="utf-8") as f:
+with open(os.path.join("pennylane_lightning", "_version.py"), encoding="utf-8") as f:
     version = f.readlines()[-1].split()[-1].strip("\"'")
 
 packages_list = ["pennylane_lightning." + backend]
 
 if backend == "lightning_qubit":
-    packages_list += ["pennylane_lightning.core"]
+    packages_list += ["pennylane_lightning", "pennylane_lightning.lightning_base"]
 
 info = {
     "version": version,
@@ -190,17 +190,5 @@ info = {
     "cmdclass": {"build_ext": CMakeBuild},
     "ext_package": "pennylane_lightning",
 }
-
-if backend == "lightning_qubit":
-    info.update(
-        {
-            "package_data": {
-                "pennylane_lightning.core": [
-                    os.path.join("src", "*"),
-                    os.path.join("src", "**", "*"),
-                ]
-            },
-        }
-    )
 
 setup(**(info))
