@@ -901,6 +901,16 @@ class StateVectorCudaManaged
         applyDeviceMatrixGate_(gate_cache_.get_gate_device_ptr(gate_key), {},
                                wires, adjoint);
     }
+    inline void applyPSWAP(const std::vector<std::size_t> &wires, bool adjoint,
+                           Precision param) {
+        static const std::string name{"PSWAP"};
+        const auto gate_key = std::make_pair(name, param);
+        if (!gate_cache_.gateExists(gate_key)) {
+            gate_cache_.add_gate(gate_key, cuGates::getPSWAP<CFP_t>(param));
+        }
+        applyDeviceMatrixGate_(gate_cache_.get_gate_device_ptr(gate_key), {},
+                               wires, adjoint);
+    }
 
     /* three-qubit gates */
     inline void applyToffoli(const std::vector<std::size_t> &wires,
@@ -1218,6 +1228,25 @@ class StateVectorCudaManaged
                                    {}, {w}, adjoint);
         }
         return -static_cast<PrecisionT>(0.5);
+    }
+
+    /**
+     * @brief Gradient generator function associated with the PSWAP gate.
+     *
+     * @param wires Wires to apply operation.
+     * @param adj Takes adjoint of operation if true. Defaults to false.
+     */
+    inline PrecisionT applyGeneratorPSWAP(const std::vector<std::size_t> &wires,
+                                          bool adj = false) {
+        static const std::string name{"GeneratorPSWAP"};
+        static const Precision param = 0.0;
+        const auto gate_key = std::make_pair(name, param);
+        if (!gate_cache_.gateExists(gate_key)) {
+            gate_cache_.add_gate(gate_key, cuGates::getGeneratorPSWAP<CFP_t>());
+        }
+        applyDeviceMatrixGate_(gate_cache_.get_gate_device_ptr(gate_key), {},
+                               wires, adj);
+        return static_cast<PrecisionT>(1.0);
     }
 
     /* Controlled-gate generators */
@@ -1732,6 +1761,38 @@ class StateVectorCudaManaged
         return -static_cast<PrecisionT>(1.0);
     }
 
+    inline PrecisionT applyControlledGeneratorPSWAP(
+        const std::vector<std::size_t> &controlled_wires,
+        const std::vector<bool> &controlled_values,
+        const std::vector<std::size_t> &wires, bool adj = false) {
+        const std::size_t ctrl_size = controlled_wires.size();
+        const std::size_t tgt_size = wires.size();
+
+        // Generate permutation
+        std::vector<custatevecIndex_t> permutations =
+            generateTrivialPermutation(ctrl_size, tgt_size);
+        std::size_t index = controlPermutationMatrixIndex(ctrl_size, tgt_size,
+                                                          controlled_values);
+        std::swap(permutations[index + 1], permutations[index + 2]);
+
+        // Generate diagonals
+        std::vector<CFP_t> diagonals(permutations.size(),
+                                     cuUtil::ZERO<CFP_t>());
+        diagonals[index + 1] = cuUtil::ONE<CFP_t>();
+        diagonals[index + 2] = cuUtil::ONE<CFP_t>();
+
+        std::vector<std::size_t> combined_tgts(ctrl_size + tgt_size);
+        std::copy(controlled_wires.begin(), controlled_wires.end(),
+                  combined_tgts.begin());
+        std::copy(wires.begin(), wires.end(),
+                  combined_tgts.begin() + ctrl_size);
+
+        applyDevicePermutationGate_(permutations, diagonals.data(), {},
+                                    combined_tgts, {}, adj);
+
+        return static_cast<PrecisionT>(1.0);
+    }
+
     inline PrecisionT applyControlledGeneratorMultiRZ(
         const std::vector<std::size_t> &controlled_wires,
         const std::vector<bool> &controlled_values,
@@ -1957,8 +2018,14 @@ class StateVectorCudaManaged
              applyCRot(std::forward<decltype(wires)>(wires),
                        std::forward<decltype(adjoint)>(adjoint),
                        std::forward<decltype(params)>(params));
-         }}
+         }},
         // LCOV_EXCL_STOP
+        {"PSWAP",
+         [&](auto &&wires, auto &&adjoint, auto &&params) {
+             applyPSWAP(std::forward<decltype(wires)>(wires),
+                        std::forward<decltype(adjoint)>(adjoint),
+                        std::forward<decltype(params[0])>(params[0]));
+         }},
     };
 
     const std::unordered_map<std::string, custatevecPauli_t> native_gates_{
@@ -1969,6 +2036,12 @@ class StateVectorCudaManaged
 
     // Holds the mapping from gate labels to associated generator functions.
     const GMap generator_map_{
+        {"PSWAP",
+         [&](auto &&wires, auto &&adjoint) {
+             return applyGeneratorPSWAP(
+                 std::forward<decltype(wires)>(wires),
+                 std::forward<decltype(adjoint)>(adjoint));
+         }},
         {"GlobalPhase",
          [&](auto &&wires, auto &&adjoint) {
              return applyGeneratorGlobalPhase(
@@ -2146,7 +2219,9 @@ class StateVectorCudaManaged
              &StateVectorCudaManaged::applyControlledGeneratorGlobalPhase)},
         {"MultiRZ",
          makeControlledGenerator(
-             &StateVectorCudaManaged::applyControlledGeneratorMultiRZ)}};
+             &StateVectorCudaManaged::applyControlledGeneratorMultiRZ)},
+        {"PSWAP", makeControlledGenerator(
+                      &StateVectorCudaManaged::applyControlledGeneratorPSWAP)}};
 
     /**
      * @brief Normalize the index ordering to match PennyLane.

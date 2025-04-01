@@ -177,6 +177,7 @@ class DummyImplementation {
     PENNYLANE_TESTS_DEFINE_GATE_OP(DoubleExcitationPlus, 1)
     PENNYLANE_TESTS_DEFINE_GATE_OP(MultiRZ, 1)
     PENNYLANE_TESTS_DEFINE_GATE_OP(GlobalPhase, 1)
+    PENNYLANE_TESTS_DEFINE_GATE_OP(PSWAP, 1)
     PENNYLANE_TESTS_DEFINE_GATE_OP(PCPhase, 2)
 
     PENNYLANE_TESTS_DEFINE_GENERATOR_OP(PhaseShift)
@@ -199,6 +200,7 @@ class DummyImplementation {
     PENNYLANE_TESTS_DEFINE_GENERATOR_OP(DoubleExcitationPlus)
     PENNYLANE_TESTS_DEFINE_GENERATOR_OP(MultiRZ)
     PENNYLANE_TESTS_DEFINE_GENERATOR_OP(GlobalPhase)
+    PENNYLANE_TESTS_DEFINE_GENERATOR_OP(PSWAP)
 };
 
 static_assert(testAllGatesImplemented<float, float, DummyImplementation>(),

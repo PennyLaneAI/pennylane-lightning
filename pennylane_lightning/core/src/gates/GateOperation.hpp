@@ -58,6 +58,7 @@ enum class GateOperation : uint32_t {
     SingleExcitation,
     SingleExcitationMinus,
     SingleExcitationPlus,
+    PSWAP,
     /* Three-qubit gates */
     Toffoli,
     CSWAP,
@@ -100,6 +101,7 @@ enum class ControlledGateOperation : uint32_t {
     DoubleExcitation,
     DoubleExcitationMinus,
     DoubleExcitationPlus,
+    PSWAP,
     /* Multi-qubit gates */
     MultiRZ,
     GlobalPhase,
@@ -132,6 +134,7 @@ enum class GeneratorOperation : uint32_t {
     DoubleExcitation,
     DoubleExcitationMinus,
     DoubleExcitationPlus,
+    PSWAP,
     MultiRZ,
     GlobalPhase,
     /* END (placeholder) */
@@ -154,6 +157,7 @@ enum class ControlledGeneratorOperation : uint32_t {
     DoubleExcitation,
     DoubleExcitationMinus,
     DoubleExcitationPlus,
+    PSWAP,
     MultiRZ,
     GlobalPhase,
     /* END (placeholder) */
