@@ -726,6 +726,16 @@ class StateVectorCudaMPI final
         applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
                               wires, adjoint);
     }
+    inline void applyPSWAP(const std::vector<std::size_t> &wires, bool adjoint,
+                           Precision param) {
+        static const std::string name{"PSWAP"};
+        const auto gate_key = std::make_pair(name, param);
+        if (!gate_cache_.gateExists(gate_key)) {
+            gate_cache_.add_gate(gate_key, cuGates::getPSWAP<CFP_t>(param));
+        }
+        applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
+                              wires, adjoint);
+    }
 
     /* three-qubit gates */
     inline void applyToffoli(const std::vector<std::size_t> &wires,
@@ -862,6 +872,25 @@ class StateVectorCudaMPI final
         applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
                               wires, adjoint);
         return static_cast<PrecisionT>(0.5);
+    }
+
+    /**
+     * @brief Gradient generator function associated with the PSWAP gate.
+     *
+     * @param wires Wires to apply operation.
+     * @param adj Takes adjoint of operation if true. Defaults to false.
+     */
+    inline PrecisionT applyGeneratorPSWAP(const std::vector<std::size_t> &wires,
+                                          bool adjoint) {
+        static const std::string name{"GeneratorPSWAP"};
+        static const Precision param = 0.0;
+        const auto gate_key = std::make_pair(name, param);
+        if (!gate_cache_.gateExists(gate_key)) {
+            gate_cache_.add_gate(gate_key, cuGates::getGeneratorPSWAP<CFP_t>());
+        }
+        applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
+                              wires, adjoint);
+        return static_cast<PrecisionT>(1.0);
     }
 
     /**
@@ -1372,6 +1401,12 @@ class StateVectorCudaMPI final
                  std::forward<decltype(adjoint)>(adjoint),
                  std::forward<decltype(params[0])>(params[0]));
          }},
+        {"PSWAP",
+         [&](auto &&wires, auto &&adjoint, auto &&params) {
+             applyPSWAP(std::forward<decltype(wires)>(wires),
+                        std::forward<decltype(adjoint)>(adjoint),
+                        std::forward<decltype(params[0])>(params[0]));
+         }},
         // LCOV_EXCL_START
         {"Rot",
          [&](auto &&wires, auto &&adjoint, auto &&params) {
@@ -1465,6 +1500,12 @@ class StateVectorCudaMPI final
         {"ControlledPhaseShift",
          [&](auto &&wires, auto &&adjoint) {
              return applyGeneratorControlledPhaseShift(
+                 std::forward<decltype(wires)>(wires),
+                 std::forward<decltype(adjoint)>(adjoint));
+         }},
+        {"PSWAP",
+         [&](auto &&wires, auto &&adjoint) {
+             return applyGeneratorPSWAP(
                  std::forward<decltype(wires)>(wires),
                  std::forward<decltype(adjoint)>(adjoint));
          }},

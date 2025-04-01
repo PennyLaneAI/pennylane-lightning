@@ -58,6 +58,7 @@ enum class GateOperation : uint32_t {
     SingleExcitation,
     SingleExcitationMinus,
     SingleExcitationPlus,
+    PSWAP,
     /* Three-qubit gates */
     Toffoli,
     CSWAP,
@@ -68,6 +69,7 @@ enum class GateOperation : uint32_t {
     /* Multi-qubit gates */
     MultiRZ,
     GlobalPhase,
+    PCPhase,
     /* END (placeholder) */
     END
 };
@@ -99,9 +101,11 @@ enum class ControlledGateOperation : uint32_t {
     DoubleExcitation,
     DoubleExcitationMinus,
     DoubleExcitationPlus,
+    PSWAP,
     /* Multi-qubit gates */
     MultiRZ,
     GlobalPhase,
+    PCPhase,
     /* END (placeholder) */
     END
 };
@@ -130,6 +134,7 @@ enum class GeneratorOperation : uint32_t {
     DoubleExcitation,
     DoubleExcitationMinus,
     DoubleExcitationPlus,
+    PSWAP,
     MultiRZ,
     GlobalPhase,
     /* END (placeholder) */
@@ -152,6 +157,7 @@ enum class ControlledGeneratorOperation : uint32_t {
     DoubleExcitation,
     DoubleExcitationMinus,
     DoubleExcitationPlus,
+    PSWAP,
     MultiRZ,
     GlobalPhase,
     /* END (placeholder) */
@@ -178,5 +184,23 @@ enum class ControlledMatrixOperation : uint32_t {
     /* END (placeholder) */
     END
 };
+
+/**
+ * @brief Enum class for sparse matrix operation
+ */
+enum class SparseMatrixOperation : uint32_t {
+    BEGIN = 0,
+    SparseMultiQubitOp = 0,
+    /* END (placeholder) */
+    END
+};
+
+enum class ControlledSparseMatrixOperation : uint32_t {
+    BEGIN = 0,
+    NCSparseMultiQubitOp = 0,
+    /* END (placeholder) */
+    END
+};
+
 /// @endcond
 } // namespace Pennylane::Gates

@@ -27,9 +27,10 @@ namespace Pennylane::Gates::Constant {
 /**
  * @brief List of multi-qubit gates
  */
-[[maybe_unused]] constexpr std::array multi_qubit_gates{GateOperation::MultiRZ};
+[[maybe_unused]] constexpr std::array multi_qubit_gates{GateOperation::MultiRZ,
+                                                        GateOperation::PCPhase};
 [[maybe_unused]] constexpr std::array controlled_multi_qubit_gates{
-    ControlledGateOperation::MultiRZ};
+    ControlledGateOperation::MultiRZ, ControlledGateOperation::PCPhase};
 /**
  * @brief List of multi-qubit generators
  */
@@ -44,6 +45,12 @@ namespace Pennylane::Gates::Constant {
  */
 [[maybe_unused]] constexpr std::array multi_qubit_matrix_ops{
     MatrixOperation::MultiQubitOp,
+};
+/**
+ * @brief List of multi-qubit sparse matrix operations
+ */
+[[maybe_unused]] constexpr std::array sparse_multi_qubit_matrix_ops{
+    SparseMatrixOperation::SparseMultiQubitOp,
 };
 
 /**
@@ -86,7 +93,9 @@ using GateView = typename std::pair<GateOperation, std::string_view>;
     GateView{GateOperation::DoubleExcitationMinus, "DoubleExcitationMinus"},
     GateView{GateOperation::DoubleExcitationPlus, "DoubleExcitationPlus"},
     GateView{GateOperation::MultiRZ, "MultiRZ"},
-    GateView{GateOperation::GlobalPhase, "GlobalPhase"}};
+    GateView{GateOperation::GlobalPhase, "GlobalPhase"},
+    GateView{GateOperation::PSWAP, "PSWAP"},
+    GateView{GateOperation::PCPhase, "PCPhase"}};
 
 using CGateView = typename std::pair<ControlledGateOperation, std::string_view>;
 [[maybe_unused]] constexpr std::array controlled_gate_names = {
@@ -119,6 +128,8 @@ using CGateView = typename std::pair<ControlledGateOperation, std::string_view>;
               "DoubleExcitationPlus"},
     CGateView{ControlledGateOperation::MultiRZ, "MultiRZ"},
     CGateView{ControlledGateOperation::GlobalPhase, "GlobalPhase"},
+    CGateView{ControlledGateOperation::PSWAP, "PSWAP"},
+    CGateView{ControlledGateOperation::PCPhase, "PCPhase"},
 };
 
 /**
@@ -152,6 +163,7 @@ using GeneratorView = typename std::pair<GeneratorOperation, std::string_view>;
     GeneratorView{GeneratorOperation::DoubleExcitationPlus,
                   "DoubleExcitationPlus"},
     GeneratorView{GeneratorOperation::GlobalPhase, "GlobalPhase"},
+    GeneratorView{GeneratorOperation::PSWAP, "PSWAP"},
 };
 
 using CGeneratorView =
@@ -179,6 +191,7 @@ using CGeneratorView =
                    "DoubleExcitationPlus"},
     CGeneratorView{ControlledGeneratorOperation::MultiRZ, "MultiRZ"},
     CGeneratorView{ControlledGeneratorOperation::GlobalPhase, "GlobalPhase"},
+    CGeneratorView{ControlledGeneratorOperation::PSWAP, "PSWAP"},
 };
 
 /**
@@ -197,6 +210,23 @@ using CMatrixView =
     CMatrixView{ControlledMatrixOperation::NCSingleQubitOp, "NCSingleQubitOp"},
     CMatrixView{ControlledMatrixOperation::NCTwoQubitOp, "NCTwoQubitOp"},
     CMatrixView{ControlledMatrixOperation::NCMultiQubitOp, "NCMultiQubitOp"},
+};
+
+/**
+ * @brief Sparse matrix names.
+ */
+using SparseMatrixView =
+    typename std::pair<SparseMatrixOperation, std::string_view>;
+[[maybe_unused]] constexpr std::array sparse_matrix_names = {
+    SparseMatrixView{SparseMatrixOperation::SparseMultiQubitOp,
+                     "SparseMultiQubitOp"},
+};
+
+using CSparseMatrixView =
+    typename std::pair<ControlledSparseMatrixOperation, std::string_view>;
+[[maybe_unused]] constexpr std::array controlled_sparse_matrix_names = {
+    CSparseMatrixView{ControlledSparseMatrixOperation::NCSparseMultiQubitOp,
+                      "NCSparseMultiQubitOp"},
 };
 
 /**
@@ -239,6 +269,7 @@ using GateNWires = typename std::pair<GateOperation, std::size_t>;
     GateNWires{GateOperation::DoubleExcitationMinus, 4},
     GateNWires{GateOperation::DoubleExcitationPlus, 4},
     GateNWires{GateOperation::GlobalPhase, 1},
+    GateNWires{GateOperation::PSWAP, 2},
 };
 
 using CGateNWires = typename std::pair<ControlledGateOperation, std::size_t>;
@@ -267,6 +298,7 @@ using CGateNWires = typename std::pair<ControlledGateOperation, std::size_t>;
     CGateNWires{ControlledGateOperation::DoubleExcitationMinus, 4},
     CGateNWires{ControlledGateOperation::DoubleExcitationPlus, 4},
     CGateNWires{ControlledGateOperation::GlobalPhase, 1},
+    CGateNWires{ControlledGateOperation::PSWAP, 2},
 };
 
 /**
@@ -293,6 +325,7 @@ using GeneratorNWires = typename std::pair<GeneratorOperation, std::size_t>;
     GeneratorNWires{GeneratorOperation::DoubleExcitationMinus, 4},
     GeneratorNWires{GeneratorOperation::DoubleExcitationPlus, 4},
     GeneratorNWires{GeneratorOperation::GlobalPhase, 1},
+    GeneratorNWires{GeneratorOperation::PSWAP, 1},
 };
 
 using CGeneratorNWires =
@@ -313,6 +346,7 @@ using CGeneratorNWires =
     CGeneratorNWires{ControlledGeneratorOperation::DoubleExcitationMinus, 4},
     CGeneratorNWires{ControlledGeneratorOperation::DoubleExcitationPlus, 4},
     CGeneratorNWires{ControlledGeneratorOperation::GlobalPhase, 1},
+    CGeneratorNWires{ControlledGeneratorOperation::PSWAP, 1},
 };
 
 /**
@@ -356,6 +390,8 @@ using GateNParams = typename std::pair<GateOperation, std::size_t>;
     GateNParams{GateOperation::CSWAP, 0},
     GateNParams{GateOperation::MultiRZ, 1},
     GateNParams{GateOperation::GlobalPhase, 1},
+    GateNParams{GateOperation::PSWAP, 1},
+    GateNParams{GateOperation::PCPhase, 2},
 };
 
 /**
@@ -388,6 +424,8 @@ using CGateNParams = typename std::pair<ControlledGateOperation, std::size_t>;
     CGateNParams{ControlledGateOperation::DoubleExcitationPlus, 1},
     CGateNParams{ControlledGateOperation::MultiRZ, 1},
     CGateNParams{ControlledGateOperation::GlobalPhase, 1},
+    CGateNParams{ControlledGateOperation::PSWAP, 1},
+    CGateNParams{ControlledGateOperation::PCPhase, 2},
 };
 } // namespace Pennylane::Gates::Constant
 /// @endcond

@@ -45,6 +45,7 @@ PauliX                 = { properties = [ "invertible", "controllable", "differe
 PauliY                 = { properties = [ "invertible", "controllable", "differentiable" ] }
 PauliZ                 = { properties = [ "invertible", "controllable", "differentiable" ] }
 PhaseShift             = { properties = [ "invertible", "controllable", "differentiable" ] }
+PSWAP                  = { properties = [ "invertible", "controllable", "differentiable" ] }
 QubitUnitary           = { properties = [ "invertible", "controllable",                  ] }
 Rot                    = { properties = [ "invertible", "controllable",                  ] }
 RX                     = { properties = [ "invertible", "controllable", "differentiable" ] }
@@ -58,6 +59,7 @@ SWAP                   = { properties = [ "invertible", "controllable", "differe
 Toffoli                = { properties = [ "invertible",                 "differentiable" ] }
 T                      = { properties = [ "invertible", "controllable", "differentiable" ] }
 SX                     = { properties = [ "invertible", "controllable", "differentiable" ] }
+PCPhase                = { properties = [ "invertible", "controllable"                   ] }
 
 # Operations supported by the execution in Python but not directly supported by the backend
 [pennylane.operators.gates]
@@ -67,7 +69,6 @@ DiagonalQubitUnitary   = {}
 ECR                    = {}
 ISWAP                  = {}
 OrbitalRotation        = {}
-PSWAP                  = {}
 QubitCarry             = {}
 QubitSum               = {}
 SISWAP                 = {}

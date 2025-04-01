@@ -82,6 +82,16 @@ constexpr bool testAllGatesImplemented() {
         static_cast<void>(wires);                                              \
         static_cast<void>(inverse);                                            \
     }
+#define PENNYLANE_TESTS_DEFINE_GATE_OP_PARAM2(GATE_NAME)                       \
+    template <class PrecisionT, class ParamT>                                  \
+    static void apply##GATE_NAME(                                              \
+        std::complex<PrecisionT> *arr, std::size_t num_qubits,                 \
+        const std::vector<std::size_t> &wires, bool inverse, ParamT, ParamT) { \
+        static_cast<void>(arr);                                                \
+        static_cast<void>(num_qubits);                                         \
+        static_cast<void>(wires);                                              \
+        static_cast<void>(inverse);                                            \
+    }
 #define PENNYLANE_TESTS_DEFINE_GATE_OP_PARAM3(GATE_NAME)                       \
     template <class PrecisionT, class ParamT>                                  \
     static void apply##GATE_NAME(std::complex<PrecisionT> *arr,                \
@@ -167,6 +177,8 @@ class DummyImplementation {
     PENNYLANE_TESTS_DEFINE_GATE_OP(DoubleExcitationPlus, 1)
     PENNYLANE_TESTS_DEFINE_GATE_OP(MultiRZ, 1)
     PENNYLANE_TESTS_DEFINE_GATE_OP(GlobalPhase, 1)
+    PENNYLANE_TESTS_DEFINE_GATE_OP(PSWAP, 1)
+    PENNYLANE_TESTS_DEFINE_GATE_OP(PCPhase, 2)
 
     PENNYLANE_TESTS_DEFINE_GENERATOR_OP(PhaseShift)
     PENNYLANE_TESTS_DEFINE_GENERATOR_OP(RX)
@@ -188,6 +200,7 @@ class DummyImplementation {
     PENNYLANE_TESTS_DEFINE_GENERATOR_OP(DoubleExcitationPlus)
     PENNYLANE_TESTS_DEFINE_GENERATOR_OP(MultiRZ)
     PENNYLANE_TESTS_DEFINE_GENERATOR_OP(GlobalPhase)
+    PENNYLANE_TESTS_DEFINE_GENERATOR_OP(PSWAP)
 };
 
 static_assert(testAllGatesImplemented<float, float, DummyImplementation>(),
