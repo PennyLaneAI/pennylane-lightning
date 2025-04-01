@@ -154,8 +154,8 @@ class StateVectorKokkosMPI final
         if (num_qubits > 0) {
             sv_ = std::make_unique<SVK>(get_num_local_wires(), settings);
             setBasisState(0U);
-            recvbuf_ = std::make_unique<SVK>(get_num_local_wires(), settings);
-            sendbuf_ = std::make_unique<SVK>(get_num_local_wires(), settings);
+            recvbuf_ = std::make_unique<SVK>(get_num_local_wires(), settings); // This could be smaller, even dynamic!
+            sendbuf_ = std::make_unique<SVK>(get_num_local_wires(), settings); // This could be smaller, even dynamic!
         }
     };
 
@@ -249,10 +249,10 @@ class StateVectorKokkosMPI final
      * @param  request MPI request allowing to validate the transfer has been
      * completed.
      */
-    void mpi_irecv(const std::size_t source, MPI_Request &request) {
+    void mpi_irecv(const std::size_t source, const std::size_t size,  MPI_Request &request) {
         KokkosVector sv_view = (*recvbuf_).getView();
         PL_MPI_IS_SUCCESS(MPI_Irecv(reinterpret_cast<void *>(sv_view.data()),
-                                    sv_view.size(), get_mpi_type<ComplexT>(),
+        size, get_mpi_type<ComplexT>(),
                                     static_cast<int>(source), 0, communicator_,
                                     &request));
     }
@@ -266,11 +266,11 @@ class StateVectorKokkosMPI final
      * @param  copy If true, copy the state vector data in sendbuf_ before
      * sending.
      */
-    void mpi_isend(const std::size_t dest, MPI_Request &request) {
+    void mpi_isend(const std::size_t dest, const std::size_t size, MPI_Request &request) {
         KokkosVector sd_view = (*sendbuf_).getView();
         mpi_wait(request);
         PL_MPI_IS_SUCCESS(MPI_Isend(reinterpret_cast<void *>(sd_view.data()),
-                                    sd_view.size(), get_mpi_type<ComplexT>(),
+                                    size, get_mpi_type<ComplexT>(),
                                     static_cast<int>(dest), 0, communicator_,
                                     &request));
     }
@@ -566,7 +566,7 @@ Wires-related methods
     find_global_wires(const std::vector<std::size_t> &wires) {
         std::vector<std::size_t> global_wires;
         for (const auto &wire : wires) {
-            if (std::find(global_wires_.begin(), global_wires_.end(), wire) ==
+            if (std::find(global_wires_.begin(), global_wires_.end(), wire) !=
                 global_wires_.end()) {
                 global_wires.push_back(wire);
             }
@@ -576,15 +576,16 @@ Wires-related methods
 
     std::vector<std::size_t>
     local_wires_subset_to_swap(const std::vector<std::size_t> &global_wires) {
-        std::vector<std::size_t> local_wires;
+        std::vector<std::size_t> local_wires(global_wires.size());
         for (std::size_t i = 0; i < global_wires.size(); i++) {
-            local_wires.push_back(local_wires_[i]);
+            local_wires[i] = local_wires_[i];
         }
+        TODO: FIX ME with better algorithm based on memory pattern
         return local_wires;
     }
 
     bool is_generalized_permutation_matrix([[maybe_unused]] const std::string &opName) {
-        return false; // To update
+        return false; // TODO: implement me
     }
 
     void swap_global_local_wires(const std::vector<std::size_t> &global_wires,
@@ -592,8 +593,63 @@ Wires-related methods
         PL_ABORT_IF_NOT(
             global_wires.size() == local_wires.size(),
             "global_wires and local_wires must have equal dimensions.");
-        return;
+
+
+            // Swap global and local wires labels
+            std::unordered_map<int, size_t> global_wires_indices;
+    std::unordered_map<int, size_t> local_wires_indices;
+            for (size_t i = 0; i < global_wires.size(); ++i) {
+                auto it_g = std::find(global_wires_.begin(), global_wires_.end(), global_wires[i]);
+                if (it_g == global_wires_.end()) {
+                    PL_ABORT("Error");
+                }
+                global_wires_indices[global_wires[i]] = std::distance(global_wires_.begin(), it_g);
+        
+                auto it_l = std::find(local_wires_.begin(), local_wires_.end(), local_wires[i]);
+                if (it_l == local_wires_.end()) {
+                    PL_ABORT("Error");
+                }
+                local_wires_indices[local_wires[i]] = std::distance(local_wires_.begin(), it_l);
+            }
+
+            for (size_t i = 0; i < global_wires.size(); ++i) {
+                std::swap(global_wires_[global_wires_indices[global_wires[i]]], local_wires_[local_wires_indices[local_wires[i]]]);
+            }
+
+            // Map local wires to actual local wire indices
+            auto local_wires_indices = get_local_wires_indices(local_wires);
+            std::size_t global_index = get_global_index_from_mpi_rank(get_mpi_rank());
+
+        // Actually swap memory
+        // TODO: add me
+        for (std::size_t batch_index = 1; batch_index < (1<<local_wires.size() - 1); batch_index++) {
+
+            MPI_Request send_req = MPI_REQUEST_NULL;
+            MPI_Request recv_req = MPI_REQUEST_NULL;
+            
+            std::size_t j = 0;
+            for (std::size_t i = 0; i < (*sv_).getView().size(); i++) {
+                bool relevant = true;
+                for (std::size_t k = 0; k < local_wires_indices.size(); k++) {
+                    relevant &= (i >> local_wires_indices[k] & 1) == ((batch_index ^ global_index) >> k & 1);
+                }
+                if (relevant) {
+                    (*sendbuf_).getView()(j) = (*sv_).getView()(i);
+                    j++
+                }
+            }
+
+            mpi_isend(batch_index ^ global_index, 1 << (get_num_local_wires() - local_wires.size()), send_req);
+            mpi_irecv(batch_index ^ global_index, 1 << (get_num_local_wires() - local_wires.size()), recv_req);
+
+
+
+
+        }
     }
+
+
+    
 
     std::vector<std::size_t>
     get_local_wires_indices(const std::vector<std::size_t> &wires) {
@@ -1046,7 +1102,7 @@ Wires-related methods
         PL_MPI_IS_SUCCESS(MPI_Gather(local_.data(), local_.size(),
                                      get_mpi_type<ComplexT>(), data_.data(),
                                      local_.size(), get_mpi_type<ComplexT>(),
-                                     root, communicator_)); // Update to Gatherv to reorder result!
+                                     root, communicator_)); // TODO: change to Gatherv to reorder result!
         return data_;
     }
 

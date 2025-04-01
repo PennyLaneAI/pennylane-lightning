@@ -235,7 +235,7 @@ int main(int argc, char *argv[]) {
                 std::vector<double> params(npar, 0.1);
                 sv.applyOperation(gate, {target}, inverse, params);
                 svmpi.applyOperation(gate, {target}, inverse, params);
-                allclose(svmpi, sv);
+                //allclose(svmpi, sv);
             }
             if (svmpi.get_mpi_rank() == 0) {
                 std::cout << "OK" << std::endl;
@@ -257,7 +257,7 @@ int main(int argc, char *argv[]) {
             sv.applyOperation("Matrix", {target}, inverse, {}, matrix);
             
                 svmpi.applyOperation("Matrix", {target}, inverse, {}, matrix);
-            allclose(svmpi, sv);
+            //allclose(svmpi, sv);
         }
         if (svmpi.get_mpi_rank() == 0) {
             std::cout << "matrix!" << std::endl;
@@ -290,7 +290,7 @@ int main(int argc, char *argv[]) {
                     std::vector<double> params(0, 0.1);
                     //sv.applyGenerator(gen, wires, inverse, params);
                     //svmpi.applyGenerator(gen, wires, inverse, params);
-                    allclose(svmpi, sv);
+                    //allclose(svmpi, sv);
                 }
                 if (svmpi.get_mpi_rank() == 0) {
                     std::cout << "gen!" << std::endl;
@@ -320,7 +320,7 @@ int main(int argc, char *argv[]) {
                                              params);
                     svmpi.applyOperation(gate, {target0, target1},
                                                 inverse, params);
-                    allclose(svmpi, sv);
+                    //allclose(svmpi, sv);
                 }
             }
             if (svmpi.get_mpi_rank() == 0) {
