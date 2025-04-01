@@ -56,13 +56,10 @@ class LightningAdjointJacobian(
 
         super().__init__(qubit_state, batch_obs)
 
-        # Initialize the C++ binds
-        self._jacobian_lightning, self._create_ops_list_lightning = self._adjoint_jacobian_dtype()
-
     def _adjoint_jacobian_dtype(self):
         """Binding to Lightning Qubit Adjoint Jacobian C++ class.
 
-        Returns: the AdjointJacobian class
+        Returns: A pair of the AdjointJacobian class and the create_ops_list function. Default is None.
         """
         jacobian_lightning = (
             AdjointJacobianC64() if self.dtype == np.complex64 else AdjointJacobianC128()

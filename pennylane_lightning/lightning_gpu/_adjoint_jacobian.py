@@ -86,9 +86,6 @@ class LightningGPUAdjointJacobian(LightningBaseAdjointJacobian):
         if self._use_mpi:
             self._mpi_handler = qubit_state._mpi_handler
 
-        # Initialize the C++ binds
-        self._jacobian_lightning, self._create_ops_list_lightning = self._adjoint_jacobian_dtype()
-
         # Warning about performance with MPI and batch observation
         if self._use_mpi and not self._batch_obs:
             warn(
@@ -100,7 +97,7 @@ class LightningGPUAdjointJacobian(LightningBaseAdjointJacobian):
     def _adjoint_jacobian_dtype(self):
         """Binding to Lightning GPU Adjoint Jacobian C++ class.
 
-        Returns: the AdjointJacobian class
+        Returns: A pair of the AdjointJacobian class and the create_ops_list function. Default is None.
         """
         if self._use_mpi:
             if not MPI_SUPPORT:

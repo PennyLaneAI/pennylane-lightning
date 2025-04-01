@@ -43,9 +43,7 @@ class LightningBaseAdjointJacobian(ABC):
         self._qubit_state = qubit_state
         self._batch_obs = batch_obs
 
-        # Dummy for the C++ bindings
-        self._jacobian_lightning: Callable = None
-        self._create_ops_list_lightning: Callable = None
+        self._jacobian_lightning, self._create_ops_list_lightning = self._adjoint_jacobian_dtype()
 
     @property
     def qubit_state(self):
@@ -66,8 +64,10 @@ class LightningBaseAdjointJacobian(ABC):
     def _adjoint_jacobian_dtype(self):
         """Binding to Lightning [Device] Adjoint Jacobian C++ class.
 
-        Returns: the AdjointJacobian class
+        Returns: A pair of the AdjointJacobian class and the create_ops_list function. Default is None.
         """
+
+        return None, None
 
     @staticmethod
     def _get_return_type(

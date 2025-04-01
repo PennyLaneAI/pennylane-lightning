@@ -16,15 +16,19 @@ r"""
 This module contains the :class:`~.LightningBase` class, that serves as a base class for Lightning simulator devices that
 interfaces with C++ for fast linear algebra calculations.
 """
+import os
+import sys
 from abc import abstractmethod
 from functools import partial
 from numbers import Number
+from pathlib import Path
 from typing import Callable, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 import pennylane as qml
 from pennylane.devices import DefaultExecutionConfig, Device, ExecutionConfig
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
+from pennylane.measurements import MidMeasureMP
 from pennylane.tape import QuantumScript, QuantumTape
 from pennylane.typing import Result, ResultBatch, TensorLike
 
@@ -84,6 +88,10 @@ class LightningBase(Device):
         self.LightningStateVector: Callable = None
         self.LightningMeasurements: type[LightningBaseMeasurements] = None
         self.LightningAdjointJacobian: Callable = None
+
+        # Lightning device name and library name for get_c_interface
+        self._lightning_device_name: str = None
+        self._lightning_lib_name: str = None
 
     @property
     def c_dtype(self):
@@ -170,11 +178,11 @@ class LightningBase(Device):
             TensorLike, tuple[TensorLike], tuple[tuple[TensorLike]]: A numeric result of the computation.
         """
 
-    @abstractmethod
     def simulate(
         self,
         circuit: QuantumScript,
         state,  # Lightning [Device] StateVector
+        mcmc: dict = None,
         postselect_mode: str = None,
     ) -> Result:
         """Simulate a single quantum script.
@@ -182,6 +190,9 @@ class LightningBase(Device):
         Args:
             circuit (QuantumTape): The single circuit to simulate
             state (Lightning [Device] StateVector): A handle to the underlying Lightning state
+            mcmc (dict): Dictionary containing the Markov Chain Monte Carlo
+                parameters: mcmc, kernel_name, num_burnin. Descriptions of
+                these fields are found in :class:`~.LightningQubit`.
             postselect_mode (str): Configuration for handling shots with mid-circuit measurement
                 postselection. Use ``"hw-like"`` to discard invalid shots and ``"fill-shots"`` to
                 keep the same number of shots. Default is ``None``.
@@ -191,6 +202,31 @@ class LightningBase(Device):
 
         Note that this function can return measurements for non-commuting observables simultaneously.
         """
+        if mcmc is None:
+            mcmc = {}
+        if circuit.shots and (any(isinstance(op, MidMeasureMP) for op in circuit.operations)):
+            results = []
+            aux_circ = qml.tape.QuantumScript(
+                circuit.operations,
+                circuit.measurements,
+                shots=[1],
+                trainable_params=circuit.trainable_params,
+            )
+            for _ in range(circuit.shots.total_shots):
+                state.reset_state()
+                mid_measurements = {}
+                final_state = state.get_final_state(
+                    aux_circ, mid_measurements=mid_measurements, postselect_mode=postselect_mode
+                )
+                results.append(
+                    self.LightningMeasurements(final_state, **mcmc).measure_final_state(
+                        aux_circ, mid_measurements=mid_measurements
+                    )
+                )
+            return tuple(results)
+
+        final_state = state.get_final_state(circuit)
+        return self.LightningMeasurements(final_state, **mcmc).measure_final_state(circuit)
 
     @abstractmethod
     def supports_derivatives(
@@ -642,3 +678,48 @@ class LightningBase(Device):
         )
 
         return results, jvps
+
+    @staticmethod
+    def get_c_interface_impl(
+        lightning_device_name: str, lightning_lib_name: str
+    ) -> Tuple[str, str]:
+        """Returns a tuple consisting of the device name, and
+        the location to the shared object with the C/C++ device implementation.
+        """
+
+        # The shared object file extension varies depending on the underlying operating system
+        file_extension = ""
+        OS = sys.platform
+        if OS == "linux":
+            file_extension = ".so"
+        elif OS == "darwin":
+            file_extension = ".dylib"
+        else:
+            raise RuntimeError(
+                f"'{lightning_device_name}' shared library not available for '{OS}' platform"
+            )
+
+        lib_name = "lib" + lightning_lib_name + "_catalyst" + file_extension
+        package_root = Path(__file__).parent
+
+        # The absolute path of the plugin shared object varies according to the installation mode.
+
+        # Wheel mode:
+        # Fixed location at the root of the project
+        wheel_mode_location = package_root.parent / lib_name
+        if wheel_mode_location.is_file():
+            return lightning_device_name, wheel_mode_location.as_posix()
+
+        # Editable mode:
+        # The build directory contains a folder which varies according to the platform:
+        #   lib.<system>-<architecture>-<python-id>"
+        # To avoid mismatching the folder name, we search for the shared object instead.
+        # TODO: locate where the naming convention of the folder is decided and replicate it here.
+        build_lightning_dir = "build_" + lightning_lib_name
+        editable_mode_path = package_root.parent.parent / build_lightning_dir
+        for path, _, files in os.walk(editable_mode_path):
+            if lib_name in files:
+                lib_location = (Path(path) / lib_name).as_posix()
+                return lightning_device_name, lib_location
+
+        raise RuntimeError(f"'{lightning_device_name}' shared library not found")
