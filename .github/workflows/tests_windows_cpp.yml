@@ -21,8 +21,8 @@ on:
       - ready_for_review
     paths:
       - .github/workflows/tests_windows_cpp.yml
-      - pennylane_lightning/core/src/**
-      - '!pennylane_lightning/core/src/simulators/lightning_gpu/**'
+      - pennylane_lightning/core/**
+      - '!pennylane_lightning/core/simulators/lightning_gpu/**'
 
 concurrency:
   group: tests_windows_cpp-${{ github.ref }}-${{ github.event_name }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
@@ -155,7 +155,7 @@ jobs:
               $filename = $filename.Substring($filename.LastIndexOf("\")+1)
               $test_call = $file.ToString() + " --order lex --reporter junit --out .\Build\tests\results\report_" + $filename + ".xml"
               Invoke-Expression $test_call
-              $cov_call = "OpenCppCoverage --sources pennylane_lightning\core\src --excluded_modules D:\a\install_dir\* --excluded_modules C:\Windows\System32\* --export_type cobertura:coverage.xml " + $file.ToString()
+              $cov_call = "OpenCppCoverage --sources pennylane_lightning\core --excluded_modules D:\a\install_dir\* --excluded_modules C:\Windows\System32\* --export_type cobertura:coverage.xml " + $file.ToString()
               Invoke-Expression $cov_call
             }
             Move-Item -Path .\coverage.xml -Destination .\coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
@@ -255,7 +255,7 @@ jobs:
               $filename = $filename.Substring($filename.LastIndexOf("\")+1)
               $test_call = $file.ToString() + " --order lex --reporter junit --out .\Build\tests\results\report_" + $filename + ".xml"
               Invoke-Expression $test_call
-              $cov_call = "OpenCppCoverage --sources pennylane_lightning\core\src --excluded_modules D:\a\install_dir\* --excluded_modules C:\Windows\System32\* --export_type cobertura:coverage.xml " + $file.ToString()
+              $cov_call = "OpenCppCoverage --sources pennylane_lightning\core --excluded_modules D:\a\install_dir\* --excluded_modules C:\Windows\System32\* --export_type cobertura:coverage.xml " + $file.ToString()
               Invoke-Expression $cov_call
             }
             Move-Item -Path .\coverage.xml -Destination .\coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml

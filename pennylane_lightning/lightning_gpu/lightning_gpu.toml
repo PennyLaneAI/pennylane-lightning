@@ -65,6 +65,7 @@ PCPhase                = { properties = [ "invertible", "controllable"          
 [pennylane.operators.gates]
 
 BlockEncode            = { properties = [ "controllable" ] }
+ControlledQubitUnitary = {}
 ECR                    = {}
 ISWAP                  = {}
 SISWAP                 = {}

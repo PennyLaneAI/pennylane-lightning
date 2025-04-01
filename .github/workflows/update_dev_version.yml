@@ -42,7 +42,7 @@ jobs:
 
       - name: Capture Current Version in Pull Request
         id: old_version
-        run: echo "version=$(grep -o '__version__ = "[^"]\+[0-9]\+"' pr/pennylane_lightning/core/_version.py | cut -d '"' -f 2)" >> $GITHUB_OUTPUT
+        run: echo "version=$(grep -o '__version__ = "[^"]\+[0-9]\+"' pr/pennylane_lightning/_version.py | cut -d '"' -f 2)" >> $GITHUB_OUTPUT
 
       - name: Run version update script
         run: |
@@ -53,7 +53,7 @@ jobs:
 
       - name: Capture Changed version
         id: new_version
-        run: echo "version=$(grep -o '__version__ = "[^"]\+[0-9]\+"' pr/pennylane_lightning/core/_version.py | cut -d '"' -f 2)" >> $GITHUB_OUTPUT
+        run: echo "version=$(grep -o '__version__ = "[^"]\+[0-9]\+"' pr/pennylane_lightning/_version.py | cut -d '"' -f 2)" >> $GITHUB_OUTPUT
 
       - name: Commit and push changes
         if: steps.old_version.outputs.version != steps.new_version.outputs.version

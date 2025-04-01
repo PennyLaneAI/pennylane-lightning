@@ -99,7 +99,7 @@ coverage-cpp:
 		  $(OPTIONS)
 	cmake --build ./BuildCov $(VERBOSE) --target $(target)
 	cd ./BuildCov; for file in *runner ; do ./$(file); done; \
-	lcov --directory . -b ../pennylane_lightning/core/src/ --capture --output-file coverage.info; \
+	lcov --directory . -b ../pennylane_lightning/core/ --capture --output-file coverage.info; \
 	genhtml coverage.info --output-directory out || echo "genhtml failed"
 	echo "Coverage report generated in ./BuildCov/out/index.html"
 

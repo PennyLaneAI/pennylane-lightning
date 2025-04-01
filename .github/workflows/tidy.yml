@@ -8,9 +8,9 @@ on:
       - ready_for_review
     paths:
       - .github/workflows/tidy.yml
-      - pennylane_lightning/core/src/**
-      - '!pennylane_lightning/core/src/simulators/lightning_gpu/**'
-      - '!pennylane_lightning/core/src/simulators/lightning_kokkos/**'
+      - pennylane_lightning/core/**
+      - '!pennylane_lightning/core/simulators/lightning_gpu/**'
+      - '!pennylane_lightning/core/simulators/lightning_kokkos/**'
   push:
     branches:
       - master

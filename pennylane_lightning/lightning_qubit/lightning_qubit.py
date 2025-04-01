@@ -75,6 +75,11 @@ _to_matrix_ops = {
 
 def stopping_condition(op: Operator) -> bool:
     """A function that determines whether or not an operation is supported by ``lightning.qubit``."""
+    # As ControlledQubitUnitary == C(QubitUnitrary),
+    # it can be removed from `_operations` to keep
+    # consistency with `lightning_qubit.toml`
+    if isinstance(op, qml.ControlledQubitUnitary):
+        return True
     if isinstance(op, qml.PauliRot):
         word = op._hyperparameters["pauli_word"]  # pylint: disable=protected-access
         # decomposes to IsingXX, etc. for n <= 2
