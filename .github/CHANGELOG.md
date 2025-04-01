@@ -1,8 +1,12 @@
 # Release 0.41.0-dev
 
 ### New features since last release
+
 * Implement new C++ kernels for efficient in-place multiplication of sparse matrices to state vectors, supporting both controlled and non-controlled gates, and add comprehensive tests for this new functionality.
-  [#1085](https://github.com/PennyLaneAI/pennylane-lightning/pull/1085)
+  [(#1085)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1085)
+
+* Integrate sparse kernels into the Lightning-Qubit dynamic dispatcher, enhance the Python layers, and expand the testing process for dense and sparse operations.
+  [(#1094)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1094)
 
 * Add support for Python 3.13.
   [(#1001)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1001)
@@ -10,6 +14,12 @@
 ### Breaking changes
 
 ### Improvements
+
+* Add `PSWAP` gate native implementation to PennyLane-Lightning devices. 
+  [(#1088)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1088)
+
+* Add native support for `qml.PCPhase` for `lightning.qubit` and `lightning.gpu`.
+  [(#1107)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1107)
 
 * Use cuquantum API for calculating expectation value of Pauli sentences in Lightning-GPU.
   [(#1104)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1104)
@@ -29,7 +39,7 @@
 * Device (`"lightning.qubit"`, `"lightning.gpu"`, `"lightning.kokkos"`) pre-processing is now included in the 
   execution pipeline when program capture is enabled.
   [(#1084)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1084)
-  
+
 * Hide anonymous namespaces in Lightning docs.
   [(#1097)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1097)
 
@@ -111,6 +121,9 @@
 
 ### Bug fixes
 
+* Add missing GH workflow step id, python setup, and virtual environment for aarch64 cuda.
+  [(#1113)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1113)
+
 * Fix the development wheel upload step for Python 3.13 by following the same syntax as for the other Python wheels.
   [(#1111)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1111)
 
@@ -163,7 +176,8 @@ Luis Alfredo Nuñez Meneses,
 Lee J. O'Riordan,
 Andrija Paurevic,
 Alex Preciado,
-Shuli Shu
+Shuli Shu,
+Jake Zaia
 
 ---
 

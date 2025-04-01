@@ -85,6 +85,18 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
         """
         return StateVectorC128 if self.dtype == np.complex128 else StateVectorC64
 
+    @staticmethod
+    def _operation_is_sparse(operation):
+        """Check if the operation is a sparse matrix operation.
+
+        Args:
+            operation (Operation): operation to check
+
+        Returns:
+            bool: True if the operation is a sparse matrix operation, False otherwise
+        """
+        return operation.has_sparse_matrix and not operation.has_matrix
+
     def _apply_state_vector(self, state, device_wires: Wires):
         """Initialize the internal state vector in a specified state.
         Args:
@@ -127,11 +139,18 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
             base_operation = operation.base
 
         method = getattr(state, f"{base_operation.name}", None)
+
         control_wires = list(operation.control_wires)
         control_values = operation.control_values
         target_wires = list(operation.target_wires)
+
         if method is not None:  # apply n-controlled specialized gate
-            param = operation.parameters
+            param = base_operation.parameters
+
+            if isinstance(base_operation, qml.PCPhase):
+                hyper = float(base_operation.hyperparameters["dimension"][0])
+                param = np.array([base_operation.parameters[0], hyper])
+
             method(control_wires, control_values, target_wires, adjoint, param)
         else:  # apply gate as an n-controlled matrix
             method = getattr(state, "applyControlledMatrix")
@@ -142,6 +161,38 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
                 target_wires,
                 adjoint,
             )
+
+    def _apply_lightning_controlled_sparse(self, operation):
+        """Apply an arbitrary controlled operation to the state tensor.
+
+        Args:
+            operation (~pennylane.operation.Operation): controlled operation to apply
+        Returns:
+            None
+        """
+        state = self.state_vector
+
+        if isinstance(operation.base, Adjoint):
+            base_operation = operation.base.base
+        else:
+            base_operation = operation.base
+
+        CSR_SparseHamiltonian = base_operation.sparse_matrix()
+
+        control_wires = list(operation.control_wires)
+        control_values = operation.control_values
+        target_wires = list(operation.target_wires)
+
+        method = getattr(state, "applyControlledSparseMatrix")
+        method(
+            CSR_SparseHamiltonian.indptr,
+            CSR_SparseHamiltonian.indices,
+            CSR_SparseHamiltonian.data,
+            control_wires,
+            control_values,
+            target_wires,
+            False,
+        )
 
     def _apply_lightning_midmeasure(
         self, operation: MidMeasureMP, mid_measurements: dict, postselect_mode: str
@@ -171,6 +222,7 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
         if operation.reset and bool(sample):
             self.apply_operations([qml.PauliX(operation.wires)], mid_measurements=mid_measurements)
 
+    # pylint: disable=too-many-branches
     def _apply_lightning(
         self, operations, mid_measurements: dict = None, postselect_mode: str = None
     ):  # pylint: disable=protected-access
@@ -199,6 +251,7 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
             else:
                 op_adjoint_base = operation
                 invert_param = False
+
             name = op_adjoint_base.name
             method = getattr(state, name, None)
             wires = list(operation.wires)
@@ -218,17 +271,33 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
                 wires = [i for i, w in zip(wires, paulis) if w != "I"]
                 word = "".join(p for p in paulis if p != "I")
                 method(wires, invert_param, operation.parameters, word)
+            elif self._operation_is_sparse(operation):
+                # Inverse can be set to False since operation.sparse_matrix() is already in inverted form
+                if isinstance(op_adjoint_base, qml.ops.Controlled):
+                    self._apply_lightning_controlled_sparse(op_adjoint_base)
+                # If the operation is not controlled, apply it as a sparse matrix.
+                else:
+                    CSR_SparseHamiltonian = operation.sparse_matrix()
+                    method = getattr(state, "applySparseMatrix")
+                    method(
+                        CSR_SparseHamiltonian.indptr,
+                        CSR_SparseHamiltonian.indices,
+                        CSR_SparseHamiltonian.data,
+                        wires,
+                        False,
+                    )
             elif method is not None:  # apply specialized gate
-                param = operation.parameters
+                param = op_adjoint_base.parameters
+
+                if isinstance(op_adjoint_base, qml.PCPhase):
+                    hyper = float(op_adjoint_base.hyperparameters["dimension"][0])
+                    param = np.array([op_adjoint_base.parameters[0], hyper])
+
                 method(wires, invert_param, param)
             elif isinstance(op_adjoint_base, qml.ops.Controlled):  # apply n-controlled gate
                 self._apply_lightning_controlled(op_adjoint_base, invert_param)
-            else:  # apply gate as a matrix
-                # Inverse can be set to False since qml.matrix(operation) is already in
-                # inverted form
+            else:
+                # apply gate as a matrix
+                # Inverse can be set to False since qml.matrix(operation) is already in inverted form
                 method = getattr(state, "applyMatrix")
-                try:
-                    method(qml.matrix(operation), wires, False)
-                except AttributeError:  # pragma: no cover
-                    # To support older versions of PL
-                    method(operation.matrix, wires, False)
+                method(qml.matrix(operation), wires, False)
