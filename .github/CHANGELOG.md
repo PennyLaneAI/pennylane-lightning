@@ -33,7 +33,6 @@
 * Update CIs to use requirements-tests.txt instead of requirements-dev.txt.
   [(#1105)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1105)
 
-
 * Hide internal C++ APIs in Lightning docs.
   [(#1096)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1096)
 
