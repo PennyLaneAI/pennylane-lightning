@@ -17,6 +17,7 @@
  */
 
 #pragma once
+#include <iostream>
 #include <complex>
 #include <cstddef>
 #include <cstdlib>
@@ -36,6 +37,7 @@
 #include "GateFunctors.hpp"
 #include "GateOperation.hpp"
 #include "StateVectorBase.hpp"
+#include "StateVectorKokkos.hpp"
 #include "Util.hpp"
 #include "UtilKokkos.hpp"
 
@@ -109,36 +111,19 @@ class StateVectorKokkosMPI final
   public:
     using PrecisionT = fp_t;
     using SVK = StateVectorKokkos<PrecisionT>;
-    using ComplexT = Kokkos::complex<fp_t>;
-    using CFP_t = ComplexT;
-    using DoubleLoopRank = Kokkos::Rank<2>;
-    using HostExecSpace = Kokkos::DefaultHostExecutionSpace;
-    using KokkosExecSpace = Kokkos::DefaultExecutionSpace;
-    using KokkosVector = Kokkos::View<ComplexT *>;
-    using KokkosSizeTVector = Kokkos::View<std::size_t *>;
-    using UnmanagedComplexHostView =
-        Kokkos::View<ComplexT *, Kokkos::HostSpace,
-                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
-    using UnmanagedSizeTHostView =
-        Kokkos::View<std::size_t *, Kokkos::HostSpace,
-                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
+    using ComplexT = typename SVK::ComplexT;
+    using CFP_t = typename SVK::CFP_t;
+    using KokkosVector = typename SVK::KokkosVector;
+    using UnmanagedComplexHostView = typename SVK::UnmanagedComplexHostView;
     using UnmanagedConstComplexHostView =
-        Kokkos::View<const ComplexT *, Kokkos::HostSpace,
-                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
+        typename SVK::UnmanagedConstComplexHostView;
+    using KokkosSizeTVector = typename SVK::KokkosSizeTVector;
+    using UnmanagedSizeTHostView = typename SVK::UnmanagedSizeTHostView;
     using UnmanagedConstSizeTHostView =
-        Kokkos::View<const std::size_t *, Kokkos::HostSpace,
-                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
-    using UnmanagedPrecisionHostView =
-        Kokkos::View<PrecisionT *, Kokkos::HostSpace,
-                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
-    using ScratchViewComplex =
-        Kokkos::View<ComplexT *, KokkosExecSpace::scratch_memory_space,
-                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
-    using ScratchViewSizeT =
-        Kokkos::View<std::size_t *, KokkosExecSpace::scratch_memory_space,
-                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
-    using TeamPolicy = Kokkos::TeamPolicy<>;
-    using MemoryStorageT = Pennylane::Util::MemoryStorageLocation::Undefined;
+        typename SVK::UnmanagedConstSizeTHostView;
+    using UnmanagedPrecisionHostView = typename SVK::UnmanagedPrecisionHostView;
+    using KokkosExecSpace = typename SVK::KokkosExecSpace;
+    using HostExecSpace = typename SVK::HostExecSpace;
 
     StateVectorKokkosMPI() = delete;
     StateVectorKokkosMPI(std::size_t num_qubits,
@@ -154,15 +139,9 @@ class StateVectorKokkosMPI final
         }
         communicator_ = communicator;
         Kokkos::InitializationSettings settings = kokkos_args;
-        settings.set_device_id(get_mpi_rank());
         num_qubits_ = num_qubits;
-        if (num_qubits > 0) {
-            sv_ = std::make_unique<SVK>(get_num_local_wires(), settings);
-            setBasisState(0U);
-            recvbuf_ = std::make_unique<SVK>(get_num_local_wires(), settings);
-            sendbuf_ = std::make_unique<SVK>(get_num_local_wires(), settings);
-        }
 
+        settings.set_device_id(get_mpi_rank());
         global_wires_.resize(log2(static_cast<std::size_t>(get_mpi_size())));
         std::iota(global_wires_.begin(), global_wires_.end(), 0);
         local_wires_.resize(get_num_local_wires());
@@ -171,7 +150,62 @@ class StateVectorKokkosMPI final
         mpi_rank_to_global_index_map_.resize(get_mpi_size());
         std::iota(mpi_rank_to_global_index_map_.begin(),
                   mpi_rank_to_global_index_map_.end(), 0);
+
+        if (num_qubits > 0) {
+            sv_ = std::make_unique<SVK>(get_num_local_wires(), settings);
+            setBasisState(0U);
+            recvbuf_ = std::make_unique<SVK>(get_num_local_wires(), settings);
+            sendbuf_ = std::make_unique<SVK>(get_num_local_wires(), settings);
+        }
     };
+
+        /**
+     * @brief Create a new state vector from data on the host.
+     *
+     * @param num_qubits Number of qubits
+     */
+    template <class complex>
+    StateVectorKokkosMPI(complex *hostdata_, const std::size_t length,
+                         const Kokkos::InitializationSettings &kokkos_args = {},
+                         const MPI_Comm &communicator = MPI_COMM_WORLD)
+        : StateVectorKokkosMPI(log2(length), kokkos_args, communicator) {
+        PL_ABORT_IF_NOT(isPerfectPowerOf2(length),
+                        "The size of provided data must be a power of 2.");
+        const std::size_t blk{get_blk_size()};
+        const std::size_t offset{blk * get_mpi_rank()};
+        (*sv_).HostToDevice(reinterpret_cast<ComplexT *>(hostdata_ + offset),
+                            blk);
+    }
+
+    /**
+     * @brief Create a new state vector from data on the host.
+     *
+     * @param num_qubits Number of qubits
+     */
+    StateVectorKokkosMPI(const ComplexT *hostdata_, const std::size_t length,
+                         const Kokkos::InitializationSettings &kokkos_args = {},
+                         const MPI_Comm &communicator = MPI_COMM_WORLD)
+        : StateVectorKokkosMPI(log2(length), kokkos_args, communicator) {
+        PL_ABORT_IF_NOT(isPerfectPowerOf2(length),
+                        "The size of provided data must be a power of 2.");
+        const std::size_t blk{get_blk_size()};
+        const std::size_t offset{blk * get_mpi_rank()};
+        std::vector<ComplexT> hostdata_copy(hostdata_ + offset,
+                                            hostdata_ + offset + blk);
+        (*sv_).HostToDevice(hostdata_copy.data(), hostdata_copy.size());
+    }
+
+    /**
+     * @brief Create a new state vector from data on the host.
+     *
+     * @param num_qubits Number of qubits
+     */
+    template <class complex>
+    StateVectorKokkosMPI(std::vector<complex> hostdata_,
+                         const Kokkos::InitializationSettings &kokkos_args = {},
+                         const MPI_Comm &communicator = MPI_COMM_WORLD)
+        : StateVectorKokkosMPI(hostdata_.data(), hostdata_.size(),
+                               kokkos_args, communicator) {}
 
     /******************
     MPI-related methods
@@ -293,7 +327,7 @@ Wires-related methods
     }
 
     std::size_t get_global_index_from_mpi_rank(const std::size_t mpi_rank) {
-        return mpi_rank_to_global_index_map_[global_index];
+        return mpi_rank_to_global_index_map_[mpi_rank];
     }
 
     std::size_t get_mpi_rank_from_global_index(const std::size_t global_index) {
@@ -337,11 +371,11 @@ Wires-related methods
      *
      * @param index Index of the target element.
      */
-    void setBasisState(std::size_t index) {
+    void setBasisState(std::size_t global_index) {
         const auto index = global_2_local_index(global_index);
         reset_indices_();
-        const auto global_index = static_cast<std::size_t>(get_mpi_rank());
-        if (index.first == global_index) {
+        const auto rank = static_cast<std::size_t>(get_mpi_rank());
+        if (index.first == rank) {
             (*sv_).setBasisState(index.second);
         } else {
             (*sv_).initZeros();
@@ -391,15 +425,16 @@ Wires-related methods
      */
     void setStateVector(const std::vector<std::size_t> &indices,
                         const std::vector<ComplexT> &values) {
+        reset_indices_();
         const std::size_t blk{get_blk_size()};
         const std::size_t offset{blk * get_mpi_rank()};
         initZeros();
-        KokkosSizeTVector d_indices("d_indices", blk);
-        KokkosVector d_values("d_values", blk);
-        Kokkos::deep_copy(d_indices, UnmanagedConstSizeTHostView(
-                                         indices.data() + offset, blk));
-        Kokkos::deep_copy(d_values, UnmanagedConstComplexHostView(
-                                        values.data() + offset, blk));
+        std::vector<std::size_t> d_indices(blk);
+        std::vector<ComplexT>  d_values(blk);
+        std::copy(indices.data() + offset, indices.data() + offset + blk,
+                  d_indices.begin());
+        std::copy(values.data() + offset, values.data() + offset + blk,
+                  d_values.begin());
         (*sv_).setStateVector(d_indices, d_values);
     }
 
@@ -411,6 +446,7 @@ Wires-related methods
      */
     void setStateVector(const std::vector<ComplexT> &state,
                         const std::vector<std::size_t> &wires) {
+        PL_ABORT("Not implemented yet.");
         PL_ABORT_IF_NOT(state.size() == exp2(wires.size()),
                         "Inconsistent state and wires dimensions.");
         setStateVector(state.data(), wires);
@@ -507,35 +543,24 @@ Wires-related methods
         : StateVectorKokkos(hostdata_.data(), hostdata_.size(), kokkos_args) {}
      */
 
-    /**
+      /**
      * @brief Copy constructor
      *
      * @param other Another state vector
-     * @param kokkos_args Arguments for Kokkos initialization
      */
-    /* StateVectorKokkos(const StateVectorKokkos &other,
-                      const Kokkos::InitializationSettings &kokkos_args = {})
-        : StateVectorKokkos(other.getNumQubits(), kokkos_args) {
-        this->DeviceToDevice(other.getView());
-    } */
+    StateVectorKokkosMPI(const StateVectorKokkosMPI &other,
+        const Kokkos::InitializationSettings &kokkos_args = {},
+        const MPI_Comm &communicator = MPI_COMM_WORLD)
+: StateVectorKokkosMPI(other.getNumQubits(), kokkos_args,
+              communicator) {
+(*sv_).DeviceToDevice(other.getView());
+}
 
     /**
      * @brief Destructor for StateVectorKokkos class
      */
-    /* ~StateVectorKokkos() {
-        data_.reset();
-        {
-            const std::lock_guard<std::mutex> lock(init_mutex_);
-            if (!is_exit_reg_) {
-                is_exit_reg_ = true;
-                std::atexit([]() {
-                    if (!Kokkos::is_finalized()) {
-                        Kokkos::finalize();
-                    }
-                });
-            }
-        }
-    } */
+    
+     ~StateVectorKokkosMPI() {}
 
     std::vector<std::size_t>
     find_global_wires(const std::vector<std::size_t> &wires) {
@@ -552,10 +577,14 @@ Wires-related methods
     std::vector<std::size_t>
     local_wires_subset_to_swap(const std::vector<std::size_t> &global_wires) {
         std::vector<std::size_t> local_wires;
-        for (std::size_t = 0; i < global_wires.size(); i++) {
+        for (std::size_t i = 0; i < global_wires.size(); i++) {
             local_wires.push_back(local_wires_[i]);
         }
         return local_wires;
+    }
+
+    bool is_generalized_permutation_matrix([[maybe_unused]] const std::string &opName) {
+        return false; // To update
     }
 
     void swap_global_local_wires(const std::vector<std::size_t> &global_wires,
@@ -606,7 +635,7 @@ Wires-related methods
         if (!is_wires_local(wires)) {
             auto global_wires = find_global_wires(wires);
             auto local_wires = local_wires_subset_to_swap(global_wires);
-            swap_global_local_wires(global_wires, local_wires)
+            swap_global_local_wires(global_wires, local_wires);
         }
 
         (*sv_).applyOperation(opName, get_local_wires_indices(wires), inverse,
@@ -675,13 +704,13 @@ Wires-related methods
         if (!is_wires_local(wires)) {
             auto global_wires = find_global_wires(wires);
             auto local_wires = local_wires_subset_to_swap(global_wires);
-            swap_global_local_wires(global_wires, local_wires)
+            swap_global_local_wires(global_wires, local_wires);
         }
 
         if (!is_wires_local(controlled_wires)) {
             auto global_wires = find_global_wires(controlled_wires);
             auto local_wires = local_wires_subset_to_swap(global_wires);
-            swap_global_local_wires(global_wires, local_wires)
+            swap_global_local_wires(global_wires, local_wires);
         }
 
         (*sv_).applyOperation(opName, get_local_wires_indices(controlled_wires),
@@ -789,17 +818,15 @@ Wires-related methods
     auto applyGenerator(const std::string &opName,
                         const std::vector<std::size_t> &wires,
                         bool inverse = false) -> PrecisionT {
-        if (is_wires_local(wires)) {
-            return (*sv_).applyGenerator(opName, get_local_wires_indices(wires),
-                                         inverse, params);
+
+        if (!is_wires_local(wires)) {
+            auto global_wires = find_global_wires(wires);
+            auto local_wires = local_wires_subset_to_swap(global_wires);
+            swap_global_local_wires(global_wires, local_wires);
         }
-        const auto generator_op =
-            reverse_lookup(generator_names, std::string_view{opName});
-        auto matrix =
-            Pennylane::Gates::getGeneratorMatrix<Kokkos::complex, PrecisionT>(
-                generator_op);
-        applyOperation("Matrix", wires, false, {}, matrix);
-        return namedGeneratorFactor<PrecisionT>(generator_op);
+            return (*sv_).applyGenerator(opName, get_local_wires_indices(wires),
+                                         inverse);
+        
     }
 
     /**
@@ -868,7 +895,7 @@ Wires-related methods
      * @param wire Wire to collapse.
      * @param branch Branch 0 or 1.
      */
-    void collapse(std::size_t wire, bool branch) {
+    void collapse([[maybe_unused]] std::size_t wire, [[maybe_unused]] bool branch) {
         /* KokkosVector matrix("gate_matrix", 4);
         Kokkos::parallel_for(
             matrix.size(), KOKKOS_LAMBDA(std::size_t k) {
@@ -913,7 +940,7 @@ Wires-related methods
      * @param other Kokkos View
      */
     void updateData(const KokkosVector other) {
-        Kokkos::deep_copy(*data_, other);
+        (*sv_).updateData(other); 
     }
 
     /**
@@ -960,14 +987,14 @@ Wires-related methods
      *
      * @return The pointer to the data of state vector
      */
-    [[nodiscard]] auto getView() const -> KokkosVector & { return *data_; }
+    [[nodiscard]] auto getView() const -> KokkosVector & { return (*sv_).getView(); }
 
     /**
      * @brief Get the Kokkos data of the state vector
      *
      * @return The pointer to the data of state vector
      */
-    [[nodiscard]] auto getView() -> KokkosVector & { return *data_; }
+    [[nodiscard]] auto getView() -> KokkosVector & { return (*sv_).getView(); }
 
     /**
      * @brief Get the vector-converted Kokkos view
@@ -987,7 +1014,7 @@ Wires-related methods
      *
      */
     inline void HostToDevice(ComplexT *sv, std::size_t length) {
-        Kokkos::deep_copy(*data_, UnmanagedComplexHostView(sv, length));
+        (*sv_).HostToDevice(sv, length);
     }
 
     /**
@@ -995,7 +1022,7 @@ Wires-related methods
      *
      */
     inline void DeviceToHost(ComplexT *sv, std::size_t length) const {
-        Kokkos::deep_copy(UnmanagedComplexHostView(sv, length), *data_);
+        (*sv_).HostToDevice(sv, length);
     }
 
     /**
@@ -1003,8 +1030,26 @@ Wires-related methods
      *
      */
     inline void DeviceToDevice(KokkosVector vector_to_copy) {
-        Kokkos::deep_copy(*data_, vector_to_copy);
+        (*sv_).DeviceToDevice(vector_to_copy);
     }
+
+
+    /**
+     * @brief Get underlying data vector
+     */
+    [[nodiscard]] auto getDataVector(const int root = 0)
+        -> std::vector<ComplexT> {
+        std::vector<ComplexT> data_((get_mpi_rank() == root) ? this->getLength()
+                                                             : 0);
+        std::vector<ComplexT> local_((*sv_).getLength());
+        (*sv_).DeviceToHost(local_.data(), local_.size());
+        PL_MPI_IS_SUCCESS(MPI_Gather(local_.data(), local_.size(),
+                                     get_mpi_type<ComplexT>(), data_.data(),
+                                     local_.size(), get_mpi_type<ComplexT>(),
+                                     root, communicator_)); // Update to Gatherv to reorder result!
+        return data_;
+    }
+
 
   private:
     std::size_t num_qubits_;
@@ -1013,5 +1058,7 @@ Wires-related methods
     std::unique_ptr<SVK> sendbuf_;
     MPI_Comm communicator_;
     std::vector<std::size_t> mpi_rank_to_global_index_map_;
+    std::vector<std::size_t> global_wires_;
+    std::vector<std::size_t> local_wires_;
 };
 }; // namespace Pennylane::LightningKokkos

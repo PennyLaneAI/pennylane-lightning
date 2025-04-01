@@ -302,6 +302,19 @@ class StateVectorKokkos final
                       const Kokkos::InitializationSettings &kokkos_args = {})
         : StateVectorKokkos(hostdata_.data(), hostdata_.size(), kokkos_args) {}
 
+
+
+    /**
+     * @brief Create a new state vector from data on the host.
+     *
+     * @param num_qubits Number of qubits
+     */
+    template <class complex>
+    StateVectorKokkos(std::vector<complex> hostdata_,
+                      const Kokkos::InitializationSettings &kokkos_args = {})
+        : StateVectorKokkos(reinterpret_cast<ComplexT *>(hostdata_.data()),
+                            hostdata_.size(), kokkos_args) {}
+                            
     /**
      * @brief Copy constructor
      *
