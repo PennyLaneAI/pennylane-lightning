@@ -134,8 +134,6 @@ jobs:
           # Python build settings
           CIBW_BEFORE_BUILD: |
             python -m pip install pybind11 cmake~=3.27.0 build
-            # Prone lightning_tensor src files to be included in the wheel
-            echo "prune pennylane_lightning/core/src/simulators/lightning_tensor" >> MANIFEST.in
 
           CIBW_ENVIRONMENT: |
             CMAKE_ARGS="-DCMAKE_BUILD_TYPE=Release"
@@ -146,7 +144,11 @@ jobs:
 
           CIBW_BUILD_FRONTEND: build
 
-        run: python -m cibuildwheel --output-dir wheelhouse
+        run: |
+          # Prone lightning_tensor src files to be included in the wheel
+          echo "prune pennylane_lightning/core/src/simulators/lightning_tensor" >> MANIFEST.in
+          cat MANIFEST.in
+          python -m cibuildwheel --output-dir wheelhouse
 
       - name: Patch wheels
         run: |
@@ -203,11 +205,11 @@ jobs:
           regex: '.*[0-9]+.[0-9]+.[0-9]+[-_]?rc[0-9]+'
 
       - uses: actions/upload-artifact@v4
-        # if: |
-        #   github.event_name == 'release' ||
-        #   github.event_name == 'workflow_dispatch' ||
-        #   github.ref == 'refs/heads/master' ||
-        #   steps.rc_build.outputs.match != ''
+        if: |
+          github.event_name == 'release' ||
+          github.event_name == 'workflow_dispatch' ||
+          github.ref == 'refs/heads/master' ||
+          steps.rc_build.outputs.match != ''
         with:
           name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ fromJson('{ "cp310-*":"py310","cp311-*":"py311","cp312-*":"py312","cp313-*":"py313" }')[matrix.cibw_build] }}-${{ matrix.arch }}.zip
           path: ./wheelhouse/*.whl
