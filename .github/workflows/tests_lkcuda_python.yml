@@ -31,11 +31,12 @@ on:
       - master
 
 env:
-  CI_CUDA_ARCH: 86
-  COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:./coverage.xml --no-flaky-report -p no:warnings --tb=native"
   GCC_VERSION: 11
-  TF_VERSION: 2.10.0
-  TORCH_VERSION: 1.11.0+cpu
+  CI_CUDA_ARCH: 86
+  TF_VERSION: 2.16.2
+  KERAS_VERSION: 3.9.0
+  TORCH_VERSION: 2.3.1+cpu
+  COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:./coverage.xml --no-flaky-report -p no:warnings --tb=native"
 
 concurrency:
   group: tests_lkcuda_python-${{ github.ref }}-${{ github.event_name }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
@@ -211,8 +212,7 @@ jobs:
         run: |
           cd main
           python -m pip install -r requirements-tests.txt
-          python -m pip install "jax[cpu]==0.4.28; python_version<='3.12'"
-          python -m pip install openfermionpyscf
+          python -m pip install "jax[cpu]==0.4.28; python_version<='3.12'" openfermionpyscf
 
       - name: Checkout PennyLane for release or latest build
         if: inputs.pennylane-version == 'release' || inputs.pennylane-version == 'latest'
@@ -245,7 +245,7 @@ jobs:
       - name: Install ML libraries for interfaces
         run: |
           python -m pip install --upgrade torch==$TORCH_VERSION -f https://download.pytorch.org/whl/cpu/torch_stable.html
-          python -m pip install --upgrade tensorflow~=$TF_VERSION keras~=$TF_VERSION
+          python -m pip install --upgrade tensorflow~=$TF_VERSION keras~=$KERAS_VERSION
 
       - name: Install backend device
         if: ${{ matrix.pl_backend != 'all'}}
@@ -269,15 +269,6 @@ jobs:
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
           pl-device-test --device ${DEVICENAME} --skip-ops --shots=10000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
-
-      #TODO: remove after v0.41.0 release (update the next step if condition too)
-      - name: Patch (stable/latest) - Remove after release
-        if: inputs.lightning-version == 'stable' && inputs.pennylane-version == 'latest'
-        run: |
-          pushd main/tests
-          find . -type f -exec sed -i 's/control_values=[wires[0], wires[1]]/control_values=[0, 1]/g' {} +
-          find . -type f -exec sed -i 's/"control_values": "01"/"control_values": [0, 1]/g' {} +
-          popd
 
       - name: Run PennyLane-Lightning unit tests
         if: ${{ matrix.pl_backend != 'all' }}

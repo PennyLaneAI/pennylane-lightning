@@ -176,8 +176,6 @@ jobs:
 
           CIBW_BEFORE_TEST: |
             python -m pip install -r requirements-tests.txt
-            # FIXME(v0.40.0): install PennyLane/latest to fix pennylane.devices.capabilities requirements
-            python -m pip install git+https://github.com/PennyLaneAI/pennylane.git@master
             if ${{ matrix.pl_backend == 'lightning_kokkos'}}
             then
               PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
