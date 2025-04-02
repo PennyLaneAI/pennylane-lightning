@@ -249,11 +249,11 @@ class StateVectorKokkosMPI final
      * @param  request MPI request allowing to validate the transfer has been
      * completed.
      */
-    void mpi_irecv(const std::size_t source, const std::size_t size,  MPI_Request &request) {
+    void mpi_irecv(const std::size_t source, const std::size_t size,  MPI_Request &request, int tag) {
         KokkosVector sv_view = (*recvbuf_).getView();
         PL_MPI_IS_SUCCESS(MPI_Irecv(reinterpret_cast<void *>(sv_view.data()),
         size, get_mpi_type<ComplexT>(),
-                                    static_cast<int>(source), 0, communicator_,
+                                    static_cast<int>(source), tag, communicator_,
                                     &request));
     }
 
@@ -266,12 +266,12 @@ class StateVectorKokkosMPI final
      * @param  copy If true, copy the state vector data in sendbuf_ before
      * sending.
      */
-    void mpi_isend(const std::size_t dest, const std::size_t size, MPI_Request &request) {
+    void mpi_isend(const std::size_t dest, const std::size_t size, MPI_Request &request, int tag) {
         KokkosVector sd_view = (*sendbuf_).getView();
         mpi_wait(request);
         PL_MPI_IS_SUCCESS(MPI_Isend(reinterpret_cast<void *>(sd_view.data()),
                                     size, get_mpi_type<ComplexT>(),
-                                    static_cast<int>(dest), 0, communicator_,
+                                    static_cast<int>(dest), tag, communicator_,
                                     &request));
     }
 
@@ -574,13 +574,20 @@ Wires-related methods
         return global_wires;
     }
 
-    std::vector<std::size_t>
-    local_wires_subset_to_swap(const std::vector<std::size_t> &global_wires) {
-        std::vector<std::size_t> local_wires(global_wires.size());
-        for (std::size_t i = 0; i < global_wires.size(); i++) {
-            local_wires[i] = local_wires_[i];
+    std::vector<std::size_t> // TODO: FIX ME: NEED TO MAKE SURE wires from local_wires_ is not operated on!
+    local_wires_subset_to_swap(const std::vector<std::size_t> &global_wires, const std::vector<std::size_t> &wires) {
+        PL_ABORT_IF(global_wires.size() > local_wires_.size(),
+                    "global_wires must be smaller than local_wires.");
+        std::vector<std::size_t> local_wires;
+        int j = 0;
+
+        while(local_wires.size() != global_wires.size()) {
+            if (std::find(wires.begin(), wires.end(), local_wires_[j]) == wires.end()) {
+                local_wires.push_back(local_wires_[j]);
+            }
+            j++;
         }
-        TODO: FIX ME with better algorithm based on memory pattern
+        //TODO: FIX ME with better algorithm based on memory pattern
         return local_wires;
     }
 
@@ -595,38 +602,15 @@ Wires-related methods
             "global_wires and local_wires must have equal dimensions.");
 
 
-            // Swap global and local wires labels
-            std::unordered_map<int, size_t> global_wires_indices;
-    std::unordered_map<int, size_t> local_wires_indices;
-            for (size_t i = 0; i < global_wires.size(); ++i) {
-                auto it_g = std::find(global_wires_.begin(), global_wires_.end(), global_wires[i]);
-                if (it_g == global_wires_.end()) {
-                    PL_ABORT("Error");
-                }
-                global_wires_indices[global_wires[i]] = std::distance(global_wires_.begin(), it_g);
-        
-                auto it_l = std::find(local_wires_.begin(), local_wires_.end(), local_wires[i]);
-                if (it_l == local_wires_.end()) {
-                    PL_ABORT("Error");
-                }
-                local_wires_indices[local_wires[i]] = std::distance(local_wires_.begin(), it_l);
-            }
-
-            for (size_t i = 0; i < global_wires.size(); ++i) {
-                std::swap(global_wires_[global_wires_indices[global_wires[i]]], local_wires_[local_wires_indices[local_wires[i]]]);
-            }
-
             // Map local wires to actual local wire indices
+
             auto local_wires_indices = get_local_wires_indices(local_wires);
             std::size_t global_index = get_global_index_from_mpi_rank(get_mpi_rank());
 
         // Actually swap memory
-        // TODO: add me
-        for (std::size_t batch_index = 1; batch_index < (1<<local_wires.size() - 1); batch_index++) {
+        // TODO: improve me
+        for (std::size_t batch_index = 1; batch_index < (1<<local_wires.size()); batch_index++) {
 
-            MPI_Request send_req = MPI_REQUEST_NULL;
-            MPI_Request recv_req = MPI_REQUEST_NULL;
-            
             std::size_t j = 0;
             for (std::size_t i = 0; i < (*sv_).getView().size(); i++) {
                 bool relevant = true;
@@ -635,17 +619,52 @@ Wires-related methods
                 }
                 if (relevant) {
                     (*sendbuf_).getView()(j) = (*sv_).getView()(i);
-                    j++
+                    j++;
                 }
             }
 
-            mpi_isend(batch_index ^ global_index, 1 << (get_num_local_wires() - local_wires.size()), send_req);
-            mpi_irecv(batch_index ^ global_index, 1 << (get_num_local_wires() - local_wires.size()), recv_req);
-
-
-
-
+            std::size_t other_global_index = batch_index ^ global_index;
+            std::size_t other_mpi_rank = get_mpi_rank_from_global_index(other_global_index);
+            std::cout << "I am rank " << get_mpi_rank() << " and I am sending to rank " << other_mpi_rank << " with tag " << batch_index << " and this number of elements " << (1 << (get_num_local_wires() - local_wires.size())) << std::endl;
+            MPI_Sendrecv((*sendbuf_).getView().data(), 1 << (get_num_local_wires() - local_wires.size()), get_mpi_type<ComplexT>(), other_mpi_rank, batch_index,
+                (*recvbuf_).getView().data(), 1 << (get_num_local_wires() - local_wires.size()), get_mpi_type<ComplexT>(), other_mpi_rank, batch_index, communicator_, MPI_STATUS_IGNORE);
+            j = 0;
+            for (std::size_t i = 0; i < (*sv_).getView().size(); i++) {
+                bool relevant = true;
+                for (std::size_t k = 0; k < local_wires_indices.size(); k++) {
+                    relevant &= (i >> local_wires_indices[k] & 1) == (other_global_index >> k & 1);
+                }
+                if (relevant) {
+                    (*sv_).getView()(i) = (*recvbuf_).getView()(j);
+                    j++;
+                }
+            }
         }
+
+
+
+            // Swap global and local wires labels
+            std::unordered_map<int, size_t> global_wires_positions;
+    std::unordered_map<int, size_t> local_wires_positions;
+            for (size_t i = 0; i < global_wires.size(); ++i) {
+                auto it_g = std::find(global_wires_.begin(), global_wires_.end(), global_wires[i]);
+                if (it_g == global_wires_.end()) {
+                    PL_ABORT("Error");
+                }
+                global_wires_positions[global_wires[i]] = std::distance(global_wires_.begin(), it_g);
+        
+                auto it_l = std::find(local_wires_.begin(), local_wires_.end(), local_wires[i]);
+                if (it_l == local_wires_.end()) {
+                    PL_ABORT("Error");
+                }
+                local_wires_positions[local_wires[i]] = std::distance(local_wires_.begin(), it_l);
+            }
+
+            for (size_t i = 0; i < global_wires.size(); ++i) {
+                std::swap(global_wires_[global_wires_positions[global_wires[i]]], local_wires_[local_wires_positions[local_wires[i]]]);
+            }
+            //barrier();
+        
     }
 
 
@@ -672,15 +691,15 @@ Wires-related methods
      * @param params Optional parameter list for parametric gates.
      * @param gate_matrix Optional std gate matrix if opName doesn't exist.
      */
-    void applyOperation(const std::string &opName,
-                        const std::vector<std::size_t> &wires,
-                        bool inverse = false,
-                        const std::vector<fp_t> &params = {},
-                        const std::vector<ComplexT> &gate_matrix = {}) {
-        if (opName == "Identity") {
-            // No op
-            return;
-        }
+    void applyOperation([[maybe_unused]] const std::string &opName,
+                        [[maybe_unused]] const std::vector<std::size_t> &wires,
+                        [[maybe_unused]] bool inverse = false,
+                        [[maybe_unused]] const std::vector<fp_t> &params = {},
+                        [[maybe_unused]] const std::vector<ComplexT> &gate_matrix = {}) {
+        //if (opName == "Identity") {
+        //    // No op
+        //    return;
+        //}
 
         if (is_wires_global(wires) &&
             is_generalized_permutation_matrix(opName)) {
@@ -690,12 +709,12 @@ Wires-related methods
 
         if (!is_wires_local(wires)) {
             auto global_wires = find_global_wires(wires);
-            auto local_wires = local_wires_subset_to_swap(global_wires);
+            auto local_wires = local_wires_subset_to_swap(global_wires, wires);
             swap_global_local_wires(global_wires, local_wires);
         }
 
-        (*sv_).applyOperation(opName, get_local_wires_indices(wires), inverse,
-                              params, gate_matrix);
+        //(*sv_).applyOperation(opName, get_local_wires_indices(wires), inverse,
+        //                      params, gate_matrix);
     }
 
     /**
@@ -759,13 +778,13 @@ Wires-related methods
 
         if (!is_wires_local(wires)) {
             auto global_wires = find_global_wires(wires);
-            auto local_wires = local_wires_subset_to_swap(global_wires);
+            auto local_wires = local_wires_subset_to_swap(global_wires, wires);
             swap_global_local_wires(global_wires, local_wires);
         }
 
         if (!is_wires_local(controlled_wires)) {
             auto global_wires = find_global_wires(controlled_wires);
-            auto local_wires = local_wires_subset_to_swap(global_wires);
+            auto local_wires = local_wires_subset_to_swap(global_wires, wires);
             swap_global_local_wires(global_wires, local_wires);
         }
 
@@ -877,7 +896,7 @@ Wires-related methods
 
         if (!is_wires_local(wires)) {
             auto global_wires = find_global_wires(wires);
-            auto local_wires = local_wires_subset_to_swap(global_wires);
+            auto local_wires = local_wires_subset_to_swap(global_wires, wires);
             swap_global_local_wires(global_wires, local_wires);
         }
             return (*sv_).applyGenerator(opName, get_local_wires_indices(wires),
@@ -968,6 +987,7 @@ Wires-related methods
      * @brief Normalize vector (to have norm 1).
      */
     void normalize() {
+        // TODO: To update
         auto sv_view = getView();
 
         PrecisionT squaredNorm = 0.0;
@@ -1089,12 +1109,76 @@ Wires-related methods
         (*sv_).DeviceToDevice(vector_to_copy);
     }
 
+    // TODO: implement me
+    //void reorder_global_local_wires() {
+    //    
+    //}
+//
+
+// Function to partition the array (using Lomuto partition scheme)
+int partition(std::vector<std::size_t>& arr, std::size_t low, std::size_t high) {
+    std::size_t pivot = arr[high]; // Choose the last element as the pivot
+    std::size_t i = (low - 1);     // Index of smaller element
+
+    for (std::size_t j = low; j < high; j++) {
+        // If the current element is smaller than or equal to the pivot
+        if (arr[j] < pivot) {
+            i++; // Increment index of smaller element
+            std::swap(arr[i], arr[j]);
+            std::vector<ComplexT> swap_matrix(16, {0.0, 0.0});
+            swap_matrix[0] = 1.0;
+            swap_matrix[5] = 1.0;
+            swap_matrix[10] = 1.0;
+            swap_matrix[15] = 1.0;
+            std::cout << "I am rank " << get_mpi_rank() << " and I am swapping " << arr[i] << " and " << arr[j] << std::endl;
+            //(*sv_).applyOperation("Matrix", get_local_wires_indices({arr[i], arr[j]}), false, {}, swap_matrix);
+
+
+        }
+    }
+    std::swap(arr[i + 1], arr[high]);
+    return (i + 1);
+}
+
+void quickSort(std::vector<std::size_t>& arr, std::size_t low, std::size_t high) {
+    if (low < high) {
+        // pi is partitioning index, arr[pi] is now at right place
+        std::size_t pi = partition(arr, low, high);
+
+        // Recursively sort elements before partition and after partition
+        quickSort(arr, low, pi - 1);
+        quickSort(arr, pi + 1, high);
+    }
+}
+    void reorder_local_wires() {
+        quickSort(local_wires_, 0, local_wires_.size() - 1);
+    }
+
+    void reorder_global_wires() {
+        std::vector<std::size_t> global_wires;
+        std::vector<std::size_t> local_wires;
+        for (const auto &wire : global_wires_) {
+            if (wire >= get_num_global_wires()) {
+                global_wires.push_back(wire);
+            }
+        }
+
+
+        for (const auto &wire : local_wires_) {
+            if (wire < get_num_global_wires()) {
+                local_wires.push_back(wire);
+            }
+        }
+        swap_global_local_wires(global_wires, local_wires);
+    }
 
     /**
      * @brief Get underlying data vector
      */
     [[nodiscard]] auto getDataVector(const int root = 0)
         -> std::vector<ComplexT> {
+        //    reorder_global_wires();
+        //    reorder_local_wires();
         std::vector<ComplexT> data_((get_mpi_rank() == root) ? this->getLength()
                                                              : 0);
         std::vector<ComplexT> local_((*sv_).getLength());
@@ -1114,6 +1198,8 @@ Wires-related methods
     std::unique_ptr<SVK> sendbuf_;
     MPI_Comm communicator_;
     std::vector<std::size_t> mpi_rank_to_global_index_map_;
+
+    public:
     std::vector<std::size_t> global_wires_;
     std::vector<std::size_t> local_wires_;
 };
