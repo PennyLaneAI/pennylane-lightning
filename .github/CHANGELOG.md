@@ -127,6 +127,9 @@
 
 ### Bug fixes
 
+* Fix the validation for all wires present after adding the extra wires from apply mid_circuit_measurements.
+  [(#1119)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1119)
+
 * Fix the stable/stable issue with missing `pytest-split`.
   [(#1112)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1112)
 
