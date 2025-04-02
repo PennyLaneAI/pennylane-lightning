@@ -147,7 +147,6 @@ jobs:
         run: |
           # Prune lightning_tensor src files to be included in the wheel
           echo "prune pennylane_lightning/core/src/simulators/lightning_tensor" >> MANIFEST.in
-          cat MANIFEST.in
           python -m cibuildwheel --output-dir wheelhouse
 
       - name: Patch wheels
@@ -158,11 +157,6 @@ jobs:
             python -m wheel unpack $i.Name
             $name = $i.Name
             $dirName = python -c "s = '$name'; print('-'.join(s.split('-')[0:2]))"
-            echo ""
-            echo $dirName
-            echo ""
-            ls
-            echo ""
             if (Test-Path -Path $dirName\pennylane_lightning\RelWithDebInfo) {
               Move-Item -Path $dirName\pennylane_lightning\RelWithDebInfo\* -Destination $dirName\pennylane_lightning
               Remove-Item $dirName\pennylane_lightning\RelWithDebInfo -Recurse
@@ -172,10 +166,6 @@ jobs:
             Remove-Item $dirName -Recurse
           }
           cd ..
-          echo ""
-          ls
-          echo ""
-
 
       - name: Determine Python version
         id: pyvs
@@ -193,6 +183,10 @@ jobs:
           python -m ensurepip --upgrade
           python -m pip install setuptools
           python -m pip install -r requirements-tests.txt
+          if (${{ matrix.pl_backend == 'lightning_kokkos'}}) {
+            PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
+            SKIP_COMPILATION=True python -m pip install . -vv
+          }
           pushd wheelhouse
           $wheels = Get-ChildItem "./" -Filter *.whl
           foreach ($i in $wheels){
