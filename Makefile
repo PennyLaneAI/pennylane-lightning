@@ -70,7 +70,7 @@ clean:
 .PHONY: python python-skip-compile
 python:
 	PL_BACKEND=$(PL_BACKEND) python scripts/configure_pyproject_toml.py
-	CMAKE_ARGS="-DSCIPY_OPENBLAS=$(SCIPY_OPENBLAS)" pip install -e . --config-settings editable_mode=compat -vv
+	CMAKE_ARGS="-DSCIPY_OPENBLAS=$(SCIPY_OPENBLAS) $(OPTIONS)" pip install -e . --config-settings editable_mode=compat -vv
 
 python-skip-compile:
 	PL_BACKEND=$(PL_BACKEND) python scripts/configure_pyproject_toml.py
