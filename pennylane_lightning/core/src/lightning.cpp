@@ -63,6 +63,14 @@ template <class ComplexT>
     std::cout << "])" << std::endl;
 }
 
+[[maybe_unused]] void print(const std::vector<Kokkos::complex<double>> &vec,
+    const std::string &name = "vector") {
+std::cout << "Vector : " << name << " = np.array([" << std::endl;
+for (auto &e : vec) {
+std::cout << e << std::endl;
+}
+std::cout << "])" << std::endl;
+}
 
 [[maybe_unused]] void print(const std::vector<std::size_t> &vec,
                             const std::string &name = "vector") {
@@ -179,91 +187,88 @@ int main(int argc, char *argv[]) {
     auto indices = prep_input_1q<unsigned int>(argc, argv);
 
     //constexpr std::size_t run_avg = 1;
-    std::vector<std::string> gates_1q = {"Identity", "PauliX"};
 
     std::size_t nq = indices.q;
     std::vector<std::complex<double>> sv_data = get_ascend_vector(nq);
 
     // Create PennyLane Lightning statevector
-    StateVectorKokkos<double> sv(sv_data);
-    StateVectorKokkosMPI<double> svmpi(sv_data);
-    if (svmpi.get_mpi_rank() == 0) {
-        std::cout << "Press Enter to continue.\n";
-        std::ignore = std::getchar();
-
-        std::ignore = std::getchar();
-
-        std::ignore = std::getchar();
-
-        std::ignore = std::getchar();
-
-        std::ignore = std::getchar();
-    }
-    [[maybe_unused]] auto nglobal = svmpi.get_num_global_wires();
+    //StateVectorKokkos<double> sv(sv_data);
+    //StateVectorKokkosMPI<double> svmpi(sv_data);
+    //if (svmpi.get_mpi_rank() == 0) {
+    //    std::cout << "Press Enter to continue.\n";
+    //    std::ignore = std::getchar();
+    //    std::ignore = std::getchar();
+    //    std::ignore = std::getchar();
+    //    std::ignore = std::getchar();
+    //    std::ignore = std::getchar();
+    //}
+    //[[maybe_unused]] auto nglobal = svmpi.get_num_global_wires();
     //print(svmpi);
     //print_basis_states(indices.q);
     //print_local_wires(indices.q);
 
-    bool inverse = false;
-
-    // Identity
-    //std::string gate = "Identity";
-    //auto gate_op =
-    //    reverse_lookup(gate_names, std::string_view{gate});
-    //auto npar = lookup(gate_num_params, gate_op);
-    //std::vector<double> params(npar, 0.1);
-    //std::size_t target = 0;
-    //sv.applyOperation(gate, {target}, inverse, params);
-    //svmpi.applyOperation(gate, {target}, inverse, params);
 
     // 2 qubit identity
-    [[maybe_unused]] std::vector<Kokkos::complex<double>> id2 (16, {0.0, 0.0});
-    id2[0] =  1.0;
-    id2[5] =  1.0;
-    id2[10] =  1.0;
-    id2[15] =  1.0;
-    svmpi.barrier();
-    std::vector<double> param {};
-    svmpi.applyOperation("matrix", {0, 2}, inverse, param, id2);
-    svmpi.applyOperation("matrix", {1, 4}, inverse, param, id2);
-    std::cout << "svmpi = " << std::endl;
-    print(svmpi);
-    svmpi.barrier();
+    //if (svmpi.get_mpi_rank() == 0) {
+    //    std::cout<<"global_wires = ";
+    //    print(svmpi.global_wires_);
+    //    std::cout<<"local_wires = ";
+    //    print(svmpi.local_wires_);
+    //    std::cout << "OK" << std::endl;
+    //}
 
-    if (svmpi.get_mpi_rank() == 0) {
-        std::cout<<"global_wires = ";
-        print(svmpi.global_wires_);
-        std::cout<<"local_wires = ";
-        print(svmpi.local_wires_);
-        std::cout << "OK" << std::endl;
+    std::vector<std::string> gates_1q = {
+        "Identity", 
+        //"PauliX",     
+        //"PauliY", "PauliZ", "Hadamard", "S",
+        //"T",        "PhaseShift", "RX",     "RY",     "RZ",       "Rot"
+        };
+    
+    for (auto &gate : gates_1q) {
+        for (auto inverse : std::vector<bool>({false, true})) {
+            for (std::size_t target = 0; target < nq; target++) {
+
+    // Create PennyLane Lightning statevector
+    StateVectorKokkos<double> sv(sv_data);
+    StateVectorKokkosMPI<double> svmpi(sv_data);
+                if (svmpi.get_mpi_rank() == 0) {
+                    std::cout << "Testing " << gate << " with : "
+                                << "(inv, targets) = (" << inverse << ", "
+                                << target << ")" << std::endl;
+                }
+                auto gate_op =
+                    reverse_lookup(gate_names, std::string_view{gate});
+                auto npar = lookup(gate_num_params, gate_op);
+                std::vector<double> params(npar, 0.1);
+                sv.applyOperation(gate, {target}, inverse, params);
+                svmpi.applyOperation(gate, {target}, inverse, params);
+                //svmpi.reorder_global_wires();
+                //svmpi.reorder_local_wires();
+
+
+                if (svmpi.get_mpi_rank() == 0) {
+                    std::cout<<"global_wires = ";
+                    print(svmpi.global_wires_);
+                    std::cout<<"local_wires = ";
+                    print(svmpi.local_wires_);
+                    std::cout << "OK" << std::endl;
+                }
+
+                svmpi.barrier();
+                print(svmpi);
+                svmpi.barrier();
+                if (svmpi.get_mpi_rank() == 0) {
+                print(sv.getDataVector());
+                }
+                svmpi.barrier();
+                allclose(svmpi, sv);
+                svmpi.barrier();
+            }
+        }
     }
     
-    svmpi.reorder_global_wires();
-    svmpi.barrier();
-    if (svmpi.get_mpi_rank() == 0) {
-        std::cout<<"just before reordering_local_wires ";
-        std::cout<<"global_wires = ";
-        print(svmpi.global_wires_);
-        std::cout<<"local_wires = ";
-        print(svmpi.local_wires_);
-        std::cout << "OK" << std::endl;
-    }
-    svmpi.reorder_local_wires();
-    svmpi.barrier();
-    print(svmpi);
-
-
-    if (svmpi.get_mpi_rank() == 0) {
-        std::cout<<"global_wires = ";
-        print(svmpi.global_wires_);
-        std::cout<<"local_wires = ";
-        print(svmpi.local_wires_);
-        std::cout << "OK" << std::endl;
-    }
     
-    
-    
-    svmpi.barrier();
+    //svmpi.barrier();
     int finflag;
     MPI_Finalized(&finflag);
     if (!finflag) {

@@ -142,14 +142,11 @@ class StateVectorKokkosMPI final
         num_qubits_ = num_qubits;
 
         settings.set_device_id(get_mpi_rank());
-        global_wires_.resize(log2(static_cast<std::size_t>(get_mpi_size())));
-        std::iota(global_wires_.begin(), global_wires_.end(), 0);
+        global_wires_.resize(log2(static_cast<std::size_t>(get_mpi_size()))); // set to constructor line
         local_wires_.resize(get_num_local_wires());
-        std::iota(local_wires_.begin(), local_wires_.end(),
-                  num_qubits - get_num_local_wires());
         mpi_rank_to_global_index_map_.resize(get_mpi_size());
-        std::iota(mpi_rank_to_global_index_map_.begin(),
-                  mpi_rank_to_global_index_map_.end(), 0);
+
+        reset_indices_();
 
         if (num_qubits > 0) {
             sv_ = std::make_unique<SVK>(get_num_local_wires(), settings);
@@ -249,13 +246,13 @@ class StateVectorKokkosMPI final
      * @param  request MPI request allowing to validate the transfer has been
      * completed.
      */
-    void mpi_irecv(const std::size_t source, const std::size_t size,  MPI_Request &request, int tag) {
+    /* void mpi_irecv(const std::size_t source, const std::size_t size,  MPI_Request &request, int tag) {
         KokkosVector sv_view = (*recvbuf_).getView();
         PL_MPI_IS_SUCCESS(MPI_Irecv(reinterpret_cast<void *>(sv_view.data()),
         size, get_mpi_type<ComplexT>(),
                                     static_cast<int>(source), tag, communicator_,
                                     &request));
-    }
+    } */
 
     /**
      * @brief  Sends local state vector to another MPI-process.
@@ -266,14 +263,14 @@ class StateVectorKokkosMPI final
      * @param  copy If true, copy the state vector data in sendbuf_ before
      * sending.
      */
-    void mpi_isend(const std::size_t dest, const std::size_t size, MPI_Request &request, int tag) {
+    /* void mpi_isend(const std::size_t dest, const std::size_t size, MPI_Request &request, int tag) {
         KokkosVector sd_view = (*sendbuf_).getView();
         mpi_wait(request);
         PL_MPI_IS_SUCCESS(MPI_Isend(reinterpret_cast<void *>(sd_view.data()),
                                     size, get_mpi_type<ComplexT>(),
                                     static_cast<int>(dest), tag, communicator_,
                                     &request));
-    }
+    } */
 
     /**
      * @brief  Waits for an MPI transfer completion.
@@ -337,11 +334,10 @@ Wires-related methods
     }
 
     void reset_indices_() {
-        std::iota(mpi_rank_to_global_index_map_.begin(),
-                  mpi_rank_to_global_index_map_.end(), 0);
         std::iota(global_wires_.begin(), global_wires_.end(), 0);
-        std::iota(local_wires_.begin(), local_wires_.end(),
-                  num_qubits_ - get_num_local_wires());
+        std::iota(local_wires_.begin(), local_wires_.end(), get_num_global_wires() );
+        std::iota(mpi_rank_to_global_index_map_.begin(),
+                  mpi_rank_to_global_index_map_.end(), 0); 
     }
 
     bool is_wires_local(const std::vector<std::size_t> &wires) {
@@ -574,7 +570,7 @@ Wires-related methods
         return global_wires;
     }
 
-    std::vector<std::size_t> // TODO: FIX ME: NEED TO MAKE SURE wires from local_wires_ is not operated on!
+    std::vector<std::size_t> 
     local_wires_subset_to_swap(const std::vector<std::size_t> &global_wires, const std::vector<std::size_t> &wires) {
         PL_ABORT_IF(global_wires.size() > local_wires_.size(),
                     "global_wires must be smaller than local_wires.");
@@ -595,12 +591,13 @@ Wires-related methods
         return false; // TODO: implement me
     }
 
-    void swap_global_local_wires(const std::vector<std::size_t> &global_wires,
-                                 const std::vector<std::size_t> &local_wires) {
+    void swap_global_local_wires(std::vector<std::size_t> &global_wires,
+                                 std::vector<std::size_t> &local_wires) {
         PL_ABORT_IF_NOT(
             global_wires.size() == local_wires.size(),
             "global_wires and local_wires must have equal dimensions.");
-
+            std::sort(global_wires.begin(), global_wires.end());
+            std::sort(local_wires.begin(), local_wires.end());
 
             // Map local wires to actual local wire indices
 
@@ -609,8 +606,13 @@ Wires-related methods
 
         // Actually swap memory
         // TODO: improve me
-        for (std::size_t batch_index = 1; batch_index < (1<<local_wires.size()); batch_index++) {
-
+        for (std::size_t batch_index = 1; batch_index < (1<<get_num_global_wires()); batch_index++) {
+            bool send = true;
+            for (std::size_t digits = 0; digits < global_wires_.size(); digits++) {
+                send &= (!(batch_index >> digits & 1) || (std::find(global_wires_.begin(), global_wires_.end(), global_wires[digits]) != global_wires_.end()));
+            }
+            if (send) {
+            barrier();
             std::size_t j = 0;
             for (std::size_t i = 0; i < (*sv_).getView().size(); i++) {
                 bool relevant = true;
@@ -623,11 +625,14 @@ Wires-related methods
                 }
             }
 
+            barrier();
             std::size_t other_global_index = batch_index ^ global_index;
             std::size_t other_mpi_rank = get_mpi_rank_from_global_index(other_global_index);
             std::cout << "I am rank " << get_mpi_rank() << " and I am sending to rank " << other_mpi_rank << " with tag " << batch_index << " and this number of elements " << (1 << (get_num_local_wires() - local_wires.size())) << std::endl;
             MPI_Sendrecv((*sendbuf_).getView().data(), 1 << (get_num_local_wires() - local_wires.size()), get_mpi_type<ComplexT>(), other_mpi_rank, batch_index,
                 (*recvbuf_).getView().data(), 1 << (get_num_local_wires() - local_wires.size()), get_mpi_type<ComplexT>(), other_mpi_rank, batch_index, communicator_, MPI_STATUS_IGNORE);
+
+            barrier();
             j = 0;
             for (std::size_t i = 0; i < (*sv_).getView().size(); i++) {
                 bool relevant = true;
@@ -639,6 +644,8 @@ Wires-related methods
                     j++;
                 }
             }
+            barrier();
+        }
         }
 
 
@@ -677,7 +684,7 @@ Wires-related methods
             auto it = std::find(local_wires_.begin(), local_wires_.end(), wire);
             if (it != local_wires_.end()) {
                 local_wires_indices.push_back(
-                    std::distance(local_wires_.begin(), it));
+                    std::distance(local_wires_.begin(), it)); 
             }
         }
         return local_wires_indices;
@@ -712,9 +719,12 @@ Wires-related methods
             auto local_wires = local_wires_subset_to_swap(global_wires, wires);
             swap_global_local_wires(global_wires, local_wires);
         }
-
-        //(*sv_).applyOperation(opName, get_local_wires_indices(wires), inverse,
-        //                      params, gate_matrix);
+        barrier();
+        if (get_mpi_rank() == 0) {
+            std::cout << "I am rank " << get_mpi_rank() << " and I am applying the operation " << opName << " to the wires " << wires[0] << wires[1] << "and converted to " << get_local_wires_indices(wires)[0] << get_local_wires_indices(wires)[1]<< std::endl;
+        }
+        (*sv_).applyOperation(opName, get_local_wires_indices(wires), inverse,
+                              params, gate_matrix);
     }
 
     /**
@@ -1115,43 +1125,25 @@ Wires-related methods
     //}
 //
 
-// Function to partition the array (using Lomuto partition scheme)
-int partition(std::vector<std::size_t>& arr, std::size_t low, std::size_t high) {
-    std::size_t pivot = arr[high]; // Choose the last element as the pivot
-    std::size_t i = (low - 1);     // Index of smaller element
 
-    for (std::size_t j = low; j < high; j++) {
-        // If the current element is smaller than or equal to the pivot
-        if (arr[j] < pivot) {
-            i++; // Increment index of smaller element
-            std::swap(arr[i], arr[j]);
-            std::vector<ComplexT> swap_matrix(16, {0.0, 0.0});
-            swap_matrix[0] = 1.0;
-            swap_matrix[5] = 1.0;
-            swap_matrix[10] = 1.0;
-            swap_matrix[15] = 1.0;
-            std::cout << "I am rank " << get_mpi_rank() << " and I am swapping " << arr[i] << " and " << arr[j] << std::endl;
-            //(*sv_).applyOperation("Matrix", get_local_wires_indices({arr[i], arr[j]}), false, {}, swap_matrix);
-
-
-        }
-    }
-    std::swap(arr[i + 1], arr[high]);
-    return (i + 1);
-}
-
-void quickSort(std::vector<std::size_t>& arr, std::size_t low, std::size_t high) {
-    if (low < high) {
-        // pi is partitioning index, arr[pi] is now at right place
-        std::size_t pi = partition(arr, low, high);
-
-        // Recursively sort elements before partition and after partition
-        quickSort(arr, low, pi - 1);
-        quickSort(arr, pi + 1, high);
-    }
-}
     void reorder_local_wires() {
-        quickSort(local_wires_, 0, local_wires_.size() - 1);
+        PL_ABORT_IF_NOT(std::all_of(
+            local_wires_.begin(), local_wires_.end(),
+            [this](const auto i) { return get_num_global_wires() <= i < num_qubits_; }),
+            "local wires must be least significant indices. Run reorder_global_wires first.");
+
+        for (std::size_t i = 0; i < get_num_local_wires(); ++i) {
+            std::size_t wire_i = i + get_num_global_wires();
+            if (local_wires_[i] > wire_i)
+            {
+                std::cout << "I am rank " << get_mpi_rank() << " and I am swapping " << local_wires_[i] << " with " << wire_i << std::endl;
+                applyOperation("SWAP", {local_wires_[i], wire_i}, false);
+            }
+        }
+
+        std::iota(local_wires_.begin(), local_wires_.end(),
+                  get_num_global_wires());
+        
     }
 
     void reorder_global_wires() {
@@ -1177,8 +1169,7 @@ void quickSort(std::vector<std::size_t>& arr, std::size_t low, std::size_t high)
      */
     [[nodiscard]] auto getDataVector(const int root = 0)
         -> std::vector<ComplexT> {
-        //    reorder_global_wires();
-        //    reorder_local_wires();
+        //reorder_local_wires();
         std::vector<ComplexT> data_((get_mpi_rank() == root) ? this->getLength()
                                                              : 0);
         std::vector<ComplexT> local_((*sv_).getLength());
