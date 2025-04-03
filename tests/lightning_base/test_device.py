@@ -131,6 +131,7 @@ class TestHelpers:
         [
             qml.RX(1.23, 0),
             qml.ctrl(-1.0 * qml.Z(0), control=[1]),
+            qml.ctrl(qml.exp(qml.Z(0)), control=[1]),
         ],
     )
     def test_stopping_condition_valid(self, valid_op):

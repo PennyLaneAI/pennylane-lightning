@@ -86,7 +86,7 @@ def stopping_condition(op: Operator) -> bool:
         word = op._hyperparameters["pauli_word"]  # pylint: disable=protected-access
         # decomposes to IsingXX, etc. for n <= 2
         return reduce(lambda x, y: x + (y != "I"), word, 0) > 2
-    if op.name == "C(SProd)":
+    if op.name in ("C(SProd)", "C(Exp)"):
         return True
     return _supports_operation(op.name)
 
