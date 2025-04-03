@@ -801,16 +801,20 @@ class TestQSVT:
 
         assert np.allclose(res, ref)
 
+
 class TestPrepSelPrep:
     """Test the PrepSelPrep routine."""
 
-    @pytest.mark.parametrize("lcu", [
-        qml.Z(0) + qml.Z(1),
-        qml.Z(0) @ qml.Z(1), 
-        -1 * qml.Z(0) @ qml.Z(1),
-        qml.Hamiltonian([0.5], [qml.Z(0)@qml.Z(1)]),
-        qml.Hamiltonian([0.5], [-1.0 * qml.Z(0)@qml.Z(1)])
-    ])
+    @pytest.mark.parametrize(
+        "lcu",
+        [
+            qml.Z(0) + qml.Z(1),
+            qml.Z(0) @ qml.Z(1),
+            -1 * qml.Z(0) @ qml.Z(1),
+            qml.Hamiltonian([0.5], [qml.Z(0) @ qml.Z(1)]),
+            qml.Hamiltonian([0.5], [-1.0 * qml.Z(0) @ qml.Z(1)]),
+        ],
+    )
     def test_prepselprep(self, lcu):
         n_qubits = 3
         dev = qml.device(device_name, wires=n_qubits)

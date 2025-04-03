@@ -127,9 +127,11 @@
 
 ### Bug fixes
 
+* Fix the issue with decomposing controlled `SProd` operations.
+  [(#XX)](https://github.com/PennyLaneAI/pennylane-lightning/pull/XX)
+
 * Fix the issue with pip installing PennyLane (and Lightning-Qubit) on Windows.
   [(#1116)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1116)
-
 
 * Fix the stable/stable issue with missing `pytest-split`.
   [(#1112)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1112)
