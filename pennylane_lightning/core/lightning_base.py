@@ -29,6 +29,7 @@ from pennylane.tape import QuantumScript, QuantumTape
 from pennylane.typing import Result, ResultBatch, TensorLike
 
 from ._measurements_base import LightningBaseMeasurements
+from ._version import __version__
 
 Result_or_ResultBatch = Union[Result, ResultBatch]
 QuantumTapeBatch = Sequence[QuantumTape]
@@ -56,6 +57,7 @@ class LightningBase(Device):
             computing the jacobian.
     """
 
+    # pylint: disable=too-many-instance-attributes
     pennylane_requires = ">=0.40"
     version = __version__
     author = "Xanadu Inc."
