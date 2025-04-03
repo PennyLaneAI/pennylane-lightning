@@ -91,6 +91,8 @@ _to_matrix_ops = {
 
 def stopping_condition(op: Operator) -> bool:
     """A function that determines whether or not an operation is supported by ``lightning.gpu``."""
+    if op.name == "C(SProd)":
+        return True
     return _supports_operation(op.name)
 
 

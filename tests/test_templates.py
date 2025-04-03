@@ -800,3 +800,27 @@ class TestQSVT:
         ref = qml.QNode(circuit, dq, diff_method=None)()
 
         assert np.allclose(res, ref)
+
+class TestPrepSelPrep:
+    """Test the PrepSelPrep routine."""
+
+    @pytest.mark.parametrize("lcu", [
+        qml.Z(0) + qml.Z(1),
+        qml.Z(0) @ qml.Z(1), 
+        -1 * qml.Z(0) @ qml.Z(1),
+        qml.Hamiltonian([0.5], [qml.Z(0)@qml.Z(1)]),
+        qml.Hamiltonian([0.5], [-1.0 * qml.Z(0)@qml.Z(1)])
+    ])
+    def test_prepselprep(self, lcu):
+        n_qubits = 3
+        dev = qml.device(device_name, wires=n_qubits)
+        dq = qml.device("default.qubit", wires=n_qubits)
+
+        def circuit():
+            qml.PrepSelPrep(lcu, control=[2])
+            return qml.expval(qml.Z(0))
+
+        res = qml.QNode(circuit, dev, diff_method=None)()
+        ref = qml.QNode(circuit, dq, diff_method=None)()
+
+        assert np.allclose(res, ref)

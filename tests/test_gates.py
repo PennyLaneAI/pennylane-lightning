@@ -403,7 +403,7 @@ def test_arbitrary_inv_unitary_correct():
 
 @pytest.mark.parametrize("theta,phi", list(zip(THETA, PHI)))
 def test_qubit_RY(theta, phi, tol):
-    """Test that Hadamard expectation value is correct"""
+    """Test that qml.RY is applied correctly"""
     n_qubits = 4
     dev_def = qml.device("default.qubit", wires=n_qubits)
     dev = qml.device(device_name, wires=n_qubits)
@@ -426,7 +426,7 @@ def test_qubit_RY(theta, phi, tol):
 @pytest.mark.parametrize("theta,phi", list(zip(THETA, PHI)))
 @pytest.mark.parametrize("n_wires", range(1, 7))
 def test_qubit_unitary(n_wires, theta, phi, tol):
-    """Test that Hadamard expectation value is correct"""
+    """Test that qml.QubitUnitary value is correct"""
     n_qubits = 10
     dev_def = qml.device("default.qubit", wires=n_qubits)
     dev = qml.device(device_name, wires=n_qubits)
