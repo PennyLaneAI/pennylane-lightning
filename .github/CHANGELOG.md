@@ -15,6 +15,9 @@
 
 ### Improvements
 
+* Install Pytorch 2.5.1 CPU in CIs and Update make python command.
+  [[#1118]](https://github.com/PennyLaneAI/pennylane-lightning/pull/1118)
+
 * Update TF, Keras and Torch versions in the CIs based on PennyLane's pinned versions.
   [(#1112)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1112)
 
@@ -45,11 +48,10 @@
   [(#1079)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/1079)
   [(#565)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/565)
 
-* Device (`"lightning.qubit"`, `"lightning.gpu"`, `"lightning.kokkos"`) pre-processing is now included in the
-  execution pipeline when program capture is enabled.
+* Device (`"lightning.qubit"`, `"lightning.gpu"`, `"lightning.kokkos"`) pre-processing is now included in the execution pipeline when program capture is enabled.
   [(#1084)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1084)
 
-* Add semgrep/bandit security scanning for pull requests
+* Add semgrep/bandit security scanning for pull requests.
   [(#1100)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1100)
 
 * Hide anonymous namespaces in Lightning docs.
@@ -85,11 +87,10 @@
 * Capture execution via `dev.eval_jaxpr` can now be used with `jax.jit` and `jax.vmap`.
   [(#1055)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1055)
 
-* Add an `execution_config` keyword argument to `LightningBase.eval_jaxpr` to accomodate a
-  Device API change.
+* Add an `execution_config` keyword argument to `LightningBase.eval_jaxpr` to accommodate a Device API change.
   [(#1067)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1067)
 
-* Lightning devices support dynamically allocated wires (e.g. `qml.device("lightning.qubit")`)
+* Lightning devices support dynamically allocated wires (e.g. `qml.device("lightning.qubit")`).
   [(#1043)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1043)
 
 * Remove the old device API references in the Lightning repo and test suite.
@@ -116,8 +117,7 @@
 * Replace the type checking using the property `return_type` of `MeasurementProcess` with direct `isinstance` checks.
   [(#1044)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1044)
 
-* Update Lightning integration tests following the `gradient_kwargs` deprecation
-  in Pennylane.
+* Update Lightning integration tests following the `gradient_kwargs` deprecation in Pennylane.
   [(#1045)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1045)
 
 * Update `qml.MultiControlledX` tests following the latest updates in PennyLane.
@@ -148,7 +148,6 @@
 * Fix the issue with pip installing PennyLane (and Lightning-Qubit) on Windows.
   [(#1116)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1116)
 
-
 * Fix the stable/stable issue with missing `pytest-split`.
   [(#1112)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1112)
 
@@ -173,7 +172,7 @@
 * Fix Github CI for aarch64 cuda to clean up after runs.
   [(#1074)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1074)
 
-* Increase maximum time for aarch64-CUDA Github CI action .
+* Increase maximum time for aarch64-CUDA Github CI action.
   [(#1072)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1072)
 
 * Fix `SyntaxWarning` from `is` with a literal in Python tests.
@@ -191,8 +190,7 @@
 * Update Github CI to use Ubuntu 24 and remove `libopenblas-base` package.
   [(#1041)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1041)
 
-* Update the `eval_jaxpr` method to handle the new signatures for the `cond`, `while`, and
-  `for` primitives.
+* Update the `eval_jaxpr` method to handle the new signatures for the `cond`, `while`, and `for` primitives.
   [(#1051)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1051)
 
 ### Contributors
