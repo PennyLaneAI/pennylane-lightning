@@ -128,7 +128,7 @@
 ### Bug fixes
 
 * Fix the issue with decomposing controlled `SProd` operations.
-  [(#XX)](https://github.com/PennyLaneAI/pennylane-lightning/pull/XX)
+  [(#1120)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1120)
 
 * Fix the issue with pip installing PennyLane (and Lightning-Qubit) on Windows.
   [(#1116)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1116)
