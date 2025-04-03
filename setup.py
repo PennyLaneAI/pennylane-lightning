@@ -191,16 +191,4 @@ info = {
     "ext_package": "pennylane_lightning",
 }
 
-if backend == "lightning_qubit":
-    info.update(
-        {
-            "package_data": {
-                "pennylane_lightning.core": [
-                    os.path.join("src", "*"),
-                    os.path.join("src", "**", "*"),
-                ]
-            },
-        }
-    )
-
 setup(**(info))

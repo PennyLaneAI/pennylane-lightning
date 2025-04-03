@@ -36,16 +36,16 @@
 * Hide internal C++ APIs in Lightning docs.
   [(#1096)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1096)
 
-* Implemented the `jaxpr_jvp` method to compute the jvp of a jaxpr using `lightning.qubit`.
+* Implement the `jaxpr_jvp` method to compute the jvp of a jaxpr using `lightning.qubit`.
   This method currently only support the adjoint differentiation method.
-  [(#1087)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1087)
-  [(#1106)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1106)
+  [(#1087)](https://github.com/PennyLaneAI/pennylane/pull/1087)
+  [(#1106)](https://github.com/PennyLaneAI/pennylane/pull/1106)
 
 * Modify expval of named operators in Lightning-Qubit for in-place computation of expectation value, to avoid creating an intermediate statevector
   [(#1079)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/1079)
   [(#565)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/565)
 
-* Device (`"lightning.qubit"`, `"lightning.gpu"`, `"lightning.kokkos"`) pre-processing is now included in the 
+* Device (`"lightning.qubit"`, `"lightning.gpu"`, `"lightning.kokkos"`) pre-processing is now included in the
   execution pipeline when program capture is enabled.
   [(#1084)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1084)
 
@@ -57,8 +57,8 @@
 
 * Expand test structure to efficiently handle sparse data.
   [(#1085)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1085)
-  
-* Removed redundant `reset_state` calls for circuit execution when state vector is freshly initialized.
+
+* Remove redundant `reset_state` calls for circuit execution when state vector is freshly initialized.
   [(#1076)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1076)
 
 * Added support for sparse `qml.QubitUnitary` gates for `lightning.qubit`, `lightning.gpu`, and `lightning.kokkos` backends.
@@ -67,7 +67,7 @@
 * Introduce a generalized sparse gate selection system via the `_observable_is_sparse` method in the base measurement class, enabling future expansion for any number of sparse observables.
   [(#1068)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1068)
 
-* Optimize the copy of a input state-vector into the LGPU #1071 
+* Optimize the copy of a input state-vector into Lightning-GPU.
   [(#1071)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1071)
 
 * Adds a net new workflow which would enable us to benchmark a pull request.
@@ -85,7 +85,7 @@
 * Capture execution via `dev.eval_jaxpr` can now be used with `jax.jit` and `jax.vmap`.
   [(#1055)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1055)
 
-* Adds an `execution_config` keyword argument to `LightningBase.eval_jaxpr` to accomodate a
+* Add an `execution_config` keyword argument to `LightningBase.eval_jaxpr` to accomodate a
   Device API change.
   [(#1067)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1067)
 
@@ -135,7 +135,7 @@
 * `SX` and `C(SX)` gates are natively supported for all lightning devices.
   [(#731)](https://github.com/PennyLaneAI/pennylane-lightning/pull/731)
 
-* Programs transformed by `qml.defer_measurements` can be executed on `lightning.qubit`. Supports `ctrl` and `adjoint` with program capture in `lightning.qubit`.
+* Program transformed by `qml.defer_measurements` can be executed on `lightning.qubit`. Supports `ctrl` and `adjoint` with program capture in `lightning.qubit`.
   [(#1069)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1069)
 
 ### Documentation
@@ -144,6 +144,10 @@
   [(#1037)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1037)
 
 ### Bug fixes
+
+* Fix the issue with pip installing PennyLane (and Lightning-Qubit) on Windows.
+  [(#1116)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1116)
+
 
 * Fix the stable/stable issue with missing `pytest-split`.
   [(#1112)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1112)
@@ -187,7 +191,7 @@
 * Update Github CI to use Ubuntu 24 and remove `libopenblas-base` package.
   [(#1041)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1041)
 
-* Updates the `eval_jaxpr` method to handle the new signatures for the `cond`, `while`, and
+* Update the `eval_jaxpr` method to handle the new signatures for the `cond`, `while`, and
   `for` primitives.
   [(#1051)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1051)
 
@@ -811,7 +815,7 @@ Ali Asadi, Astral Cai, Ahmed Darwish, Amintor Dusko, Vincent Michaud-Rioux, Luis
   [(#750)](https://github.com/PennyLaneAI/pennylane-lightning/pull/750)
 
 * Rationalize MCM tests, removing most end-to-end tests from the native MCM test file, but keeping one that validates multiple mid-circuit measurements with any allowed return.
-  [(#754)](https://github.com/PennyLaneAI/pennylane/pull/754)
+  [(#754)](https://github.com/PennyLaneAI/pennylane-lightning/pull/754)
 
 * Rename `lightning.tensor` C++ libraries.
   [(#755)](https://github.com/PennyLaneAI/pennylane-lightning/pull/755)
