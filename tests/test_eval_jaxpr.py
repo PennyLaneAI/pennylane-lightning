@@ -17,6 +17,7 @@ This module tests the eval_jaxpr method.
 from functools import partial
 
 import pennylane as qml
+import pennylane.errors
 import pytest
 from conftest import LightningDevice, device_name
 from pennylane.transforms.defer_measurements import DeferMeasurementsInterpreter
@@ -636,7 +637,7 @@ class TestDeferMeasurements:
         jaxpr = jax.make_jaxpr(f)()
         with pytest.raises(jaxlib.xla_extension.XlaRuntimeError):
             with pytest.raises(
-                qml.DeviceError, match="Lightning devices do not support postselection"
+                pennylane.errors.DeviceError, match="Lightning devices do not support postselection"
             ):
                 dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts)
 

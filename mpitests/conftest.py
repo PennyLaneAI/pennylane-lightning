@@ -19,7 +19,7 @@ Pytest configuration file for PennyLane-Lightning-GPU test suite.
 import itertools
 import os
 
-import pennylane as qml
+import pennylane.errors
 import pytest
 from pennylane import numpy as np
 
@@ -91,7 +91,7 @@ def get_device():
 device_name = get_device()
 
 if device_name not in qml.plugin_devices:
-    raise qml.DeviceError(
+    raise pennylane.errors.DeviceError(
         f"Device {device_name} does not exist. Make sure the required plugin is installed."
     )
 
@@ -106,7 +106,7 @@ if device_name == "lightning.gpu":
     )
 
 else:
-    raise qml.DeviceError(f"The MPI tests do not apply to the {device_name} device.")
+    raise pennylane.errors.DeviceError(f"The MPI tests do not apply to the {device_name} device.")
 
 
 # General qubit_device fixture, for any number of wires.

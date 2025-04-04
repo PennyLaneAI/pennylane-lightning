@@ -17,6 +17,7 @@ Unit tests for the LightningTensor class.
 
 import numpy as np
 import pennylane as qml
+import pennylane.errors
 import pytest
 from conftest import LightningDevice, LightningException, device_name
 from pennylane import DeviceError
@@ -105,7 +106,7 @@ class TestTensorNet:
 
         tape = QuantumScript([qml.StatePrep(np.array([1, 0, 0, 0]), wires=[0, 1])])
         with pytest.raises(
-            qml.DeviceError, match="Exact Tensor Network does not support StatePrep"
+            pennylane.errors.DeviceError, match="Exact Tensor Network does not support StatePrep"
         ):
             dev.execute(tape)
 
@@ -263,7 +264,9 @@ class TestTensorNetMPS:
 
         qnode_ltensor = qml.QNode(circuit, dev)
 
-        with pytest.raises(qml.DeviceError, match="Exact Tensor Network does not support MPSPrep"):
+        with pytest.raises(
+            pennylane.errors.DeviceError, match="Exact Tensor Network does not support MPSPrep"
+        ):
             _ = qnode_ltensor(MPS)
 
     @pytest.mark.parametrize(
