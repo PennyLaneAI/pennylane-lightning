@@ -33,7 +33,7 @@
 * Use cuquantum API for calculating expectation value of Pauli sentences in Lightning-GPU.
   [(#1104)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1104)
 
-* Update CIs to use requirements-tests.txt instead of requirements-dev.txt.
+* Update CIs to use `requirements-tests.txt` instead of `requirements-dev.txt`.
   [(#1105)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1105)
 
 * Hide internal C++ APIs in Lightning docs.
