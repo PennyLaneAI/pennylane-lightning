@@ -813,7 +813,7 @@ class TestPrepSelPrep:
             -1 * qml.Z(0) @ qml.Z(1),
             qml.Hamiltonian([0.5], [qml.Z(0) @ qml.Z(1)]),
             qml.Hamiltonian([0.5], [-1.0 * qml.Z(0) @ qml.Z(1)]),
-            qml.Hamiltonian([0.5], [qml.exp(qml.Z(0) @ qml.Z(1))]),
+            qml.Hamiltonian([1.0], [qml.exp(1j * qml.Z(0) @ qml.Z(1))]),
         ],
     )
     def test_prepselprep(self, lcu):
