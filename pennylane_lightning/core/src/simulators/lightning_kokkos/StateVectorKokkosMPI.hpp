@@ -609,7 +609,9 @@ Wires-related methods
         for (std::size_t batch_index = 1; batch_index < (1<<get_num_global_wires()); batch_index++) {
             bool send = true;
             for (std::size_t digits = 0; digits < global_wires_.size(); digits++) {
-                send &= (!(batch_index >> digits & 1) || (std::find(global_wires_.begin(), global_wires_.end(), global_wires[digits]) != global_wires_.end()));
+                bool is_global_wire_in_swap = std::find(global_wires.begin(), global_wires.end(), global_wires_[get_num_global_wires() - digits - 1]) != global_wires.end();
+                bool batch_index_digit = (batch_index >> digits) & 1;
+                send = send && (!batch_index_digit || is_global_wire_in_swap);
             }
             if (send) {
             barrier();
@@ -617,7 +619,10 @@ Wires-related methods
             for (std::size_t i = 0; i < (*sv_).getView().size(); i++) {
                 bool relevant = true;
                 for (std::size_t k = 0; k < local_wires_indices.size(); k++) {
-                    relevant &= (i >> local_wires_indices[k] & 1) == ((batch_index ^ global_index) >> k & 1);
+                    auto it = std::find(global_wires_.begin(), global_wires_.end(), global_wires[k]);
+                    std::size_t global_index_to_shift = global_wires_.size() - 1 - std::distance(global_wires_.begin(), it);
+                    std::size_t local_index_to_shift = local_wires_.size() - 1 - local_wires_indices[k];
+                    relevant &= (i >> local_index_to_shift & 1) == (((batch_index ^ global_index) >> global_index_to_shift) & 1);
                 }
                 if (relevant) {
                     (*sendbuf_).getView()(j) = (*sv_).getView()(i);
@@ -637,7 +642,10 @@ Wires-related methods
             for (std::size_t i = 0; i < (*sv_).getView().size(); i++) {
                 bool relevant = true;
                 for (std::size_t k = 0; k < local_wires_indices.size(); k++) {
-                    relevant &= (i >> local_wires_indices[k] & 1) == (other_global_index >> k & 1);
+                    auto it = std::find(global_wires_.begin(), global_wires_.end(), global_wires[k]);
+                    std::size_t global_index_to_shift = global_wires_.size() - 1 - std::distance(global_wires_.begin(), it);
+                    std::size_t local_index_to_shift = local_wires_.size() - 1 - local_wires_indices[k];
+                    relevant &= (i >> local_index_to_shift & 1) == (((batch_index ^ global_index) >> global_index_to_shift) & 1);
                 }
                 if (relevant) {
                     (*sv_).getView()(i) = (*recvbuf_).getView()(j);
