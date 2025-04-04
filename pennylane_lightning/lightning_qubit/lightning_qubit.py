@@ -391,10 +391,10 @@ class LightningQubit(LightningBase):
 
         program.add_transform(validate_measurements, name=self.name)
         program.add_transform(validate_observables, accepted_observables, name=self.name)
-        program.add_transform(validate_device_wires, self.wires, name=self.name)
         program.add_transform(
             mid_circuit_measurements, device=self, mcm_config=exec_config.mcm_config
         )
+        program.add_transform(validate_device_wires, self.wires, name=self.name)
 
         program.add_transform(
             decompose,
