@@ -15,7 +15,7 @@
 
 ### Improvements
 
-* Install Pytorch 2.5.1 CPU in CIs and Update make python command.
+* Install Pytorch 2.5.1 CPU in CIs and update `make python` command.
   [[#1118]](https://github.com/PennyLaneAI/pennylane-lightning/pull/1118)
 
 * Update TF, Keras and Torch versions in the CIs based on PennyLane's pinned versions.
@@ -63,7 +63,7 @@
 * Remove redundant `reset_state` calls for circuit execution when state vector is freshly initialized.
   [(#1076)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1076)
 
-* Added support for sparse `qml.QubitUnitary` gates for `lightning.qubit`, `lightning.gpu`, and `lightning.kokkos` backends.
+* Add support for sparse `qml.QubitUnitary` gates for `lightning.qubit`, `lightning.gpu`, and `lightning.kokkos` backends.
   [(#1068)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1068)
 
 * Introduce a generalized sparse gate selection system via the `_observable_is_sparse` method in the base measurement class, enabling future expansion for any number of sparse observables.
@@ -72,7 +72,7 @@
 * Optimize the copy of a input state-vector into Lightning-GPU.
   [(#1071)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1071)
 
-* Adds a net new workflow which would enable us to benchmark a pull request.
+* Add new GitHub workflow to enable benchmarking within pull request.
   [(#1073)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1073)
 
 * Fix wheel naming in Docker builds for `setuptools v75.8.1` compatibility.
@@ -157,7 +157,7 @@
 * Fix the development wheel upload step for Python 3.13 by following the same syntax as for the other Python wheels.
   [(#1111)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1111)
 
-* Add a workflow to run label-external-pull-request on external requests from forks.
+* Add a workflow to run `label-external-pull-request` to label pull requests from external forks.
   [(#1110)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1110)
 
 * Fix the `test_preprocess` test skip condition for `lightning.tensor`.
