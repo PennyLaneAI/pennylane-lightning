@@ -550,6 +550,10 @@ Wires-related methods
 : StateVectorKokkosMPI(other.getNumQubits(), kokkos_args,
               communicator) {
 (*sv_).DeviceToDevice(other.getView());
+global_wires_ = other.global_wires_;
+local_wires_ = other.local_wires_;
+mpi_rank_to_global_index_map_ = other.mpi_rank_to_global_index_map_;
+// TODO: need to copy global/local wires_ too
 }
 
     /**
@@ -605,7 +609,7 @@ Wires-related methods
             std::size_t global_index = get_global_index_from_mpi_rank(get_mpi_rank());
 
         // Actually swap memory
-        // TODO: improve me
+        // TODO: improve me, or at least parallelize me
         for (std::size_t batch_index = 1; batch_index < (1<<get_num_global_wires()); batch_index++) {
             bool send = true;
             for (std::size_t digits = 0; digits < global_wires_.size(); digits++) {
@@ -718,7 +722,7 @@ Wires-related methods
 
         if (is_wires_global(wires) &&
             is_generalized_permutation_matrix(opName)) {
-            PL_ABORT("Not implemented yet.");
+            PL_ABORT("Not implemented this optimization yet.");
             return;
         }
 
@@ -788,12 +792,12 @@ Wires-related methods
             return;
         }
 
-        if (is_wires_global(wires) && is_wires_global(controlled_wires) &&
-            is_generalized_permutation_matrix(opName)) {
-            PL_ABORT("Not implemented yet.");
-            return;
-        }
+        //if (is_wires_local(wires) && is_wires_global(controlled_wires)) {
+        //    PL_ABORT("Optimization Not implemented yet.");
+        //    return;
+        //}
 
+        // TODO: FIX ME - need to make sure we don't swap out control or target wires to global when swapping 
         if (!is_wires_local(wires)) {
             auto global_wires = find_global_wires(wires);
             auto local_wires = local_wires_subset_to_swap(global_wires, wires);
@@ -1127,11 +1131,7 @@ Wires-related methods
         (*sv_).DeviceToDevice(vector_to_copy);
     }
 
-    // TODO: implement me
-    //void reorder_global_local_wires() {
-    //    
-    //}
-//
+    
 
 
     void reorder_local_wires() {
@@ -1182,9 +1182,27 @@ Wires-related methods
                                                              : 0);
         std::vector<ComplexT> local_((*sv_).getLength());
         (*sv_).DeviceToHost(local_.data(), local_.size());
-        PL_MPI_IS_SUCCESS(MPI_Gather(local_.data(), local_.size(),
+        std::vector<int> recvcount(get_mpi_size(),local_.size());
+        std::vector<int> displacements(get_mpi_size(),0);
+        for (std::size_t rank = 0; rank < get_mpi_size(); rank++) {
+            for (std::size_t i = 0; i < get_num_global_wires(); i++) {       
+                std::size_t temp = ((get_global_index_from_mpi_rank(rank) >> (get_num_global_wires() - 1 - i) )&1) * (1 << (get_num_global_wires() - 1 - global_wires_[i]));
+                displacements[rank] += temp;
+            }
+            displacements[rank] *= local_.size();
+        }
+
+        if(get_mpi_rank() == root) {
+            for (std::size_t rank = 0; rank < get_mpi_size(); rank++) {
+                std::cout << "Rank: " << rank << ", Displacement: " << displacements[rank]
+                          << ", Recvcount: " << recvcount[rank] << std::endl;
+            }
+        }
+        
+        PL_MPI_IS_SUCCESS(MPI_Gatherv(local_.data(), local_.size(),
                                      get_mpi_type<ComplexT>(), data_.data(),
-                                     local_.size(), get_mpi_type<ComplexT>(),
+                                     recvcount.data(),
+                                     displacements.data(), get_mpi_type<ComplexT>(),
                                      root, communicator_)); // TODO: change to Gatherv to reorder result!
         return data_;
     }
@@ -1198,7 +1216,7 @@ Wires-related methods
     MPI_Comm communicator_;
     std::vector<std::size_t> mpi_rank_to_global_index_map_;
 
-    public:
+    public: // TODO: make private
     std::vector<std::size_t> global_wires_;
     std::vector<std::size_t> local_wires_;
 };

@@ -81,7 +81,7 @@ std::cout << "])" << std::endl;
     std::cout << "])" << std::endl;
 }
 
-[[maybe_unused]] void print(StateVectorKokkosMPI<double> sv,
+[[maybe_unused]] void print(StateVectorKokkosMPI<double> &sv,
                             const std::string &name = "statevector") {
     auto data = sv.getDataVector(0);
     if (0 == sv.get_mpi_rank()) {
@@ -108,7 +108,7 @@ std::cout << "])" << std::endl;
     }
 }
 
-[[maybe_unused]] void allclose(StateVectorKokkosMPI<double> svmpi,
+[[maybe_unused]] void allclose(StateVectorKokkosMPI<double> &svmpi,
                                StateVectorKokkos<double> sv) {
     [[maybe_unused]] constexpr double tol = 1.0e-6;
     auto dat = svmpi.getDataVector(0);
@@ -223,29 +223,16 @@ int main(int argc, char *argv[]) {
         "PauliY", "PauliZ", "Hadamard", "S",
         "T",        "PhaseShift", "RX",     "RY",     "RZ",       "Rot"
         };
-        std::vector<std::string> gates_2q = {"CNOT",
-            "CY",
-            "CZ",
-            "SWAP",
-            "IsingXX",
-            "IsingXY",
-            "IsingYY",
-            "IsingZZ",
-            "ControlledPhaseShift",
-            "CRX",
-            "CRY",
-            "CRZ",
-            "CRot",
-            "SingleExcitation",
-            "SingleExcitationMinus",
-            "SingleExcitationPlus"};
+
+    /* StateVectorKokkos<double> sv(sv_data);
+    StateVectorKokkosMPI<double> svmpi(sv_data);
     for (auto &gate : gates_1q) {
         for (auto inverse : std::vector<bool>({false, true})) {
             for (std::size_t target = 0; target < nq; target++) {
 
     // Create PennyLane Lightning statevector
-    StateVectorKokkos<double> sv(sv_data);
-    StateVectorKokkosMPI<double> svmpi(sv_data);
+    //StateVectorKokkos<double> sv(sv_data);
+    //StateVectorKokkosMPI<double> svmpi(sv_data);
                 if (svmpi.get_mpi_rank() == 0) {
                     std::cout << "Testing " << gate << " with : "
                                 << "(inv, targets) = (" << inverse << ", "
@@ -257,8 +244,8 @@ int main(int argc, char *argv[]) {
                 std::vector<double> params(npar, 0.1);
                 sv.applyOperation(gate, {target}, inverse, params);
                 svmpi.applyOperation(gate, {target}, inverse, params);
-                svmpi.reorder_global_wires();
-                svmpi.reorder_local_wires();
+                //svmpi.reorder_global_wires();
+                //svmpi.reorder_local_wires();
 
 
                 if (svmpi.get_mpi_rank() == 0) {
@@ -276,10 +263,45 @@ int main(int argc, char *argv[]) {
                 print(sv.getDataVector());
                 }
                 svmpi.barrier();
-                allclose(svmpi, sv);
-                svmpi.barrier();
+                //allclose(svmpi, sv);
+                //svmpi.barrier();
             }
         }
+    }
+
+    svmpi.reorder_global_wires();
+    svmpi.reorder_local_wires();
+    svmpi.barrier();
+    allclose(svmpi, sv);
+    svmpi.barrier(); */
+
+
+    std::vector<std::string> gates_2q = {"CNOT",
+        "CY",
+        "CZ",
+        "SWAP",
+        "IsingXX",
+        "IsingXY",
+        "IsingYY",
+        "IsingZZ",
+        "ControlledPhaseShift",
+        "CRX",
+        "CRY",
+        "CRZ",
+        "CRot",
+        "SingleExcitation",
+        "SingleExcitationMinus",
+        "SingleExcitationPlus"
+        };
+    StateVectorKokkos<double> sv(sv_data);
+    StateVectorKokkosMPI<double> svmpi(sv_data);
+    if (svmpi.get_mpi_rank() == 0) {
+        std::cout << "Press Enter to continue.\n";
+        std::ignore = std::getchar();
+        std::ignore = std::getchar();
+        std::ignore = std::getchar();
+        std::ignore = std::getchar();
+        std::ignore = std::getchar();
     }
 
     for (auto &gate : gates_2q) {
@@ -290,8 +312,8 @@ int main(int argc, char *argv[]) {
                         continue;
                     }
 
-    StateVectorKokkos<double> sv(sv_data);
-    StateVectorKokkosMPI<double> svmpi(sv_data);
+    //StateVectorKokkos<double> sv(sv_data);
+    //StateVectorKokkosMPI<double> svmpi(sv_data);
                     if (svmpi.get_mpi_rank() == 0) {
                         std::cout << "Testing " << gate << " with : "
                                   << "(inv, targets) = (" << inverse << ", "
@@ -306,28 +328,52 @@ int main(int argc, char *argv[]) {
                                              params);
                     svmpi.applyOperation(gate, {target0, target1},
                                                 inverse, params);
-            svmpi.reorder_global_wires();
-            svmpi.reorder_local_wires();
+            //svmpi.reorder_global_wires();
+            //svmpi.reorder_local_wires();
 
 
-            if (svmpi.get_mpi_rank() == 0) {
-                std::cout<<"global_wires = ";
-                print(svmpi.global_wires_);
-                std::cout<<"local_wires = ";
-                print(svmpi.local_wires_);
-                std::cout << "OK" << std::endl;
-            }
+            //if (svmpi.get_mpi_rank() == 0) {
+            //    std::cout<<"global_wires = ";
+            //    print(svmpi.global_wires_);
+            //    std::cout<<"local_wires = ";
+            //    print(svmpi.local_wires_);
+            //    std::cout << "OK" << std::endl;
+            //}
+//
+            //svmpi.barrier();
+            //print(svmpi);
+            //svmpi.barrier();
+            //if (svmpi.get_mpi_rank() == 0) {
+            //print(sv.getDataVector());
+            //}
+            svmpi.barrier();
+            //allclose(svmpi, sv);
+            //svmpi.barrier();
+    }
+}
+}
+}
+svmpi.reorder_global_wires();
+svmpi.reorder_local_wires();
+svmpi.barrier();
+if (svmpi.get_mpi_rank() == 0) {
+    std::cout<<"global_wires = ";
+    print(svmpi.global_wires_);
+    std::cout<<"local_wires = ";
+    print(svmpi.local_wires_);
+    std::cout << "OK" << std::endl;
+}
 
-            svmpi.barrier();
-            print(svmpi);
-            svmpi.barrier();
-            if (svmpi.get_mpi_rank() == 0) {
-            print(sv.getDataVector());
-            }
-            svmpi.barrier();
-            allclose(svmpi, sv);
-            svmpi.barrier();
-    }}}}
+svmpi.barrier();
+print(svmpi);
+svmpi.barrier();
+if (svmpi.get_mpi_rank() == 0) {
+print(sv.getDataVector());
+}
+svmpi.barrier();
+
+allclose(svmpi, sv);
+svmpi.barrier();
     
     
     //svmpi.barrier();
