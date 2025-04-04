@@ -37,6 +37,7 @@ from pennylane.typing import Result, ResultBatch
 
 from ._measurements import LightningTensorMeasurements
 from ._tensornet import LightningTensorNet
+from ..core._version import __version__
 
 try:
     # pylint: disable=import-error, unused-import
@@ -288,6 +289,9 @@ class LightningTensor(Device):
     """
 
     # pylint: disable=too-many-instance-attributes
+    pennylane_requires = ">=0.40"
+    version = __version__
+
 
     _device_options = {
         "mps": ("backend", "max_bond_dim", "cutoff", "cutoff_mode"),
