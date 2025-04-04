@@ -309,7 +309,6 @@ class LightningQubit(LightningBase):
         for option, _ in config.device_options.items():
             if option not in self._device_options:
                 raise pennylane.errors.DeviceError(f"device option {option} not present on {self}")
-pennylane.errors.DeviceError
         if config.gradient_method == "best":
             updated_values["gradient_method"] = "adjoint"
         if config.use_device_jacobian_product is None:

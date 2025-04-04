@@ -88,8 +88,9 @@ def test_apply_state_vector_with_lightning_handle(tol):
     state_vector_1.apply_operations([qml.BasisState(np.array([0, 1]), wires=[0, 1])])
 
     if device_name == "lightning.gpu":
-        withpennylane.errors.DeviceError
-            pennylane.errors.DeviceError, match="LightningGPU does not support allocate external state_vector."
+        with pytest.raises(
+            pennylane.errors.DeviceError,
+            match="LightningGPU does not support allocate external state_vector.",
         ):
             state_vector_2 = LightningStateVector(2)
             state_vector_2._apply_state_vector(state_vector_1.state_vector, Wires([0, 1]))
