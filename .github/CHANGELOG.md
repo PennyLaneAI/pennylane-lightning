@@ -140,6 +140,9 @@
 
 ### Documentation
 
+* Modify `CHANGELOG.md` to prepare it for release v.0.41.0
+  [(#1117)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1117)
+
 * Update install instructions for `lightning.gpu`.
   [(#1037)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1037)
 
