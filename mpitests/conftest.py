@@ -21,6 +21,8 @@ import os
 
 import pennylane.errors
 import pytest
+
+import pennylane as qml
 from pennylane import numpy as np
 
 # Tuple passed to distributed device ctor
