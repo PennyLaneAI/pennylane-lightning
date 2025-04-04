@@ -18,9 +18,9 @@ from typing import List, Sequence, Tuple
 
 import numpy as np
 import pennylane as qml
+from pennylane.errors import DeviceError
 from pennylane import (
     BasisState,
-    DeviceError,
     Hadamard,
     Identity,
     PauliX,
