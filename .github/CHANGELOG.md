@@ -127,7 +127,7 @@
 
 ### Bug fixes
 
-* Fix the issue with decomposing controlled `SProd` operations.
+* Fix the issue with decomposing controlled `qml.SProd` and `qml.Exp` operations.
   [(#1120)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1120)
 
 * Fix the issue with pip installing PennyLane (and Lightning-Qubit) on Windows.
