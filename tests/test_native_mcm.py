@@ -17,6 +17,7 @@ from typing import Sequence
 
 import numpy as np
 import pennylane as qml
+import pennylane.errors
 import pytest
 from conftest import LightningDevice, device_name, validate_measurements
 from flaky import flaky
@@ -85,13 +86,13 @@ def test_unsupported_measurement():
 
     if device_name == "lightning.qubit":
         with pytest.raises(
-            qml.DeviceError,
+            pennylane.errors.DeviceError,
             match=f"not accepted with finite shots on lightning.qubit",
         ):
             func(*params)
     if device_name in ("lightning.kokkos", "lightning.gpu"):
         with pytest.raises(
-            qml.DeviceError,
+            pennylane.errors.DeviceError,
             match=r"Measurement shadow\(wires=\[0\]\) not accepted with finite shots on "
             + device_name,
         ):

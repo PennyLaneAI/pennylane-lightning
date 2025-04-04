@@ -19,6 +19,7 @@ import itertools
 import math
 
 import pennylane as qml
+import pennylane.errors
 import pytest
 from conftest import LightningDevice as ld
 from conftest import device_name
@@ -69,14 +70,14 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
         config = ExecutionConfig(gradient_method="adjoint", device_options={"batch_obs": batch_obs})
 
         with pytest.raises(
-            qml.QuantumFunctionError, match="Adjoint differentiation method does not"
+            pennylane.errors.QuantumFunctionError, match="Adjoint differentiation method does not"
         ):
             dev.compute_derivatives(qs, config)
 
         qs = QuantumScript([qml.RX(1.23, 0)], [qml.state()], trainable_params=[0])
 
         with pytest.raises(
-            qml.QuantumFunctionError,
+            pennylane.errors.QuantumFunctionError,
             match="Adjoint differentiation method does not support measurement StateMP.",
         ):
             dev.compute_derivatives(qs, config)
@@ -91,7 +92,7 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
         config = ExecutionConfig(gradient_method="adjoint", device_options={"batch_obs": batch_obs})
 
         with pytest.raises(
-            qml.QuantumFunctionError,
+            pennylane.errors.QuantumFunctionError,
             match="Requested adjoint differentiation to be computed with finite shots.",
         ):
             dev.compute_derivatives(qs, config)
@@ -141,7 +142,7 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
         )
 
         with pytest.raises(
-            qml.QuantumFunctionError,
+            pennylane.errors.QuantumFunctionError,
             match="differentiation method does not support the Projector",
         ):
             dev.compute_derivatives(qs, config)
@@ -153,7 +154,7 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
         )
 
         with pytest.raises(
-            qml.QuantumFunctionError,
+            pennylane.errors.QuantumFunctionError,
             match="differentiation method does not support the Projector",
         ):
             dev.compute_derivatives(qs, config)
@@ -502,7 +503,8 @@ class TestAdjointJacobianQNode:
         dev = qml.device(device_name, wires=8, mpi=True, shots=1)
 
         with pytest.raises(
-            qml.QuantumFunctionError, match="does not support adjoint with requested circuit."
+            pennylane.errors.QuantumFunctionError,
+            match="does not support adjoint with requested circuit.",
         ):
 
             @qml.qnode(dev, diff_method="adjoint")

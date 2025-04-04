@@ -19,6 +19,7 @@ import math
 
 import numpy as np
 import pennylane as qml
+import pennylane.errors
 import pytest
 import scipy as sp
 from conftest import LightningDevice, LightningStateVector, device_name  # tested device
@@ -88,7 +89,8 @@ def test_apply_state_vector_with_lightning_handle(tol):
 
     if device_name == "lightning.gpu":
         with pytest.raises(
-            qml.DeviceError, match="LightningGPU does not support allocate external state_vector."
+            pennylane.errors.DeviceError,
+            match="LightningGPU does not support allocate external state_vector.",
         ):
             state_vector_2 = LightningStateVector(2)
             state_vector_2._apply_state_vector(state_vector_1.state_vector, Wires([0, 1]))

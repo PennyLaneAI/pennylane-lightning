@@ -16,6 +16,7 @@ Unit tests for the serialization helper functions.
 """
 import numpy as np
 import pennylane as qml
+import pennylane.errors
 import pytest
 from conftest import LightningDevice, device_name
 
@@ -68,7 +69,7 @@ def get_module_name(tn_back, name, dtype):
 def test_wrong_device_name():
     """Test the device name is not a valid option"""
 
-    with pytest.raises(qml.DeviceError, match="The device name"):
+    with pytest.raises(pennylane.errors.DeviceError, match="The device name"):
         QuantumScriptSerializer("thunder.qubit")
 
 

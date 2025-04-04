@@ -20,6 +20,7 @@ from typing import Sequence
 
 import numpy as np
 import pennylane as qml
+import pennylane.errors
 import pytest
 
 import pennylane_lightning
@@ -116,7 +117,7 @@ def get_device():
 device_name = get_device()
 
 if device_name not in qml.plugin_devices:
-    raise qml.DeviceError(
+    raise pennylane.errors.DeviceError(
         f"Device {device_name} does not exist. Make sure the required plugin is installed."
     )
 
