@@ -219,11 +219,26 @@ int main(int argc, char *argv[]) {
 
     std::vector<std::string> gates_1q = {
         "Identity", 
-        //"PauliX",     
-        //"PauliY", "PauliZ", "Hadamard", "S",
-        //"T",        "PhaseShift", "RX",     "RY",     "RZ",       "Rot"
+        "PauliX",     
+        "PauliY", "PauliZ", "Hadamard", "S",
+        "T",        "PhaseShift", "RX",     "RY",     "RZ",       "Rot"
         };
-    
+        std::vector<std::string> gates_2q = {"CNOT",
+            "CY",
+            "CZ",
+            "SWAP",
+            "IsingXX",
+            "IsingXY",
+            "IsingYY",
+            "IsingZZ",
+            "ControlledPhaseShift",
+            "CRX",
+            "CRY",
+            "CRZ",
+            "CRot",
+            "SingleExcitation",
+            "SingleExcitationMinus",
+            "SingleExcitationPlus"};
     for (auto &gate : gates_1q) {
         for (auto inverse : std::vector<bool>({false, true})) {
             for (std::size_t target = 0; target < nq; target++) {
@@ -242,8 +257,8 @@ int main(int argc, char *argv[]) {
                 std::vector<double> params(npar, 0.1);
                 sv.applyOperation(gate, {target}, inverse, params);
                 svmpi.applyOperation(gate, {target}, inverse, params);
-                //svmpi.reorder_global_wires();
-                //svmpi.reorder_local_wires();
+                svmpi.reorder_global_wires();
+                svmpi.reorder_local_wires();
 
 
                 if (svmpi.get_mpi_rank() == 0) {
@@ -266,6 +281,53 @@ int main(int argc, char *argv[]) {
             }
         }
     }
+
+    for (auto &gate : gates_2q) {
+        for (auto inverse : std::vector<bool>({false, true})) {
+            for (std::size_t target0 = 0; target0 < nq; target0++) {
+                for (std::size_t target1 = 0; target1 < nq; target1++) {
+                    if (target0 == target1) {
+                        continue;
+                    }
+
+    StateVectorKokkos<double> sv(sv_data);
+    StateVectorKokkosMPI<double> svmpi(sv_data);
+                    if (svmpi.get_mpi_rank() == 0) {
+                        std::cout << "Testing " << gate << " with : "
+                                  << "(inv, targets) = (" << inverse << ", "
+                                  << target0 << ", " << target1 << ")"
+                                  << std::endl;
+                    }
+                    auto gate_op =
+                        reverse_lookup(gate_names, std::string_view{gate});
+                    auto npar = lookup(gate_num_params, gate_op);
+                    std::vector<double> params(npar, 0.1);
+                    sv.applyOperation(gate, {target0, target1}, inverse,
+                                             params);
+                    svmpi.applyOperation(gate, {target0, target1},
+                                                inverse, params);
+            svmpi.reorder_global_wires();
+            svmpi.reorder_local_wires();
+
+
+            if (svmpi.get_mpi_rank() == 0) {
+                std::cout<<"global_wires = ";
+                print(svmpi.global_wires_);
+                std::cout<<"local_wires = ";
+                print(svmpi.local_wires_);
+                std::cout << "OK" << std::endl;
+            }
+
+            svmpi.barrier();
+            print(svmpi);
+            svmpi.barrier();
+            if (svmpi.get_mpi_rank() == 0) {
+            print(sv.getDataVector());
+            }
+            svmpi.barrier();
+            allclose(svmpi, sv);
+            svmpi.barrier();
+    }}}}
     
     
     //svmpi.barrier();
