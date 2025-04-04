@@ -18,7 +18,6 @@ from typing import List, Sequence, Tuple
 
 import numpy as np
 import pennylane as qml
-from pennylane.errors import DeviceError
 from pennylane import (
     BasisState,
     Hadamard,
@@ -32,6 +31,7 @@ from pennylane import (
     StatePrep,
     matrix,
 )
+from pennylane.errors import DeviceError
 from pennylane.math import unwrap
 from pennylane.ops import LinearCombination, Prod, SProd, Sum
 from pennylane.tape import QuantumTape

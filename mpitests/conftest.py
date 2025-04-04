@@ -19,10 +19,9 @@ Pytest configuration file for PennyLane-Lightning-GPU test suite.
 import itertools
 import os
 
+import pennylane as qml
 import pennylane.errors
 import pytest
-
-import pennylane as qml
 from pennylane import numpy as np
 
 # Tuple passed to distributed device ctor
