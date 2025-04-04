@@ -131,7 +131,7 @@ def _supports_adjoint(circuit):
     try:
         prog((circuit,))
     except (DecompositionUndefinedError, pennylane.errors.DeviceError, AttributeError):
-        return Falsepennylane.errors.DeviceError
+        return False
     return True
 
 
@@ -339,7 +339,7 @@ class LightningQubit(LightningBase):
                 None,
             ):
                 raise pennylane.errors.DeviceError(
-                    f"pennylane.errors.DeviceErrorm_method}' is not supported with lightning.qubit "
+                    f"{mcm_method}' is not supported with lightning.qubit "
                     "when program capture is enabled."
                 )
 
