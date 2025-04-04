@@ -30,7 +30,7 @@
 * Add native support for `qml.PCPhase` for `lightning.qubit` and `lightning.gpu`.
   [(#1107)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1107)
 
-* Use cuquantum API for calculating expectation value of Pauli sentences in Lightning-GPU.
+* Use cuQuantum API for calculating expectation value of Pauli sentences in Lightning-GPU.
   [(#1104)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1104)
 
 * Update CIs to use `requirements-tests.txt` instead of `requirements-dev.txt`.
