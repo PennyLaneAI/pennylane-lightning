@@ -173,6 +173,9 @@ def stopping_condition(op: Operator) -> bool:
     if isinstance(op, qml.MPSPrep):
         return True
 
+    if op.name in ("C(SProd)", "C(Exp)"):
+        return True
+
     return op.has_matrix and op.name in _operations
 
 

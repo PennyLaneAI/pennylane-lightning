@@ -145,6 +145,9 @@
 
 ### Bug fixes
 
+* Fix the issue with decomposing controlled `qml.SProd` and `qml.Exp` operations.
+  [(#1120)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1120)
+
 * Fix the validation for all wires present after adding the extra wires from apply `mid_circuit_measurements`.
   [(#1119)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1119)
 
