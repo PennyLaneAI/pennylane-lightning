@@ -15,6 +15,9 @@
 
 ### Improvements
 
+* Install Pytorch 2.5.1 CPU in CIs and update `make python` command.
+  [[#1118]](https://github.com/PennyLaneAI/pennylane-lightning/pull/1118)
+
 * Update TF, Keras and Torch versions in the CIs based on PennyLane's pinned versions.
   [(#1112)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1112)
 
@@ -27,8 +30,11 @@
 * Add native support for `qml.PCPhase` for `lightning.qubit` and `lightning.gpu`.
   [(#1107)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1107)
 
-* Use cuquantum API for calculating expectation value of Pauli sentences in Lightning-GPU.
+* Use cuQuantum API for calculating expectation value of Pauli sentences in Lightning-GPU.
   [(#1104)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1104)
+
+* Update CIs to use `requirements-tests.txt` instead of `requirements-dev.txt`.
+  [(#1105)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1105)
 
 * Hide internal C++ APIs in Lightning docs.
   [(#1096)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1096)
@@ -42,9 +48,11 @@
   [(#1079)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/1079)
   [(#565)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/565)
 
-* Device (`"lightning.qubit"`, `"lightning.gpu"`, `"lightning.kokkos"`) pre-processing is now included in the
-  execution pipeline when program capture is enabled.
+* Device (`"lightning.qubit"`, `"lightning.gpu"`, `"lightning.kokkos"`) pre-processing is now included in the execution pipeline when program capture is enabled.
   [(#1084)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1084)
+
+* Add semgrep/bandit security scanning for pull requests.
+  [(#1100)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1100)
 
 * Hide anonymous namespaces in Lightning docs.
   [(#1097)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1097)
@@ -56,13 +64,16 @@
   [(#1076)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1076)
 
 * Add support for sparse `qml.QubitUnitary` gates for `lightning.qubit`, `lightning.gpu`, and `lightning.kokkos` backends.
-  [(#1068)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1068).
+  [(#1068)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1068)
 
 * Introduce a generalized sparse gate selection system via the `_observable_is_sparse` method in the base measurement class, enabling future expansion for any number of sparse observables.
-  [(#1068)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1068).
+  [(#1068)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1068)
 
 * Optimize the copy of a input state-vector into Lightning-GPU.
   [(#1071)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1071)
+
+* Add new GitHub workflow to enable benchmarking within pull request.
+  [(#1073)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1073)
 
 * Fix wheel naming in Docker builds for `setuptools v75.8.1` compatibility.
   [(#1075)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1075)
@@ -76,15 +87,20 @@
 * Capture execution via `dev.eval_jaxpr` can now be used with `jax.jit` and `jax.vmap`.
   [(#1055)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1055)
 
-* Add an `execution_config` keyword argument to `LightningBase.eval_jaxpr` to accomodate a
-  Device API change.
-  [(#1067)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1067/)
+* Add an `execution_config` keyword argument to `LightningBase.eval_jaxpr` to accommodate a Device API change.
+  [(#1067)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1067)
 
-* Lightning devices support dynamically allocated wires (e.g. `qml.device("lightning.qubit")`)
+* Lightning devices support dynamically allocated wires (e.g. `qml.device("lightning.qubit")`).
   [(#1043)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1043)
 
 * Remove the old device API references in the Lightning repo and test suite.
   [(#1057)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1057)
+
+* Update GPU workflow to use the new self-hosted GPU runner infrastructure.
+  [(#1061)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1061)
+
+* Optimize MPO operation in `lightning.tensor`.
+  [(#1054)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1054)
 
 * Update `qml.ControlledQubitUnitary` tests following the latest updates in PennyLane.
   [(#1047)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1047)
@@ -92,14 +108,16 @@
 * Remove unnecessary adjoint pytest skip for Lightning-Kokkos.
   [(#1048)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1048)
 
+* Add isort to the precommit hook.
+   [(#1052)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1052)
+
 * Update source code to use black formatter 25.1.0.
   [(#1059)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1059)
 
 * Replace the type checking using the property `return_type` of `MeasurementProcess` with direct `isinstance` checks.
   [(#1044)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1044)
 
-* Update Lightning integration tests following the `gradient_kwargs` deprecation
-  in Pennylane.
+* Update Lightning integration tests following the `gradient_kwargs` deprecation in Pennylane.
   [(#1045)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1045)
 
 * Update `qml.MultiControlledX` tests following the latest updates in PennyLane.
@@ -117,13 +135,16 @@
 * `SX` and `C(SX)` gates are natively supported for all lightning devices.
   [(#731)](https://github.com/PennyLaneAI/pennylane-lightning/pull/731)
 
-* Program transformed by `qml.defer_measurements` can be executed on `lightning.qubit`.
-  [(#1069)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1069)
-
-* `lightning.qubit` supports `ctrl` and `adjoint` with program capture.
+* Program transformed by `qml.defer_measurements` can be executed on `lightning.qubit`. Supports `ctrl` and `adjoint` with program capture in `lightning.qubit`.
   [(#1069)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1069)
 
 ### Documentation
+
+* Modify `CHANGELOG.md` to prepare it for release v.0.41.0
+  [(#1117)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1117)
+
+* Update install instructions for `lightning.gpu`.
+  [(#1037)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1037)
 
 ### Bug fixes
 
@@ -145,6 +166,9 @@
 * Fix the development wheel upload step for Python 3.13 by following the same syntax as for the other Python wheels.
   [(#1111)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1111)
 
+* Add a workflow to run `label-external-pull-request` to label pull requests from external forks.
+  [(#1110)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1110)
+
 * Fix the `test_preprocess` test skip condition for `lightning.tensor`.
   [(#1092)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1092)
 
@@ -157,8 +181,8 @@
 * Fix Github CI for aarch64 cuda to clean up after runs.
   [(#1074)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1074)
 
-* Increase maximum time for aarch64-CUDA Github CI action .
-  [(#1070)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1070)
+* Increase maximum time for aarch64-CUDA Github CI action.
+  [(#1072)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1072)
 
 * Fix `SyntaxWarning` from `is` with a literal in Python tests.
   [(#1070)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1070)
@@ -175,14 +199,16 @@
 * Update Github CI to use Ubuntu 24 and remove `libopenblas-base` package.
   [(#1041)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1041)
 
-* Update the `eval_jaxpr` method to handle the new signatures for the `cond`, `while`, and
-  `for` primitives.
+* Update the `eval_jaxpr` method to handle the new signatures for the `cond`, `while`, and `for` primitives.
   [(#1051)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1051)
 
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
 
+Runor Agbaire,
+Catalina Albornoz,
+Ali Asadi,
 Saeed Bohloul,
 Astral Cai,
 Yushao Chen,
@@ -190,8 +216,10 @@ Amintor Dusko,
 Pietropaolo Frisoni,
 Christina Lee,
 Joseph Lee,
+Rashid N H M,
 Luis Alfredo Nuñez Meneses,
 Lee J. O'Riordan,
+Mudit Pandey,
 Andrija Paurevic,
 Alex Preciado,
 Shuli Shu,
