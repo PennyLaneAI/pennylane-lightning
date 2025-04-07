@@ -20,4 +20,4 @@ custatevec-cu12; sys_platform == "linux"
 cutensornet-cu12>=2.6.0; sys_platform == "linux"
 pylint==2.7.4
 scipy-openblas32>=0.3.26
-git+https://github.com/PennyLaneAI/pennylane.git@master
+git+https://github.com/PennyLaneAI/pennylane.git@0.41.0-rc0
