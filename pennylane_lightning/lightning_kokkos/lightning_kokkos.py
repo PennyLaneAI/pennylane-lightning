@@ -191,7 +191,7 @@ class LightningKokkos(LightningBase):
             the expectation values. Defaults to ``None`` if not specified. Setting
             to ``None`` results in computing statistics like expectation values and
             variances analytically.
-        sync (bool): immediately sync with host-sv after applying operations
+        mpi  (bool): Use MPI to distribute statevector across multiple processes.
         kokkos_args (InitializationSettings): binding for Kokkos::InitializationSettings
             (threading parameters).
     """
@@ -220,6 +220,7 @@ class LightningKokkos(LightningBase):
         shots: Union[int, List] = None,
         batch_obs: bool = False,
         # Kokkos arguments
+        mpi: bool = False,
         kokkos_args=None,
     ):
         if not self._CPP_BINARY_AVAILABLE:
@@ -239,8 +240,17 @@ class LightningKokkos(LightningBase):
         # Set the attributes to call the Lightning classes
         self._set_lightning_classes()
 
-        self._statevector = None
-        self._sv_init_kwargs = {"kokkos_args": kokkos_args}
+        
+        if mpi:
+            self._statevector = self.LightningStateVector(
+                num_wires = len(self.wires),
+                dtype=self.c_dtype,
+                kokkos_args=kokkos_args,
+            )
+        else:
+            self._statevector = None
+            self._sv_init_kwargs = {"kokkos_args": kokkos_args}
+            
 
     @property
     def name(self):
