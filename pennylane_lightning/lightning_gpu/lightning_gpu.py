@@ -91,6 +91,8 @@ _to_matrix_ops = {
 
 def stopping_condition(op: Operator) -> bool:
     """A function that determines whether or not an operation is supported by ``lightning.gpu``."""
+    if op.name in ("C(SProd)", "C(Exp)"):
+        return True
     return _supports_operation(op.name)
 
 
@@ -392,10 +394,10 @@ class LightningGPU(LightningBase):
 
         program.add_transform(validate_measurements, name=self.name)
         program.add_transform(validate_observables, accepted_observables, name=self.name)
-        program.add_transform(validate_device_wires, self.wires, name=self.name)
         program.add_transform(
             mid_circuit_measurements, device=self, mcm_config=exec_config.mcm_config
         )
+        program.add_transform(validate_device_wires, self.wires, name=self.name)
 
         program.add_transform(
             decompose,

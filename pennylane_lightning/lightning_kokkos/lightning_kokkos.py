@@ -83,6 +83,8 @@ def stopping_condition(op: Operator) -> bool:
         word = op._hyperparameters["pauli_word"]  # pylint: disable=protected-access
         # decomposes to IsingXX, etc. for n <= 2
         return reduce(lambda x, y: x + (y != "I"), word, 0) > 2
+    if op.name in ("C(SProd)", "C(Exp)"):
+        return True
     return _supports_operation(op.name)
 
 
@@ -347,10 +349,10 @@ class LightningKokkos(LightningBase):
 
         program.add_transform(validate_measurements, name=self.name)
         program.add_transform(validate_observables, accepted_observables, name=self.name)
-        program.add_transform(validate_device_wires, self.wires, name=self.name)
         program.add_transform(
             mid_circuit_measurements, device=self, mcm_config=exec_config.mcm_config
         )
+        program.add_transform(validate_device_wires, self.wires, name=self.name)
 
         program.add_transform(
             decompose,

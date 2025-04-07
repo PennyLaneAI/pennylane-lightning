@@ -98,6 +98,26 @@ def test_unsupported_measurement():
             func(*params)
 
 
+def test_unsupported_configuration():
+    """Test unsupported configuration for wires=1, shots=None"""
+
+    dev = qml.device(device_name, wires=1, shots=None)
+
+    @qml.qnode(dev)
+    def circuit():
+        qml.Hadamard(0)
+        m = qml.measure(0)
+        qml.cond(m, qml.Hadamard)(0)
+        return qml.expval(qml.X(0))
+
+    with pytest.raises(
+        qml.wires.WireError,
+        match=r"Cannot run circuit\(s\) "
+        + f"on {device_name} as they contain wires not found on the device: {{1}}",
+    ):
+        circuit()
+
+
 @pytest.mark.parametrize("mcm_method", ["deferred", "one-shot"])
 def test_qnode_mcm_method(mcm_method, mocker):
     """Test that user specified qnode arg for mid-circuit measurements transform are used correctly"""
