@@ -72,7 +72,7 @@ class Measurements final
     using TeamPolicy = typename StateVectorT::TeamPolicy;
 
   public:
-    explicit Measurements(const StateVectorT &statevector)
+    explicit Measurements(StateVectorT &statevector)
         : BaseType{statevector} {
         init_expval_funcs_();
     };

@@ -302,8 +302,6 @@ class StateVectorKokkos final
                       const Kokkos::InitializationSettings &kokkos_args = {})
         : StateVectorKokkos(hostdata_.data(), hostdata_.size(), kokkos_args) {}
 
-
-
     /**
      * @brief Create a new state vector from data on the host.
      *
@@ -314,7 +312,7 @@ class StateVectorKokkos final
                       const Kokkos::InitializationSettings &kokkos_args = {})
         : StateVectorKokkos(reinterpret_cast<ComplexT *>(hostdata_.data()),
                             hostdata_.size(), kokkos_args) {}
-                            
+
     /**
      * @brief Copy constructor
      *

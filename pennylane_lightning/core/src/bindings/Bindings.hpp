@@ -59,8 +59,12 @@ using namespace Pennylane::LightningQubit::Measures;
 
 #include "AdjointJacobianKokkos.hpp"
 #include "LKokkosBindings.hpp" // StateVectorBackends, registerBackendClassSpecificBindings, registerBackendSpecificMeasurements, registerBackendSpecificAlgorithms
-#include "MeasurementsKokkos.hpp"
 #include "ObservablesKokkos.hpp"
+#if _ENABLE_MPI == 1
+#include "MeasurementsKokkosMPI.hpp"
+#else
+#include "MeasurementsKokkos.hpp"
+#endif
 
 /// @cond DEV
 namespace {
@@ -113,6 +117,11 @@ namespace {
 using Pennylane::Util::bestCPUMemoryModel;
 using Pennylane::Util::CPUMemoryModel;
 using Pennylane::Util::getMemoryModel;
+#if _ENABLE_PLKOKKOS == 1 && _ENABLE_MPI == 1
+template <class T> using measure = MeasurementsMPI<T>;
+#else
+template <class T> using measure = Measurements<T>;
+#endif
 } // namespace
 /// @endcond
 
@@ -449,32 +458,33 @@ void registerBackendAgnosticMeasurements(PyClass &pyclass) {
     using PrecisionT =
         typename StateVectorT::PrecisionT; // Statevector's precision.
     using ParamT = PrecisionT;             // Parameter's data precision
-
+    using measureT = measure<StateVectorT>;
     pyclass
+    .def(
+        "expval",
+        [](measureT &M,
+           const std::shared_ptr<Observable<StateVectorT>> &ob) {
+            return M.expval(*ob);
+        },
+        "Expected value of an observable object.")
+    .def(
+        "var",
+        [](measureT &M,
+           const std::shared_ptr<Observable<StateVectorT>> &ob) {
+            return M.var(*ob);
+        },
+        "Variance of an observable object.")
+    #if _ENABLE_MPI != 1 || _ENABLE_PLKOKKOS != 1
         .def("probs",
-             [](Measurements<StateVectorT> &M,
+             [](measureT &M,
                 const std::vector<std::size_t> &wires) {
                  return py::array_t<ParamT>(py::cast(M.probs(wires)));
              })
         .def("probs",
-             [](Measurements<StateVectorT> &M) {
+             [](measureT &M) {
                  return py::array_t<ParamT>(py::cast(M.probs()));
              })
-        .def(
-            "expval",
-            [](Measurements<StateVectorT> &M,
-               const std::shared_ptr<Observable<StateVectorT>> &ob) {
-                return M.expval(*ob);
-            },
-            "Expected value of an observable object.")
-        .def(
-            "var",
-            [](Measurements<StateVectorT> &M,
-               const std::shared_ptr<Observable<StateVectorT>> &ob) {
-                return M.var(*ob);
-            },
-            "Variance of an observable object.")
-        .def("generate_samples", [](Measurements<StateVectorT> &M,
+        .def("generate_samples", [](measureT &M,
                                     std::size_t num_wires,
                                     std::size_t num_shots) {
             auto &&result = M.generate_samples(num_shots);
@@ -491,7 +501,9 @@ void registerBackendAgnosticMeasurements(PyClass &pyclass) {
                 shape,  /* shape of the matrix       */
                 strides /* strides for each axis     */
                 ));
-        });
+        })
+#endif
+        ;
 }
 
 /**
@@ -683,10 +695,10 @@ template <class StateVectorT> void lightningClassBindings(py::module_ &m) {
     //                             Measurements
     //***********************************************************************//
     class_name = "MeasurementsC" + bitsize;
-    auto pyclass_measurements = py::class_<Measurements<StateVectorT>>(
+    auto pyclass_measurements = py::class_<measure<StateVectorT>>(
         m, class_name.c_str(), py::module_local());
 
-#ifdef _ENABLE_PLGPU
+#if defined(_ENABLE_PLGPU) || defined(_ENABLE_PLKOKKOS)
     pyclass_measurements.def(py::init<StateVectorT &>());
 #else
     pyclass_measurements.def(py::init<const StateVectorT &>());
