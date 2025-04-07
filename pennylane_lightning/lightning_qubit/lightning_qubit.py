@@ -291,7 +291,7 @@ class LightningQubit(LightningBase):
         self._statevector = None
         self._sv_init_kwargs = {}
         
-        time.sleep(2.0)
+#        time.sleep(2.0)
 
     @property
     def name(self):
