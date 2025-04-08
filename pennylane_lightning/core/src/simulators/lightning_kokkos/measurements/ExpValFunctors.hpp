@@ -29,6 +29,118 @@ using Pennylane::LightningKokkos::Util::wires2Parity;
 
 namespace Pennylane::LightningKokkos::Functors {
 
+template <class PrecisionT> struct getExpValPauliWordFunctor {
+    using ComplexT = Kokkos::complex<PrecisionT>;
+    using KokkosComplexVector = Kokkos::View<ComplexT *>;
+    using KokkosIntVector = Kokkos::View<std::size_t *>;
+    using ScratchViewComplex =
+        Kokkos::View<ComplexT *,
+                     Kokkos::DefaultExecutionSpace::scratch_memory_space,
+                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
+    using MemberType = Kokkos::TeamPolicy<>::member_type;
+
+    KokkosComplexVector arr;
+    KokkosComplexVector matrix;
+    KokkosIntVector wires;
+    KokkosIntVector parity;
+    KokkosIntVector rev_wire_shifts;
+    std::size_t dim;
+    std::size_t num_qubits;
+    std::size_t xmask;
+    std::size_t ymask;
+    std::size_t num_y;
+    std::size_t zmask;
+
+    getExpValPauliWordFunctor(const KokkosComplexVector &arr_,
+                              std::size_t num_qubits_,
+                              const std::vector<std::size_t> &X_wires,
+                              const std::vector<std::size_t> &Y_wires,
+                              const std::vector<std::size_t> &Z_wires,
+                              const std::vector<std::size_t> &target_wires) {
+        xmask = 0;
+        ymask = 0;
+        zmask = 0;
+        for (std::size_t i = 0; i < X_wires.size(); i++) {
+            //xmask |= (one << (target_wires.size() - X_wires[i] - 1));
+            xmask |= (one <<X_wires[i]);
+        }
+        for (std::size_t i = 0; i < Y_wires.size(); i++) {
+            //ymask |= (one << (target_wires.size() - Y_wires[i] - 1));
+            ymask |= (one <<Y_wires[i]);
+        }
+        for (std::size_t i = 0; i < Z_wires.size(); i++) {
+            //zmask |= (one << (target_wires.size() - Z_wires[i] - 1));
+            zmask |= (one <<Z_wires[i]);
+        }
+        num_y = Y_wires.size();
+
+        wires = vector2view(target_wires);
+        dim = one << target_wires.size();
+        num_qubits = num_qubits_;
+        arr = arr_;
+        std::tie(parity, rev_wire_shifts) = wires2Parity(num_qubits_, target_wires);
+    }
+
+    KOKKOS_INLINE_FUNCTION
+    void operator()(const MemberType &teamMember, PrecisionT &expval) const {
+        const std::size_t k = teamMember.league_rank();
+        PrecisionT tempExpVal = 0.0;
+        ScratchViewComplex coeffs_in(teamMember.team_scratch(0), dim);
+        if (teamMember.team_rank() == 0) {
+            std::size_t idx = (k & parity(0));
+            for (std::size_t i = 1; i < parity.size(); i++) {
+                idx |= ((k << i) & parity(i));
+            }
+            coeffs_in(0) = arr(idx);
+
+            Kokkos::parallel_for(Kokkos::ThreadVectorRange(teamMember, 1, dim),
+                                 [&](const std::size_t inner_idx) {
+                                     std::size_t index = idx;
+                                     for (std::size_t i = 0; i < wires.size();
+                                          i++) {
+                                         if ((inner_idx & (one << i)) != 0) {
+                                             index |= rev_wire_shifts(i);
+                                         }
+                                     }
+                                     coeffs_in(inner_idx) = arr(index);
+                                 });
+        }
+        teamMember.team_barrier();
+        Kokkos::parallel_reduce(
+            Kokkos::TeamThreadRange(teamMember, dim),
+            [&](const std::size_t i, PrecisionT &innerExpVal) {
+                std::size_t j = (i ^ xmask) ^ ymask;
+                std::size_t phase0_tmp = 2 * std::popcount(i & ymask) + num_y;
+                // TODO: IMPROVE this
+                ComplexT phase0{Kokkos::cos(static_cast<PrecisionT>(phase0_tmp * M_PI_2)),
+                                Kokkos::sin(static_cast<PrecisionT>(phase0_tmp  * M_PI_2))};
+                    phase0 *= (-1.0)*((std::popcount(i&zmask) %2)*2-1);
+                    innerExpVal +=
+                        real(conj(coeffs_in(j)) * coeffs_in(i) * phase0);
+            },
+            tempExpVal);
+        if (teamMember.team_rank() == 0) {
+            expval += tempExpVal;
+        }
+    }
+};
+
+template <class PrecisionT> struct getExpectationValueIdentityFunctor {
+    Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
+
+    getExpectationValueIdentityFunctor(
+        Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
+        [[maybe_unused]] std::size_t num_qubits,
+        [[maybe_unused]] const std::vector<std::size_t> &wires) {
+        arr = arr_;
+    }
+
+    KOKKOS_INLINE_FUNCTION
+    void operator()(const std::size_t k, PrecisionT &expval) const {
+        expval += real(conj(arr[k]) * arr[k]);
+    }
+};
+
 template <class PrecisionT> struct getExpectationValuePauliXFunctor {
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
 

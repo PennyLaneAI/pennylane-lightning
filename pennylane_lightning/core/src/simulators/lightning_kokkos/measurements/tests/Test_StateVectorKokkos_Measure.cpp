@@ -140,6 +140,106 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values", "[Measurements]",
         exp_values_ref = {0.7620549436, 0.8420840225, 0.8449848566};
         REQUIRE_THAT(exp_values, Catch::Approx(exp_values_ref).margin(1e-6));
     }
+
+    SECTION("Testing list of operators defined by its name:") {
+        PrecisionT exp_value;
+        PrecisionT exp_value_ref;
+
+        std::vector<std::string> pauli_string {"I"};
+        std::vector<std::vector<std::size_t>> wire_list {{1}};
+        std::vector<std::complex<PrecisionT>> coeffs {{1.0,0.0}};
+        exp_value = Measurer.expval(pauli_string, wire_list, coeffs.data());
+        exp_value_ref = 1.0;
+        REQUIRE(exp_value == Approx(exp_value_ref).margin(1e-6));
+
+        pauli_string = {"III"};
+        wire_list = {{0, 1, 2}};
+        coeffs = {{1.0,0.0}};
+        exp_value = Measurer.expval(pauli_string, wire_list, coeffs.data());
+        exp_value_ref = 1.0;
+        REQUIRE(exp_value == Approx(exp_value_ref).margin(1e-6));
+
+        pauli_string = {"III"};
+        wire_list = {{0, 1, 2}};
+        coeffs = {{0.3,0.0}};
+        exp_value = Measurer.expval(pauli_string, wire_list, coeffs.data());
+        exp_value_ref = 0.3;
+        REQUIRE(exp_value == Approx(exp_value_ref).margin(1e-6));
+
+
+        pauli_string = {"X"};
+        wire_list = {{0}};
+        coeffs = {{1.0,0.0}};
+        exp_value = Measurer.expval(pauli_string, wire_list, coeffs.data());
+        exp_value_ref = 0.49272486;
+        REQUIRE(exp_value == Approx(exp_value_ref).margin(1e-6));
+
+
+        pauli_string = {"X"};
+        wire_list = {{1}};
+        coeffs = {{1.0,0.0}};
+        exp_value = Measurer.expval(pauli_string, wire_list, coeffs.data());
+        exp_value_ref = 0.42073549;
+        REQUIRE(exp_value == Approx(exp_value_ref).margin(1e-6));
+
+
+        pauli_string = {"X"};
+        wire_list = {{2}};
+        coeffs = {{1.0,0.0}};
+        exp_value = Measurer.expval(pauli_string, wire_list, coeffs.data());
+        exp_value_ref = 0.28232124;
+        REQUIRE(exp_value == Approx(exp_value_ref).margin(1e-6));
+
+
+
+        pauli_string = {"Y"};
+        wire_list = {{0}};
+        coeffs = {{1.0,0.0}};
+        exp_value = Measurer.expval(pauli_string, wire_list, coeffs.data());
+        exp_value_ref = -0.64421768;
+        REQUIRE(exp_value == Approx(exp_value_ref).margin(1e-6));
+
+
+        pauli_string = {"Y"};
+        wire_list = {{1}};
+        coeffs = {{1.0,0.0}};
+        exp_value = Measurer.expval(pauli_string, wire_list, coeffs.data());
+        exp_value_ref = -0.47942553;
+        REQUIRE(exp_value == Approx(exp_value_ref).margin(1e-6));
+
+
+        pauli_string = {"Y"};
+        wire_list = {{2}};
+        coeffs = {{1.0,0.0}};
+        exp_value = Measurer.expval(pauli_string, wire_list, coeffs.data());
+        exp_value_ref = -0.29552020;
+        REQUIRE(exp_value == Approx(exp_value_ref).margin(1e-6));
+
+        pauli_string = {"Z"};
+        wire_list = {{0}};
+        coeffs = {{1.0,0.0}};
+        exp_value = Measurer.expval(pauli_string, wire_list, coeffs.data());
+        exp_value_ref = 0.58498357;
+        REQUIRE(exp_value == Approx(exp_value_ref).margin(1e-6));
+
+
+        pauli_string = {"Z"};
+        wire_list = {{1}};
+        coeffs = {{1.0,0.0}};
+        exp_value = Measurer.expval(pauli_string, wire_list, coeffs.data());
+        exp_value_ref = 0.77015115;
+        REQUIRE(exp_value == Approx(exp_value_ref).margin(1e-6));
+
+
+        pauli_string = {"Z"};
+        wire_list = {{2}};
+        coeffs = {{1.0,0.0}};
+        exp_value = Measurer.expval(pauli_string, wire_list, coeffs.data());
+        exp_value_ref = 0.91266780;
+        REQUIRE(exp_value == Approx(exp_value_ref).margin(1e-6));
+
+        //TODO: Add more tests here
+    }
 }
 
 TEMPLATE_PRODUCT_TEST_CASE("Variances", "[Measurements]", (StateVectorKokkos),

@@ -229,7 +229,8 @@ class Measurements final
                 const std::vector<std::size_t> &wires) -> PrecisionT {
         switch (expval_funcs_[operation]) {
         case ExpValFunc::Identity:
-            return 1.0;
+            return applyExpValNamedFunctor<getExpectationValueIdentityFunctor, 0>(
+            wires);
         case ExpValFunc::PauliX:
             return applyExpValNamedFunctor<getExpectationValuePauliXFunctor, 1>(
                 wires);
@@ -248,6 +249,52 @@ class Measurements final
                 operation);
         }
     };
+
+    /**
+     * @brief Expected value of an observable.
+     *
+     * @param pauli_words Vector of operators' name strings.
+     * @param target_wires Vector of wires where to apply the operator.
+     * @param coeffs Complex buffer of size |pauli_words|
+     * @return Floating point expected value of the observable.
+     */
+    auto expval(const std::vector<std::string> &pauli_words,
+        const std::vector<std::vector<std::size_t>> &target_wires,
+        const std::complex<PrecisionT> *coeffs) -> PrecisionT {
+            PrecisionT expval = 0.0;
+            PrecisionT expval_tmp = 0.0;
+
+        const std::size_t num_qubits = this->_statevector.getNumQubits();
+        const KokkosVector arr_data = this->_statevector.getView();
+        for(std::size_t word = 0; word < pauli_words.size(); word++) {
+                const std::size_t two2N = exp2(num_qubits - target_wires[word].size());
+                const std::size_t dim = exp2(target_wires[word].size());
+                std::vector<std::size_t> X_wires;
+                std::vector<std::size_t> Y_wires;
+                std::vector<std::size_t> Z_wires;
+                for(std::size_t i = 0; i < target_wires[word].size(); i++) {
+                    if(pauli_words[word][i] == 'X') {
+                        X_wires.push_back(i);
+                    } else if(pauli_words[word][i] == 'Y') {
+                        Y_wires.push_back(i);
+                    } else if(pauli_words[word][i] == 'Z') {
+                        Z_wires.push_back(i);
+                    } 
+                }
+                std::size_t scratch_size = ScratchViewComplex::shmem_size(dim);
+                Kokkos::parallel_reduce(
+                    "getExpValPauliWordFunctor",
+                    TeamPolicy(two2N, Kokkos::AUTO, dim)
+                        .set_scratch_size(0, Kokkos::PerTeam(scratch_size)),
+                        getExpValPauliWordFunctor<PrecisionT>(arr_data, num_qubits,
+                                                             X_wires, Y_wires,
+                                                             Z_wires, target_wires[word]),
+                                                             expval_tmp);
+                expval += expval_tmp * std::real(coeffs[word]);
+            }
+            return expval;
+        }
+
 
     /**
      * @brief Expected value for a list of observables.
