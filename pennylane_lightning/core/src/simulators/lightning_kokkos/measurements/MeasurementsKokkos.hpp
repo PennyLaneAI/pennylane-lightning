@@ -72,8 +72,7 @@ class Measurements final
     using TeamPolicy = typename StateVectorT::TeamPolicy;
 
   public:
-    explicit Measurements(StateVectorT &statevector)
-        : BaseType{statevector} {
+    explicit Measurements(StateVectorT &statevector) : BaseType{statevector} {
         init_expval_funcs_();
     };
 
@@ -229,7 +228,8 @@ class Measurements final
                 const std::vector<std::size_t> &wires) -> PrecisionT {
         switch (expval_funcs_[operation]) {
         case ExpValFunc::Identity:
-            return 1.0;
+            return applyExpValNamedFunctor<getExpectationValueIdentityFunctor,
+                                           1>(wires);
         case ExpValFunc::PauliX:
             return applyExpValNamedFunctor<getExpectationValuePauliXFunctor, 1>(
                 wires);
@@ -288,6 +288,36 @@ class Measurements final
                 const std::size_t &num_shots,
                 const std::vector<std::size_t> &shot_range) -> PrecisionT {
         return BaseType::expval(obs, num_shots, shot_range);
+    }
+
+    /**
+     * @brief Expected value of a Pauli string (Pauli words with coefficients)
+     *
+     * @param pauli_words Vector of operators' name strings.
+     * @param target_wires Vector of wires where to apply the operator.
+     * @param coeffs Complex buffer of size |pauli_words|
+     * @return Floating point expected value of the observable.
+     */
+    auto expval(const std::vector<std::string> &pauli_words,
+                const std::vector<std::vector<std::size_t>> &target_wires,
+                const std::complex<PrecisionT> *coeffs) -> PrecisionT {
+
+        const std::size_t num_qubits = this->_statevector.getNumQubits();
+        const std::size_t two2N = exp2(num_qubits - wires.size());
+        const std::size_t dim = exp2(wires.size());
+        const KokkosVector arr_data = this->_statevector.getView();
+
+        PrecisionT expval = 0.0;
+// TODO: convert pauli word to enum
+        std::size_t scratch_size = ScratchViewComplex::shmem_size(dim);
+        Kokkos::parallel_reduce(
+            "getExpValPauliWordFunctor",
+            TeamPolicy(two2N, Kokkos::AUTO, dim)
+                .set_scratch_size(0, Kokkos::PerTeam(scratch_size)),
+                getExpValPauliWordFunctor<PrecisionT>(arr_data, num_qubits,
+                    pauli_word, wires),
+            expval);
+        return expval;
     }
 
     /**

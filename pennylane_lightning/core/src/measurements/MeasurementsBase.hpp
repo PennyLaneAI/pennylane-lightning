@@ -52,7 +52,7 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
     using ComplexT = typename StateVectorT::ComplexT;
 
   protected:
-  #if defined(_ENABLE_PLGPU) || defined(_ENABLE_PLKOKKOS)    
+#if defined(_ENABLE_PLGPU) || defined(_ENABLE_PLKOKKOS)
     StateVectorT &_statevector;
 #else
     const StateVectorT &_statevector;
@@ -62,8 +62,8 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
     std::mt19937 _rng;
 
   public:
-  #if defined(_ENABLE_PLGPU) || defined(_ENABLE_PLKOKKOS)    
-explicit MeasurementsBase(StateVectorT &statevector)
+#if defined(_ENABLE_PLGPU) || defined(_ENABLE_PLKOKKOS)
+    explicit MeasurementsBase(StateVectorT &statevector)
         : _statevector{statevector} {};
 #else
     explicit MeasurementsBase(const StateVectorT &statevector)

@@ -460,48 +460,47 @@ void registerBackendAgnosticMeasurements(PyClass &pyclass) {
     using ParamT = PrecisionT;             // Parameter's data precision
     using measureT = measure<StateVectorT>;
     pyclass
-    .def(
-        "expval",
-        [](measureT &M,
-           const std::shared_ptr<Observable<StateVectorT>> &ob) {
-            return M.expval(*ob);
-        },
-        "Expected value of an observable object.")
-    .def(
-        "var",
-        [](measureT &M,
-           const std::shared_ptr<Observable<StateVectorT>> &ob) {
-            return M.var(*ob);
-        },
-        "Variance of an observable object.")
-    #if _ENABLE_MPI != 1 || _ENABLE_PLKOKKOS != 1
+        .def(
+            "expval",
+            [](measureT &M,
+               const std::shared_ptr<Observable<StateVectorT>> &ob) {
+                return M.expval(*ob);
+            },
+            "Expected value of an observable object.")
+        .def(
+            "var",
+            [](measureT &M,
+               const std::shared_ptr<Observable<StateVectorT>> &ob) {
+                return M.var(*ob);
+            },
+            "Variance of an observable object.")
+#if _ENABLE_MPI != 1 || _ENABLE_PLKOKKOS != 1
         .def("probs",
-             [](measureT &M,
-                const std::vector<std::size_t> &wires) {
+             [](measureT &M, const std::vector<std::size_t> &wires) {
                  return py::array_t<ParamT>(py::cast(M.probs(wires)));
              })
         .def("probs",
              [](measureT &M) {
                  return py::array_t<ParamT>(py::cast(M.probs()));
              })
-        .def("generate_samples", [](measureT &M,
-                                    std::size_t num_wires,
-                                    std::size_t num_shots) {
-            auto &&result = M.generate_samples(num_shots);
-            const std::size_t ndim = 2;
-            const std::vector<std::size_t> shape{num_shots, num_wires};
-            constexpr auto sz = sizeof(std::size_t);
-            const std::vector<std::size_t> strides{sz * num_wires, sz};
-            // return 2-D NumPy array
-            return py::array(py::buffer_info(
-                result.data(), /* data as contiguous array  */
-                sz,            /* size of one scalar        */
-                py::format_descriptor<std::size_t>::format(), /* data type */
-                ndim,   /* number of dimensions      */
-                shape,  /* shape of the matrix       */
-                strides /* strides for each axis     */
-                ));
-        })
+        .def("generate_samples",
+             [](measureT &M, std::size_t num_wires, std::size_t num_shots) {
+                 auto &&result = M.generate_samples(num_shots);
+                 const std::size_t ndim = 2;
+                 const std::vector<std::size_t> shape{num_shots, num_wires};
+                 constexpr auto sz = sizeof(std::size_t);
+                 const std::vector<std::size_t> strides{sz * num_wires, sz};
+                 // return 2-D NumPy array
+                 return py::array(py::buffer_info(
+                     result.data(), /* data as contiguous array  */
+                     sz,            /* size of one scalar        */
+                     py::format_descriptor<std::size_t>::format(), /* data type
+                                                                    */
+                     ndim,   /* number of dimensions      */
+                     shape,  /* shape of the matrix       */
+                     strides /* strides for each axis     */
+                     ));
+             })
 #endif
         ;
 }

@@ -233,7 +233,7 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
     using np_arr_sparse_ind =
         py::array_t<SparseIndexT, py::array::c_style | py::array::forcecast>;
 
-        using measureT = measure<StateVectorT>;
+    using measureT = measure<StateVectorT>;
 
     pyclass
         .def("expval",

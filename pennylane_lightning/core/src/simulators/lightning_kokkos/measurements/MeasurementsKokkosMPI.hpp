@@ -16,8 +16,6 @@
 #include <cstdint>
 #include <iostream>
 
-#include <Kokkos_Core.hpp>
-#include <Kokkos_Random.hpp>
 #include "ExpValFunctors.hpp"
 #include "LinearAlgebraKokkos.hpp" // getRealOfComplexInnerProduct
 #include "MeasurementsBase.hpp"
@@ -26,6 +24,8 @@
 #include "ObservablesKokkos.hpp"
 #include "StateVectorKokkos.hpp"
 #include "Util.hpp"
+#include <Kokkos_Core.hpp>
+#include <Kokkos_Random.hpp>
 
 /// @cond DEV
 namespace {
@@ -72,7 +72,7 @@ class MeasurementsMPI final
      */
     PrecisionT expval(StateVectorT &sv) {
         // TODO: IMPROVE ME - add barriers?
-        
+
         sv.reorder_global_wires();
         sv.reorder_local_wires();
         this->_statevector.reorder_global_wires();
@@ -95,7 +95,7 @@ class MeasurementsMPI final
         StateVectorT ob_sv{this->_statevector};
         ob_sv.applyOperation("Matrix", wires, false, {}, matrix);
         return expval(ob_sv);
-        };
+    };
 
     /**
      * @brief Expectation value of an observable.
@@ -120,7 +120,8 @@ class MeasurementsMPI final
     PrecisionT expval(Observable<StateVectorT> &ob) {
         StateVectorT ob_sv{this->_statevector};
         ob.applyInPlace(ob_sv);
-        // TODO: IMPROVE ME - and add barriers??
+        // TODO: IMPROVE ME (no need to reorder both sv, reorder first then
+        // apply gate and add barriers??
         ob_sv.barrier();
         ob_sv.reorder_global_wires();
         ob_sv.reorder_local_wires();
@@ -160,6 +161,19 @@ class MeasurementsMPI final
 
         return expected_value_list;
     }
+    /**
+     * @brief Expected value of a Pauli string (Pauli words with coefficients)
+     *
+     * @param pauli_words Vector of operators' name strings.
+     * @param target_wires Vector of wires where to apply the operator.
+     * @param coeffs Complex buffer of size |pauli_words|
+     * @return Floating point expected value of the observable.
+     */
+    auto expval(const std::vector<std::string> &pauli_words,
+                const std::vector<std::vector<std::size_t>> &target_wires,
+                const std::complex<PrecisionT> *coeffs) -> PrecisionT {
+        PL_ABORT("TODO: Not yet implemented, but will be!");
+    }
 
     /**
      * @brief Variance of an observable.
@@ -179,12 +193,14 @@ class MeasurementsMPI final
         this->_statevector.barrier();
         const PrecisionT local_mean_square =
             getRealOfComplexInnerProduct(sv.getView(), sv.getView());
-       
-        const PrecisionT local_mean = getRealOfComplexInnerProduct(this->_statevector.getView(), sv.getView());
-        const PrecisionT squared_mean = std::pow(this->_statevector.all_reduce_sum(local_mean), 2);
 
-        const PrecisionT mean_square = this->_statevector.all_reduce_sum(
-            local_mean_square);
+        const PrecisionT local_mean = getRealOfComplexInnerProduct(
+            this->_statevector.getView(), sv.getView());
+        const PrecisionT squared_mean =
+            std::pow(this->_statevector.all_reduce_sum(local_mean), 2);
+
+        const PrecisionT mean_square =
+            this->_statevector.all_reduce_sum(local_mean_square);
         const PrecisionT variance = mean_square - squared_mean;
         return variance;
     }

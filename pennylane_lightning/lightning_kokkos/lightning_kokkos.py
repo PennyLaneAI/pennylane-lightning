@@ -240,17 +240,15 @@ class LightningKokkos(LightningBase):
         # Set the attributes to call the Lightning classes
         self._set_lightning_classes()
 
-        
         if mpi:
             self._statevector = self.LightningStateVector(
-                num_wires = len(self.wires),
+                num_wires=len(self.wires),
                 dtype=self.c_dtype,
                 kokkos_args=kokkos_args,
             )
         else:
             self._statevector = None
             self._sv_init_kwargs = {"kokkos_args": kokkos_args}
-            
 
     @property
     def name(self):

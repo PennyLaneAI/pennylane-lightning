@@ -28,6 +28,21 @@ using Pennylane::LightningKokkos::Util::wires2Parity;
 /// @endcond
 
 namespace Pennylane::LightningKokkos::Functors {
+template <class PrecisionT> struct getExpectationValueIdentityFunctor {
+    Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
+
+    getExpectationValueIdentityFunctor(
+        Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
+        [[maybe_unused]] std::size_t num_qubits,
+        [[maybe_unused]] const std::vector<std::size_t> &wires) {
+        arr = arr_;
+    }
+
+    KOKKOS_INLINE_FUNCTION
+    void operator()(const std::size_t k, PrecisionT &expval) const {
+        expval += real(conj(arr[k]) * arr[k]);
+    }
+};
 
 template <class PrecisionT> struct getExpectationValuePauliXFunctor {
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr;

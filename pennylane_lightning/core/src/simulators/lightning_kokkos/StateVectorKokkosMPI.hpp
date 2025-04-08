@@ -760,49 +760,72 @@ Wires-related methods
         [[maybe_unused]] bool inverse = false,
         [[maybe_unused]] const std::vector<fp_t> &params = {},
         [[maybe_unused]] const std::vector<ComplexT> &gate_matrix = {}) {
+        // Temporarily comment this to test swapping mechanism
         // if (opName == "Identity") {
         //     // No op
         //     return;
         // }
 
-        if (is_wires_global(wires))
-        {
-            
-                if (opName == "PauliX") {
-                std::size_t distance = std::distance(global_wires_.begin(), std::find(global_wires_.begin(), global_wires_.end(), wires[0]));
-                    for (auto &global_index : mpi_rank_to_global_index_map_) {
-                        global_index = global_index ^ (1U << distance);
-                    }
-                    return; 
-                }
-                else if (opName == "PauliY") {
-                    std::size_t distance = std::distance(global_wires_.begin(), std::find(global_wires_.begin(), global_wires_.end(), wires[0]));
-                    std::size_t global_index = get_global_index_from_mpi_rank(get_mpi_rank());
-                    fp_t phase = (( global_index >> distance) & 1 ) ? (M_PI_2) : (-1.0)*M_PI_2;
-                    (*sv_).applyOperation("GlobalPhase", {}, false, {phase});
-                    for (auto &global_index : mpi_rank_to_global_index_map_) {
-                        global_index = global_index ^ (1U << distance);
-                    }
-                    return;
-                }
-                else if (opName == "PauliZ") {
-                    std::size_t distance = std::distance(global_wires_.begin(), std::find(global_wires_.begin(), global_wires_.end(), wires[0]));
-                    std::size_t global_index = get_global_index_from_mpi_rank(get_mpi_rank());
-                    if(( global_index >> distance) & 1 ) {
-                        (*sv_).applyOperation("GlobalPhase", {}, false, {M_PI});}
-                    return;
-                }
-                else if (opName == "CNOT") {
+        if (is_wires_global(wires)) {
 
-                    std::size_t distance_0 = std::distance(global_wires_.begin(), std::find(global_wires_.begin(), global_wires_.end(), wires[0]));
-                    std::size_t distance_1 = std::distance(global_wires_.begin(), std::find(global_wires_.begin(), global_wires_.end(), wires[1]));
-                    for (auto &global_index : mpi_rank_to_global_index_map_) {
-                        global_index = ((global_index >> distance_0) &1)? global_index : global_index ^ (1U << distance_1);
-                    }
+            if (opName == "PauliX") {
+                std::size_t distance =
+                    std::distance(global_wires_.begin(),
+                                  std::find(global_wires_.begin(),
+                                            global_wires_.end(), wires[0]));
+                for (auto &global_index : mpi_rank_to_global_index_map_) {
+                    global_index = global_index ^ (1U << distance);
                 }
+                return;
+            } else if (opName == "PauliY") {
+                std::size_t distance =
+                    std::distance(global_wires_.begin(),
+                                  std::find(global_wires_.begin(),
+                                            global_wires_.end(), wires[0]));
+                std::size_t global_index =
+                    get_global_index_from_mpi_rank(get_mpi_rank());
+                fp_t phase = ((global_index >> distance) & 1) ? (M_PI_2)
+                                                              : (-1.0) * M_PI_2;
+                (*sv_).applyOperation("GlobalPhase", {}, false, {phase});
+                for (auto &global_index : mpi_rank_to_global_index_map_) {
+                    global_index = global_index ^ (1U << distance);
+                }
+                return;
+            } else if (opName == "PauliZ") {
+                std::size_t distance =
+                    std::distance(global_wires_.begin(),
+                                  std::find(global_wires_.begin(),
+                                            global_wires_.end(), wires[0]));
+                std::size_t global_index =
+                    get_global_index_from_mpi_rank(get_mpi_rank());
+                if ((global_index >> distance) & 1) {
+                    (*sv_).applyOperation("GlobalPhase", {}, false, {M_PI});
+                }
+                return;
+            } else if (opName == "CNOT") {
 
+                std::size_t distance_0 =
+                    std::distance(global_wires_.begin(),
+                                  std::find(global_wires_.begin(),
+                                            global_wires_.end(), wires[0]));
+                std::size_t distance_1 =
+                    std::distance(global_wires_.begin(),
+                                  std::find(global_wires_.begin(),
+                                            global_wires_.end(), wires[1]));
+                for (auto &global_index : mpi_rank_to_global_index_map_) {
+                    global_index =
+                        ((global_index >>
+                          (get_num_global_wires() - distance_0 - 1)) &
+                         1)
+                            ? global_index ^ (1U << (get_num_global_wires() -
+                                                     distance_1 - 1))
+                            : global_index;
+                }
+                return;
             }
-        
+            // TODO: Add similar for CY, CZ, SWAP, S, PhaseShift, GlobalPhase
+            // etc.
+        }
 
         if (!is_wires_local(wires)) {
             auto global_wires = find_global_wires(wires);
@@ -1293,11 +1316,10 @@ Wires-related methods
             }
         }
 
-        PL_MPI_IS_SUCCESS(MPI_Gatherv(
-            local_.data(), local_.size(), get_mpi_type<ComplexT>(),
-            data_.data(), recvcount.data(), displacements.data(),
-            get_mpi_type<ComplexT>(), root,
-            communicator_));
+        PL_MPI_IS_SUCCESS(
+            MPI_Gatherv(local_.data(), local_.size(), get_mpi_type<ComplexT>(),
+                        data_.data(), recvcount.data(), displacements.data(),
+                        get_mpi_type<ComplexT>(), root, communicator_));
         return data_;
     }
 
@@ -1307,8 +1329,8 @@ Wires-related methods
     std::unique_ptr<SVK> recvbuf_;
     std::unique_ptr<SVK> sendbuf_;
     MPI_Comm communicator_;
-    
-    public: // TODO: make private
+
+  public: // TODO: make private
     std::vector<std::size_t> mpi_rank_to_global_index_map_;
     std::vector<std::size_t> global_wires_;
     std::vector<std::size_t> local_wires_;
