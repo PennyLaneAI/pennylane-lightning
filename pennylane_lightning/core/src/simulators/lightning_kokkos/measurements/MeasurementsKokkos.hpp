@@ -260,7 +260,7 @@ class Measurements final
      */
     auto expval(const std::vector<std::string> &pauli_words,
         const std::vector<std::vector<std::size_t>> &target_wires,
-        const std::complex<PrecisionT> *coeffs) -> PrecisionT {
+        const Kokkos::complex<PrecisionT> *coeffs) -> PrecisionT {
             PrecisionT expvalue = 0.0;
 
         const std::size_t num_qubits = this->_statevector.getNumQubits();
@@ -285,7 +285,7 @@ class Measurements final
                     if (wires.size() == 0)
                     {
                         expvalue += expval("Identity", target_wires[word]) *
-                                  std::real(coeffs[word]);
+                                  Kokkos::real(coeffs[word]);
                     }
                     else
                     {
@@ -301,7 +301,7 @@ class Measurements final
                                 X_wires, Y_wires,
                                 Z_wires, wires),
                                 expval_tmp);
-                                expvalue += expval_tmp * std::real(coeffs[word]);
+                                expvalue += expval_tmp * Kokkos::real(coeffs[word]);
                             }
                         } 
                     

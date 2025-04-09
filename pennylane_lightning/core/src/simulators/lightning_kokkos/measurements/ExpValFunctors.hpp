@@ -40,7 +40,6 @@ template <class PrecisionT> struct getExpValPauliWordFunctor {
     using MemberType = Kokkos::TeamPolicy<>::member_type;
 
     KokkosComplexVector arr;
-    KokkosComplexVector matrix;
     KokkosIntVector wires;
     KokkosIntVector parity;
     KokkosIntVector rev_wire_shifts;
@@ -107,13 +106,12 @@ template <class PrecisionT> struct getExpValPauliWordFunctor {
             Kokkos::TeamThreadRange(teamMember, dim),
             [&](const std::size_t i, PrecisionT &innerExpVal) {
                 std::size_t j = (i ^ xmask) ^ ymask;
-                std::size_t phase0_tmp = 2 * std::popcount(i & ymask) + num_y;
-                // TODO: IMPROVE this
-                ComplexT phase0{Kokkos::cos(static_cast<PrecisionT>(phase0_tmp * M_PI_2)),
-                                Kokkos::sin(static_cast<PrecisionT>(phase0_tmp  * M_PI_2))};
-                    phase0 *= (-1.0)*((std::popcount(i&zmask) %2)*2-1);
+                std::size_t y_factors = 2 * std::popcount(i & ymask) + num_y;
+                ComplexT prefactor{static_cast<PrecisionT>((y_factors + 1) %2),
+                                static_cast<PrecisionT>(y_factors%2)};
+                                prefactor *= (((y_factors/2) % 2) ^ (std::popcount(i&zmask) % 2)) ? -1.0 : 1.0;
                     innerExpVal +=
-                    real(conj(coeffs_in(j)) * coeffs_in(i) * phase0);
+                    real(conj(coeffs_in(j)) * coeffs_in(i) * prefactor);
             },
             tempExpVal);
         if (teamMember.team_rank() == 0) {

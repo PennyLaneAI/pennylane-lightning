@@ -418,6 +418,13 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values", "[Measurements]",
         exp_value_ref = -0.25596322;
         CHECK(exp_value == Approx(exp_value_ref).margin(1e-6));
 
+        pauli_string = {"XXZ", "ZZY"};
+        wire_list = {{0, 1, 2}, {0, 2, 1}};
+        coeffs = {{0.2,0.0},{0.4,0.0}};
+        exp_value = Measurer.expval(pauli_string, wire_list, coeffs.data());
+        exp_value_ref = -0.064544826;
+        CHECK(exp_value == Approx(exp_value_ref).margin(1e-6));
+
     }
 }
 
