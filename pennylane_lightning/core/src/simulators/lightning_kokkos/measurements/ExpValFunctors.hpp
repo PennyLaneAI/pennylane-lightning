@@ -61,16 +61,13 @@ template <class PrecisionT> struct getExpValPauliWordFunctor {
         ymask = 0;
         zmask = 0;
         for (std::size_t i = 0; i < X_wires.size(); i++) {
-            //xmask |= (one << (target_wires.size() - X_wires[i] - 1));
-            xmask |= (one <<X_wires[i]);
+            xmask |= (one <<(target_wires.size() - 1 - X_wires[i]));
         }
         for (std::size_t i = 0; i < Y_wires.size(); i++) {
-            //ymask |= (one << (target_wires.size() - Y_wires[i] - 1));
-            ymask |= (one <<Y_wires[i]);
+            ymask |= (one <<(target_wires.size() - 1 - Y_wires[i]));
         }
         for (std::size_t i = 0; i < Z_wires.size(); i++) {
-            //zmask |= (one << (target_wires.size() - Z_wires[i] - 1));
-            zmask |= (one <<Z_wires[i]);
+            zmask |= (one <<(target_wires.size() - 1 - Z_wires[i]));
         }
         num_y = Y_wires.size();
 
@@ -116,7 +113,7 @@ template <class PrecisionT> struct getExpValPauliWordFunctor {
                                 Kokkos::sin(static_cast<PrecisionT>(phase0_tmp  * M_PI_2))};
                     phase0 *= (-1.0)*((std::popcount(i&zmask) %2)*2-1);
                     innerExpVal +=
-                        real(conj(coeffs_in(j)) * coeffs_in(i) * phase0);
+                    real(conj(coeffs_in(j)) * coeffs_in(i) * phase0);
             },
             tempExpVal);
         if (teamMember.team_rank() == 0) {

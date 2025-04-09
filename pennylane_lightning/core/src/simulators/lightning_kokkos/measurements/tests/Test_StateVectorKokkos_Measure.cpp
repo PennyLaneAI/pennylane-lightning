@@ -150,95 +150,274 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values", "[Measurements]",
         std::vector<std::complex<PrecisionT>> coeffs {{1.0,0.0}};
         exp_value = Measurer.expval(pauli_string, wire_list, coeffs.data());
         exp_value_ref = 1.0;
-        REQUIRE(exp_value == Approx(exp_value_ref).margin(1e-6));
+        CHECK(exp_value == Approx(exp_value_ref).margin(1e-6));
 
         pauli_string = {"III"};
         wire_list = {{0, 1, 2}};
         coeffs = {{1.0,0.0}};
         exp_value = Measurer.expval(pauli_string, wire_list, coeffs.data());
         exp_value_ref = 1.0;
-        REQUIRE(exp_value == Approx(exp_value_ref).margin(1e-6));
+        CHECK(exp_value == Approx(exp_value_ref).margin(1e-6));
 
         pauli_string = {"III"};
         wire_list = {{0, 1, 2}};
         coeffs = {{0.3,0.0}};
         exp_value = Measurer.expval(pauli_string, wire_list, coeffs.data());
         exp_value_ref = 0.3;
-        REQUIRE(exp_value == Approx(exp_value_ref).margin(1e-6));
-
+        CHECK(exp_value == Approx(exp_value_ref).margin(1e-6));
 
         pauli_string = {"X"};
         wire_list = {{0}};
         coeffs = {{1.0,0.0}};
         exp_value = Measurer.expval(pauli_string, wire_list, coeffs.data());
         exp_value_ref = 0.49272486;
-        REQUIRE(exp_value == Approx(exp_value_ref).margin(1e-6));
-
+        CHECK(exp_value == Approx(exp_value_ref).margin(1e-6));
 
         pauli_string = {"X"};
         wire_list = {{1}};
         coeffs = {{1.0,0.0}};
         exp_value = Measurer.expval(pauli_string, wire_list, coeffs.data());
         exp_value_ref = 0.42073549;
-        REQUIRE(exp_value == Approx(exp_value_ref).margin(1e-6));
-
+        CHECK(exp_value == Approx(exp_value_ref).margin(1e-6));
 
         pauli_string = {"X"};
         wire_list = {{2}};
         coeffs = {{1.0,0.0}};
         exp_value = Measurer.expval(pauli_string, wire_list, coeffs.data());
         exp_value_ref = 0.28232124;
-        REQUIRE(exp_value == Approx(exp_value_ref).margin(1e-6));
-
-
+        CHECK(exp_value == Approx(exp_value_ref).margin(1e-6));
 
         pauli_string = {"Y"};
         wire_list = {{0}};
         coeffs = {{1.0,0.0}};
         exp_value = Measurer.expval(pauli_string, wire_list, coeffs.data());
         exp_value_ref = -0.64421768;
-        REQUIRE(exp_value == Approx(exp_value_ref).margin(1e-6));
-
+        CHECK(exp_value == Approx(exp_value_ref).margin(1e-6));
 
         pauli_string = {"Y"};
         wire_list = {{1}};
         coeffs = {{1.0,0.0}};
         exp_value = Measurer.expval(pauli_string, wire_list, coeffs.data());
         exp_value_ref = -0.47942553;
-        REQUIRE(exp_value == Approx(exp_value_ref).margin(1e-6));
-
+        CHECK(exp_value == Approx(exp_value_ref).margin(1e-6));
 
         pauli_string = {"Y"};
         wire_list = {{2}};
         coeffs = {{1.0,0.0}};
         exp_value = Measurer.expval(pauli_string, wire_list, coeffs.data());
         exp_value_ref = -0.29552020;
-        REQUIRE(exp_value == Approx(exp_value_ref).margin(1e-6));
+        CHECK(exp_value == Approx(exp_value_ref).margin(1e-6));
 
         pauli_string = {"Z"};
         wire_list = {{0}};
         coeffs = {{1.0,0.0}};
         exp_value = Measurer.expval(pauli_string, wire_list, coeffs.data());
         exp_value_ref = 0.58498357;
-        REQUIRE(exp_value == Approx(exp_value_ref).margin(1e-6));
-
+        CHECK(exp_value == Approx(exp_value_ref).margin(1e-6));
 
         pauli_string = {"Z"};
         wire_list = {{1}};
         coeffs = {{1.0,0.0}};
         exp_value = Measurer.expval(pauli_string, wire_list, coeffs.data());
         exp_value_ref = 0.77015115;
-        REQUIRE(exp_value == Approx(exp_value_ref).margin(1e-6));
-
+        CHECK(exp_value == Approx(exp_value_ref).margin(1e-6));
 
         pauli_string = {"Z"};
         wire_list = {{2}};
         coeffs = {{1.0,0.0}};
         exp_value = Measurer.expval(pauli_string, wire_list, coeffs.data());
         exp_value_ref = 0.91266780;
-        REQUIRE(exp_value == Approx(exp_value_ref).margin(1e-6));
+        CHECK(exp_value == Approx(exp_value_ref).margin(1e-6));
 
-        //TODO: Add more tests here
+        pauli_string = {"ZZ"};
+        wire_list = {{0, 1}};
+        coeffs = {{1.0,0.0}};
+        exp_value = Measurer.expval(pauli_string, wire_list, coeffs.data());
+        exp_value_ref = 0.45052577;
+        CHECK(exp_value == Approx(exp_value_ref).margin(1e-6));
+
+        pauli_string = {"ZZ"};
+        wire_list = {{0, 2}};
+        coeffs = {{1.0,0.0}};
+        exp_value = Measurer.expval(pauli_string, wire_list, coeffs.data());
+        exp_value_ref = 0.53389567;
+        CHECK(exp_value == Approx(exp_value_ref).margin(1e-6));
+
+        pauli_string = {"ZZ"};
+        wire_list = {{1, 2}};
+        coeffs = {{1.0,0.0}};
+        exp_value = Measurer.expval(pauli_string, wire_list, coeffs.data());
+        exp_value_ref = 0.70289216;
+        CHECK(exp_value == Approx(exp_value_ref).margin(1e-6));
+
+        pauli_string = {"XXI"};
+        wire_list = {{0, 1, 2}};
+        coeffs = {{1.0,0.0}};
+        exp_value = Measurer.expval(pauli_string, wire_list, coeffs.data());
+        exp_value_ref = 0.2073068;
+        CHECK(exp_value == Approx(exp_value_ref).margin(1e-6));
+
+        pauli_string = {"XX"};
+        wire_list = {{0, 1}};
+        coeffs = {{1.0,0.0}};
+        exp_value = Measurer.expval(pauli_string, wire_list, coeffs.data());
+        exp_value_ref = 0.2073068;
+        CHECK(exp_value == Approx(exp_value_ref).margin(1e-6));
+
+        pauli_string = {"XX"};
+        wire_list = {{1, 0}};
+        coeffs = {{1.0,0.0}};
+        exp_value = Measurer.expval(pauli_string, wire_list, coeffs.data());
+        exp_value_ref = 0.2073068;
+        CHECK(exp_value == Approx(exp_value_ref).margin(1e-6));
+
+        pauli_string = {"XX"};
+        wire_list = {{0, 2}};
+        coeffs = {{1.0,0.0}};
+        exp_value = Measurer.expval(pauli_string, wire_list, coeffs.data());
+        exp_value_ref = 0.139106693;
+        CHECK(exp_value == Approx(exp_value_ref).margin(1e-6));
+
+        pauli_string = {"XX"};
+        wire_list = {{1, 2}};
+        coeffs = {{1.0,0.0}};
+        exp_value = Measurer.expval(pauli_string, wire_list, coeffs.data());
+        exp_value_ref = 0.11878256;
+        CHECK(exp_value == Approx(exp_value_ref).margin(1e-6));
+
+        pauli_string = {"XXX"};
+        wire_list = {{0, 1, 2}};
+        coeffs = {{1.0,0.0}};
+        exp_value = Measurer.expval(pauli_string, wire_list, coeffs.data());
+        exp_value_ref = 0.05852712;
+        CHECK(exp_value == Approx(exp_value_ref).margin(1e-6));
+
+        pauli_string = {"YY"};
+        wire_list = {{0, 1}};
+        coeffs = {{1.0,0.0}};
+        exp_value = Measurer.expval(pauli_string, wire_list, coeffs.data());
+        exp_value_ref = 0.30885441;
+        CHECK(exp_value == Approx(exp_value_ref).margin(1e-6));
+
+        pauli_string = {"YY"};
+        wire_list = {{1, 0}};
+        coeffs = {{1.0,0.0}};
+        exp_value = Measurer.expval(pauli_string, wire_list, coeffs.data());
+        exp_value_ref = 0.30885441;
+        CHECK(exp_value == Approx(exp_value_ref).margin(1e-6));
+
+        pauli_string = {"YY"};
+        wire_list = {{0, 2}};
+        coeffs = {{1.0,0.0}};
+        exp_value = Measurer.expval(pauli_string, wire_list, coeffs.data());
+        exp_value_ref = 0.1903793;
+        CHECK(exp_value == Approx(exp_value_ref).margin(1e-6));
+
+        pauli_string = {"YY"};
+        wire_list = {{1, 2}};
+        coeffs = {{1.0,0.0}};
+        exp_value = Measurer.expval(pauli_string, wire_list, coeffs.data());
+        exp_value_ref = 0.1416799;
+        CHECK(exp_value == Approx(exp_value_ref).margin(1e-6));
+
+        pauli_string = {"YYY"};
+        wire_list = {{0, 1, 2}};
+        coeffs = {{1.0,0.0}};
+        exp_value = Measurer.expval(pauli_string, wire_list, coeffs.data());
+        exp_value_ref = -0.0912727;
+        CHECK(exp_value == Approx(exp_value_ref).margin(1e-6));
+
+        pauli_string = {"ZZ"};
+        wire_list = {{0, 1}};
+        coeffs = {{1.0,0.0}};
+        exp_value = Measurer.expval(pauli_string, wire_list, coeffs.data());
+        exp_value_ref = 0.45052577;
+        CHECK(exp_value == Approx(exp_value_ref).margin(1e-6));
+
+        pauli_string = {"ZZ"};
+        wire_list = {{1, 0}};
+        coeffs = {{1.0,0.0}};
+        exp_value = Measurer.expval(pauli_string, wire_list, coeffs.data());
+        exp_value_ref = 0.45052577;
+        CHECK(exp_value == Approx(exp_value_ref).margin(1e-6));
+
+        pauli_string = {"ZZ"};
+        wire_list = {{0, 2}};
+        coeffs = {{1.0,0.0}};
+        exp_value = Measurer.expval(pauli_string, wire_list, coeffs.data());
+        exp_value_ref = 0.53389567;
+        CHECK(exp_value == Approx(exp_value_ref).margin(1e-6));
+
+        pauli_string = {"ZZ"};
+        wire_list = {{1, 2}};
+        coeffs = {{1.0,0.0}};
+        exp_value = Measurer.expval(pauli_string, wire_list, coeffs.data());
+        exp_value_ref = 0.70289216;
+        CHECK(exp_value == Approx(exp_value_ref).margin(1e-6));
+
+        pauli_string = {"ZZZ"};
+        wire_list = {{0, 1, 2}};
+        coeffs = {{1.0,0.0}};
+        exp_value = Measurer.expval(pauli_string, wire_list, coeffs.data());
+        exp_value_ref = 0.41118036;
+        CHECK(exp_value == Approx(exp_value_ref).margin(1e-6));
+
+        pauli_string = {"XY"};
+        wire_list = {{0, 2}};
+        coeffs = {{1.0,0.0}};
+        exp_value = Measurer.expval(pauli_string, wire_list, coeffs.data());
+        exp_value_ref = -0.14561015;
+        CHECK(exp_value == Approx(exp_value_ref).margin(1e-6));
+
+        pauli_string = {"YX"};
+        wire_list = {{2, 0}};
+        coeffs = {{1.0,0.0}};
+        exp_value = Measurer.expval(pauli_string, wire_list, coeffs.data());
+        exp_value_ref = -0.14561015;
+        CHECK(exp_value == Approx(exp_value_ref).margin(1e-6));
+
+        pauli_string = {"XZ"};
+        wire_list = {{2, 1}};
+        coeffs = {{1.0,0.0}};
+        exp_value = Measurer.expval(pauli_string, wire_list, coeffs.data());
+        exp_value_ref = 0.21743002;
+        CHECK(exp_value == Approx(exp_value_ref).margin(1e-6));
+
+        pauli_string = {"YZ"};
+        wire_list = {{0, 1}};
+        coeffs = {{1.0,0.0}};
+        exp_value = Measurer.expval(pauli_string, wire_list, coeffs.data());
+        exp_value_ref = -0.49614499;
+        CHECK(exp_value == Approx(exp_value_ref).margin(1e-6));
+
+        pauli_string = {"XYZ"};
+        wire_list = {{0, 1, 2}};
+        coeffs = {{1.0,0.0}};
+        exp_value = Measurer.expval(pauli_string, wire_list, coeffs.data());
+        exp_value_ref = -0.2155948;
+        CHECK(exp_value == Approx(exp_value_ref).margin(1e-6));
+
+        pauli_string = {"XXZ"};
+        wire_list = {{0, 1, 2}};
+        coeffs = {{1.0,0.0}};
+        exp_value = Measurer.expval(pauli_string, wire_list, coeffs.data());
+        exp_value_ref = 0.18920227;
+        CHECK(exp_value == Approx(exp_value_ref).margin(1e-6));
+
+        pauli_string = {"YYX"};
+        wire_list = {{0, 2, 1}};
+        coeffs = {{1.0,0.0}};
+        exp_value = Measurer.expval(pauli_string, wire_list, coeffs.data());
+        exp_value_ref = 0.0800993;
+        CHECK(exp_value == Approx(exp_value_ref).margin(1e-6));
+
+        pauli_string = {"ZZY"};
+        wire_list = {{0, 2, 1}};
+        coeffs = {{1.0,0.0}};
+        exp_value = Measurer.expval(pauli_string, wire_list, coeffs.data());
+        exp_value_ref = -0.25596322;
+        CHECK(exp_value == Approx(exp_value_ref).margin(1e-6));
+
     }
 }
 
