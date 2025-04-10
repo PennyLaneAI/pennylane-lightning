@@ -23,6 +23,7 @@
 #include "Observables.hpp"
 #include "ObservablesKokkos.hpp"
 #include "StateVectorKokkos.hpp"
+#include "MeasurementsKokkos.hpp"
 #include "Util.hpp"
 #include <Kokkos_Core.hpp>
 #include <Kokkos_Random.hpp>
@@ -170,9 +171,55 @@ class MeasurementsMPI final
      * @return Floating point expected value of the observable.
      */
     auto expval(const std::vector<std::string> &pauli_words,
-                const std::vector<std::vector<std::size_t>> &target_wires,
-                const std::complex<PrecisionT> *coeffs) -> PrecisionT {
-        PL_ABORT("TODO: Not yet implemented, but will be!");
+        const std::vector<std::vector<std::size_t>> &target_wires,
+        const Kokkos::complex<PrecisionT> *coeffs) -> PrecisionT {
+            for (std::size_t word = 0; word < pauli_words.size(); word++) {
+                std::vector<std::size_t> X_wires;
+                std::vector<std::size_t> Y_wires;
+                std::vector<std::size_t> Z_wires;
+                std::vector<std::size_t> global_wires_need_to_swap;
+                std::vector<std::size_t> local_wires_cannot_be_swapped;
+                std::vector<std::size_t> local_wires_to_swap;
+                std::vector<std::size_t> local_target_wires;
+                std::string local_pauli_word {""};
+
+                for (std::size_t i = 0; i < target_wires[word].size(); i++) {
+                        if (pauli_words[word][i] == 'X') {
+                            X_wires.push_back(target_wires[word][i]);
+                            this->_statevector.is_wires_local({target_wires[word][i]}) ? local_wires_cannot_be_swapped.push_back(target_wires[word][i]) : global_wires_need_to_swap.push_back(target_wires[word][i]);
+                        } else if (pauli_words[word][i] == 'Y') {
+                            Y_wires.push_back(target_wires[word][i]);
+                            this->_statevector.is_wires_local({target_wires[word][i]}) ? local_wires_cannot_be_swapped.push_back(target_wires[word][i]) : global_wires_need_to_swap.push_back(target_wires[word][i]);
+                        } else if (pauli_words[word][i] == 'Z') {
+                            Z_wires.push_back(target_wires[word][i]);
+                        }
+
+                        PL_ABORT_IF((X_wires.size() + Y_wires.size() > this->_statevector.get_num_local_wires()),
+                            "Number of X and Y gates exceeds the number of local wires.");
+
+                        for (std::size_t i = 0; i < this->_statevector.local_wires_.size(); i++) {
+                            if (local_wires_to_swap.size() == global_wires_need_to_swap.size()) {
+                                break;
+                            }
+                            if (std::find(local_wires_cannot_be_swapped.begin(), local_wires_cannot_be_swapped.end(), this->_statevector.local_wires_[i]) == local_wires_cannot_be_swapped.end()) {
+                                local_wires_to_swap.push_back(this->_statevector.local_wires_[i]);
+                            }
+                        }
+
+                        // DO SWAP HERE
+                        // Construct local pauli string and local wires
+                        // apply local expval
+                        ComplexT coeff_tmp = {1.0, 0.0};
+                        Measurements local_measure(
+                            this->_statevector.getLocalSV());
+                        PrecisionT local_expval = local_measure.expval({local_pauli_word}, {this->_statevector.get_local_wires_indices(local_target_wires)}, &coeff_tmp);
+                    }
+                        // combine
+
+                    
+                
+            }
+            return 0.0;
     }
 
     /**

@@ -1323,14 +1323,22 @@ Wires-related methods
         return data_;
     }
 
-  private:
+private:
     std::size_t num_qubits_;
     std::unique_ptr<SVK> sv_;
     std::unique_ptr<SVK> recvbuf_;
     std::unique_ptr<SVK> sendbuf_;
     MPI_Comm communicator_;
 
-  public: // TODO: make private
+public: // TODO: make private
+    /**
+     * @brief Get the StateVectorKokkos instance.
+     *
+     * @return A reference to the StateVectorKokkos instance.
+     */
+    SVK &getLocalSV() {
+            return *sv_;
+    }
     std::vector<std::size_t> mpi_rank_to_global_index_map_;
     std::vector<std::size_t> global_wires_;
     std::vector<std::size_t> local_wires_;
