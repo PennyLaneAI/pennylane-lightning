@@ -207,6 +207,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         GeneratorOperation::DoubleExcitation,
         GeneratorOperation::DoubleExcitationMinus,
         GeneratorOperation::DoubleExcitationPlus,
+        GeneratorOperation::PSWAP,
         GeneratorOperation::MultiRZ,
         GeneratorOperation::GlobalPhase,
     };
