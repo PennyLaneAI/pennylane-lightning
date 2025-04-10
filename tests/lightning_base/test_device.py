@@ -126,13 +126,24 @@ class TestHelpers:
 
         num_wires = 1
 
-    def test_stopping_condition(self):
-        """Test that stopping_condition returns whether or not an operation
-        is supported by the device."""
-        valid_op = qml.RX(1.23, 0)
-        invalid_op = self.DummyOperator(0)
+    @pytest.mark.parametrize(
+        "valid_op",
+        [
+            qml.RX(1.23, 0),
+            qml.ctrl(-1.0 * qml.Z(0), control=[1]),
+            qml.ctrl(qml.exp(qml.Z(0)), control=[1]),
+        ],
+    )
+    def test_stopping_condition_valid(self, valid_op):
+        """Test that stopping_condition returns True for operations unsupported by the device."""
 
         assert stopping_condition(valid_op) is True
+
+    def test_stopping_condition_invalid(self):
+        """Test that stopping_condition returns False for operations unsupported by the device."""
+
+        invalid_op = self.DummyOperator(0)
+
         assert stopping_condition(invalid_op) is False
 
     def test_accepted_observables(self):
@@ -671,10 +682,10 @@ class TestExecution:
         expected_program = qml.transforms.core.TransformProgram()
         expected_program.add_transform(validate_measurements, name=device.name)
         expected_program.add_transform(validate_observables, accepted_observables, name=device.name)
-        expected_program.add_transform(validate_device_wires, device.wires, name=device.name)
         expected_program.add_transform(
             mid_circuit_measurements, device=device, mcm_config=MCMConfig()
         )
+        expected_program.add_transform(validate_device_wires, device.wires, name=device.name)
         expected_program.add_transform(
             decompose,
             stopping_condition=stopping_condition,

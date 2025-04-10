@@ -44,6 +44,65 @@ template <class PrecisionT> struct getExpectationValueIdentityFunctor {
     }
 };
 
+template <class PrecisionT> struct getExpValPauliWordFunctor {
+    using ComplexT = Kokkos::complex<PrecisionT>;
+    using KokkosComplexVector = Kokkos::View<ComplexT *>;
+    KokkosComplexVector arr;
+    std::size_t xmask;
+    std::size_t ymask;
+    std::size_t zmask;
+    std::size_t num_y;
+
+    getExpValPauliWordFunctor(const KokkosComplexVector &arr_,
+                              std::size_t num_qubits_,
+                              const std::vector<std::size_t> &X_wires,
+                              const std::vector<std::size_t> &Y_wires,
+                              const std::vector<std::size_t> &Z_wires) {
+        xmask = 0;
+        ymask = 0;
+        zmask = 0;
+        for (std::size_t i = 0; i < X_wires.size(); i++) {
+            xmask |= (one << (num_qubits_ - 1 - X_wires[i]));
+        }
+        for (std::size_t i = 0; i < Y_wires.size(); i++) {
+            ymask |= (one << (num_qubits_ - 1 - Y_wires[i]));
+        }
+        for (std::size_t i = 0; i < Z_wires.size(); i++) {
+            zmask |= (one << (num_qubits_ - 1 - Z_wires[i]));
+        }
+        num_y = Y_wires.size();
+        arr = arr_;
+    }
+
+    KOKKOS_INLINE_FUNCTION
+    void operator()(const std::size_t k, PrecisionT &expval) const {
+        std::size_t j = (k ^ xmask) ^ ymask;
+        std::size_t y_factors = 2 * Kokkos::popcount(k & ymask) + num_y;
+        ComplexT prefactor{static_cast<PrecisionT>((y_factors + 1) % 2),
+                           static_cast<PrecisionT>(y_factors % 2)};
+        prefactor *= (((y_factors / 2) % 2) ^ (Kokkos::popcount(k & zmask) % 2))
+                         ? -1.0
+                         : 1.0;
+        expval += real(conj(arr(j)) * arr(k) * prefactor);
+    }
+};
+
+template <class PrecisionT> struct getExpectationValueIdentityFunctor {
+    Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
+
+    getExpectationValueIdentityFunctor(
+        Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
+        [[maybe_unused]] std::size_t num_qubits,
+        [[maybe_unused]] const std::vector<std::size_t> &wires) {
+        arr = arr_;
+    }
+
+    KOKKOS_INLINE_FUNCTION
+    void operator()(const std::size_t k, PrecisionT &expval) const {
+        expval += real(conj(arr[k]) * arr[k]);
+    }
+};
+
 template <class PrecisionT> struct getExpectationValuePauliXFunctor {
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
 
