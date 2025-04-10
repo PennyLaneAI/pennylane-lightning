@@ -46,14 +46,14 @@ template <class PrecisionT> struct getExpValPauliWordFunctor {
         xmask = 0;
         ymask = 0;
         zmask = 0;
-        for (std::size_t i = 0; i < X_wires.size(); i++) {
-            xmask |= (one << (num_qubits_ - 1 - X_wires[i]));
+        for (std::size_t x_wire : X_wires) {
+            xmask |= (one << (num_qubits_ - 1 - x_wire));
         }
-        for (std::size_t i = 0; i < Y_wires.size(); i++) {
-            ymask |= (one << (num_qubits_ - 1 - Y_wires[i]));
+        for (std::size_t y_wire : Y_wires) {
+            ymask |= (one << (num_qubits_ - 1 - y_wire));
         }
-        for (std::size_t i = 0; i < Z_wires.size(); i++) {
-            zmask |= (one << (num_qubits_ - 1 - Z_wires[i]));
+        for (std::size_t z_wire : Z_wires) {
+            zmask |= (one << (num_qubits_ - 1 - z_wire));
         }
         num_y = Y_wires.size();
         arr = arr_;
