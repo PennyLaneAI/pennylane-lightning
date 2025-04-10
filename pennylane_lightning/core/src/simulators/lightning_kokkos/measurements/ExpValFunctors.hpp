@@ -53,7 +53,7 @@ template <class PrecisionT> struct getExpValPauliWordFunctor {
             ymask |= (one << (num_qubits_ - 1 - Y_wires[i]));
         }
         for (std::size_t i = 0; i < Z_wires.size(); i++) {
-            zmask |= (one << (num_qubits_- 1 - Z_wires[i]));
+            zmask |= (one << (num_qubits_ - 1 - Z_wires[i]));
         }
         num_y = Y_wires.size();
         arr = arr_;
@@ -62,17 +62,14 @@ template <class PrecisionT> struct getExpValPauliWordFunctor {
     KOKKOS_INLINE_FUNCTION
     void operator()(const std::size_t k, PrecisionT &expval) const {
         std::size_t j = (k ^ xmask) ^ ymask;
-                std::size_t y_factors = 2 * Kokkos::popcount(k & ymask) + num_y;
-                ComplexT prefactor{static_cast<PrecisionT>((y_factors + 1) % 2),
-                    static_cast<PrecisionT>(y_factors % 2)};
-                    prefactor *=
-                    (((y_factors / 2) % 2) ^ (Kokkos::popcount(k & zmask) % 2))
-                    ? -1.0
-                    : 1.0;
-                    expval +=
-                    real(conj(arr(j)) * arr(k) * prefactor);
-                }
-
+        std::size_t y_factors = 2 * Kokkos::popcount(k & ymask) + num_y;
+        ComplexT prefactor{static_cast<PrecisionT>((y_factors + 1) % 2),
+                           static_cast<PrecisionT>(y_factors % 2)};
+        prefactor *= (((y_factors / 2) % 2) ^ (Kokkos::popcount(k & zmask) % 2))
+                         ? -1.0
+                         : 1.0;
+        expval += real(conj(arr(j)) * arr(k) * prefactor);
+    }
 };
 
 template <class PrecisionT> struct getExpectationValueIdentityFunctor {
