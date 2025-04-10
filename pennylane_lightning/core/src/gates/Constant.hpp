@@ -325,7 +325,7 @@ using GeneratorNWires = typename std::pair<GeneratorOperation, std::size_t>;
     GeneratorNWires{GeneratorOperation::DoubleExcitationMinus, 4},
     GeneratorNWires{GeneratorOperation::DoubleExcitationPlus, 4},
     GeneratorNWires{GeneratorOperation::GlobalPhase, 1},
-    GeneratorNWires{GeneratorOperation::PSWAP, 1},
+    GeneratorNWires{GeneratorOperation::PSWAP, 2},
 };
 
 using CGeneratorNWires =
@@ -346,7 +346,7 @@ using CGeneratorNWires =
     CGeneratorNWires{ControlledGeneratorOperation::DoubleExcitationMinus, 4},
     CGeneratorNWires{ControlledGeneratorOperation::DoubleExcitationPlus, 4},
     CGeneratorNWires{ControlledGeneratorOperation::GlobalPhase, 1},
-    CGeneratorNWires{ControlledGeneratorOperation::PSWAP, 1},
+    CGeneratorNWires{ControlledGeneratorOperation::PSWAP, 2},
 };
 
 /**
