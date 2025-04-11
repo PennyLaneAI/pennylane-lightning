@@ -1,16 +1,20 @@
 Lightning Plugins
 #################
 
-.. image:: https://img.shields.io/github/actions/workflow/status/PennyLaneAI/pennylane-lightning/tests_lqcpu_python.yml?branch=master&label=LQubit%20%28Python%20Tests%29&style=flat-square
+.. image:: https://img.shields.io/github/actions/workflow/status/PennyLaneAI/pennylane-lightning/tests_lqcpu_python.yml?branch=master&label=LQubit&style=flat-square
     :alt: Linux x86_64 L-Qubit Python tests (branch)
     :target: https://github.com/PennyLaneAI/pennylane-lightning/actions/workflows/tests_lqcpu_python.yml
 
-.. image:: https://img.shields.io/github/actions/workflow/status/PennyLaneAI/pennylane-lightning/tests_lkcpu_python.yml?branch=master&label=LKokkos%20%28Python%20Tests%29&style=flat-square
+.. image:: https://img.shields.io/github/actions/workflow/status/PennyLaneAI/pennylane-lightning/tests_lkcpu_python.yml?branch=master&label=LKokkos&style=flat-square
     :alt: Linux x86_64 L-Kokkos Python tests (branch)
     :target: https://github.com/PennyLaneAI/pennylane-lightning/actions/workflows/tests_lkcpu_python.yml
 
-.. image:: https://img.shields.io/github/actions/workflow/status/PennyLaneAI/pennylane-lightning/tests_gpu_python.yml?branch=master&label=GPU%20%28Python%20Tests%29&style=flat-square
-    :alt: Linux x86_64 GPU Python tests (branch)
+.. image:: https://img.shields.io/github/actions/workflow/status/PennyLaneAI/pennylane-lightning/tests_gpu_python.yml?branch=master&label=LGPU&style=flat-square
+    :alt: Linux x86_64 L-GPU Python tests (branch)
+    :target: https://github.com/PennyLaneAI/pennylane-lightning/actions/workflows/tests_gpu_python.yml
+
+.. image:: https://img.shields.io/github/actions/workflow/status/PennyLaneAI/pennylane-lightning/tests_gpu_python.yml?branch=master&label=LTensor&style=flat-square
+    :alt: Linux x86_64 L-Tensor Python tests (branch)
     :target: https://github.com/PennyLaneAI/pennylane-lightning/actions/workflows/tests_gpu_python.yml
 
 .. image:: https://img.shields.io/github/actions/workflow/status/PennyLaneAI/pennylane-lightning/.github/workflows/wheel_linux_x86_64.yml?branch=master&logo=github&style=flat-square
@@ -67,8 +71,6 @@ The following table summarizes the supported platforms and the primary installat
 | Linux x86 | pip     | pip    | source      | pip            | source          | source         |     pip        |
 +-----------+---------+--------+-------------+----------------+-----------------+----------------+----------------+
 | Linux ARM | pip     | pip    |             | pip            | source          | source         |     pip        |
-+-----------+---------+--------+-------------+----------------+-----------------+----------------+----------------+
-| Linux PPC | pip     | source |             | source         | source          | source         |                |
 +-----------+---------+--------+-------------+----------------+-----------------+----------------+----------------+
 | MacOS x86 | pip     |        |             | pip            |                 |                |                |
 +-----------+---------+--------+-------------+----------------+-----------------+----------------+----------------+
@@ -210,8 +212,8 @@ Lightning-GPU installation
 
 Standard installation
 =====================
-| For the majority of cases,
-| Lightning-GPU can be installed by following our installation instructions at `pennylane.ai/install <https://pennylane.ai/install/#high-performance-computing-and-gpus>`__.
+For the majority of cases,
+Lightning-GPU can be installed by following our installation instructions at `pennylane.ai/install <https://pennylane.ai/install/#high-performance-computing-and-gpus>`__.
 
 Install Lightning-GPU from source
 =================================
@@ -406,8 +408,8 @@ Please see the `cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`_ ins
 
 Standard installation
 =====================
-| For the majority of cases,
-| Lightning-Tensor can be installed by following our installation instructions at `pennylane.ai/install <https://pennylane.ai/install/#high-performance-computing-and-gpus>`__.
+For the majority of cases,
+Lightning-Tensor can be installed by following our installation instructions at `pennylane.ai/install <https://pennylane.ai/install/#high-performance-computing-and-gpus>`__.
 
 Install Lightning-Tensor from source
 ====================================
