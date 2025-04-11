@@ -619,7 +619,10 @@ Wires-related methods
             get_global_index_from_mpi_rank(get_mpi_rank());
 
         // Actually swap memory
-        // TODO: improve me, or at least parallelize me!!
+        // TODO: improve me!!
+        // TODO: Swap local indices so that memory chunk already contiguous, and no need need complicated index computation?
+        // TODO: Parallelize copies to send and recv buffer
+        // TODO: overlap copying to send and recv buffer
         for (std::size_t batch_index = 1;
              batch_index < (1 << get_num_global_wires()); batch_index++) {
             bool send = true;
@@ -632,7 +635,7 @@ Wires-related methods
                     global_wires.end();
                 bool batch_index_digit = (batch_index >> digits) & 1;
                 send = send && (!batch_index_digit || is_global_wire_in_swap);
-            }
+            } 
             if (send) {
                 barrier();
                 std::size_t j = 0;
