@@ -2,16 +2,34 @@
 
 ### New features since last release
 
-* Implement new C++ kernels for efficient in-place multiplication of sparse matrices to state vectors, supporting both controlled and non-controlled gates, and add comprehensive tests for this new functionality.
-  [(#1085)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1085)
+* Add native support for `qml.PCPhase` for `lightning.qubit` and `lightning.gpu`.
+  [(#1107)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1107)
 
 * Integrate sparse kernels into the Lightning-Qubit dynamic dispatcher, enhance the Python layers, and expand the testing process for dense and sparse operations.
   [(#1094)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1094)
 
-* Add support for Python 3.13.
+* Add `PSWAP` gate native implementation to PennyLane-Lightning devices.
+  [(#1088)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1088)
+
+* Implement new C++ kernels for efficient in-place multiplication of sparse matrices to state vectors, supporting both controlled and non-controlled gates, and add comprehensive tests for this new functionality.
+  [(#1085)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1085)
+
+* Add support for sparse `qml.QubitUnitary` gates for Lightning state-vector simulators.
+  [(#1068)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1068)
+
+* Lightning devices support dynamically allocated wires (e.g. `qml.device("lightning.qubit")`).
+  [(#1043)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1043)
+
+* Add support for Python 3.13 Lightning wheel builds.
   [(#1001)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1001)
 
+* Add native `SX` and `C(SX)` gates to all lightning devices.
+  [(#731)](https://github.com/PennyLaneAI/pennylane-lightning/pull/731)
+
 ### Breaking changes
+
+* Update the minimum required version of PennyLane to `v0.40.0`.
+  [(#1033)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1033)
 
 ### Improvements
 
@@ -23,12 +41,6 @@
 
 * Build Lightning-GPU and Lightning-Tensor wheels against Python 3.10 and 3.13 on non-release PRs.
   [(#1112)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1112)
-
-* Add `PSWAP` gate native implementation to PennyLane-Lightning devices.
-  [(#1088)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1088)
-
-* Add native support for `qml.PCPhase` for `lightning.qubit` and `lightning.gpu`.
-  [(#1107)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1107)
 
 * Use cuQuantum API for calculating expectation value of Pauli sentences in Lightning-GPU.
   [(#1104)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1104)
@@ -44,7 +56,7 @@
   [(#1087)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1087)
   [(#1106)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1106)
 
-* Modify expval of named operators in Lightning-Qubit for in-place computation of expectation value, to avoid creating an intermediate statevector
+* Modify `expval` of named operators in Lightning-Qubit for in-place computation of expectation value, to avoid creating an intermediate statevector
   [(#1079)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/1079)
   [(#565)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/565)
 
@@ -62,9 +74,6 @@
 
 * Remove redundant `reset_state` calls for circuit execution when state vector is freshly initialized.
   [(#1076)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1076)
-
-* Add support for sparse `qml.QubitUnitary` gates for `lightning.qubit`, `lightning.gpu`, and `lightning.kokkos` backends.
-  [(#1068)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1068)
 
 * Introduce a generalized sparse gate selection system via the `_observable_is_sparse` method in the base measurement class, enabling future expansion for any number of sparse observables.
   [(#1068)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1068)
@@ -90,9 +99,6 @@
 * Add an `execution_config` keyword argument to `LightningBase.eval_jaxpr` to accommodate a Device API change.
   [(#1067)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1067)
 
-* Lightning devices support dynamically allocated wires (e.g. `qml.device("lightning.qubit")`).
-  [(#1043)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1043)
-
 * Remove the old device API references in the Lightning repo and test suite.
   [(#1057)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1057)
 
@@ -108,10 +114,10 @@
 * Remove unnecessary adjoint pytest skip for Lightning-Kokkos.
   [(#1048)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1048)
 
-* Add isort to the precommit hook.
+* Add `isort` to the precommit hook.
    [(#1052)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1052)
 
-* Update source code to use black formatter 25.1.0.
+* Update source code to use `black` formatter 25.1.0.
   [(#1059)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1059)
 
 * Replace the type checking using the property `return_type` of `MeasurementProcess` with direct `isinstance` checks.
@@ -123,24 +129,18 @@
 * Update `qml.MultiControlledX` tests following the latest updates in PennyLane.
   [(#1040)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1040)
 
-* Update the minimum required version of PennyLane to `v0.40.0`.
-  [(#1033)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1033)
-
 * Merge the `v0.40.0-rc` branch to the master and bump version.
   [(#1038)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1038)
 
 * Reduce the number of shots in the PennyLane Python tests on CIs, from 20k to 10k.
   [(#1046)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1046)
 
-* `SX` and `C(SX)` gates are natively supported for all lightning devices.
-  [(#731)](https://github.com/PennyLaneAI/pennylane-lightning/pull/731)
-
 * Program transformed by `qml.defer_measurements` can be executed on `lightning.qubit`. Supports `ctrl` and `adjoint` with program capture in `lightning.qubit`.
   [(#1069)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1069)
 
 ### Documentation
 
-* Modify `CHANGELOG.md` to prepare it for release v.0.41.0
+* Modify `CHANGELOG.md` to prepare it for release v0.41.0
   [(#1117)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1117)
 
 * Update install instructions for `lightning.gpu`.
