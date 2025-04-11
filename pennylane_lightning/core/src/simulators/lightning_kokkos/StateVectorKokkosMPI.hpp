@@ -1296,6 +1296,7 @@ Wires-related methods
         (*sv_).DeviceToHost(local_.data(), local_.size());
         std::vector<int> recvcount(get_mpi_size(), local_.size());
         std::vector<int> displacements(get_mpi_size(), 0);
+        //TODO: fix me
         for (std::size_t rank = 0; rank < get_mpi_size(); rank++) {
             for (std::size_t i = 0; i < get_num_global_wires(); i++) {
                 std::size_t temp =

@@ -281,7 +281,7 @@ int main(int argc, char *argv[]) {
     // svmpi.barrier();
 
     std::vector<std::string> gates_2q = {
-        "CNOT",
+        //"CNOT",
         //"CY",
         //"CZ",
         //"SWAP",
@@ -418,7 +418,29 @@ int main(int argc, char *argv[]) {
     //    allclose(resmpi, res);
     //}
 
-    // svmpi.barrier();
+
+    std::vector<std::string> pauli_string {{"X"}};
+    std::vector<std::vector<std::size_t>> wires {{{0}}};
+    Kokkos::complex coeffs {1.0, 0.0};
+
+    Measurements measure{sv};
+    MeasurementsMPI measurempi{svmpi};
+    auto res = measure.expval(pauli_string, wires, &coeffs);
+    auto resmpi = measurempi.expval(pauli_string, wires, &coeffs);
+
+     svmpi.barrier();
+     if (svmpi.get_mpi_rank() == 0) {
+        std::cout << "global_wires = ";
+        print(svmpi.global_wires_);
+        std::cout << "local_wires = ";
+        print(svmpi.local_wires_);
+        std::cout << "OK" << std::endl;
+    }
+
+    svmpi.barrier();
+    print(svmpi);
+    svmpi.barrier();
+    
     int finflag;
     MPI_Finalized(&finflag);
     if (!finflag) {
