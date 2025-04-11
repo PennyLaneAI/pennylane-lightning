@@ -69,7 +69,6 @@ _to_matrix_ops = {
     "ECR": OperatorProperties(),
     "ISWAP": OperatorProperties(),
     "OrbitalRotation": OperatorProperties(),
-    "PSWAP": OperatorProperties(),
     "QubitCarry": OperatorProperties(),
     "QubitSum": OperatorProperties(),
     "SISWAP": OperatorProperties(),

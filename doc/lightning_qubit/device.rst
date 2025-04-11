@@ -26,6 +26,7 @@ Supported operations and observables
     :nosignatures:
 
     ~pennylane.BasisState
+    ~pennylane.BlockEncode
     ~pennylane.CNOT
     ~pennylane.ControlledPhaseShift
     ~pennylane.ControlledQubitUnitary
@@ -41,6 +42,7 @@ Supported operations and observables
     ~pennylane.DoubleExcitationMinus
     ~pennylane.DoubleExcitationPlus
     ~pennylane.ECR
+    ~pennylane.GlobalPhase
     ~pennylane.Hadamard
     ~pennylane.Identity
     ~pennylane.IsingXX
@@ -54,6 +56,7 @@ Supported operations and observables
     ~pennylane.PauliX
     ~pennylane.PauliY
     ~pennylane.PauliZ
+    ~pennylane.PCPhase
     ~pennylane.PhaseShift
     ~pennylane.PSWAP
     ~pennylane.QubitCarry

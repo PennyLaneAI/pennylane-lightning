@@ -13,7 +13,8 @@ A ``lightning.gpu`` device can be loaded using:
 
 If the NVIDIA cuQuantum libraries are available, the above device will allow all operations to be performed on a CUDA capable GPU of generation SM 7.0 (Volta) and greater. If the libraries are not correctly installed, or available on path, the device will raise an error.
 
-The ``lightning.gpu`` device supports quantum circuit gradients using the adjoint differentiation method by default. This can be enabled at the PennyLane QNode level with:
+The ``lightning.gpu`` device supports quantum circuit gradients using the adjoint differentiation method.
+By default, this method is enabled. It can also be explicitly specified using the ``diff_method`` argument when creating a device:
 
 .. code-block:: python
 
@@ -36,6 +37,7 @@ Supported operations and observables
     :nosignatures:
 
     ~pennylane.BasisState
+    ~pennylane.BlockEncode
     ~pennylane.CNOT
     ~pennylane.ControlledPhaseShift
     ~pennylane.ControlledQubitUnitary
@@ -51,6 +53,7 @@ Supported operations and observables
     ~pennylane.DoubleExcitationMinus
     ~pennylane.DoubleExcitationPlus
     ~pennylane.ECR
+    ~pennylane.GlobalPhase
     ~pennylane.Hadamard
     ~pennylane.Identity
     ~pennylane.IsingXX
@@ -64,6 +67,7 @@ Supported operations and observables
     ~pennylane.PauliX
     ~pennylane.PauliY
     ~pennylane.PauliZ
+    ~pennylane.PCPhase
     ~pennylane.PhaseShift
     ~pennylane.PSWAP
     ~pennylane.QubitCarry

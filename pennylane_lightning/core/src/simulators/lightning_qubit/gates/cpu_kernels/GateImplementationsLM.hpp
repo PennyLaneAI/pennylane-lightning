@@ -20,7 +20,6 @@
 #include <bit>
 #include <complex>
 #include <functional>
-#include <iostream>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -207,6 +206,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         GeneratorOperation::DoubleExcitation,
         GeneratorOperation::DoubleExcitationMinus,
         GeneratorOperation::DoubleExcitationPlus,
+        GeneratorOperation::PSWAP,
         GeneratorOperation::MultiRZ,
         GeneratorOperation::GlobalPhase,
     };
@@ -226,6 +226,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         ControlledGeneratorOperation::DoubleExcitation,
         ControlledGeneratorOperation::DoubleExcitationMinus,
         ControlledGeneratorOperation::DoubleExcitationPlus,
+        ControlledGeneratorOperation::PSWAP,
         ControlledGeneratorOperation::MultiRZ,
         ControlledGeneratorOperation::GlobalPhase,
     };
