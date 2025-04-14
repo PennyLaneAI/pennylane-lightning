@@ -17,10 +17,6 @@ Lightning Plugins
     :alt: Linux x86_64 L-Tensor Python tests (branch)
     :target: https://github.com/PennyLaneAI/pennylane-lightning/actions/workflows/tests_gpu_python.yml
 
-.. image:: https://img.shields.io/github/actions/workflow/status/PennyLaneAI/pennylane-lightning/.github/workflows/wheel_linux_x86_64.yml?branch=master&logo=github&style=flat-square
-    :alt: Linux x86_64 wheel builds (branch)
-    :target: https://github.com/PennyLaneAI/pennylane-lightning/actions/workflows/wheel_linux_x86_64.yml?query=branch%3Amaster++
-
 .. image:: https://img.shields.io/codecov/c/github/PennyLaneAI/pennylane-lightning/master.svg?logo=codecov&style=flat-square
     :alt: Codecov coverage
     :target: https://codecov.io/gh/PennyLaneAI/pennylane-lightning
@@ -47,8 +43,8 @@ Lightning Plugins
 
 
 .. image:: doc/_static/pennylane_lightning.png
-    :align: left
-    :width: 210px
+    :align: center
+    :width: 310px
     :target: javascript:void(0);
 
 .. header-start-inclusion-marker-do-not-remove
