@@ -1,21 +1,25 @@
 Lightning Plugins
 #################
 
-.. image:: https://img.shields.io/github/actions/workflow/status/PennyLaneAI/pennylane-lightning/tests_lqcpu_python.yml?branch=master&label=L-Qubit&style=flat-square
+.. image:: https://img.shields.io/github/actions/workflow/status/PennyLaneAI/pennylane-lightning/tests_lqcpu_python.yml?branch=master&label=LQubit&style=flat-square
     :alt: Linux x86_64 L-Qubit Python tests (branch)
     :target: https://github.com/PennyLaneAI/pennylane-lightning/actions/workflows/tests_lqcpu_python.yml
 
-.. image:: https://img.shields.io/github/actions/workflow/status/PennyLaneAI/pennylane-lightning/tests_lkcpu_python.yml?branch=master&label=L-Kokkos&style=flat-square
-    :alt: Linux x86_64 L-Kokkos Python tests (branch)
-    :target: https://github.com/PennyLaneAI/pennylane-lightning/actions/workflows/tests_lkcpu_python.yml
-
-.. image:: https://img.shields.io/github/actions/workflow/status/PennyLaneAI/pennylane-lightning/tests_gpu_python.yml?branch=master&label=L-GPU&style=flat-square
+.. image:: https://img.shields.io/github/actions/workflow/status/PennyLaneAI/pennylane-lightning/tests_gpu_python.yml?branch=master&label=LGPU&style=flat-square
     :alt: Linux x86_64 L-GPU Python tests (branch)
     :target: https://github.com/PennyLaneAI/pennylane-lightning/actions/workflows/tests_gpu_python.yml
 
-.. image:: https://img.shields.io/github/actions/workflow/status/PennyLaneAI/pennylane-lightning/tests_gpu_python.yml?branch=master&label=L-Tensor&style=flat-square
+.. image:: https://img.shields.io/github/actions/workflow/status/PennyLaneAI/pennylane-lightning/tests_lkcpu_python.yml?branch=master&label=LKokkos&style=flat-square
+    :alt: Linux x86_64 L-Kokkos Python tests (branch)
+    :target: https://github.com/PennyLaneAI/pennylane-lightning/actions/workflows/tests_lkcpu_python.yml
+
+.. image:: https://img.shields.io/github/actions/workflow/status/PennyLaneAI/pennylane-lightning/tests_gpu_python.yml?branch=master&label=LTensor&style=flat-square
     :alt: Linux x86_64 L-Tensor Python tests (branch)
     :target: https://github.com/PennyLaneAI/pennylane-lightning/actions/workflows/tests_gpu_python.yml
+
+.. image:: https://img.shields.io/github/actions/workflow/status/PennyLaneAI/pennylane-lightning/.github/workflows/wheel_linux_x86_64.yml?branch=master&logo=github&style=flat-square
+    :alt: Linux x86_64 wheel builds (branch)
+    :target: https://github.com/PennyLaneAI/pennylane-lightning/actions/workflows/wheel_linux_x86_64.yml?query=branch%3Amaster++
 
 .. image:: https://img.shields.io/codecov/c/github/PennyLaneAI/pennylane-lightning/master.svg?logo=codecov&style=flat-square
     :alt: Codecov coverage
@@ -41,9 +45,11 @@ Lightning Plugins
     :alt: PyPI - Python Version
     :target: https://pypi.org/project/PennyLane-Lightning
 
-.. image:: https://img.shields.io/pypi/l/PennyLane.svg?logo=apache&style=flat-square
-    :alt: License
-    :target: https://www.apache.org/licenses/LICENSE-2.0
+
+.. image:: doc/_static/pennylane_lightning.png
+    :align: left
+    :width: 210px
+    :target: javascript:void(0);
 
 .. header-start-inclusion-marker-do-not-remove
 
@@ -67,6 +73,9 @@ If you're not sure what simulator to use, check out our `PennyLane performance <
 
 .. header-end-inclusion-marker-do-not-remove
 
+Installation
+************
+
 The following table summarizes the supported platforms and the primary installation mode:
 
 +-----------+---------+--------+-------------+----------------+-----------------+----------------+----------------+
@@ -83,61 +92,10 @@ The following table summarizes the supported platforms and the primary installat
 | Windows   | pip     |        |             |                |                 |                |                |
 +-----------+---------+--------+-------------+----------------+-----------------+----------------+----------------+
 
-
-.. installation_LTensor-start-inclusion-marker-do-not-remove
-
-
-Lightning-Tensor installation
-*****************************
-Lightning-Tensor requires CUDA 12 and the `cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`_ (only the `cutensornet <https://docs.nvidia.com/cuda/cuquantum/latest/cutensornet/index.html>`_ library is required).
-The SDK may be installed within the Python environment ``site-packages`` directory using ``pip`` or ``conda`` or the SDK library path appended to the ``LD_LIBRARY_PATH`` environment variable.
-Please see the `cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`_ install guide for more information.
-
-Standard installation
-=====================
-| For the majority of cases,
-| Lightning-Tensor can be installed by following our installation instructions at `pennylane.ai/install <https://pennylane.ai/install/#high-performance-computing-and-gpus>`__.
-
-Install Lightning-Tensor from source
-====================================
-
-.. note::
-
-    The section below contains instructions for installing Lightning-Tensor **from source**. For most cases, *this is not required* and one can simply use the installation instructions at `pennylane.ai/install <https://pennylane.ai/install/#high-performance-computing-and-gpus>`__. If those instructions do not work for you, or you have a more complex build environment that requires building from source, then consider reading on.
-
-Lightning-Qubit needs to be 'installed' by ``pip`` before Lightning-Tensor (compilation is not necessary):
-
-.. code-block:: bash
-
-    git clone https://github.com/PennyLaneAI/pennylane-lightning.git
-    cd pennylane-lightning
-    pip install -r requirements.txt
-    pip install cutensornet-cu12
-    PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
-    SKIP_COMPILATION=True pip install -e . --config-settings editable_mode=compat
-
-Note that `cutensornet-cu12` is a requirement for Lightning-Tensor, and is installed by ``pip`` separately. After `cutensornet-cu12` is installed, the ``CUQUANTUM_SDK`` environment variable should be set to enable discovery during installation:
-
-.. code-block:: bash
-
-    export CUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum')")
-
-The Lightning-Tensor can then be installed with ``pip``:
-
-.. code-block:: bash
-
-    PL_BACKEND="lightning_tensor" python scripts/configure_pyproject_toml.py
-    pip install -e . --config-settings editable_mode=compat -vv
-
-.. installation_LTensor-end-inclusion-marker-do-not-remove
-
-Lightning-Tensor also requires additional NVIDIA libraries including ``nvJitLink``, ``cuSOLVER``, ``cuSPARSE``, ``cuBLAS``, and ``CUDA runtime``. These can be installed through the `CUDA Toolkit <https://developer.nvidia.com/cuda-toolkit/>`_ or from ``pip``.
-
-Please refer to the `plugin documentation <https://docs.pennylane.ai/projects/lightning/>`_ as
-well as to the `PennyLane documentation <https://docs.pennylane.ai/>`_ for further reference.
+To install the latest stable version of these plugins, check out the `PennyLane installation guide <https://pennylane.ai/install#high-performance-computing-and-gpus>`_.
+If you wish to install the latest development version, instructions for `building from source <https://docs.pennylane.ai/projects/lightning/en/latest/dev/installation.html>`_ are also available.
 
 .. docker-start-inclusion-marker-do-not-remove
-
 
 Docker support
 **************
