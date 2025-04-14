@@ -3,8 +3,8 @@ Lightning-GPU installation
 
 Standard installation
 =====================
-| For the majority of cases,
-| Lightning-GPU can be installed by following our installation instructions at `pennylane.ai/install <https://pennylane.ai/install/#high-performance-computing-and-gpus>`__.
+For the majority of cases,
+Lightning-GPU can be installed by following our installation instructions at `pennylane.ai/install <https://pennylane.ai/install/#high-performance-computing-and-gpus>`__.
 
 Install Lightning-GPU from source
 =================================

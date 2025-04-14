@@ -6,8 +6,8 @@ Please see the `cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`_ ins
 
 Standard installation
 =====================
-| For the majority of cases,
-| Lightning-Tensor can be installed by following our installation instructions at `pennylane.ai/install <https://pennylane.ai/install/#high-performance-computing-and-gpus>`__.
+For the majority of cases,
+Lightning-Tensor can be installed by following our installation instructions at `pennylane.ai/install <https://pennylane.ai/install/#high-performance-computing-and-gpus>`__.
 
 Install Lightning-Tensor from source
 ====================================

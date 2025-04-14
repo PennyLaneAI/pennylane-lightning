@@ -41,10 +41,14 @@ Lightning Plugins
     :alt: PyPI - Python Version
     :target: https://pypi.org/project/PennyLane-Lightning
 
+.. image:: https://img.shields.io/pypi/l/PennyLane.svg?logo=apache&style=flat-square
+    :alt: License
+    :target: https://www.apache.org/licenses/LICENSE-2.0
+
 
 .. image:: doc/_static/pennylane_lightning.png
     :align: center
-    :width: 310px
+    :width: 400px
     :target: javascript:void(0);
 
 .. header-start-inclusion-marker-do-not-remove
@@ -55,7 +59,7 @@ The Lightning plugin ecosystem provides fast state-vector and tensor-network sim
 learning, automatic differentiation, and optimization of hybrid quantum-classical computations.
 PennyLane supports Python 3.10 and above.
 
-Features
+Backends
 ********
 
 PennyLane-Lightning high performance simulators include the following backends:
