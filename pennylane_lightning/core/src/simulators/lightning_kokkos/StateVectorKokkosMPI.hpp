@@ -559,7 +559,6 @@ Wires-related methods
         global_wires_ = other.global_wires_;
         local_wires_ = other.local_wires_;
         mpi_rank_to_global_index_map_ = other.mpi_rank_to_global_index_map_;
-        // TODO: need to copy global/local wires_ too
     }
 
     /**
@@ -604,91 +603,134 @@ Wires-related methods
         return false; // TODO: implement me
     }
 
-    void swap_global_local_wires(std::vector<std::size_t> &global_wires_to_swap,
-                                 std::vector<std::size_t> &local_wires_to_swap) {
-        PL_ABORT_IF_NOT(
-            global_wires_to_swap.size() == local_wires_to_swap.size(),
-            "global_wires_to_swap and local_wires_to_swap must have equal dimensions.");
+    void
+    swap_global_local_wires(std::vector<std::size_t> &global_wires_to_swap,
+                            std::vector<std::size_t> &local_wires_to_swap) {
+        PL_ABORT_IF_NOT(global_wires_to_swap.size() ==
+                            local_wires_to_swap.size(),
+                        "global_wires_to_swap and local_wires_to_swap must "
+                        "have equal dimensions.");
         std::sort(global_wires_to_swap.begin(), global_wires_to_swap.end());
         std::sort(local_wires_to_swap.begin(), local_wires_to_swap.end());
 
         // Map local wires to actual local wire indices
 
-        
-std::vector<std::size_t> rev_local_wires_index_to_swap;
-std::vector<std::size_t> rev_local_wires_index_not_swapping;
-for (std::size_t i = 0; i < get_num_local_wires(); i++)
-{
-    // use transform? reverse?
-    if (std::find(local_wires_to_swap.begin(),
-                  local_wires_to_swap.end(), local_wires_[i]) !=
-        local_wires_to_swap.end()){
-        rev_local_wires_index_to_swap.push_back(
-            get_num_local_wires() - 1 - get_local_wire_index(local_wires_[i])); 
-    } else {
-        rev_local_wires_index_not_swapping.push_back(get_num_local_wires() - 1 - get_local_wire_index(local_wires_[i])); 
-    }
-}
-std::size_t global_index =
-get_global_index_from_mpi_rank(get_mpi_rank());
-for (std::size_t batch_index = 1;
-    batch_index < (1 << get_num_global_wires()); batch_index++) {
-
-    std::size_t swap_wire_mask = 0;
-    for (std::size_t i = 0; i < local_wires_to_swap.size(); i++)
-    {
-        swap_wire_mask |= ((((batch_index ^ global_index) >> i) & 1) << rev_local_wires_index_to_swap[i]);
-    }
-
-        
-    for (std::size_t buffer_index = 0; buffer_index < exp2(rev_local_wires_index_to_swap.size()); buffer_index++)
-    {
-        std::size_t SV_index = swap_wire_mask;
-
-        for( std::size_t i = 0; i < rev_local_wires_index_to_swap.size(); i++)
-        {
-                SV_index |= (((buffer_index >> i) & 1) << rev_local_wires_index_to_swap[i]);
+        std::vector<std::size_t> rev_global_wires_index_to_swap;
+        std::vector<std::size_t> rev_local_wires_index_to_swap;
+        std::vector<std::size_t> rev_local_wires_index_not_swapping;
+        for (std::size_t i = 0; i < get_num_local_wires(); i++) {
+            // use transform? reverse?
+            if (std::find(local_wires_to_swap.begin(),
+                          local_wires_to_swap.end(),
+                          local_wires_[i]) != local_wires_to_swap.end()) {
+                rev_local_wires_index_to_swap.push_back(
+                    get_num_local_wires() - 1 -
+                    get_local_wire_index(local_wires_[i]));
+            } else {
+                rev_local_wires_index_not_swapping.push_back(
+                    get_num_local_wires() - 1 -
+                    get_local_wire_index(local_wires_[i]));
+            }
         }
-
-        (*sendbuf_).getView()(buffer_index) = (*sv_).getView()(SV_index);
-    }
-
-
-    barrier();
-    std::size_t other_global_index = batch_index ^ global_index;
-    std::size_t other_mpi_rank =
-        get_mpi_rank_from_global_index(other_global_index);
-    std::cout << "I am rank " << get_mpi_rank()
-              << " and I am sending to rank " << other_mpi_rank
-              << " with tag " << batch_index
-              << " and this number of elements "
-              << (1 << (get_num_local_wires() - local_wires_to_swap.size()))
-              << std::endl;
-    MPI_Sendrecv((*sendbuf_).getView().data(),
-                 1 << (get_num_local_wires() - local_wires_to_swap.size()),
-                 get_mpi_type<ComplexT>(), other_mpi_rank,
-                 batch_index, (*recvbuf_).getView().data(),
-                 1 << (get_num_local_wires() - local_wires_to_swap.size()),
-                 get_mpi_type<ComplexT>(), other_mpi_rank,
-                 batch_index, communicator_, MPI_STATUS_IGNORE);
-
-    barrier();
-
-        
-    for (std::size_t buffer_index = 0; buffer_index < exp2(rev_local_wires_index_to_swap.size()); buffer_index++)
-    {
-        std::size_t SV_index = swap_wire_mask;
-
-        for( std::size_t i = 0; i < rev_local_wires_index_to_swap.size(); i++)
-        {
-                SV_index |= (((buffer_index >> i) & 1) << rev_local_wires_index_to_swap[i]);
+        for (std::size_t i = 0; i < get_num_global_wires(); i++) {
+            // use transform? reverse?
+            if (std::find(global_wires_to_swap.begin(),
+                          global_wires_to_swap.end(),
+                          global_wires_[i]) != global_wires_to_swap.end()) {
+                rev_global_wires_index_to_swap.push_back(
+                    get_num_global_wires() - 1 -
+                    get_global_wire_index(global_wires_[i]));
+            }
         }
+        std::size_t global_index =
+            get_global_index_from_mpi_rank(get_mpi_rank());
+        for (std::size_t batch_index = 1;
+             batch_index < (1 << get_num_global_wires()); batch_index++) {
 
-        (*sv_).getView()(SV_index) =(*recvbuf_).getView()(buffer_index);
-    }
+            bool send = true;
+            for (std::size_t digits = 0; digits < global_wires_.size();
+                 digits++) {
+                bool is_global_wire_in_swap =
+                    std::find(
+                        global_wires_to_swap.begin(),
+                        global_wires_to_swap.end(),
+                        global_wires_[get_num_global_wires() - digits - 1]) !=
+                    global_wires_to_swap.end();
+                bool batch_index_digit = (batch_index >> digits) & 1;
+                send = send && (!batch_index_digit || is_global_wire_in_swap);
+            }
+            if (send) {
+                std::cout << "I am rank " << get_mpi_rank()
+                          << " batch index = " << batch_index << std::endl;
+                std::size_t swap_wire_mask = 0;
+                for (std::size_t i = 0; i < local_wires_to_swap.size(); i++) {
+                    swap_wire_mask |= ((((batch_index ^ global_index) >>
+                                         rev_global_wires_index_to_swap[i]) &
+                                        1)
+                                       << rev_local_wires_index_to_swap[i]);
+                }
+                std::cout << "I am rank " << get_mpi_rank()
+                          << " and swap_wire_mask = " << swap_wire_mask
+                          << std::endl;
 
+                for (std::size_t buffer_index = 0;
+                     buffer_index <
+                     exp2((get_num_local_wires() - local_wires_to_swap.size()));
+                     buffer_index++) {
+                    std::size_t SV_index = swap_wire_mask;
 
-}
+                    for (std::size_t i = 0;
+                         i < rev_local_wires_index_not_swapping.size(); i++) {
+                        SV_index |= (((buffer_index >> i) & 1)
+                                     << rev_local_wires_index_not_swapping[i]);
+                    }
+                    std::cout << "I am rank " << get_mpi_rank()
+                              << " and buffer_index = " << buffer_index
+                              << " and SV_index = " << SV_index << std::endl;
+                    (*sendbuf_).getView()(buffer_index) =
+                        (*sv_).getView()(SV_index);
+                }
+
+                barrier();
+                std::size_t other_global_index = batch_index ^ global_index;
+                std::size_t other_mpi_rank =
+                    get_mpi_rank_from_global_index(other_global_index);
+                std::cout << "I am rank " << get_mpi_rank()
+                          << " and I am sending to rank " << other_mpi_rank
+                          << " with tag " << batch_index
+                          << " and this number of elements "
+                          << (1 << (get_num_local_wires() -
+                                    local_wires_to_swap.size()))
+                          << std::endl;
+                MPI_Sendrecv(
+                    (*sendbuf_).getView().data(),
+                    1 << (get_num_local_wires() - local_wires_to_swap.size()),
+                    get_mpi_type<ComplexT>(), other_mpi_rank, batch_index,
+                    (*recvbuf_).getView().data(),
+                    1 << (get_num_local_wires() - local_wires_to_swap.size()),
+                    get_mpi_type<ComplexT>(), other_mpi_rank, batch_index,
+                    communicator_, MPI_STATUS_IGNORE);
+
+                barrier();
+
+                for (std::size_t buffer_index = 0;
+                     buffer_index <
+                     exp2((get_num_local_wires() - local_wires_to_swap.size()));
+                     buffer_index++) {
+                    std::size_t SV_index = swap_wire_mask;
+
+                    for (std::size_t i = 0;
+                         i < rev_local_wires_index_not_swapping.size(); i++) {
+                        SV_index |= (((buffer_index >> i) & 1)
+                                     << rev_local_wires_index_not_swapping[i]);
+                    }
+
+                    (*sv_).getView()(SV_index) =
+                        (*recvbuf_).getView()(buffer_index);
+                }
+            }
+            barrier();
+        }
 
         // Swap global and local wires labels
         std::unordered_map<int, size_t> global_wires_to_swap_positions;
@@ -712,8 +754,11 @@ for (std::size_t batch_index = 1;
         }
 
         for (size_t i = 0; i < global_wires_to_swap.size(); ++i) {
-            std::swap(global_wires_[global_wires_to_swap_positions[global_wires_to_swap[i]]],
-                      local_wires_[local_wires_to_swap_positions[local_wires_to_swap[i]]]);
+            std::swap(
+                global_wires_
+                    [global_wires_to_swap_positions[global_wires_to_swap[i]]],
+                local_wires_
+                    [local_wires_to_swap_positions[local_wires_to_swap[i]]]);
         }
         // barrier();
     }
@@ -734,7 +779,24 @@ for (std::size_t batch_index = 1;
         } else {
             PL_ABORT("Error");
         }
-        
+    }
+
+    std::vector<std::size_t>
+    get_global_wires_indices(const std::vector<std::size_t> &wires) {
+        std::vector<std::size_t> global_wires_indices;
+        for (const auto &wire : wires) {
+            global_wires_indices.push_back(get_global_wire_index(wire));
+        }
+        return global_wires_indices;
+    }
+
+    size_t get_global_wire_index(const std::size_t wire) {
+        auto it = std::find(global_wires_.begin(), global_wires_.end(), wire);
+        if (it != global_wires_.end()) {
+            return std::distance(global_wires_.begin(), it);
+        } else {
+            PL_ABORT("Error");
+        }
     }
 
     /**
@@ -765,8 +827,10 @@ for (std::size_t batch_index = 1;
                     std::distance(global_wires_.begin(),
                                   std::find(global_wires_.begin(),
                                             global_wires_.end(), wires[0]));
+                std::size_t rev_distance =
+                    get_num_global_wires() - 1 - distance;
                 for (auto &global_index : mpi_rank_to_global_index_map_) {
-                    global_index = global_index ^ (1U << distance);
+                    global_index = global_index ^ (1U << rev_distance);
                 }
                 return;
             } else if (opName == "PauliY") {
@@ -774,23 +838,30 @@ for (std::size_t batch_index = 1;
                     std::distance(global_wires_.begin(),
                                   std::find(global_wires_.begin(),
                                             global_wires_.end(), wires[0]));
+                std::size_t rev_distance =
+                    get_num_global_wires() - 1 - distance;
                 std::size_t global_index =
                     get_global_index_from_mpi_rank(get_mpi_rank());
-                fp_t phase = ((global_index >> distance) & 1) ? (M_PI_2)
-                                                              : (-1.0) * M_PI_2;
+                fp_t phase = ((global_index >> rev_distance) & 1)
+                                 ? (M_PI_2)
+                                 : (-1.0) * M_PI_2;
                 (*sv_).applyOperation("GlobalPhase", {}, false, {phase});
                 for (auto &global_index : mpi_rank_to_global_index_map_) {
-                    global_index = global_index ^ (1U << distance);
+                    global_index = global_index ^ (1U << rev_distance);
                 }
+
                 return;
             } else if (opName == "PauliZ") {
                 std::size_t distance =
                     std::distance(global_wires_.begin(),
                                   std::find(global_wires_.begin(),
                                             global_wires_.end(), wires[0]));
+
+                std::size_t rev_distance =
+                    get_num_global_wires() - 1 - distance;
                 std::size_t global_index =
                     get_global_index_from_mpi_rank(get_mpi_rank());
-                if ((global_index >> distance) & 1) {
+                if ((global_index >> rev_distance) & 1) {
                     (*sv_).applyOperation("GlobalPhase", {}, false, {M_PI});
                 }
                 return;
@@ -815,7 +886,7 @@ for (std::size_t batch_index = 1;
                 }
                 return;
             }
-            // TODO: Add similar for CY, CZ, SWAP, S, PhaseShift, GlobalPhase
+            // TODO: Add similar for CY, CZ, SWAP, PhaseShift, GlobalPhase
             // etc.
         }
 
@@ -885,33 +956,68 @@ for (std::size_t batch_index = 1;
             return applyOperation(opName, wires, inverse, params, gate_matrix);
         }
 
-        if (opName == "Identity") {
-            // No op
-            return;
-        }
-
-        // if (is_wires_local(wires) && is_wires_global(controlled_wires)) {
-        //     PL_ABORT("Optimization Not implemented yet.");
+        // if (opName == "Identity") {
+        //     // No op
         //     return;
         // }
 
-        // TODO: FIX ME - need to make sure we don't swap out control or target
-        // wires to global when swapping
+        // Swap target wires to all local
         if (!is_wires_local(wires)) {
             auto global_wires = find_global_wires(wires);
             auto local_wires = local_wires_subset_to_swap(global_wires, wires);
             swap_global_local_wires(global_wires, local_wires);
         }
 
-        if (!is_wires_local(controlled_wires)) {
-            auto global_wires = find_global_wires(controlled_wires);
-            auto local_wires = local_wires_subset_to_swap(global_wires, wires);
-            swap_global_local_wires(global_wires, local_wires);
-        }
+        std::vector<std::size_t> global_control_wires;
+        std::vector<bool> global_control_values;
+        std::vector<std::size_t> local_control_wires;
+        std::vector<bool> local_control_values;
 
-        (*sv_).applyOperation(opName, get_local_wires_indices(controlled_wires),
-                              controlled_values, get_local_wires_indices(wires),
-                              inverse, params, gate_matrix);
+        for (std::size_t i = 0; i < controlled_wires.size(); i++) {
+            if (std::find(local_wires_.begin(), local_wires_.end(),
+            controlled_wires[i]) != local_wires_.end()) {
+                              local_control_wires.push_back(controlled_wires[i]);
+                              local_control_values.push_back(controlled_values[i]);
+                        } else {
+                global_control_wires.push_back(controlled_wires[i]);
+                global_control_values.push_back(controlled_values[i]);
+            }
+        }
+        for (auto wire : global_control_wires){
+            std::cout << "I am rank " << get_mpi_rank()
+                      << " applying to the global control wire " << wire << std::endl;
+        }
+        std::size_t global_index =
+            get_global_index_from_mpi_rank(get_mpi_rank());
+        bool operate = true;
+        for (std::size_t i = 0; i < global_control_wires.size(); i++) {
+            operate = operate &&
+                      (((global_index >>
+                         (get_num_global_wires() - 1 -
+                          get_global_wire_index(global_control_wires[i]))) &
+                        1) == global_control_values[i]);
+        }
+        if (operate) {
+            for (auto lcw : local_control_wires) {
+                std::cout << "I am rank " << get_mpi_rank()
+                          << " applying to the local control wire " << lcw << "and local index = " << get_local_wire_index(lcw)
+                          << std::endl;
+            }
+            for (auto w : wires) {
+                std::cout << "I am rank " << get_mpi_rank()
+                          << " applying to the target wire " << w << " and local index = " << get_local_wire_index(w) << 
+                          std::endl;
+            }
+            (*sv_).applyOperation(
+                opName, get_local_wires_indices(local_control_wires),
+                local_control_values, get_local_wires_indices(wires), inverse,
+                params, gate_matrix);
+
+            (*sv_).applyOperation(
+                opName, get_local_wires_indices(local_control_wires),
+                local_control_values, get_local_wires_indices(wires), inverse,
+                params, gate_matrix);
+        }
     }
 
     /**
@@ -1288,14 +1394,14 @@ for (std::size_t batch_index = 1;
         (*sv_).DeviceToHost(local_.data(), local_.size());
         std::vector<int> recvcount(get_mpi_size(), local_.size());
         std::vector<int> displacements(get_mpi_size(), 0);
-        //TODO: fix me
+
         for (std::size_t rank = 0; rank < get_mpi_size(); rank++) {
             for (std::size_t i = 0; i < get_num_global_wires(); i++) {
                 std::size_t temp =
                     ((get_global_index_from_mpi_rank(rank) >>
                       (get_num_global_wires() - 1 - i)) &
-                     1) *
-                    (1 << (get_num_global_wires() - 1 - global_wires_[i]));
+                     1)
+                    << (get_num_global_wires() - 1 - global_wires_[i]);
                 displacements[rank] += temp;
             }
             displacements[rank] *= local_.size();
@@ -1316,22 +1422,20 @@ for (std::size_t batch_index = 1;
         return data_;
     }
 
-private:
+  private:
     std::size_t num_qubits_;
     std::unique_ptr<SVK> sv_;
     std::unique_ptr<SVK> recvbuf_;
     std::unique_ptr<SVK> sendbuf_;
     MPI_Comm communicator_;
 
-public: // TODO: make private
+  public: // TODO: make private
     /**
      * @brief Get the StateVectorKokkos instance.
      *
      * @return A reference to the StateVectorKokkos instance.
      */
-    SVK &getLocalSV() {
-            return *sv_;
-    }
+    SVK &getLocalSV() { return *sv_; }
     std::vector<std::size_t> mpi_rank_to_global_index_map_;
     std::vector<std::size_t> global_wires_;
     std::vector<std::size_t> local_wires_;

@@ -253,16 +253,15 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
                 return M.expval(matrix_v, wires);
             },
             "Expected value of a Hermitian observable.")
-            .def(
-                "expval",
-                [](measureT &M,
-                    const std::vector<std::string> &pauli_words,
-                    const std::vector<std::vector<std::size_t>> &target_wires,
-                    const np_arr_c &coeffs) {
-                        return M.expval(pauli_words, target_wires,
-                            static_cast<ComplexT *>(coeffs.request().ptr));
-                        },
-                        "Expected value of Hamiltonian represented by Pauli words.")
+        .def(
+            "expval",
+            [](measureT &M, const std::vector<std::string> &pauli_words,
+               const std::vector<std::vector<std::size_t>> &target_wires,
+               const np_arr_c &coeffs) {
+                return M.expval(pauli_words, target_wires,
+                                static_cast<ComplexT *>(coeffs.request().ptr));
+            },
+            "Expected value of Hamiltonian represented by Pauli words.")
 #ifndef _ENABLE_MPI
         .def(
             "expval",
