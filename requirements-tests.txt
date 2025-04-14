@@ -5,4 +5,4 @@ pytest-mock>=3.7.0
 pytest-xdist>=2.5.0
 pytest-split
 flaky>=3.7.0
-git+https://github.com/PennyLaneAI/pennylane.git@v0.41.0-rc0
+git+https://github.com/PennyLaneAI/pennylane.git@master
