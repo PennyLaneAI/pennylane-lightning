@@ -245,50 +245,6 @@ class StateVectorKokkosMPI final
     void mpi_barrier() { PL_MPI_IS_SUCCESS(MPI_Barrier(communicator_)); }
 
     /**
-     * @brief  Receives the local state vector of another MPI-process.
-     *
-     * @param  source Destination MPI rank.
-     * @param  request MPI request allowing to validate the transfer has been
-     * completed.
-     */
-    /* void mpi_irecv(const std::size_t source, const std::size_t size,
-    MPI_Request &request, int tag) { KokkosVector sv_view =
-    (*recvbuf_).getView(); PL_MPI_IS_SUCCESS(MPI_Irecv(reinterpret_cast<void
-    *>(sv_view.data()), size, get_mpi_type<ComplexT>(),
-                                    static_cast<int>(source), tag,
-    communicator_, &request));
-    } */
-
-    /**
-     * @brief  Sends local state vector to another MPI-process.
-     *
-     * @param  dest Destination MPI rank.
-     * @param  request MPI request allowing to validate the transfer has been
-     * completed.
-     * @param  copy If true, copy the state vector data in sendbuf_ before
-     * sending.
-     */
-    /* void mpi_isend(const std::size_t dest, const std::size_t size,
-    MPI_Request &request, int tag) { KokkosVector sd_view =
-    (*sendbuf_).getView(); mpi_wait(request);
-        PL_MPI_IS_SUCCESS(MPI_Isend(reinterpret_cast<void *>(sd_view.data()),
-                                    size, get_mpi_type<ComplexT>(),
-                                    static_cast<int>(dest), tag, communicator_,
-                                    &request));
-    } */
-
-    /**
-     * @brief  Waits for an MPI transfer completion.
-     *
-     * @param  request MPI request allowing to validate the transfer has been
-     * completed.
-     */
-    void mpi_wait(MPI_Request &request) {
-        MPI_Status status;
-        PL_MPI_IS_SUCCESS(MPI_Wait(&request, &status));
-    }
-
-    /**
      * @brief  Returns the MPI-distribution block size, or the size of the local
      * state vector data.
      */
@@ -302,9 +258,9 @@ class StateVectorKokkosMPI final
     }
 
     /********************
-Wires-related methods
-********************/
-
+    Wires-related methods
+    ********************/
+    //TODO: add method for rev wires
     /**
      * @brief  Returns the number of global wires.
      */
@@ -568,16 +524,53 @@ Wires-related methods
     ~StateVectorKokkosMPI() {}
 
     std::vector<std::size_t>
+    get_local_wires_indices(const std::vector<std::size_t> &wires) {
+        std::vector<std::size_t> local_wires_indices;
+        for (const auto &wire : wires) {
+            local_wires_indices.push_back(get_local_wire_index(wire));
+        }
+        return local_wires_indices;
+    }
+
+    size_t get_local_wire_index(const std::size_t wire) {
+        auto it = std::find(local_wires_.begin(), local_wires_.end(), wire);
+        if (it != local_wires_.end()) {
+            return std::distance(local_wires_.begin(), it);
+        } else {
+            PL_ABORT("Error");
+        }
+    }
+
+    std::vector<std::size_t>
+    get_global_wires_indices(const std::vector<std::size_t> &wires) {
+        std::vector<std::size_t> global_wires_indices;
+        for (const auto &wire : wires) {
+            global_wires_indices.push_back(get_global_wire_index(wire));
+        }
+        return global_wires_indices;
+    }
+
+    size_t get_global_wire_index(const std::size_t wire) {
+        auto it = std::find(global_wires_.begin(), global_wires_.end(), wire);
+        if (it != global_wires_.end()) {
+            return std::distance(global_wires_.begin(), it);
+        } else {
+            PL_ABORT("Error");
+        }
+    }
+
+
+    std::vector<std::size_t>
     find_global_wires(const std::vector<std::size_t> &wires) {
         std::vector<std::size_t> global_wires;
         for (const auto &wire : wires) {
-            if (std::find(global_wires_.begin(), global_wires_.end(), wire) !=
-                global_wires_.end()) {
+            if (is_wires_global({wire})) {
                 global_wires.push_back(wire);
             }
         }
         return global_wires;
     }
+
 
     std::vector<std::size_t>
     local_wires_subset_to_swap(const std::vector<std::size_t> &global_wires,
@@ -598,11 +591,6 @@ Wires-related methods
         return local_wires;
     }
 
-    bool is_generalized_permutation_matrix(
-        [[maybe_unused]] const std::string &opName) {
-        return false; // TODO: implement me
-    }
-
     void
     swap_global_local_wires(std::vector<std::size_t> &global_wires_to_swap,
                             std::vector<std::size_t> &local_wires_to_swap) {
@@ -612,8 +600,18 @@ Wires-related methods
                         "have equal dimensions.");
         std::sort(global_wires_to_swap.begin(), global_wires_to_swap.end());
         std::sort(local_wires_to_swap.begin(), local_wires_to_swap.end());
-
-        // Map local wires to actual local wire indices
+        if (get_mpi_rank() == 0) {
+            std::cout << "Swapping global wires: ";
+            for (const auto &wire : global_wires_to_swap) {
+                std::cout << wire << " ";
+            }
+            std::cout << "with local wires: ";
+            for (const auto &wire : local_wires_to_swap) {
+                std::cout << wire << " ";
+            }
+            std::cout << std::endl;
+        }
+        
 
         std::vector<std::size_t> rev_global_wires_index_to_swap;
         std::vector<std::size_t> rev_local_wires_index_to_swap;
@@ -622,25 +620,23 @@ Wires-related methods
             // use transform? reverse?
             if (std::find(local_wires_to_swap.begin(),
                           local_wires_to_swap.end(),
-                          local_wires_[i]) != local_wires_to_swap.end()) {
-                rev_local_wires_index_to_swap.push_back(
-                    get_num_local_wires() - 1 -
-                    get_local_wire_index(local_wires_[i]));
-            } else {
+                          local_wires_[i]) == local_wires_to_swap.end()) {
                 rev_local_wires_index_not_swapping.push_back(
                     get_num_local_wires() - 1 -
                     get_local_wire_index(local_wires_[i]));
             }
         }
-        for (std::size_t i = 0; i < get_num_global_wires(); i++) {
-            // use transform? reverse?
-            if (std::find(global_wires_to_swap.begin(),
-                          global_wires_to_swap.end(),
-                          global_wires_[i]) != global_wires_to_swap.end()) {
+        for (std::size_t i = 0; i < local_wires_to_swap.size(); i++) {
+                rev_local_wires_index_to_swap.push_back(
+                    get_num_local_wires() - 1 -
+                    get_local_wire_index(local_wires_to_swap[i]));
+            
+        }
+        for (std::size_t i = 0; i < global_wires_to_swap.size(); i++) {
                 rev_global_wires_index_to_swap.push_back(
                     get_num_global_wires() - 1 -
-                    get_global_wire_index(global_wires_[i]));
-            }
+                    get_global_wire_index(global_wires_to_swap[i]));
+            
         }
         std::size_t global_index =
             get_global_index_from_mpi_rank(get_mpi_rank());
@@ -736,21 +732,10 @@ Wires-related methods
         std::unordered_map<int, size_t> global_wires_to_swap_positions;
         std::unordered_map<int, size_t> local_wires_to_swap_positions;
         for (size_t i = 0; i < global_wires_to_swap.size(); ++i) {
-            auto it_g = std::find(global_wires_.begin(), global_wires_.end(),
-                                  global_wires_to_swap[i]);
-            if (it_g == global_wires_.end()) {
-                PL_ABORT("Error");
-            }
             global_wires_to_swap_positions[global_wires_to_swap[i]] =
-                std::distance(global_wires_.begin(), it_g);
-
-            auto it_l = std::find(local_wires_.begin(), local_wires_.end(),
-                                  local_wires_to_swap[i]);
-            if (it_l == local_wires_.end()) {
-                PL_ABORT("Error");
-            }
-            local_wires_to_swap_positions[local_wires_to_swap[i]] =
-                std::distance(local_wires_.begin(), it_l);
+            get_global_wire_index(global_wires_to_swap[i]);
+            local_wires_to_swap_positions[local_wires_to_swap[i]] = get_local_wire_index(
+                local_wires_to_swap[i]);
         }
 
         for (size_t i = 0; i < global_wires_to_swap.size(); ++i) {
@@ -761,42 +746,6 @@ Wires-related methods
                     [local_wires_to_swap_positions[local_wires_to_swap[i]]]);
         }
         // barrier();
-    }
-
-    std::vector<std::size_t>
-    get_local_wires_indices(const std::vector<std::size_t> &wires) {
-        std::vector<std::size_t> local_wires_indices;
-        for (const auto &wire : wires) {
-            local_wires_indices.push_back(get_local_wire_index(wire));
-        }
-        return local_wires_indices;
-    }
-
-    size_t get_local_wire_index(const std::size_t wire) {
-        auto it = std::find(local_wires_.begin(), local_wires_.end(), wire);
-        if (it != local_wires_.end()) {
-            return std::distance(local_wires_.begin(), it);
-        } else {
-            PL_ABORT("Error");
-        }
-    }
-
-    std::vector<std::size_t>
-    get_global_wires_indices(const std::vector<std::size_t> &wires) {
-        std::vector<std::size_t> global_wires_indices;
-        for (const auto &wire : wires) {
-            global_wires_indices.push_back(get_global_wire_index(wire));
-        }
-        return global_wires_indices;
-    }
-
-    size_t get_global_wire_index(const std::size_t wire) {
-        auto it = std::find(global_wires_.begin(), global_wires_.end(), wire);
-        if (it != global_wires_.end()) {
-            return std::distance(global_wires_.begin(), it);
-        } else {
-            PL_ABORT("Error");
-        }
     }
 
     /**
@@ -823,23 +772,15 @@ Wires-related methods
         if (is_wires_global(wires)) {
 
             if (opName == "PauliX") {
-                std::size_t distance =
-                    std::distance(global_wires_.begin(),
-                                  std::find(global_wires_.begin(),
-                                            global_wires_.end(), wires[0]));
                 std::size_t rev_distance =
-                    get_num_global_wires() - 1 - distance;
+                    get_num_global_wires() - 1 - get_global_wire_index(wires[0]);
                 for (auto &global_index : mpi_rank_to_global_index_map_) {
                     global_index = global_index ^ (1U << rev_distance);
                 }
                 return;
             } else if (opName == "PauliY") {
-                std::size_t distance =
-                    std::distance(global_wires_.begin(),
-                                  std::find(global_wires_.begin(),
-                                            global_wires_.end(), wires[0]));
                 std::size_t rev_distance =
-                    get_num_global_wires() - 1 - distance;
+                    get_num_global_wires() - 1 - get_global_wire_index(wires[0]);
                 std::size_t global_index =
                     get_global_index_from_mpi_rank(get_mpi_rank());
                 fp_t phase = ((global_index >> rev_distance) & 1)
@@ -852,13 +793,8 @@ Wires-related methods
 
                 return;
             } else if (opName == "PauliZ") {
-                std::size_t distance =
-                    std::distance(global_wires_.begin(),
-                                  std::find(global_wires_.begin(),
-                                            global_wires_.end(), wires[0]));
-
                 std::size_t rev_distance =
-                    get_num_global_wires() - 1 - distance;
+                    get_num_global_wires() - 1 - get_global_wire_index(wires[0]);
                 std::size_t global_index =
                     get_global_index_from_mpi_rank(get_mpi_rank());
                 if ((global_index >> rev_distance) & 1) {
@@ -867,14 +803,8 @@ Wires-related methods
                 return;
             } else if (opName == "CNOT") {
 
-                std::size_t distance_0 =
-                    std::distance(global_wires_.begin(),
-                                  std::find(global_wires_.begin(),
-                                            global_wires_.end(), wires[0]));
-                std::size_t distance_1 =
-                    std::distance(global_wires_.begin(),
-                                  std::find(global_wires_.begin(),
-                                            global_wires_.end(), wires[1]));
+                std::size_t distance_0 =get_global_wire_index(wires[0]);
+                std::size_t distance_1 =get_global_wire_index(wires[1]);
                 for (auto &global_index : mpi_rank_to_global_index_map_) {
                     global_index =
                         ((global_index >>
@@ -966,6 +896,7 @@ Wires-related methods
             auto global_wires = find_global_wires(wires);
             auto local_wires = local_wires_subset_to_swap(global_wires, wires);
             swap_global_local_wires(global_wires, local_wires);
+            barrier();
         }
 
         std::vector<std::size_t> global_control_wires;
@@ -974,8 +905,7 @@ Wires-related methods
         std::vector<bool> local_control_values;
 
         for (std::size_t i = 0; i < controlled_wires.size(); i++) {
-            if (std::find(local_wires_.begin(), local_wires_.end(),
-            controlled_wires[i]) != local_wires_.end()) {
+            if (is_wires_local({controlled_wires[i]})) {
                               local_control_wires.push_back(controlled_wires[i]);
                               local_control_values.push_back(controlled_values[i]);
                         } else {
@@ -1008,11 +938,6 @@ Wires-related methods
                           << " applying to the target wire " << w << " and local index = " << get_local_wire_index(w) << 
                           std::endl;
             }
-            (*sv_).applyOperation(
-                opName, get_local_wires_indices(local_control_wires),
-                local_control_values, get_local_wires_indices(wires), inverse,
-                params, gate_matrix);
-
             (*sv_).applyOperation(
                 opName, get_local_wires_indices(local_control_wires),
                 local_control_values, get_local_wires_indices(wires), inverse,
