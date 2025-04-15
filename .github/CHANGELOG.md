@@ -1,18 +1,25 @@
-# Release 0.42.0-dev
+# Release 0.42.0-dev (development release)
 
-### New features since last release
+<h3>New features since last release</h3>
 
-### Breaking changes
+<h3>Improvements 🛠</h3>
 
-### Improvements
+- Merge the `v0.41.0-rc` branch to the master and bump version.
+  [(#1132)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1132)
 
-### Documentation
+<h3>Breaking changes 💔</h3>
 
-### Bug fixes
+<h3>Deprecations 👋</h3>
 
-### Contributors
+<h3>Documentation 📝</h3>
+
+<h3>Bug fixes 🐛</h3>
+
+<h3>Contributors ✍️</h3>
 
 This release contains contributions from (in alphabetical order):
+
+Luis Alfredo Nuñez Meneses
 
 ---
 
