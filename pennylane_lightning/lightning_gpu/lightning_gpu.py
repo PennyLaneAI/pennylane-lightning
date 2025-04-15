@@ -79,7 +79,6 @@ _to_matrix_ops = {
     "ControlledQubitUnitary": OperatorProperties(),
     "ECR": OperatorProperties(),
     "ISWAP": OperatorProperties(),
-    "PSWAP": OperatorProperties(),
     "SISWAP": OperatorProperties(),
     "SQISW": OperatorProperties(),
     "OrbitalRotation": OperatorProperties(),
