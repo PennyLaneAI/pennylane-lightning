@@ -4,9 +4,6 @@
 
 <h3>Improvements 🛠</h3>
 
-- Merge the `v0.41.0-rc` branch to the master and bump version.
-  [(#1132)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1132)
-
 <h3>Breaking changes 💔</h3>
 
 <h3>Deprecations 👋</h3>
@@ -14,6 +11,11 @@
 <h3>Documentation 📝</h3>
 
 <h3>Bug fixes 🐛</h3>
+
+<h3>Internal changes ⚙️</h3>
+
+- Merge the `v0.41.0-rc` branch to the master and bump version.
+  [(#1132)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1132)
 
 <h3>Contributors ✍️</h3>
 
