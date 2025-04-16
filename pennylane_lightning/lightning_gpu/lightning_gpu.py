@@ -80,7 +80,6 @@ _to_matrix_ops = {
     "ControlledQubitUnitary": OperatorProperties(),
     "ECR": OperatorProperties(),
     "ISWAP": OperatorProperties(),
-    "PSWAP": OperatorProperties(),
     "SISWAP": OperatorProperties(),
     "SQISW": OperatorProperties(),
     "OrbitalRotation": OperatorProperties(),
@@ -92,6 +91,8 @@ _to_matrix_ops = {
 
 def stopping_condition(op: Operator) -> bool:
     """A function that determines whether or not an operation is supported by ``lightning.gpu``."""
+    if op.name in ("C(SProd)", "C(Exp)"):
+        return True
     return _supports_operation(op.name)
 
 
