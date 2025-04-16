@@ -11,7 +11,8 @@ A ``lightning.kokkos`` device can be loaded using:
     import pennylane as qml
     dev = qml.device("lightning.kokkos", wires=2)
 
-The ``lightning.kokkos`` device also directly supports quantum circuit gradients using the adjoint differentiation method. This can be enabled at the PennyLane QNode level with:
+The ``lightning.kokkos`` device also directly supports quantum circuit gradients using the adjoint differentiation method.
+By default, this method is enabled. It can also be explicitly specified using the ``diff_method`` argument when creating a device:
 
 .. code-block:: python
 
@@ -34,6 +35,7 @@ Supported operations and observables
     :nosignatures:
 
     ~pennylane.BasisState
+    ~pennylane.BlockEncode
     ~pennylane.CNOT
     ~pennylane.ControlledPhaseShift
     ~pennylane.ControlledQubitUnitary
@@ -49,6 +51,7 @@ Supported operations and observables
     ~pennylane.DoubleExcitationMinus
     ~pennylane.DoubleExcitationPlus
     ~pennylane.ECR
+    ~pennylane.GlobalPhase
     ~pennylane.Hadamard
     ~pennylane.Identity
     ~pennylane.IsingXX
