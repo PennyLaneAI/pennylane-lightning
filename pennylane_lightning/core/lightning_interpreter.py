@@ -17,7 +17,7 @@ This module contains a class for executing plxpr using default qubit tools.
 
 import jax
 import pennylane as qml
-import pennylane.errors
+from pennylane import exceptions
 from pennylane.capture import disable, enable, pause
 from pennylane.capture.base_interpreter import FlattenedHigherOrderPrimitives, PlxprInterpreter
 from pennylane.capture.primitives import adjoint_transform_prim, ctrl_transform_prim, measure_prim
@@ -92,7 +92,7 @@ class LightningInterpreter(PlxprInterpreter):
     def interpret_operation(self, op):
         """Apply an operation to the state."""
         if isinstance(op, qml.Projector):
-            raise pennylane.errors.DeviceError(
+            raise exceptions.DeviceError(
                 "Lightning devices do not support postselection with mcm_method='deferred'."
             )
         self.state.apply_operations([op])

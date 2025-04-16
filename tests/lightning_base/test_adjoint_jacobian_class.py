@@ -17,7 +17,7 @@ Unit tests for the adjoint Jacobian and VJP methods.
 import math
 
 import pennylane as qml
-import pennylane.errors
+from pennylane import exceptions
 import pytest
 from conftest import (  # tested device
     LightningAdjointJacobian,
@@ -101,7 +101,7 @@ class TestAdjointJacobian:
         tape = qml.tape.QuantumTape(measurements=[qml.expval(qml.PauliZ(0))], shots=1)
 
         with pytest.raises(
-            pennylane.errors.QuantumFunctionError,
+            exceptions.QuantumFunctionError,
             match="Requested adjoint differentiation to be computed with finite shots.",
         ):
             self.calculate_jacobian(lightning_sv(num_wires=1), tape)
@@ -121,7 +121,7 @@ class TestAdjointJacobian:
             qml.state()
 
         with pytest.raises(
-            pennylane.errors.QuantumFunctionError,
+            exceptions.QuantumFunctionError,
             match="Adjoint differentiation method does not support measurement StateMP.",
         ):
             self.calculate_jacobian(lightning_sv(num_wires=3), tape)
@@ -154,7 +154,7 @@ class TestAdjointJacobian:
             qml.var(qml.PauliZ(1))
 
         with pytest.raises(
-            pennylane.errors.QuantumFunctionError,
+            exceptions.QuantumFunctionError,
             match="Adjoint differentiation method does not support expectation return type "
             "mixed with other return types",
         ):
@@ -452,7 +452,7 @@ class TestVectorJacobianProduct:
         dy = np.array([1.0])
 
         with pytest.raises(
-            pennylane.errors.QuantumFunctionError,
+            exceptions.QuantumFunctionError,
             match="Requested adjoint differentiation to be computed with finite shots.",
         ):
             self.calculate_vjp(statevector, tape, dy)
@@ -510,7 +510,7 @@ class TestVectorJacobianProduct:
         dy = np.ones(3, dtype=statevector.dtype)
 
         with pytest.raises(
-            pennylane.errors.QuantumFunctionError,
+            exceptions.QuantumFunctionError,
             match="Adjoint differentiation does not support State measurements.",
         ):
             self.calculate_vjp(statevector, tape, dy)

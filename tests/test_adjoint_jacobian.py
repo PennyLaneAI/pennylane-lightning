@@ -18,7 +18,7 @@ import itertools
 import math
 
 import pennylane as qml
-import pennylane.errors
+from pennylane import exceptions
 import pytest
 from conftest import LightningDevice as ld
 from conftest import LightningException, device_name
@@ -113,7 +113,7 @@ class TestAdjointJacobian:
         method = dev.compute_derivatives
 
         with pytest.raises(
-            pennylane.errors.QuantumFunctionError, match="Adjoint differentiation method does not"
+            exceptions.QuantumFunctionError, match="Adjoint differentiation method does not"
         ):
             method(tape)
 
@@ -122,7 +122,7 @@ class TestAdjointJacobian:
             qml.state()
 
         with pytest.raises(
-            pennylane.errors.QuantumFunctionError,
+            exceptions.QuantumFunctionError,
             match="Adjoint differentiation method does not support measurement StateMP.",
         ):
             method(tape)
@@ -135,7 +135,7 @@ class TestAdjointJacobian:
         tape = qml.tape.QuantumScript([], [qml.expval(qml.PauliZ(0))], shots=1)
 
         with pytest.raises(
-            pennylane.errors.QuantumFunctionError,
+            exceptions.QuantumFunctionError,
             match="Requested adjoint differentiation to be computed with finite shots.",
         ):
             dev.compute_derivatives(tape)
@@ -557,7 +557,7 @@ class TestAdjointJacobian:
         method = dev.compute_derivatives
 
         with pytest.raises(
-            pennylane.errors.QuantumFunctionError,
+            exceptions.QuantumFunctionError,
             match="Adjoint differentiation method does not support measurement StateMP.",
         ):
             method(tape)

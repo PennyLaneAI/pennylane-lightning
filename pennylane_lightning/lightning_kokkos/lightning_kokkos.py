@@ -25,7 +25,7 @@ from warnings import warn
 
 import numpy as np
 import pennylane as qml
-import pennylane.errors
+from pennylane import exceptions
 from pennylane.devices import DefaultExecutionConfig, ExecutionConfig
 from pennylane.devices.capabilities import OperatorProperties
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
@@ -127,7 +127,7 @@ def _supports_adjoint(circuit):
 
     try:
         prog((circuit,))
-    except (DecompositionUndefinedError, pennylane.errors.DeviceError, AttributeError):
+    except (DecompositionUndefinedError, exceptions.DeviceError, AttributeError):
         return False
     return True
 
@@ -265,7 +265,7 @@ class LightningKokkos(LightningBase):
 
         for option, _ in config.device_options.items():
             if option not in self._device_options and option not in mcmc_default:
-                raise pennylane.errors.DeviceError(f"device option {option} not present on {self}")
+                raise exceptions.DeviceError(f"device option {option} not present on {self}")
 
         if config.gradient_method == "best":
             updated_values["gradient_method"] = "adjoint"
@@ -298,7 +298,7 @@ class LightningKokkos(LightningBase):
                 "single-branch-statistics",
                 None,
             ):
-                raise pennylane.errors.DeviceError(
+                raise exceptions.DeviceError(
                     f"mcm_method='{mcm_method}' is not supported with lightning.qubit "
                     "when program capture is enabled."
                 )

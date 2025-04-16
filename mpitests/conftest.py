@@ -20,7 +20,7 @@ import itertools
 import os
 
 import pennylane as qml
-import pennylane.errors
+from pennylane import exceptions
 import pytest
 from pennylane import numpy as np
 
@@ -92,7 +92,7 @@ def get_device():
 device_name = get_device()
 
 if device_name not in qml.plugin_devices:
-    raise pennylane.errors.DeviceError(
+    raise exceptions.DeviceError(
         f"Device {device_name} does not exist. Make sure the required plugin is installed."
     )
 
@@ -107,7 +107,7 @@ if device_name == "lightning.gpu":
     )
 
 else:
-    raise pennylane.errors.DeviceError(f"The MPI tests do not apply to the {device_name} device.")
+    raise exceptions.DeviceError(f"The MPI tests do not apply to the {device_name} device.")
 
 
 # General qubit_device fixture, for any number of wires.

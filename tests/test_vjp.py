@@ -104,7 +104,7 @@ class TestVectorJacobianProduct:
         dy = np.array([1.0])
 
         with pytest.raises(
-            pennylane.errors.QuantumFunctionError, match="Adjoint differentiation method does not"
+            exceptions.QuantumFunctionError, match="Adjoint differentiation method does not"
         ):
             dev.compute_vjp(tape, dy)
 
@@ -116,7 +116,7 @@ class TestVectorJacobianProduct:
         dy = np.array([1.0])
 
         with pytest.raises(
-            pennylane.errors.QuantumFunctionError,
+            exceptions.QuantumFunctionError,
             match="Requested adjoint differentiation to be computed with finite shots.",
         ):
             dev.compute_vjp(tape, dy)
@@ -255,7 +255,7 @@ class TestVectorJacobianProduct:
         dy = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
 
         with pytest.raises(
-            pennylane.errors.QuantumFunctionError,
+            exceptions.QuantumFunctionError,
             match="Adjoint differentiation method does not support",
         ):
             dev.compute_vjp(tape, dy)

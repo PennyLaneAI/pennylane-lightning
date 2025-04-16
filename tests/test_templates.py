@@ -17,7 +17,7 @@ Test the correctness of templates with Lightning devices.
 import functools
 
 import pennylane as qml
-import pennylane.errors
+from pennylane import exceptions
 import pytest
 from conftest import LightningDevice, device_name
 from pennylane import numpy as np
@@ -171,7 +171,7 @@ class TestDisplacementSqueezingEmbedding:
 
         X = np.arange(1, n_qubits + 1)
 
-        with pytest.raises(pennylane.errors.DeviceError, match="not supported"):
+        with pytest.raises(exceptions.DeviceError, match="not supported"):
             _ = qml.QNode(circuit, dev, diff_method=None)(X)
 
 
@@ -233,7 +233,7 @@ class TestCVNeuralNetLayers:
         shapes = qml.CVNeuralNetLayers.shape(n_layers=2, n_wires=n_qubits)
         weights = [np.random.random(shape) for shape in shapes]
 
-        with pytest.raises(pennylane.errors.DeviceError, match="not supported"):
+        with pytest.raises(exceptions.DeviceError, match="not supported"):
             _ = qml.QNode(circuit, dev, diff_method=None)(weights)
 
 

@@ -14,7 +14,7 @@
 """Tests for default qubit preprocessing."""
 import numpy as np
 import pennylane as qml
-import pennylane.errors
+from pennylane import exceptions
 import pytest
 from conftest import LightningDevice, device_name
 from mpi4py import MPI
@@ -39,7 +39,7 @@ def test_unspported_mid_measurement():
     comm.Barrier()
 
     with pytest.raises(
-        pennylane.errors.DeviceError,
+        exceptions.DeviceError,
         match="Lightning-GPU-MPI does not support Mid-circuit measurements.",
     ):
         func(*params)
