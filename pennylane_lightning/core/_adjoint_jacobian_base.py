@@ -21,7 +21,7 @@ from typing import Any, Callable, List
 import numpy as np
 import pennylane as qml
 from pennylane import BasisState, StatePrep
-from exceptions import QuantumFunctionError
+from pennylane.exceptions import QuantumFunctionError
 from pennylane.measurements import ExpectationMP, MeasurementProcess, StateMP
 from pennylane.operation import Operation
 from pennylane.tape import QuantumTape

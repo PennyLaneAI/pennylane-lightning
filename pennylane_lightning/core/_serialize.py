@@ -31,7 +31,7 @@ from pennylane import (
     StatePrep,
     matrix,
 )
-from exceptions import DeviceError
+from pennylane.exceptions import DeviceError
 from pennylane.math import unwrap
 from pennylane.ops import LinearCombination, Prod, SProd, Sum
 from pennylane.tape import QuantumTape
