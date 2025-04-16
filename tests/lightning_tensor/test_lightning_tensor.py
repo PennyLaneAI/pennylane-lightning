@@ -19,7 +19,7 @@ import numpy as np
 import pennylane as qml
 import pytest
 from conftest import LightningDevice, LightningException, device_name
-from pennylane import DeviceError
+from pennylane.exceptions import DeviceError
 from pennylane.tape import QuantumScript
 from pennylane.wires import Wires
 
@@ -104,9 +104,7 @@ class TestTensorNet:
         dev = LightningTensor(wires=2, **method)
 
         tape = QuantumScript([qml.StatePrep(np.array([1, 0, 0, 0]), wires=[0, 1])])
-        with pytest.raises(
-            qml.DeviceError, match="Exact Tensor Network does not support StatePrep"
-        ):
+        with pytest.raises(DeviceError, match="Exact Tensor Network does not support StatePrep"):
             dev.execute(tape)
 
     def test_support_derivatives(self, method):
@@ -263,7 +261,7 @@ class TestTensorNetMPS:
 
         qnode_ltensor = qml.QNode(circuit, dev)
 
-        with pytest.raises(qml.DeviceError, match="Exact Tensor Network does not support MPSPrep"):
+        with pytest.raises(DeviceError, match="Exact Tensor Network does not support MPSPrep"):
             _ = qnode_ltensor(MPS)
 
     @pytest.mark.parametrize(

@@ -24,6 +24,7 @@ import pytest
 from conftest import LightningDevice as ld
 from conftest import LightningException, device_name, lightning_ops, validate_measurements
 from flaky import flaky
+from pennylane.exceptions import DeviceError, QuantumFunctionError
 from pennylane.measurements import ExpectationMP, Shots, VarianceMP
 from pennylane.wires import Wires
 
@@ -41,7 +42,7 @@ def test_no_measure():
         qml.RX(x, wires=0)
         return qml.PauliY(0)
 
-    with pytest.raises(qml.QuantumFunctionError, match="must return either a single measurement"):
+    with pytest.raises(QuantumFunctionError, match="must return either a single measurement"):
         circuit(0.65)
 
 
@@ -226,7 +227,7 @@ class TestProbs:
             qml.RY(-0.2, wires=[0])
             return qml.probs(op=qml.PauliZ(0), wires=[0])
 
-        with pytest.raises(qml.QuantumFunctionError, match="Cannot specify the wires to probs"):
+        with pytest.raises(QuantumFunctionError, match="Cannot specify the wires to probs"):
             circuit()
 
 
@@ -313,7 +314,7 @@ class TestExpval:
         assert np.allclose(res, expected, atol=tol, rtol=0)
 
     def test_not_an_observable(self, dev):
-        """Test that a qml.QuantumFunctionError is raised if the provided
+        """Test that a QuantumFunctionError is raised if the provided
         argument is not an observable"""
 
         @qml.qnode(dev)
@@ -321,7 +322,7 @@ class TestExpval:
             qml.RX(0.52, wires=0)
             return qml.expval(qml.RX(0.742, wires=[0]))
 
-        with pytest.raises(qml.DeviceError, match="Observable RX.*not supported"):
+        with pytest.raises(DeviceError, match="Observable RX.*not supported"):
             circuit()
 
     def test_observable_return_type_is_expectation(self, dev):
@@ -415,7 +416,7 @@ class TestVar:
         assert np.allclose(res, expected, atol=tol, rtol=0)
 
     def test_not_an_observable(self, dev):
-        """Test that a qml.QuantumFunctionError is raised if the provided
+        """Test that a QuantumFunctionError is raised if the provided
         argument is not an observable"""
 
         @qml.qnode(dev)
@@ -423,7 +424,7 @@ class TestVar:
             qml.RX(0.52, wires=0)
             return qml.var(qml.RX(0.742, wires=[0]))
 
-        with pytest.raises(qml.DeviceError, match="Observable RX.*not supported"):
+        with pytest.raises(DeviceError, match="Observable RX.*not supported"):
             circuit()
 
     def test_observable_return_type_is_variance(self, dev):

@@ -18,8 +18,8 @@ Tests for the expectation value calculations on the LightningTensor device.
 import pennylane as qml
 import pytest
 from conftest import PHI, THETA, LightningDevice, device_name
-from pennylane import DeviceError
 from pennylane import numpy as np
+from pennylane.exceptions import DeviceError
 
 if device_name != "lightning.tensor":
     pytest.skip(

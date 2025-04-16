@@ -21,7 +21,7 @@ import pytest
 from conftest import LightningDevice as ld
 from conftest import device_name
 from mpi4py import MPI
-from pennylane import DeviceError
+from pennylane.exceptions import DeviceError
 from pennylane.tape import QuantumScript
 
 if not ld._CPP_BINARY_AVAILABLE:

@@ -41,6 +41,7 @@ from pennylane.devices.preprocess import (
     validate_measurements,
     validate_observables,
 )
+from pennylane.exceptions import DeviceError
 from pennylane.measurements import MidMeasureMP
 from pennylane.operation import DecompositionUndefinedError, Operator
 from pennylane.ops import Conditional, PauliRot, Prod, SProd, Sum
@@ -135,7 +136,7 @@ def _supports_adjoint(circuit):
 
     try:
         prog((circuit,))
-    except (DecompositionUndefinedError, qml.DeviceError, AttributeError):
+    except (DecompositionUndefinedError, DeviceError, AttributeError):
         return False
     return True
 
@@ -273,9 +274,7 @@ class LightningGPU(LightningBase):
         # Create the state vector only for MPI, otherwise created dynamically before execution
         if mpi:
             if wires is None:
-                raise qml.DeviceError(
-                    "Lightning-GPU-MPI does not support dynamic wires allocation."
-                )
+                raise DeviceError("Lightning-GPU-MPI does not support dynamic wires allocation.")
             self._mpi_handler = MPIHandler(mpi, mpi_buf_size, len(self.wires), c_dtype)
             self._statevector = self.LightningStateVector(
                 num_wires=len(self.wires),
@@ -310,7 +309,7 @@ class LightningGPU(LightningBase):
 
         for option, _ in config.device_options.items():
             if option not in self._device_options and option not in mcmc_default:
-                raise qml.DeviceError(f"device option {option} not present on {self}")
+                raise DeviceError(f"device option {option} not present on {self}")
 
         if config.gradient_method == "best":
             updated_values["gradient_method"] = "adjoint"
@@ -343,7 +342,7 @@ class LightningGPU(LightningBase):
                 "single-branch-statistics",
                 None,
             ):
-                raise qml.DeviceError(
+                raise DeviceError(
                     f"mcm_method='{mcm_method}' is not supported with lightning.qubit "
                     "when program capture is enabled."
                 )
@@ -487,9 +486,7 @@ class LightningGPU(LightningBase):
         """
         if circuit.shots and (any(isinstance(op, MidMeasureMP) for op in circuit.operations)):
             if self._mpi_handler and self._mpi_handler.use_mpi:
-                raise qml.DeviceError(
-                    "Lightning-GPU-MPI does not support Mid-circuit measurements."
-                )
+                raise DeviceError("Lightning-GPU-MPI does not support Mid-circuit measurements.")
 
             results = []
             aux_circ = QuantumScript(

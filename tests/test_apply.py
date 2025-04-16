@@ -22,7 +22,7 @@ import pytest
 from conftest import PHI, THETA
 from conftest import LightningDevice as ld
 from conftest import device_name
-from pennylane import DeviceError
+from pennylane.exceptions import DeviceError
 from pennylane.operation import Operation
 from pennylane.wires import Wires
 

@@ -19,6 +19,7 @@ import pennylane as qml
 import pytest
 import scipy
 from conftest import LightningDevice, device_name  # tested device
+from pennylane.exceptions import DeviceError
 
 if device_name != "lightning.tensor":
     pytest.skip("Skipping tests for the tensornet class.", allow_module_level=True)
@@ -70,13 +71,13 @@ def test_device_name_and_init(num_wires, bondDims, dtype, device_name, tn_backen
 
 def test_wrong_device_name():
     """Test an invalid device name"""
-    with pytest.raises(qml.DeviceError, match="The device name"):
+    with pytest.raises(DeviceError, match="The device name"):
         LightningTensorNet(3, max_bond_dim=5, device_name="thunder.tensor")
 
 
 def test_wrong_method_name():
     """Test an invalid method name"""
-    with pytest.raises(qml.DeviceError, match="The method "):
+    with pytest.raises(DeviceError, match="The method "):
         LightningTensorNet(3, max_bond_dim=5, device_name="lightning.tensor", method="spider_web")
 
 
