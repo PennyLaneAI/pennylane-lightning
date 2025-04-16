@@ -33,7 +33,7 @@ from conftest import (
 )
 from pennylane.devices import DefaultExecutionConfig, DefaultQubit, ExecutionConfig, MCMConfig
 from pennylane.devices.default_qubit import adjoint_ops
-from pennylane.exceptions import DeviceError
+from pennylane.exceptions import DeviceError, QuantumFunctionError
 from pennylane.measurements import ProbabilityMP
 from pennylane.tape import QuantumScript
 
