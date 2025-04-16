@@ -341,7 +341,7 @@ class LightningQubit(LightningBase):
                 None,
             ):
                 raise exceptions.DeviceError(
-                    f"{mcm_method}' is not supported with lightning.qubit "
+                    f"'{mcm_method}' is not supported with lightning.qubit "
                     "when program capture is enabled."
                 )
 
