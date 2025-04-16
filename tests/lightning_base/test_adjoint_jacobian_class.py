@@ -25,7 +25,7 @@ from conftest import (  # tested device
     device_name,
 )
 from pennylane import numpy as np
-from pennylane.exceptions import DeviceError
+from pennylane.exceptions import QuantumFunctionError
 from pennylane.tape import QuantumScript
 from scipy.stats import unitary_group
 
