@@ -25,6 +25,7 @@
 This release contains contributions from (in alphabetical order):
 
 Luis Alfredo Nuñez Meneses
+Andrija Paurevic
 
 ---
 
