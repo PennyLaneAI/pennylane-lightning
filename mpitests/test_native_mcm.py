@@ -17,7 +17,7 @@ import pennylane as qml
 import pytest
 from conftest import LightningDevice, device_name
 from mpi4py import MPI
-from pennylane import exceptions
+from pennylane.exceptions import DeviceError
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-access
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
@@ -39,7 +39,7 @@ def test_unspported_mid_measurement():
     comm.Barrier()
 
     with pytest.raises(
-        exceptions.DeviceError,
+        DeviceError,
         match="Lightning-GPU-MPI does not support Mid-circuit measurements.",
     ):
         func(*params)

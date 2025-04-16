@@ -24,7 +24,7 @@ if device_name != "lightning.tensor":
         "Skipping tests for the LightningTensorMeasurements class.", allow_module_level=True
     )
 
-from pennylane import exceptions
+from pennylane.exceptions import DeviceError
 
 from pennylane_lightning.lightning_tensor._measurements import LightningTensorMeasurements
 from pennylane_lightning.lightning_tensor._tensornet import LightningTensorNet
@@ -155,7 +155,7 @@ class TestMeasurementFunction:
         ref = dq.execute(tape)
 
         if method["method"] == "tn":
-            with pytest.raises(exceptions.DeviceError):
+            with pytest.raises(DeviceError):
                 res = dev.execute(tape)
         else:
             res = dev.execute(tape)
@@ -182,7 +182,7 @@ class TestMeasurementFunction:
         tape = qml.tape.QuantumScript(ops, [mp])
         ref = dq.execute(tape)
         if method["method"] == "tn":
-            with pytest.raises(exceptions.DeviceError):
+            with pytest.raises(DeviceError):
                 res = dev.execute(tape)
         else:
             res = dev.execute(tape)

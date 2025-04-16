@@ -22,7 +22,7 @@ import pennylane as qml
 import pytest
 import scipy as sp
 from conftest import LightningDevice, LightningStateVector, device_name  # tested device
-from pennylane import exceptions
+from pennylane.exceptions import DeviceError
 from pennylane.tape import QuantumScript
 from pennylane.wires import Wires
 from scipy.sparse import coo_matrix, csc_matrix, csr_matrix
@@ -89,7 +89,7 @@ def test_apply_state_vector_with_lightning_handle(tol):
 
     if device_name == "lightning.gpu":
         with pytest.raises(
-            exceptions.DeviceError,
+            DeviceError,
             match="LightningGPU does not support allocate external state_vector.",
         ):
             state_vector_2 = LightningStateVector(2)

@@ -21,8 +21,8 @@ import pennylane as qml
 import pytest
 from conftest import LightningDevice as ld
 from conftest import LightningException, device_name
-from pennylane import exceptions
 from pennylane import numpy as np
+from pennylane.exceptions import QuantumFunctionError
 
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
@@ -104,9 +104,7 @@ class TestVectorJacobianProduct:
 
         dy = np.array([1.0])
 
-        with pytest.raises(
-            exceptions.QuantumFunctionError, match="Adjoint differentiation method does not"
-        ):
+        with pytest.raises(QuantumFunctionError, match="Adjoint differentiation method does not"):
             dev.compute_vjp(tape, dy)
 
     def test_finite_shots_error(self):
@@ -117,7 +115,7 @@ class TestVectorJacobianProduct:
         dy = np.array([1.0])
 
         with pytest.raises(
-            exceptions.QuantumFunctionError,
+            QuantumFunctionError,
             match="Requested adjoint differentiation to be computed with finite shots.",
         ):
             dev.compute_vjp(tape, dy)
@@ -256,7 +254,7 @@ class TestVectorJacobianProduct:
         dy = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
 
         with pytest.raises(
-            exceptions.QuantumFunctionError,
+            QuantumFunctionError,
             match="Adjoint differentiation method does not support",
         ):
             dev.compute_vjp(tape, dy)
