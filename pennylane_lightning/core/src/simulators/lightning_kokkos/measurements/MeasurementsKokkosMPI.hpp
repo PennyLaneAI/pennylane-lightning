@@ -72,7 +72,9 @@ class MeasurementsMPI final
      * @return Floating point expectation value of the observable.
      */
     PrecisionT expval(StateVectorT &sv) {
+        // TODO: FIX ME - global wire order is not always the same after reorder_global_wires!!
         // TODO: IMPROVE ME - add barriers?
+
 
         sv.reorder_global_wires();
         sv.reorder_local_wires();
@@ -290,7 +292,7 @@ class MeasurementsMPI final
      * @return Floating point variance of the observable.
      */
     PrecisionT var(StateVectorT &sv) {
-        // TODO: IMPROVE ME
+        // TODO: FIX ME, IMPROVE ME
         sv.barrier();
         sv.reorder_global_wires();
         sv.reorder_local_wires();
