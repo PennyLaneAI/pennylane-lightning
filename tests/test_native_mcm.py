@@ -17,10 +17,10 @@ from typing import Sequence
 
 import numpy as np
 import pennylane as qml
-from pennylane import exceptions
 import pytest
 from conftest import LightningDevice, device_name, validate_measurements
 from flaky import flaky
+from pennylane import exceptions
 
 if device_name not in ("lightning.qubit", "lightning.kokkos", "lightning.gpu"):
     pytest.skip("Native MCM not supported. Skipping.", allow_module_level=True)

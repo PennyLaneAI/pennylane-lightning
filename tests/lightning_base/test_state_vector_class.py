@@ -19,10 +19,10 @@ import math
 
 import numpy as np
 import pennylane as qml
-from pennylane import exceptions
 import pytest
 import scipy as sp
 from conftest import LightningDevice, LightningStateVector, device_name  # tested device
+from pennylane import exceptions
 from pennylane.tape import QuantumScript
 from pennylane.wires import Wires
 from scipy.sparse import coo_matrix, csc_matrix, csr_matrix

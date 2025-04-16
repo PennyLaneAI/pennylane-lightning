@@ -20,8 +20,8 @@ from typing import Sequence
 
 import numpy as np
 import pennylane as qml
-from pennylane import exceptions
 import pytest
+from pennylane import exceptions
 
 import pennylane_lightning
 

@@ -20,7 +20,6 @@ import itertools
 
 import numpy as np
 import pennylane as qml
-from pennylane import exceptions
 import pytest
 from conftest import (
     PHI,
@@ -32,6 +31,7 @@ from conftest import (
     LightningStateVector,
     device_name,
 )
+from pennylane import exceptions
 from pennylane.devices import DefaultExecutionConfig, DefaultQubit, ExecutionConfig, MCMConfig
 from pennylane.devices.default_qubit import adjoint_ops
 from pennylane.measurements import ProbabilityMP

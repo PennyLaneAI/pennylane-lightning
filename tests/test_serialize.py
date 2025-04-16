@@ -16,9 +16,9 @@ Unit tests for the serialization helper functions.
 """
 import numpy as np
 import pennylane as qml
-from pennylane import exceptions
 import pytest
 from conftest import LightningDevice, device_name
+from pennylane import exceptions
 
 from pennylane_lightning.core._serialize import QuantumScriptSerializer, global_phase_diagonal
 

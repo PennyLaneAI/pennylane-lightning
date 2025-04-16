@@ -17,7 +17,6 @@ Unit tests for the adjoint Jacobian and VJP methods.
 import math
 
 import pennylane as qml
-from pennylane import exceptions
 import pytest
 from conftest import (  # tested device
     LightningAdjointJacobian,
@@ -25,6 +24,7 @@ from conftest import (  # tested device
     LightningStateVector,
     device_name,
 )
+from pennylane import exceptions
 from pennylane import numpy as np
 from pennylane.tape import QuantumScript
 from scipy.stats import unitary_group

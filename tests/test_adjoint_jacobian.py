@@ -18,11 +18,10 @@ import itertools
 import math
 
 import pennylane as qml
-from pennylane import exceptions
 import pytest
 from conftest import LightningDevice as ld
 from conftest import LightningException, device_name
-from pennylane import QNode
+from pennylane import QNode, exceptions
 from pennylane import numpy as np
 from pennylane import qchem, qnode
 from scipy.stats import unitary_group

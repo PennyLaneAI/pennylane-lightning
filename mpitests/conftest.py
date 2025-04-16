@@ -20,8 +20,8 @@ import itertools
 import os
 
 import pennylane as qml
-from pennylane import exceptions
 import pytest
+from pennylane import exceptions
 from pennylane import numpy as np
 
 # Tuple passed to distributed device ctor

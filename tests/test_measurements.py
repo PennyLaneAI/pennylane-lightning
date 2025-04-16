@@ -20,11 +20,11 @@ from typing import Sequence
 
 import numpy as np
 import pennylane as qml
-from pennylane import exceptions
 import pytest
 from conftest import LightningDevice as ld
 from conftest import LightningException, device_name, lightning_ops, validate_measurements
 from flaky import flaky
+from pennylane import exceptions
 from pennylane.measurements import ExpectationMP, Shots, VarianceMP
 from pennylane.wires import Wires
 

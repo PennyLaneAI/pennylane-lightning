@@ -14,10 +14,10 @@
 """Tests for default qubit preprocessing."""
 import numpy as np
 import pennylane as qml
-from pennylane import exceptions
 import pytest
 from conftest import LightningDevice, device_name
 from mpi4py import MPI
+from pennylane import exceptions
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-access
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)

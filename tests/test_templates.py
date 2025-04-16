@@ -17,9 +17,9 @@ Test the correctness of templates with Lightning devices.
 import functools
 
 import pennylane as qml
-from pennylane import exceptions
 import pytest
 from conftest import LightningDevice, device_name
+from pennylane import exceptions
 from pennylane import numpy as np
 
 # pylint: disable=missing-function-docstring, too-few-public-methods

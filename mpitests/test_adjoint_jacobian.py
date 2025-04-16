@@ -19,12 +19,11 @@ import itertools
 import math
 
 import pennylane as qml
-from pennylane import exceptions
 import pytest
 from conftest import LightningDevice as ld
 from conftest import device_name
 from mpi4py import MPI
-from pennylane import QNode
+from pennylane import QNode, exceptions
 from pennylane import numpy as np
 from pennylane import qnode
 from pennylane.devices import ExecutionConfig

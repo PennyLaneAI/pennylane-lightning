@@ -16,10 +16,10 @@ Unit tests for the tensornet functions.
 """
 import numpy as np
 import pennylane as qml
-from pennylane import exceptions
 import pytest
 import scipy
 from conftest import LightningDevice, device_name  # tested device
+from pennylane import exceptions
 
 if device_name != "lightning.tensor":
     pytest.skip("Skipping tests for the tensornet class.", allow_module_level=True)

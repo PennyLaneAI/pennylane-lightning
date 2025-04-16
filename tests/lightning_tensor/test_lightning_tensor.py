@@ -17,10 +17,9 @@ Unit tests for the LightningTensor class.
 
 import numpy as np
 import pennylane as qml
-from pennylane import exceptions
 import pytest
 from conftest import LightningDevice, LightningException, device_name
-from pennylane import DeviceError
+from pennylane import DeviceError, exceptions
 from pennylane.tape import QuantumScript
 from pennylane.wires import Wires
 
