@@ -18,10 +18,10 @@ import itertools
 import math
 
 import pennylane as qml
-from pennylane import exceptions
 import pytest
 from conftest import LightningDevice as ld
 from conftest import LightningException, device_name
+from pennylane import exceptions
 from pennylane import numpy as np
 
 if not ld._CPP_BINARY_AVAILABLE:
