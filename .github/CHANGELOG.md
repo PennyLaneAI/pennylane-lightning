@@ -14,6 +14,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Import custom PennyLane errors from `pennylane.exceptions` rather than top-level.
+  [(#1122)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1122)
+
 - Merge the `v0.41.0-rc` branch to the master and bump version.
   [(#1132)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1132)
 
