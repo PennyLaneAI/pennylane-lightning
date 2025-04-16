@@ -18,6 +18,7 @@ import itertools
 import math
 
 import pennylane as qml
+from pennylane import exceptions
 import pytest
 from conftest import LightningDevice as ld
 from conftest import LightningException, device_name
