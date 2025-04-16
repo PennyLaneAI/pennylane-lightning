@@ -37,7 +37,7 @@ from pennylane.devices.preprocess import (
     validate_measurements,
     validate_observables,
 )
-from pennylane.exceptions import DeviceError, QuantumFunctionError
+from pennylane.exceptions import DeviceError
 from pennylane.measurements import MidMeasureMP
 from pennylane.operation import DecompositionUndefinedError, Operator
 from pennylane.ops import Conditional, PauliRot, Prod, SProd, Sum
