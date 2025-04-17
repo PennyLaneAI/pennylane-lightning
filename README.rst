@@ -46,10 +46,9 @@ Lightning Plugins
     :target: https://www.apache.org/licenses/LICENSE-2.0
 
 
-.. image:: doc/_static/pennylane_lightning.png
-    :align: center
-    :width: 400px
-    :target: javascript:void(0);
+<p align="center">
+  <img src="doc/_static/pennylane_lightning.png" width="400px" />
+</p>
 
 .. header-start-inclusion-marker-do-not-remove
 
