@@ -14,7 +14,7 @@ Install from source
     The section below contains instructions for installing Lightning-Qubit **from source**. For most cases, *this is not required* and one can simply use the installation instructions at `pennylane.ai/install <https://pennylane.ai/install>`__.
     If those instructions do not work for you, or you have a more complex build environment that requires building from source, then consider reading on.
 
-To build Lightning-Qubit from the sdist release you can run
+To build Lightning-Qubit from the `sdist` release you can run
 
 .. code-block:: bash
 
