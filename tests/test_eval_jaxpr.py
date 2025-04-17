@@ -19,6 +19,7 @@ from functools import partial
 import pennylane as qml
 import pytest
 from conftest import LightningDevice, device_name
+from pennylane.exceptions import DeviceError
 from pennylane.transforms.defer_measurements import DeferMeasurementsInterpreter
 
 jax = pytest.importorskip("jax")
@@ -635,9 +636,7 @@ class TestDeferMeasurements:
 
         jaxpr = jax.make_jaxpr(f)()
         with pytest.raises(jaxlib.xla_extension.XlaRuntimeError):
-            with pytest.raises(
-                qml.DeviceError, match="Lightning devices do not support postselection"
-            ):
+            with pytest.raises(DeviceError, match="Lightning devices do not support postselection"):
                 dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts)
 
     def test_mcms_as_gate_parameters(self):

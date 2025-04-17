@@ -20,7 +20,6 @@ import numpy as np
 import pennylane as qml
 from pennylane import (
     BasisState,
-    DeviceError,
     Hadamard,
     Identity,
     PauliX,
@@ -32,6 +31,7 @@ from pennylane import (
     StatePrep,
     matrix,
 )
+from pennylane.exceptions import DeviceError
 from pennylane.math import unwrap
 from pennylane.ops import LinearCombination, Prod, SProd, Sum
 from pennylane.tape import QuantumTape

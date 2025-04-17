@@ -22,6 +22,7 @@ import os
 import pennylane as qml
 import pytest
 from pennylane import numpy as np
+from pennylane.exceptions import DeviceError
 
 # Tuple passed to distributed device ctor
 # np.complex for data type and True or False
@@ -91,7 +92,7 @@ def get_device():
 device_name = get_device()
 
 if device_name not in qml.plugin_devices:
-    raise qml.DeviceError(
+    raise DeviceError(
         f"Device {device_name} does not exist. Make sure the required plugin is installed."
     )
 
@@ -106,7 +107,7 @@ if device_name == "lightning.gpu":
     )
 
 else:
-    raise qml.DeviceError(f"The MPI tests do not apply to the {device_name} device.")
+    raise DeviceError(f"The MPI tests do not apply to the {device_name} device.")
 
 
 # General qubit_device fixture, for any number of wires.

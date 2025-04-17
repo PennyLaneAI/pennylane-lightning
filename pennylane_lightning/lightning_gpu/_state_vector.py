@@ -36,7 +36,7 @@ from typing import Union
 import numpy as np
 import pennylane as qml
 import scipy as sp
-from pennylane import DeviceError
+from pennylane.exceptions import DeviceError
 from pennylane.measurements import MidMeasureMP
 from pennylane.ops import Conditional
 from pennylane.ops.op_math import Adjoint
