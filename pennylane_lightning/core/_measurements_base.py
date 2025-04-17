@@ -128,6 +128,10 @@ class LightningBaseMeasurements(ABC):
                 CSR_SparseHamiltonian.data,
             )
 
+        # use specialized function to compute expval(pauli_sentence)
+        if measurementprocess.obs.pauli_rep is not None and hasattr(self, "expval_pauli_sentence"):
+            return self.expval_pauli_sentence(measurementprocess)
+
         if isinstance(measurementprocess.obs, qml.Hermitian):
             observable_wires = measurementprocess.obs.wires
             matrix = measurementprocess.obs.matrix()
