@@ -251,18 +251,21 @@ class Measurements final
     };
 
     /**
-     * @brief Expected value of Pauli words.  
+     * @brief Expected value of Pauli words.
      *
-     * @param pauli_sentence Vector of Pauli words strings making up the Pauli sentence.
+     * @param pauli_sentence Vector of Pauli words strings making up the Pauli
+     * sentence.
      * @param target_wires Vector of wires where to apply the operator.
-     * @param coeffs Coefficients of the Pauli words within the string with size |pauli_word|.
+     * @param coeffs Coefficients of the Pauli words within the string with size
+     * |pauli_word|.
      * @return Floating point expected value of the observable.
      */
     auto expval(const std::vector<std::string> &pauli_words,
                 const std::vector<std::vector<std::size_t>> &target_wires,
                 const Kokkos::complex<PrecisionT> *coeffs) -> PrecisionT {
         PL_ABORT_IF((pauli_words.size() != target_wires.size()),
-            "The lengths of the Pauli sentence and list of wires do not match.");
+                    "The lengths of the Pauli sentence and list of wires do "
+                    "not match.");
 
         PrecisionT expvalue = 0.0;
 
@@ -270,7 +273,7 @@ class Measurements final
         const KokkosVector arr_data = this->_statevector.getView();
         for (std::size_t word = 0; word < pauli_words.size(); word++) {
             PL_ABORT_IF((pauli_words[word].size() != target_wires[word].size()),
-                "The number of Pauli words and wires do not match.");
+                        "The number of Pauli words and wires do not match.");
             std::vector<std::size_t> X_wires;
             std::vector<std::size_t> Y_wires;
             std::vector<std::size_t> Z_wires;

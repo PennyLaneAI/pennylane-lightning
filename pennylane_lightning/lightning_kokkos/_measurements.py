@@ -118,3 +118,9 @@ class LightningKokkosMeasurements(
         return (
             tuple(zip(*processed_samples)) if shots.has_partitioned_shots else processed_samples[0]
         )
+
+    def expval_pauli_sentence(self, measurementprocess):
+        pwords, coeffs = zip(*measurementprocess.obs.pauli_rep.items())
+        pauli_words = [qml.pauli.pauli_word_to_string(p) for p in pwords]
+        wires = [p.wires.tolist() for p in pwords]
+        return self._measurement_lightning.expval(pauli_words, wires, coeffs)

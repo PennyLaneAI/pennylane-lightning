@@ -33,7 +33,7 @@ template <class PrecisionT> struct getExpValPauliWordFunctor {
     using ComplexT = Kokkos::complex<PrecisionT>;
     using KokkosComplexVector = Kokkos::View<ComplexT *>;
     using bitmask_t = std::size_t;
-    
+
     KokkosComplexVector arr;
     bitmask_t xmask = 0;
     bitmask_t ymask = 0;
@@ -44,7 +44,8 @@ template <class PrecisionT> struct getExpValPauliWordFunctor {
                               std::size_t num_qubits_,
                               const std::vector<std::size_t> &X_wires,
                               const std::vector<std::size_t> &Y_wires,
-                              const std::vector<std::size_t> &Z_wires) : arr(arr_), num_y(Y_wires.size()) {
+                              const std::vector<std::size_t> &Z_wires)
+        : arr(arr_), num_y(Y_wires.size()) {
         for (std::size_t x_wire : X_wires) {
             xmask |= (one << (num_qubits_ - 1 - x_wire));
         }
@@ -58,7 +59,7 @@ template <class PrecisionT> struct getExpValPauliWordFunctor {
 
     KOKKOS_INLINE_FUNCTION
     void operator()(const std::size_t k, PrecisionT &expval) const {
-        bitmask_t j = (k ^ xmask) ^ ymask;  
+        bitmask_t j = (k ^ xmask) ^ ymask;
         std::size_t y_factors = 2 * Kokkos::popcount(k & ymask) + num_y;
         ComplexT prefactor{static_cast<PrecisionT>((y_factors + 1) % 2),
                            static_cast<PrecisionT>(y_factors % 2)};
@@ -69,7 +70,8 @@ template <class PrecisionT> struct getExpValPauliWordFunctor {
     }
 };
 
-// Expectation value of Identity is not necessarily 1.0 for distributed sub-statevector (with MPI).
+// Expectation value of Identity is not necessarily 1.0 for distributed
+// sub-statevector (with MPI).
 template <class PrecisionT> struct getExpectationValueIdentityFunctor {
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
 

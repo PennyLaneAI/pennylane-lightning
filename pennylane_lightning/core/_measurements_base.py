@@ -129,12 +129,9 @@ class LightningBaseMeasurements(ABC):
             )
 
         # use specialized function to compute expval(pauli_sentence)
-        if measurementprocess.obs.pauli_rep is not None:
-            pwords, coeffs = zip(*measurementprocess.obs.pauli_rep.items())
-            pauli_words = [qml.pauli.pauli_word_to_string(p) for p in pwords]
-            wires = [p.wires.tolist() for p in pwords]
-            return self._measurement_lightning.expval(pauli_words, wires, coeffs)
-        
+        if measurementprocess.obs.pauli_rep is not None and hasattr(self, "expval_pauli_sentence"):
+            return self.expval_pauli_sentence(measurementprocess)
+
         if isinstance(measurementprocess.obs, qml.Hermitian):
             observable_wires = measurementprocess.obs.wires
             matrix = measurementprocess.obs.matrix()
