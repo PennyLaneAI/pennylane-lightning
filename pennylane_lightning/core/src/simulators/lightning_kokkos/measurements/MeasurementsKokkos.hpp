@@ -251,21 +251,26 @@ class Measurements final
     };
 
     /**
-     * @brief Expected value of an observable.
+     * @brief Expected value of Pauli words.  
      *
-     * @param pauli_words Vector of operators' name strings.
+     * @param pauli_sentence Vector of Pauli words strings making up the Pauli sentence.
      * @param target_wires Vector of wires where to apply the operator.
-     * @param coeffs Complex buffer of size |pauli_words|
+     * @param coeffs Coefficients of the Pauli words within the string with size |pauli_word|.
      * @return Floating point expected value of the observable.
      */
     auto expval(const std::vector<std::string> &pauli_words,
                 const std::vector<std::vector<std::size_t>> &target_wires,
                 const Kokkos::complex<PrecisionT> *coeffs) -> PrecisionT {
+        PL_ABORT_IF((pauli_words.size() != target_wires.size()),
+            "The lengths of the Pauli sentence and list of wires do not match.");
+
         PrecisionT expvalue = 0.0;
 
         const std::size_t num_qubits = this->_statevector.getNumQubits();
         const KokkosVector arr_data = this->_statevector.getView();
         for (std::size_t word = 0; word < pauli_words.size(); word++) {
+            PL_ABORT_IF((pauli_words[word].size() != target_wires[word].size()),
+                "The number of Pauli words and wires do not match.");
             std::vector<std::size_t> X_wires;
             std::vector<std::size_t> Y_wires;
             std::vector<std::size_t> Z_wires;
@@ -276,10 +281,11 @@ class Measurements final
                     Y_wires.push_back(target_wires[word][i]);
                 } else if (pauli_words[word][i] == 'Z') {
                     Z_wires.push_back(target_wires[word][i]);
+                } else if (pauli_words[word][i] != 'I') {
+                    PL_ABORT("Invalid Pauli word.");
                 }
             }
-            if (X_wires.size() == 0 && Y_wires.size() == 0 &&
-                Z_wires.size() == 0) {
+            if (X_wires.empty() && Y_wires.empty() && Z_wires.empty()) {
                 expvalue += expval("Identity", target_wires[word]) *
                             Kokkos::real(coeffs[word]);
             } else {

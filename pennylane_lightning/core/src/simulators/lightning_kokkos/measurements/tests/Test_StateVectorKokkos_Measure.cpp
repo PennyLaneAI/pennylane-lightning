@@ -141,7 +141,29 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values", "[Measurements]",
         REQUIRE_THAT(exp_values, Catch::Approx(exp_values_ref).margin(1e-6));
     }
 
-    SECTION("Testing list of operators defined by its name:") {
+    SECTION("Testing error cases for expectation values of Pauli Strings"){
+        std::vector<std::string> pauli_string{"XH"};
+        std::vector<std::vector<std::size_t>> wire_list{{1, 2}};
+        std::vector<ComplexT> coeffs{{1.0, 0.0}};
+        PL_REQUIRE_THROWS_MATCHES(Measurer.expval(pauli_string, wire_list, coeffs.data()), LightningException,"Invalid Pauli word");
+
+        pauli_string = {"XX", "YQ"};
+         wire_list = {{1, 2}, {1, 2}};
+        coeffs = {{1.0, 0.0}, {1.0, 0.0}};
+        PL_REQUIRE_THROWS_MATCHES(Measurer.expval(pauli_string, wire_list, coeffs.data()), LightningException,"Invalid Pauli word");
+
+        pauli_string = {"XX", "YY"};
+         wire_list = {{1, 2}};
+        coeffs = {{1.0, 0.0}, {1.0, 0.0}};
+        PL_REQUIRE_THROWS_MATCHES(Measurer.expval(pauli_string, wire_list, coeffs.data()), LightningException,"The lengths of the Pauli sentence and list of wires do not match");
+        
+        pauli_string = {"XY"};
+        wire_list = {{1, 2, 3}};
+        coeffs = {{1.0, 0.0}};
+        PL_REQUIRE_THROWS_MATCHES(Measurer.expval(pauli_string, wire_list, coeffs.data()), LightningException,"The number of Pauli words and wires do not match");
+    }
+
+    SECTION("Testing expectation values of Pauli strings (3 wires):") {
         PrecisionT exp_value;
         PrecisionT exp_value_ref;
 
@@ -423,6 +445,35 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values", "[Measurements]",
         coeffs = {{0.2, 0.0}, {0.4, 0.0}};
         exp_value = Measurer.expval(pauli_string, wire_list, coeffs.data());
         exp_value_ref = -0.064544826;
+        CHECK(exp_value == Approx(exp_value_ref).margin(1e-6));
+    }
+
+    SECTION("Testing expectation values of Pauli strings (5 wires):") {
+        auto statevector_data_5 = createNonTrivialState<StateVectorT>(5);
+        StateVectorT statevector_5(statevector_data_5.data(), statevector_data_5.size());
+        Measurements<StateVectorT> Measurer_5(statevector_5);
+        PrecisionT exp_value;
+        PrecisionT exp_value_ref;
+
+        std::vector<std::string> pauli_string {"XYZZ", "III","XZ", "Y"};
+        std::vector<std::vector<std::size_t>> wire_list {{3, 1, 2, 0}, {1, 3, 2}, {3, 4}, {2}};
+        std::vector<ComplexT> coeffs {{0.1, 0.0}, {0.3, 0.0}, {0.5, 0.0}, {0.7, 0.0}};
+        exp_value = Measurer_5.expval(pauli_string, wire_list, coeffs.data());
+        exp_value_ref = 0.139765566;
+        CHECK(exp_value == Approx(exp_value_ref).margin(1e-6));
+
+        pauli_string = {"XIX", "XIIZ","ZIXYZ", "YIYZY", "YIYZY", "ZZXXX", "YYYY", "YIY"};
+        wire_list = {{3, 1, 2}, {1, 3, 2, 0}, {4, 3, 2, 1, 0}, {0, 1, 2, 3, 4}, {0, 3, 2, 4, 1}, {0, 4, 2, 1, 3}, {3, 2, 1, 4}, {0, 1, 2}};
+        coeffs = {{0.1, 0.0}, {0.3, 0.0}, {0.5, 0.0}, {0.7, 0.0}, {0.9, 0.0}, {1.1, 0.0}, {1.3, 0.0}, {1.5, 0.0}};
+        exp_value = Measurer_5.expval(pauli_string, wire_list, coeffs.data());
+        exp_value_ref = 0.260541908;
+        CHECK(exp_value == Approx(exp_value_ref).margin(1e-6));
+
+        pauli_string = {"X", "Y", "Z", "I"};
+        wire_list = {{3}, {1}, {4}, {2}};
+        coeffs = {{0.1, 0.0}, {0.3, 0.0}, {0.5, 0.0}, {0.7, 0.0}};
+        exp_value = Measurer_5.expval(pauli_string, wire_list, coeffs.data());
+        exp_value_ref = 1.061122449;
         CHECK(exp_value == Approx(exp_value_ref).margin(1e-6));
     }
 }
