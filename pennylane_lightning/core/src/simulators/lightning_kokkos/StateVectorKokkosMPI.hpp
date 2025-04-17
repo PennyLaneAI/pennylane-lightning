@@ -1,0 +1,1472 @@
+// Copyright 2025 Xanadu Quantum Technologies Inc.
+
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+
+//     http://www.apache.org/licenses/LICENSE-2.0
+
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+/**
+ * @file StateVectorKokkosMPI.hpp
+ */
+
+#pragma once
+#include <complex>
+#include <cstddef>
+#include <cstdlib>
+#include <iostream>
+#include <string>
+#include <unordered_map>
+#include <unordered_set>
+#include <vector>
+
+#include <Kokkos_Core.hpp>
+#include <Kokkos_Random.hpp>
+#include <mpi.h>
+
+#include "BitUtil.hpp" // isPerfectPowerOf2
+#include "Constant.hpp"
+#include "ConstantUtil.hpp"
+#include "Error.hpp"
+#include "GateFunctors.hpp"
+#include "GateOperation.hpp"
+#include "StateVectorBase.hpp"
+#include "StateVectorKokkos.hpp"
+#include "Util.hpp"
+#include "UtilKokkos.hpp"
+
+#include "CPUMemoryModel.hpp"
+
+/// @cond DEV
+namespace {
+using namespace Pennylane::Gates::Constant;
+using namespace Pennylane::LightningKokkos::Functors;
+using namespace Pennylane::LightningKokkos::Util;
+using Pennylane::Gates::GateOperation;
+using Pennylane::Gates::GeneratorOperation;
+using Pennylane::Util::array_contains;
+using Pennylane::Util::exp2;
+using Pennylane::Util::isPerfectPowerOf2;
+using Pennylane::Util::log2;
+using Pennylane::Util::reverse_lookup;
+using std::size_t;
+
+// LCOV_EXCL_START
+inline void errhandler(int errcode, const char *str) {
+    char msg[MPI_MAX_ERROR_STRING];
+    int resultlen;
+    MPI_Error_string(errcode, msg, &resultlen);
+    fprintf(stderr, "%s: %s\n", str, msg);
+    MPI_Abort(MPI_COMM_WORLD, 1);
+}
+// LCOV_EXCL_STOP
+
+#define PL_MPI_IS_SUCCESS(fn)                                                  \
+    {                                                                          \
+        int errcode;                                                           \
+        errcode = (fn);                                                        \
+        if (errcode != MPI_SUCCESS)                                            \
+            errhandler(errcode, #fn);                                          \
+    }
+
+template <class T> [[maybe_unused]] MPI_Datatype get_mpi_type() {
+    PL_ABORT("No corresponding MPI type.");
+}
+template <> [[maybe_unused]] MPI_Datatype get_mpi_type<float>() {
+    return MPI_FLOAT;
+}
+template <> [[maybe_unused]] MPI_Datatype get_mpi_type<double>() {
+    return MPI_DOUBLE;
+}
+template <>
+[[maybe_unused]] MPI_Datatype get_mpi_type<Kokkos::complex<float>>() {
+    return MPI_C_FLOAT_COMPLEX;
+}
+template <>
+[[maybe_unused]] MPI_Datatype get_mpi_type<Kokkos::complex<double>>() {
+    return MPI_C_DOUBLE_COMPLEX;
+}
+
+} // namespace
+/// @endcond
+
+namespace Pennylane::LightningKokkos {
+/**
+ * @brief  Kokkos state vector class
+ *
+ * @tparam fp_t Floating-point precision type.
+ */
+template <class fp_t = double>
+class StateVectorKokkosMPI final
+    : public StateVectorBase<fp_t, StateVectorKokkosMPI<fp_t>> {
+  private:
+    using BaseType = StateVectorBase<fp_t, StateVectorKokkosMPI<fp_t>>;
+
+  public:
+    using PrecisionT = fp_t;
+    using SVK = StateVectorKokkos<PrecisionT>;
+    using ComplexT = typename SVK::ComplexT;
+    using CFP_t = typename SVK::CFP_t;
+    using KokkosVector = typename SVK::KokkosVector;
+    using UnmanagedComplexHostView = typename SVK::UnmanagedComplexHostView;
+    using UnmanagedConstComplexHostView =
+        typename SVK::UnmanagedConstComplexHostView;
+    using KokkosSizeTVector = typename SVK::KokkosSizeTVector;
+    using UnmanagedSizeTHostView = typename SVK::UnmanagedSizeTHostView;
+    using UnmanagedConstSizeTHostView =
+        typename SVK::UnmanagedConstSizeTHostView;
+    using UnmanagedPrecisionHostView = typename SVK::UnmanagedPrecisionHostView;
+    using KokkosExecSpace = typename SVK::KokkosExecSpace;
+    using HostExecSpace = typename SVK::HostExecSpace;
+
+    StateVectorKokkosMPI() = delete;
+    StateVectorKokkosMPI(std::size_t num_qubits,
+                         const Kokkos::InitializationSettings &kokkos_args = {},
+                         const MPI_Comm &communicator = MPI_COMM_WORLD)
+        : BaseType{num_qubits} {
+
+        // Init MPI
+        int status = 0;
+        MPI_Initialized(&status);
+        if (!status) {
+            PL_MPI_IS_SUCCESS(MPI_Init(nullptr, nullptr));
+        }
+        communicator_ = communicator;
+        Kokkos::InitializationSettings settings = kokkos_args;
+        num_qubits_ = num_qubits;
+
+        settings.set_device_id(get_mpi_rank());
+        global_wires_.resize(log2(static_cast<std::size_t>(
+            get_mpi_size()))); // set to constructor line
+        local_wires_.resize(get_num_local_wires());
+        mpi_rank_to_global_index_map_.resize(get_mpi_size());
+
+        reset_indices_();
+
+        if (num_qubits > 0) {
+            sv_ = std::make_unique<SVK>(get_num_local_wires(), settings);
+            setBasisState(0U);
+            recvbuf_ = std::make_unique<SVK>(
+                get_num_local_wires(),
+                settings); // This could be smaller, even dynamic!
+            sendbuf_ = std::make_unique<SVK>(
+                get_num_local_wires(),
+                settings); // This could be smaller, even dynamic!
+        }
+    };
+
+    /**
+     * @brief Create a new state vector from data on the host.
+     *
+     * @param num_qubits Number of qubits
+     */
+    template <class complex>
+    StateVectorKokkosMPI(complex *hostdata_, const std::size_t length,
+                         const Kokkos::InitializationSettings &kokkos_args = {},
+                         const MPI_Comm &communicator = MPI_COMM_WORLD)
+        : StateVectorKokkosMPI(log2(length), kokkos_args, communicator) {
+        PL_ABORT_IF_NOT(isPerfectPowerOf2(length),
+                        "The size of provided data must be a power of 2.");
+        const std::size_t blk{get_blk_size()};
+        const std::size_t offset{blk * get_mpi_rank()};
+        (*sv_).HostToDevice(reinterpret_cast<ComplexT *>(hostdata_ + offset),
+                            blk);
+    }
+
+    /**
+     * @brief Create a new state vector from data on the host.
+     *
+     * @param num_qubits Number of qubits
+     */
+    StateVectorKokkosMPI(const ComplexT *hostdata_, const std::size_t length,
+                         const Kokkos::InitializationSettings &kokkos_args = {},
+                         const MPI_Comm &communicator = MPI_COMM_WORLD)
+        : StateVectorKokkosMPI(log2(length), kokkos_args, communicator) {
+        PL_ABORT_IF_NOT(isPerfectPowerOf2(length),
+                        "The size of provided data must be a power of 2.");
+        const std::size_t blk{get_blk_size()};
+        const std::size_t offset{blk * get_mpi_rank()};
+        std::vector<ComplexT> hostdata_copy(hostdata_ + offset,
+                                            hostdata_ + offset + blk);
+        (*sv_).HostToDevice(hostdata_copy.data(), hostdata_copy.size());
+    }
+
+    /**
+     * @brief Create a new state vector from data on the host.
+     *
+     * @param num_qubits Number of qubits
+     */
+    template <class complex>
+    StateVectorKokkosMPI(std::vector<complex> hostdata_,
+                         const Kokkos::InitializationSettings &kokkos_args = {},
+                         const MPI_Comm &communicator = MPI_COMM_WORLD)
+        : StateVectorKokkosMPI(hostdata_.data(), hostdata_.size(), kokkos_args,
+                               communicator) {}
+
+    /******************
+    MPI-related methods
+    ******************/
+
+    /**
+     * @brief  Returns the MPI-process rank.
+     */
+    int get_mpi_rank() {
+        int rank;
+        PL_MPI_IS_SUCCESS(MPI_Comm_rank(communicator_, &rank));
+        return rank;
+    }
+
+    /**
+     * @brief  Returns the number of MPI processes.
+     */
+    int get_mpi_size() {
+        int size;
+        PL_MPI_IS_SUCCESS(MPI_Comm_size(communicator_, &size));
+        return size;
+    }
+
+    /**
+     * @brief  Calls all barriers.
+     */
+    void barrier() {
+        Kokkos::fence();
+        mpi_barrier();
+    }
+
+    /**
+     * @brief  Calls MPI_Barrier.
+     */
+    void mpi_barrier() { PL_MPI_IS_SUCCESS(MPI_Barrier(communicator_)); }
+
+    /**
+     * @brief  Returns the MPI-distribution block size, or the size of the local
+     * state vector data.
+     */
+    std::size_t get_blk_size() { return exp2(get_num_local_wires()); }
+
+    template <typename T> T all_reduce_sum(const T &data) const {
+        T sum;
+        MPI_Allreduce(&data, &sum, 1, get_mpi_type<T>(), MPI_SUM,
+                      communicator_);
+        return sum;
+    }
+
+    void mpi_sendrecv(const std::size_t send_rank, const std::size_t recv_rank,
+                      const std::size_t size, const int tag) {
+        PL_MPI_IS_SUCCESS(MPI_Sendrecv((*sendbuf_).getView().data(), size,
+                                       get_mpi_type<ComplexT>(), send_rank, tag,
+                                       (*recvbuf_).getView().data(), size,
+                                       get_mpi_type<ComplexT>(), recv_rank, tag,
+                                       communicator_, MPI_STATUS_IGNORE));
+    }
+
+    /********************
+    Wires-related methods
+    ********************/
+
+    template <typename T>
+    bool is_element_in_vector(const std::vector<T> &vec, const T &element) {
+        return find_element_in_vector(vec, element) != vec.end();
+    }
+
+    template <typename T>
+    auto find_element_in_vector(const std::vector<T> &vec, const T &element) {
+        return std::find(vec.begin(), vec.end(), element);
+    }
+
+    template <typename T>
+    std::size_t get_element_index_in_vector(const std::vector<T> &vec,
+                                            const T &element) {
+        auto it = find_element_in_vector(vec, element);
+        if (it != vec.end()) {
+            return std::distance(vec.begin(), it);
+        } else {
+            PL_ABORT("Error");
+        }
+    }
+
+    std::size_t get_rev_wire_index(const std::vector<std::size_t> &wires,
+                                   std::size_t wire) {
+        return wires.size() - 1 - wire;
+    }
+
+    std::size_t get_rev_local_wire_index(const std::size_t wire) {
+        return get_rev_wire_index(local_wires_, wire);
+    }
+
+    std::size_t get_rev_global_wire_index(const std::size_t wire) {
+        return get_rev_wire_index(global_wires_, wire);
+    }
+    /**
+     * @brief  Returns the number of global wires.
+     */
+    std::size_t get_num_global_wires() { return global_wires_.size(); }
+
+    /**
+     * @brief  Returns the number of local wires.
+     */
+    std::size_t get_num_local_wires() {
+        return num_qubits_ - get_num_global_wires();
+    }
+
+    std::vector<std::size_t>
+    get_local_wires_indices(const std::vector<std::size_t> &wires) {
+        std::vector<std::size_t> local_wires_indices;
+        for (const auto &wire : wires) {
+            local_wires_indices.push_back(get_local_wire_index(wire));
+        }
+        return local_wires_indices;
+    }
+
+    size_t get_local_wire_index(const std::size_t wire) {
+        return get_element_index_in_vector(local_wires_, wire);
+    }
+
+    std::vector<std::size_t>
+    get_global_wires_indices(const std::vector<std::size_t> &wires) {
+        std::vector<std::size_t> global_wires_indices;
+        for (const auto &wire : wires) {
+            global_wires_indices.push_back(get_global_wire_index(wire));
+        }
+        return global_wires_indices;
+    }
+
+    size_t get_global_wire_index(const std::size_t wire) {
+        return get_element_index_in_vector(global_wires_, wire);
+    }
+
+    std::vector<std::size_t>
+    find_global_wires(const std::vector<std::size_t> &wires) {
+        std::vector<std::size_t> global_wires;
+        for (const auto &wire : wires) {
+            if (is_wires_global({wire})) {
+                global_wires.push_back(wire);
+            }
+        }
+        return global_wires;
+    }
+
+    /**
+     * @brief  Converts a global state vector index to a local one.
+     *
+     * @param index Global index.
+     */
+    std::pair<std::size_t, std::size_t>
+    global_2_local_index(const std::size_t index) {
+        auto blk = get_blk_size();
+        return std::pair<std::size_t, std::size_t>{index / blk, index % blk};
+    }
+
+    std::size_t get_global_index_from_mpi_rank(const std::size_t mpi_rank) {
+        return mpi_rank_to_global_index_map_[mpi_rank];
+    }
+
+    std::size_t get_mpi_rank_from_global_index(const std::size_t global_index) {
+        return get_element_index_in_vector(mpi_rank_to_global_index_map_,
+                                           global_index);
+    }
+
+    void reset_indices_() {
+        std::iota(global_wires_.begin(), global_wires_.end(), 0);
+        std::iota(local_wires_.begin(), local_wires_.end(),
+                  get_num_global_wires());
+        std::iota(mpi_rank_to_global_index_map_.begin(),
+                  mpi_rank_to_global_index_map_.end(), 0);
+    }
+
+    bool is_wires_local(const std::vector<std::size_t> &wires) {
+        return std::all_of(wires.begin(), wires.end(), [this](const auto i) {
+            return is_element_in_vector(local_wires_, i);
+        });
+    }
+
+    bool is_wires_global(const std::vector<std::size_t> &wires) {
+        return std::all_of(wires.begin(), wires.end(), [this](const auto i) {
+            return is_element_in_vector(global_wires_, i);
+        });
+    }
+
+    /**
+     * @brief Init zeros for the state-vector on device.
+     */
+    void initZeros() {
+        reset_indices_();
+        (*sv_).initZeros();
+    }
+
+    /**
+     * @brief Set value for a single element of the state-vector on device.
+     *
+     * @param index Index of the target element.
+     */
+    void setBasisState(std::size_t global_index) {
+        const auto index = global_2_local_index(global_index);
+        reset_indices_();
+        const auto rank = static_cast<std::size_t>(get_mpi_rank());
+        if (index.first == rank) {
+            (*sv_).setBasisState(index.second);
+        } else {
+            (*sv_).initZeros();
+        }
+    }
+
+    /**
+     * @brief Prepares a single computational basis state.
+     *
+     * @param state Binary number representing the index
+     * @param wires Wires.
+     */
+    void setBasisState(const std::vector<std::size_t> &state,
+                       const std::vector<std::size_t> &wires) {
+        PL_ABORT_IF_NOT(state.size() == wires.size(),
+                        "state and wires must have equal dimensions.");
+        const auto num_qubits = this->getNumQubits();
+        PL_ABORT_IF_NOT(
+            std::find_if(wires.begin(), wires.end(),
+                         [&num_qubits](const auto i) {
+                             return i >= num_qubits;
+                         }) == wires.end(),
+            "wires must take values lower than the number of qubits.");
+        const auto n_wires = wires.size();
+        std::size_t index{0U};
+        for (std::size_t k = 0; k < n_wires; k++) {
+            const auto bit = static_cast<std::size_t>(state[k]);
+            index |= bit << (num_qubits - 1 - wires[k]);
+        }
+        setBasisState(index);
+    }
+
+    /**
+     * @brief Reset the data back to the \f$\ket{0}\f$ state.
+     */
+    void resetStateVector() {
+        if (this->getLength() > 0) {
+            setBasisState(0U);
+        }
+    }
+
+    /**
+     * @brief Set values for a batch of elements of the state-vector.
+     *
+     * @param indices Indices of the target elements.
+     * @param values Values to be set for the target elements.
+     */
+    void setStateVector(const std::vector<std::size_t> &indices,
+                        const std::vector<ComplexT> &values) {
+        reset_indices_();
+        const std::size_t blk{get_blk_size()};
+        const std::size_t offset{blk * get_mpi_rank()};
+        initZeros();
+        std::vector<std::size_t> d_indices(blk);
+        std::vector<ComplexT> d_values(blk);
+        std::copy(indices.data() + offset, indices.data() + offset + blk,
+                  d_indices.begin());
+        std::copy(values.data() + offset, values.data() + offset + blk,
+                  d_values.begin());
+        (*sv_).setStateVector(d_indices, d_values);
+    }
+
+    /**
+     * @brief Set values for a batch of elements of the state-vector.
+     *
+     * @param state State.
+     * @param wires Wires.
+     */
+    void setStateVector(const std::vector<ComplexT> &state,
+                        const std::vector<std::size_t> &wires) {
+        PL_ABORT("Not implemented yet.");
+        PL_ABORT_IF_NOT(state.size() == exp2(wires.size()),
+                        "Inconsistent state and wires dimensions.");
+        setStateVector(state.data(), wires);
+    }
+
+    /**
+     * @brief Set values for a batch of elements of the state-vector.
+     *
+     * @param state State.
+     * @param wires Wires.
+     */
+    void setStateVector(const ComplexT *state,
+                        const std::vector<std::size_t> &wires) {
+        PL_ABORT("Not implemented yet.");
+        constexpr std::size_t one{1U};
+        const auto num_qubits = this->getNumQubits();
+        PL_ABORT_IF_NOT(
+            std::find_if(wires.begin(), wires.end(),
+                         [&num_qubits](const auto i) {
+                             return i >= num_qubits;
+                         }) == wires.end(),
+            "wires must take values lower than the number of qubits.");
+        const auto num_state = exp2(wires.size());
+        auto d_sv = getView();
+        auto d_state = pointer2view(state, num_state);
+        auto d_wires = vector2view(wires);
+        initZeros();
+        Kokkos::parallel_for(
+            num_state, KOKKOS_LAMBDA(std::size_t i) {
+                std::size_t index{0U};
+                for (std::size_t w = 0; w < d_wires.size(); w++) {
+                    const std::size_t bit = (i & (one << w)) >> w;
+                    index |= bit << (num_qubits - 1 -
+                                     d_wires(d_wires.size() - 1 - w));
+                }
+                d_sv(index) = d_state(i);
+            });
+    }
+
+    /**
+     * @brief Create a new state vector from data on the host.
+     *
+     * @param hostdata_ Host array for state vector
+     * @param length Length of host array (must be power of 2)
+     * @param kokkos_args Arguments for Kokkos initialization
+     */
+    /* StateVectorKokkos(ComplexT *hostdata_, std::size_t length,
+                      const Kokkos::InitializationSettings &kokkos_args = {})
+        : StateVectorKokkos(log2(length), kokkos_args) {
+        PL_ABORT_IF_NOT(isPerfectPowerOf2(length),
+                        "The size of provided data must be a power of 2.");
+        HostToDevice(hostdata_, length);
+    } */
+
+    /**
+     * @brief Create a new state vector from data on the host.
+     *
+     * @param hostdata_ Host vector for state vector
+     * @param length Length of host array (must be power of 2)
+     * @param kokkos_args Arguments for Kokkos initialization
+     */
+    /* StateVectorKokkos(std::complex<PrecisionT> *hostdata_, std::size_t
+    length, const Kokkos::InitializationSettings &kokkos_args = {}) :
+    StateVectorKokkos(log2(length), kokkos_args) {
+        PL_ABORT_IF_NOT(isPerfectPowerOf2(length),
+                        "The size of provided data must be a power of 2.");
+        HostToDevice(reinterpret_cast<ComplexT *>(hostdata_), length);
+    } */
+
+    /**
+     * @brief Create a new state vector from data on the host.
+     *
+     * @param hostdata_ Host array for state vector
+     * @param length Length of host array (must be power of 2)
+     * @param kokkos_args Arguments for Kokkos initialization
+     */
+    /* StateVectorKokkos(const ComplexT *hostdata_, std::size_t length,
+                      const Kokkos::InitializationSettings &kokkos_args = {})
+        : StateVectorKokkos(log2(length), kokkos_args) {
+        PL_ABORT_IF_NOT(isPerfectPowerOf2(length),
+                        "The size of provided data must be a power of 2.");
+        std::vector<ComplexT> hostdata_copy(hostdata_, hostdata_ + length);
+        HostToDevice(hostdata_copy.data(), length);
+    } */
+
+    /**
+     * @brief Create a new state vector from data on the host.
+     *
+     * @param hostdata_ Host vector for state vector
+     * @param kokkos_args Arguments for Kokkos initialization
+     */
+    /* StateVectorKokkos(std::vector<ComplexT> hostdata_,
+                      const Kokkos::InitializationSettings &kokkos_args = {})
+        : StateVectorKokkos(hostdata_.data(), hostdata_.size(), kokkos_args) {}
+     */
+
+    /**
+     * @brief Copy constructor
+     *
+     * @param other Another state vector
+     */
+    StateVectorKokkosMPI(const StateVectorKokkosMPI &other,
+                         const Kokkos::InitializationSettings &kokkos_args = {},
+                         const MPI_Comm &communicator = MPI_COMM_WORLD)
+        : StateVectorKokkosMPI(other.getNumQubits(), kokkos_args,
+                               communicator) {
+        (*sv_).DeviceToDevice(other.getView());
+        global_wires_ = other.global_wires_;
+        local_wires_ = other.local_wires_;
+        mpi_rank_to_global_index_map_ = other.mpi_rank_to_global_index_map_;
+    }
+
+    /**
+     * @brief Destructor for StateVectorKokkos class
+     */
+
+    ~StateVectorKokkosMPI() {}
+
+    std::vector<std::size_t>
+    local_wires_subset_to_swap(const std::vector<std::size_t> &global_wires,
+                               const std::vector<std::size_t> &wires) {
+        PL_ABORT_IF(global_wires.size() > local_wires_.size(),
+                    "global_wires must be smaller than local_wires.");
+        std::vector<std::size_t> local_wires;
+        int j = 0;
+
+        while (local_wires.size() != global_wires.size()) {
+            if (!is_element_in_vector(wires, local_wires_[j])) {
+                local_wires.push_back(local_wires_[j]);
+            }
+            j++;
+        }
+        // TODO: FIX ME with better algorithm based on memory pattern
+        return local_wires;
+    }
+
+    /**
+     * @brief
+     *
+     * @param global_wires_to_swap
+     * @param local_wires_to_swap
+     *
+     * Example:
+     * For Global|Local wires = 0 | 1 2 and swapping global_wires {0} and
+     * local_wires {2}, the elements {0|01, 0|11} in global_index 0 will be swap
+     * with elements {1|00, 1|10} in global_index 1. This will be done when
+     * batch_index = 1:
+     * - receiving_global_index = local_global_index ^ batch_index
+     * - the (relevant, i.e. to be swapped) local_wire = (relevant) local_wire ^
+     * batch_index (wire 2 in example)
+     * - the (irrelevant, not swapped) local_wires are looped over and copied
+     * to/from the buffers to send/recv
+     *
+     * Note: the batch index loops over all the global wires (including those
+     * that are not swapped).Functors we then check whether the specific batch
+     * number requires communication
+     *
+     * For each batch, a single pairwise MPI_Sendrecv is performed.
+     * The number of batches = 2^(num_swapping_wires) - 1 .
+     * The number of elements sent in each batch is 1/2^(num_swapping_wires) *
+     * size_of_subSV.
+     *
+     */
+    void
+    swap_global_local_wires(std::vector<std::size_t> &global_wires_to_swap,
+                            std::vector<std::size_t> &local_wires_to_swap) {
+        PL_ABORT_IF_NOT(global_wires_to_swap.size() ==
+                            local_wires_to_swap.size(),
+                        "global_wires_to_swap and local_wires_to_swap must "
+                        "have equal dimensions.");
+        std::sort(global_wires_to_swap.begin(), global_wires_to_swap.end());
+        std::sort(local_wires_to_swap.begin(), local_wires_to_swap.end());
+
+        // A little debug message:
+        if (get_mpi_rank() == 0) {
+            std::cout << "Swapping global wires: ";
+            for (const auto &wire : global_wires_to_swap) {
+                std::cout << wire << " ";
+            }
+            std::cout << "with local wires: ";
+            for (const auto &wire : local_wires_to_swap) {
+                std::cout << wire << " ";
+            }
+            std::cout << std::endl;
+        }
+
+        std::vector<std::size_t> rev_global_wires_index_to_swap;
+        std::vector<std::size_t> rev_local_wires_index_to_swap;
+        std::vector<std::size_t> rev_local_wires_index_not_swapping;
+        for (std::size_t i = 0; i < get_num_local_wires(); i++) {
+            if (!is_element_in_vector(local_wires_to_swap, local_wires_[i])) {
+                rev_local_wires_index_not_swapping.push_back(
+                    get_rev_local_wire_index(
+                        get_local_wire_index(local_wires_[i])));
+            }
+        }
+        for (std::size_t i = 0; i < local_wires_to_swap.size(); i++) {
+            rev_local_wires_index_to_swap.push_back(get_rev_local_wire_index(
+                get_local_wire_index(local_wires_to_swap[i])));
+        }
+        for (std::size_t i = 0; i < global_wires_to_swap.size(); i++) {
+            rev_global_wires_index_to_swap.push_back(get_rev_global_wire_index(
+                get_global_wire_index(global_wires_to_swap[i])));
+        }
+
+        std::size_t global_index =
+            get_global_index_from_mpi_rank(get_mpi_rank());
+
+        for (std::size_t batch_index = 1;
+             batch_index < exp2(get_num_global_wires()); batch_index++) {
+            // We loop over all the global indices (ranks) and check if the
+            // batch index actually requires swapping
+
+            bool send = true;
+            for (std::size_t digits = 0; digits < global_wires_.size();
+                 digits++) {
+                bool is_global_wire_in_swap = is_element_in_vector(
+                    global_wires_to_swap,
+                    global_wires_[get_rev_global_wire_index(digits)]);
+                bool batch_index_digit = (batch_index >> digits) & 1;
+                send = send && (!batch_index_digit || is_global_wire_in_swap);
+            }
+            if (send) {
+                // A little debug message:
+                std::cout << "I am rank " << get_mpi_rank()
+                          << " batch index = " << batch_index << std::endl;
+
+                std::size_t swap_wire_mask = 0;
+                for (std::size_t i = 0; i < local_wires_to_swap.size(); i++) {
+                    swap_wire_mask |= ((((batch_index ^ global_index) >>
+                                         rev_global_wires_index_to_swap[i]) &
+                                        1)
+                                       << rev_local_wires_index_to_swap[i]);
+                }
+
+                // A little debug message:
+                std::cout << "I am rank " << get_mpi_rank()
+                          << " and swap_wire_mask = " << swap_wire_mask
+                          << std::endl;
+
+                // TODO: Kokkos parallelize this
+                //  Copy non-swapping local wire elements to send buffer
+                for (std::size_t buffer_index = 0;
+                     buffer_index <
+                     exp2((get_num_local_wires() - local_wires_to_swap.size()));
+                     buffer_index++) {
+                    std::size_t SV_index = swap_wire_mask;
+
+                    for (std::size_t i = 0;
+                         i < rev_local_wires_index_not_swapping.size(); i++) {
+                        SV_index |= (((buffer_index >> i) & 1)
+                                     << rev_local_wires_index_not_swapping[i]);
+                    }
+
+                    // A little debug message:
+                    std::cout << "I am rank " << get_mpi_rank()
+                              << " and buffer_index = " << buffer_index
+                              << " and SV_index = " << SV_index << std::endl;
+
+                    (*sendbuf_).getView()(buffer_index) =
+                        (*sv_).getView()(SV_index);
+                }
+                // TODO: uncomment this
+                // Kokkos::parallel_for(exp2((get_num_local_wires() -
+                // local_wires_to_swap.size())), KOKKOS_LAMBDA(std::size_t
+                // buffer_index) {
+                //    std::size_t SV_index = swap_wire_mask;
+
+                //    for (std::size_t i = 0;
+                //         i < rev_local_wires_index_not_swapping.size(); i++) {
+                //        SV_index |= (((buffer_index >> i) & 1)
+                //                     <<
+                //                     rev_local_wires_index_not_swapping[j]);
+                //    }
+
+                //    (*sendbuf_).getView()(buffer_index) =
+                //        (*sv_).getView()(SV_index);
+                //});
+                // Kokkos::fence();
+
+                std::size_t other_global_index = batch_index ^ global_index;
+                std::size_t other_mpi_rank =
+                    get_mpi_rank_from_global_index(other_global_index);
+
+                // A little debug message:
+                std::cout << "I am rank " << get_mpi_rank()
+                          << " and I am sending to rank " << other_mpi_rank
+                          << " with tag " << batch_index
+                          << " and this number of elements "
+                          << (1 << (get_num_local_wires() -
+                                    local_wires_to_swap.size()))
+                          << std::endl;
+
+                mpi_sendrecv(
+                    other_mpi_rank, other_mpi_rank,
+                    exp2(get_num_local_wires() - local_wires_to_swap.size()),
+                    batch_index);
+
+                // TODO: kokkos parallelize this
+                for (std::size_t buffer_index = 0;
+                     buffer_index <
+                     exp2((get_num_local_wires() - local_wires_to_swap.size()));
+                     buffer_index++) {
+                    std::size_t SV_index = swap_wire_mask;
+
+                    for (std::size_t i = 0;
+                         i < rev_local_wires_index_not_swapping.size(); i++) {
+                        SV_index |= (((buffer_index >> i) & 1)
+                                     << rev_local_wires_index_not_swapping[i]);
+                    }
+
+                    (*sv_).getView()(SV_index) =
+                        (*recvbuf_).getView()(buffer_index);
+                }
+            }
+        }
+
+        // TODO: uncomment this
+        // Kokkos::parallel_for(exp2((get_num_local_wires() -
+        // local_wires_to_swap.size())), KOKKOS_LAMBDA(std::size_t buffer_index)
+        // {
+        //    std::size_t SV_index = swap_wire_mask;
+
+        //    for (std::size_t i = 0;
+        //         i < rev_local_wires_index_not_swapping.size(); i++) {
+        //        SV_index |= (((buffer_index >> i) & 1)
+        //                     << rev_local_wires_index_not_swapping[j]);
+        //    }
+
+        //    (*sv_).getView()(SV_index) =
+        //(*recvbuf_).getView()(buffer_index);
+        //});
+        // Kokkos::fence();
+
+        // Swap global and local wires labels
+        for (size_t i = 0; i < global_wires_to_swap.size(); ++i) {
+            std::size_t global_wire_idx =
+                get_global_wire_index(global_wires_to_swap[i]);
+            std::size_t local_wire_idx =
+                get_local_wire_index(local_wires_to_swap[i]);
+            std::swap(global_wires_[global_wire_idx],
+                      local_wires_[local_wire_idx]);
+        }
+    }
+
+    /**
+     * @brief Apply a single gate to the state vector.
+     *
+     * @param opName Name of gate to apply.
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicates whether to use adjoint of gate.
+     * @param params Optional parameter list for parametric gates.
+     * @param gate_matrix Optional std gate matrix if opName doesn't exist.
+     */
+    void applyOperation(
+        [[maybe_unused]] const std::string &opName,
+        [[maybe_unused]] const std::vector<std::size_t> &wires,
+        [[maybe_unused]] bool inverse = false,
+        [[maybe_unused]] const std::vector<fp_t> &params = {},
+        [[maybe_unused]] const std::vector<ComplexT> &gate_matrix = {}) {
+        if (opName == "Identity") {
+            // No op
+            return;
+        }
+
+        if (is_wires_global(wires)) {
+
+            if (opName == "PauliX") {
+                std::size_t rev_distance =
+                    get_rev_global_wire_index(get_global_wire_index(wires[0]));
+                for (auto &global_index : mpi_rank_to_global_index_map_) {
+                    global_index = global_index ^ (1U << rev_distance);
+                }
+                return;
+            } else if (opName == "PauliY") {
+                std::size_t rev_distance =
+                    get_rev_global_wire_index(get_global_wire_index(wires[0]));
+                std::size_t global_index =
+                    get_global_index_from_mpi_rank(get_mpi_rank());
+                fp_t phase = ((global_index >> rev_distance) & 1)
+                                 ? (M_PI_2)
+                                 : (-1.0) * M_PI_2;
+                (*sv_).applyOperation("GlobalPhase", {}, false, {phase});
+                for (auto &global_index : mpi_rank_to_global_index_map_) {
+                    global_index = global_index ^ (1U << rev_distance);
+                }
+
+                return;
+            } else if (opName == "PauliZ") {
+                std::size_t rev_distance =
+                    get_rev_global_wire_index(get_global_wire_index(wires[0]));
+                std::size_t global_index =
+                    get_global_index_from_mpi_rank(get_mpi_rank());
+                if ((global_index >> rev_distance) & 1) {
+                    (*sv_).applyOperation("GlobalPhase", {}, false, {M_PI});
+                }
+                return;
+            } else if (opName == "CNOT") {
+
+                std::size_t rev_distance_0 =
+                    get_rev_global_wire_index(get_global_wire_index(wires[0]));
+                std::size_t rev_distance_1 =
+                    get_rev_global_wire_index(get_global_wire_index(wires[1]));
+                for (auto &global_index : mpi_rank_to_global_index_map_) {
+                    global_index = ((global_index >> rev_distance_0) & 1)
+                                       ? global_index ^ (1U << rev_distance_1)
+                                       : global_index;
+                }
+                return;
+            }
+            // TODO: Add similar for CY, CZ, SWAP, PhaseShift, GlobalPhase
+            // etc.
+        }
+
+        if (!is_wires_local(wires)) {
+            auto global_wires_to_swap = find_global_wires(wires);
+            auto local_wires_to_swap =
+                local_wires_subset_to_swap(global_wires_to_swap, wires);
+            swap_global_local_wires(global_wires_to_swap, local_wires_to_swap);
+        }
+        if (get_mpi_rank() == 0) {
+            std::cout << "I am rank " << get_mpi_rank()
+                      << " and I am applying the operation " << opName
+                      << " to the wires " << wires[0] << wires[1]
+                      << "and converted to "
+                      << get_local_wires_indices(wires)[0]
+                      << get_local_wires_indices(wires)[1] << std::endl;
+        }
+        (*sv_).applyOperation(opName, get_local_wires_indices(wires), inverse,
+                              params, gate_matrix);
+    }
+
+    /**
+     * @brief Apply a PauliRot gate to the state-vector.
+     *
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicates whether to use inverse of gate.
+     * @param params Rotation angle.
+     * @param word A Pauli word (e.g. "XYYX").
+     */
+    /* void applyPauliRot(const std::vector<std::size_t> &wires, bool inverse,
+                       const std::vector<PrecisionT> &params,
+                       const std::string &word) {
+        PL_ABORT_IF_NOT(wires.size() == word.size(),
+                        "wires and word have incompatible dimensions.");
+        Pennylane::LightningKokkos::Functors::applyPauliRot<KokkosExecSpace,
+                                                            PrecisionT>(
+            getView(), this->getNumQubits(), wires, inverse, params[0], word);
+    } */
+
+    /**
+     * @brief Apply a controlled-single gate to the state vector.
+     *
+     * @param opName Name of gate to apply.
+     * @param controlled_wires Control wires.
+     * @param controlled_values Control values (false or true).
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicates whether to use adjoint of gate. (Default to
+     * false)
+     * @param params Optional parameter list for parametric gates.
+     * @param gate_matrix Optional unitary gate matrix if opName doesn't exist.
+     */
+    void applyOperation(const std::string &opName,
+                        const std::vector<std::size_t> &controlled_wires,
+                        const std::vector<bool> &controlled_values,
+                        const std::vector<std::size_t> &wires,
+                        bool inverse = false,
+                        const std::vector<fp_t> &params = {},
+                        const std::vector<ComplexT> &gate_matrix = {}) {
+        PL_ABORT_IF_NOT(
+            areVecsDisjoint<std::size_t>(controlled_wires, wires),
+            "`controlled_wires` and target wires must be disjoint.");
+        PL_ABORT_IF_NOT(controlled_wires.size() == controlled_values.size(),
+                        "`controlled_wires` must have the same size as "
+                        "`controlled_values`.");
+
+        if (controlled_wires.empty()) {
+            return applyOperation(opName, wires, inverse, params, gate_matrix);
+        }
+
+        if (opName == "Identity") {
+            // No op
+            return;
+        }
+
+        // Swap target wires to all local
+        if (!is_wires_local(wires)) {
+            auto global_wires_to_swap = find_global_wires(wires);
+            auto local_wires_to_swap =
+                local_wires_subset_to_swap(global_wires_to_swap, wires);
+            swap_global_local_wires(global_wires_to_swap, local_wires_to_swap);
+            barrier();
+        }
+
+        std::vector<std::size_t> global_control_wires;
+        std::vector<bool> global_control_values;
+        std::vector<std::size_t> local_control_wires;
+        std::vector<bool> local_control_values;
+
+        for (std::size_t i = 0; i < controlled_wires.size(); i++) {
+            if (is_wires_local({controlled_wires[i]})) {
+                local_control_wires.push_back(controlled_wires[i]);
+                local_control_values.push_back(controlled_values[i]);
+            } else {
+                global_control_wires.push_back(controlled_wires[i]);
+                global_control_values.push_back(controlled_values[i]);
+            }
+        }
+        for (auto wire : global_control_wires) {
+            std::cout << "I am rank " << get_mpi_rank()
+                      << " applying to the global control wire " << wire
+                      << std::endl;
+        }
+        std::size_t global_index =
+            get_global_index_from_mpi_rank(get_mpi_rank());
+        bool operate = true;
+        for (std::size_t i = 0; i < global_control_wires.size(); i++) {
+            operate = operate &&
+                      (((global_index >>
+                         get_rev_global_wire_index(
+                             get_global_wire_index(global_control_wires[i]))) &
+                        1) == global_control_values[i]);
+        }
+        if (operate) {
+            // A little debug message:
+            for (auto lcw : local_control_wires) {
+                std::cout << "I am rank " << get_mpi_rank()
+                          << " applying to the local control wire " << lcw
+                          << "and local index = " << get_local_wire_index(lcw)
+                          << std::endl;
+            }
+            for (auto w : wires) {
+                std::cout << "I am rank " << get_mpi_rank()
+                          << " applying to the target wire " << w
+                          << " and local index = " << get_local_wire_index(w)
+                          << std::endl;
+            }
+
+            (*sv_).applyOperation(
+                opName, get_local_wires_indices(local_control_wires),
+                local_control_values, get_local_wires_indices(wires), inverse,
+                params, gate_matrix);
+        }
+    }
+
+    /**
+     * @brief Apply a given matrix directly to the statevector using a
+     * raw matrix pointer vector on host memory.
+     *
+     * @param matrix Pointer to host matrix to apply to wires (in row-major
+     * format).
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicate whether inverse should be taken. (Default to
+     * false)
+     */
+    inline void applyMatrix(const ComplexT *matrix,
+                            const std::vector<std::size_t> &wires,
+                            bool inverse = false) {
+        PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
+        size_t n = static_cast<std::size_t>(1U) << wires.size();
+        const std::vector<ComplexT> matrix_(matrix, matrix + n * n);
+        applyOperation("Matrix", wires, inverse, {}, matrix_);
+    }
+
+    /**
+     * @brief Apply a given matrix as a vector directly to the statevector.
+     *
+     * @param matrix Matrix data as a vector (in row-major format).
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicate whether inverse should be taken. (Default to
+     * false)
+     */
+    inline void applyMatrix(const std::vector<ComplexT> &matrix,
+                            const std::vector<std::size_t> &wires,
+                            bool inverse = false) {
+        PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
+        PL_ABORT_IF(matrix.size() != exp2(2 * wires.size()),
+                    "The size of matrix does not match with the given "
+                    "number of wires");
+        applyOperation("Matrix", wires, inverse, {}, matrix);
+    }
+
+    /**
+     * @brief Apply a given matrix directly to the statevector using a
+     * raw matrix pointer on host memory.
+     *
+     * @param matrix Pointer to the array data (in row-major format).
+     * @param controlled_wires Controlled wires
+     * @param controlled_values Controlled values (true or false)
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicate whether inverse should be taken. (Default to
+     * false)
+     */
+    inline void
+    applyControlledMatrix(const ComplexT *matrix,
+                          const std::vector<std::size_t> &controlled_wires,
+                          const std::vector<bool> &controlled_values,
+                          const std::vector<std::size_t> &wires,
+                          bool inverse = false) {
+        PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
+        size_t n = static_cast<std::size_t>(1U) << wires.size();
+        const std::vector<ComplexT> matrix_(matrix, matrix + n * n);
+        applyOperation("Matrix", controlled_wires, controlled_values, wires,
+                       inverse, {}, matrix_);
+    }
+
+    /**
+     * @brief Apply a given controlled-matrix as a vector directly to the
+     * statevector.
+     *
+     * @param matrix  Matrix data as a vector to apply to target wires (in
+     * row-major format).
+     * @param controlled_wires Control wires.
+     * @param controlled_values Control values (false or true).
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicate whether inverse should be taken. (Default to
+     * false)
+     */
+    inline void
+    applyControlledMatrix(const std::vector<ComplexT> &matrix,
+                          const std::vector<std::size_t> &controlled_wires,
+                          const std::vector<bool> &controlled_values,
+                          const std::vector<std::size_t> &wires,
+                          bool inverse = false) {
+        PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
+        PL_ABORT_IF(matrix.size() != exp2(2 * wires.size()),
+                    "The size of matrix does not match with the given "
+                    "number of wires");
+        applyOperation("Matrix", controlled_wires, controlled_values, wires,
+                       inverse, {}, matrix);
+    }
+
+    /**
+     * @brief Apply a single generator to the state vector using the given
+     * kernel.
+     *
+     * @param opName Name of gate to apply.
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicates whether to use adjoint of gate. (Default to
+     * false)
+     * @return PrecisionT Generator scale prefactor
+     */
+    auto applyGenerator(const std::string &opName,
+                        const std::vector<std::size_t> &wires,
+                        bool inverse = false) -> PrecisionT {
+
+        if (!is_wires_local(wires)) {
+            auto global_wires = find_global_wires(wires);
+            auto local_wires = local_wires_subset_to_swap(global_wires, wires);
+            swap_global_local_wires(global_wires, local_wires);
+        }
+        return (*sv_).applyGenerator(opName, get_local_wires_indices(wires),
+                                     inverse);
+    }
+
+    /**
+     * @brief Apply a single controlled generator to the state vector using the
+     * given kernel.
+     *
+     * @param opName Name of gate to apply.
+     * @param controlled_wires Control wires.
+     * @param controlled_values Control values (true or false).
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicates whether to use adjoint of gate. (Default to
+     * false)
+     * @return PrecisionT Generator scale prefactor
+     */
+    auto
+    applyControlledGenerator(const std::string &opName,
+                             const std::vector<std::size_t> &controlled_wires,
+                             const std::vector<bool> &controlled_values,
+                             const std::vector<std::size_t> &wires,
+                             bool inverse = false) -> PrecisionT {
+        if (is_wires_local(wires) && is_wires_local(controlled_wires)) {
+            return (*sv_).applyControlledGenerator(
+                opName, get_local_wires_indices(controlled_wires),
+                controlled_values, get_local_wires_indices(wires), inverse);
+        } else {
+            PL_ABORT("Not implemented yet.");
+        }
+    }
+
+    /**
+     * @brief Apply a single generator to the state vector using the given
+     * kernel.
+     *
+     * @param opName Name of gate to apply.
+     * @param controlled_wires Control wires.
+     * @param controlled_values Control values (true or false).
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicates whether to use adjoint of gate. (Default to
+     * false)
+     * @return PrecisionT Generator scale prefactor
+     */
+    auto applyGenerator(const std::string &opName,
+                        const std::vector<std::size_t> &controlled_wires,
+                        const std::vector<bool> &controlled_values,
+                        const std::vector<std::size_t> &wires,
+                        bool inverse = false) -> PrecisionT {
+        PL_ABORT_IF_NOT(
+            areVecsDisjoint<std::size_t>(controlled_wires, wires),
+            "`controlled_wires` and `target wires` must be disjoint.");
+        PL_ABORT_IF_NOT(controlled_wires.size() == controlled_values.size(),
+                        "`controlled_wires` must have the same size as "
+                        "`controlled_values`.");
+        if (controlled_wires.empty()) {
+            return applyGenerator(opName, wires, inverse);
+        }
+        return applyControlledGenerator(opName, controlled_wires,
+                                        controlled_values, wires, inverse);
+    }
+
+    /**
+     * @brief Collapse the state vector after having measured one of the
+     * qubits.
+     *
+     * The branch parameter imposes the measurement result on the given wire.
+     *
+     * @param wire Wire to collapse.
+     * @param branch Branch 0 or 1.
+     */
+    void collapse([[maybe_unused]] std::size_t wire,
+                  [[maybe_unused]] bool branch) {
+        /* KokkosVector matrix("gate_matrix", 4);
+        Kokkos::parallel_for(
+            matrix.size(), KOKKOS_LAMBDA(std::size_t k) {
+                matrix(k) = ((k == 0 && branch == 0) || (k == 3 && branch == 1))
+                                ? ComplexT{1.0, 0.0}
+                                : ComplexT{0.0, 0.0};
+            });
+        applyMultiQubitOp(matrix, {wire}, false);
+        normalize(); */
+        PL_ABORT("Not implemented yet.");
+    }
+
+    /**
+     * @brief Normalize vector (to have norm 1).
+     */
+    void normalize() {
+        // TODO: To update
+        auto sv_view = getView();
+
+        PrecisionT squaredNorm = 0.0;
+        Kokkos::parallel_reduce(
+            sv_view.size(),
+            KOKKOS_LAMBDA(std::size_t i, PrecisionT & sum) {
+                const PrecisionT norm = Kokkos::abs(sv_view(i));
+                sum += norm * norm;
+            },
+            squaredNorm);
+
+        PL_ABORT_IF(squaredNorm <
+                        std::numeric_limits<PrecisionT>::epsilon() * 1e2,
+                    "vector has norm close to zero and can't be normalized");
+
+        const std::complex<PrecisionT> inv_norm =
+            1. / Kokkos::sqrt(squaredNorm);
+        Kokkos::parallel_for(
+            sv_view.size(),
+            KOKKOS_LAMBDA(std::size_t i) { sv_view(i) *= inv_norm; });
+    }
+
+    /**
+     * @brief Update data of the class
+     *
+     * @param other Kokkos View
+     */
+    void updateData(const KokkosVector other) { (*sv_).updateData(other); }
+
+    /**
+     * @brief Update data of the class
+     *
+     * @param other State vector
+     */
+    void updateData(const StateVectorKokkos<fp_t> &other) {
+        updateData(other.getView());
+    }
+
+    /**
+     * @brief Update data of the class
+     *
+     * @param new_data data pointer to new data.
+     * @param new_size size of underlying data storage.
+     */
+    void updateData(ComplexT *new_data, std::size_t new_size) {
+        updateData(KokkosVector(new_data, new_size));
+    }
+
+    /**
+     * @brief Update data of the class
+     *
+     * @param other STL vector of type ComplexT
+     */
+    void updateData(std::vector<ComplexT> &other) {
+        updateData(other.data(), other.size());
+    }
+
+    void updateData(const StateVectorKokkosMPI<PrecisionT> &other) {
+        updateData(other.getView());
+        global_wires_ = other.global_wires_;
+        local_wires_ = other.local_wires_;
+    }
+
+    /**
+     * @brief Get underlying Kokkos view data on the device
+     *
+     * @return ComplexT *
+     */
+    [[nodiscard]] auto getData() -> ComplexT * { return getView().data(); }
+
+    [[nodiscard]] auto getData() const -> const ComplexT * {
+        return getView().data();
+    }
+
+    /**
+     * @brief Get the Kokkos data of the state vector.
+     *
+     * @return The pointer to the data of state vector
+     */
+    [[nodiscard]] auto getView() const -> KokkosVector & {
+        return (*sv_).getView();
+    }
+
+    /**
+     * @brief Get the Kokkos data of the state vector
+     *
+     * @return The pointer to the data of state vector
+     */
+    [[nodiscard]] auto getView() -> KokkosVector & { return (*sv_).getView(); }
+
+    /**
+     * @brief Get the vector-converted Kokkos view
+     *
+     * @return std::vector<ComplexT>
+     */
+    [[nodiscard]] auto getDataVector() -> std::vector<ComplexT> {
+        return view2vector(getView());
+    }
+
+    [[nodiscard]] auto getDataVector() const -> const std::vector<ComplexT> {
+        return view2vector(getView());
+    }
+
+    /**
+     * @brief Copy data from the host space to the device space.
+     *
+     */
+    inline void HostToDevice(ComplexT *sv, std::size_t length) {
+        (*sv_).HostToDevice(sv, length);
+    }
+
+    /**
+     * @brief Copy data from the device space to the host space.
+     *
+     */
+    inline void DeviceToHost(ComplexT *sv, std::size_t length) const {
+        (*sv_).HostToDevice(sv, length);
+    }
+
+    /**
+     * @brief Copy data from the device space to the device space.
+     *
+     */
+    inline void DeviceToDevice(KokkosVector vector_to_copy) {
+        (*sv_).DeviceToDevice(vector_to_copy);
+    }
+
+    void reorder_local_wires() {
+        PL_ABORT_IF_NOT(std::all_of(local_wires_.begin(), local_wires_.end(),
+                                    [this](const auto i) {
+                                        return (get_num_global_wires() <= i) &&
+                                               (i < num_qubits_);
+                                    }),
+                        "local wires must be least significant indices. Run "
+                        "reorder_global_wires first.");
+
+        for (std::size_t i = 0; i < get_num_local_wires(); ++i) {
+            std::size_t wire_i = i + get_num_global_wires();
+            if (local_wires_[i] > wire_i) {
+                std::cout << "I am rank " << get_mpi_rank()
+                          << " and I am swapping " << local_wires_[i]
+                          << " with " << wire_i << std::endl;
+                applyOperation("SWAP", {local_wires_[i], wire_i}, false);
+            }
+        }
+
+        std::iota(local_wires_.begin(), local_wires_.end(),
+                  get_num_global_wires());
+    }
+
+    void reorder_global_wires() {
+        std::vector<std::size_t> global_wires;
+        std::vector<std::size_t> local_wires;
+        for (const auto &wire : global_wires_) {
+            if (wire >= get_num_global_wires()) {
+                global_wires.push_back(wire);
+            }
+        }
+
+        for (const auto &wire : local_wires_) {
+            if (wire < get_num_global_wires()) {
+                local_wires.push_back(wire);
+            }
+        }
+        swap_global_local_wires(global_wires, local_wires);
+    }
+
+    /**
+     * @brief Get underlying data vector
+     */
+    [[nodiscard]] auto getDataVector(const int root = 0)
+        -> std::vector<ComplexT> {
+        std::vector<ComplexT> data_((get_mpi_rank() == root) ? this->getLength()
+                                                             : 0);
+        std::vector<ComplexT> local_((*sv_).getLength());
+        (*sv_).DeviceToHost(local_.data(), local_.size());
+        std::vector<int> recvcount(get_mpi_size(), local_.size());
+        std::vector<int> displacements(get_mpi_size(), 0);
+
+        for (std::size_t rank = 0; rank < get_mpi_size(); rank++) {
+            for (std::size_t i = 0; i < get_num_global_wires(); i++) {
+                std::size_t temp =
+                    ((get_global_index_from_mpi_rank(rank) >>
+                      (get_num_global_wires() - 1 - i)) &
+                     1)
+                    << (get_num_global_wires() - 1 - global_wires_[i]);
+                displacements[rank] += temp;
+            }
+            displacements[rank] *= local_.size();
+        }
+
+        // A little debug message:
+        if (get_mpi_rank() == root) {
+            for (std::size_t rank = 0; rank < get_mpi_size(); rank++) {
+                std::cout << "Rank: " << rank
+                          << ", Displacement: " << displacements[rank]
+                          << ", Recvcount: " << recvcount[rank] << std::endl;
+            }
+        }
+
+        PL_MPI_IS_SUCCESS(
+            MPI_Gatherv(local_.data(), local_.size(), get_mpi_type<ComplexT>(),
+                        data_.data(), recvcount.data(), displacements.data(),
+                        get_mpi_type<ComplexT>(), root, communicator_));
+        return data_;
+    }
+
+  private:
+    std::size_t num_qubits_;
+    std::unique_ptr<SVK> sv_;
+    std::unique_ptr<SVK> recvbuf_; // TODO: THESE do not have to be full SVK
+    std::unique_ptr<SVK> sendbuf_; // TODO: THESE do not have to be full SVK
+    MPI_Comm communicator_;
+
+  public:
+    std::vector<std::size_t> mpi_rank_to_global_index_map_; // TODO: make
+                                                            // private
+    std::vector<std::size_t> global_wires_; // TODO: make private
+    std::vector<std::size_t> local_wires_;  // TODO: make private
+    /**
+     * @brief Get the StateVectorKokkos instance.
+     *
+     * @return A reference to the StateVectorKokkos instance.
+     */
+    SVK &getLocalSV() { return *sv_; }
+    /**
+     * @brief Get the MPI rank to global index map.
+     *
+     * @return A reference to the vector mapping MPI ranks to global indices.
+     */
+    std::vector<std::size_t> &getMpiRankToGlobalIndexMap() {
+        return mpi_rank_to_global_index_map_;
+    }
+
+    /**
+     * @brief Get the global wires.
+     *
+     * @return A reference to the vector of global wires.
+     */
+    std::vector<std::size_t> &getGlobalWires() { return global_wires_; }
+
+    /**
+     * @brief Get the local wires.
+     *
+     * @return A reference to the vector of local wires.
+     */
+    std::vector<std::size_t> &getLocalWires() { return local_wires_; }
+};
+}; // namespace Pennylane::LightningKokkos

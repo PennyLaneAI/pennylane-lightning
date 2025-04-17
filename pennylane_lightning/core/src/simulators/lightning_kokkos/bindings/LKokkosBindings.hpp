@@ -23,9 +23,14 @@
 #include "Constant.hpp"
 #include "ConstantUtil.hpp" // lookup
 #include "GateOperation.hpp"
+#if _ENABLE_MPI == 1
+#include "MeasurementsKokkosMPI.hpp"
+#include "StateVectorKokkosMPI.hpp"
+#else
 #include "MeasurementsKokkos.hpp"
-#include "ObservablesKokkos.hpp"
 #include "StateVectorKokkos.hpp"
+#endif
+#include "ObservablesKokkos.hpp"
 #include "TypeList.hpp"
 #include "Util.hpp" // exp2
 
@@ -38,6 +43,11 @@ using namespace Pennylane::LightningKokkos::Observables;
 using Kokkos::InitializationSettings;
 using Pennylane::LightningKokkos::StateVectorKokkos;
 using Pennylane::Util::exp2;
+#if _ENABLE_MPI == 1
+template <class T> using measure = MeasurementsMPI<T>;
+#else
+template <class T> using measure = Measurements<T>;
+#endif
 } // namespace
 /// @endcond
 
@@ -45,9 +55,15 @@ namespace py = pybind11;
 
 namespace Pennylane::LightningKokkos {
 /// @cond DEV
+#if _ENABLE_MPI == 1
+using StateVectorBackends =
+    Pennylane::Util::TypeList<StateVectorKokkosMPI<float>,
+                              StateVectorKokkosMPI<double>, void>;
+#else
 using StateVectorBackends =
     Pennylane::Util::TypeList<StateVectorKokkos<float>,
                               StateVectorKokkos<double>, void>;
+#endif
 /// @endcond
 
 /**
@@ -108,17 +124,18 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
     using ParamT = PrecisionT; // Parameter's data precision
     using np_arr_c = py::array_t<std::complex<ParamT>,
                                  py::array::c_style | py::array::forcecast>;
-
     registerGatesForStateVector<StateVectorT>(pyclass);
     registerControlledGate<StateVectorT>(pyclass);
+#ifndef _ENABLE_MPI
     pyclass.def(
-        "applyPauliRot",
+        "applyPauliRot", // TODO: update this support
         [](StateVectorT &sv, const std::vector<std::size_t> &wires,
            const bool inverse, const std::vector<ParamT> &params,
            const std::string &word) {
             sv.applyPauliRot(wires, inverse, params, word);
         },
         "Apply a Pauli rotation.");
+#endif
     pyclass
         .def(py::init([](std::size_t num_qubits) {
             return new StateVectorT(num_qubits);
@@ -216,15 +233,17 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
     using np_arr_sparse_ind =
         py::array_t<SparseIndexT, py::array::c_style | py::array::forcecast>;
 
+    using measureT = measure<StateVectorT>;
+
     pyclass
         .def("expval",
-             static_cast<PrecisionT (Measurements<StateVectorT>::*)(
+             static_cast<PrecisionT (measureT::*)(
                  const std::string &, const std::vector<std::size_t> &)>(
-                 &Measurements<StateVectorT>::expval),
+                 &measureT::expval),
              "Expected value of an operation by name.")
         .def(
             "expval",
-            [](Measurements<StateVectorT> &M, const np_arr_c &matrix,
+            [](measureT &M, const np_arr_c &matrix,
                const std::vector<std::size_t> &wires) {
                 const std::size_t matrix_size = exp2(2 * wires.size());
                 auto matrix_data =
@@ -236,14 +255,14 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
             "Expected value of a Hermitian observable.")
         .def(
             "expval",
-            [](Measurements<StateVectorT> &M,
-               const std::vector<std::string> &pauli_words,
+            [](measureT &M, const std::vector<std::string> &pauli_words,
                const std::vector<std::vector<std::size_t>> &target_wires,
                const np_arr_c &coeffs) {
                 return M.expval(pauli_words, target_wires,
                                 static_cast<ComplexT *>(coeffs.request().ptr));
             },
             "Expected value of Hamiltonian represented by Pauli words.")
+#ifndef _ENABLE_MPI
         .def(
             "expval",
             [](Measurements<StateVectorT> &M, const np_arr_sparse_ind &row_map,
@@ -256,27 +275,17 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
                     static_cast<SparseIndexT>(values.request().size));
             },
             "Expected value of a sparse Hamiltonian.")
+#endif
         .def("var",
-             [](Measurements<StateVectorT> &M, const std::string &operation,
+             [](measureT &M, const std::string &operation,
                 const std::vector<std::size_t> &wires) {
                  return M.var(operation, wires);
              })
         .def("var",
-             static_cast<PrecisionT (Measurements<StateVectorT>::*)(
+             static_cast<PrecisionT (measureT::*)(
                  const std::string &, const std::vector<std::size_t> &)>(
-                 &Measurements<StateVectorT>::var),
-             "Variance of an operation by name.")
-        .def(
-            "var",
-            [](Measurements<StateVectorT> &M, const np_arr_sparse_ind &row_map,
-               const np_arr_sparse_ind &entries, const np_arr_c &values) {
-                return M.var(static_cast<SparseIndexT *>(row_map.request().ptr),
-                             static_cast<SparseIndexT>(row_map.request().size),
-                             static_cast<SparseIndexT *>(entries.request().ptr),
-                             static_cast<ComplexT *>(values.request().ptr),
-                             static_cast<SparseIndexT>(values.request().size));
-            },
-            "Variance of a sparse Hamiltonian.");
+                 &measureT::var),
+             "Variance of an operation by name.");
 }
 
 /**
