@@ -81,13 +81,13 @@ The following table summarizes the supported platforms and the primary installat
 +----------------+-----------+-----------+-----------+-----------+-----------+------------------------------------------------------------------------------------------------------------------+
 | L-GPU          | pip       | pip       |           |           |           | `lightning.gpu <https://docs.pennylane.ai/projects/lightning/en/stable/lightning_gpu/installation.html>`_        |
 +----------------+-----------+-----------+-----------+-----------+-----------+------------------------------------------------------------------------------------------------------------------+
-| L-GPU (MPI)    | source    |           |           |           |           |                                                                                                                  |
+| L-GPU (MPI)    | source    |           |           |           |           | `lightning.gpu <https://docs.pennylane.ai/projects/lightning/en/stable/lightning_gpu/installation.html#install-lightning-gpu-with-mpi>`_   |
 +----------------+-----------+-----------+-----------+-----------+-----------+------------------------------------------------------------------------------------------------------------------+
 | L-Kokkos (OMP) | pip       | pip       | pip       | pip       |           | `lightning.kokkos <https://docs.pennylane.ai/projects/lightning/en/stable/lightning_kokkos/installation.html>`_  |
 +----------------+-----------+-----------+-----------+-----------+-----------+------------------------------------------------------------------------------------------------------------------+
-| L-Kokkos (CUDA)| source    | source    |           |           |           |                                                                                                                  |
+| L-Kokkos (CUDA)| source    | source    |           |           |           | `lightning.kokkos <https://docs.pennylane.ai/projects/lightning/en/stable/lightning_kokkos/installation.html#install-lightning-kokkos>`_   |
 +----------------+-----------+-----------+-----------+-----------+-----------+------------------------------------------------------------------------------------------------------------------+
-| L-Kokkos (HIP) | source    | source    |           |           |           |                                                                                                                  |
+| L-Kokkos (HIP) | source    | source    |           |           |           |  `lightning.kokkos <https://docs.pennylane.ai/projects/lightning/en/stable/lightning_kokkos/installation.html#install-lightning-kokkos>`_  |
 +----------------+-----------+-----------+-----------+-----------+-----------+------------------------------------------------------------------------------------------------------------------+
 | L-Tensor       | pip       | pip       |           |           |           | `lightning.tensor <https://docs.pennylane.ai/projects/lightning/en/stable/lightning_tensor/installation.html>`_  |
 +----------------+-----------+-----------+-----------+-----------+-----------+------------------------------------------------------------------------------------------------------------------+
