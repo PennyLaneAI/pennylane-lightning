@@ -46,12 +46,6 @@ Lightning Plugins
     :target: https://www.apache.org/licenses/LICENSE-2.0
 
 
-.. image:: doc/_static/pennylane_lightning.png
-    :align: center
-    :width: 400px
-    :target: javascript:void(0);
-
-
 .. header-start-inclusion-marker-do-not-remove
 
 The Lightning plugin ecosystem provides fast state-vector and tensor-network simulators written in C++.
@@ -67,7 +61,7 @@ PennyLane-Lightning high performance simulators include the following backends:
 
 * ``lightning.qubit``: a fast state-vector simulator written in C++ with optional `OpenMP <https://www.openmp.org/>`_ additions and parallelized gate-level SIMD kernels.
 * ``lightning.gpu``: a state-vector simulator based on the `NVIDIA cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`_. It notably implements a distributed state-vector simulator based on `MPI <https://www.mpi-forum.org/docs/>`_.
-* ``lightning.kokkos``: a state-vector simulator written with `Kokkos <https://kokkos.github.io/kokkos-core-wiki/index.html>`_. It can exploit the inherent parallelism of modern processing units supporting the `OpenMP <https://www.openmp.org/>`_, `CUDA <https://developer.nvidia.com/cuda-toolkit>`_ or `HIP <https://rocm.docs.amd.com/projects/HIP/en/latest/>`_ programming models.
+* ``lightning.kokkos``: a state-vector simulator written with `Kokkos <https://kokkos.github.io/kokkos-core-wiki/index.html>`_. It can exploit the inherent parallelism of modern processing units supporting the `OpenMP <https://www.openmp.org/>`_, `CUDA <https://developer.nvidia.com/cuda-toolkit>`_ or `HIP <https://rocm.docs.amd.com/projects/HIP/en/stable/>`_ programming models.
 * ``lightning.tensor``: a tensor-network simulator based on the `NVIDIA cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`_. The supported methods are Matrix Product State (MPS) and Exact Tensor Network (TN).
 
 If you're not sure what simulator to use, check out our `PennyLane performance <https://pennylane.ai/performance>`_ page.
@@ -94,7 +88,10 @@ The following table summarizes the supported platforms and the primary installat
 +-----------+---------+--------+-------------+----------------+-----------------+----------------+----------------+
 
 To install the latest stable version of these plugins, check out the `PennyLane installation guide <https://pennylane.ai/install#high-performance-computing-and-gpus>`_.
-If you wish to install the latest development version, instructions for `building from source <https://docs.pennylane.ai/projects/lightning/en/latest/dev/installation.html>`_ are also available.
+If you wish to install the latest development version, instructions for `building from source <https://docs.pennylane.ai/projects/lightning/en/stable/dev/installation.html>`_ are also available for each backend:
+
+| [L-Qubit](https://docs.pennylane.ai/projects/lightning/en/stable/lightning_qubit/installation.html) | [L-GPU](https://docs.pennylane.ai/projects/lightning/en/stable/lightning_gpu/installation.html) | [L-Kokkos](https://docs.pennylane.ai/projects/lightning/en/stable/lightning_kokkos/installation.html) | [L-Tensor](https://docs.pennylane.ai/projects/lightning/en/stable/lightning_tensor/installation.html)|
+|---|---|---|---|
 
 .. docker-start-inclusion-marker-do-not-remove
 

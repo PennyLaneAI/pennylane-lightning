@@ -14,14 +14,14 @@ Install from source
     The section below contains instructions for installing Lightning-Qubit **from source**. For most cases, *this is not required* and one can simply use the installation instructions at `pennylane.ai/install <https://pennylane.ai/install>`__.
     If those instructions do not work for you, or you have a more complex build environment that requires building from source, then consider reading on.
 
-To build Lightning plugins from source you can run
+To build Lightning-Qubit from the sdist release you can run
 
 .. code-block:: bash
 
-    PL_BACKEND=${PL_BACKEND} pip install pybind11 pennylane-lightning --no-binary :all:
+    python -m pip install --verbose pennylane-lightning --no-binary "pennylane_lightning"
 
 where ``${PL_BACKEND}`` can be ``lightning_qubit`` (default), ``lightning_gpu``,  ``lightning_kokkos``, or ``lightning_tensor``.
-The `pybind11 <https://pybind11.readthedocs.io/en/stable/>`_ library is required to bind the C++ functionality to Python. If installing Lightning-GPU, Lightning-Tensor, or Lightning-Kokkos, additional dependencies may be required. We recommend referring to the respective guides for `Lightning-GPU installation <https://docs.pennylane.ai/projects/lightning/en/stable/lightning_gpu/installation.html>`_, `Lightning-Tensor installation <https://docs.pennylane.ai/projects/lightning/en/stable/lightning_tensor/installation.html>`_, and `Lightning-Kokkos installation <https://docs.pennylane.ai/projects/lightning/en/stable/lightning_kokkos/installation.html>`_.
+If installing Lightning-GPU, Lightning-Tensor, or Lightning-Kokkos, additional dependencies may be required. We recommend referring to the respective guides for `Lightning-GPU installation <https://docs.pennylane.ai/projects/lightning/en/stable/lightning_gpu/installation.html>`_, `Lightning-Tensor installation <https://docs.pennylane.ai/projects/lightning/en/stable/lightning_tensor/installation.html>`_, and `Lightning-Kokkos installation <https://docs.pennylane.ai/projects/lightning/en/stable/lightning_kokkos/installation.html>`_.
 
 A C++ compiler such as ``g++``, ``clang++``, or ``MSVC`` is required.
 On Debian-based systems, this can be installed via ``apt``:
