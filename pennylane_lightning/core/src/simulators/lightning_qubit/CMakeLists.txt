@@ -20,7 +20,7 @@ add_library(lightning_qubit STATIC ${LQUBIT_FILES})
 
 option(ENABLE_BLAS "Enable BLAS" OFF)
 option(ENABLE_GATE_DISPATCHER "Enable gate kernel dispatching on AVX/AVX2/AVX512" ON)
-option(LQ_ENABLE_KERNEL_OMP "Enable OpenMP pragmas for gate kernels" OFF)
+option(LQ_ENABLE_KERNEL_OMP "Enable OpenMP pragmas for gate kernels" ON)
 option(LQ_ENABLE_KERNEL_AVX_STREAMING "Enable AVX2/512 streaming operations for gate kernels" OFF)
 
 # Inform the compiler that this device is enabled.
