@@ -90,8 +90,9 @@ The following table summarizes the supported platforms and the primary installat
 To install the latest stable version of these plugins, check out the `PennyLane installation guide <https://pennylane.ai/install#high-performance-computing-and-gpus>`_.
 If you wish to install the latest development version, instructions for `building from source <https://docs.pennylane.ai/projects/lightning/en/stable/dev/installation.html>`_ are also available for each backend:
 
-| [L-Qubit](https://docs.pennylane.ai/projects/lightning/en/stable/lightning_qubit/installation.html) | [L-GPU](https://docs.pennylane.ai/projects/lightning/en/stable/lightning_gpu/installation.html) | [L-Kokkos](https://docs.pennylane.ai/projects/lightning/en/stable/lightning_kokkos/installation.html) | [L-Tensor](https://docs.pennylane.ai/projects/lightning/en/stable/lightning_tensor/installation.html)|
-|---|---|---|---|
++----------------+-----------------+----------------+----------------+
+| [L-Qubit](https://docs.pennylane.ai/projects/lightning/en/stable/lightning_qubit/installation.html) | [L-GPU](https://docs.pennylane.ai/projects/lightning/en/stable/lightning_gpu/installation.html) | [L-Kokkos](https://docs.pennylane.ai/projects/lightning/en/stable/lightning_kokkos/installation.html) | [L-Tensor](https://docs.pennylane.ai/projects/lightning/en/stable/lightning_tensor/installation.html) |
++----------------+-----------------+----------------+----------------+
 
 .. docker-start-inclusion-marker-do-not-remove
 
