@@ -32,7 +32,8 @@ from pennylane.measurements import MidMeasureMP
 from pennylane.tape import QuantumScript, QuantumTape
 from pennylane.typing import Result, ResultBatch, TensorLike
 
-from ._measurements import LightningBaseMeasurements
+from pennylane_lightning.lightning_base._measurements import LightningBaseMeasurements
+from pennylane_lightning import __version__
 
 Result_or_ResultBatch = Union[Result, ResultBatch]
 QuantumTapeBatch = Sequence[QuantumTape]
@@ -61,6 +62,8 @@ class LightningBase(Device):
     """
 
     # pylint: disable=too-many-instance-attributes
+    pennylane_requires = ">=0.41"
+    version = __version__
 
     def __init__(  # pylint: disable=too-many-arguments
         self,

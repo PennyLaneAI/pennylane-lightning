@@ -35,6 +35,7 @@ from pennylane.devices.preprocess import (
     validate_measurements,
     validate_observables,
 )
+from pennylane.exceptions import DeviceError
 from pennylane.measurements import MidMeasureMP
 from pennylane.operation import DecompositionUndefinedError, Operator
 from pennylane.ops import Conditional, PauliRot, Prod, SProd, Sum
@@ -82,6 +83,8 @@ def stopping_condition(op: Operator) -> bool:
         word = op._hyperparameters["pauli_word"]  # pylint: disable=protected-access
         # decomposes to IsingXX, etc. for n <= 2
         return reduce(lambda x, y: x + (y != "I"), word, 0) > 2
+    if op.name in ("C(SProd)", "C(Exp)"):
+        return True
     return _supports_operation(op.name)
 
 
@@ -125,7 +128,7 @@ def _supports_adjoint(circuit):
 
     try:
         prog((circuit,))
-    except (DecompositionUndefinedError, qml.DeviceError, AttributeError):
+    except (DecompositionUndefinedError, DeviceError, AttributeError):
         return False
     return True
 
@@ -303,8 +306,7 @@ class LightningQubit(LightningBase):
 
         for option, _ in config.device_options.items():
             if option not in self._device_options:
-                raise qml.DeviceError(f"device option {option} not present on {self}")
-
+                raise DeviceError(f"device option {option} not present on {self}")
         if config.gradient_method == "best":
             updated_values["gradient_method"] = "adjoint"
         if config.use_device_jacobian_product is None:
@@ -334,7 +336,7 @@ class LightningQubit(LightningBase):
                 "single-branch-statistics",
                 None,
             ):
-                raise qml.DeviceError(
+                raise DeviceError(
                     f"mcm_method='{mcm_method}' is not supported with lightning.qubit "
                     "when program capture is enabled."
                 )
@@ -385,10 +387,10 @@ class LightningQubit(LightningBase):
 
         program.add_transform(validate_measurements, name=self.name)
         program.add_transform(validate_observables, accepted_observables, name=self.name)
-        program.add_transform(validate_device_wires, self.wires, name=self.name)
         program.add_transform(
             mid_circuit_measurements, device=self, mcm_config=exec_config.mcm_config
         )
+        program.add_transform(validate_device_wires, self.wires, name=self.name)
 
         program.add_transform(
             decompose,

@@ -20,6 +20,7 @@ import pennylane as qml
 import pytest
 from conftest import LightningDevice, device_name, validate_measurements
 from flaky import flaky
+from pennylane.exceptions import DeviceError
 
 if device_name not in ("lightning.qubit", "lightning.kokkos", "lightning.gpu"):
     pytest.skip("Native MCM not supported. Skipping.", allow_module_level=True)
@@ -85,17 +86,37 @@ def test_unsupported_measurement():
 
     if device_name == "lightning.qubit":
         with pytest.raises(
-            qml.DeviceError,
+            DeviceError,
             match=f"not accepted with finite shots on lightning.qubit",
         ):
             func(*params)
     if device_name in ("lightning.kokkos", "lightning.gpu"):
         with pytest.raises(
-            qml.DeviceError,
+            DeviceError,
             match=r"Measurement shadow\(wires=\[0\]\) not accepted with finite shots on "
             + device_name,
         ):
             func(*params)
+
+
+def test_unsupported_configuration():
+    """Test unsupported configuration for wires=1, shots=None"""
+
+    dev = qml.device(device_name, wires=1, shots=None)
+
+    @qml.qnode(dev)
+    def circuit():
+        qml.Hadamard(0)
+        m = qml.measure(0)
+        qml.cond(m, qml.Hadamard)(0)
+        return qml.expval(qml.X(0))
+
+    with pytest.raises(
+        qml.wires.WireError,
+        match=r"Cannot run circuit\(s\) "
+        + f"on {device_name} as they contain wires not found on the device: {{1}}",
+    ):
+        circuit()
 
 
 @pytest.mark.parametrize("mcm_method", ["deferred", "one-shot"])
