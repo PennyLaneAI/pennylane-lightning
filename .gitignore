@@ -14,8 +14,6 @@ __pycache__
 /PennyLane_Lightning*
 /pennylane_lightning/.vs
 /pennylane_lightning/*.pyd
-/pennylane_lightning/src/GBenchmarks/
-/pennylane_lightning/src/Kokkos/
 build_lightning_*/
 build/
 Build/
