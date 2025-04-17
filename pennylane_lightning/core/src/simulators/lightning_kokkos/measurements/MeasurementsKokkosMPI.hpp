@@ -72,14 +72,7 @@ class MeasurementsMPI final
      * @return Floating point expectation value of the observable.
      */
     PrecisionT expval(StateVectorT &sv) {
-        // TODO: FIX ME - global wire order is not always the same after reorder_global_wires!!
         // TODO: IMPROVE ME - add barriers?
-
-
-        sv.reorder_global_wires();
-        sv.reorder_local_wires();
-        this->_statevector.reorder_global_wires();
-        this->_statevector.reorder_local_wires();
 
         const PrecisionT expected_value = getRealOfComplexInnerProduct(
             this->_statevector.getView(), sv.getView());
@@ -95,6 +88,13 @@ class MeasurementsMPI final
      */
     PrecisionT expval(const std::vector<ComplexT> &matrix,
                       const std::vector<std::size_t> &wires) {
+
+        if (!(this->_statevector.is_wires_local(wires))) {
+            auto global_wires_to_swap = this->_statevector.find_global_wires(wires);
+            auto local_wires_to_swap =
+            this->_statevector.local_wires_subset_to_swap(global_wires_to_swap, wires);
+            this->_statevector.swap_global_local_wires(global_wires_to_swap, local_wires_to_swap);
+        }
         StateVectorT ob_sv{this->_statevector};
         ob_sv.applyOperation("Matrix", wires, false, {}, matrix);
         return expval(ob_sv);
@@ -109,6 +109,13 @@ class MeasurementsMPI final
      */
     PrecisionT expval(const std::string &operation,
                       const std::vector<size_t> &wires) {
+
+        if (!(this->_statevector.is_wires_local(wires))) {
+            auto global_wires_to_swap = this->_statevector.find_global_wires(wires);
+            auto local_wires_to_swap =
+            this->_statevector.local_wires_subset_to_swap(global_wires_to_swap, wires);
+            this->_statevector.swap_global_local_wires(global_wires_to_swap, local_wires_to_swap);
+        }
         StateVectorT ob_sv{this->_statevector};
         ob_sv.applyOperation(operation, wires);
         return expval(ob_sv);
@@ -121,17 +128,9 @@ class MeasurementsMPI final
      * @return Expectation value with respect to the given observable.
      */
     PrecisionT expval(Observable<StateVectorT> &ob) {
+        //FIX ME - get wires first, or don't support this
         StateVectorT ob_sv{this->_statevector};
         ob.applyInPlace(ob_sv);
-        // TODO: IMPROVE ME (no need to reorder both sv, reorder first then
-        // apply gate and add barriers??
-        ob_sv.barrier();
-        ob_sv.reorder_global_wires();
-        ob_sv.reorder_local_wires();
-        this->_statevector.reorder_global_wires();
-        this->_statevector.reorder_local_wires();
-        ob_sv.barrier();
-        this->_statevector.barrier();
         const PrecisionT expected_value = getRealOfComplexInnerProduct(
             this->_statevector.getView(), ob_sv.getView());
         const PrecisionT result =

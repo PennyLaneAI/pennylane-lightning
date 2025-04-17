@@ -1431,8 +1431,8 @@ class StateVectorKokkosMPI final
   private:
     std::size_t num_qubits_;
     std::unique_ptr<SVK> sv_;
-    std::unique_ptr<SVK> recvbuf_;
-    std::unique_ptr<SVK> sendbuf_;
+    std::unique_ptr<SVK> recvbuf_; // TODO: THESE do not have to be full SVK
+    std::unique_ptr<SVK> sendbuf_; // TODO: THESE do not have to be full SVK
     MPI_Comm communicator_;
 
   public:
