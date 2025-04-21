@@ -251,7 +251,7 @@ class Measurements final
     };
 
     /**
-     * @brief Expected value of Pauli words.
+     * @brief Expected value of Pauli sentence.
      *
      * @param pauli_sentence Vector of Pauli words strings making up the Pauli
      * sentence.
@@ -262,9 +262,12 @@ class Measurements final
      */
     auto expval(const std::vector<std::string> &pauli_words,
                 const std::vector<std::vector<std::size_t>> &target_wires,
-                const Kokkos::complex<PrecisionT> *coeffs) -> PrecisionT {
+                const std::vector<PrecisionT> &coeffs) -> PrecisionT {
         PL_ABORT_IF((pauli_words.size() != target_wires.size()),
                     "The lengths of the Pauli sentence and list of wires do "
+                    "not match.");
+        PL_ABORT_IF((pauli_words.size() != coeffs.size()),
+                    "The lengths of the Pauli sentence and list of coeffs do "
                     "not match.");
 
         PrecisionT expvalue = 0.0;
@@ -289,8 +292,8 @@ class Measurements final
                 }
             }
             if (X_wires.empty() && Y_wires.empty() && Z_wires.empty()) {
-                expvalue += expval("Identity", target_wires[word]) *
-                            Kokkos::real(coeffs[word]);
+                expvalue +=
+                    expval("Identity", target_wires[word]) * coeffs[word];
             } else {
                 PrecisionT expval_tmp = 0.0;
                 Kokkos::parallel_reduce(
@@ -298,7 +301,7 @@ class Measurements final
                     getExpValPauliWordFunctor<PrecisionT>(
                         arr_data, num_qubits, X_wires, Y_wires, Z_wires),
                     expval_tmp);
-                expvalue += expval_tmp * Kokkos::real(coeffs[word]);
+                expvalue += expval_tmp * coeffs[word];
             }
         }
 
