@@ -129,7 +129,6 @@ class LightningKokkosMeasurements(
             Expectation value.
         """
         pwords, coeffs = zip(*measurementprocess.obs.pauli_rep.items())
-        coeffs = np.array(coeffs).astype(np.float64)
         pauli_words = [qml.pauli.pauli_word_to_string(p) for p in pwords]
         wires = [p.wires.tolist() for p in pwords]
         return self._measurement_lightning.expval(pauli_words, wires, coeffs)

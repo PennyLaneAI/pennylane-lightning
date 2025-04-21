@@ -403,12 +403,13 @@ class TestExpvalPauliSentence:
         statevector.apply_operations([qml.RX(0.4, wires=[0]), qml.RY(-0.2, wires=[1])])
 
         m = LightningMeasurements(statevector)
-        with pytest.raises(AttributeError):
+        with pytest.raises(AttributeError, match="object has no attribute"):
             m._expval_pauli_sentence(qml.expval(obs))
 
     @pytest.mark.parametrize(
         "obs, expected",
         (
+            [qml.Identity(1), 1.0],
             [qml.PauliX(1), -0.19866933079506138],
             [qml.PauliY(0), -0.3894183423086505],
             [qml.PauliZ(0), 0.9210609940028852],
