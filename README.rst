@@ -73,26 +73,28 @@ Installation
 
 The following table summarizes the supported platforms and the primary installation mode:
 
-+-----------+---------+--------+-------------+----------------+-----------------+----------------+----------------+
-|           | L-Qubit | L-GPU  | L-GPU (MPI) | L-Kokkos (OMP) | L-Kokkos (CUDA) | L-Kokkos (HIP) |    L-Tensor    |
-+===========+=========+========+=============+================+=================+================+================+
-| Linux x86 | pip     | pip    | source      | pip            | source          | source         |     pip        |
-+-----------+---------+--------+-------------+----------------+-----------------+----------------+----------------+
-| Linux ARM | pip     | pip    |             | pip            | source          | source         |     pip        |
-+-----------+---------+--------+-------------+----------------+-----------------+----------------+----------------+
-| MacOS x86 | pip     |        |             | pip            |                 |                |                |
-+-----------+---------+--------+-------------+----------------+-----------------+----------------+----------------+
-| MacOS ARM | pip     |        |             | pip            |                 |                |                |
-+-----------+---------+--------+-------------+----------------+-----------------+----------------+----------------+
-| Windows   | pip     |        |             |                |                 |                |                |
-+-----------+---------+--------+-------------+----------------+-----------------+----------------+----------------+
++------------------------+-----------+-----------+-----------+-----------+-----------+
+|                        | Linux x86 | Linux ARM | MacOS x86 | MacOS ARM | Windows   |
+|                        |           |           |           |           |           |
++========================+===========+===========+===========+===========+===========+
+| Lightning-Qubit        | pip       | pip       | pip       | pip       | pip       |
++------------------------+-----------+-----------+-----------+-----------+-----------+
+| Lightning-GPU          | pip       | pip       |           |           |           |
++------------------------+-----------+-----------+-----------+-----------+-----------+
+| Lightning-GPU (MPI)    | source    |           |           |           |           |
++------------------------+-----------+-----------+-----------+-----------+-----------+
+| Lightning-Kokkos (OMP) | pip       | pip       | pip       | pip       |           |
++------------------------+-----------+-----------+-----------+-----------+-----------+
+| Lightning-Kokkos (CUDA)| source    | source    |           |           |           |
++------------------------+-----------+-----------+-----------+-----------+-----------+
+| Lightning-Kokkos (HIP) | source    | source    |           |           |           |
++------------------------+-----------+-----------+-----------+-----------+-----------+
+| Lightning-Tensor       | pip       | pip       |           |           |           |
++------------------------+-----------+-----------+-----------+-----------+-----------+
 
 To install the latest stable version of these plugins, check out the `PennyLane installation guide <https://pennylane.ai/install#high-performance-computing-and-gpus>`_.
-If you wish to install the latest development version, instructions for `building from source <https://docs.pennylane.ai/projects/lightning/en/stable/dev/installation.html>`_ are also available for each backend:
 
-+---------------------------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------------------------------------------+
-| `lightning.qubit <https://docs.pennylane.ai/projects/lightning/en/stable/lightning_qubit/installation.html>`_ | `lightning.gpu <https://docs.pennylane.ai/projects/lightning/en/stable/lightning_gpu/installation.html>`_ | `lightning.kokkos <https://docs.pennylane.ai/projects/lightning/en/stable/lightning_kokkos/installation.html>`_ | `lightning.tensor <https://docs.pennylane.ai/projects/lightning/en/stable/lightning_tensor/installation.html>`_ |
-+---------------------------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------------------------------------------+
+If you wish to install the latest development version, instructions for `building from source <https://docs.pennylane.ai/projects/lightning/en/stable/dev/installation.html>`_ are also available for each backend.
 
 .. docker-start-inclusion-marker-do-not-remove
 
