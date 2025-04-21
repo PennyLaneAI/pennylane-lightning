@@ -37,10 +37,10 @@
 #include "TypeTraits.hpp"
 
 namespace Pennylane::LightningQubit::Gates::AVXCommon {
+/// @cond DEV
 using Pennylane::Util::FuncReturn;
 using Pennylane::Util::log2PerfectPower;
 
-/// @cond DEV
 template <class T, class = void>
 struct HasInternalInternalWithoutParam : std::false_type {};
 
