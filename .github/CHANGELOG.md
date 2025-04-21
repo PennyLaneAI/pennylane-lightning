@@ -10,6 +10,9 @@
 
 <h3>Documentation 📝</h3>
 
+- Fix doxygen doc builds for `AVXCommon::FuncReturn`.
+  [(#1134)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1134)
+
 <h3>Bug fixes 🐛</h3>
 
 <h3>Internal changes ⚙️</h3>
@@ -24,8 +27,9 @@
 
 This release contains contributions from (in alphabetical order):
 
-Luis Alfredo Nuñez Meneses
-Andrija Paurevic
+Ali Asadi,
+Luis Alfredo Nuñez Meneses,
+Andrija Paurevic,
 
 ---
 
