@@ -30,6 +30,7 @@
 #include "GateOperation.hpp"
 #include "Macros.hpp"
 
+/// @cond DEV
 namespace Pennylane::Util {
 inline auto createWires(Pennylane::Gates::GateOperation op,
                         std::size_t num_qubits) -> std::vector<std::size_t> {
@@ -84,6 +85,8 @@ auto createParams(Pennylane::Gates::GateOperation op)
         return {};
     case 1:
         return {static_cast<PrecisionT>(0.312)};
+    case 2:
+        return {static_cast<PrecisionT>(0.312), static_cast<PrecisionT>(0.563)};
     case 3:
         return {static_cast<PrecisionT>(0.128), static_cast<PrecisionT>(-0.563),
                 static_cast<PrecisionT>(1.414)};
@@ -223,3 +226,4 @@ auto inline createAllWires(std::size_t n_qubits,
 }
 
 } // namespace Pennylane::Util
+/// @endcond

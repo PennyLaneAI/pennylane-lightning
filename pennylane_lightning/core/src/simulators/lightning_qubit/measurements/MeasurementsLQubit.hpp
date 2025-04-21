@@ -28,6 +28,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "ExpValFunc.hpp"
 #include "LinearAlgebra.hpp"
 #include "MeasurementKernels.hpp"
 #include "MeasurementsBase.hpp"
@@ -46,6 +47,15 @@ using namespace Pennylane::Observables;
 using Pennylane::LightningQubit::StateVectorLQubitManaged;
 using Pennylane::LightningQubit::Util::innerProdC;
 namespace PUtil = Pennylane::Util;
+enum class ExpValFunc : uint32_t {
+    BEGIN = 1,
+    Identity = 1,
+    PauliX,
+    PauliY,
+    PauliZ,
+    Hadamard,
+    END
+};
 } // namespace
 /// @endcond
 
@@ -194,7 +204,7 @@ class Measurements final
     }
 
     /**
-     * @brief Expected value of an observable.
+     * @brief Expected value of a matrix.
      *
      * @param matrix Square matrix in row-major order.
      * @param wires Wires where to apply the operator.
@@ -202,67 +212,124 @@ class Measurements final
      */
     auto expval(const std::vector<ComplexT> &matrix,
                 const std::vector<std::size_t> &wires) -> PrecisionT {
-        // Copying the original state vector, for the application of the
-        // observable operator.
-        StateVectorLQubitManaged<PrecisionT> operator_statevector(
-            this->_statevector);
+        PL_ABORT_IF(matrix.size() != PUtil::exp2(2 * wires.size()),
+                    "The size of matrix does not match with the given "
+                    "number of wires");
+        const std::size_t num_qubits = this->_statevector.getNumQubits();
+        const ComplexT *arr_data = this->_statevector.getData();
 
-        operator_statevector.applyMatrix(matrix, wires);
-
-        ComplexT expected_value = innerProdC(this->_statevector.getData(),
-                                             operator_statevector.getData(),
-                                             this->_statevector.getLength());
-        return std::real(expected_value);
+        switch (wires.size()) {
+        case 1: {
+            return applyExpValMatWires1<PrecisionT>(arr_data, num_qubits, wires,
+                                                    matrix);
+        }
+        case 2: {
+            return applyExpValMatWires2<PrecisionT>(arr_data, num_qubits, wires,
+                                                    matrix);
+        }
+        case 3: {
+            return applyExpValMatWires3<PrecisionT>(arr_data, num_qubits, wires,
+                                                    matrix);
+        }
+        default:
+            return applyExpValMatMultiQubit<PrecisionT>(arr_data, num_qubits,
+                                                        wires, matrix);
+        }
     };
 
     /**
-     * @brief Expected value of an observable.
+     * @brief Expected value of a named observable.
      *
      * @param operation String with the operator name.
-     * @param wires Wires where to apply the operator.
-     * @return Floating point expected value of the observable.
+     * @param wires Wires to apply the operator.
+     * @return Expected value of the observable.
      */
     auto expval(const std::string &operation,
                 const std::vector<std::size_t> &wires) -> PrecisionT {
-        // Copying the original state vector, for the application of the
-        // observable operator.
-        StateVectorLQubitManaged<PrecisionT> operator_statevector(
-            this->_statevector);
+        const ComplexT *arr_data = this->_statevector.getData();
+        const std::size_t num_qubits = this->_statevector.getNumQubits();
 
-        operator_statevector.applyOperation(operation, wires);
+        using FuncT = std::function<void(const ComplexT *, const std::size_t,
+                                         const std::size_t, PrecisionT &)>;
+        FuncT core_function;
 
-        ComplexT expected_value = innerProdC(this->_statevector.getData(),
-                                             operator_statevector.getData(),
-                                             this->_statevector.getLength());
-        return std::real(expected_value);
+        switch (expval_funcs_[operation]) {
+        case ExpValFunc::Identity:
+            return 1.0;
+        case ExpValFunc::PauliX:
+            core_function = [](const ComplexT *arr, const std::size_t i0,
+                               const std::size_t i1,
+                               PrecisionT &expected_value) {
+                expected_value += (arr[i0].real() * arr[i1].real() +
+                                   arr[i0].imag() * arr[i1].imag()) *
+                                  2.0;
+            };
+            break;
+        case ExpValFunc::PauliY:
+            core_function = [](const ComplexT *arr, const std::size_t i0,
+                               const std::size_t i1,
+                               PrecisionT &expected_value) {
+                expected_value += (arr[i0].real() * arr[i1].imag() -
+                                   arr[i0].imag() * arr[i1].real()) *
+                                  2.0;
+            };
+            break;
+        case ExpValFunc::PauliZ:
+            core_function = [](const ComplexT *arr, const std::size_t i0,
+                               const std::size_t i1,
+                               PrecisionT &expected_value) {
+                expected_value += std::norm(arr[i0]) - std::norm(arr[i1]);
+            };
+            break;
+        case ExpValFunc::Hadamard:
+            core_function = [](const ComplexT *arr, const std::size_t i0,
+                               const std::size_t i1,
+                               PrecisionT &expected_value) {
+                const ComplexT v0 = arr[i0];
+                const ComplexT v1 = arr[i1];
+                expected_value +=
+                    M_SQRT1_2 *
+                    (std::norm(v0) - std::norm(v1) +
+                     2.0 * (v0.real() * v1.real() + v0.imag() * v1.imag()));
+            };
+            break;
+        default:
+            PL_ABORT(
+                std::string("Expval does not exist for named observable ") +
+                operation);
+            break;
+        }
+
+        return applyExpVal1<PrecisionT, FuncT>(arr_data, num_qubits, wires,
+                                               core_function);
     };
 
     /**
      * @brief Expected value of a Sparse Hamiltonian.
      *
-     * @tparam index_type integer type used as indices of the sparse matrix.
+     * @tparam IndexT integer type used as indices of the sparse matrix.
      * @param row_map_ptr   row_map array pointer.
      *                      The j element encodes the number of non-zeros
      above
      * row j.
      * @param row_map_size  row_map array size.
-     * @param entries_ptr   pointer to an array with column indices of the
+     * @param column_idx_ptr   pointer to an array with column indices of the
      * non-zero elements.
      * @param values_ptr    pointer to an array with the non-zero elements.
      * @param numNNZ        number of non-zero elements.
      * @return Floating point expected value of the observable.
      */
-    template <class index_type>
-    auto expval(const index_type *row_map_ptr, const index_type row_map_size,
-                const index_type *entries_ptr, const ComplexT *values_ptr,
-                const index_type numNNZ) -> PrecisionT {
+    template <class IndexT>
+    auto expval(const IndexT *row_map_ptr, const IndexT row_map_size,
+                const IndexT *column_idx_ptr, const ComplexT *values_ptr,
+                const IndexT numNNZ) -> PrecisionT {
         PL_ABORT_IF(
             (this->_statevector.getLength() != (std::size_t(row_map_size) - 1)),
             "Statevector and Hamiltonian have incompatible sizes.");
         auto operator_vector = Util::apply_Sparse_Matrix(
             this->_statevector.getData(),
-            static_cast<index_type>(this->_statevector.getLength()),
-            row_map_ptr, row_map_size, entries_ptr, values_ptr, numNNZ);
+            static_cast<IndexT>(this->_statevector.getLength()), row_map_ptr,
+            row_map_size, column_idx_ptr, values_ptr, numNNZ);
 
         ComplexT expected_value =
             innerProdC(this->_statevector.getData(), operator_vector.data(),
@@ -533,29 +600,29 @@ class Measurements final
     /**
      * @brief Variance of a sparse Hamiltonian.
      *
-     * @tparam index_type integer type used as indices of the sparse matrix.
+     * @tparam IndexT integer type used as indices of the sparse matrix.
      * @param row_map_ptr   row_map array pointer.
      *                      The j element encodes the number of non-zeros
      above
      * row j.
      * @param row_map_size  row_map array size.
-     * @param entries_ptr   pointer to an array with column indices of the
+     * @param column_idx_ptr   pointer to an array with column indices of the
      * non-zero elements.
      * @param values_ptr    pointer to an array with the non-zero elements.
      * @param numNNZ        number of non-zero elements.
      * @return Floating point with the variance of the sparse Hamiltonian.
      */
-    template <class index_type>
-    PrecisionT var(const index_type *row_map_ptr, const index_type row_map_size,
-                   const index_type *entries_ptr, const ComplexT *values_ptr,
-                   const index_type numNNZ) {
+    template <class IndexT>
+    PrecisionT var(const IndexT *row_map_ptr, const IndexT row_map_size,
+                   const IndexT *column_idx_ptr, const ComplexT *values_ptr,
+                   const IndexT numNNZ) {
         PL_ABORT_IF(
             (this->_statevector.getLength() != (std::size_t(row_map_size) - 1)),
             "Statevector and Hamiltonian have incompatible sizes.");
         auto operator_vector = Util::apply_Sparse_Matrix(
             this->_statevector.getData(),
-            static_cast<index_type>(this->_statevector.getLength()),
-            row_map_ptr, row_map_size, entries_ptr, values_ptr, numNNZ);
+            static_cast<IndexT>(this->_statevector.getLength()), row_map_ptr,
+            row_map_size, column_idx_ptr, values_ptr, numNNZ);
 
         const PrecisionT mean_square =
             std::real(innerProdC(operator_vector.data(), operator_vector.data(),
@@ -612,6 +679,12 @@ class Measurements final
     }
 
   private:
+    std::unordered_map<std::string, ExpValFunc> expval_funcs_ = {
+        {"Identity", ExpValFunc::Identity},
+        {"PauliX", ExpValFunc::PauliX},
+        {"PauliY", ExpValFunc::PauliY},
+        {"PauliZ", ExpValFunc::PauliZ},
+        {"Hadamard", ExpValFunc::Hadamard}};
     /**
      * @brief Support function that calculates <bra|obs|ket> to obtain the
      * observable's expectation value.

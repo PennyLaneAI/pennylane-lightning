@@ -14,6 +14,7 @@
 """
 Tests for the ``vjp`` method.
 """
+import itertools
 import math
 
 import pennylane as qml
@@ -21,6 +22,7 @@ import pytest
 from conftest import LightningDevice as ld
 from conftest import LightningException, device_name
 from pennylane import numpy as np
+from pennylane.exceptions import QuantumFunctionError
 
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
@@ -32,9 +34,11 @@ if device_name == "lightning.tensor":
 class TestVectorJacobianProduct:
     """Tests for the `vjp` function"""
 
-    @pytest.fixture(params=[np.complex64, np.complex128])
+    fixture_params = itertools.product([np.complex64, np.complex128], [None, 2])
+
+    @pytest.fixture(params=fixture_params)
     def dev(self, request):
-        return qml.device(device_name, wires=2, c_dtype=request.param)
+        return qml.device(device_name, wires=request.param[1], c_dtype=request.param[0])
 
     def test_multiple_measurements(self, tol, dev):
         """Tests provides correct answer when provided multiple measurements."""
@@ -100,9 +104,7 @@ class TestVectorJacobianProduct:
 
         dy = np.array([1.0])
 
-        with pytest.raises(
-            qml.QuantumFunctionError, match="Adjoint differentiation method does not"
-        ):
+        with pytest.raises(QuantumFunctionError, match="Adjoint differentiation method does not"):
             dev.compute_vjp(tape, dy)
 
     def test_finite_shots_error(self):
@@ -113,7 +115,7 @@ class TestVectorJacobianProduct:
         dy = np.array([1.0])
 
         with pytest.raises(
-            qml.QuantumFunctionError,
+            QuantumFunctionError,
             match="Requested adjoint differentiation to be computed with finite shots.",
         ):
             dev.compute_vjp(tape, dy)
@@ -252,7 +254,7 @@ class TestVectorJacobianProduct:
         dy = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
 
         with pytest.raises(
-            qml.QuantumFunctionError,
+            QuantumFunctionError,
             match="Adjoint differentiation method does not support",
         ):
             dev.compute_vjp(tape, dy)
@@ -261,9 +263,11 @@ class TestVectorJacobianProduct:
 class TestBatchVectorJacobianProduct:
     """Tests for the batch_vjp function"""
 
-    @pytest.fixture(params=[np.complex64, np.complex128])
+    fixture_params = itertools.product([np.complex64, np.complex128], [None, 2])
+
+    @pytest.fixture(params=fixture_params)
     def dev(self, request):
-        return qml.device(device_name, wires=2, c_dtype=request.param)
+        return qml.device(device_name, wires=request.param[1], c_dtype=request.param[0])
 
     def test_one_tape_no_trainable_parameters_1(self, dev):
         """A tape with no trainable parameters will simply return None"""

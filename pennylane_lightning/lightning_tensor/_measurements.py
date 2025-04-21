@@ -44,6 +44,7 @@ from pennylane.measurements import (
     StateMeasurement,
     VarianceMP,
 )
+from pennylane.operation import Observable
 from pennylane.ops import SparseHamiltonian, Sum
 from pennylane.tape import QuantumScript
 from pennylane.typing import Result, TensorLike
@@ -74,6 +75,19 @@ class LightningTensorMeasurements:
     def dtype(self):
         """Returns the simulation data type."""
         return self._dtype
+
+    @staticmethod
+    def _observable_is_sparse(obs: Observable) -> bool:
+        """States if the required observable is sparse.
+
+        Args:
+            obs(Observable): PennyLane observable to check sparsity.
+
+        Returns:
+            True if the measurement process only uses the sparse data representation.
+        """
+
+        return isinstance(obs, qml.SparseHamiltonian)
 
     def _measurement_dtype(self):
         """Binding to Lightning Measurements C++ class.
@@ -115,8 +129,8 @@ class LightningTensorMeasurements:
         Returns:
             Expectation value of the observable
         """
-        if isinstance(measurementprocess.obs, qml.SparseHamiltonian):
-            raise NotImplementedError("Sparse Hamiltonians are not supported.")
+        if self._observable_is_sparse(measurementprocess.obs):
+            raise NotImplementedError("Sparse Observables are not supported.")
 
         if isinstance(measurementprocess.obs, qml.Hermitian):
             if len(measurementprocess.obs.wires) > 1:
@@ -137,10 +151,18 @@ class LightningTensorMeasurements:
             Probabilities of the supplied observable or wires
         """
         diagonalizing_gates = measurementprocess.diagonalizing_gates()
+
         if diagonalizing_gates:
             self._tensornet.apply_operations(diagonalizing_gates)
             self._tensornet.appendFinalState()
-        results = self._measurement_lightning.probs(measurementprocess.wires.tolist())
+
+        if measurementprocess.wires == Wires([]):
+            # For the case where no wires is specified for tensornet
+            # and measurement process, wires are determined here
+            measurewires = self._tensornet._wires
+        else:
+            measurewires = measurementprocess.wires.tolist()
+        results = self._measurement_lightning.probs(measurewires)
         if diagonalizing_gates:
             self._tensornet.apply_operations(
                 [qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)]
@@ -159,10 +181,8 @@ class LightningTensorMeasurements:
         Returns:
             Variance of the observable
         """
-        if isinstance(measurementprocess.obs, qml.SparseHamiltonian):
-            raise NotImplementedError(
-                "The var measurement does not support sparse Hamiltonian observables."
-            )
+        if self._observable_is_sparse(measurementprocess.obs):
+            raise NotImplementedError("The var measurement does not support sparse observables.")
 
         if isinstance(measurementprocess.obs, qml.Hermitian):
             if len(measurementprocess.obs.wires) > 1:
@@ -267,6 +287,18 @@ class LightningTensorMeasurements:
             List[TensorLike[Any]]: Sample measurement results
         """
         mps = measurements
+
+        for measurement in mps:
+            if measurement.wires == Wires([]):
+                # This is required for the case where no wires is specific for the tensornet
+                # (i.e. dynamically determined from circuit), and no wires (and no observable)
+                # is provided for the measurement (e.g. qml.probs() or qml.counts() or
+                # qml.samples()). In the case where number of wires is provided for the statevector,
+                # the same operation is performed in validate_device_wires during preprocess.
+
+                # pylint:disable=protected-access
+                measurement._wires = Wires(range(self._tensornet.num_wires))
+
         groups, indices = _group_measurements(mps)
 
         all_res = []

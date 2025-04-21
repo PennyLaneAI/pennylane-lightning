@@ -152,16 +152,13 @@ class LightningGPUMeasurements(LightningBaseMeasurements):  # pylint: disable=to
             Expectation value of the observable
         """
 
-        if isinstance(measurementprocess.obs, qml.SparseHamiltonian):
+        if self._observable_is_sparse(measurementprocess.obs):
             # ensuring CSR sparse representation.
 
             if self._use_mpi:
                 # Identity for CSR_SparseHamiltonian to pass to processes with rank != 0 to reduce
                 # host(cpu) memory requirements
-                obs = qml.Identity(0)
-                Hmat = qml.Hamiltonian([1.0], [obs]).sparse_matrix()
-                H_sparse = qml.SparseHamiltonian(Hmat, wires=range(1))
-                CSR_SparseHamiltonian = H_sparse.sparse_matrix().tocsr()
+                CSR_SparseHamiltonian = qml.Identity(0).sparse_matrix()
                 # CSR_SparseHamiltonian for rank == 0
                 if self._mpi_handler.mpi_manager.getRank() == 0:
                     CSR_SparseHamiltonian = measurementprocess.obs.sparse_matrix().tocsr()
@@ -175,6 +172,13 @@ class LightningGPUMeasurements(LightningBaseMeasurements):  # pylint: disable=to
                 CSR_SparseHamiltonian.indices,
                 CSR_SparseHamiltonian.data,
             )
+
+        # use specialized function to compute expval(pauli_sentence)
+        if measurementprocess.obs.pauli_rep is not None:
+            pwords, coeffs = zip(*measurementprocess.obs.pauli_rep.items())
+            pauli_words = [qml.pauli.pauli_word_to_string(p) for p in pwords]
+            wires = [p.wires.tolist() for p in pwords]
+            return self._measurement_lightning.expval(pauli_words, wires, coeffs)
 
         # use specialized functors to compute expval(Hermitian)
         if isinstance(measurementprocess.obs, qml.Hermitian):

@@ -24,6 +24,7 @@ from conftest import LightningException, device_name
 from pennylane import QNode
 from pennylane import numpy as np
 from pennylane import qchem, qnode
+from pennylane.exceptions import QuantumFunctionError
 from scipy.stats import unitary_group
 
 I, X, Y, Z = (
@@ -46,8 +47,7 @@ if device_name == "lightning.kokkos":
     kokkos_args += [InitializationSettings().set_num_threads(2)]
 
 fixture_params = itertools.product(
-    [np.complex64, np.complex128],
-    kokkos_args,
+    [np.complex64, np.complex128], kokkos_args, [None, 3]  # c_dtype x kokkos_args x wires
 )
 
 
@@ -100,7 +100,7 @@ class TestAdjointJacobian:
         params = request.param
         if device_name == "lightning.kokkos":
             return qml.device(device_name, wires=3, c_dtype=params[0], kokkos_args=params[1])
-        return qml.device(device_name, wires=3, c_dtype=params[0])
+        return qml.device(device_name, wires=params[2], c_dtype=params[0])
 
     def test_not_expval(self, dev):
         """Test if a QuantumFunctionError is raised for a tape with measurements that are not
@@ -112,9 +112,7 @@ class TestAdjointJacobian:
 
         method = dev.compute_derivatives
 
-        with pytest.raises(
-            qml.QuantumFunctionError, match="Adjoint differentiation method does not"
-        ):
+        with pytest.raises(QuantumFunctionError, match="Adjoint differentiation method does not"):
             method(tape)
 
         with qml.tape.QuantumTape() as tape:
@@ -122,7 +120,7 @@ class TestAdjointJacobian:
             qml.state()
 
         with pytest.raises(
-            qml.QuantumFunctionError,
+            QuantumFunctionError,
             match="Adjoint differentiation method does not support measurement StateMP.",
         ):
             method(tape)
@@ -135,7 +133,7 @@ class TestAdjointJacobian:
         tape = qml.tape.QuantumScript([], [qml.expval(qml.PauliZ(0))], shots=1)
 
         with pytest.raises(
-            qml.QuantumFunctionError,
+            QuantumFunctionError,
             match="Requested adjoint differentiation to be computed with finite shots.",
         ):
             dev.compute_derivatives(tape)
@@ -557,7 +555,7 @@ class TestAdjointJacobian:
         method = dev.compute_derivatives
 
         with pytest.raises(
-            qml.QuantumFunctionError,
+            QuantumFunctionError,
             match="Adjoint differentiation method does not support measurement StateMP.",
         ):
             method(tape)
@@ -566,9 +564,9 @@ class TestAdjointJacobian:
 class TestAdjointJacobianQNode:
     """Test QNode integration with the adjoint_jacobian method"""
 
-    @pytest.fixture(params=[np.complex64, np.complex128])
+    @pytest.fixture(params=fixture_params)
     def dev(self, request):
-        return qml.device(device_name, wires=2, c_dtype=request.param)
+        return qml.device(device_name, wires=request.param[1], c_dtype=request.param[0])
 
     def test_qnode(self, mocker, dev):
         """Test that specifying diff_method allows the adjoint method to be selected"""
@@ -618,6 +616,7 @@ class TestAdjointJacobianQNode:
             qml.CRY,
             qml.CRZ,
             qml.ControlledPhaseShift,
+            qml.PSWAP,
             qml.SingleExcitation,
             qml.SingleExcitationMinus,
             qml.SingleExcitationPlus,
@@ -682,6 +681,7 @@ class TestAdjointJacobianQNode:
             qml.CRY,
             qml.CRZ,
             qml.ControlledPhaseShift,
+            qml.PSWAP,
             qml.SingleExcitation,
             qml.SingleExcitationMinus,
             qml.SingleExcitationPlus,
@@ -743,6 +743,7 @@ class TestAdjointJacobianQNode:
             qml.IsingXY,
             qml.IsingYY,
             qml.IsingZZ,
+            qml.PSWAP,
             qml.SingleExcitation,
             qml.SingleExcitationMinus,
             qml.SingleExcitationPlus,

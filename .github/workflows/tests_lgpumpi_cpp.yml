@@ -48,7 +48,7 @@ jobs:
         mpilib: ["mpich", "openmpi"]
         cuda_version_maj: ["12"]
         cuda_version_min: ["4"]
-    timeout-minutes: 35
+    timeout-minutes: 60
 
     steps:
       - name: Checkout
@@ -61,6 +61,7 @@ jobs:
         run: |
           git fetch tags --force
           git checkout latest_release
+          
       - uses: actions/setup-python@v5
         id: setup_python
         name: Install Python
@@ -102,7 +103,7 @@ jobs:
 
       - name: Install required packages
         run: |
-          python -m pip install -r requirements-dev.txt
+          python -m pip install -r requirements-tests.txt
           python -m pip install cmake custatevec-cu12 scipy
 
       - name: Validate GPU version and installed compiler and modules
@@ -144,8 +145,13 @@ jobs:
           cmake --build ./Build
           cd ./Build
           mkdir -p ./tests/results
-          for file in *runner ; do ./$file --order lex --reporter junit --out ./tests/results/report_$file.xml; done;
-          for file in *runner_mpi ; do mpirun -np 2 ./$file --order lex --reporter junit --out ./tests/results/report_$file.xml; done;
+          test_status=0
+          for file in *runner ; do ./$file  --reporter junit --out ./tests/results/report_$file.xml && echo "Test $file Success!" || { cat ./tests/results/report_$file.xml; test_status=1; } done;
+          for file in *runner_mpi ; do mpirun -np 2 ./$file --reporter junit --out ./tests/results/report_$file.xml && echo "Test $file Success!" || { cat ./tests/results/report_$file.xml; test_status=1; } done;
+          if [ $test_status -ne 0 ]; then
+            echo "Tests failed. Exiting with error code."
+            exit 1
+          fi
           lcov --directory . -b ../pennylane_lightning/src --capture --output-file coverage.info
           lcov --remove coverage.info '/usr/*' --output-file coverage.info
           mv coverage.info coverage-${{ github.job }}-lightning_gpu_${{ matrix.mpilib }}.info

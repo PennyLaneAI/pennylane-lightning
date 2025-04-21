@@ -43,9 +43,11 @@ using Pennylane::LightningQubit::StateVectorLQubitManaged;
 namespace py = pybind11;
 
 namespace Pennylane::LightningQubit {
+/// @cond DEV
 using StateVectorBackends =
     Pennylane::Util::TypeList<StateVectorLQubitManaged<float>,
                               StateVectorLQubitManaged<double>, void>;
+/// @endcond
 
 /**
  * @brief Get a gate kernel map for a statevector.
@@ -128,6 +130,50 @@ void applyControlledMatrix(
         static_cast<const ComplexT *>(matrix.request().ptr), controlled_wires,
         controlled_values, wires, inverse);
 }
+
+template <class StateVectorT, class PyClass>
+void registerSparseMatrixOperators(PyClass &pyclass) {
+    using PrecisionT =
+        typename StateVectorT::PrecisionT; // Statevector's precision
+    using ParamT = PrecisionT;             // Parameter's data precision
+    using ComplexT = typename StateVectorT::ComplexT;
+
+    using np_arr_c = py::array_t<std::complex<ParamT>,
+                                 py::array::c_style | py::array::forcecast>;
+    using SparseIndexT = std::size_t;
+    using np_arr_sparse_ind =
+        py::array_t<SparseIndexT, py::array::c_style | py::array::forcecast>;
+    // Note: Only pointers to data are passed to the kernels, as they infer the
+    // unitary dimensions from the wires vector.
+    pyclass
+        .def(
+            "applySparseMatrix",
+            [](StateVectorT &st, const np_arr_sparse_ind &row_map,
+               const np_arr_sparse_ind &col_idx, const np_arr_c &values,
+               const std::vector<std::size_t> &wires, bool inverse) {
+                st.applySparseMatrix(
+                    static_cast<SparseIndexT *>(row_map.request().ptr),
+                    static_cast<SparseIndexT *>(col_idx.request().ptr),
+                    static_cast<ComplexT *>(values.request().ptr), wires,
+                    inverse);
+            },
+            "Apply a sparse matrix to the statevector.")
+        .def(
+            "applyControlledSparseMatrix",
+            [](StateVectorT &st, const np_arr_sparse_ind &row_map,
+               const np_arr_sparse_ind &col_idx, const np_arr_c &values,
+               const std::vector<std::size_t> &controlled_wires,
+               const std::vector<bool> &controlled_values,
+               const std::vector<std::size_t> &wires, bool inverse) {
+                st.applyControlledSparseMatrix(
+                    static_cast<SparseIndexT *>(row_map.request().ptr),
+                    static_cast<SparseIndexT *>(col_idx.request().ptr),
+                    static_cast<ComplexT *>(values.request().ptr),
+                    controlled_wires, controlled_values, wires, inverse);
+            },
+            "Apply a controlled sparse matrix to the statevector.");
+}
+
 template <class StateVectorT, class PyClass>
 void registerControlledGate(PyClass &pyclass) {
     using PrecisionT =
@@ -171,6 +217,7 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
 
     registerGatesForStateVector<StateVectorT>(pyclass);
     registerControlledGate<StateVectorT>(pyclass);
+    registerSparseMatrixOperators<StateVectorT>(pyclass);
     pyclass.def(
         "applyPauliRot",
         [](StateVectorT &sv, const std::vector<std::size_t> &wires,
@@ -249,10 +296,9 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
 
     using np_arr_c = py::array_t<std::complex<ParamT>,
                                  py::array::c_style | py::array::forcecast>;
-    using sparse_index_type = std::size_t;
+    using SparseIndexT = std::size_t;
     using np_arr_sparse_ind =
-        py::array_t<sparse_index_type,
-                    py::array::c_style | py::array::forcecast>;
+        py::array_t<SparseIndexT, py::array::c_style | py::array::forcecast>;
 
     pyclass
         .def("expval",
@@ -262,15 +308,27 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
              "Expected value of an operation by name.")
         .def(
             "expval",
+            [](Measurements<StateVectorT> &M, const np_arr_c &matrix,
+               const std::vector<std::size_t> &wires) {
+                const std::size_t matrix_size = matrix.size();
+                auto matrix_data = static_cast<std::complex<PrecisionT> *>(
+                    matrix.request().ptr);
+                std::vector<std::complex<PrecisionT>> matrix_v{
+                    matrix_data, matrix_data + matrix_size};
+                return M.expval(matrix_v, wires);
+            },
+            "Expected value of a Hermitian observable.")
+        .def(
+            "expval",
             [](Measurements<StateVectorT> &M, const np_arr_sparse_ind &row_map,
-               const np_arr_sparse_ind &entries, const np_arr_c &values) {
+               const np_arr_sparse_ind &col_idx, const np_arr_c &values) {
                 return M.expval(
-                    static_cast<sparse_index_type *>(row_map.request().ptr),
-                    static_cast<sparse_index_type>(row_map.request().size),
-                    static_cast<sparse_index_type *>(entries.request().ptr),
+                    static_cast<SparseIndexT *>(row_map.request().ptr),
+                    static_cast<SparseIndexT>(row_map.request().size),
+                    static_cast<SparseIndexT *>(col_idx.request().ptr),
                     static_cast<std::complex<PrecisionT> *>(
                         values.request().ptr),
-                    static_cast<sparse_index_type>(values.request().size));
+                    static_cast<SparseIndexT>(values.request().size));
             },
             "Expected value of a sparse Hamiltonian.")
         .def("var",
@@ -286,14 +344,13 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
         .def(
             "var",
             [](Measurements<StateVectorT> &M, const np_arr_sparse_ind &row_map,
-               const np_arr_sparse_ind &entries, const np_arr_c &values) {
-                return M.var(
-                    static_cast<sparse_index_type *>(row_map.request().ptr),
-                    static_cast<sparse_index_type>(row_map.request().size),
-                    static_cast<sparse_index_type *>(entries.request().ptr),
-                    static_cast<std::complex<PrecisionT> *>(
-                        values.request().ptr),
-                    static_cast<sparse_index_type>(values.request().size));
+               const np_arr_sparse_ind &col_idx, const np_arr_c &values) {
+                return M.var(static_cast<SparseIndexT *>(row_map.request().ptr),
+                             static_cast<SparseIndexT>(row_map.request().size),
+                             static_cast<SparseIndexT *>(col_idx.request().ptr),
+                             static_cast<std::complex<PrecisionT> *>(
+                                 values.request().ptr),
+                             static_cast<SparseIndexT>(values.request().size));
             },
             "Variance of a sparse Hamiltonian.")
         .def("generate_samples",

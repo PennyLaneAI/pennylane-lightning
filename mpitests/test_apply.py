@@ -119,7 +119,7 @@ def apply_operation_gates_qnode_nonparam(tol, dev_mpi, operation, Wires):
     assert np.allclose(local_state_vector, local_expected_output_cpu, atol=tol, rtol=0)
 
 
-class TestApply:  # pylint: disable=missing-function-docstring,too-many-arguments
+class TestApply:  # pylint: disable=missing-function-docstring,too-many-arguments,too-many-positional-arguments
     """Tests whether the device can apply supported quantum gates."""
 
     @pytest.fixture(params=fixture_params)
@@ -208,6 +208,7 @@ class TestApply:  # pylint: disable=missing-function-docstring,too-many-argument
             qml.IsingXX,
             qml.IsingYY,
             qml.IsingZZ,
+            qml.PSWAP,
         ],
     )
     @pytest.mark.parametrize("par", [[0.1], [0.2], [0.3]])
@@ -370,8 +371,6 @@ class TestApply:  # pylint: disable=missing-function-docstring,too-many-argument
 
         comm.Scatter(state_vector, local_state_vector, root=0)
         dev_cpu = qml.device("lightning.qubit", wires=num_wires, c_dtype=c_dtype)
-
-        dev_cpu._statevector.reset_state()
 
         def circuit():
             qml.PauliX(wires=[0])
@@ -862,6 +861,7 @@ def circuit_ansatz(params, wires):
     qml.IsingXX(params[13], wires=[wires[1], wires[0]])
     qml.IsingYY(params[14], wires=[wires[3], wires[2]])
     qml.IsingZZ(params[15], wires=[wires[2], wires[1]])
+    qml.PSAWP(params[16], wires=[wires[3], wires[0]])
     qml.SingleExcitation(params[24], wires=[wires[2], wires[0]])
     qml.DoubleExcitation(params[25], wires=[wires[2], wires[0], wires[1], wires[3]])
 

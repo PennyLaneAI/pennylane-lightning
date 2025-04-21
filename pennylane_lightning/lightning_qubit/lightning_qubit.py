@@ -1,4 +1,4 @@
-# Copyright 2018-2024 Xanadu Quantum Technologies Inc.
+# Copyright 2018-2025 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -37,6 +37,7 @@ from pennylane.devices.preprocess import (
     validate_measurements,
     validate_observables,
 )
+from pennylane.exceptions import DeviceError
 from pennylane.measurements import MidMeasureMP
 from pennylane.operation import DecompositionUndefinedError, Operator
 from pennylane.ops import Conditional, PauliRot, Prod, SProd, Sum
@@ -68,7 +69,6 @@ _to_matrix_ops = {
     "ECR": OperatorProperties(),
     "ISWAP": OperatorProperties(),
     "OrbitalRotation": OperatorProperties(),
-    "PSWAP": OperatorProperties(),
     "QubitCarry": OperatorProperties(),
     "QubitSum": OperatorProperties(),
     "SISWAP": OperatorProperties(),
@@ -87,6 +87,8 @@ def stopping_condition(op: Operator) -> bool:
         word = op._hyperparameters["pauli_word"]  # pylint: disable=protected-access
         # decomposes to IsingXX, etc. for n <= 2
         return reduce(lambda x, y: x + (y != "I"), word, 0) > 2
+    if op.name in ("C(SProd)", "C(Exp)"):
+        return True
     return _supports_operation(op.name)
 
 
@@ -130,7 +132,7 @@ def _supports_adjoint(circuit):
 
     try:
         prog((circuit,))
-    except (DecompositionUndefinedError, qml.DeviceError, AttributeError):
+    except (DecompositionUndefinedError, DeviceError, AttributeError):
         return False
     return True
 
@@ -183,7 +185,7 @@ class LightningQubit(LightningBase):
     :doc:`/lightning_qubit/installation` guide for more details.
 
     Args:
-        wires (int): the number of wires to initialize the device with
+        wires (Optional[int, list]): the number of wires to initialize the device with. Defaults to ``None`` if not specified, and the device will allocate the number of wires depending on the circuit to execute.
         c_dtype: Datatypes for statevector representation. Must be one of
             ``np.complex64`` or ``np.complex128``.
         shots (int): How many times the circuit should be evaluated (or sampled) to estimate
@@ -228,7 +230,7 @@ class LightningQubit(LightningBase):
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
-        wires: Union[int, List],
+        wires: Union[int, List] = None,
         *,
         c_dtype: Union[np.complex128, np.complex64] = np.complex128,
         shots: Union[int, List] = None,
@@ -286,8 +288,8 @@ class LightningQubit(LightningBase):
             "kernel_name": self._kernel_name,
         }
 
-        # Creating the state vector
-        self._statevector = self.LightningStateVector(num_wires=len(self.wires), dtype=c_dtype)
+        self._statevector = None
+        self._sv_init_kwargs = {}
 
     @property
     def name(self):
@@ -305,8 +307,17 @@ class LightningQubit(LightningBase):
         Update the execution config with choices for how the device should be used and the device options.
         """
         updated_values = {}
+
+        for option, _ in config.device_options.items():
+            if option not in self._device_options:
+                raise DeviceError(f"device option {option} not present on {self}")
         if config.gradient_method == "best":
             updated_values["gradient_method"] = "adjoint"
+        if config.use_device_jacobian_product is None:
+            updated_values["use_device_jacobian_product"] = config.gradient_method in (
+                "best",
+                "adjoint",
+            )
         if config.use_device_gradient is None:
             updated_values["use_device_gradient"] = config.gradient_method in ("best", "adjoint")
         if (
@@ -320,6 +331,30 @@ class LightningQubit(LightningBase):
         for option in self._device_options:
             if option not in new_device_options:
                 new_device_options[option] = getattr(self, f"_{option}", None)
+
+        if qml.capture.enabled():
+            mcm_config = config.mcm_config
+            mcm_updated_values = {}
+            if (mcm_method := mcm_config.mcm_method) not in (
+                "deferred",
+                "single-branch-statistics",
+                None,
+            ):
+                raise DeviceError(
+                    f"mcm_method='{mcm_method}' is not supported with lightning.qubit "
+                    "when program capture is enabled."
+                )
+
+            if mcm_method == "single-branch-statistics" and mcm_config.postselect_mode is not None:
+                warn(
+                    "Setting 'postselect_mode' is not supported with mcm_method='single-branch-"
+                    "statistics'. 'postselect_mode' will be ignored.",
+                    UserWarning,
+                )
+                mcm_updated_values["postselect_mode"] = None
+            if mcm_method is None:
+                mcm_updated_values["mcm_method"] = "deferred"
+            updated_values["mcm_config"] = replace(mcm_config, **mcm_updated_values)
 
         return replace(config, **updated_values, device_options=new_device_options)
 
@@ -342,15 +377,24 @@ class LightningQubit(LightningBase):
         * Currently does not intrinsically support parameter broadcasting
 
         """
+
         exec_config = self._setup_execution_config(execution_config)
         program = TransformProgram()
 
+        if qml.capture.enabled():
+
+            if exec_config.mcm_config.mcm_method == "deferred":
+                program.add_transform(qml.defer_measurements, num_wires=len(self.wires))
+            # Using stopping_condition_shots because we don't want to decompose Conditionals or MCMs
+            program.add_transform(qml.transforms.decompose, gate_set=stopping_condition_shots)
+            return program, exec_config
+
         program.add_transform(validate_measurements, name=self.name)
         program.add_transform(validate_observables, accepted_observables, name=self.name)
-        program.add_transform(validate_device_wires, self.wires, name=self.name)
         program.add_transform(
             mid_circuit_measurements, device=self, mcm_config=exec_config.mcm_config
         )
+        program.add_transform(validate_device_wires, self.wires, name=self.name)
 
         program.add_transform(
             decompose,
@@ -391,7 +435,7 @@ class LightningQubit(LightningBase):
                 [circuit], _ = qml.map_wires(circuit, self._wire_map)
             results.append(
                 self.simulate(
-                    circuit,
+                    self.dynamic_wires_from_circuit(circuit),
                     self._statevector,
                     mcmc=mcmc,
                     postselect_mode=execution_config.mcm_config.postselect_mode,
@@ -472,7 +516,6 @@ class LightningQubit(LightningBase):
                 )
             return tuple(results)
 
-        state.reset_state()
         final_state = state.get_final_state(circuit)
         return self.LightningMeasurements(final_state, **mcmc).measure_final_state(circuit)
 

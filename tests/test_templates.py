@@ -20,6 +20,7 @@ import pennylane as qml
 import pytest
 from conftest import LightningDevice, device_name
 from pennylane import numpy as np
+from pennylane.exceptions import DeviceError
 
 # pylint: disable=missing-function-docstring, too-few-public-methods
 
@@ -170,7 +171,7 @@ class TestDisplacementSqueezingEmbedding:
 
         X = np.arange(1, n_qubits + 1)
 
-        with pytest.raises(qml.DeviceError, match="not supported"):
+        with pytest.raises(DeviceError, match="not supported"):
             _ = qml.QNode(circuit, dev, diff_method=None)(X)
 
 
@@ -232,7 +233,7 @@ class TestCVNeuralNetLayers:
         shapes = qml.CVNeuralNetLayers.shape(n_layers=2, n_wires=n_qubits)
         weights = [np.random.random(shape) for shape in shapes]
 
-        with pytest.raises(qml.DeviceError, match="not supported"):
+        with pytest.raises(DeviceError, match="not supported"):
             _ = qml.QNode(circuit, dev, diff_method=None)(weights)
 
 
@@ -794,6 +795,35 @@ class TestQSVT:
 
         def circuit():
             qml.QSVT(block_encode, shifts)
+            return qml.expval(qml.Z(0))
+
+        res = qml.QNode(circuit, dev, diff_method=None)()
+        ref = qml.QNode(circuit, dq, diff_method=None)()
+
+        assert np.allclose(res, ref)
+
+
+class TestPrepSelPrep:
+    """Test the PrepSelPrep routine."""
+
+    @pytest.mark.parametrize(
+        "lcu",
+        [
+            qml.Z(0) + qml.Z(1),
+            qml.Z(0) @ qml.Z(1),
+            -1 * qml.Z(0) @ qml.Z(1),
+            qml.Hamiltonian([0.5], [qml.Z(0) @ qml.Z(1)]),
+            qml.Hamiltonian([0.5], [-1.0 * qml.Z(0) @ qml.Z(1)]),
+            qml.Hamiltonian([1.0], [qml.exp(1j * qml.Z(0) @ qml.Z(1))]),
+        ],
+    )
+    def test_prepselprep(self, lcu):
+        n_qubits = 3
+        dev = qml.device(device_name, wires=n_qubits)
+        dq = qml.device("default.qubit", wires=n_qubits)
+
+        def circuit():
+            qml.PrepSelPrep(lcu, control=[2])
             return qml.expval(qml.Z(0))
 
         res = qml.QNode(circuit, dev, diff_method=None)()

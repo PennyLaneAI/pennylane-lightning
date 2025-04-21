@@ -32,6 +32,7 @@ from pennylane.measurements import (
     StateMeasurement,
     VarianceMP,
 )
+from pennylane.operation import Observable
 from pennylane.ops import SparseHamiltonian, Sum
 from pennylane.tape import QuantumScript
 from pennylane.typing import Result, TensorLike
@@ -70,6 +71,18 @@ class LightningBaseMeasurements(ABC):
         """Returns the simulation data type."""
         return self._qubit_state.dtype
 
+    @staticmethod
+    def _observable_is_sparse(obs: Observable) -> bool:
+        """States if the required observable is sparse.
+
+        Args:
+            obs (Observable): PennyLane observable to check sparsity.
+
+        Returns:
+            True if the measurement process only uses the sparse data representation.
+        """
+        return isinstance(obs, SparseHamiltonian)
+
     @abstractmethod
     def _measurement_dtype(self):
         """Binding to Lightning [Device] Measurements C++ class.
@@ -79,7 +92,7 @@ class LightningBaseMeasurements(ABC):
 
     def state_diagonalizing_gates(self, measurementprocess: StateMeasurement) -> TensorLike:
         """Apply a measurement to state when the measurement process has an observable with diagonalizing gates.
-            This method is bypassing the measurement process to default.qubit implementation.
+           This method is bypassing the measurement process to default.qubit implementation.
 
         Args:
             measurementprocess (StateMeasurement): measurement to apply to the state
@@ -104,9 +117,8 @@ class LightningBaseMeasurements(ABC):
         Returns:
             Expectation value of the observable
         """
-
-        if isinstance(measurementprocess.obs, qml.SparseHamiltonian):
-            # ensuring CSR sparse representation.
+        if self._observable_is_sparse(measurementprocess.obs):
+            # We first ensure the CSR sparse representation.
             CSR_SparseHamiltonian = measurementprocess.obs.sparse_matrix(
                 wire_order=list(range(self._qubit_state.num_wires))
             ).tocsr(copy=False)
@@ -116,10 +128,13 @@ class LightningBaseMeasurements(ABC):
                 CSR_SparseHamiltonian.data,
             )
 
-        if (
-            isinstance(measurementprocess.obs, qml.Hermitian)
-            or (measurementprocess.obs.arithmetic_depth > 0)
-            or isinstance(measurementprocess.obs.name, List)
+        if isinstance(measurementprocess.obs, qml.Hermitian):
+            observable_wires = measurementprocess.obs.wires
+            matrix = measurementprocess.obs.matrix()
+            return self._measurement_lightning.expval(matrix, observable_wires)
+
+        if (measurementprocess.obs.arithmetic_depth > 0) or isinstance(
+            measurementprocess.obs.name, List
         ):
             # pylint: disable=protected-access
             ob_serialized = QuantumScriptSerializer(
@@ -145,7 +160,13 @@ class LightningBaseMeasurements(ABC):
         if diagonalizing_gates:
             self._qubit_state.apply_operations(diagonalizing_gates)
 
-        results = self._measurement_lightning.probs(measurementprocess.wires.tolist())
+        if measurementprocess.wires == Wires([]):
+            # For the case where no wires is specified for statevector
+            # and measurement process, wires are determined here
+            measurewires = self._qubit_state.wires
+        else:
+            measurewires = measurementprocess.wires.tolist()
+        results = self._measurement_lightning.probs(measurewires)
 
         if diagonalizing_gates:
             self._qubit_state.apply_operations(
@@ -164,8 +185,8 @@ class LightningBaseMeasurements(ABC):
             Variance of the observable
         """
 
-        if isinstance(measurementprocess.obs, qml.SparseHamiltonian):
-            # ensuring CSR sparse representation.
+        if self._observable_is_sparse(measurementprocess.obs):
+            # Ensuring CSR sparse representation.
             CSR_SparseHamiltonian = measurementprocess.obs.sparse_matrix(
                 wire_order=list(range(self._qubit_state.num_wires))
             ).tocsr(copy=False)
@@ -203,7 +224,7 @@ class LightningBaseMeasurements(ABC):
             Callable: function that returns the measurement result
         """
         if isinstance(measurementprocess, StateMeasurement):
-            if isinstance(measurementprocess, ExpectationMP):
+            if isinstance(measurementprocess, ExpectationMP) and measurementprocess.obs is not None:
                 if self._use_mpi:
                     if isinstance(measurementprocess.obs, (qml.Projector)):
                         return self.state_diagonalizing_gates
@@ -215,7 +236,7 @@ class LightningBaseMeasurements(ABC):
             if isinstance(measurementprocess, ProbabilityMP):
                 return self.probs
 
-            if isinstance(measurementprocess, VarianceMP):
+            if isinstance(measurementprocess, VarianceMP) and measurementprocess.obs is not None:
                 if self._use_mpi:
                     if isinstance(measurementprocess.obs, (qml.Projector)):
                         return self.state_diagonalizing_gates
@@ -223,6 +244,7 @@ class LightningBaseMeasurements(ABC):
                     if isinstance(measurementprocess.obs, (qml.Identity, qml.Projector)):
                         return self.state_diagonalizing_gates
                 return self.var
+
             if measurementprocess.obs is None or measurementprocess.obs.has_diagonalizing_gates:
                 return self.state_diagonalizing_gates
 
@@ -297,15 +319,27 @@ class LightningBaseMeasurements(ABC):
         """
         # last N measurements are sampling MCMs in ``dynamic_one_shot`` execution mode
         mps = measurements[0 : -len(mid_measurements)] if mid_measurements else measurements
+
+        for measurement in mps:
+            if measurement.wires == Wires([]):
+                # This is required for the case where no wires is specific for the statevector
+                # (i.e. dynamically determined from circuit), and no wires (and no observable)
+                # is provided for the measurement (e.g. qml.probs() or qml.counts() or
+                # qml.samples()). In the case where number of wires is provided for the statevector,
+                # the same operation is performed in validate_device_wires during preprocess.
+
+                # pylint:disable=protected-access
+                measurement._wires = Wires(range(self._qubit_state.num_wires))
+
         groups, indices = _group_measurements(mps)
 
         all_res = []
         for group in groups:
-            if isinstance(group[0], (ExpectationMP, VarianceMP)) and isinstance(
-                group[0].obs, SparseHamiltonian
+            if isinstance(group[0], (ExpectationMP, VarianceMP)) and self._observable_is_sparse(
+                group[0].obs
             ):
                 raise TypeError(
-                    "ExpectationMP/VarianceMP(SparseHamiltonian) cannot be computed with samples."
+                    "ExpectationMP/VarianceMP of sparse observables cannot be computed with samples."
                 )
             if isinstance(group[0], VarianceMP) and isinstance(group[0].obs, Sum):
                 raise TypeError("VarianceMP(Sum) cannot be computed with samples.")

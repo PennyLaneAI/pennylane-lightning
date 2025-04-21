@@ -33,7 +33,7 @@
 /// @cond DEV
 namespace {
 using namespace Pennylane::Util;
-}
+} // namespace
 /// @endcond
 
 #ifndef CUDA_UNSAFE
@@ -52,7 +52,6 @@ using namespace Pennylane::Util;
 #define PL_CUSTATEVEC_IS_SUCCESS(err)                                          \
     { static_cast<void>(err); }
 #endif
-
 namespace Pennylane::LightningGPU::Util {
 static const std::string
 GetCuStateVecErrorString(const custatevecStatus_t &err) {

@@ -16,6 +16,8 @@ This module contains unit tests for new device API Lightning classes.
 """
 # pylint: disable=too-many-arguments, unused-argument
 
+import itertools
+
 import numpy as np
 import pennylane as qml
 import pytest
@@ -31,6 +33,7 @@ from conftest import (
 )
 from pennylane.devices import DefaultExecutionConfig, DefaultQubit, ExecutionConfig, MCMConfig
 from pennylane.devices.default_qubit import adjoint_ops
+from pennylane.exceptions import DeviceError, QuantumFunctionError
 from pennylane.measurements import ProbabilityMP
 from pennylane.tape import QuantumScript
 
@@ -99,10 +102,21 @@ else:
 if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-access
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
+fixture_params = itertools.product([3, None], [np.complex64, np.complex128])  # wires x c_dtype
 
-@pytest.fixture(params=[np.complex64, np.complex128])
+
+@pytest.fixture(params=fixture_params)
 def dev(request):
-    return LightningDevice(wires=3, c_dtype=request.param)
+    return LightningDevice(wires=request.param[0], c_dtype=request.param[1])
+
+
+@pytest.fixture()
+def enable_disable_plxpr():
+    """Fixture to enable and disable the plxpr capture"""
+    pytest.importorskip("jax")
+    qml.capture.enable()
+    yield
+    qml.capture.disable()
 
 
 class TestHelpers:
@@ -113,13 +127,24 @@ class TestHelpers:
 
         num_wires = 1
 
-    def test_stopping_condition(self):
-        """Test that stopping_condition returns whether or not an operation
-        is supported by the device."""
-        valid_op = qml.RX(1.23, 0)
-        invalid_op = self.DummyOperator(0)
+    @pytest.mark.parametrize(
+        "valid_op",
+        [
+            qml.RX(1.23, 0),
+            qml.ctrl(-1.0 * qml.Z(0), control=[1]),
+            qml.ctrl(qml.exp(qml.Z(0)), control=[1]),
+        ],
+    )
+    def test_stopping_condition_valid(self, valid_op):
+        """Test that stopping_condition returns True for operations unsupported by the device."""
 
         assert stopping_condition(valid_op) is True
+
+    def test_stopping_condition_invalid(self):
+        """Test that stopping_condition returns False for operations unsupported by the device."""
+
+        invalid_op = self.DummyOperator(0)
+
         assert stopping_condition(invalid_op) is False
 
     def test_accepted_observables(self):
@@ -204,6 +229,218 @@ class TestHelpers:
         """Test that _supports_adjoint returns the correct boolean value."""
         assert _supports_adjoint(circuit) == expected
 
+    @pytest.mark.skipif(
+        device_name == "lightning.tensor", reason="lightning.tensor does not contain a state vector"
+    )
+    @pytest.mark.parametrize("device_wires", [None, 2])
+    def test_state_vector_init(self, device_wires):
+        """Test that the state-vector is not created during initialization"""
+        dev = LightningDevice(wires=device_wires)
+        assert dev._statevector == None
+
+    @pytest.mark.parametrize(
+        "circuit_in, n_wires, expected_circuit_out",
+        [
+            (
+                QuantumScript(
+                    [
+                        qml.RX(0.1, 0),
+                        qml.CNOT([1, 0]),
+                        qml.RZ(0.1, 1),
+                        qml.CNOT([2, 1]),
+                    ],
+                    [qml.expval(qml.Z(0))],
+                ),
+                3,
+                QuantumScript(
+                    [
+                        qml.RX(0.1, 0),
+                        qml.CNOT([1, 0]),
+                        qml.RZ(0.1, 1),
+                        qml.CNOT([2, 1]),
+                    ],
+                    [qml.expval(qml.Z(0))],
+                ),
+            ),
+            (
+                QuantumScript(
+                    [
+                        qml.RX(0.1, 0),
+                        qml.CNOT([1, 4]),
+                        qml.RZ(0.1, 4),
+                        qml.CNOT([2, 1]),
+                    ],
+                    [qml.expval(qml.Z(6))],
+                ),
+                5,
+                QuantumScript(
+                    [
+                        qml.RX(0.1, 0),
+                        qml.CNOT([1, 2]),
+                        qml.RZ(0.1, 2),
+                        qml.CNOT([3, 1]),
+                    ],
+                    [qml.expval(qml.Z(4))],
+                ),
+            ),
+        ],
+    )
+    def test_dynamic_wires_from_circuit(self, circuit_in, n_wires, expected_circuit_out):
+        """Test that dynamic_wires_from_circuit returns correct circuit and creates state-vectors properly"""
+        device = LightningDevice(wires=None)
+
+        circuit_out = device.dynamic_wires_from_circuit(circuit_in)
+
+        assert circuit_out.num_wires == n_wires
+        assert circuit_out.wires == qml.wires.Wires(range(n_wires))
+        assert circuit_out.operations == expected_circuit_out.operations
+        assert circuit_out.measurements == expected_circuit_out.measurements
+
+        if device_name != "lightning.tensor":
+            assert device._statevector._num_wires == n_wires
+            assert device._statevector._wires == qml.wires.Wires(range(n_wires))
+
+    @pytest.mark.parametrize(
+        "circuit_in, n_wires, wires_list",
+        [
+            (
+                QuantumScript(
+                    [
+                        qml.RX(0.1, 0),
+                        qml.CNOT([1, 0]),
+                        qml.RZ(0.1, 1),
+                        qml.CNOT([2, 1]),
+                    ],
+                    [qml.expval(qml.Z(0))],
+                ),
+                3,
+                [0, 1, 2],
+            ),
+            (
+                QuantumScript(
+                    [
+                        qml.RX(0.1, 0),
+                        qml.CNOT([1, 4]),
+                        qml.RZ(0.1, 4),
+                        qml.CNOT([2, 1]),
+                    ],
+                    [qml.expval(qml.Z(6))],
+                ),
+                7,
+                [0, 1, 4, 2, 6],
+            ),
+        ],
+    )
+    def test_dynamic_wires_from_circuit_fixed_wires(self, circuit_in, n_wires, wires_list):
+        """Test that dynamic_wires_from_circuit does not alter the circuit if wires are fixed and state-vector is created properly"""
+        device = LightningDevice(wires=n_wires)
+
+        circuit_out = device.dynamic_wires_from_circuit(circuit_in)
+
+        assert circuit_out.num_wires == circuit_in.num_wires
+        assert circuit_out.wires == qml.wires.Wires(wires_list)
+        assert circuit_out.operations == circuit_in.operations
+        assert circuit_out.measurements == circuit_in.measurements
+
+        if device_name != "lightning.tensor":
+            assert device._statevector._num_wires == n_wires
+            assert device._statevector._wires == qml.wires.Wires(range(n_wires))
+
+    @pytest.mark.parametrize(
+        "circuit_0, n_wires_0",
+        [
+            (QuantumScript([qml.RX(0.1, 0)], [qml.expval(qml.Z(1))]), 2),
+            (QuantumScript([qml.RX(0.1, 0), qml.RX(0.1, 1)], [qml.expval(qml.Z(2))]), 3),
+        ],
+    )
+    @pytest.mark.parametrize(
+        "circuit_1, n_wires_1",
+        [
+            (QuantumScript([qml.RX(0.1, 0)], [qml.expval(qml.Z(1))]), 2),
+            (QuantumScript([qml.RX(0.1, 0), qml.RX(0.1, 2)], [qml.expval(qml.Z(1))]), 3),
+            (
+                QuantumScript(
+                    [qml.RX(0.1, 0), qml.RX(0.1, 1), qml.RX(0.1, 4), qml.RX(0.1, 6)],
+                    [qml.expval(qml.Z(2))],
+                ),
+                5,
+            ),
+        ],
+    )
+    @pytest.mark.parametrize("shots", [None, 10])
+    @pytest.mark.parametrize("dtype", [np.complex64, np.complex128])
+    @pytest.mark.skipif(
+        device_name == "lightning.tensor", reason="lightning.tensor does not have state vector"
+    )
+    def test_dynamic_wires_from_circuit_reset_state(
+        self, circuit_0, n_wires_0, circuit_1, n_wires_1, shots, dtype
+    ):
+        """Test that dynamic_wires_from_circuit resets state when reusing or initializing new state vector"""
+        device = LightningDevice(wires=None, c_dtype=dtype, shots=shots)
+
+        # Initialize statevector and apply a state
+        device.dynamic_wires_from_circuit(circuit_0)
+        state = np.zeros(2**n_wires_0)
+        state[-1] = 1.0
+        device._statevector._apply_state_vector(state, range(n_wires_0))
+
+        # Dynamic wires again will reset the state
+        device.dynamic_wires_from_circuit(circuit_1)
+        expected_state = np.zeros(2**n_wires_1)
+        expected_state[0] = 1.0
+        assert np.allclose(device._statevector.state, expected_state)
+
+    @pytest.mark.parametrize("shots", [None, 10])
+    @pytest.mark.skipif(
+        device_name not in ("lightning.kokkos", "lightning.gpu"),
+        reason="This device state has no additional kwargs",
+    )
+    def test_dynamic_wires_from_circuit_state_kwargs(self, shots):
+        """Test that dynamic_wires_from_circuit sets the state with the correct device init kwargs"""
+
+        if device_name == "lightning.kokkos":
+            from pennylane_lightning.lightning_kokkos_ops import InitializationSettings
+
+            sv_init_kwargs = {"kokkos_args": InitializationSettings().set_num_threads(2)}
+        if device_name == "lightning.gpu":
+            sv_init_kwargs = {"use_async": True}
+
+        device = LightningDevice(wires=None, shots=shots, **sv_init_kwargs)
+
+        circuit = QuantumScript([qml.RX(0.1, 0), qml.RX(0.1, 2)], [qml.expval(qml.Z(1))])
+        circuit_num_wires = 3
+
+        device.dynamic_wires_from_circuit(circuit)
+
+        if device_name == "lightning.gpu":
+            assert device._statevector._use_async == sv_init_kwargs["use_async"]
+        if device_name == "lightning.kokkos":
+            sv = LightningStateVector(circuit_num_wires, **sv_init_kwargs)
+            type(sv) == type(device._statevector)
+
+    @pytest.mark.parametrize("shots", [None, 10])
+    @pytest.mark.parametrize("n_wires", [None, 3])
+    def test_dynamic_wires_from_circuit_bad_kwargs(self, n_wires, shots):
+        """Test that dynamic_wires_from_circuit produce right error when setting the state with the incorrect device init kwargs"""
+
+        if device_name == "lightning.kokkos":
+            bad_init_kwargs = {"kokkos_args": np.array([33])}
+        else:
+            bad_init_kwargs = {"XXX": True}
+
+        circuit = QuantumScript([qml.RX(0.1, 0), qml.RX(0.1, 2)], [qml.expval(qml.Z(1))])
+
+        if device_name == "lightning.kokkos":
+            with pytest.raises(TypeError, match="Argument kokkos_args must be of type "):
+                device = LightningDevice(wires=n_wires, shots=shots, **bad_init_kwargs)
+                device.dynamic_wires_from_circuit(circuit)
+        else:
+            with pytest.raises(
+                TypeError, match=r"got an unexpected keyword argument|Unexpected argument"
+            ):
+                device = LightningDevice(wires=n_wires, shots=shots, **bad_init_kwargs)
+                device.dynamic_wires_from_circuit(circuit)
+
 
 class TestInitialization:
     """Unit tests for device initialization"""
@@ -287,7 +524,7 @@ class TestExecution:
     }
 
     @pytest.mark.skipif(
-        device_name="lightning.tensor", reason="lightning.tensor does not support rng key"
+        device_name == "lightning.tensor", reason="lightning.tensor does not support rng key"
     )
     @pytest.mark.parametrize(
         "config, expected_config",
@@ -295,8 +532,9 @@ class TestExecution:
             (
                 DefaultExecutionConfig,
                 ExecutionConfig(
-                    grad_on_execution=True,
+                    grad_on_execution=None,
                     use_device_gradient=False,
+                    use_device_jacobian_product=False,
                     device_options=_default_device_options,
                 ),
             ),
@@ -306,6 +544,7 @@ class TestExecution:
                     gradient_method="adjoint",
                     grad_on_execution=True,
                     use_device_gradient=True,
+                    use_device_jacobian_product=True,
                     device_options=_default_device_options,
                 ),
             ),
@@ -317,8 +556,9 @@ class TestExecution:
                     }
                 ),
                 ExecutionConfig(
-                    grad_on_execution=True,
+                    grad_on_execution=None,
                     use_device_gradient=False,
+                    use_device_jacobian_product=False,
                     device_options={
                         "c_dtype": np.complex64,
                         "batch_obs": False,
@@ -340,6 +580,7 @@ class TestExecution:
                     gradient_method="backprop",
                     use_device_gradient=False,
                     grad_on_execution=False,
+                    use_device_jacobian_product=False,
                     device_options=_default_device_options,
                 ),
             ),
@@ -354,7 +595,85 @@ class TestExecution:
         assert new_config == expected_config
 
     @pytest.mark.skipif(
-        device_name="lightning.tensor", reason="lightning.tensor does not support adjoint"
+        device_name == "lightning.tensor",
+        reason="lightning.tensor device supports new device options",
+    )
+    def test_preprocess_incorrect_device_config(self):
+        """Test that an error is raised if the device options are not valid"""
+        config = ExecutionConfig(
+            device_options={
+                "is_wrong_option": True,
+            }
+        )
+        device = LightningDevice(wires=2)
+        with pytest.raises(DeviceError, match="device option is_wrong_option"):
+            _ = device.preprocess(config)
+
+    @pytest.mark.skipif(
+        device_name == "lightning.tensor",
+        reason="lightning.tensor device doesn't have support for program capture.",
+    )
+    @pytest.mark.parametrize("postselect_mode", ["hw-like", "fill-shots"])
+    def test_sbs_and_postselect_warning(self, enable_disable_plxpr, postselect_mode):
+        """Test that a warning is raised if post-selection is used with single branch statistics."""
+        device = LightningDevice(wires=1)
+        config = ExecutionConfig(
+            mcm_config=MCMConfig(
+                mcm_method="single-branch-statistics", postselect_mode=postselect_mode
+            )
+        )
+
+        with pytest.warns(
+            UserWarning,
+            match="Setting 'postselect_mode' is not supported with mcm_method='single-branch-",
+        ):
+            _ = device.preprocess(config)
+
+    @pytest.mark.skipif(
+        device_name == "lightning.tensor",
+        reason="lightning.tensor device doesn't have support for program capture.",
+    )
+    def test_preprocess_invalid_mcm_method_error(self, enable_disable_plxpr):
+        """Test that an error is raised if mcm_method is invalid."""
+        device = LightningDevice(wires=1)
+        config = ExecutionConfig(mcm_config=MCMConfig(mcm_method="foo"))
+
+        with pytest.raises(DeviceError, match="mcm_method='foo' is not supported"):
+            _ = device.preprocess(config)
+
+    @pytest.mark.skipif(
+        device_name == "lightning.tensor",
+        reason="lightning.tensor device doesn't have support for program capture.",
+    )
+    def test_transform_program(self, enable_disable_plxpr):
+        """Test that the transform program returned by preprocess has the correct transforms."""
+        dev = LightningDevice(wires=1)
+
+        # Default config
+        config = ExecutionConfig()
+        program, _ = dev.preprocess(execution_config=config)
+        assert len(program) == 2
+        # pylint: disable=protected-access
+        assert program[0].transform == qml.defer_measurements._transform
+        assert program[1].transform == qml.transforms.decompose._transform
+
+        # mcm_method="deferred"
+        config = ExecutionConfig(mcm_config=MCMConfig(mcm_method="deferred"))
+        program, _ = dev.preprocess(execution_config=config)
+        assert len(program) == 2
+        # pylint: disable=protected-access
+        assert program[0].transform == qml.defer_measurements._transform
+        assert program[1].transform == qml.transforms.decompose._transform
+
+        # mcm_method="single-branch-statistics"
+        config = ExecutionConfig(mcm_config=MCMConfig(mcm_method="single-branch-statistics"))
+        program, _ = dev.preprocess(execution_config=config)
+        assert len(program) == 1
+        # pylint: disable=protected-access
+        assert program[0].transform == qml.transforms.decompose._transform
+
+    @pytest.mark.skipif(
+        device_name == "lightning.tensor", reason="lightning.tensor does not support adjoint"
     )
     @pytest.mark.parametrize("adjoint", [True, False])
     def test_preprocess(self, adjoint):
@@ -364,10 +683,10 @@ class TestExecution:
         expected_program = qml.transforms.core.TransformProgram()
         expected_program.add_transform(validate_measurements, name=device.name)
         expected_program.add_transform(validate_observables, accepted_observables, name=device.name)
-        expected_program.add_transform(validate_device_wires, device.wires, name=device.name)
         expected_program.add_transform(
             mid_circuit_measurements, device=device, mcm_config=MCMConfig()
         )
+        expected_program.add_transform(validate_device_wires, device.wires, name=device.name)
         expected_program.add_transform(
             decompose,
             stopping_condition=stopping_condition,
@@ -552,6 +871,46 @@ class TestExecution:
         expected = self.calculate_reference(qs)[0]
         assert len(res) == 2
         for r, e in zip(res, expected):
+            assert np.allclose(r, e)
+
+    def test_execute_tape_batch_with_dynamic_wires(self):
+        """Test that execute handles multiple tapes with dynamic number of wires."""
+
+        qs0 = QuantumScript(
+            [
+                qml.RX(0.1, 0),
+                qml.CNOT([1, 0]),
+                qml.RZ(0.1, 1),
+                qml.CNOT([2, 1]),
+            ],
+            [qml.state()],
+        )
+        qs1 = QuantumScript(
+            [
+                qml.RX(0.1, 0),
+                qml.CNOT([1, 0]),
+                qml.RZ(0.1, 1),
+                qml.CNOT([0, 1]),
+            ],
+            [qml.state()],
+        )
+        qs2 = QuantumScript(
+            [
+                qml.RX(0.1, 4),
+                qml.CNOT([2, 4]),
+                qml.RZ(0.1, 2),
+                qml.CNOT([1, 2]),
+                qml.CNOT([0, 2]),
+            ],
+            [qml.state()],
+        )
+        dev = LightningDevice(wires=None)
+        result = dev.execute([qs0, qs1, qs2])
+
+        dev_ref = DefaultQubit(max_workers=1)
+        result_ref = dev_ref.execute([qs0, qs1, qs2])
+
+        for r, e in zip(result, result_ref):
             assert np.allclose(r, e)
 
     @pytest.mark.parametrize("phi, theta", list(zip(PHI, THETA)))
@@ -873,13 +1232,13 @@ class TestDerivatives:
         config = ExecutionConfig(gradient_method="adjoint", device_options={"batch_obs": batch_obs})
 
         with pytest.raises(
-            qml.QuantumFunctionError,
+            QuantumFunctionError,
             match="Adjoint differentiation method does not support measurement StateMP.",
         ):
             _ = dev.compute_derivatives(qs, config)
 
         with pytest.raises(
-            qml.QuantumFunctionError,
+            QuantumFunctionError,
             match="Adjoint differentiation method does not support measurement StateMP.",
         ):
             _ = dev.execute_and_compute_derivatives(qs, config)
@@ -892,15 +1251,17 @@ class TestDerivatives:
         config = ExecutionConfig(gradient_method="adjoint", device_options={"batch_obs": batch_obs})
         program, _ = dev.preprocess(config)
 
-        with pytest.raises(qml.DeviceError, match="Finite shots are not supported"):
+        with pytest.raises(DeviceError, match="Finite shots are not supported"):
             _, _ = program([qs])
 
+    @pytest.mark.parametrize("device_wires", [None, 4])
     @pytest.mark.parametrize("phi", PHI)
     @pytest.mark.parametrize("execute_and_derivatives", [True, False])
-    def test_derivatives_tape_batch(self, phi, execute_and_derivatives, batch_obs):
+    def test_derivatives_tape_batch(self, device_wires, phi, execute_and_derivatives, batch_obs):
         """Test that results are correct when we execute and compute derivatives for a batch of
-        tapes."""
-        device = LightningDevice(wires=4, batch_obs=batch_obs)
+        tapes with and without dynamic wires."""
+
+        device = LightningDevice(wires=device_wires, batch_obs=batch_obs)
 
         ops = [qml.X(0), qml.X(1)]
         if device_name == "lightning.qubit":
@@ -1247,23 +1608,25 @@ class TestVJP:
         dy = 1.0
 
         with pytest.raises(
-            qml.QuantumFunctionError,
+            QuantumFunctionError,
             match="Adjoint differentiation does not support State measurements",
         ):
             _ = dev.compute_vjp(qs, dy, config)
 
         with pytest.raises(
-            qml.QuantumFunctionError,
+            QuantumFunctionError,
             match="Adjoint differentiation does not support State measurements",
         ):
             _ = dev.execute_and_compute_vjp(qs, dy, config)
 
+    @pytest.mark.parametrize("device_wires", [None, 4])
     @pytest.mark.parametrize("phi", PHI)
     @pytest.mark.parametrize("execute_and_derivatives", [True, False])
-    def test_vjp_tape_batch(self, phi, execute_and_derivatives, batch_obs):
-        """Test that results are correct when we execute and compute derivatives for a batch of
-        tapes."""
-        device = LightningDevice(wires=4, batch_obs=batch_obs)
+    def test_vjp_tape_batch(self, device_wires, phi, execute_and_derivatives, batch_obs):
+        """Test that results are correct when we execute and compute vjp for a batch of
+        tapes with and without dynamic wires."""
+
+        device = LightningDevice(wires=device_wires, batch_obs=batch_obs)
 
         ops = [
             qml.X(0),

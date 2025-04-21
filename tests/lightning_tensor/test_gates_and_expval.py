@@ -18,8 +18,8 @@ Tests for the expectation value calculations on the LightningTensor device.
 import pennylane as qml
 import pytest
 from conftest import PHI, THETA, LightningDevice, device_name
-from pennylane import DeviceError
 from pennylane import numpy as np
+from pennylane.exceptions import DeviceError
 
 if device_name != "lightning.tensor":
     pytest.skip(
@@ -248,7 +248,7 @@ class TestSparseHExpval:
 
         m = LightningTensorMeasurements(tensornet)
 
-        with pytest.raises(NotImplementedError, match="Sparse Hamiltonians are not supported."):
+        with pytest.raises(NotImplementedError, match="Sparse Observables are not supported."):
             m.expval(q.queue[0])
 
     def test_var_sparseH_not_supported(self, method):
@@ -262,7 +262,7 @@ class TestSparseHExpval:
 
         with pytest.raises(
             NotImplementedError,
-            match="The var measurement does not support sparse Hamiltonian observables.",
+            match="The var measurement does not support sparse observables.",
         ):
             m.var(q.queue[0])
 

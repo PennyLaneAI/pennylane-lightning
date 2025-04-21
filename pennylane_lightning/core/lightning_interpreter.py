@@ -16,10 +16,13 @@ This module contains a class for executing plxpr using default qubit tools.
 """
 
 import jax
-from pennylane.capture import disable, enable
+import pennylane as qml
+from pennylane.capture import disable, enable, pause
 from pennylane.capture.base_interpreter import FlattenedHigherOrderPrimitives, PlxprInterpreter
 from pennylane.capture.primitives import adjoint_transform_prim, ctrl_transform_prim, measure_prim
+from pennylane.exceptions import DeviceError
 from pennylane.measurements import MidMeasureMP, Shots
+from pennylane.tape.plxpr_conversion import CollectOpsandMeas
 
 from ._measurements_base import LightningBaseMeasurements
 from ._state_vector_base import LightningBaseStateVector
@@ -66,7 +69,7 @@ class LightningInterpreter(PlxprInterpreter):
         self,
         state: LightningBaseStateVector,
         measurement_class: type[LightningBaseMeasurements],
-        shots: Shots = Shots(None),
+        shots: Shots = Shots(),
     ):
         self.state = state
         self.measurement_class = measurement_class
@@ -88,6 +91,10 @@ class LightningInterpreter(PlxprInterpreter):
 
     def interpret_operation(self, op):
         """Apply an operation to the state."""
+        if isinstance(op, qml.Projector):
+            raise DeviceError(
+                "Lightning devices do not support postselection with mcm_method='deferred'."
+            )
         self.state.apply_operations([op])
 
     def interpret_measurement_eqn(self, eqn: "jax.core.JaxprEqn"):
@@ -124,15 +131,37 @@ def _(self, *invals, reset, postselect):
     return mcms[mp]
 
 
-# pylint: disable=unused-argument
 @LightningInterpreter.register_primitive(adjoint_transform_prim)
 def _(self, *invals, jaxpr, n_consts, lazy=True):
-    # TODO: requires jaxpr -> list of ops first
-    raise NotImplementedError
+    consts = invals[:n_consts]
+    args = invals[n_consts:]
+    recorder = CollectOpsandMeas()
+    recorder.eval(jaxpr, consts, *args)
+    ops = recorder.state["ops"]
+    with pause():
+        adjoint_ops = [qml.adjoint(op, lazy=lazy) for op in reversed(ops)]
+        self.state.apply_operations(adjoint_ops)
+    return []
 
 
 # pylint: disable=too-many-arguments
 @LightningInterpreter.register_primitive(ctrl_transform_prim)
 def _(self, *invals, n_control, jaxpr, control_values, work_wires, n_consts):
-    # TODO: requires jaxpr -> list of ops first
-    raise NotImplementedError
+    consts = invals[:n_consts]
+    control_wires = invals[-n_control:]
+    args = invals[n_consts:-n_control]
+    recorder = CollectOpsandMeas()
+    recorder.eval(jaxpr, consts, *args)
+    ops = recorder.state["ops"]
+    with pause():
+        ctrl_ops = [
+            qml.ctrl(
+                op,
+                control_wires,
+                control_values=control_values,
+                work_wires=work_wires,
+            )
+            for op in ops
+        ]
+        self.state.apply_operations(ctrl_ops)
+    return []

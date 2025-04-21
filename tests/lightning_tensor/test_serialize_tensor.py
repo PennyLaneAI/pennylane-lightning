@@ -18,6 +18,7 @@ import numpy as np
 import pennylane as qml
 import pytest
 from conftest import LightningDevice, device_name
+from pennylane.exceptions import DeviceError
 
 from pennylane_lightning.core._serialize import QuantumScriptSerializer, global_phase_diagonal
 
@@ -68,7 +69,7 @@ def get_module_name(tn_back, name, dtype):
 def test_wrong_device_name():
     """Test the device name is not a valid option"""
 
-    with pytest.raises(qml.DeviceError, match="The device name"):
+    with pytest.raises(DeviceError, match="The device name"):
         QuantumScriptSerializer("thunder.qubit")
 
 

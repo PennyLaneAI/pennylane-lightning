@@ -17,6 +17,7 @@ This module contains the :class:`~.LightningBase` class, that serves as a base c
 interfaces with C++ for fast linear algebra calculations.
 """
 from abc import abstractmethod
+from functools import partial
 from numbers import Number
 from typing import Callable, List, Optional, Sequence, Tuple, Union
 
@@ -25,9 +26,10 @@ import pennylane as qml
 from pennylane.devices import DefaultExecutionConfig, Device, ExecutionConfig
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
 from pennylane.tape import QuantumScript, QuantumTape
-from pennylane.typing import Result, ResultBatch
+from pennylane.typing import Result, ResultBatch, TensorLike
 
 from ._measurements_base import LightningBaseMeasurements
+from ._version import __version__
 
 Result_or_ResultBatch = Union[Result, ResultBatch]
 QuantumTapeBatch = Sequence[QuantumTape]
@@ -43,7 +45,7 @@ class LightningBase(Device):
     A class that serves as a base class for Lightning simulators.
 
     Args:
-        wires (int or list): number or list of wires to initialize the device with
+        wires (Optional[int, list]): number or list of wires to initialize the device with. Defaults to ``None`` if not specified, and the device will allocate the number of wires depending on the circuit to execute.
         sync (bool): immediately sync with host after applying operations on the device
         c_dtype: Datatypes for statevector representation. Must be one of
             ``np.complex64`` or ``np.complex128``.
@@ -56,10 +58,12 @@ class LightningBase(Device):
     """
 
     # pylint: disable=too-many-instance-attributes
+    pennylane_requires = ">=0.41"
+    version = __version__
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
-        wires: Union[int, List],
+        wires: Union[int, List] = None,
         *,
         c_dtype: Union[np.complex64, np.complex128],
         shots: Union[int, List],
@@ -70,7 +74,11 @@ class LightningBase(Device):
         self._c_dtype = c_dtype
         self._batch_obs = batch_obs
 
-        if isinstance(wires, int):
+        # State-vector is dynamically allocated just before execution
+        self._statevector = None
+        self._sv_init_kwargs = {}
+
+        if isinstance(wires, int) or wires is None:
             self._wire_map = None  # should just use wires as is
         else:
             self._wire_map = {w: i for i, w in enumerate(self.wires)}
@@ -101,6 +109,32 @@ class LightningBase(Device):
             ExecutionConfig: An updated execution config with device options set.
 
         """
+
+    def dynamic_wires_from_circuit(self, circuit):
+        """Allocate the underlying quantum state from the pre-defined wires or a given circuit if applicable. Circuit wires will be mapped to Pennylane ``default.qubit`` standard wire order.
+
+        Args:
+            circuit (QuantumTape): The circuit to execute.
+
+        Returns:
+            QuantumTape: The updated circuit with the wires mapped to the standard wire order.
+        """
+
+        if self.wires is None:
+            num_wires = circuit.num_wires
+            # Map to follow the standard wire order for dynamic wires
+            circuit = circuit.map_to_standard_wires()
+        else:
+            num_wires = len(self.wires)
+
+        if (self._statevector is None) or (self._statevector.num_wires != num_wires):
+            self._statevector = self.LightningStateVector(
+                num_wires=num_wires, dtype=self._c_dtype, **self._sv_init_kwargs
+            )
+        else:
+            self._statevector.reset_state()
+
+        return circuit
 
     @abstractmethod
     def preprocess(self, execution_config: ExecutionConfig = DefaultExecutionConfig):
@@ -316,7 +350,12 @@ class LightningBase(Device):
         batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
 
         return tuple(
-            self.jacobian(circuit, self._statevector, batch_obs=batch_obs, wire_map=self._wire_map)
+            self.jacobian(
+                self.dynamic_wires_from_circuit(circuit),
+                self._statevector,
+                batch_obs=batch_obs,
+                wire_map=self._wire_map,
+            )
             for circuit in circuits
         )
 
@@ -337,9 +376,12 @@ class LightningBase(Device):
         batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
         results = tuple(
             self.simulate_and_jacobian(
-                c, self._statevector, batch_obs=batch_obs, wire_map=self._wire_map
+                self.dynamic_wires_from_circuit(circuit),
+                self._statevector,
+                batch_obs=batch_obs,
+                wire_map=self._wire_map,
             )
-            for c in circuits
+            for circuit in circuits
         )
         return tuple(zip(*results))
 
@@ -392,7 +434,13 @@ class LightningBase(Device):
         """
         batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
         return tuple(
-            self.vjp(circuit, cots, self._statevector, batch_obs=batch_obs, wire_map=self._wire_map)
+            self.vjp(
+                self.dynamic_wires_from_circuit(circuit),
+                cots,
+                self._statevector,
+                batch_obs=batch_obs,
+                wire_map=self._wire_map,
+            )
             for circuit, cots in zip(circuits, cotangents)
         )
 
@@ -415,20 +463,34 @@ class LightningBase(Device):
         batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
         results = tuple(
             self.simulate_and_vjp(
-                circuit, cots, self._statevector, batch_obs=batch_obs, wire_map=self._wire_map
+                self.dynamic_wires_from_circuit(circuit),
+                cots,
+                self._statevector,
+                batch_obs=batch_obs,
+                wire_map=self._wire_map,
             )
             for circuit, cots in zip(circuits, cotangents)
         )
         return tuple(zip(*results))
 
-    # pylint: disable=import-outside-toplevel
-    def eval_jaxpr(self, jaxpr, consts, *args):
+    # pylint: disable=import-outside-toplevel, unused-argument
+    def eval_jaxpr(
+        self,
+        jaxpr: "jax.core.Jaxpr",
+        consts: list[TensorLike],
+        *args: TensorLike,
+        execution_config: Optional[ExecutionConfig] = None,
+    ) -> list[TensorLike]:
         """Execute pennylane variant jaxpr using C++ simulation tools.
 
         Args:
             jaxpr (jax.core.Jaxpr): jaxpr containing quantum operations
             consts (list[TensorLike]): List of constants for the jaxpr closure variables
             *args (TensorLike): The arguments to the jaxpr.
+
+        Keyword Args:
+            execution_config (Optional[ExecutionConfig]): a datastructure with additional
+                information required for execution
 
         Returns:
             list(TensorLike): the results of the execution
@@ -457,10 +519,129 @@ class LightningBase(Device):
             [1.0, 0.8775825618903728, 0.5403023058681395]
 
         """
-        # has jax dependency, so can't import up top
+        # jax is still an optional dependency for pennylane, but mandatory for program capture
+        # jax imports cannot be placed in the standard import path
+        import jax
+        from pennylane.capture.primitives import AbstractMeasurement
+
         from .lightning_interpreter import LightningInterpreter
+
+        # pylint: disable=no-member
+        dtype_map = {
+            float: (jax.numpy.float64 if jax.config.jax_enable_x64 else jax.numpy.float32),
+            int: jax.numpy.int64 if jax.config.jax_enable_x64 else jax.numpy.int32,
+            complex: (jax.numpy.complex128 if jax.config.jax_enable_x64 else jax.numpy.complex64),
+        }
+
+        if self.wires is None:
+            raise NotImplementedError("Wires must be specified for integration with plxpr capture.")
+
+        self._statevector = self.LightningStateVector(
+            num_wires=len(self.wires), dtype=self._c_dtype
+        )
 
         interpreter = LightningInterpreter(
             self._statevector, self.LightningMeasurements, shots=self.shots
         )
-        return interpreter.eval(jaxpr, consts, *args)
+        evaluator = partial(interpreter.eval, jaxpr)
+
+        def shape(var):
+            if isinstance(var.aval, AbstractMeasurement):
+                shots = self.shots.total_shots
+                s, dtype = var.aval.abstract_eval(num_device_wires=len(self.wires), shots=shots)
+                return jax.core.ShapedArray(s, dtype_map[dtype])
+            return var.aval
+
+        shapes = [shape(var) for var in jaxpr.outvars]
+        return jax.pure_callback(evaluator, shapes, consts, *args, vectorized=False)
+
+    def jaxpr_jvp(
+        self,
+        jaxpr: "jax.core.Jaxpr",
+        args: Sequence[TensorLike],
+        tangents: Sequence[TensorLike],
+        execution_config: Optional[ExecutionConfig] = None,
+    ) -> tuple[Sequence[TensorLike], Sequence[TensorLike]]:
+        """
+        An **experimental** method for computing the results and jvp for PLXPR with LightningBase devices.
+
+        Args:
+            jaxpr (jax.core.Jaxpr): Pennylane variant jaxpr containing quantum operations
+                and measurements
+            args (Sequence[TensorLike]): the arguments to the ``jaxpr``. Should contain ``consts`` followed
+                by non-constant arguments
+            tangents (Sequence[TensorLike]): the tangents corresponding to ``args``.
+                May contain ``jax.interpreters.ad.Zero``.
+
+        Keyword Args:
+            execution_config (Optional[ExecutionConfig]): a data structure with additional information required for execution
+
+        Returns:
+            Sequence[TensorLike], Sequence[TensorLike]: the results and Jacobian vector products
+
+
+        .. note::
+
+            For LightningBase devices, the current implementation of this method is based on the conversion of the jaxpr to a PennyLane tape.
+            This has strict limitations. The ``args`` should contain the concatenation of ``jaxpr.constvars`` and ``jaxpr.invars``,
+            which are assumed to represent the trainable parameters of the circuit.
+            The method will raise an error if ``args`` do not match exactly the parameters of the tape created from the jaxpr.
+            Finally, only the adjoint method is supported for gradient calculation on LightningBase devices.
+
+        """
+
+        # pylint: disable=import-outside-toplevel
+        import jax
+
+        from pennylane_lightning.core.jaxpr_jvp import (
+            convert_jaxpr_to_tape,
+            get_output_shapes,
+            validate_args_tangents,
+        )
+
+        if self.wires is None:
+            raise NotImplementedError("Wires must be specified for integration with plxpr capture.")
+
+        gradient_method = getattr(execution_config, "gradient_method", "adjoint")
+
+        if gradient_method != "adjoint":
+            raise NotImplementedError(
+                f"LightningQubit does not support gradient_method={gradient_method} for jaxpr_jvp."
+            )
+
+        if self.shots.total_shots is not None:
+            raise NotImplementedError(
+                "LightningBase does not support finite shots for ``jaxpr_jvp``. Please use shots=None."
+            )
+
+        tangents = validate_args_tangents(args, tangents)
+
+        self._statevector = self.LightningStateVector(
+            num_wires=len(self.wires), dtype=self._c_dtype
+        )
+
+        def wrapper(*args):
+            """
+            Evaluate a jaxpr by converting it into a quantum tape, ensuring the provided
+            parameters match the tape's parameters, and then simulating the tape to compute
+            both the result and the Jacobian.
+
+            The *args should contain the concatenation of jaxpr.constvars and jaxpr.invars,
+            which are assumed to represent the trainable parameters.
+            """
+            tape = convert_jaxpr_to_tape(jaxpr, args)
+            return self.simulate_and_jacobian(tape, state=self._statevector)
+
+        shapes_res, shapes_jac = get_output_shapes(jaxpr, len(self.wires))
+        results, jacobians = jax.pure_callback(wrapper, (shapes_res, shapes_jac), *args)
+
+        if len(tangents) == 1 and not jax.numpy.isscalar(tangents[0]):
+            tangents = tangents[0]
+
+        jvps = (
+            [qml.gradients.compute_jvp_single(tangents, jacobians)]
+            if len(jaxpr.outvars) == 1
+            else qml.gradients.compute_jvp_multi(tangents, jacobians)
+        )
+
+        return results, jvps

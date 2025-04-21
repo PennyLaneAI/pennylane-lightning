@@ -20,7 +20,8 @@ from typing import Any, Callable, List
 
 import numpy as np
 import pennylane as qml
-from pennylane import BasisState, QuantumFunctionError, StatePrep
+from pennylane import BasisState, StatePrep
+from pennylane.exceptions import QuantumFunctionError
 from pennylane.measurements import ExpectationMP, MeasurementProcess, StateMP
 from pennylane.operation import Operation
 from pennylane.tape import QuantumTape
@@ -184,7 +185,7 @@ class LightningBaseAdjointJacobian(ABC):
                 # the tape does not have measurements
                 return True
 
-            if tape_return_type is "state":
+            if tape_return_type == "state":
                 raise QuantumFunctionError(
                     "Adjoint differentiation method does not support measurement StateMP."
                 )
@@ -194,7 +195,7 @@ class LightningBaseAdjointJacobian(ABC):
                 # the tape does not have measurements or the gradient is 0.0
                 return True
 
-            if tape_return_type is "state":
+            if tape_return_type == "state":
                 raise QuantumFunctionError(
                     "Adjoint differentiation does not support State measurements."
                 )

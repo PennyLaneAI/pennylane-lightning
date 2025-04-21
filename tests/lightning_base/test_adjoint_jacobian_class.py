@@ -25,6 +25,7 @@ from conftest import (  # tested device
     device_name,
 )
 from pennylane import numpy as np
+from pennylane.exceptions import QuantumFunctionError
 from pennylane.tape import QuantumScript
 from scipy.stats import unitary_group
 
@@ -100,7 +101,7 @@ class TestAdjointJacobian:
         tape = qml.tape.QuantumTape(measurements=[qml.expval(qml.PauliZ(0))], shots=1)
 
         with pytest.raises(
-            qml.QuantumFunctionError,
+            QuantumFunctionError,
             match="Requested adjoint differentiation to be computed with finite shots.",
         ):
             self.calculate_jacobian(lightning_sv(num_wires=1), tape)
@@ -120,7 +121,7 @@ class TestAdjointJacobian:
             qml.state()
 
         with pytest.raises(
-            qml.QuantumFunctionError,
+            QuantumFunctionError,
             match="Adjoint differentiation method does not support measurement StateMP.",
         ):
             self.calculate_jacobian(lightning_sv(num_wires=3), tape)
@@ -153,7 +154,7 @@ class TestAdjointJacobian:
             qml.var(qml.PauliZ(1))
 
         with pytest.raises(
-            qml.QuantumFunctionError,
+            QuantumFunctionError,
             match="Adjoint differentiation method does not support expectation return type "
             "mixed with other return types",
         ):
@@ -451,7 +452,7 @@ class TestVectorJacobianProduct:
         dy = np.array([1.0])
 
         with pytest.raises(
-            qml.QuantumFunctionError,
+            QuantumFunctionError,
             match="Requested adjoint differentiation to be computed with finite shots.",
         ):
             self.calculate_vjp(statevector, tape, dy)
@@ -509,7 +510,7 @@ class TestVectorJacobianProduct:
         dy = np.ones(3, dtype=statevector.dtype)
 
         with pytest.raises(
-            qml.QuantumFunctionError,
+            QuantumFunctionError,
             match="Adjoint differentiation does not support State measurements.",
         ):
             self.calculate_vjp(statevector, tape, dy)

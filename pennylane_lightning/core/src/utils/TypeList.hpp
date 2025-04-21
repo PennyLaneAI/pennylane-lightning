@@ -27,7 +27,7 @@ template <typename T, typename... Ts> struct TypeNode {
     using Type = T;
     using Next = TypeNode<Ts...>;
 };
-///@cond DEV
+/// @cond DEV
 template <typename T> struct TypeNode<T, void> {
     using Type = T;
     using Next = void;
@@ -36,12 +36,14 @@ template <typename T> struct TypeNode<T> {
     using Type = T;
     using Next = void;
 };
-///@endcond
+/// @endcond
 
+/// @cond DEV
 /**
  * @brief Define type list
  */
 template <typename... Ts> using TypeList = TypeNode<Ts...>;
+/// @endcond
 
 /**
  * @brief Get N-th type of a type list.

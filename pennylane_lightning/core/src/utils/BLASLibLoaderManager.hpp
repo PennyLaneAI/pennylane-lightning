@@ -23,9 +23,11 @@
 #include <memory>
 #include <string>
 
+/// @cond DEV
 #ifndef SCIPY_OPENBLAS32_LIB
 #define SCIPY_OPENBLAS32_LIB ""
 #endif
+/// @endcond
 
 #include "SharedLibLoader.hpp"
 
