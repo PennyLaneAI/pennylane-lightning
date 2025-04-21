@@ -3,8 +3,7 @@ Lightning-Kokkos installation
 
 Standard installation
 =====================
-On most Linux systems,
-Lightning-Kokkos can be installed via Spack or Docker by following our installation instructions at `pennylane.ai/install <https://pennylane.ai/install/#high-performance-computing-and-gpus>`__.
+On most Linux systems, Lightning-Kokkos can be installed via Spack or Docker by following our installation instructions at `pennylane.ai/install <https://pennylane.ai/install/#high-performance-computing-and-gpus>`__.
 
 Install Lightning-Kokkos from source
 ====================================

@@ -13,6 +13,9 @@
 - Move the installation sections from `README.rst` to dedicated pages.
   [(#1131)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1131)
 
+- Fix doxygen doc builds for `AVXCommon::FuncReturn`.
+  [(#1134)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1134)
+
 <h3>Bug fixes 🐛</h3>
 
 <h3>Internal changes ⚙️</h3>
@@ -29,7 +32,7 @@ This release contains contributions from (in alphabetical order):
 
 Ali Asadi,
 Luis Alfredo Nuñez Meneses,
-Andrija Paurevic
+Andrija Paurevic,
 
 ---
 

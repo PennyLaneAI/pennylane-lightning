@@ -18,6 +18,7 @@ To build Lightning-Qubit from the `sdist` release you can run
 
 .. code-block:: bash
 
+    PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
     python -m pip install --verbose pennylane-lightning --no-binary "pennylane_lightning"
 
 where ``${PL_BACKEND}`` can be ``lightning_qubit`` (default), ``lightning_gpu``,  ``lightning_kokkos``, or ``lightning_tensor``.
