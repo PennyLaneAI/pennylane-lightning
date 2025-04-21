@@ -119,7 +119,7 @@ class LightningKokkosMeasurements(
             tuple(zip(*processed_samples)) if shots.has_partitioned_shots else processed_samples[0]
         )
 
-    def expval_pauli_sentence(self, measurementprocess: MeasurementProcess):
+    def _expval_pauli_sentence(self, measurementprocess: MeasurementProcess):
         """Specialized method for computing the expectation value of a Pauli sentence.
 
         Args:

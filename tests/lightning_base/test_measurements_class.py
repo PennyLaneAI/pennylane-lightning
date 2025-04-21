@@ -381,6 +381,56 @@ class TestExpvalHamiltonian:
 
 
 @pytest.mark.skipif(
+    device_name not in ("lightning.kokkos", "lightning.gpu"),
+    reason="Specialised expectation value for Pauli Strings only available for lightning.kokkos and lightning.gpu",
+)
+class TestExpvalPauliSentence:
+    """Tests expval for Pauli Sentences"""
+
+    wires = 2
+
+    @pytest.mark.parametrize(
+        "obs",
+        [
+            qml.Hadamard(0),
+            qml.Hermitian(np.eye(2), wires=0),
+        ],
+    )
+    def test_no_paulirep(self, obs, lightning_sv):
+        """Test _expval_pauli_sentence method with obs with no pauli_rep"""
+
+        statevector = lightning_sv(self.wires)
+        statevector.apply_operations([qml.RX(0.4, wires=[0]), qml.RY(-0.2, wires=[1])])
+
+        m = LightningMeasurements(statevector)
+        with pytest.raises(AttributeError):
+            m._expval_pauli_sentence(qml.expval(obs))
+
+    @pytest.mark.parametrize(
+        "obs, expected",
+        (
+            [qml.PauliX(1), -0.19866933079506138],
+            [qml.PauliY(0), -0.3894183423086505],
+            [qml.PauliZ(0), 0.9210609940028852],
+            [qml.sum(qml.PauliX(1), qml.PauliY(0)), -0.5880876731037115],
+            [qml.prod(qml.PauliX(1), qml.PauliY(0)), 0.07736548146578165],
+            [qml.s_prod(2.0, qml.PauliX(1)), -0.39733866159012277],
+            [qml.Hamiltonian([1.0, 2.0], [qml.PauliX(1), qml.PauliY(0)]), -0.9775060154123624],
+        ),
+    )
+    def test_pauli_sentence(self, obs, expected, tol, lightning_sv):
+        """Test _expval_pauli_sentence method with obs"""
+
+        statevector = lightning_sv(self.wires)
+        statevector.apply_operations([qml.RX(0.4, wires=[0]), qml.RY(-0.2, wires=[1])])
+
+        m = LightningMeasurements(statevector)
+        result = m._expval_pauli_sentence(qml.expval(obs))
+
+        assert np.allclose(result, expected, atol=tol, rtol=0)
+
+
+@pytest.mark.skipif(
     device_name == "lightning.tensor",
     reason="lightning.tensor does not support sparse observables.",
 )
