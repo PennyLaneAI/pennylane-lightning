@@ -250,6 +250,64 @@ class Measurements final
     };
 
     /**
+     * @brief Expected value of Pauli sentence.
+     *
+     * @param pauli_words Vector of Pauli words strings making up the Pauli
+     * sentence.
+     * @param target_wires Vector of wires where to apply the operator.
+     * @param coeffs Coefficients of the Pauli words within the string with size
+     * |pauli_word|.
+     * @return Floating point expected value of the observable.
+     */
+    auto expval(const std::vector<std::string> &pauli_words,
+                const std::vector<std::vector<std::size_t>> &target_wires,
+                const std::vector<PrecisionT> &coeffs) -> PrecisionT {
+        PL_ABORT_IF((pauli_words.size() != target_wires.size()),
+                    "The lengths of the Pauli sentence and list of wires do "
+                    "not match.");
+        PL_ABORT_IF((pauli_words.size() != coeffs.size()),
+                    "The lengths of the Pauli sentence and list of coeffs do "
+                    "not match.");
+
+        PrecisionT expvalue = 0.0;
+
+        const std::size_t num_qubits = this->_statevector.getNumQubits();
+        const KokkosVector arr_data = this->_statevector.getView();
+        for (std::size_t word = 0; word < pauli_words.size(); word++) {
+            PL_ABORT_IF((pauli_words[word].size() != target_wires[word].size()),
+                        "The number of Pauli words and wires do not match.");
+            std::vector<std::size_t> X_wires;
+            std::vector<std::size_t> Y_wires;
+            std::vector<std::size_t> Z_wires;
+            for (std::size_t i = 0; i < target_wires[word].size(); i++) {
+                if (pauli_words[word][i] == 'X') {
+                    X_wires.push_back(target_wires[word][i]);
+                } else if (pauli_words[word][i] == 'Y') {
+                    Y_wires.push_back(target_wires[word][i]);
+                } else if (pauli_words[word][i] == 'Z') {
+                    Z_wires.push_back(target_wires[word][i]);
+                } else if (pauli_words[word][i] != 'I') {
+                    PL_ABORT("Invalid Pauli word.");
+                }
+            }
+            if (X_wires.empty() && Y_wires.empty() && Z_wires.empty()) {
+                expvalue +=
+                    expval("Identity", target_wires[word]) * coeffs[word];
+            } else {
+                PrecisionT expval_tmp = 0.0;
+                Kokkos::parallel_reduce(
+                    "getExpValPauliWordFunctor", exp2(num_qubits),
+                    getExpValPauliWordFunctor<PrecisionT>(
+                        arr_data, num_qubits, X_wires, Y_wires, Z_wires),
+                    expval_tmp);
+                expvalue += expval_tmp * coeffs[word];
+            }
+        }
+
+        return expvalue;
+    }
+
+    /**
      * @brief Expected value for a list of observables.
      *
      * @tparam op_type Operation type.

@@ -4,6 +4,9 @@
 
 <h3>Improvements 🛠</h3>
 
+- Improve performance of computing expectation values of Pauli Sentences for `lightning.kokkos`.
+  [(#1126)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1126)
+
 <h3>Breaking changes 💔</h3>
 
 <h3>Deprecations 👋</h3>
@@ -31,6 +34,7 @@
 This release contains contributions from (in alphabetical order):
 
 Ali Asadi,
+Joseph Lee,
 Luis Alfredo Nuñez Meneses,
 Andrija Paurevic,
 

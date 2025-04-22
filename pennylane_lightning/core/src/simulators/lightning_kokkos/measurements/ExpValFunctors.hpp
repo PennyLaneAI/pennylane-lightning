@@ -29,6 +29,47 @@ using Pennylane::LightningKokkos::Util::wires2Parity;
 
 namespace Pennylane::LightningKokkos::Functors {
 
+template <class PrecisionT> struct getExpValPauliWordFunctor {
+    using ComplexT = Kokkos::complex<PrecisionT>;
+    using KokkosComplexVector = Kokkos::View<ComplexT *>;
+    using bitmask_t = std::size_t;
+
+    KokkosComplexVector arr;
+    bitmask_t xmask = 0;
+    bitmask_t ymask = 0;
+    bitmask_t zmask = 0;
+    std::size_t num_y;
+
+    getExpValPauliWordFunctor(const KokkosComplexVector &arr_,
+                              std::size_t num_qubits_,
+                              const std::vector<std::size_t> &X_wires,
+                              const std::vector<std::size_t> &Y_wires,
+                              const std::vector<std::size_t> &Z_wires)
+        : arr(arr_), num_y(Y_wires.size()) {
+        for (std::size_t x_wire : X_wires) {
+            xmask |= (one << (num_qubits_ - 1 - x_wire));
+        }
+        for (std::size_t y_wire : Y_wires) {
+            ymask |= (one << (num_qubits_ - 1 - y_wire));
+        }
+        for (std::size_t z_wire : Z_wires) {
+            zmask |= (one << (num_qubits_ - 1 - z_wire));
+        }
+    }
+
+    KOKKOS_INLINE_FUNCTION
+    void operator()(const std::size_t k, PrecisionT &expval) const {
+        bitmask_t j = (k ^ xmask) ^ ymask;
+        std::size_t y_factors = 2 * Kokkos::popcount(k & ymask) + num_y;
+        ComplexT prefactor{static_cast<PrecisionT>((y_factors + 1) % 2),
+                           static_cast<PrecisionT>(y_factors % 2)};
+        prefactor *= (((y_factors / 2) % 2) ^ (Kokkos::popcount(k & zmask) % 2))
+                         ? -1.0
+                         : 1.0;
+        expval += real(conj(arr(j)) * arr(k) * prefactor);
+    }
+};
+
 template <class PrecisionT> struct getExpectationValuePauliXFunctor {
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
 
