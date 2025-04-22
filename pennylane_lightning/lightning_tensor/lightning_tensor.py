@@ -35,7 +35,8 @@ from pennylane.tape import QuantumScript, QuantumTape
 from pennylane.transforms.core import TransformProgram
 from pennylane.typing import Result, ResultBatch
 
-from ..core._version import __version__
+from pennylane_lightning.core._version import __version__
+
 from ._measurements import LightningTensorMeasurements
 from ._tensornet import LightningTensorNet
 
@@ -289,7 +290,7 @@ class LightningTensor(Device):
     """
 
     # pylint: disable=too-many-instance-attributes
-    pennylane_requires = ">=0.40"
+    pennylane_requires = ">=0.41"
     version = __version__
 
     _device_options = {

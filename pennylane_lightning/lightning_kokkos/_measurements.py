@@ -33,7 +33,6 @@ from pennylane.typing import TensorLike
 
 # pylint: disable=ungrouped-imports
 from pennylane_lightning.core._measurements_base import LightningBaseMeasurements
-from pennylane_lightning.core._serialize import QuantumScriptSerializer
 
 
 class LightningKokkosMeasurements(
@@ -120,47 +119,16 @@ class LightningKokkosMeasurements(
             tuple(zip(*processed_samples)) if shots.has_partitioned_shots else processed_samples[0]
         )
 
-    def expval(self, measurementprocess: MeasurementProcess):
-        """Expectation value of the supplied observable contained in the MeasurementProcess.
+    def _expval_pauli_sentence(self, measurementprocess: MeasurementProcess):
+        """Specialized method for computing the expectation value of a Pauli sentence.
 
         Args:
-            measurementprocess (StateMeasurement): measurement to apply to the state
+            measurementprocess (MeasurementProcess): Measurement process with pauli_rep.
 
         Returns:
-            Expectation value of the observable
+            Expectation value.
         """
-        if self._observable_is_sparse(measurementprocess.obs):
-            # We first ensure the CSR sparse representation.
-            CSR_SparseHamiltonian = measurementprocess.obs.sparse_matrix(
-                wire_order=list(range(self._qubit_state.num_wires))
-            ).tocsr(copy=False)
-            return self._measurement_lightning.expval(
-                CSR_SparseHamiltonian.indptr,
-                CSR_SparseHamiltonian.indices,
-                CSR_SparseHamiltonian.data,
-            )
-
-        # use specialized function to compute expval(pauli_sentence)
-        if measurementprocess.obs.pauli_rep is not None:
-            pwords, coeffs = zip(*measurementprocess.obs.pauli_rep.items())
-            pauli_words = [qml.pauli.pauli_word_to_string(p) for p in pwords]
-            wires = [p.wires.tolist() for p in pwords]
-            return self._measurement_lightning.expval(pauli_words, wires, coeffs)
-
-        if isinstance(measurementprocess.obs, qml.Hermitian):
-            observable_wires = measurementprocess.obs.wires
-            matrix = measurementprocess.obs.matrix()
-            return self._measurement_lightning.expval(matrix, observable_wires)
-
-        if (measurementprocess.obs.arithmetic_depth > 0) or isinstance(
-            measurementprocess.obs.name, List
-        ):
-            # pylint: disable=protected-access
-            ob_serialized = QuantumScriptSerializer(
-                self._qubit_state.device_name, self.dtype == np.complex64, self._use_mpi
-            )._ob(measurementprocess.obs)
-            return self._measurement_lightning.expval(ob_serialized)
-
-        return self._measurement_lightning.expval(
-            measurementprocess.obs.name, measurementprocess.obs.wires
-        )
+        pwords, coeffs = zip(*measurementprocess.obs.pauli_rep.items())
+        pauli_words = [qml.pauli.pauli_word_to_string(p) for p in pwords]
+        wires = [p.wires.tolist() for p in pwords]
+        return self._measurement_lightning.expval(pauli_words, wires, coeffs)

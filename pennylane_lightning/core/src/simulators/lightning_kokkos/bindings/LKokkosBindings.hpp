@@ -257,11 +257,10 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
             "expval",
             [](measureT &M, const std::vector<std::string> &pauli_words,
                const std::vector<std::vector<std::size_t>> &target_wires,
-               const np_arr_c &coeffs) {
-                return M.expval(pauli_words, target_wires,
-                                static_cast<ComplexT *>(coeffs.request().ptr));
+               const std::vector<ParamT> &coeffs) {
+                return M.expval(pauli_words, target_wires, coeffs);
             },
-            "Expected value of Hamiltonian represented by Pauli words.")
+            "Expected value of a Hamiltonian represented by Pauli words.")
 #ifndef _ENABLE_MPI
         .def(
             "expval",
