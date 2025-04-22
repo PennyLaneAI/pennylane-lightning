@@ -382,7 +382,7 @@ class TestExpvalHamiltonian:
 
 @pytest.mark.skipif(
     device_name not in ("lightning.kokkos", "lightning.gpu"),
-    reason="Specialised expectation value for Pauli Strings only available for lightning.kokkos and lightning.gpu",
+    reason="Specialized expectation value for Pauli Sentences only available for lightning.kokkos and lightning.gpu",
 )
 class TestExpvalPauliSentence:
     """Tests expval for Pauli Sentences"""
@@ -413,10 +413,25 @@ class TestExpvalPauliSentence:
             [qml.PauliX(1), -0.19866933079506138],
             [qml.PauliY(0), -0.3894183423086505],
             [qml.PauliZ(0), 0.9210609940028852],
+            [0.1 * qml.PauliZ(0) + 0.2 * qml.PauliY(0), 0.01422243094],
             [qml.sum(qml.PauliX(1), qml.PauliY(0)), -0.5880876731037115],
             [qml.prod(qml.PauliX(1), qml.PauliY(0)), 0.07736548146578165],
             [qml.s_prod(2.0, qml.PauliX(1)), -0.39733866159012277],
+            [
+                qml.sum(
+                    qml.prod(qml.PauliX(1), qml.PauliY(0)),
+                    qml.s_prod(-1.0, qml.prod(qml.PauliY(0), qml.PauliX(1))),
+                ),
+                0.0,
+            ],
             [qml.Hamiltonian([1.0, 2.0], [qml.PauliX(1), qml.PauliY(0)]), -0.9775060154123624],
+            [
+                qml.sum(
+                    qml.Hamiltonian([1.0, 2.0], [qml.PauliX(1), qml.PauliY(0)]),
+                    qml.prod(qml.PauliX(1), qml.PauliY(0)),
+                ),
+                -0.9001405339,
+            ],
         ),
     )
     def test_pauli_sentence(self, obs, expected, tol, lightning_sv):

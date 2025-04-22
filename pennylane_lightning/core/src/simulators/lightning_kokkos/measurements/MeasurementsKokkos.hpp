@@ -229,8 +229,7 @@ class Measurements final
                 const std::vector<std::size_t> &wires) -> PrecisionT {
         switch (expval_funcs_[operation]) {
         case ExpValFunc::Identity:
-            return applyExpValNamedFunctor<getExpectationValueIdentityFunctor,
-                                           0>(wires);
+            return 1.0;
         case ExpValFunc::PauliX:
             return applyExpValNamedFunctor<getExpectationValuePauliXFunctor, 1>(
                 wires);
@@ -253,7 +252,7 @@ class Measurements final
     /**
      * @brief Expected value of Pauli sentence.
      *
-     * @param pauli_sentence Vector of Pauli words strings making up the Pauli
+     * @param pauli_words Vector of Pauli words strings making up the Pauli
      * sentence.
      * @param target_wires Vector of wires where to apply the operator.
      * @param coeffs Coefficients of the Pauli words within the string with size
