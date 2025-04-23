@@ -4,11 +4,20 @@
 
 <h3>Improvements 🛠</h3>
 
+- Improve performance of computing expectation values of Pauli Sentences for `lightning.kokkos`.
+  [(#1126)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1126)
+
 <h3>Breaking changes 💔</h3>
 
 <h3>Deprecations 👋</h3>
 
 <h3>Documentation 📝</h3>
+
+- Move the installation sections from `README.rst` to dedicated pages.
+  [(#1131)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1131)
+
+- Fix doxygen doc builds for `AVXCommon::FuncReturn`.
+  [(#1134)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1134)
 
 <h3>Bug fixes 🐛</h3>
 
@@ -27,8 +36,10 @@
 
 This release contains contributions from (in alphabetical order):
 
-Luis Alfredo Nuñez Meneses
-Andrija Paurevic
+Ali Asadi,
+Joseph Lee,
+Luis Alfredo Nuñez Meneses,
+Andrija Paurevic,
 
 ---
 

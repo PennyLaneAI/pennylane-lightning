@@ -28,7 +28,7 @@ from typing import List
 
 import numpy as np
 import pennylane as qml
-from pennylane.measurements import CountsMP, SampleMeasurement, Shots
+from pennylane.measurements import CountsMP, MeasurementProcess, SampleMeasurement, Shots
 from pennylane.typing import TensorLike
 
 # pylint: disable=ungrouped-imports
@@ -118,3 +118,17 @@ class LightningKokkosMeasurements(
         return (
             tuple(zip(*processed_samples)) if shots.has_partitioned_shots else processed_samples[0]
         )
+
+    def _expval_pauli_sentence(self, measurementprocess: MeasurementProcess):
+        """Specialized method for computing the expectation value of a Pauli sentence.
+
+        Args:
+            measurementprocess (MeasurementProcess): Measurement process with pauli_rep.
+
+        Returns:
+            Expectation value.
+        """
+        pwords, coeffs = zip(*measurementprocess.obs.pauli_rep.items())
+        pauli_words = [qml.pauli.pauli_word_to_string(p) for p in pwords]
+        wires = [p.wires.tolist() for p in pwords]
+        return self._measurement_lightning.expval(pauli_words, wires, coeffs)
