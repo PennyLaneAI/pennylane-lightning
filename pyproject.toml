@@ -1,9 +1,9 @@
 [build-system]
-requires = ["cmake~=3.27.0", "ninja; platform_system!='Windows'", "setuptools>=42", "tomli", "cutensornet-cu12"]
+requires = ["cmake~=3.27.0", "ninja; platform_system!='Windows'", "setuptools>=42", "tomli"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "PennyLane_Lightning_Tensor"
+name = "PennyLane_Lightning"
 description = "PennyLane-Lightning plugin"
 readme = "README.rst"
 requires-python = ">=3.10"
@@ -26,7 +26,7 @@ classifiers = [
     "Programming Language :: Python :: 3.13", 
     "Topic :: Scientific/Engineering :: Physics",
 ]
-dependencies = ["pennylane>=0.41", "scipy-openblas32>=0.3.26", "cutensornet-cu12", "nvidia-cusolver-cu12", "nvidia-nvjitlink-cu12", "nvidia-cusparse-cu12", "nvidia-cublas-cu12", "nvidia-cuda-runtime-cu12", "pennylane_lightning==0.42.0-dev1"]
+dependencies = ["pennylane>=0.41", "scipy-openblas32>=0.3.26"]
 dynamic = [ "version",]
 [[project.maintainers]]
 name = "Xanadu Quantum Technologies Inc."
@@ -44,7 +44,7 @@ tensor = [ "pennylane-lightning-tensor",]
 Homepage = "https://github.com/PennyLaneAI/pennylane-lightning"
 
 [project.entry-points."pennylane.plugins"]
-"lightning.tensor" = "pennylane_lightning.lightning_tensor:LightningTensor"
+"lightning.qubit" = "pennylane_lightning.lightning_qubit:LightningQubit"
 
 [tool.bandit]
 targets = "pennylane_lightning"
