@@ -32,8 +32,8 @@ from pennylane.measurements import MidMeasureMP
 from pennylane.tape import QuantumScript, QuantumTape
 from pennylane.typing import Result, ResultBatch, TensorLike
 
-from pennylane_lightning.lightning_base._measurements import LightningBaseMeasurements
 from pennylane_lightning import __version__
+from pennylane_lightning.lightning_base._measurements import LightningBaseMeasurements
 
 Result_or_ResultBatch = Union[Result, ResultBatch]
 QuantumTapeBatch = Sequence[QuantumTape]
