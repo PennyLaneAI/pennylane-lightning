@@ -95,6 +95,12 @@ macro(findMPI_LK external_libs)
             message(FATAL_ERROR "MPI is NOT found.")
         endif()
 
+        if(DEFINED ENV{MPI_EXTRA_LINKER_FLAGS})
+            string(REPLACE " " ";" MPI_EXTRA_FLAGS_LIST "$ENV{MPI_EXTRA_LINKER_FLAGS}")
+            message(STATUS "Adding MPI extra linker flags: ${MPI_EXTRA_FLAGS_LIST}")
+            target_link_options(${external_libs} INTERFACE ${MPI_EXTRA_FLAGS_LIST})
+        endif()
+
         target_link_libraries(${external_libs} INTERFACE MPI::MPI_CXX)
     endif()
 endmacro()
