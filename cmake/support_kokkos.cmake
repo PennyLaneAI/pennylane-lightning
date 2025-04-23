@@ -95,24 +95,6 @@ macro(findMPI_LK external_libs)
             message(FATAL_ERROR "MPI is NOT found.")
         endif()
 
-        find_library(GTL
-        NAMES libmpi_gtl_hsa.so libmpi_gtl_hsa.so.0 libmpi_gtl_hsa.so.0.0.0
-        HINTS ENV CRAY_LD_LIBRARY_PATH
-        ENV LD_LIBRARY_PATH
-        )
-
-        string(FIND "${CMAKE_SYSTEM}" "cray" subStrIdx)
-        if(NOT subStrIdx EQUAL -1)
-            if(DEFINED ENV{CRAY_MPICH_VERSION} AND NOT "$ENV{CRAY_MPICH_VERSION}" STREQUAL "none")
-                if(NOT GTL)
-                    message(FATAL_ERROR "\nUnable to find GTL (GPU Transport Layer) library.")
-                else()
-                    message(STATUS "GPU Transport Layer library found.")
-                    target_link_libraries(${external_libs} INTERFACE ${GTL})
-                endif()
-            endif()
-        endif()
-
         target_link_libraries(${external_libs} INTERFACE MPI::MPI_CXX)
     endif()
 endmacro()
