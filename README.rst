@@ -1,6 +1,3 @@
-Lightning Plugins
-#################
-
 .. image:: https://img.shields.io/github/actions/workflow/status/PennyLaneAI/pennylane-lightning/tests_lqcpu_python.yml?branch=master&label=LQubit&style=flat-square
     :alt: Linux x86_64 L-Qubit Python tests (branch)
     :target: https://github.com/PennyLaneAI/pennylane-lightning/actions/workflows/tests_lqcpu_python.yml
