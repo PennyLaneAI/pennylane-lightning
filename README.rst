@@ -48,6 +48,7 @@ Lightning Plugins
 .. header (logo+title) image
 
 .. raw:: html
+    
     <p align="center">
         <img src="https://raw.githubusercontent.com/PennyLaneAI/pennylane-lightning/master/doc/_static/readme/pl-lightning-logo-lightmode.png#gh-light-mode-only" width="700px">
         <!--
