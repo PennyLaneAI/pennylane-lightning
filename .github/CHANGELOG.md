@@ -13,11 +13,16 @@
 
 <h3>Documentation 📝</h3>
 
+- Move the installation sections from `README.rst` to dedicated pages.
+  [(#1131)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1131)
+
 - Fix doxygen doc builds for `AVXCommon::FuncReturn`.
   [(#1134)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1134)
 
 - Add a header/banner image to the README (`README.rst`), as in the `pennylane` and `catalyst` repositories.
+  Revert this change temporarily as PyPI disables the `.. raw::` directive for security reasons in `rst` files.
   [(#1139)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1139)
+  [(#1141)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1141)
 
 <h3>Bug fixes 🐛</h3>
 
