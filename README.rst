@@ -45,6 +45,18 @@ Lightning Plugins
     :alt: License
     :target: https://www.apache.org/licenses/LICENSE-2.0
 
+..
+    header (logo+title) image
+
+.. raw:: html
+    <p align="center">
+        <img src="https://raw.githubusercontent.com/PennyLaneAI/pennylane-lightning/master/doc/_static/readme/pl-lightning-logo-lightmode.png#gh-light-mode-only" width="700px">
+        <!--
+        Use a relative import for the dark mode image. When loading on PyPI, this
+        will fail automatically and show nothing.
+        -->
+        <img src=".doc/_static/readme/pl-lightning-logo-darkmode.png#gh-dark-mode-only" width="700px" onerror="this.style.display='none'" alt=""/>
+    </p>
 
 .. header-start-inclusion-marker-do-not-remove
 
