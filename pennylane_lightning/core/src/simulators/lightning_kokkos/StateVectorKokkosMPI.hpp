@@ -643,8 +643,8 @@ class StateVectorKokkosMPI final
      *
      */
     void
-    swap_global_local_wires(std::vector<std::size_t> &global_wires_to_swap,
-                            std::vector<std::size_t> &local_wires_to_swap) {
+    swap_global_local_wires(const std::vector<std::size_t> &global_wires_to_swap,
+                            const std::vector<std::size_t> &local_wires_to_swap) {
         PL_ABORT_IF_NOT(global_wires_to_swap.size() ==
                             local_wires_to_swap.size(),
                         "global_wires_to_swap and local_wires_to_swap must "
@@ -655,8 +655,8 @@ class StateVectorKokkosMPI final
         PL_ABORT_IF_NOT(
             is_wires_local(local_wires_to_swap),
             "local_wires_to_swap must be local wires.");
-        std::sort(global_wires_to_swap.begin(), global_wires_to_swap.end());
-        std::sort(local_wires_to_swap.begin(), local_wires_to_swap.end());
+        //std::sort(global_wires_to_swap.begin(), global_wires_to_swap.end());
+        //std::sort(local_wires_to_swap.begin(), local_wires_to_swap.end());
 
         //#ifdef LKMPI_DEBUG
         // A little debug message:
@@ -751,6 +751,8 @@ class StateVectorKokkosMPI final
                               << " and SV_index = " << SV_index << std::endl;
                     #endif
 
+
+                    // TODO: FIX ME FIX ME on GPU
                     (*sendbuf_)(buffer_index) =
                         (*sv_).getView()(SV_index);
                 }
@@ -805,6 +807,7 @@ class StateVectorKokkosMPI final
                                      << rev_local_wires_index_not_swapping[i]);
                     }
 
+                    // TODO: FIX ME FIX ME on GPU
                     (*sv_).getView()(SV_index) =
                         (*recvbuf_)(buffer_index);
                 }
@@ -1415,6 +1418,8 @@ class StateVectorKokkosMPI final
      */
     [[nodiscard]] auto getDataVector(const int root = 0)
         -> std::vector<ComplexT> {
+            reorder_global_wires();
+            reorder_local_wires();
         std::vector<ComplexT> data_((get_mpi_rank() == root) ? this->getLength()
                                                              : 0);
         std::vector<ComplexT> local_((*sv_).getLength());
