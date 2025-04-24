@@ -45,8 +45,7 @@ Lightning Plugins
     :alt: License
     :target: https://www.apache.org/licenses/LICENSE-2.0
 
-..
-    header (logo+title) image
+.. header (logo+title) image
 
 .. raw:: html
     <p align="center">
