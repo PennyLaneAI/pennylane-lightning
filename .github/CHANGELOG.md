@@ -13,9 +13,6 @@
 
 <h3>Documentation 📝</h3>
 
-- Move the installation sections from `README.rst` to dedicated pages.
-  [(#1131)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1131)
-
 - Fix doxygen doc builds for `AVXCommon::FuncReturn`.
   [(#1134)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1134)
 
