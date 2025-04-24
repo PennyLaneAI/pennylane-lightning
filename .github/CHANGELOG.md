@@ -19,8 +19,9 @@
 - Fix doxygen doc builds for `AVXCommon::FuncReturn`.
   [(#1134)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1134)
 
-- Add a header/banner image to the README (`README.rst`), as in the `pennylane` and `catalyst` repositories.
-  Revert this change temporarily as PyPI disables the `.. raw::` directive for security reasons in `rst` files.
+- Added a header/banner image to the README (`README.rst`), as in the `pennylane` and `catalyst` repositories.
+  Temporarily reverted this change as PyPI forbids the `.. raw::` directive for security reasons in `rst` files.
+  This will be revisited in a future PR.
   [(#1139)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1139)
   [(#1141)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1141)
 
