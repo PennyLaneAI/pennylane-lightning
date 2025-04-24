@@ -50,7 +50,7 @@ Lightning Plugins
 
 .. raw:: html
     <p align="center">
-        <img src="https://raw.githubusercontent.com/PennyLaneAI/pennylane-lightning/master/doc/_static/readme/pl-lightning-logo-lightmode.png#gh-light-mode-only" width="700px">
+        <img src="https://raw.githubusercontent.com/PennyLaneAI/pennylane-lightning/add_readme_header_image/doc/_static/readme/pl-lightning-logo-lightmode.png#gh-light-mode-only" width="700px">
         <!--
         Use a relative import for the dark mode image. When loading on PyPI, this
         will fail automatically and show nothing.
