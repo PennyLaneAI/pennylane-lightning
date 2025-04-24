@@ -175,10 +175,7 @@ class LightningGPUMeasurements(LightningBaseMeasurements):  # pylint: disable=to
 
         # use specialized function to compute expval(pauli_sentence)
         if measurementprocess.obs.pauli_rep is not None:
-            pwords, coeffs = zip(*measurementprocess.obs.pauli_rep.items())
-            pauli_words = [qml.pauli.pauli_word_to_string(p) for p in pwords]
-            wires = [p.wires.tolist() for p in pwords]
-            return self._measurement_lightning.expval(pauli_words, wires, coeffs)
+            return self._expval_pauli_sentence(measurementprocess)
 
         # use specialized functors to compute expval(Hermitian)
         if isinstance(measurementprocess.obs, qml.Hermitian):
@@ -200,3 +197,17 @@ class LightningGPUMeasurements(LightningBaseMeasurements):  # pylint: disable=to
         return self._measurement_lightning.expval(
             measurementprocess.obs.name, measurementprocess.obs.wires
         )
+
+    def _expval_pauli_sentence(self, measurementprocess: MeasurementProcess):
+        """Specialized method for computing the expectation value of a Pauli sentence.
+
+        Args:
+            measurementprocess (MeasurementProcess): Measurement process with pauli_rep.
+
+        Returns:
+            Expectation value.
+        """
+        pwords, coeffs = zip(*measurementprocess.obs.pauli_rep.items())
+        pauli_words = [qml.pauli.pauli_word_to_string(p) for p in pwords]
+        wires = [p.wires.tolist() for p in pwords]
+        return self._measurement_lightning.expval(pauli_words, wires, coeffs)
