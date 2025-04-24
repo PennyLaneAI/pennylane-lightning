@@ -38,8 +38,8 @@ This release contains contributions from (in alphabetical order):
 
 Ali Asadi,
 Joseph Lee,
-Luis Alfredo Nuñez Meneses,
 Anton Naim Ibrahim,
+Luis Alfredo Nuñez Meneses,
 Andrija Paurevic,
 
 ---
