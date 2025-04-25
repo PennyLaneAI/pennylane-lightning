@@ -29,6 +29,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Updates for depending deprecations to `Observable` and `is_trainable` in pennylane.
+  [(#1138)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1138)
+
 - Import custom PennyLane errors from `pennylane.exceptions` rather than top-level.
   [(#1122)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1122)
 
@@ -40,6 +43,7 @@
 This release contains contributions from (in alphabetical order):
 
 Ali Asadi,
+Christina Lee, 
 Joseph Lee,
 Anton Naim Ibrahim,
 Luis Alfredo Nuñez Meneses,
