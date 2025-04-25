@@ -1,3 +1,6 @@
+Lightning Plugins
+#################
+
 .. image:: https://img.shields.io/github/actions/workflow/status/PennyLaneAI/pennylane-lightning/tests_lqcpu_python.yml?branch=master&label=LQubit&style=flat-square
     :alt: Linux x86_64 L-Qubit Python tests (branch)
     :target: https://github.com/PennyLaneAI/pennylane-lightning/actions/workflows/tests_lqcpu_python.yml
@@ -41,19 +44,6 @@
 .. image:: https://img.shields.io/pypi/l/PennyLane.svg?logo=apache&style=flat-square
     :alt: License
     :target: https://www.apache.org/licenses/LICENSE-2.0
-
-.. header (logo+title) image
-
-.. raw:: html
-
-    <p align="center">
-        <img src="https://raw.githubusercontent.com/PennyLaneAI/pennylane-lightning/master/doc/_static/readme/pl-lightning-logo-lightmode.png#gh-light-mode-only" width="700px">
-        <!--
-        Use a relative import for the dark mode image. When loading on PyPI, this
-        will fail automatically and show nothing.
-        -->
-        <img src="./doc/_static/readme/pl-lightning-logo-darkmode.png#gh-dark-mode-only" width="700px" onerror="this.style.display='none'" alt=""/>
-    </p>
 
 .. header-start-inclusion-marker-do-not-remove
 
