@@ -19,6 +19,12 @@
 - Fix doxygen doc builds for `AVXCommon::FuncReturn`.
   [(#1134)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1134)
 
+- Added a header/banner image to the README (`README.rst`), as in the `pennylane` and `catalyst` repositories.
+  Temporarily reverted this change as PyPI forbids the `.. raw::` directive for security reasons in `rst` files.
+  This will be revisited in a future PR.
+  [(#1139)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1139)
+  [(#1141)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1141)
+
 <h3>Bug fixes 🐛</h3>
 
 <h3>Internal changes ⚙️</h3>
@@ -39,6 +45,7 @@ This release contains contributions from (in alphabetical order):
 Ali Asadi,
 Christina Lee, 
 Joseph Lee,
+Anton Naim Ibrahim,
 Luis Alfredo Nuñez Meneses,
 Andrija Paurevic,
 
