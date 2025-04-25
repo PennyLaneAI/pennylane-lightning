@@ -139,10 +139,11 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
 #if _ENABLE_MPI == 1
     pyclass.def(
         "swapGlobalLocalWires",
-        [](StateVectorT &sv, const std::vector<std::size_t> &global_wires_to_swap,
+        [](StateVectorT &sv,
+           const std::vector<std::size_t> &global_wires_to_swap,
            const std::vector<std::size_t> &local_wires_to_swap) {
             sv.swap_global_local_wires(global_wires_to_swap,
-                                      local_wires_to_swap);
+                                       local_wires_to_swap);
         },
         "Swap global and local wires.");
 #endif
@@ -172,16 +173,16 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
             },
             "Set the state vector to the data contained in `state`.")
 #if _ENABLE_MPI == 1
-        .def("getPrintState", 
-                [](StateVectorT &sv) {       
-                 auto state = sv.getDataVector(0);
-                    for (auto i: state) {
-                        std::cout << i << " ";
-                    }
-                    std::cout << std::endl;
-                },
-                "Get the state vector as a string."
-        )
+        .def(
+            "getPrintState",
+            [](StateVectorT &sv) {
+                auto state = sv.getDataVector(0);
+                for (auto i : state) {
+                    std::cout << i << " ";
+                }
+                std::cout << std::endl;
+            },
+            "Get the state vector as a string.")
 #endif
         .def(
             "DeviceToHost",

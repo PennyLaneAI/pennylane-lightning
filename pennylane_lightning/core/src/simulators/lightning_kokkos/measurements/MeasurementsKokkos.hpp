@@ -230,7 +230,7 @@ class Measurements final
         case ExpValFunc::Identity:
 #if _ENABLE_MPI == 1
             return applyExpValNamedFunctor<getExpectationValueIdentityFunctor,
-            0>(wires);
+                                           0>(wires);
 #else
             return 1.0;
 #endif

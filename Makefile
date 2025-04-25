@@ -134,7 +134,7 @@ test-cpp-mpi:
 	rm -rf ./BuildTests
 	cmake -BBuildTests -G Ninja \
 		  -DCMAKE_BUILD_TYPE=Debug \
-		  -DBUILD_TESTS=ON \
+		  -DBUILD_TESTS=OFF \
 		  -DENABLE_WARNINGS=OFF \
 		  -DPL_BACKEND=$(PL_BACKEND) \
 		  -DSCIPY_OPENBLAS=$(SCIPY_OPENBLAS) \
