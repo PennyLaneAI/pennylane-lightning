@@ -66,12 +66,11 @@ int main(int argc, char *argv[]) {
 
     auto inputs = prep_input_1q(argc, argv);
     std::size_t nq = inputs.first;
-    std::size_t swapping_qubit = inputs.second;
+    std::size_t swapping = inputs.second;
 
     // Create PennyLane Lightning statevector
     StateVectorKokkosMPI<double> svmpi(nq);
-    std::size_t repeats = 10;
-    std::size_t swapping = 0;
+    std::size_t repeats = 4;
 
     svmpi.swap_global_local_wires({swapping}, {nq - 1});
     svmpi.swap_global_local_wires({nq-1}, {swapping});

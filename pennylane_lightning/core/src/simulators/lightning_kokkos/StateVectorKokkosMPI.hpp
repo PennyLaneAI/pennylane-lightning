@@ -141,7 +141,9 @@ class StateVectorKokkosMPI final
         Kokkos::InitializationSettings settings = kokkos_args;
         num_qubits_ = num_qubits;
 
-        settings.set_device_id(get_mpi_rank());
+        //TODO: FIX! with srun, each rank sees GPU ID 0
+        //settings.set_device_id(get_mpi_rank());
+        settings.set_device_id(0);
         global_wires_.resize(log2(static_cast<std::size_t>(
             get_mpi_size()))); // set to constructor line
         local_wires_.resize(get_num_local_wires());
@@ -757,20 +759,28 @@ class StateVectorKokkosMPI final
                         (*sv_).getView()(SV_index);
                 } */
                 // TODO: uncomment this
+                
+                // These are defined since on AMD compiler it's more strict what host functions can be included in the KOKKOS_LAMBDA - e.g. dereferencing, size are all not allowed
+                /* const std::size_t not_swapping_local_wire_size = rev_local_wires_index_not_swapping.size(); 
+                auto rev_local_wires_index_not_swapping_view = vector2view(rev_local_wires_index_not_swapping);
+
+                auto sendbuf_view = (*sendbuf_);
+                auto recvbuf_view = (*recvbuf_);
+                auto sv_view = (*sv_).getView();
                 Kokkos::parallel_for("copy_sendbuf",
                     exp2((get_num_local_wires() - local_wires_to_swap.size())),
                     KOKKOS_LAMBDA(std::size_t buffer_index) {
                         std::size_t SV_index = swap_wire_mask;
                         for (std::size_t i = 0;
-                             i < rev_local_wires_index_not_swapping.size();
+                             i < not_swapping_local_wire_size;
                              i++) {
                             SV_index |=
                                 (((buffer_index >> i) & 1)
-                                 << rev_local_wires_index_not_swapping[i]);
+                                 << rev_local_wires_index_not_swapping_view(i));
                         }
-                        (*sendbuf_)(buffer_index) = (*sv_).getView()(SV_index);
+                        sendbuf_view(buffer_index) = sv_view(SV_index);
                     });
-                Kokkos::fence();
+                Kokkos::fence(); */
 
                 std::size_t other_global_index = batch_index ^ global_index;
                 std::size_t other_mpi_rank =
@@ -809,21 +819,21 @@ class StateVectorKokkosMPI final
                     (*sv_).getView()(SV_index) = (*recvbuf_)(buffer_index);
                 } */
                 //TODO: uncomment this
-                Kokkos::parallel_for("copy_recvbuf", exp2((get_num_local_wires() -
+                /* Kokkos::parallel_for("copy_recvbuf", exp2((get_num_local_wires() -
                 local_wires_to_swap.size())), KOKKOS_LAMBDA(std::size_t buffer_index)
                 {
                    std::size_t SV_index = swap_wire_mask;
        
                    for (std::size_t i = 0;
-                        i < rev_local_wires_index_not_swapping.size(); i++) {
+                        i < not_swapping_local_wire_size; i++) {
                        SV_index |= (((buffer_index >> i) & 1)
-                                    << rev_local_wires_index_not_swapping[i]);
+                                    << rev_local_wires_index_not_swapping_view(i));
                    }
        
-                   (*sv_).getView()(SV_index) =
-               (*recvbuf_)(buffer_index);
+                   sv_view(SV_index) =
+                   recvbuf_view(buffer_index);
                });
-                Kokkos::fence();
+                Kokkos::fence(); */
             }
         }
 
