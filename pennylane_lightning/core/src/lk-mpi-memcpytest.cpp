@@ -55,7 +55,7 @@ int main(int argc, char *argv[]) {
 
     // Create PennyLane Lightning statevector
     StateVectorKokkosMPI<double> svmpi(nq);
-    std::size_t repeats = 8;
+    std::size_t repeats = 5;
 
 
     std::vector<std::size_t> rev_local_wires_index_not_swapping;
@@ -70,8 +70,9 @@ int main(int argc, char *argv[]) {
     auto sendbuf_view = (*(svmpi.sendbuf_));
     auto recvbuf_view = (*(svmpi.recvbuf_));
     auto sv_view = (*svmpi.sv_).getView();
+    // Warmup
     Kokkos::parallel_for("copy_sendbuf",
-        exp2(nq - 1),
+        exp2(nq - 2),
         KOKKOS_LAMBDA(std::size_t buffer_index) {
             std::size_t SV_index = swap_wire_mask;
             for (std::size_t i = 0;
@@ -86,23 +87,33 @@ int main(int argc, char *argv[]) {
     Kokkos::fence();
 
 
-    // Warmup
-   /*  svmpi.mpi_sendrecv(dest_rank, dest_rank, send_size ,xor_rank);
-
     
     const auto t_start = std::chrono::high_resolution_clock::now();   
 
     for (std::size_t i = 0; i < repeats; i++) {    
-        svmpi.mpi_sendrecv(dest_rank, dest_rank, send_size ,xor_rank);
+        Kokkos::parallel_for("copy_sendbuf",
+        exp2(nq - 2),
+        KOKKOS_LAMBDA(std::size_t buffer_index) {
+            std::size_t SV_index = swap_wire_mask;
+            for (std::size_t i = 0;
+                    i < not_swapping_local_wire_size;
+                    i++) {
+                SV_index |=
+                    (((buffer_index >> i) & 1)
+                        << rev_local_wires_index_not_swapping_view(i));
+            }
+            sendbuf_view(buffer_index) = sv_view(SV_index);
+        });
+    Kokkos::fence();
     }
     const auto t_end = std::chrono::high_resolution_clock::now();   
     const double t_duration = std::chrono::duration<double, t_scale>(t_end - t_start).count();  
     double average_time = t_duration / (repeats); 
-    double data_sent_GB = send_size * 128 / 8 / 1024 / 1024 / 1024;
-    std::cout << "Average time for swapping "  << average_time << " ms (My rank:"<< myrank << " dest rank:" << dest_rank << ")" << std::endl;  
-    std::cout << "Data sent = Data received = " << data_sent_GB << " GB (My rank:"<< myrank << " dest rank:" << dest_rank << ")" << std::endl;  
-    std::cout << "Effective single direction bandwidth = " << data_sent_GB/average_time*1000.0 << " GB/s (My rank:"<< myrank << " dest rank:" << dest_rank << ")" << std::endl;  
-     */
+    double data_copied_GB = exp2(nq - 2) * 128 / 8 / 1024 / 1024 / 1024;
+    std::cout << "Average time for swapping "  << average_time << " ms" << std::endl;  
+    std::cout << "Data copied = " << data_copied_GB  << " GB" << std::endl;  
+    std::cout << "Effective copy speed = " << data_copied_GB/average_time*1000.0 << " GB/s " << std::endl;  
+
 
 
 
