@@ -40,4 +40,8 @@ if (ENABLE_MPI)
     target_link_libraries(lk-mpi-bandwidthtest pennylane_lightning)
     set_property(TARGET lk-mpi-bandwidthtest PROPERTY CXX_STANDARD 20)
 
+    add_executable(lk-mpi-memcpytest lk-mpi-memcpytest.cpp)
+    target_link_libraries(lk-mpi-memcpytest pennylane_lightning)
+    set_property(TARGET lk-mpi-memcpytest PROPERTY CXX_STANDARD 20)
+
 endif()

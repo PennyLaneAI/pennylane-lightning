@@ -1464,7 +1464,8 @@ class StateVectorKokkosMPI final
         return data_;
     }
 
-  private:
+  //private:
+  public: // TODO: temporary tests 
     std::size_t num_qubits_;
     std::unique_ptr<SVK> sv_;
     std::unique_ptr<KokkosVector>

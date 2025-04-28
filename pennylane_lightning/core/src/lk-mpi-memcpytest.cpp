@@ -42,7 +42,7 @@ std::size_t  prep_input_1q(int argc, char *argv[]) {
     std::string arg_qubits = argv[1];
     std::size_t qubits = std::stoi(arg_qubits);
 
-    return {qubits, xor_rank};
+    return qubits;
 }
 
 
@@ -51,9 +51,7 @@ std::size_t  prep_input_1q(int argc, char *argv[]) {
 int main(int argc, char *argv[]) {
 
 
-    auto inputs = prep_input_1q(argc, argv);
-    std::size_t nq = inputs.first;
-    std::size_t xor_rank = inputs.second;
+    std::size_t nq = prep_input_1q(argc, argv);
 
     // Create PennyLane Lightning statevector
     StateVectorKokkosMPI<double> svmpi(nq);
@@ -65,29 +63,31 @@ int main(int argc, char *argv[]) {
     std::iota(rev_local_wires_index_not_swapping.begin(), rev_local_wires_index_not_swapping.end(), 0);
 
     const std::size_t not_swapping_local_wire_size = rev_local_wires_index_not_swapping.size(); 
-                auto rev_local_wires_index_not_swapping_view = vector2view(rev_local_wires_index_not_swapping);
+    auto rev_local_wires_index_not_swapping_view = vector2view(rev_local_wires_index_not_swapping);
 
-                auto sendbuf_view = (*sendbuf_);
-                auto recvbuf_view = (*recvbuf_);
-                auto sv_view = (*sv_).getView();
-                Kokkos::parallel_for("copy_sendbuf",
-                    exp2((get_num_local_wires() - local_wires_to_swap.size())),
-                    KOKKOS_LAMBDA(std::size_t buffer_index) {
-                        std::size_t SV_index = swap_wire_mask;
-                        for (std::size_t i = 0;
-                             i < not_swapping_local_wire_size;
-                             i++) {
-                            SV_index |=
-                                (((buffer_index >> i) & 1)
-                                 << rev_local_wires_index_not_swapping_view(i));
-                        }
-                        sendbuf_view(buffer_index) = sv_view(SV_index);
-                    });
-                Kokkos::fence();
+    std::size_t swap_wire_mask = 1U << (nq - 2);
+
+    auto sendbuf_view = (*(svmpi.sendbuf_));
+    auto recvbuf_view = (*(svmpi.recvbuf_));
+    auto sv_view = (*svmpi.sv_).getView();
+    Kokkos::parallel_for("copy_sendbuf",
+        exp2(nq - 1),
+        KOKKOS_LAMBDA(std::size_t buffer_index) {
+            std::size_t SV_index = swap_wire_mask;
+            for (std::size_t i = 0;
+                    i < not_swapping_local_wire_size;
+                    i++) {
+                SV_index |=
+                    (((buffer_index >> i) & 1)
+                        << rev_local_wires_index_not_swapping_view(i));
+            }
+            sendbuf_view(buffer_index) = sv_view(SV_index);
+        });
+    Kokkos::fence();
 
 
     // Warmup
-    svmpi.mpi_sendrecv(dest_rank, dest_rank, send_size ,xor_rank);
+   /*  svmpi.mpi_sendrecv(dest_rank, dest_rank, send_size ,xor_rank);
 
     
     const auto t_start = std::chrono::high_resolution_clock::now();   
@@ -102,7 +102,7 @@ int main(int argc, char *argv[]) {
     std::cout << "Average time for swapping "  << average_time << " ms (My rank:"<< myrank << " dest rank:" << dest_rank << ")" << std::endl;  
     std::cout << "Data sent = Data received = " << data_sent_GB << " GB (My rank:"<< myrank << " dest rank:" << dest_rank << ")" << std::endl;  
     std::cout << "Effective single direction bandwidth = " << data_sent_GB/average_time*1000.0 << " GB/s (My rank:"<< myrank << " dest rank:" << dest_rank << ")" << std::endl;  
-    
+     */
 
 
 
