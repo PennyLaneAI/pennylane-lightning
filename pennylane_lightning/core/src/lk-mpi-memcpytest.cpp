@@ -110,7 +110,7 @@ int main(int argc, char *argv[]) {
     const double t_duration = std::chrono::duration<double, t_scale>(t_end - t_start).count();  
     double average_time = t_duration / (repeats); 
     double data_copied_GB = exp2(nq - 2) * 128 / 8 / 1024 / 1024 / 1024;
-    std::cout << "Average time for swapping "  << average_time << " ms" << std::endl;  
+    std::cout << "Average time for copying "  << average_time << " ms" << std::endl;  
     std::cout << "Data copied = " << data_copied_GB  << " GB" << std::endl;  
     std::cout << "Effective copy speed = " << data_copied_GB/average_time*1000.0 << " GB/s " << std::endl;  
 
