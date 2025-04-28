@@ -298,7 +298,7 @@ class QuantumScriptSerializer:
         """Serialize an observable (Sparse Hamiltonian)
 
         Args:
-            observable (Observable): the input observable (Sparse Hamiltonian)
+            observable (Operator): the input observable (Sparse Hamiltonian)
             wire_map (dict): a dictionary mapping input wires to the device's backend wires
 
         Returns:
@@ -364,7 +364,7 @@ class QuantumScriptSerializer:
 
     # pylint: disable=protected-access, too-many-return-statements
     def _ob(self, observable, wires_map: dict = None):
-        """Serialize a :class:`pennylane.operation.Observable` into an Observable."""
+        """Serialize a :class:`pennylane.operation.Operator` into an Observable."""
         if isinstance(observable, NAMED_OBS):
             return self._named_obs(observable, wires_map)
         if observable.pauli_rep is not None:
