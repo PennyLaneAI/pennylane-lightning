@@ -732,7 +732,7 @@ class StateVectorKokkosMPI final
                           << std::endl;
 #endif
 
-                // TODO: Kokkos parallelize this
+                // TODO: Kokkos parallelize this - done
                 //  Copy non-swapping local wire elements to send buffer
                 /* for (std::size_t buffer_index = 0;
                      buffer_index <
@@ -761,7 +761,7 @@ class StateVectorKokkosMPI final
                 // TODO: uncomment this
                 
                 // These are defined since on AMD compiler it's more strict what host functions can be included in the KOKKOS_LAMBDA - e.g. dereferencing, size are all not allowed
-                /* const std::size_t not_swapping_local_wire_size = rev_local_wires_index_not_swapping.size(); 
+                const std::size_t not_swapping_local_wire_size = rev_local_wires_index_not_swapping.size(); 
                 auto rev_local_wires_index_not_swapping_view = vector2view(rev_local_wires_index_not_swapping);
 
                 auto sendbuf_view = (*sendbuf_);
@@ -780,7 +780,7 @@ class StateVectorKokkosMPI final
                         }
                         sendbuf_view(buffer_index) = sv_view(SV_index);
                     });
-                Kokkos::fence(); */
+                Kokkos::fence();
 
                 std::size_t other_global_index = batch_index ^ global_index;
                 std::size_t other_mpi_rank =
@@ -819,7 +819,7 @@ class StateVectorKokkosMPI final
                     (*sv_).getView()(SV_index) = (*recvbuf_)(buffer_index);
                 } */
                 //TODO: uncomment this
-                /* Kokkos::parallel_for("copy_recvbuf", exp2((get_num_local_wires() -
+                Kokkos::parallel_for("copy_recvbuf", exp2((get_num_local_wires() -
                 local_wires_to_swap.size())), KOKKOS_LAMBDA(std::size_t buffer_index)
                 {
                    std::size_t SV_index = swap_wire_mask;
@@ -833,7 +833,7 @@ class StateVectorKokkosMPI final
                    sv_view(SV_index) =
                    recvbuf_view(buffer_index);
                });
-                Kokkos::fence(); */
+                Kokkos::fence();
             }
         }
 
