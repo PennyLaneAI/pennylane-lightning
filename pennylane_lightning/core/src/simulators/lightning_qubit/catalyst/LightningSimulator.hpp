@@ -30,7 +30,6 @@
 #include "LightningObsManager.hpp"
 #include "QuantumDevice.hpp"
 #include "QubitManager.hpp"
-#include "Utils.hpp"
 
 namespace Catalyst::Runtime::Simulator {
 class LightningSimulator final : public Catalyst::Runtime::QuantumDevice {
@@ -96,6 +95,9 @@ class LightningSimulator final : public Catalyst::Runtime::QuantumDevice {
         return std::nullopt;
     }
 
+    auto GenerateSamplesMetropolis(size_t shots) -> std::vector<size_t>;
+    auto GenerateSamples(size_t shots) -> std::vector<size_t>;
+
   public:
     explicit LightningSimulator(
         const std::string &kwargs = "{}") // NOLINT(hicpp-member-init)
@@ -110,25 +112,68 @@ class LightningSimulator final : public Catalyst::Runtime::QuantumDevice {
     }
     ~LightningSimulator() override = default;
 
-    void SetDevicePRNG(std::mt19937 *gen) override;
-    void SetState(DataView<std::complex<double>, 1> &state,
-                  std::vector<QubitIdType> &wires) override;
-    void SetBasisState(DataView<int8_t, 1> &n,
-                       std::vector<QubitIdType> &wires) override;
+    LightningSimulator(const LightningSimulator &) = delete;
+    LightningSimulator &operator=(const LightningSimulator &) = delete;
+    LightningSimulator(LightningSimulator &&) = delete;
+    LightningSimulator &operator=(LightningSimulator &&) = delete;
 
-    QUANTUM_DEVICE_DEL_DECLARATIONS(LightningSimulator);
+    auto AllocateQubit() -> QubitIdType override;
+    auto AllocateQubits(std::size_t num_qubits)
+        -> std::vector<QubitIdType> override;
+    void ReleaseQubit(QubitIdType q) override;
+    void ReleaseAllQubits() override;
+    [[nodiscard]] auto GetNumQubits() const -> std::size_t override;
+    void StartTapeRecording() override;
+    void StopTapeRecording() override;
+    void SetDeviceShots(std::size_t shots) override;
+    void SetDevicePRNG(std::mt19937 *) override;
+    void SetState(DataView<std::complex<double>, 1> &,
+                  std::vector<QubitIdType> &) override;
+    void SetBasisState(DataView<int8_t, 1> &,
+                       std::vector<QubitIdType> &) override;
+    [[nodiscard]] auto GetDeviceShots() const -> std::size_t override;
 
-    // TODO: properly refactor the common device methods,
-    // instead of using #define macros in
-    // runtime/lib/backend/common/Utils.hpp
-    // When done, remove the NOLINT(hicpp-member-init) on the class constructor
-    QUANTUM_DEVICE_RT_DECLARATIONS;
-    QUANTUM_DEVICE_QIS_DECLARATIONS;
+    void
+    NamedOperation(const std::string &name, const std::vector<double> &params,
+                   const std::vector<QubitIdType> &wires, bool inverse = false,
+                   const std::vector<QubitIdType> &controlled_wires = {},
+                   const std::vector<bool> &controlled_values = {}) override;
+    using Catalyst::Runtime::QuantumDevice::MatrixOperation;
+    void
+    MatrixOperation(const std::vector<std::complex<double>> &matrix,
+                    const std::vector<QubitIdType> &wires, bool inverse = false,
+                    const std::vector<QubitIdType> &controlled_wires = {},
+                    const std::vector<bool> &controlled_values = {}) override;
+    auto Observable(ObsId id, const std::vector<std::complex<double>> &matrix,
+                    const std::vector<QubitIdType> &wires)
+        -> ObsIdType override;
+    auto TensorObservable(const std::vector<ObsIdType> &obs)
+        -> ObsIdType override;
+    auto HamiltonianObservable(const std::vector<double> &coeffs,
+                               const std::vector<ObsIdType> &obs)
+        -> ObsIdType override;
+    auto Expval(ObsIdType obsKey) -> double override;
+    auto Var(ObsIdType obsKey) -> double override;
+    void State(DataView<std::complex<double>, 1> &state) override;
+    void Probs(DataView<double, 1> &probs) override;
+    void PartialProbs(DataView<double, 1> &probs,
+                      const std::vector<QubitIdType> &wires) override;
+    void Sample(DataView<double, 2> &samples) override;
+    void PartialSample(DataView<double, 2> &samples,
+                       const std::vector<QubitIdType> &wires) override;
+    void Counts(DataView<double, 1> &eigvals,
+                DataView<int64_t, 1> &counts) override;
+    void PartialCounts(DataView<double, 1> &eigvals,
+                       DataView<int64_t, 1> &counts,
+                       const std::vector<QubitIdType> &wires) override;
+    auto Measure(QubitIdType wire,
+                 std::optional<int32_t> postselect = std::nullopt)
+        -> Result override;
+    void Gradient(std::vector<DataView<double, 1>> &gradients,
+                  const std::vector<std::size_t> &trainParams) override;
 
     auto CacheManagerInfo()
-        -> std::tuple<size_t, size_t, size_t, std::vector<std::string>,
-                      std::vector<ObsIdType>>;
-    auto GenerateSamplesMetropolis(size_t shots) -> std::vector<size_t>;
-    auto GenerateSamples(size_t shots) -> std::vector<size_t>;
+        -> std::tuple<std::size_t, std::size_t, std::size_t,
+                      std::vector<std::string>, std::vector<ObsIdType>>;
 };
 } // namespace Catalyst::Runtime::Simulator
