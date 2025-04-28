@@ -69,7 +69,15 @@ int main(int argc, char *argv[]) {
     std::iota(index_not_swapped.begin(), index_not_swapped.end(), 0);
 
     const std::size_t not_swapping_local_wire_size = index_not_swapped.size(); 
-    auto index_not_swapped_view = vector2view(index_not_swapped);
+    //auto index_not_swapped_view = vector2view(index_not_swapped);
+
+    using UnmanagedView = Kokkos::View<const std::size_t *, Kokkos::HostSpace,
+                                       Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
+
+
+    Kokkos::View<std::size_t *> index_not_swapped_view("index_not_swapped", not_swapping_local_wire_size);
+    Kokkos::deep_copy(index_not_swapped_view, UnmanagedView(index_not_swapped.data(), not_swapping_local_wire_size));
+    
 
     std::size_t swap_wire_mask = 1U << (nq - 1);
 
@@ -120,16 +128,6 @@ int main(int argc, char *argv[]) {
     std::cout << "Data copied = " << data_copied_GB  << " GB" << std::endl;  
     std::cout << "Effective copy speed = " << data_copied_GB/average_time*1000.0 << " GB/s " << std::endl;  
 
-
-
-
-
-
-    int finflag;
-    MPI_Finalized(&finflag);
-    if (!finflag) {
-        MPI_Finalize();
-    }
-
+    
     return 0;
 }
