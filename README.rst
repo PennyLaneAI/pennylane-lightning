@@ -45,7 +45,6 @@ Lightning Plugins
     :alt: License
     :target: https://www.apache.org/licenses/LICENSE-2.0
 
-
 .. header-start-inclusion-marker-do-not-remove
 
 The Lightning plugin ecosystem provides fast state-vector and tensor-network simulators written in C++.
