@@ -1493,6 +1493,7 @@ TEST_CASE("PartialSample test with incorrect numWires and numAlloc",
     }
 
     std::vector<double> samples_vec(1);
+    sim->SetDeviceShots(1);
     MemRefT<double, 2> samples{samples_vec.data(),
                                samples_vec.data(),
                                0,
@@ -1502,20 +1503,20 @@ TEST_CASE("PartialSample test with incorrect numWires and numAlloc",
                              samples.sizes, samples.strides);
 
     REQUIRE_THROWS_WITH(
-        sim->PartialSample(view, {Qs[0], Qs[1], Qs[2], Qs[3], Qs[0]}, 4),
+        sim->PartialSample(view, {Qs[0], Qs[1], Qs[2], Qs[3], Qs[0]}),
         Catch::Contains("Invalid number of wires"));
 
     REQUIRE_THROWS_WITH(
-        sim->PartialSample(view, {Qs[0], Qs[1]}, 2),
+        sim->PartialSample(view, {Qs[0], Qs[1]}),
         Catch::Contains("Invalid size for the pre-allocated partial-samples"));
 
     REQUIRE_THROWS_WITH(
-        sim->Sample(view, 2),
+        sim->Sample(view),
         Catch::Contains("Invalid size for the pre-allocated samples"));
 
     sim->ReleaseQubit(Qs[0]);
 
-    REQUIRE_THROWS_WITH(sim->PartialSample(view, {Qs[0]}, 4),
+    REQUIRE_THROWS_WITH(sim->PartialSample(view, {Qs[0]}),
                         Catch::Contains("Invalid given wires to measure"));
 }
 
@@ -1530,6 +1531,7 @@ TEST_CASE("PartialCounts test with incorrect numWires and numAlloc",
     for (std::size_t i = 0; i < n; i++) {
         Qs.push_back(sim->AllocateQubit());
     }
+    sim->SetDeviceShots(1);
 
     std::vector<double> eigvals_vec(1);
     DataView<double, 1> eigvals_view(eigvals_vec);
@@ -1538,22 +1540,21 @@ TEST_CASE("PartialCounts test with incorrect numWires and numAlloc",
     DataView<int64_t, 1> counts_view(counts_vec);
 
     REQUIRE_THROWS_WITH(sim->PartialCounts(eigvals_view, counts_view,
-                                           {Qs[0], Qs[1], Qs[2], Qs[3], Qs[0]},
-                                           4),
+                                           {Qs[0], Qs[1], Qs[2], Qs[3], Qs[0]}),
                         Catch::Contains("Invalid number of wires"));
 
     REQUIRE_THROWS_WITH(
-        sim->PartialCounts(eigvals_view, counts_view, {Qs[0]}, 1),
+        sim->PartialCounts(eigvals_view, counts_view, {Qs[0]}),
         Catch::Contains("Invalid size for the pre-allocated partial-counts"));
 
     REQUIRE_THROWS_WITH(
-        sim->Counts(eigvals_view, counts_view, 1),
+        sim->Counts(eigvals_view, counts_view),
         Catch::Contains("Invalid size for the pre-allocated counts"));
 
     sim->ReleaseQubit(Qs[0]);
 
     REQUIRE_THROWS_WITH(
-        sim->PartialCounts(eigvals_view, counts_view, {Qs[0]}, 4),
+        sim->PartialCounts(eigvals_view, counts_view, {Qs[0]}),
         Catch::Contains("Invalid given wires to measure"));
 }
 
@@ -1574,34 +1575,35 @@ TEST_CASE("Sample and PartialSample tests with numWires=0-4 shots=100",
     sim->NamedOperation("CNOT", {}, {Qs[0], Qs[1]}, false);
 
     std::size_t shots = 100;
+    sim->SetDeviceShots(shots);
 
     std::vector<double> samples1(shots * 1);
     MemRefT<double, 2> buffer1{
         samples1.data(), samples1.data(), 0, {shots, 1}, {1, 1}};
     DataView<double, 2> view1(buffer1.data_aligned, buffer1.offset,
                               buffer1.sizes, buffer1.strides);
-    sim->PartialSample(view1, std::vector<intptr_t>{Qs[2]}, shots);
+    sim->PartialSample(view1, std::vector<intptr_t>{Qs[2]});
 
     std::vector<double> samples2(shots * 2);
     MemRefT<double, 2> buffer2{
         samples2.data(), samples2.data(), 0, {shots, 2}, {1, 1}};
     DataView<double, 2> view2(buffer2.data_aligned, buffer2.offset,
                               buffer2.sizes, buffer2.strides);
-    sim->PartialSample(view2, std::vector<intptr_t>{Qs[0], Qs[3]}, shots);
+    sim->PartialSample(view2, std::vector<intptr_t>{Qs[0], Qs[3]});
 
     std::vector<double> samples3(shots * 4);
     MemRefT<double, 2> buffer3{
         samples3.data(), samples3.data(), 0, {shots, 4}, {1, 1}};
     DataView<double, 2> view3(buffer3.data_aligned, buffer3.offset,
                               buffer3.sizes, buffer3.strides);
-    sim->PartialSample(view3, Qs, shots);
+    sim->PartialSample(view3, Qs);
 
     std::vector<double> samples4(shots * 4);
     MemRefT<double, 2> buffer4{
         samples4.data(), samples4.data(), 0, {shots, 4}, {1, 1}};
     DataView<double, 2> view4(buffer4.data_aligned, buffer4.offset,
                               buffer4.sizes, buffer4.strides);
-    sim->Sample(view4, shots);
+    sim->Sample(view4);
 
     for (std::size_t i = 0; i < shots * 1; i++)
         CHECK((samples1[i] == 0. || samples1[i] == 1.));
@@ -1632,34 +1634,35 @@ TEST_CASE("Sample and PartialSample tests with numWires=0-4 "
     sim->NamedOperation("CNOT", {}, {Qs[0], Qs[1]}, false);
 
     std::size_t shots = 100;
+    sim->SetDeviceShots(shots);
 
     std::vector<double> samples1(shots * 1);
     MemRefT<double, 2> buffer1{
         samples1.data(), samples1.data(), 0, {shots, 1}, {1, 1}};
     DataView<double, 2> view1(buffer1.data_aligned, buffer1.offset,
                               buffer1.sizes, buffer1.strides);
-    sim->PartialSample(view1, std::vector<intptr_t>{Qs[2]}, shots);
+    sim->PartialSample(view1, std::vector<intptr_t>{Qs[2]});
 
     std::vector<double> samples2(shots * 2);
     MemRefT<double, 2> buffer2{
         samples2.data(), samples2.data(), 0, {shots, 2}, {1, 1}};
     DataView<double, 2> view2(buffer2.data_aligned, buffer2.offset,
                               buffer2.sizes, buffer2.strides);
-    sim->PartialSample(view2, std::vector<intptr_t>{Qs[0], Qs[3]}, shots);
+    sim->PartialSample(view2, std::vector<intptr_t>{Qs[0], Qs[3]});
 
     std::vector<double> samples3(shots * 4);
     MemRefT<double, 2> buffer3{
         samples3.data(), samples3.data(), 0, {shots, 4}, {1, 1}};
     DataView<double, 2> view3(buffer3.data_aligned, buffer3.offset,
                               buffer3.sizes, buffer3.strides);
-    sim->PartialSample(view3, Qs, shots);
+    sim->PartialSample(view3, Qs);
 
     std::vector<double> samples4(shots * 4);
     MemRefT<double, 2> buffer4{
         samples4.data(), samples4.data(), 0, {shots, 4}, {1, 1}};
     DataView<double, 2> view4(buffer4.data_aligned, buffer4.offset,
                               buffer4.sizes, buffer4.strides);
-    sim->Sample(view4, shots);
+    sim->Sample(view4);
 
     for (std::size_t i = 0; i < shots * 1; i++)
         CHECK((samples1[i] == 0. || samples1[i] == 1.));
@@ -1684,37 +1687,37 @@ TEST_CASE("Counts and PartialCounts tests with numWires=0-4 shots=100",
     sim->NamedOperation("CNOT", {}, {Qs[0], Qs[1]}, false);
 
     std::size_t shots = 100;
+    sim->SetDeviceShots(shots);
 
     std::vector<double> eigvals0(1);
     std::vector<int64_t> counts0(1);
     DataView<double, 1> eview0(eigvals0);
     DataView<int64_t, 1> cview0(counts0);
-    sim->PartialCounts(eview0, cview0, std::vector<intptr_t>{}, shots);
+    sim->PartialCounts(eview0, cview0, std::vector<intptr_t>{});
 
     std::vector<double> eigvals1(2);
     std::vector<int64_t> counts1(2);
     DataView<double, 1> eview1(eigvals1);
     DataView<int64_t, 1> cview1(counts1);
-    sim->PartialCounts(eview1, cview1, std::vector<intptr_t>{Qs[2]}, shots);
+    sim->PartialCounts(eview1, cview1, std::vector<intptr_t>{Qs[2]});
 
     std::vector<double> eigvals2(4);
     std::vector<int64_t> counts2(4);
     DataView<double, 1> eview2(eigvals2);
     DataView<int64_t, 1> cview2(counts2);
-    sim->PartialCounts(eview2, cview2, std::vector<intptr_t>{Qs[0], Qs[3]},
-                       shots);
+    sim->PartialCounts(eview2, cview2, std::vector<intptr_t>{Qs[0], Qs[3]});
 
     std::vector<double> eigvals3(16);
     std::vector<int64_t> counts3(16);
     DataView<double, 1> eview3(eigvals3);
     DataView<int64_t, 1> cview3(counts3);
-    sim->PartialCounts(eview3, cview3, Qs, shots);
+    sim->PartialCounts(eview3, cview3, Qs);
 
     std::vector<double> eigvals4(16);
     std::vector<int64_t> counts4(16);
     DataView<double, 1> eview4(eigvals4);
     DataView<int64_t, 1> cview4(counts4);
-    sim->Counts(eview4, cview4, shots);
+    sim->Counts(eview4, cview4);
 
     CHECK(eigvals0.size() == 1);
     CHECK(eigvals0[0] == 0.0);
@@ -1788,12 +1791,13 @@ TEST_CASE("Sample with a seeded device", "[Measures]") {
     auto circuit = [shots](LKSimulator &sim, DataView<double, 2> &view,
                            std::mt19937 &gen) {
         sim.SetDevicePRNG(&gen);
+        sim.SetDeviceShots(shots);
         std::vector<intptr_t> Qs;
         Qs.reserve(1);
         Qs.push_back(sim.AllocateQubit());
         sim.NamedOperation("Hadamard", {}, {Qs[0]}, false);
         sim.NamedOperation("RX", {0.5}, {Qs[0]}, false);
-        sim.Sample(view, shots);
+        sim.Sample(view);
     };
 
     for (std::size_t trial = 0; trial < 5; trial++) {
