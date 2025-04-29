@@ -66,13 +66,12 @@ int main(int argc, char *argv[]) {
         for (uint32_t i = 0; i < repeats; i++) {   
 
             roctxMark("ROCTX-MARK: Starting iteration");
-                       
-            //Kokkos::parallel_for("copy_sendbuf",
-            //    buffer_size,
-            //    KOKKOS_LAMBDA(uint32_t buffer_index) {
-            //        sendbuf_(buffer_index) = data_(buffer_index);
-            //    });
-                Kokkos::deep_copy(sendbuf_, data_);
+            Kokkos::parallel_for("copy_sendbuf",
+                buffer_size,
+                KOKKOS_LAMBDA(uint32_t buffer_index) {
+                    sendbuf_(buffer_index) = data_(buffer_index);
+                });
+            //    Kokkos::deep_copy(sendbuf_, data_);
             roctxMark("ROCTX-MARK: ending iteration");
         }
         Kokkos::fence();
