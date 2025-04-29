@@ -14,7 +14,7 @@ comment:
 
 flags:
   # This is the default flag for all files
-  default:
+  default_rules:
     paths:
       - ".*"
     carryforward: true
