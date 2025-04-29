@@ -12,9 +12,7 @@ codecov:
 comment:
   after_n_builds: 4
 
-flags:
+flag_management:
   # This is the default flag for all files
   default_rules:
-    paths:
-      - ".*"
     carryforward: true
