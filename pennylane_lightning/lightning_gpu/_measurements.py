@@ -84,14 +84,6 @@ class LightningGPUMeasurements(LightningBaseMeasurements):  # pylint: disable=to
         # without MPI
         return MeasurementsC128 if self.dtype == np.complex128 else MeasurementsC64
 
-    def test_flag(self):
-        """Test if the Lightning GPU measurements class is available.
-
-        Returns:
-            bool: True if the Lightning GPU measurements class is available, False otherwise.
-        """
-        return self._measurement_lightning.test_flag()
-
     def _measure_with_samples_diagonalizing_gates(
         self,
         mps: List[SampleMeasurement],
