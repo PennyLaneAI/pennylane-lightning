@@ -126,11 +126,11 @@ class LightningSimulator final : public Catalyst::Runtime::QuantumDevice {
     void StartTapeRecording() override;
     void StopTapeRecording() override;
     void SetDeviceShots(std::size_t shots) override;
-    void SetDevicePRNG(std::mt19937 *) override;
-    void SetState(DataView<std::complex<double>, 1> &,
-                  std::vector<QubitIdType> &) override;
-    void SetBasisState(DataView<int8_t, 1> &,
-                       std::vector<QubitIdType> &) override;
+    void SetDevicePRNG(std::mt19937 *gen) override;
+    void SetState(DataView<std::complex<double>, 1> &state,
+                  std::vector<QubitIdType> &wires) override;
+    void SetBasisState(DataView<int8_t, 1> &n,
+                       std::vector<QubitIdType> &wires) override;
     [[nodiscard]] auto GetDeviceShots() const -> std::size_t override;
 
     void

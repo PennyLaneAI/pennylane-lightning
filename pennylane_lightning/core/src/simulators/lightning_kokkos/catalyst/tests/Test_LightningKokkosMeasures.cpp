@@ -1553,9 +1553,8 @@ TEST_CASE("PartialCounts test with incorrect numWires and numAlloc",
 
     sim->ReleaseQubit(Qs[0]);
 
-    REQUIRE_THROWS_WITH(
-        sim->PartialCounts(eigvals_view, counts_view, {Qs[0]}),
-        Catch::Contains("Invalid given wires to measure"));
+    REQUIRE_THROWS_WITH(sim->PartialCounts(eigvals_view, counts_view, {Qs[0]}),
+                        Catch::Contains("Invalid given wires to measure"));
 }
 
 TEST_CASE("Sample and PartialSample tests with numWires=0-4 shots=100",
