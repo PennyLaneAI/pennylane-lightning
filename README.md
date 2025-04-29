@@ -54,3 +54,23 @@
     <img src="./doc/_static/readme/pl-lightning-logo-darkmode.png#gh-dark-mode-only" width="700px" onerror="this.style.display='none'" alt=""/>
 </p>
 
+The Lightning plugin ecosystem provides fast state-vector and tensor-network simulators written in C++.
+
+[PennyLane](https://docs.pennylane.ai) is a cross-platform Python library for quantum machine
+learning, automatic differentiation, and optimization of hybrid quantum-classical computations.
+PennyLane supports Python 3.10 and above.
+
+## Backends
+
+PennyLane-Lightning high performance simulators include the following backends:
+
+* ``lightning.qubit``: a fast state-vector simulator written in C++ with optional [OpenMP](https://www.openmp.org/) additions and parallelized gate-level SIMD kernels.
+* ``lightning.gpu``: a state-vector simulator based on the [NVIDIA cuQuantum SDK](https://developer.nvidia.com/cuquantum-sdk).
+  It notably implements a distributed state-vector simulator based on [MPI](https://www.mpi-forum.org/docs/).
+* ``lightning.kokkos``: a state-vector simulator written with [Kokkos](https://kokkos.github.io/kokkos-core-wiki/index.html).
+  It can exploit the inherent parallelism of modern processing units supporting the [OpenMP](https://www.openmp.org/>`),
+  [CUDA](https://developer.nvidia.com/cuda-toolkit) or [HIP](https://rocm.docs.amd.com/projects/HIP/en/latest) programming models.
+* ``lightning.tensor``: a tensor-network simulator based on the [NVIDIA cuQuantum SDK](https://developer.nvidia.com/cuquantum-sdk).
+  The supported methods are Matrix Product State (MPS) and Exact Tensor Network (TN).
+
+If you're not sure which simulator to use, check out our [PennyLane Performance](https://pennylane.ai/performance) page.
