@@ -74,3 +74,24 @@ PennyLane-Lightning high performance simulators include the following backends:
   The supported methods are Matrix Product State (MPS) and Exact Tensor Network (TN).
 
 If you're not sure which simulator to use, check out our [PennyLane Performance](https://pennylane.ai/performance) page.
+
+## Installation
+
+The following table summarizes the supported platforms and the primary installation mode:
+
+|                        | Linux x86 | Linux ARM | MacOS x86 | MacOS ARM | Windows   |
+|------------------------|-----------|-----------|-----------|-----------|-----------|
+| Lightning-Qubit        | pip       | pip       | pip       | pip       | pip       |
+| Lightning-GPU          | pip       | pip       |           |           |           |
+| Lightning-GPU (MPI)    | source    |           |           |           |           |
+| Lightning-Kokkos (OMP) | pip       | pip       | pip       | pip       |           |
+| Lightning-Kokkos (CUDA)| source    | source    |           |           |           |
+| Lightning-Kokkos (HIP) | source    | source    |           |           |           |
+| Lightning-Tensor       | pip       | pip       |           |           |           |
+
+To install the latest stable version of these plugins,
+check out the [PennyLane installation guide](https://pennylane.ai/install#high-performance-computing-and-gpus).
+
+If you wish to install the latest development version, instructions for
+[building from source](https://docs.pennylane.ai/projects/lightning/en/stable/dev/installation.html) are also available for each backend.
+
