@@ -13,6 +13,9 @@
 
 <h3>Documentation 📝</h3>
 
+- Enable `pennylane.ai` search.
+  [(#1135)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1135)
+
 - Move the installation sections from `README.rst` to dedicated pages.
   [(#1131)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1131)
 
@@ -47,7 +50,8 @@
 This release contains contributions from (in alphabetical order):
 
 Ali Asadi,
-Christina Lee, 
+Andrew Gardhouse,
+Christina Lee,
 Joseph Lee,
 Anton Naim Ibrahim,
 Luis Alfredo Nuñez Meneses,
