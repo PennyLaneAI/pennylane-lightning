@@ -157,3 +157,20 @@ If you are using Lightning for research, please cite:
 
 If you are having issues, please let us know by posting the issue on our Github issue tracker, or
 by asking a question in the forum.
+
+## License
+
+The Lightning plugins are **free** and **open source**, released under
+the [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0).  
+The Lightning-GPU and Lightning-Tensor plugins make use of the NVIDIA cuQuantum SDK headers to
+enable the device bindings to PennyLane, which are held to their own respective license.
+
+## Acknowledgements
+
+PennyLane Lightning makes use of the following libraries and tools, which are under their own respective licenses:
+
+- **pybind11:** https://github.com/pybind/pybind11
+- **Kokkos Core:** https://github.com/kokkos/kokkos
+- **NVIDIA cuQuantum:** https://developer.nvidia.com/cuquantum-sdk
+- **scipy-openblas32:** https://pypi.org/project/scipy-openblas32/
+- **Xanadu JET:** https://github.com/XanaduAI/jet
