@@ -63,7 +63,6 @@ PennyLane supports Python 3.10 and above.
 ## Backends
 
 PennyLane-Lightning high performance simulators include the following backends:
-
 * ``lightning.qubit``: a fast state-vector simulator written in C++ with optional [OpenMP](https://www.openmp.org/) additions and parallelized gate-level SIMD kernels.
 * ``lightning.gpu``: a state-vector simulator based on the [NVIDIA cuQuantum SDK](https://developer.nvidia.com/cuquantum-sdk).
   It notably implements a distributed state-vector simulator based on [MPI](https://www.mpi-forum.org/docs/).
@@ -94,4 +93,23 @@ check out the [PennyLane installation guide](https://pennylane.ai/install#high-p
 
 If you wish to install the latest development version, instructions for
 [building from source](https://docs.pennylane.ai/projects/lightning/en/stable/dev/installation.html) are also available for each backend.
+
+## Docker support
+
+Docker images for the various backends are found on the
+[PennyLane Docker Hub](https://hub.docker.com/u/pennylaneai) page, where a detailed description about PennyLane Docker support can be found.
+Briefly, one can build the Docker Lightning images using:
+
+```bash
+    git clone https://github.com/PennyLaneAI/pennylane-lightning.git
+    cd pennylane-lightning
+    docker build -f docker/Dockerfile --target ${TARGET} .
+```
+
+where ``${TARGET}`` is one of the following:
+* ``wheel-lightning-qubit``
+* ``wheel-lightning-gpu``
+* ``wheel-lightning-kokkos-openmp``
+* ``wheel-lightning-kokkos-cuda``
+* ``wheel-lightning-kokkos-rocm``
 
