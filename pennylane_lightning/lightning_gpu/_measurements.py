@@ -91,7 +91,7 @@ class LightningGPUMeasurements(LightningBaseMeasurements):  # pylint: disable=to
             bool: True if the Lightning GPU measurements class is available, False otherwise.
         """
         return self._measurement_lightning.test_flag()
-    
+
     def _measure_with_samples_diagonalizing_gates(
         self,
         mps: List[SampleMeasurement],
