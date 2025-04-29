@@ -19,42 +19,18 @@ Backends
 
 PennyLane-Lightning high performance simulators include the following backends:
 
-* ``lightning.qubit``: a fast state-vector simulator written in C++ with optional `OpenMP <https://www.openmp.org/>`_ additions and parallelized gate-level SIMD kernels.
-* ``lightning.gpu``: a state-vector simulator based on the `NVIDIA cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`_. It notably implements a distributed state-vector simulator based on `MPI <https://www.mpi-forum.org/docs/>`_.
-* ``lightning.kokkos``: a state-vector simulator written with `Kokkos <https://kokkos.github.io/kokkos-core-wiki/index.html>`_. It can exploit the inherent parallelism of modern processing units supporting the `OpenMP <https://www.openmp.org/>`_, `CUDA <https://developer.nvidia.com/cuda-toolkit>`_ or `HIP <https://rocm.docs.amd.com/projects/HIP/en/latest>`_ programming models.
-* ``lightning.tensor``: a tensor-network simulator based on the `NVIDIA cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`_. The supported methods are Matrix Product State (MPS) and Exact Tensor Network (TN).
+*   [``lightning.qubit``](lightning_qubit/device.html): a fast state-vector simulator written in C++
+    with optional `OpenMP <https://www.openmp.org/>`_ additions and parallelized gate-level SIMD kernels.
+*   [``lightning.gpu``](lightning_gpu/device.html): a state-vector simulator based on
+    the `NVIDIA cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`_.
+    It notably implements a distributed state-vector simulator based on `MPI <https://www.mpi-forum.org/docs/>`_.
+*   [``lightning.kokkos``](lightning_kokkos/device.html): a state-vector simulator written with `Kokkos <https://kokkos.github.io/kokkos-core-wiki/index.html>`_.
+    It can exploit the inherent parallelism of modern processing units supporting the `OpenMP <https://www.openmp.org/>`_,
+    `CUDA <https://developer.nvidia.com/cuda-toolkit>`_ or `HIP <https://rocm.docs.amd.com/projects/HIP/en/latest>`_ programming models.
+*   [``lightning.tensor``](lightning_tensor/device.html): a tensor-network simulator based on the `NVIDIA cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`_.
+    The supported methods are Matrix Product State (MPS) and Exact Tensor Network (TN).
 
 If you're not sure which simulator to use, check out our `PennyLane performance <https://pennylane.ai/performance>`_ page.
-
-Devices
-*******
-
-The Lightning ecosystem provides the following devices:
-
-.. title-card::
-    :name: 'lightning.qubit'
-    :description: A fast state-vector qubit simulator written in C++
-    :link: lightning_qubit/device.html
-
-.. title-card::
-    :name: 'lightning.gpu'
-    :description: A heterogeneous backend state-vector simulator with NVIDIA cuQuantum library support.
-    :link: lightning_gpu/device.html
-
-.. title-card::
-    :name: 'lightning.kokkos'
-    :description: A heterogeneous backend state-vector simulator with Kokkos library support.
-    :link: lightning_kokkos/device.html
-
-.. title-card::
-    :name: 'lightning.tensor'
-    :description: A tensor network simulator with NVIDIA cuQuantum library support.
-    :link: lightning_tensor/device.html
-
-.. raw:: html
-
-    <div style='clear:both'></div>
-    </br>
 
 Authors
 *******
