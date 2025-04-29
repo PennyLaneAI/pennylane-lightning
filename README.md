@@ -101,9 +101,9 @@ Docker images for the various backends are found on the
 Briefly, one can build the Docker Lightning images using:
 
 ```bash
-    git clone https://github.com/PennyLaneAI/pennylane-lightning.git
-    cd pennylane-lightning
-    docker build -f docker/Dockerfile --target ${TARGET} .
+git clone https://github.com/PennyLaneAI/pennylane-lightning.git
+cd pennylane-lightning
+docker build -f docker/Dockerfile --target ${TARGET} .
 ```
 
 where ``${TARGET}`` is one of the following:
@@ -129,3 +129,22 @@ We set a line width of a 100 characters.
 The Python code is statically analyzed with [Pylint](https://pylint.readthedocs.io/en/stable/).
 We set up a pre-commit hook (see [Git hooks](https://git-scm.com/docs/githooks)) to run both of these on `git commit`.
 Please make your best effort to comply with `black` and `pylint` before using disabling pragmas (e.g. `# pylint: disable=missing-function-docstring`).
+
+## Authors
+
+Lightning is the work of [many contributors](https://github.com/PennyLaneAI/pennylane-lightning/graphs/contributors).
+
+If you are using Lightning for research, please cite:
+
+```bibtex
+@misc{
+    asadi2024,
+    title={{Hybrid quantum programming with PennyLane Lightning on HPC platforms}},
+    author={Ali Asadi and Amintor Dusko and Chae-Yeun Park and Vincent Michaud-Rioux and Isidor Schoch and Shuli Shu and Trevor Vincent and Lee James O'Riordan},
+    year={2024},
+    eprint={2403.02512},
+    archivePrefix={arXiv},
+    primaryClass={quant-ph},
+    url={https://arxiv.org/abs/2403.02512},
+}
+```
