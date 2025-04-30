@@ -51,6 +51,7 @@ This release contains contributions from (in alphabetical order):
 
 Ali Asadi,
 Andrew Gardhouse,
+David Ittah,
 Christina Lee,
 Joseph Lee,
 Anton Naim Ibrahim,
