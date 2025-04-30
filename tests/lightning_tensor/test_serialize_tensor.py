@@ -20,7 +20,7 @@ import pytest
 from conftest import LightningDevice, device_name
 from pennylane.exceptions import DeviceError
 
-from pennylane_lightning.lightning_base._serialize import (
+from pennylane_lightning._serialize import (
     QuantumScriptSerializer,
     global_phase_diagonal,
 )

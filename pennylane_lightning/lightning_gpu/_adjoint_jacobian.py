@@ -54,7 +54,7 @@ from scipy.sparse import csr_matrix
 
 # pylint: disable=ungrouped-imports
 from pennylane_lightning.lightning_base._adjoint_jacobian import LightningBaseAdjointJacobian
-from pennylane_lightning.lightning_base._serialize import QuantumScriptSerializer
+from pennylane_lightning._serialize import QuantumScriptSerializer
 
 
 class LightningGPUAdjointJacobian(LightningBaseAdjointJacobian):
