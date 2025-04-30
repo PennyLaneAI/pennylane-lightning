@@ -44,44 +44,107 @@ int main(int argc, char *argv[]) {
 
     Kokkos::initialize();
     {
-        KokkosVector data_("data_", 1U << (nq-1));
+        KokkosVector data_("data_", 1U << (nq));
         KokkosVector sendbuf_("sendbuf_", 1U << (nq - 1));
-        uint32_t repeats = 5;
+        KokkosVector recvbuf_("recvbuf_", 1U << (nq - 1));
+        std::size_t repeats = 5;
+        std::vector<std::size_t> index_not_swapped;
+        index_not_swapped.resize(nq - 1);
+
+        // right most index
+        std::iota(index_not_swapped.begin(), index_not_swapped.end(), 0);
+        std::size_t swap_wire_mask = 1U << (nq - 1);
+
+        // left most index
+        //std::iota(index_not_swapped.begin(), index_not_swapped.end(), 1);
+        //std::size_t swap_wire_mask = 1U;
+
+        const std::size_t not_swapping_local_wire_size = index_not_swapped.size();
+        using UnmanagedView = Kokkos::View<const std::size_t *, Kokkos::HostSpace,
+        Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
 
 
-        uint32_t buffer_size = 1U << (nq - 1);
+        Kokkos::View<std::size_t *> index_not_swapped_view("index_not_swapped", not_swapping_local_wire_size);
+        Kokkos::deep_copy(index_not_swapped_view, UnmanagedView(index_not_swapped.data(), not_swapping_local_wire_size));
+
+        std::size_t buffer_size = 1U << (nq - 1);
         std::cout << "Buffer size = " << buffer_size << std::endl;
+        
         // Warmup
         roctxMark("ROCTX-MARK: before warmup");
         Kokkos::parallel_for("copy_sendbuf",
             buffer_size,
-            KOKKOS_LAMBDA(uint32_t buffer_index) {
+            KOKKOS_LAMBDA(std::size_t buffer_index) {
                 sendbuf_(buffer_index) = data_(buffer_index);
             });
         Kokkos::fence();
         roctxMark("ROCTX-MARK: after warmup");
 
-        const auto t_start = std::chrono::high_resolution_clock::now();   
+        auto t_start = std::chrono::high_resolution_clock::now();   
 
-        for (uint32_t i = 0; i < repeats; i++) {   
+        for (std::size_t i = 0; i < repeats; i++) {   
 
             roctxMark("ROCTX-MARK: Starting iteration");
                        
-            //Kokkos::parallel_for("copy_sendbuf",
-            //    buffer_size,
-            //    KOKKOS_LAMBDA(uint32_t buffer_index) {
-            //        sendbuf_(buffer_index) = data_(buffer_index);
-            //    });
-                Kokkos::deep_copy(sendbuf_, data_);
-            roctxMark("ROCTX-MARK: ending iteration");
+            Kokkos::parallel_for("copy_sendbuf",
+                buffer_size,
+                KOKKOS_LAMBDA(std::size_t buffer_index) {
+                std::size_t SV_index = swap_wire_mask;
+                for (int i = 0;
+                        i < not_swapping_local_wire_size;
+                        i++) {
+                    SV_index |=
+                        (((buffer_index >> i) & 1)
+                            << index_not_swapped_view(i));
+                }
+                sendbuf_(buffer_index) = data_(SV_index);
+                });
+                Kokkos::fence();
         }
         Kokkos::fence();
-        const auto t_end = std::chrono::high_resolution_clock::now();  
+        auto t_end = std::chrono::high_resolution_clock::now();  
 
-        const double t_duration = std::chrono::duration<double, t_scale>(t_end - t_start).count();  
+        double t_duration = std::chrono::duration<double, t_scale>(t_end - t_start).count();  
         double average_time = t_duration / (repeats); 
         double data_copied_GB = exp2(nq - 1) * 128 / 8 / 1024 / 1024 / 1024;
-        std::cout << "Average time for copying "  << average_time << " ms" << std::endl;  
+        std::cout << "Average time for copying to sendbuf"  << average_time << " ms" << std::endl;  
+        std::cout << "Data copied = " << data_copied_GB  << " GB" << std::endl;  
+        std::cout << "Effective copy speed = " << data_copied_GB/average_time*1000.0 << " GB/s " << std::endl;  
+
+
+
+
+
+
+
+        t_start = std::chrono::high_resolution_clock::now();   
+
+        for (std::size_t i = 0; i < repeats; i++) {   
+
+            roctxMark("ROCTX-MARK: Starting iteration");
+                       
+            Kokkos::parallel_for("copy_recvbuf",
+                buffer_size,
+                KOKKOS_LAMBDA(std::size_t buffer_index) {
+                std::size_t SV_index = swap_wire_mask;
+                for (int i = 0;
+                        i < not_swapping_local_wire_size;
+                        i++) {
+                    SV_index |=
+                        (((buffer_index >> i) & 1)
+                            << index_not_swapped_view(i));
+                }
+                data_(SV_index) = recvbuf_(buffer_index);
+                });
+                Kokkos::fence();
+        }
+        Kokkos::fence();
+        t_end = std::chrono::high_resolution_clock::now();  
+
+        t_duration = std::chrono::duration<double, t_scale>(t_end - t_start).count();  
+        average_time = t_duration / (repeats); 
+        data_copied_GB = exp2(nq - 1) * 128 / 8 / 1024 / 1024 / 1024;
+        std::cout << "Average time for copying from recvbuf"  << average_time << " ms" << std::endl;  
         std::cout << "Data copied = " << data_copied_GB  << " GB" << std::endl;  
         std::cout << "Effective copy speed = " << data_copied_GB/average_time*1000.0 << " GB/s " << std::endl;  
     }

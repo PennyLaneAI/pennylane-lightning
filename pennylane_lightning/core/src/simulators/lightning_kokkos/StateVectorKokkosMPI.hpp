@@ -42,6 +42,7 @@
 #include "UtilKokkos.hpp"
 
 #include "CPUMemoryModel.hpp"
+#include <roctracer/roctx.h>
 
 /// @cond DEV
 namespace {
@@ -649,30 +650,32 @@ class StateVectorKokkosMPI final
     void swap_global_local_wires(
         const std::vector<std::size_t> &global_wires_to_swap,
         const std::vector<std::size_t> &local_wires_to_swap) {
-        PL_ABORT_IF_NOT(global_wires_to_swap.size() ==
-                            local_wires_to_swap.size(),
-                        "global_wires_to_swap and local_wires_to_swap must "
-                        "have equal dimensions.");
-        PL_ABORT_IF_NOT(is_wires_global(global_wires_to_swap),
-                        "global_wires_to_swap must be global wires.");
-        PL_ABORT_IF_NOT(is_wires_local(local_wires_to_swap),
-                        "local_wires_to_swap must be local wires.");
-        // std::sort(global_wires_to_swap.begin(), global_wires_to_swap.end());
-        // std::sort(local_wires_to_swap.begin(), local_wires_to_swap.end());
 
-        // #ifdef LKMPI_DEBUG
+            PL_ABORT_IF_NOT(global_wires_to_swap.size() ==
+            local_wires_to_swap.size(),
+            "global_wires_to_swap and local_wires_to_swap must "
+            "have equal dimensions.");
+            PL_ABORT_IF_NOT(is_wires_global(global_wires_to_swap),
+            "global_wires_to_swap must be global wires.");
+            PL_ABORT_IF_NOT(is_wires_local(local_wires_to_swap),
+            "local_wires_to_swap must be local wires.");
+            // std::sort(global_wires_to_swap.begin(), global_wires_to_swap.end());
+            // std::sort(local_wires_to_swap.begin(), local_wires_to_swap.end());
+            
+            // #ifdef LKMPI_DEBUG
+        roctxMark("ROCTX-MARK: Start of swap_global_local_wires");
         //  A little debug message:
-        if (get_mpi_rank() == 0) {
-            std::cout << "Swapping global wires: ";
-            for (const auto &wire : global_wires_to_swap) {
-                std::cout << wire << " ";
-            }
-            std::cout << "with local wires: ";
-            for (const auto &wire : local_wires_to_swap) {
-                std::cout << wire << " ";
-            }
-            std::cout << std::endl;
-        }
+        //if (get_mpi_rank() == 0) {
+        //    std::cout << "Swapping global wires: ";
+        //    for (const auto &wire : global_wires_to_swap) {
+        //        std::cout << wire << " ";
+        //    }
+        //    std::cout << "with local wires: ";
+        //    for (const auto &wire : local_wires_to_swap) {
+        //        std::cout << wire << " ";
+        //    }
+        //    std::cout << std::endl;
+        //}
         // #endif
 
         std::vector<std::size_t> rev_global_wires_index_to_swap;
@@ -731,34 +734,6 @@ class StateVectorKokkosMPI final
                           << " and swap_wire_mask = " << swap_wire_mask
                           << std::endl;
 #endif
-
-                // TODO: Kokkos parallelize this - done
-                //  Copy non-swapping local wire elements to send buffer
-                /* for (std::size_t buffer_index = 0;
-                     buffer_index <
-                     exp2((get_num_local_wires() - local_wires_to_swap.size()));
-                     buffer_index++) {
-                    std::size_t SV_index = swap_wire_mask;
-
-                    for (std::size_t i = 0;
-                         i < rev_local_wires_index_not_swapping.size(); i++) {
-                        SV_index |= (((buffer_index >> i) & 1)
-                                     << rev_local_wires_index_not_swapping[i]);
-                    }
-
-                    #ifdef LKMPI_DEBUG
-                    // A little debug message:
-                    std::cout << "I am rank " << get_mpi_rank()
-                              << " and buffer_index = " << buffer_index
-                              << " and SV_index = " << SV_index << std::endl;
-                    #endif
-
-
-                    // TODO: FIX ME FIX ME on GPU
-                    (*sendbuf_)(buffer_index) =
-                        (*sv_).getView()(SV_index);
-                } */
-                // TODO: uncomment this
                 
                 // These are defined since on AMD compiler it's more strict what host functions can be included in the KOKKOS_LAMBDA - e.g. dereferencing, size are all not allowed
                 const std::size_t not_swapping_local_wire_size = rev_local_wires_index_not_swapping.size(); 
@@ -767,11 +742,14 @@ class StateVectorKokkosMPI final
                 auto sendbuf_view = (*sendbuf_);
                 auto recvbuf_view = (*recvbuf_);
                 auto sv_view = (*sv_).getView();
+                std::size_t send_size = exp2((get_num_local_wires() - local_wires_to_swap.size()));
+
+        roctxMark("ROCTX-MARK: Start of copy_sendbuf");
                 Kokkos::parallel_for("copy_sendbuf",
-                    exp2((get_num_local_wires() - local_wires_to_swap.size())),
+                    send_size,
                     KOKKOS_LAMBDA(std::size_t buffer_index) {
                         std::size_t SV_index = swap_wire_mask;
-                        for (std::size_t i = 0;
+                        for (int i = 0;
                              i < not_swapping_local_wire_size;
                              i++) {
                             SV_index |=
@@ -782,6 +760,7 @@ class StateVectorKokkosMPI final
                     });
                 Kokkos::fence();
 
+                roctxMark("ROCTX-MARK: End of copy_sendbuf");
                 std::size_t other_global_index = batch_index ^ global_index;
                 std::size_t other_mpi_rank =
                     get_mpi_rank_from_global_index(other_global_index);
@@ -792,39 +771,23 @@ class StateVectorKokkosMPI final
                           << " and I am sending to rank " << other_mpi_rank
                           << " with tag " << batch_index
                           << " and this number of elements "
-                          << (1 << (get_num_local_wires() -
-                                    local_wires_to_swap.size()))
+                          << send_size
                           << std::endl;
 #endif
 
+roctxMark("ROCTX-MARK: Start of sendrecv");
                 mpi_sendrecv(
                     other_mpi_rank, other_mpi_rank,
-                    exp2(get_num_local_wires() - local_wires_to_swap.size()),
+                    send_size,
                     batch_index);
+roctxMark("ROCTX-MARK: End of sendrecv");
 
-                // TODO: kokkos parallelize this
-                /* for (std::size_t buffer_index = 0;
-                     buffer_index <
-                     exp2((get_num_local_wires() - local_wires_to_swap.size()));
-                     buffer_index++) {
-                    std::size_t SV_index = swap_wire_mask;
-
-                    for (std::size_t i = 0;
-                         i < rev_local_wires_index_not_swapping.size(); i++) {
-                        SV_index |= (((buffer_index >> i) & 1)
-                                     << rev_local_wires_index_not_swapping[i]);
-                    }
-
-                    // TODO: FIX ME FIX ME on GPU
-                    (*sv_).getView()(SV_index) = (*recvbuf_)(buffer_index);
-                } */
-                //TODO: uncomment this
-                Kokkos::parallel_for("copy_recvbuf", exp2((get_num_local_wires() -
-                local_wires_to_swap.size())), KOKKOS_LAMBDA(std::size_t buffer_index)
+                roctxMark("ROCTX-MARK: Start of copy_recvbuf");
+                Kokkos::parallel_for("copy_recvbuf", send_size, KOKKOS_LAMBDA(std::size_t buffer_index)
                 {
                    std::size_t SV_index = swap_wire_mask;
        
-                   for (std::size_t i = 0;
+                   for (int i = 0;
                         i < not_swapping_local_wire_size; i++) {
                        SV_index |= (((buffer_index >> i) & 1)
                                     << rev_local_wires_index_not_swapping_view(i));
@@ -834,6 +797,7 @@ class StateVectorKokkosMPI final
                    recvbuf_view(buffer_index);
                });
                 Kokkos::fence();
+                roctxMark("ROCTX-MARK: End of copy_recvbuf");
             }
         }
 

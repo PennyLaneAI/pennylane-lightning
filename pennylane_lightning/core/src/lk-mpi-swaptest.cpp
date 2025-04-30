@@ -35,41 +35,50 @@ using t_scale = std::milli;
 std::pair<std::size_t, std::size_t>  prep_input_1q(int argc, char *argv[]) {
     if (argc <= 2) {
         std::cout << "Please ensure you specify the following arguments: "
-                     "total_qubits swapping_qubit"
+                     "total_qubits swapping_global_qubit"
                   << std::endl;
         std::exit(-1);
     }
     std::string arg_qubits = argv[1];
-    std::string arg_swapping_qubit = argv[2];
+    std::string arg_swapping_global_qubit = argv[2];
     std::size_t qubits = std::stoi(arg_qubits);
-    std::size_t swapping_qubit = std::stoi(arg_swapping_qubit);
+    std::size_t swapping_global_qubit = std::stoi(arg_swapping_global_qubit);
 
-    return {qubits, swapping_qubit};
+    return {qubits, swapping_global_qubit};
 }
 
 
 
 
 int main(int argc, char *argv[]) {
+    if (argc <= 3) {
+        std::cout << "Please ensure you specify the following arguments: "
+                     "total_qubits swapping_global_qubit"
+                  << std::endl;
+        std::exit(-1);
+    }
 
+    std::string arg_qubits = argv[1];
+    std::string arg_swapping_global_qubit = argv[2];
+    std::string arg_swapping_local_qubit = argv[3];
 
-    auto inputs = prep_input_1q(argc, argv);
-    std::size_t nq = inputs.first;
-    std::size_t swapping = inputs.second;
+    std::size_t nq = std::stoi(arg_qubits);
+    std::size_t swapping_global_qubit = std::stoi(arg_swapping_global_qubit);
+    std::size_t swapping_local_qubit = std::stoi(arg_swapping_local_qubit);
 
     // Create PennyLane Lightning statevector
     StateVectorKokkosMPI<double> svmpi(nq);
     std::size_t repeats = 4;
 
-    svmpi.swap_global_local_wires({swapping}, {nq - 1});
-    svmpi.swap_global_local_wires({nq-1}, {swapping});
+    svmpi.swap_global_local_wires({swapping_global_qubit}, {swapping_local_qubit});
+    svmpi.swap_global_local_wires({swapping_local_qubit}, {swapping_global_qubit});
 
     
     const auto t_start = std::chrono::high_resolution_clock::now();   
 
     for (std::size_t i = 0; i < repeats; i++) {
-        svmpi.swap_global_local_wires({swapping}, {nq - 1});
-        svmpi.swap_global_local_wires({nq-1}, {swapping});
+        svmpi.swap_global_local_wires({swapping_global_qubit}, {swapping_local_qubit});
+        svmpi.swap_global_local_wires({swapping_local_qubit}, {swapping_global_qubit});
     }
     const auto t_end = std::chrono::high_resolution_clock::now();   
     const double t_duration = std::chrono::duration<double, t_scale>(t_end - t_start).count();  
