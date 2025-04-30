@@ -16,3 +16,4 @@ flag_management:
   # This is the default flag for all files
   default_rules:
     carryforward: true
+    show_carryforward_flags: true
