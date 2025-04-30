@@ -639,7 +639,7 @@ class TestAdjointJacobianQNode:
         init_state /= np.linalg.norm(init_state)
         init_state = np.array(init_state, requires_grad=False)
 
-        num_wires = max(operation.num_wires, 1)
+        num_wires = max(operation.num_wires, 1) if operation.num_wires else 1
         if num_wires > n_qubits:
             return
 
@@ -704,7 +704,7 @@ class TestAdjointJacobianQNode:
         init_state /= np.linalg.norm(init_state)
         init_state = np.array(init_state, requires_grad=False)
 
-        num_wires = max(operation.num_wires, 1)
+        num_wires = max(operation.num_wires, 1) if operation.num_wires else 1
         if num_wires > n_qubits:
             return
 
@@ -766,7 +766,7 @@ class TestAdjointJacobianQNode:
         init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
         init_state /= np.linalg.norm(init_state)
         init_state = np.array(init_state, requires_grad=False)
-        num_wires = max(operation.num_wires, 1)
+        num_wires = max(operation.num_wires, 1) if operation.num_wires else 1
         if num_wires > n_qubits:
             return
 
