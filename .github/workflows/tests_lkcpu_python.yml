@@ -117,8 +117,7 @@ jobs:
       - name: Create device wheel ${{ inputs.lightning-version }}
         run: |
           PL_BACKEND=${{ matrix.pl_backend }} python scripts/configure_pyproject_toml.py
-          # TODO: remove CATALYST_GIT_TAG after release
-          CMAKE_ARGS="-DCATALYST_GIT_TAG='device-interface-rework' -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos" python -m build
+          CMAKE_ARGS="-DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos" python -m build
           cd dist
           WHEEL_NAME=$(ls *.whl)
           cp $WHEEL_NAME ${{ github.workspace }}/wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}.whl
@@ -271,7 +270,7 @@ jobs:
           SKIP_COMPILATION=True python -m pip install -e . --config-settings editable_mode=compat
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
           PL_BACKEND=${DEVICENAME} python scripts/configure_pyproject_toml.py
-          CMAKE_ARGS="-DCATALYST_GIT_TAG='device-interface-rework'" python -m pip install -e . --config-settings editable_mode=compat -vv
+          python -m pip install -e . --config-settings editable_mode=compat -vv
           PL_DEVICE=${DEVICENAME} python -m pytest tests/test_device.py $COVERAGE_FLAGS --cov-append
 
       - name: Upload test durations
