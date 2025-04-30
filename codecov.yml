@@ -16,3 +16,8 @@ flag_management:
   # This is the default flag for all files
   default_rules:
     carryforward: true
+
+flags:
+  all_paths:
+    paths:
+      - "pennylane_lightning/"
