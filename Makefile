@@ -4,6 +4,7 @@ TESTRUNNER := -m pytest tests --tb=short
 
 PL_BACKEND ?= "$(if $(backend:-=),$(backend),lightning_qubit)"
 SCIPY_OPENBLAS :=$(shell $(PYTHON) -c "import scipy_openblas32; print(scipy_openblas32.get_lib_dir())")
+COMPILER_LAUNCHER ?= $(shell which ccache)
 
 ifdef check
     CHECK := --check --diff
@@ -96,6 +97,8 @@ coverage-cpp:
 		  -DBUILD_TESTS=ON \
 		  -DENABLE_COVERAGE=ON \
 		  -DPL_BACKEND=$(PL_BACKEND) \
+		  -DCMAKE_C_COMPILER_LAUNCHER=$(COMPILER_LAUNCHER) \
+		  -DCMAKE_CXX_COMPILER_LAUNCHER=$(COMPILER_LAUNCHER) \
 		  $(OPTIONS)
 	cmake --build ./BuildCov $(VERBOSE) --target $(target)
 	cd ./BuildCov; for file in *runner ; do ./$(file); done; \
@@ -121,6 +124,8 @@ test-cpp:
 		  -DENABLE_WARNINGS=ON \
 		  -DPL_BACKEND=$(PL_BACKEND) \
 		  -DSCIPY_OPENBLAS=$(SCIPY_OPENBLAS) \
+		  -DCMAKE_C_COMPILER_LAUNCHER=$(COMPILER_LAUNCHER) \
+		  -DCMAKE_CXX_COMPILER_LAUNCHER=$(COMPILER_LAUNCHER) \
 		  $(OPTIONS)
 ifdef target
 	cmake --build ./BuildTests $(VERBOSE) --target $(target)
@@ -139,6 +144,8 @@ test-cpp-mpi:
 		  -DPL_BACKEND=lightning_gpu \
 		  -DSCIPY_OPENBLAS=$(SCIPY_OPENBLAS) \
 		  -DENABLE_MPI=ON \
+		  -DCMAKE_C_COMPILER_LAUNCHER=$(COMPILER_LAUNCHER) \
+		  -DCMAKE_CXX_COMPILER_LAUNCHER=$(COMPILER_LAUNCHER) \
 		  $(OPTIONS)
 ifdef target
 	cmake --build ./BuildTests $(VERBOSE) --target $(target)
@@ -171,6 +178,8 @@ check-tidy:
 		  -DENABLE_WARNINGS=ON \
 		  -DCLANG_TIDY_BINARY=clang-tidy \
 		  -DPL_BACKEND=$(PL_BACKEND) \
+		  -DCMAKE_C_COMPILER_LAUNCHER=$(COMPILER_LAUNCHER) \
+		  -DCMAKE_CXX_COMPILER_LAUNCHER=$(COMPILER_LAUNCHER) \
 		  $(OPTIONS)
 ifdef target
 	cmake --build ./BuildTidy $(VERBOSE) --target $(target)
