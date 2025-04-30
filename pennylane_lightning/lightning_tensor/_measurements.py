@@ -44,7 +44,7 @@ from pennylane.measurements import (
     StateMeasurement,
     VarianceMP,
 )
-from pennylane.operation import Observable
+from pennylane.operation import Operator
 from pennylane.ops import SparseHamiltonian, Sum
 from pennylane.tape import QuantumScript
 from pennylane.typing import Result, TensorLike
@@ -77,11 +77,11 @@ class LightningTensorMeasurements:
         return self._dtype
 
     @staticmethod
-    def _observable_is_sparse(obs: Observable) -> bool:
+    def _observable_is_sparse(obs: Operator) -> bool:
         """States if the required observable is sparse.
 
         Args:
-            obs(Observable): PennyLane observable to check sparsity.
+            obs(Operator): PennyLane observable to check sparsity.
 
         Returns:
             True if the measurement process only uses the sparse data representation.

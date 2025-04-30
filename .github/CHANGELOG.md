@@ -13,11 +13,20 @@
 
 <h3>Documentation 📝</h3>
 
+- Enable `pennylane.ai` search.
+  [(#1135)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1135)
+
 - Move the installation sections from `README.rst` to dedicated pages.
   [(#1131)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1131)
 
 - Fix doxygen doc builds for `AVXCommon::FuncReturn`.
   [(#1134)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1134)
+
+- Added a header/banner image to the README (`README.rst`), as in the `pennylane` and `catalyst` repositories.
+  Temporarily reverted this change as PyPI forbids the `.. raw::` directive for security reasons in `rst` files.
+  This will be revisited in a future PR.
+  [(#1139)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1139)
+  [(#1141)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1141)
 
 <h3>Bug fixes 🐛</h3>
 
@@ -28,6 +37,9 @@
   The license classifier and `project.license` as a TOML table are deprecated in favor of a SPDX license expression and removed in `pyproject.toml`.
   To speedup the recompilation of C++ source code, `ccache` is also added to `Makefile`.
   [(#1098)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1098)
+
+- Updates for depending deprecations to `Observable` and `is_trainable` in pennylane.
+  [(#1138)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1138)
 
 - Import custom PennyLane errors from `pennylane.exceptions` rather than top-level.
   [(#1122)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1122)
@@ -40,7 +52,10 @@
 This release contains contributions from (in alphabetical order):
 
 Ali Asadi,
+Andrew Gardhouse,
+Christina Lee,
 Joseph Lee,
+Anton Naim Ibrahim,
 Luis Alfredo Nuñez Meneses,
 Andrija Paurevic,
 
@@ -119,20 +134,10 @@ Andrija Paurevic,
 
 * Expand test structure to efficiently handle sparse data.
   [(#1085)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1085)
-<<<<<<< HEAD
-  
-* Remove redundant `reset_state` calls for circuit execution when state vector is freshly initialized.
-  [(#1076)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1076)
-
-* Add support for sparse `qml.QubitUnitary` gates for `lightning.qubit`, `lightning.gpu`, and `lightning.kokkos` backends.
-  [(#1068)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1068).
-
-=======
 
 * Remove redundant `reset_state` calls for circuit execution when state vector is freshly initialized.
   [(#1076)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1076)
 
->>>>>>> ba0e455762982024286927423dc162404b1fa210
 * Introduce a generalized sparse gate selection system via the `_observable_is_sparse` method in the base measurement class, enabling future expansion for any number of sparse observables.
   [(#1068)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1068)
 

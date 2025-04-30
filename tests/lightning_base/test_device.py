@@ -122,7 +122,7 @@ def enable_disable_plxpr():
 class TestHelpers:
     """Unit tests for helper functions"""
 
-    class DummyOperator(qml.operation.Operation, qml.operation.Observable):
+    class DummyOperator(qml.operation.Operation):
         """Dummy operator"""
 
         num_wires = 1
