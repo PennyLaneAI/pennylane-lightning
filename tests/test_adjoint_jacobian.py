@@ -50,8 +50,6 @@ fixture_params = itertools.product(
     [np.complex64, np.complex128], kokkos_args, [None, 3]  # c_dtype x kokkos_args x wires
 )
 
-def test_diff():
-    return True
 
 def Rx(theta):
     r"""One-qubit rotation about the x axis.
