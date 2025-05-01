@@ -32,6 +32,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- All Catalyst plugins have been updated to be compatible with the next version of Catalyst (v0.12) with changes to the `QuantumDevice` interface.
+  [(#1143)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1143)
+
 - Updates for depending deprecations to `Observable`, `is_trainable`, and `AnyWires` in pennylane.
   [(#1138)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1138)
   [(#1146)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1146)
@@ -52,6 +55,7 @@ This release contains contributions from (in alphabetical order):
 Runor Agbaire,
 Ali Asadi,
 Andrew Gardhouse,
+David Ittah,
 Christina Lee,
 Joseph Lee,
 Anton Naim Ibrahim,
