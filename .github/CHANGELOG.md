@@ -32,7 +32,7 @@
 
 <h3>Internal changes ⚙️</h3>
 
-- The `LightningBaseStateVector`, `LightningBaseAdjointJacobian`, `LightningBaseMeasurements`, `QuantumScriptSerializer`, and `LightningInterpreter` base classes now can be found at `pennylane_lightning.lightning_base`.
+- The `LightningBaseStateVector`, `LightningBaseAdjointJacobian`, `LightningBaseMeasurements` and `LightningInterpreter` base classes now can be found at `pennylane_lightning.lightning_base`.
   The new `lightning_base` module further enables the relocation of core files from `pennylane_lightning/core/src/*` to `pennylane_lightning/core/*`.
   The license classifier and `project.license` as a TOML table are deprecated in favor of a SPDX license expression and removed in `pyproject.toml`.
   To speedup the recompilation of C++ source code, `ccache` is also added to `Makefile`.

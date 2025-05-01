@@ -382,6 +382,7 @@ class LightningKokkos(LightningBase):
                 self.simulate(
                     self.dynamic_wires_from_circuit(circuit),
                     self._statevector,
+                    mcmc=None,
                     postselect_mode=execution_config.mcm_config.postselect_mode,
                 )
             )

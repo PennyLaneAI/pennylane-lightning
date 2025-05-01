@@ -78,11 +78,9 @@ class LightningGPUAdjointJacobian(LightningBaseAdjointJacobian):
         batch_obs: bool = False,
     ) -> None:
 
-        super().__init__(qubit_state, batch_obs)
-
-        self._dp = DevPool()
-
         self._use_mpi = qubit_state._mpi_handler.use_mpi
+
+        super().__init__(qubit_state, batch_obs)
 
         if self._use_mpi:
             self._mpi_handler = qubit_state._mpi_handler

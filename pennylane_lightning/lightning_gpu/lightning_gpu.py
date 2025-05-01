@@ -490,6 +490,7 @@ class LightningGPU(LightningBase):
         return super().simulate(
             circuit,
             state,
+            mcmc=None,
             postselect_mode=postselect_mode,
         )
 
