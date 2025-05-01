@@ -42,7 +42,7 @@
 #include "UtilKokkos.hpp"
 
 #include "CPUMemoryModel.hpp"
-#include <roctracer/roctx.h>
+//#include <roctracer/roctx.h>
 
 /// @cond DEV
 namespace {
@@ -663,7 +663,7 @@ class StateVectorKokkosMPI final
             // std::sort(local_wires_to_swap.begin(), local_wires_to_swap.end());
             
             // #ifdef LKMPI_DEBUG
-        roctxMark("ROCTX-MARK: Start of swap_global_local_wires");
+        //roctxMark("ROCTX-MARK: Start of swap_global_local_wires");
         //  A little debug message:
         //if (get_mpi_rank() == 0) {
         //    std::cout << "Swapping global wires: ";
@@ -688,6 +688,8 @@ class StateVectorKokkosMPI final
                         get_local_wire_index(local_wires_[i])));
             }
         }
+        std::sort(rev_local_wires_index_not_swapping.begin(),
+                  rev_local_wires_index_not_swapping.end());
         for (std::size_t i = 0; i < local_wires_to_swap.size(); i++) {
             rev_local_wires_index_to_swap.push_back(get_rev_local_wire_index(
                 get_local_wire_index(local_wires_to_swap[i])));
@@ -743,8 +745,8 @@ class StateVectorKokkosMPI final
                 auto recvbuf_view = (*recvbuf_);
                 auto sv_view = (*sv_).getView();
                 std::size_t send_size = exp2((get_num_local_wires() - local_wires_to_swap.size()));
-
-        roctxMark("ROCTX-MARK: Start of copy_sendbuf");
+        
+        //roctxMark("ROCTX-MARK: Start of copy_sendbuf");
                 Kokkos::parallel_for("copy_sendbuf",
                     send_size,
                     KOKKOS_LAMBDA(std::size_t buffer_index) {
@@ -760,7 +762,7 @@ class StateVectorKokkosMPI final
                     });
                 Kokkos::fence();
 
-                roctxMark("ROCTX-MARK: End of copy_sendbuf");
+                //roctxMark("ROCTX-MARK: End of copy_sendbuf");
                 std::size_t other_global_index = batch_index ^ global_index;
                 std::size_t other_mpi_rank =
                     get_mpi_rank_from_global_index(other_global_index);
@@ -775,14 +777,14 @@ class StateVectorKokkosMPI final
                           << std::endl;
 #endif
 
-roctxMark("ROCTX-MARK: Start of sendrecv");
+//roctxMark("ROCTX-MARK: Start of sendrecv");
                 mpi_sendrecv(
                     other_mpi_rank, other_mpi_rank,
                     send_size,
                     batch_index);
-roctxMark("ROCTX-MARK: End of sendrecv");
+//roctxMark("ROCTX-MARK: End of sendrecv");
 
-                roctxMark("ROCTX-MARK: Start of copy_recvbuf");
+                //roctxMark("ROCTX-MARK: Start of copy_recvbuf");
                 Kokkos::parallel_for("copy_recvbuf", send_size, KOKKOS_LAMBDA(std::size_t buffer_index)
                 {
                    std::size_t SV_index = swap_wire_mask;
@@ -797,7 +799,7 @@ roctxMark("ROCTX-MARK: End of sendrecv");
                    recvbuf_view(buffer_index);
                });
                 Kokkos::fence();
-                roctxMark("ROCTX-MARK: End of copy_recvbuf");
+                //roctxMark("ROCTX-MARK: End of copy_recvbuf");
             }
         }
 
