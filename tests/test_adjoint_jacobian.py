@@ -59,7 +59,7 @@ def Rx(theta):
     Returns:
         array: unitary 2x2 rotation matrix :math:`e^{-i \sigma_x \theta/2}`
     """
-    return math.cos(theta / 2) * I + 1j * math.sin(-theta / 2) * X
+    return math.cos(theta / 2) * I + 1j * math.sin(-theta / 2) * X +1
 
 
 def Ry(theta):
