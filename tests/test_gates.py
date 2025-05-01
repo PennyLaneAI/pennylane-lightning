@@ -624,7 +624,7 @@ def test_controlled_qubit_gates(operation, n_qubits, control_value, adjoint, tol
     dev_def = qml.device("default.qubit", wires=n_qubits)
     dev = qml.device(device_name, wires=n_qubits)
     threshold = 5 if device_name == "lightning.tensor" else 250
-    num_wires = max(operation.num_wires, 1)
+    num_wires = max(operation.num_wires, 1) if operation.num_wires else 1
     operation = qml.adjoint(operation) if adjoint else operation
 
     if device_name not in ["lightning.qubit", "lightning.gpu"] and op == qml.PCPhase:
@@ -771,7 +771,7 @@ def test_controlled_globalphase(n_qubits, control_value, tol):
     dev = qml.device(device_name, wires=n_qubits)
     threshold = 250
     operation = qml.GlobalPhase
-    num_wires = max(operation.num_wires, 1)
+    num_wires = max(operation.num_wires, 1) if operation.num_wires else 1
     for n_wires in range(num_wires + 1, num_wires + 4):
         wire_lists = list(itertools.permutations(range(0, n_qubits), n_wires))
         n_perms = len(wire_lists) * n_wires
@@ -840,7 +840,7 @@ def test_adjoint_controlled_qubit_gates(operation, n_qubits, control_value, tol,
     dev_def = qml.device("default.qubit", wires=n_qubits)
     dev = qml.device(device_name, wires=n_qubits)
     threshold = 5 if device_name == "lightning.tensor" else 250
-    num_wires = max(operation.num_wires, 1)
+    num_wires = max(operation.num_wires, 1) if operation.num_wires else 1
     operation = qml.adjoint(operation) if adjoint else operation
 
     for n_wires in range(num_wires + 1, num_wires + 4):
