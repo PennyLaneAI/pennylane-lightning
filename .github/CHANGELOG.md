@@ -13,15 +13,31 @@
 
 <h3>Documentation 📝</h3>
 
+- Enable `pennylane.ai` search.
+  [(#1135)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1135)
+
 - Move the installation sections from `README.rst` to dedicated pages.
   [(#1131)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1131)
 
 - Fix doxygen doc builds for `AVXCommon::FuncReturn`.
   [(#1134)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1134)
 
+- Added a header/banner image to the README (`README.rst`), as in the `pennylane` and `catalyst` repositories.
+  Temporarily reverted this change as PyPI forbids the `.. raw::` directive for security reasons in `rst` files.
+  This will be revisited in a future PR.
+  [(#1139)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1139)
+  [(#1141)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1141)
+
 <h3>Bug fixes 🐛</h3>
 
 <h3>Internal changes ⚙️</h3>
+
+- All Catalyst plugins have been updated to be compatible with the next version of Catalyst (v0.12) with changes to the `QuantumDevice` interface.
+  [(#1143)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1143)
+
+- Updates for depending deprecations to `Observable`, `is_trainable`, and `AnyWires` in pennylane.
+  [(#1138)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1138)
+  [(#1146)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1146)
 
 - Import custom PennyLane errors from `pennylane.exceptions` rather than top-level.
   [(#1122)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1122)
@@ -34,7 +50,11 @@
 This release contains contributions from (in alphabetical order):
 
 Ali Asadi,
+Andrew Gardhouse,
+David Ittah,
+Christina Lee,
 Joseph Lee,
+Anton Naim Ibrahim,
 Luis Alfredo Nuñez Meneses,
 Andrija Paurevic,
 

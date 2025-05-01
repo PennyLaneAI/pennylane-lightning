@@ -38,7 +38,7 @@ def test_all_invalid_shots_circuit():
     """Test all invalid cases: expval, probs, var measurements."""
 
     dev = qml.device(device_name, wires=2)
-    dq = qml.device("default.qubit", wires=2)
+    dq = qml.device("default.qubit", wires=3)
 
     def circuit_op():
         m = qml.measure(0, postselect=1)

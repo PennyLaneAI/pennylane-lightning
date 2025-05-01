@@ -106,29 +106,6 @@ void LightningGPUSimulator::SetDevicePRNG(std::mt19937 *gen) {
     this->gen = gen;
 }
 
-/// LCOV_EXCL_START
-// TODO: TBD whether to remove this function or add it to coverage test
-void LightningGPUSimulator::PrintState() {
-    using std::cout;
-    using std::endl;
-
-    const std::size_t num_qubits = this->device_sv->getNumQubits();
-    const std::size_t size = Pennylane::Util::exp2(num_qubits);
-
-    std::vector<std::complex<double>> state(size, {0.0, 0.0});
-
-    this->device_sv->CopyGpuDataToHost(state.data(), size);
-
-    std::size_t idx = 0;
-    cout << "*** State-Vector of Size " << size << " ***" << endl;
-    cout << "[";
-    for (; idx < size - 1; idx++) {
-        cout << state[idx] << ", ";
-    }
-    cout << state[idx] << "]" << endl;
-}
-/// LCOV_EXCL_STOP
-
 void LightningGPUSimulator::SetState(DataView<std::complex<double>, 1> &data,
                                      std::vector<QubitIdType> &wires) {
     std::size_t expected_wires = static_cast<std::size_t>(log2(data.size()));
@@ -142,14 +119,6 @@ void LightningGPUSimulator::SetBasisState(DataView<int8_t, 1> &data,
                                           std::vector<QubitIdType> &wires) {
     std::vector<std::size_t> basis_state(data.begin(), data.end());
     this->device_sv->setBasisState(basis_state, getDeviceWires(wires));
-}
-
-auto LightningGPUSimulator::Zero() const -> Result {
-    return const_cast<Result>(&GLOBAL_RESULT_FALSE_CONST);
-}
-
-auto LightningGPUSimulator::One() const -> Result {
-    return const_cast<Result>(&GLOBAL_RESULT_TRUE_CONST);
 }
 
 void LightningGPUSimulator::NamedOperation(
@@ -342,9 +311,8 @@ std::vector<size_t> LightningGPUSimulator::GenerateSamples(size_t shots) {
     return m.generate_samples(shots);
 }
 
-void LightningGPUSimulator::Sample(DataView<double, 2> &samples,
-                                   std::size_t shots) {
-    auto li_samples = this->GenerateSamples(shots);
+void LightningGPUSimulator::Sample(DataView<double, 2> &samples) {
+    auto li_samples = this->GenerateSamples(device_shots);
 
     RT_FAIL_IF(samples.size() != li_samples.size(),
                "Invalid size for the pre-allocated samples");
@@ -356,35 +324,34 @@ void LightningGPUSimulator::Sample(DataView<double, 2> &samples,
     // corresponding shape is (shots, qubits). Gather the desired bits
     // corresponding to the input wires into a bitstring.
     auto samplesIter = samples.begin();
-    for (std::size_t shot = 0; shot < shots; shot++) {
+    for (std::size_t shot = 0; shot < device_shots; shot++) {
         for (std::size_t wire = 0; wire < numQubits; wire++) {
             *(samplesIter++) =
                 static_cast<double>(li_samples[shot * numQubits + wire]);
         }
     }
 }
-void LightningGPUSimulator::PartialSample(DataView<double, 2> &samples,
-                                          const std::vector<QubitIdType> &wires,
-                                          std::size_t shots) {
+void LightningGPUSimulator::PartialSample(
+    DataView<double, 2> &samples, const std::vector<QubitIdType> &wires) {
     const std::size_t numWires = wires.size();
     const std::size_t numQubits = this->GetNumQubits();
 
     RT_FAIL_IF(numWires > numQubits, "Invalid number of wires");
     RT_FAIL_IF(!isValidQubits(wires), "Invalid given wires to measure");
-    RT_FAIL_IF(samples.size() != shots * numWires,
+    RT_FAIL_IF(samples.size() != device_shots * numWires,
                "Invalid size for the pre-allocated partial-samples");
 
     // get device wires
     auto &&dev_wires = getDeviceWires(wires);
 
-    auto li_samples = this->GenerateSamples(shots);
+    auto li_samples = this->GenerateSamples(device_shots);
 
     // The lightning samples are layed out as a single vector of size
     // shots*qubits, where each element represents a single bit. The
     // corresponding shape is (shots, qubits). Gather the desired bits
     // corresponding to the input wires into a bitstring.
     auto samplesIter = samples.begin();
-    for (std::size_t shot = 0; shot < shots; shot++) {
+    for (std::size_t shot = 0; shot < device_shots; shot++) {
         for (auto wire : dev_wires) {
             *(samplesIter++) =
                 static_cast<double>(li_samples[shot * numQubits + wire]);
@@ -393,15 +360,14 @@ void LightningGPUSimulator::PartialSample(DataView<double, 2> &samples,
 }
 
 void LightningGPUSimulator::Counts(DataView<double, 1> &eigvals,
-                                   DataView<int64_t, 1> &counts,
-                                   std::size_t shots) {
+                                   DataView<int64_t, 1> &counts) {
     const std::size_t numQubits = this->GetNumQubits();
     const std::size_t numElements = 1U << numQubits;
 
     RT_FAIL_IF(eigvals.size() != numElements || counts.size() != numElements,
                "Invalid size for the pre-allocated counts");
 
-    auto li_samples = this->GenerateSamples(shots);
+    auto li_samples = this->GenerateSamples(device_shots);
 
     // Fill the eigenvalues with the integer representation of the corresponding
     // computational basis bitstring. In the future, eigenvalues can also be
@@ -414,7 +380,7 @@ void LightningGPUSimulator::Counts(DataView<double, 1> &eigvals,
     // shots*qubits, where each element represents a single bit. The
     // corresponding shape is (shots, qubits). Gather the bits of all qubits
     // into a bitstring.
-    for (std::size_t shot = 0; shot < shots; shot++) {
+    for (std::size_t shot = 0; shot < device_shots; shot++) {
         std::bitset<CHAR_BIT * sizeof(double)> basisState;
         std::size_t idx = numQubits;
         for (std::size_t wire = 0; wire < numQubits; wire++) {
@@ -424,10 +390,9 @@ void LightningGPUSimulator::Counts(DataView<double, 1> &eigvals,
     }
 }
 
-void LightningGPUSimulator::PartialCounts(DataView<double, 1> &eigvals,
-                                          DataView<int64_t, 1> &counts,
-                                          const std::vector<QubitIdType> &wires,
-                                          std::size_t shots) {
+void LightningGPUSimulator::PartialCounts(
+    DataView<double, 1> &eigvals, DataView<int64_t, 1> &counts,
+    const std::vector<QubitIdType> &wires) {
     const std::size_t numWires = wires.size();
     const std::size_t numQubits = this->GetNumQubits();
     const std::size_t numElements = 1U << numWires;
@@ -440,7 +405,7 @@ void LightningGPUSimulator::PartialCounts(DataView<double, 1> &eigvals,
     // get device wires
     auto &&dev_wires = getDeviceWires(wires);
 
-    auto li_samples = this->GenerateSamples(shots);
+    auto li_samples = this->GenerateSamples(device_shots);
 
     // Fill the eigenvalues with the integer representation of the corresponding
     // computational basis bitstring. In the future, eigenvalues can also be
@@ -453,7 +418,7 @@ void LightningGPUSimulator::PartialCounts(DataView<double, 1> &eigvals,
     // shots*qubits, where each element represents a single bit. The
     // corresponding shape is (shots, qubits). Gather the desired bits
     // corresponding to the input wires into a bitstring.
-    for (std::size_t shot = 0; shot < shots; shot++) {
+    for (std::size_t shot = 0; shot < device_shots; shot++) {
         std::bitset<CHAR_BIT * sizeof(double)> basisState;
         std::size_t idx = dev_wires.size();
         for (auto wire : dev_wires) {
@@ -480,7 +445,8 @@ auto LightningGPUSimulator::Measure(QubitIdType wire,
     bool mres = Lightning::simulateDraw(probs, postselect, this->gen);
     auto dev_wires = getDeviceWires(wires);
     this->device_sv->collapse(dev_wires[0], mres ? 1 : 0);
-    return mres ? this->One() : this->Zero();
+    return mres ? const_cast<Result>(&GLOBAL_RESULT_TRUE_CONST)
+                : const_cast<Result>(&GLOBAL_RESULT_FALSE_CONST);
 }
 
 void LightningGPUSimulator::Gradient(
