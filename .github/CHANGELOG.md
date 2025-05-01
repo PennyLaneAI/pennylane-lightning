@@ -49,6 +49,7 @@
 
 This release contains contributions from (in alphabetical order):
 
+Runor Agbaire,
 Ali Asadi,
 Andrew Gardhouse,
 Christina Lee,
@@ -56,7 +57,6 @@ Joseph Lee,
 Anton Naim Ibrahim,
 Luis Alfredo Nuñez Meneses,
 Andrija Paurevic,
-Runor Agbaire
 
 ---
 
