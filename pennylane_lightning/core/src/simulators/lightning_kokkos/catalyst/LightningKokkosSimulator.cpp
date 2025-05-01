@@ -110,33 +110,6 @@ void LightningKokkosSimulator::SetDevicePRNG(std::mt19937 *gen) {
     this->gen = gen;
 }
 
-/// LCOV_EXCL_START
-void LightningKokkosSimulator::PrintState() {
-    using std::cout;
-    using std::endl;
-    using UnmanagedComplexHostView =
-        Kokkos::View<Kokkos::complex<double> *, Kokkos::HostSpace,
-                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
-
-    const std::size_t num_qubits = this->device_sv->getNumQubits();
-    const std::size_t size = Pennylane::Util::exp2(num_qubits);
-
-    std::vector<std::complex<double>> state(size, {0.0, 0.0});
-    auto *state_kptr =
-        reinterpret_cast<Kokkos::complex<double> *>(state.data());
-    auto device_data = this->device_sv->getView();
-    Kokkos::deep_copy(UnmanagedComplexHostView(state_kptr, size), device_data);
-
-    std::size_t idx = 0;
-    cout << "*** State-Vector of Size " << size << " ***" << endl;
-    cout << "[";
-    for (; idx < size - 1; idx++) {
-        cout << state[idx] << ", ";
-    }
-    cout << state[idx] << "]" << endl;
-}
-/// LCOV_EXCL_STOP
-
 void LightningKokkosSimulator::SetState(DataView<std::complex<double>, 1> &data,
                                         std::vector<QubitIdType> &wires) {
     std::size_t expected_wires = static_cast<std::size_t>(log2(data.size()));
@@ -149,14 +122,6 @@ void LightningKokkosSimulator::SetBasisState(DataView<int8_t, 1> &data,
                                              std::vector<QubitIdType> &wires) {
     std::vector<std::size_t> basis_state(data.begin(), data.end());
     this->device_sv->setBasisState(basis_state, getDeviceWires(wires));
-}
-
-auto LightningKokkosSimulator::Zero() const -> Result {
-    return const_cast<Result>(&GLOBAL_RESULT_FALSE_CONST);
-}
-
-auto LightningKokkosSimulator::One() const -> Result {
-    return const_cast<Result>(&GLOBAL_RESULT_TRUE_CONST);
 }
 
 void LightningKokkosSimulator::NamedOperation(
@@ -375,9 +340,8 @@ std::vector<size_t> LightningKokkosSimulator::GenerateSamples(size_t shots) {
     return m.generate_samples(shots);
 }
 
-void LightningKokkosSimulator::Sample(DataView<double, 2> &samples,
-                                      std::size_t shots) {
-    auto li_samples = this->GenerateSamples(shots);
+void LightningKokkosSimulator::Sample(DataView<double, 2> &samples) {
+    auto li_samples = this->GenerateSamples(device_shots);
 
     RT_FAIL_IF(samples.size() != li_samples.size(),
                "Invalid size for the pre-allocated samples");
@@ -389,7 +353,7 @@ void LightningKokkosSimulator::Sample(DataView<double, 2> &samples,
     // corresponding shape is (shots, qubits). Gather the desired bits
     // corresponding to the input wires into a bitstring.
     auto samplesIter = samples.begin();
-    for (std::size_t shot = 0; shot < shots; shot++) {
+    for (std::size_t shot = 0; shot < device_shots; shot++) {
         for (std::size_t wire = 0; wire < numQubits; wire++) {
             *(samplesIter++) =
                 static_cast<double>(li_samples[shot * numQubits + wire]);
@@ -397,27 +361,26 @@ void LightningKokkosSimulator::Sample(DataView<double, 2> &samples,
     }
 }
 void LightningKokkosSimulator::PartialSample(
-    DataView<double, 2> &samples, const std::vector<QubitIdType> &wires,
-    std::size_t shots) {
+    DataView<double, 2> &samples, const std::vector<QubitIdType> &wires) {
     const std::size_t numWires = wires.size();
     const std::size_t numQubits = this->GetNumQubits();
 
     RT_FAIL_IF(numWires > numQubits, "Invalid number of wires");
     RT_FAIL_IF(!isValidQubits(wires), "Invalid given wires to measure");
-    RT_FAIL_IF(samples.size() != shots * numWires,
+    RT_FAIL_IF(samples.size() != device_shots * numWires,
                "Invalid size for the pre-allocated partial-samples");
 
     // get device wires
     auto &&dev_wires = getDeviceWires(wires);
 
-    auto li_samples = this->GenerateSamples(shots);
+    auto li_samples = this->GenerateSamples(device_shots);
 
     // The lightning samples are layed out as a single vector of size
     // shots*qubits, where each element represents a single bit. The
     // corresponding shape is (shots, qubits). Gather the desired bits
     // corresponding to the input wires into a bitstring.
     auto samplesIter = samples.begin();
-    for (std::size_t shot = 0; shot < shots; shot++) {
+    for (std::size_t shot = 0; shot < device_shots; shot++) {
         for (auto wire : dev_wires) {
             *(samplesIter++) =
                 static_cast<double>(li_samples[shot * numQubits + wire]);
@@ -426,15 +389,14 @@ void LightningKokkosSimulator::PartialSample(
 }
 
 void LightningKokkosSimulator::Counts(DataView<double, 1> &eigvals,
-                                      DataView<int64_t, 1> &counts,
-                                      std::size_t shots) {
+                                      DataView<int64_t, 1> &counts) {
     const std::size_t numQubits = this->GetNumQubits();
     const std::size_t numElements = 1U << numQubits;
 
     RT_FAIL_IF(eigvals.size() != numElements || counts.size() != numElements,
                "Invalid size for the pre-allocated counts");
 
-    auto li_samples = this->GenerateSamples(shots);
+    auto li_samples = this->GenerateSamples(device_shots);
 
     // Fill the eigenvalues with the integer representation of the corresponding
     // computational basis bitstring. In the future, eigenvalues can also be
@@ -447,7 +409,7 @@ void LightningKokkosSimulator::Counts(DataView<double, 1> &eigvals,
     // shots*qubits, where each element represents a single bit. The
     // corresponding shape is (shots, qubits). Gather the bits of all qubits
     // into a bitstring.
-    for (std::size_t shot = 0; shot < shots; shot++) {
+    for (std::size_t shot = 0; shot < device_shots; shot++) {
         std::bitset<CHAR_BIT * sizeof(double)> basisState;
         std::size_t idx = numQubits;
         for (std::size_t wire = 0; wire < numQubits; wire++) {
@@ -459,7 +421,7 @@ void LightningKokkosSimulator::Counts(DataView<double, 1> &eigvals,
 
 void LightningKokkosSimulator::PartialCounts(
     DataView<double, 1> &eigvals, DataView<int64_t, 1> &counts,
-    const std::vector<QubitIdType> &wires, std::size_t shots) {
+    const std::vector<QubitIdType> &wires) {
     const std::size_t numWires = wires.size();
     const std::size_t numQubits = this->GetNumQubits();
     const std::size_t numElements = 1U << numWires;
@@ -472,7 +434,7 @@ void LightningKokkosSimulator::PartialCounts(
     // get device wires
     auto &&dev_wires = getDeviceWires(wires);
 
-    auto li_samples = this->GenerateSamples(shots);
+    auto li_samples = this->GenerateSamples(device_shots);
 
     // Fill the eigenvalues with the integer representation of the corresponding
     // computational basis bitstring. In the future, eigenvalues can also be
@@ -485,7 +447,7 @@ void LightningKokkosSimulator::PartialCounts(
     // shots*qubits, where each element represents a single bit. The
     // corresponding shape is (shots, qubits). Gather the desired bits
     // corresponding to the input wires into a bitstring.
-    for (std::size_t shot = 0; shot < shots; shot++) {
+    for (std::size_t shot = 0; shot < device_shots; shot++) {
         std::bitset<CHAR_BIT * sizeof(double)> basisState;
         std::size_t idx = dev_wires.size();
         for (auto wire : dev_wires) {
@@ -512,7 +474,8 @@ auto LightningKokkosSimulator::Measure(QubitIdType wire,
     bool mres = Lightning::simulateDraw(probs, postselect, this->gen);
     auto dev_wires = getDeviceWires(wires);
     this->device_sv->collapse(dev_wires[0], mres ? 1 : 0);
-    return mres ? this->One() : this->Zero();
+    return mres ? const_cast<Result>(&GLOBAL_RESULT_TRUE_CONST)
+                : const_cast<Result>(&GLOBAL_RESULT_FALSE_CONST);
 }
 
 void LightningKokkosSimulator::Gradient(
