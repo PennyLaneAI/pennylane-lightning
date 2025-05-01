@@ -319,9 +319,6 @@ class QuantumScriptSerializer:
         indices = np.array(spm.indices).astype(np.int64)
         offsets = np.array(spm.indptr).astype(np.int64)
 
-        if len(data) == 0:
-            return self.sparse_hamiltonian_obs(data, indices, offsets, [])
-
         wires = [wires_map[w] for w in observable.wires] if wires_map else observable.wires.tolist()
 
         return self.sparse_hamiltonian_obs(data, indices, offsets, wires)
