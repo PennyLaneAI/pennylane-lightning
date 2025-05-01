@@ -894,7 +894,7 @@ class TestControlledOps:
     def test_controlled_qubit_gates(self, operation, n_qubits, control_value, tol, lightning_sv):
         """Test that multi-controlled gates are correctly applied to a state"""
         threshold = 250 if device_name != "lightning.tensor" else 5
-        num_wires = max(operation.num_wires, 1)
+        num_wires = max(operation.num_wires, 1) if operation.num_wires else 1
         np.random.seed(0)
 
         if device_name not in ["lightning.qubit", "lightning.gpu"] and operation == qml.PCPhase:
@@ -1028,7 +1028,7 @@ class TestControlledOps:
         """Test that multi-controlled gates are correctly applied to a state"""
         threshold = 250 if device_name != "lightning.tensor" else 5
         operation = qml.GlobalPhase
-        num_wires = max(operation.num_wires, 1)
+        num_wires = max(operation.num_wires, 1) if operation.num_wires else 1
         for n_wires in range(num_wires + 1, num_wires + 4):
             wire_lists = list(itertools.permutations(range(0, n_qubits), n_wires))
             n_perms = len(wire_lists) * n_wires
