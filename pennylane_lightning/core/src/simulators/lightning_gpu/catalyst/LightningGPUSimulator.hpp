@@ -38,7 +38,6 @@
 #include "LightningGPUObsManager.hpp"
 #include "QuantumDevice.hpp"
 #include "QubitManager.hpp"
-#include "Utils.hpp"
 
 namespace Catalyst::Runtime::Simulator {
 /**
@@ -131,9 +130,6 @@ class LightningGPUSimulator final : public Catalyst::Runtime::QuantumDevice {
     void SetBasisState(DataView<int8_t, 1> &,
                        std::vector<QubitIdType> &) override;
     [[nodiscard]] auto GetDeviceShots() const -> std::size_t override;
-    void PrintState() override;
-    [[nodiscard]] auto Zero() const -> Result override;
-    [[nodiscard]] auto One() const -> Result override;
 
     void
     NamedOperation(const std::string &name, const std::vector<double> &params,
@@ -160,16 +156,14 @@ class LightningGPUSimulator final : public Catalyst::Runtime::QuantumDevice {
     void Probs(DataView<double, 1> &probs) override;
     void PartialProbs(DataView<double, 1> &probs,
                       const std::vector<QubitIdType> &wires) override;
-    void Sample(DataView<double, 2> &samples, std::size_t shots) override;
+    void Sample(DataView<double, 2> &samples) override;
     void PartialSample(DataView<double, 2> &samples,
-                       const std::vector<QubitIdType> &wires,
-                       std::size_t shots) override;
-    void Counts(DataView<double, 1> &eigvals, DataView<int64_t, 1> &counts,
-                std::size_t shots) override;
+                       const std::vector<QubitIdType> &wires) override;
+    void Counts(DataView<double, 1> &eigvals,
+                DataView<int64_t, 1> &counts) override;
     void PartialCounts(DataView<double, 1> &eigvals,
                        DataView<int64_t, 1> &counts,
-                       const std::vector<QubitIdType> &wires,
-                       std::size_t shots) override;
+                       const std::vector<QubitIdType> &wires) override;
     auto Measure(QubitIdType wire,
                  std::optional<int32_t> postselect = std::nullopt)
         -> Result override;
