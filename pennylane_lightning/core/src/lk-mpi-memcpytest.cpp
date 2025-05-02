@@ -126,7 +126,7 @@ int main(int argc, char *argv[]) {
 
         double t_duration = std::chrono::duration<double, t_scale>(t_end - t_start).count();  
         double average_time = t_duration / (repeats); 
-        double data_copied_GB = buffer_size * 128 / 8 / 1024 / 1024 / 1024;
+        double data_copied_GB = static_cast<double>(buffer_size) * 128.0 / 8.0 / 1024.0 / 1024.0 / 1024.0;
         std::cout << "Average time for copying to sendbuf"  << average_time << " ms" << std::endl;  
         std::cout << "Data copied = " << data_copied_GB  << " GB" << std::endl;  
         std::cout << "Effective copy speed = " << data_copied_GB/average_time*1000.0 << " GB/s " << std::endl;  

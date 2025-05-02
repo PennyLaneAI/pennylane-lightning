@@ -163,6 +163,7 @@ class StateVectorKokkosMPI final
                 exp2(get_num_local_wires() -
                      1)); // This could be smaller, even dynamic!
         }
+        std::cout << "Initialized LK_MPI SV!" << std::endl;
     };
 
     /**
@@ -662,21 +663,21 @@ class StateVectorKokkosMPI final
             // std::sort(global_wires_to_swap.begin(), global_wires_to_swap.end());
             // std::sort(local_wires_to_swap.begin(), local_wires_to_swap.end());
             
-            // #ifdef LKMPI_DEBUG
+            //#ifdef LKMPI_DEBUG
         //roctxMark("ROCTX-MARK: Start of swap_global_local_wires");
         //  A little debug message:
-        //if (get_mpi_rank() == 0) {
-        //    std::cout << "Swapping global wires: ";
-        //    for (const auto &wire : global_wires_to_swap) {
-        //        std::cout << wire << " ";
-        //    }
-        //    std::cout << "with local wires: ";
-        //    for (const auto &wire : local_wires_to_swap) {
-        //        std::cout << wire << " ";
-        //    }
-        //    std::cout << std::endl;
-        //}
-        // #endif
+        if (get_mpi_rank() == 0) {
+            std::cout << "Swapping global wires: ";
+            for (const auto &wire : global_wires_to_swap) {
+                std::cout << wire << " ";
+            }
+            std::cout << "with local wires: ";
+            for (const auto &wire : local_wires_to_swap) {
+                std::cout << wire << " ";
+            }
+            std::cout << std::endl;
+        }
+         //#endif
 
         std::vector<std::size_t> rev_global_wires_index_to_swap;
         std::vector<std::size_t> rev_local_wires_index_to_swap;
@@ -814,6 +815,66 @@ class StateVectorKokkosMPI final
                       local_wires_[local_wire_idx]);
         }
     }
+
+
+        
+    
+    void match_wires(const StateVectorKokkosMPI& other_sv) {
+        //TODO: FINISH THIS FUNCTION
+        // Swap global-local wires if necessary
+        if (global_wires_ != other_sv.global_wires_) {
+            std::vector<std::size_t> global_wires_to_swap;
+            std::vector<std::size_t> local_wires_to_swap;
+            for (std::size_t i = 0; i < global_wires_.size(); ++i) {
+                if (!is_element_in_vector(other_sv.global_wires_, global_wires_[i])) {
+                    global_wires_to_swap.push_back(global_wires_[i]);
+                }
+            }
+            for (std::size_t i = 0; i < local_wires_.size(); ++i) {
+                if (!is_element_in_vector(other_sv.local_wires_, local_wires_[i])) {
+                    local_wires_.push_back(local_wires_[i]);
+                }
+            }
+            swap_global_local_wires(global_wires_to_swap, local_wires_to_swap);
+        }
+        
+        // Swap global-global wires if necessary
+        if ((global_wires_ != other_sv.global_wires_) || (mpi_rank_to_global_index_map_ != other_sv.mpi_rank_to_global_index_map_)) {
+        match_global_wires_and_index(other_sv.global_wires_, other_sv.mpi_rank_to_global_index_map_);
+        
+        }
+        
+        // Swap local-local wires if necessary
+        
+        
+        }
+        
+        void match_global_wires_and_index(const std::vector<std::size_t>& global_wires_target, const std::vector<std::size_t>& mpi_rank_to_global_index_map_target) {
+            //TODO: FINISH THIS FUNCTION
+        
+            PL_ABORT_IF(global_wires.size() != global_wires_target.size(), "Mismatch in size of global wires");
+            PL_ABORT_IF(mpi_rank_to_global_index_map.size() != mpi_rank_to_global_index_map_target.size(), "Mismatch in size of global index map");
+        
+            std::size_t my_global_index = get_global_index_from_mpi_rank(get_mpi_rank());
+            std::size_t dest_global_index = 0;
+            for (std::size_t i = 0; i < global_wires_.size(); ++i) {
+                dest_global_index |= (((my_global_index >> i) & 1) << (global_wires_.size()  - 1 -get_element_index_in_vector(global_wires_target, global_wires_[global_wires_.size() - i - 1]) ));
+               
+            }
+        
+            std::size_t dest_mpi_rank = get_element_index_in_vector(mpi_rank_to_global_index_map_target,
+                dest_global_index);
+                get_mpi_rank_from_global_index(other_global_index);
+        
+            // COPY to buffer
+            //SENDRECV
+            mpi_sendrecv(dest_mpi_rank, dest_mpi_rank, send_size, 0);
+            // COPY FROM BUFFER
+            // repeat
+        
+            // copy target index map and global wires to local index map and global wires
+        
+        }
 
     /**
      * @brief Apply a single gate to the state vector.
