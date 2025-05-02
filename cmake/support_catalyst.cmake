@@ -25,9 +25,8 @@ macro(FindCatalyst target_name)
         target_include_directories(${target_name} SYSTEM PUBLIC ${LIGHTNING_CATALYST_SRC_PATH}/runtime/include)
 
     else()
-        # TODO: reset tag to main after merging https://github.com/PennyLaneAI/catalyst/pull/1680
         if(NOT CATALYST_GIT_TAG)
-            set(CATALYST_GIT_TAG "device-interface-rework" CACHE STRING "GIT_TAG value to build Catalyst")
+            set(CATALYST_GIT_TAG "main" CACHE STRING "GIT_TAG value to build Catalyst")
         endif()
         message(INFO " Building against Catalyst GIT TAG ${CATALYST_GIT_TAG}")
 
