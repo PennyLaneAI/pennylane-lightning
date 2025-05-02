@@ -1,5 +1,10 @@
 # Release 0.41.0.post1
 
+<h3>Breaking changes 💔</h3>
+
+- Build Catalyst Lightning plugins against Catalyst Runtime v0.11.0.
+  [(#1148)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1148)
+
 <h3>Documentation 📝</h3>
 
 - Enable `pennylane.ai` search.
