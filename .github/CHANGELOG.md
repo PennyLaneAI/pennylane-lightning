@@ -1,3 +1,28 @@
+# Release 0.41.0.post1
+
+<h3>Breaking changes 💔</h3>
+
+- Build Catalyst Lightning plugins against Catalyst Runtime v0.11.0.
+  [(#1148)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1148)
+
+<h3>Documentation 📝</h3>
+
+- Enable `pennylane.ai` search.
+  [(#1135)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1135)
+
+- Fix doxygen doc builds for `AVXCommon::FuncReturn`.
+  [(#1134)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1134)
+
+- Move the installation sections from `README.rst` to dedicated pages.
+  [(#1131)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1131)
+
+<h3>Contributors ✍️</h3>
+
+This release contains contributions from (in alphabetical order):
+
+Ali Asadi,
+Andrew Gardhouse
+
 # Release 0.41.0
 
 ### New features since last release
