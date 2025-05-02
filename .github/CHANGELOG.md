@@ -1,4 +1,4 @@
-# Release 0.41.0.post1
+# Release 0.41.1
 
 <h3>Breaking changes 💔</h3>
 
