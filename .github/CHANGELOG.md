@@ -45,10 +45,14 @@
 - Merge the `v0.41.0-rc` branch to the master and bump version.
   [(#1132)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1132)
 
+- Added flags to all Codecov reports and a default carryforward flag for all flags.
+  [(1144)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1144)
+
 <h3>Contributors ✍️</h3>
 
 This release contains contributions from (in alphabetical order):
 
+Runor Agbaire,
 Ali Asadi,
 Andrew Gardhouse,
 David Ittah,
