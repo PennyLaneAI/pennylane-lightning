@@ -820,6 +820,7 @@ class StateVectorKokkosMPI final
         
     
     void match_wires(const StateVectorKokkosMPI& other_sv) {
+        PL_ABORT("Not yet supported");
         //TODO: FINISH THIS FUNCTION
         // Swap global-local wires if necessary
         if (global_wires_ != other_sv.global_wires_) {
@@ -851,9 +852,9 @@ class StateVectorKokkosMPI final
         
         void match_global_wires_and_index(const std::vector<std::size_t>& global_wires_target, const std::vector<std::size_t>& mpi_rank_to_global_index_map_target) {
             //TODO: FINISH THIS FUNCTION
-        
-            PL_ABORT_IF(global_wires.size() != global_wires_target.size(), "Mismatch in size of global wires");
-            PL_ABORT_IF(mpi_rank_to_global_index_map.size() != mpi_rank_to_global_index_map_target.size(), "Mismatch in size of global index map");
+            PL_ABORT("Not yet supported");
+            PL_ABORT_IF(global_wires_.size() != global_wires_target.size(), "Mismatch in size of global wires");
+            PL_ABORT_IF(mpi_rank_to_global_index_map_.size() != mpi_rank_to_global_index_map_target.size(), "Mismatch in size of global index map");
         
             std::size_t my_global_index = get_global_index_from_mpi_rank(get_mpi_rank());
             std::size_t dest_global_index = 0;
@@ -864,8 +865,8 @@ class StateVectorKokkosMPI final
         
             std::size_t dest_mpi_rank = get_element_index_in_vector(mpi_rank_to_global_index_map_target,
                 dest_global_index);
-                get_mpi_rank_from_global_index(other_global_index);
         
+            std::size_t send_size = exp2(get_num_local_wires() - 1);
             // COPY to buffer
             //SENDRECV
             mpi_sendrecv(dest_mpi_rank, dest_mpi_rank, send_size, 0);
