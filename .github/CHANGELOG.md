@@ -2,18 +2,18 @@
 
 <h3>Breaking changes 💔</h3>
 
-- Build Catalyst Lightning plugins against Catalyst Runtime v0.11.0.
+* Build Catalyst Lightning plugins against Catalyst Runtime v0.11.0.
   [(#1148)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1148)
 
 <h3>Documentation 📝</h3>
 
-- Enable `pennylane.ai` search.
+* Enable `pennylane.ai` search.
   [(#1135)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1135)
 
-- Fix doxygen doc builds for `AVXCommon::FuncReturn`.
+* Fix doxygen doc builds for `AVXCommon::FuncReturn`.
   [(#1134)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1134)
 
-- Move the installation sections from `README.rst` to dedicated pages.
+* Move the installation sections from `README.rst` to dedicated pages.
   [(#1131)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1131)
 
 <h3>Contributors ✍️</h3>
