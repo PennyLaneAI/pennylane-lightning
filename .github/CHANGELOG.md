@@ -7,7 +7,7 @@
 
 <h3>Documentation 📝</h3>
 
-* Enable `pennylane.ai` search.
+* `pennylane.ai` search is enabled, so users are redirected to the PennyLane search page from the PennyLane-Lightning docs.
   [(#1135)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1135)
 
 * Fix doxygen doc builds for `AVXCommon::FuncReturn`.
@@ -21,7 +21,11 @@
 This release contains contributions from (in alphabetical order):
 
 Ali Asadi,
-Andrew Gardhouse
+Amintor Dusko,
+Andrew Gardhouse,
+Joseph Lee,
+Anton Naim Ibrahim,
+Luis Alfredo Nuñez Meneses
 
 # Release 0.41.0
 
