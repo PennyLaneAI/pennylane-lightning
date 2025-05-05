@@ -1,11 +1,22 @@
-# Release 0.42.0-dev (development release)
+# Release 0.42.1-dev
 
-<h3>New features since last release</h3>
+### New features since last release
 
-<h3>Improvements 🛠</h3>
+### Breaking changes
 
-- Improve performance of computing expectation values of Pauli Sentences for `lightning.kokkos`.
-  [(#1126)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1126)
+### Improvements
+
+### Documentation
+
+### Bug fixes
+
+### Contributors
+
+This release contains contributions from (in alphabetical order):
+
+---
+
+# Release 0.41.1
 
 <h3>Breaking changes 💔</h3>
 
