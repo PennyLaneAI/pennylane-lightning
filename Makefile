@@ -1,4 +1,5 @@
 PYTHON := python3
+COMPILER_LAUNCHER ?= $(shell which ccache)
 COVERAGE := --cov=pennylane_lightning --cov-report term-missing --cov-report=html:coverage_html_report
 TESTRUNNER := -m pytest tests --tb=short
 
@@ -133,11 +134,13 @@ endif
 test-cpp-mpi:
 	rm -rf ./BuildTests
 	cmake -BBuildTests -G Ninja \
-		  -DCMAKE_BUILD_TYPE=Release \
-		  -DBUILD_TESTS=OFF \
+		  -DCMAKE_BUILD_TYPE=Debug \
+		  -DBUILD_TESTS=ON \
 		  -DENABLE_WARNINGS=OFF \
 		  -DPL_BACKEND=$(PL_BACKEND) \
 		  -DSCIPY_OPENBLAS=$(SCIPY_OPENBLAS) \
+		  -DCMAKE_C_COMPILER_LAUNCHER=$(COMPILER_LAUNCHER) \
+		  -DCMAKE_CXX_COMPILER_LAUNCHER=$(COMPILER_LAUNCHER) \
 		  -DENABLE_MPI=ON \
 		  $(OPTIONS)
 ifdef target

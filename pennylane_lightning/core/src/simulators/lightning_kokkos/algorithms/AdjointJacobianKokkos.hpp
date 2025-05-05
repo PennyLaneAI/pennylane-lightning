@@ -55,14 +55,14 @@ class AdjointJacobian final
                                std::span<PrecisionT> &jac,
                                PrecisionT scaling_coeff, std::size_t idx) {
         auto element = -2 * scaling_coeff *
-                   getImagOfComplexInnerProduct<PrecisionT>(sv1.getView(),
-                                                            sv2.getView());
+                       getImagOfComplexInnerProduct<PrecisionT>(sv1.getView(),
+                                                                sv2.getView());
 
-        #if _ENABLE_MPI == 1
-        //TODO: Swap wires to match two statevectors!
+#if _ENABLE_MPI == 1
+        // TODO: Swap wires to match two statevectors!
         auto sum = sv1.all_reduce_sum(element);
         element = sum;
-        #endif
+#endif
         jac[idx] = element;
     }
 

@@ -257,12 +257,12 @@ int main(int argc, char *argv[]) {
                 //
                 if (svmpi.get_mpi_rank() == 0) {
                     std::cout << "global_wires = ";
-                    print(svmpi.global_wires_);
+                    print(svmpi.get_global_wires());
                     std::cout << "local_wires = ";
-                    print(svmpi.local_wires_);
+                    print(svmpi.get_local_wires());
                     std::cout << "OK" << std::endl;
                     std::cout << "global_index_map = ";
-                    print(svmpi.mpi_rank_to_global_index_map_);
+                    print(svmpi.get_mpi_rank_to_global_index_map());
                 }
 
                 svmpi.barrier();
@@ -592,9 +592,9 @@ int main(int argc, char *argv[]) {
                                 if (svmpi.get_mpi_rank() == 0) {
 
                                     std::cout << "svmpi global_wires = ";
-                                    print(svmpi.global_wires_);
+                                    print(svmpi.get_global_wires());
                                     std::cout << "svmpi local_wires = ";
-                                    print(svmpi.local_wires_);
+                                    print(svmpi.get_local_wires());
                                     std::cout << "OK" << std::endl;
                                 }
                                 StateVectorKokkosMPI<double> svmpi_copy(svmpi);
@@ -606,10 +606,10 @@ int main(int argc, char *argv[]) {
                                 svmpi_copy.reorder_local_wires();
                                 if (svmpi_copy.get_mpi_rank() == 0) {
 
-                                    std::cout << "svmpi_copy global_wires = ";
-                                    print(svmpi_copy.global_wires_);
-                                    std::cout << "svmpi_copy local_wires = ";
-                                    print(svmpi_copy.local_wires_);
+                                    std::cout << "svmpi global_wires = ";
+                                    print(svmpi.get_global_wires());
+                                    std::cout << "svmpi local_wires = ";
+                                    print(svmpi.get_local_wires());
                                     std::cout << "OK" << std::endl;
                                 }
 
@@ -642,10 +642,10 @@ int main(int argc, char *argv[]) {
     svmpi.reorder_local_wires();
     svmpi.barrier();
     if (svmpi.get_mpi_rank() == 0) {
-        std::cout << "global_wires = ";
-        print(svmpi.global_wires_);
-        std::cout << "local_wires = ";
-        print(svmpi.local_wires_);
+        std::cout << "svmpi global_wires = ";
+        print(svmpi.get_global_wires());
+        std::cout << "svmpi local_wires = ";
+        print(svmpi.get_local_wires());
         std::cout << "OK" << std::endl;
     }
 

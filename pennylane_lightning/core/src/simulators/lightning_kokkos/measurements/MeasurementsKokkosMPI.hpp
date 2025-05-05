@@ -99,7 +99,7 @@ class MeasurementsMPI final
                                                        local_wires_to_swap);
         }
 
-        Measurements local_measure(this->_statevector.getLocalSV());
+        Measurements local_measure(this->_statevector.get_local_sv());
         PrecisionT local_expval = local_measure.expval(
             matrix, this->_statevector.get_local_wires_indices(wires));
         PrecisionT global_expval =
@@ -128,7 +128,7 @@ class MeasurementsMPI final
                                                        local_wires_to_swap);
         }
 
-        Measurements local_measure(this->_statevector.getLocalSV());
+        Measurements local_measure(this->_statevector.get_local_sv());
         PrecisionT local_expval = local_measure.expval(
             operation, this->_statevector.get_local_wires_indices(wires));
         PrecisionT global_expval =
@@ -230,7 +230,7 @@ class MeasurementsMPI final
                  this->_statevector.get_num_local_wires()),
                 "Number of X and Y gates exceeds the number of local wires.");
 
-            for (std::size_t i = 0; i < this->_statevector.local_wires_.size();
+            for (std::size_t i = 0; i < this->_statevector.get_num_local_wires();
                  i++) {
                 if (local_wires_to_swap.size() ==
                     global_wires_need_to_swap.size()) {
@@ -238,10 +238,10 @@ class MeasurementsMPI final
                 }
                 if (std::find(local_wires_cannot_be_swapped.begin(),
                               local_wires_cannot_be_swapped.end(),
-                              this->_statevector.local_wires_[i]) ==
+                              this->_statevector.get_local_wires()[i]) ==
                     local_wires_cannot_be_swapped.end()) {
                     local_wires_to_swap.push_back(
-                        this->_statevector.local_wires_[i]);
+                        this->_statevector.get_local_wires()[i]);
                 }
             }
 
@@ -259,7 +259,7 @@ class MeasurementsMPI final
             }
 
             // apply local expval
-            Measurements local_measure(this->_statevector.getLocalSV());
+            Measurements local_measure(this->_statevector.get_local_sv());
             PrecisionT local_expval = local_measure.expval(
                 {local_pauli_word},
                 {this->_statevector.get_local_wires_indices(
@@ -272,9 +272,9 @@ class MeasurementsMPI final
                     this->_statevector.get_mpi_rank());
             for (std::size_t i = 0; i < global_Z_wires.size(); i++) {
                 std::size_t distance = std::distance(
-                    this->_statevector.global_wires_.begin(),
-                    std::find(this->_statevector.global_wires_.begin(),
-                              this->_statevector.global_wires_.end(),
+                    this->_statevector.get_global_wires().begin(),
+                    std::find(this->_statevector.get_global_wires().begin(),
+                              this->_statevector.get_global_wires().end(),
                               global_Z_wires[i]));
                 global_z_mask |=
                     (1U << (this->_statevector.get_num_global_wires() - 1 -

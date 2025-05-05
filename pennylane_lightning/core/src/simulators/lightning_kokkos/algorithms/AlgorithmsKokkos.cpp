@@ -19,7 +19,6 @@
 using namespace Pennylane::LightningKokkos;
 using Pennylane::LightningKokkos::StateVectorKokkos;
 
-
 #if _ENABLE_MPI == 1
 #include "StateVectorKokkosMPI.hpp"
 template <typename T>

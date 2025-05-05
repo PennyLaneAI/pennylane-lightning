@@ -29,10 +29,9 @@ using namespace Pennylane::LightningKokkos::Measures;
 using namespace Pennylane::LightningKokkos::Observables;
 using namespace Pennylane::Util;
 using t_scale = std::milli;
-}
+} // namespace
 
-
-std::pair<std::size_t, std::size_t>  prep_input_1q(int argc, char *argv[]) {
+std::pair<std::size_t, std::size_t> prep_input_1q(int argc, char *argv[]) {
     if (argc <= 2) {
         std::cout << "Please ensure you specify the following arguments: "
                      "total_qubits swapping_global_qubit"
@@ -46,9 +45,6 @@ std::pair<std::size_t, std::size_t>  prep_input_1q(int argc, char *argv[]) {
 
     return {qubits, swapping_global_qubit};
 }
-
-
-
 
 int main(int argc, char *argv[]) {
     if (argc <= 3) {
@@ -70,28 +66,32 @@ int main(int argc, char *argv[]) {
     StateVectorKokkosMPI<double> svmpi(nq);
     std::size_t repeats = 4;
 
-    svmpi.swap_global_local_wires({swapping_global_qubit}, {swapping_local_qubit});
-    svmpi.swap_global_local_wires({swapping_local_qubit}, {swapping_global_qubit});
+    svmpi.swap_global_local_wires({swapping_global_qubit},
+                                  {swapping_local_qubit});
+    svmpi.swap_global_local_wires({swapping_local_qubit},
+                                  {swapping_global_qubit});
 
-    
-    const auto t_start = std::chrono::high_resolution_clock::now();   
+    const auto t_start = std::chrono::high_resolution_clock::now();
 
     for (std::size_t i = 0; i < repeats; i++) {
-        svmpi.swap_global_local_wires({swapping_global_qubit}, {swapping_local_qubit});
-        svmpi.swap_global_local_wires({swapping_local_qubit}, {swapping_global_qubit});
+        svmpi.swap_global_local_wires({swapping_global_qubit},
+                                      {swapping_local_qubit});
+        svmpi.swap_global_local_wires({swapping_local_qubit},
+                                      {swapping_global_qubit});
     }
-    const auto t_end = std::chrono::high_resolution_clock::now();   
-    const double t_duration = std::chrono::duration<double, t_scale>(t_end - t_start).count();  
-    double average_time = t_duration / (2.0 * repeats); 
-    double data_sent_GB = exp2(svmpi.get_num_local_wires() - 1) * 128 / 8 / 1024 / 1024 / 1024;
-    std::cout << "Average time for swapping "  << average_time << " ms" << std::endl;  
-    std::cout << "Data sent = Data received = " << data_sent_GB << " GB" << std::endl;
-    std::cout << "Effective single direction bandwidth = " << data_sent_GB/average_time*1000.0 << " GB/s   - time include copying to/from buffer" << std::endl;
-    
-
-
-
-
+    const auto t_end = std::chrono::high_resolution_clock::now();
+    const double t_duration =
+        std::chrono::duration<double, t_scale>(t_end - t_start).count();
+    double average_time = t_duration / (2.0 * repeats);
+    double data_sent_GB =
+        exp2(svmpi.get_num_local_wires() - 1) * 128 / 8 / 1024 / 1024 / 1024;
+    std::cout << "Average time for swapping " << average_time << " ms"
+              << std::endl;
+    std::cout << "Data sent = Data received = " << data_sent_GB << " GB"
+              << std::endl;
+    std::cout << "Effective single direction bandwidth = "
+              << data_sent_GB / average_time * 1000.0
+              << " GB/s   - time include copying to/from buffer" << std::endl;
 
     int finflag;
     MPI_Finalized(&finflag);

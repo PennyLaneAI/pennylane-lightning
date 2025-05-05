@@ -83,10 +83,10 @@ class CMakeBuild(build_ext):
         self.build_temp = f"build_{backend}"
         extdir = str(Path(self.get_ext_fullpath(ext.name)).parent.absolute())
         debug = int(os.environ.get("DEBUG", 0)) if self.debug is None else self.debug
-        build_type = "Debug" if debug else "Release"
+        build_type = "Debug" if debug else "RelWithDebInfo"
         ninja_path = str(shutil.which("ninja"))
 
-        build_args = ["--config", "Debug"] if debug else ["--config", "Release"]
+        build_args = ["--config", "Debug"] if debug else ["--config", "RelWithDebInfo"]
         configure_args = [
             f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={extdir}",
             f"-DCMAKE_BUILD_TYPE={build_type}",  # not used on MSVC, but no harm
@@ -170,7 +170,7 @@ class CMakeBuild(build_ext):
                 shared_lib_ext = {"Linux": ".so", "Darwin": ".dylib"}[platform.system()]
                 source = os.path.join(f"{extdir}", f"lib{backend}_catalyst{shared_lib_ext}")
                 destination = os.path.join(os.getcwd(), self.build_temp)
-                shutil.copy(source, destination)
+                #shutil.copy(source, destination)
 
 with open(os.path.join("pennylane_lightning", "core", "_version.py"), encoding="utf-8") as f:
     version = f.readlines()[-1].split()[-1].strip("\"'")
