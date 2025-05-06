@@ -13,7 +13,7 @@
 // limitations under the License.
 #pragma once
 #include <span>
-
+#include <iostream> 
 #include "AdjointJacobianBase.hpp"
 #include "ObservablesKokkos.hpp"
 
@@ -54,12 +54,43 @@ class AdjointJacobian final
     inline void updateJacobian(StateVectorT &sv1, StateVectorT &sv2,
                                std::span<PrecisionT> &jac,
                                PrecisionT scaling_coeff, std::size_t idx) {
+
+#if _ENABLE_MPI == 1
+        if(sv1.get_mpi_rank() == 0) {
+            std::cout << "sv1.get_global_wires(): ";
+            for (const auto& element: sv1.get_global_wires()) {
+                std::cout << element << " ";
+            }
+            std::cout << "sv1.get_local_wires(): ";
+            for (const auto& element: sv1.get_local_wires()) {
+                std::cout << element << " ";
+            }
+            std::cout << "sv1.get_mpi_rank_to_global_index_map(): ";
+            for (const auto& element: sv1.get_mpi_rank_to_global_index_map()) {
+                std::cout << element << " ";
+            }
+            std::cout << std::endl;
+            std::cout << "sv2.get_global_wires(): ";
+            for (const auto& element: sv2.get_global_wires()) {
+                std::cout << element << " ";
+            }
+            std::cout << "sv2.get_local_wires(): ";
+            for (const auto& element: sv2.get_local_wires()) {
+                std::cout << element << " ";
+            }
+            std::cout << "sv2.get_mpi_rank_to_global_index_map(): ";
+            for (const auto& element: sv2.get_mpi_rank_to_global_index_map()) {
+                std::cout << element << " ";
+            }
+            std::cout << std::endl;
+        }
+        sv1.match_wires(sv2);
+#endif
         auto element = -2 * scaling_coeff *
                        getImagOfComplexInnerProduct<PrecisionT>(sv1.getView(),
                                                                 sv2.getView());
 
 #if _ENABLE_MPI == 1
-        // TODO: Swap wires to match two statevectors!
         auto sum = sv1.all_reduce_sum(element);
         element = sum;
 #endif
@@ -125,6 +156,7 @@ class AdjointJacobian final
         const auto tp_rend = tp.rend();
 
         // Create $U_{1:p}\vert \lambda \rangle$
+        std::cout << "creating another SV" << std::endl;
         StateVectorT lambda{ref_data};
 
         // Apply given operations to statevector if requested
@@ -133,6 +165,7 @@ class AdjointJacobian final
         }
 
         // Create observable-applied state-vectors
+        std::cout << "num_observables: " << num_observables << std::endl;
         std::vector<StateVectorT> H_lambda(num_observables,
                                            StateVectorT(lambda.getNumQubits()));
         BaseType::applyObservables(H_lambda, lambda, obs);

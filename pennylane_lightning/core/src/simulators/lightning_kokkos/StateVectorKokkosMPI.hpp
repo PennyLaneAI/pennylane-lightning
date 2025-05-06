@@ -242,7 +242,6 @@ class StateVectorKokkosMPI final
      */
     void mpi_barrier() { PL_MPI_IS_SUCCESS(MPI_Barrier(communicator_)); }
 
-
     template <typename T> T all_reduce_sum(const T &data) const {
         T sum;
         MPI_Allreduce(&data, &sum, 1, get_mpi_type<T>(), MPI_SUM,
@@ -262,12 +261,12 @@ class StateVectorKokkosMPI final
         PL_ABORT_IF_NOT(
             get_num_local_wires() > 0,
             "State vector must be initialized before allocating buffers.");
-        if (sendbuf_) {
-            sendbuf_ = std::make_unique<KokkosVector>(
+        if (!sendbuf_) {
+            sendbuf_ = std::make_shared<KokkosVector>(
                 "sendbuf_", exp2(get_num_local_wires() - 1));
         }
-        if (recvbuf_) {
-            recvbuf_ = std::make_unique<KokkosVector>(
+        if (!recvbuf_) {
+            recvbuf_ = std::make_shared<KokkosVector>(
                 "recvbuf_", exp2(get_num_local_wires() - 1));
         }
     }
@@ -327,7 +326,6 @@ class StateVectorKokkosMPI final
     std::size_t get_num_local_wires() const {
         return num_qubits_ - get_num_global_wires();
     }
-
 
     SVK &get_local_sv() { return *sv_; }
 
@@ -449,7 +447,6 @@ class StateVectorKokkosMPI final
      */
     void setBasisState(const std::vector<std::size_t> &state,
                        const std::vector<std::size_t> &wires) {
-        PL_ABORT("Not implemented yet.");
         PL_ABORT_IF_NOT(state.size() == wires.size(),
                         "state and wires must have equal dimensions.");
         const auto num_qubits = this->getNumQubits();
@@ -617,6 +614,8 @@ class StateVectorKokkosMPI final
         global_wires_ = other.global_wires_;
         local_wires_ = other.local_wires_;
         mpi_rank_to_global_index_map_ = other.mpi_rank_to_global_index_map_;
+        sendbuf_ = other.sendbuf_;
+        recvbuf_ = other.recvbuf_;
     }
 
     /**
@@ -673,7 +672,6 @@ class StateVectorKokkosMPI final
     void swap_global_local_wires(
         const std::vector<std::size_t> &global_wires_to_swap,
         const std::vector<std::size_t> &local_wires_to_swap) {
-
         PL_ABORT_IF_NOT(global_wires_to_swap.size() ==
                             local_wires_to_swap.size(),
                         "global_wires_to_swap and local_wires_to_swap must "
@@ -707,19 +705,18 @@ class StateVectorKokkosMPI final
         for (std::size_t i = 0; i < get_num_local_wires(); i++) {
             if (!is_element_in_vector(local_wires_to_swap, local_wires_[i])) {
                 rev_local_wires_index_not_swapping.push_back(
-                    get_rev_local_wire_index(
-                        local_wires_[i]));
+                    get_rev_local_wire_index(local_wires_[i]));
             }
         }
         std::sort(rev_local_wires_index_not_swapping.begin(),
                   rev_local_wires_index_not_swapping.end());
         for (std::size_t i = 0; i < local_wires_to_swap.size(); i++) {
-            rev_local_wires_index_to_swap.push_back(get_rev_local_wire_index(
-                local_wires_to_swap[i]));
+            rev_local_wires_index_to_swap.push_back(
+                get_rev_local_wire_index(local_wires_to_swap[i]));
         }
         for (std::size_t i = 0; i < global_wires_to_swap.size(); i++) {
-            rev_global_wires_index_to_swap.push_back(get_rev_global_wire_index(
-                global_wires_to_swap[i]));
+            rev_global_wires_index_to_swap.push_back(
+                get_rev_global_wire_index(global_wires_to_swap[i]));
         }
 
         std::size_t global_index =
@@ -779,7 +776,8 @@ class StateVectorKokkosMPI final
                     "copy_sendbuf", send_size,
                     KOKKOS_LAMBDA(std::size_t buffer_index) {
                         std::size_t SV_index = swap_wire_mask;
-                        for (int i = 0; i < not_swapping_local_wire_size; i++) {
+                        for (std::size_t i = 0;
+                             i < not_swapping_local_wire_size; i++) {
                             SV_index |=
                                 (((buffer_index >> i) & 1)
                                  << rev_local_wires_index_not_swapping_view(i));
@@ -813,7 +811,8 @@ class StateVectorKokkosMPI final
                     KOKKOS_LAMBDA(std::size_t buffer_index) {
                         std::size_t SV_index = swap_wire_mask;
 
-                        for (int i = 0; i < not_swapping_local_wire_size; i++) {
+                        for (std::size_t i = 0;
+                             i < not_swapping_local_wire_size; i++) {
                             SV_index |=
                                 (((buffer_index >> i) & 1)
                                  << rev_local_wires_index_not_swapping_view(i));
@@ -839,6 +838,7 @@ class StateVectorKokkosMPI final
 
     void match_wires(const StateVectorKokkosMPI &other_sv) {
         // Swap global-local wires if necessary
+
         if (global_wires_ != other_sv.global_wires_) {
             std::vector<std::size_t> global_wires_to_swap;
             std::vector<std::size_t> local_wires_to_swap;
@@ -851,12 +851,11 @@ class StateVectorKokkosMPI final
             for (std::size_t i = 0; i < local_wires_.size(); ++i) {
                 if (!is_element_in_vector(other_sv.local_wires_,
                                           local_wires_[i])) {
-                    local_wires_.push_back(local_wires_[i]);
+                    local_wires_to_swap.push_back(local_wires_[i]);
                 }
             }
             swap_global_local_wires(global_wires_to_swap, local_wires_to_swap);
         }
-
         // Swap global-global wires if necessary
         if ((global_wires_ != other_sv.global_wires_) ||
             (mpi_rank_to_global_index_map_ !=
@@ -962,6 +961,9 @@ class StateVectorKokkosMPI final
         [[maybe_unused]] bool inverse = false,
         [[maybe_unused]] const std::vector<fp_t> &params = {},
         [[maybe_unused]] const std::vector<ComplexT> &gate_matrix = {}) {
+            if (get_mpi_rank() == 0){
+            std::cout << "Applying " << opName << std::endl;
+            }
         if (opName == "Identity") {
             // No op
             return;
@@ -970,15 +972,13 @@ class StateVectorKokkosMPI final
         if (is_wires_global(wires)) {
 
             if (opName == "PauliX") {
-                std::size_t rev_distance =
-                    get_rev_global_wire_index(wires[0]);
+                std::size_t rev_distance = get_rev_global_wire_index(wires[0]);
                 for (auto &global_index : mpi_rank_to_global_index_map_) {
                     global_index = global_index ^ (1U << rev_distance);
                 }
                 return;
             } else if (opName == "PauliY") {
-                std::size_t rev_distance =
-                    get_rev_global_wire_index(wires[0]);
+                std::size_t rev_distance = get_rev_global_wire_index(wires[0]);
                 std::size_t global_index =
                     get_global_index_from_mpi_rank(get_mpi_rank());
                 fp_t phase = ((global_index >> rev_distance) & 1)
@@ -991,8 +991,7 @@ class StateVectorKokkosMPI final
 
                 return;
             } else if (opName == "PauliZ") {
-                std::size_t rev_distance =
-                    get_rev_global_wire_index(wires[0]);
+                std::size_t rev_distance = get_rev_global_wire_index(wires[0]);
                 std::size_t global_index =
                     get_global_index_from_mpi_rank(get_mpi_rank());
                 if ((global_index >> rev_distance) & 1) {
@@ -1020,6 +1019,23 @@ class StateVectorKokkosMPI final
             auto global_wires_to_swap = find_global_wires(wires);
             auto local_wires_to_swap =
                 local_wires_subset_to_swap(global_wires_to_swap, wires);
+                if (get_mpi_rank() == 0){
+                    std::cout << "global_wires =" ;
+                    for (const auto &wire : global_wires_) {
+                        std::cout << wire << " ";
+                    }
+                    std::cout << "local_wires = ";
+                    for (const auto &wire : local_wires_) {
+                        std::cout << wire << " ";
+                    }
+            std::cout << "global_wires_to_swap = ";
+            for (const auto &wire : global_wires_to_swap) {
+                std::cout << wire << " ";
+            }
+            std::cout << "local_wires_to_swap = ";
+            for (const auto &wire : local_wires_to_swap) {
+                std::cout << wire << " ";
+            }}
             swap_global_local_wires(global_wires_to_swap, local_wires_to_swap);
         }
 
@@ -1128,8 +1144,7 @@ class StateVectorKokkosMPI final
         for (std::size_t i = 0; i < global_control_wires.size(); i++) {
             operate = operate &&
                       (((global_index >>
-                         get_rev_global_wire_index(
-                             global_control_wires[i])) &
+                         get_rev_global_wire_index(global_control_wires[i])) &
                         1) == global_control_values[i]);
         }
         if (operate) {
@@ -1412,6 +1427,8 @@ class StateVectorKokkosMPI final
         updateData(other.getView());
         global_wires_ = other.global_wires_;
         local_wires_ = other.local_wires_;
+        mpi_rank_to_global_index_map_ =
+            other.mpi_rank_to_global_index_map_;
     }
 
     /**
@@ -1515,7 +1532,9 @@ class StateVectorKokkosMPI final
                 local_wires.push_back(wire);
             }
         }
-        swap_global_local_wires(global_wires, local_wires);
+        if (!global_wires.empty()) {
+            swap_global_local_wires(global_wires, local_wires);
+        }
     }
 
     /**
@@ -1565,15 +1584,12 @@ class StateVectorKokkosMPI final
   private:
     std::size_t num_qubits_;
     std::unique_ptr<SVK> sv_;
-    std::unique_ptr<KokkosVector>
-        recvbuf_;
-    std::unique_ptr<KokkosVector>
-        sendbuf_;
+    std::shared_ptr<KokkosVector> recvbuf_;
+    std::shared_ptr<KokkosVector> sendbuf_;
     MPI_Comm communicator_;
 
     std::vector<std::size_t> mpi_rank_to_global_index_map_;
     std::vector<std::size_t> global_wires_;
     std::vector<std::size_t> local_wires_;
-
 };
 }; // namespace Pennylane::LightningKokkos

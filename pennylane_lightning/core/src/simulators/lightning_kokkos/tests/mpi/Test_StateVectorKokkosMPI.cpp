@@ -52,35 +52,37 @@ TEMPLATE_TEST_CASE("StateVectorKokkosMPI::Constructibility",
 /**
  * Test StateVectorKokkosMPI wire-related helper methods
  */
-TEMPLATE_TEST_CASE("is_element_in_vector", "[LKMPI]",double, float) {
+TEMPLATE_TEST_CASE("is_element_in_vector", "[LKMPI]", double, float) {
     StateVectorKokkosMPI<TestType> sv(2);
-   std::vector<std::size_t> wires = {0, 1, 4, 5};
-   REQUIRE(sv.is_element_in_vector(wires, static_cast<std::size_t>(0)));
-   REQUIRE(sv.is_element_in_vector(wires, static_cast<std::size_t>(1)));
-   REQUIRE(sv.is_element_in_vector(wires, static_cast<std::size_t>(4)));
-   REQUIRE(sv.is_element_in_vector(wires, static_cast<std::size_t>(5)));
-   REQUIRE(!sv.is_element_in_vector(wires, static_cast<std::size_t>(2)));
+    std::vector<std::size_t> wires = {0, 1, 4, 5};
+    REQUIRE(sv.is_element_in_vector(wires, static_cast<std::size_t>(0)));
+    REQUIRE(sv.is_element_in_vector(wires, static_cast<std::size_t>(1)));
+    REQUIRE(sv.is_element_in_vector(wires, static_cast<std::size_t>(4)));
+    REQUIRE(sv.is_element_in_vector(wires, static_cast<std::size_t>(5)));
+    REQUIRE(!sv.is_element_in_vector(wires, static_cast<std::size_t>(2)));
 
-   wires = {};
-   REQUIRE(!sv.is_element_in_vector(wires, static_cast<std::size_t>(0)));
+    wires = {};
+    REQUIRE(!sv.is_element_in_vector(wires, static_cast<std::size_t>(0)));
 }
 
-
-TEMPLATE_TEST_CASE("get_element_index_in_vector", "[LKMPI]",double, float) {
+TEMPLATE_TEST_CASE("get_element_index_in_vector", "[LKMPI]", double, float) {
     StateVectorKokkosMPI<TestType> sv(2);
-   std::vector<std::size_t> wires = {0, 1, 4, 5};
-   REQUIRE(sv.get_element_index_in_vector(wires, static_cast<std::size_t>(0)) == 0);
-   REQUIRE(sv.get_element_index_in_vector(wires, static_cast<std::size_t>(1)) == 1);
-   REQUIRE(sv.get_element_index_in_vector(wires, static_cast<std::size_t>(4)) == 2);
-   REQUIRE(sv.get_element_index_in_vector(wires, static_cast<std::size_t>(5)) == 3);
+    std::vector<std::size_t> wires = {0, 1, 4, 5};
+    REQUIRE(sv.get_element_index_in_vector(wires,
+                                           static_cast<std::size_t>(0)) == 0);
+    REQUIRE(sv.get_element_index_in_vector(wires,
+                                           static_cast<std::size_t>(1)) == 1);
+    REQUIRE(sv.get_element_index_in_vector(wires,
+                                           static_cast<std::size_t>(4)) == 2);
+    REQUIRE(sv.get_element_index_in_vector(wires,
+                                           static_cast<std::size_t>(5)) == 3);
 
-   PL_REQUIRE_THROWS_MATCHES(
-       sv.get_element_index_in_vector(wires, static_cast<std::size_t>(2)),
-       LightningException,"Element not in vector");
+    PL_REQUIRE_THROWS_MATCHES(
+        sv.get_element_index_in_vector(wires, static_cast<std::size_t>(2)),
+        LightningException, "Element not in vector");
 }
 
-
-TEMPLATE_TEST_CASE("Local/Global wire helpers", "[LKMPI]",double, float) {
+TEMPLATE_TEST_CASE("Local/Global wire helpers", "[LKMPI]", double, float) {
     StateVectorKokkosMPI<TestType> sv(5);
 
     // Only run with 4 mpi ranks:
@@ -92,8 +94,10 @@ TEMPLATE_TEST_CASE("Local/Global wire helpers", "[LKMPI]",double, float) {
     REQUIRE(sv.get_rev_global_wire_index(0) == 1);
     REQUIRE(sv.get_rev_global_wire_index(1) == 0);
 
-    PL_REQUIRE_THROWS_MATCHES(sv.get_rev_global_wire_index(2),LightningException,"Element not in vector");
-    PL_REQUIRE_THROWS_MATCHES(sv.get_rev_local_wire_index(1),LightningException,"Element not in vector");
+    PL_REQUIRE_THROWS_MATCHES(sv.get_rev_global_wire_index(2),
+                              LightningException, "Element not in vector");
+    PL_REQUIRE_THROWS_MATCHES(sv.get_rev_local_wire_index(1),
+                              LightningException, "Element not in vector");
 
     REQUIRE(sv.get_rev_local_wire_index(2) == 2);
     REQUIRE(sv.get_rev_local_wire_index(3) == 1);
@@ -102,13 +106,19 @@ TEMPLATE_TEST_CASE("Local/Global wire helpers", "[LKMPI]",double, float) {
     REQUIRE(sv.get_global_wires() == std::vector<std::size_t>{0, 1});
     REQUIRE(sv.get_local_wires() == std::vector<std::size_t>{2, 3, 4});
 
-    REQUIRE(sv.get_local_wires_indices({2, 4}) == std::vector<std::size_t>{0, 2});
-    REQUIRE(sv.get_local_wires_indices({3, 2}) == std::vector<std::size_t>{1, 0});
-    PL_REQUIRE_THROWS_MATCHES(sv.get_local_wires_indices({3, 0}),LightningException,"Element not in vector");
+    REQUIRE(sv.get_local_wires_indices({2, 4}) ==
+            std::vector<std::size_t>{0, 2});
+    REQUIRE(sv.get_local_wires_indices({3, 2}) ==
+            std::vector<std::size_t>{1, 0});
+    PL_REQUIRE_THROWS_MATCHES(sv.get_local_wires_indices({3, 0}),
+                              LightningException, "Element not in vector");
 
-    REQUIRE(sv.get_global_wires_indices({0, 1}) == std::vector<std::size_t>{0, 1});
-    REQUIRE(sv.get_global_wires_indices({1, 0}) == std::vector<std::size_t>{1, 0});
-    PL_REQUIRE_THROWS_MATCHES(sv.get_global_wires_indices({3, 0}),LightningException,"Element not in vector");
+    REQUIRE(sv.get_global_wires_indices({0, 1}) ==
+            std::vector<std::size_t>{0, 1});
+    REQUIRE(sv.get_global_wires_indices({1, 0}) ==
+            std::vector<std::size_t>{1, 0});
+    PL_REQUIRE_THROWS_MATCHES(sv.get_global_wires_indices({3, 0}),
+                              LightningException, "Element not in vector");
 
     REQUIRE(sv.find_global_wires({1, 3}) == std::vector<std::size_t>{1});
     REQUIRE(sv.find_global_wires({1, 3, 0}) == std::vector<std::size_t>{1, 0});
@@ -124,26 +134,589 @@ TEMPLATE_TEST_CASE("Local/Global wire helpers", "[LKMPI]",double, float) {
 
     REQUIRE(sv.get_blk_size() == 8);
 
-    REQUIRE(sv.global_2_local_index(0) == std::pair<std::size_t, std::size_t>{0, 0});
-    REQUIRE(sv.global_2_local_index(1) == std::pair<std::size_t, std::size_t>{0, 1});
-    REQUIRE(sv.global_2_local_index(7) == std::pair<std::size_t, std::size_t>{0, 7});
-    REQUIRE(sv.global_2_local_index(8) == std::pair<std::size_t, std::size_t>{1, 0});
-    REQUIRE(sv.global_2_local_index(9) == std::pair<std::size_t, std::size_t>{1, 1});
-    REQUIRE(sv.global_2_local_index(30) == std::pair<std::size_t, std::size_t>{3, 6});
-    REQUIRE(sv.global_2_local_index(31) == std::pair<std::size_t, std::size_t>{3, 7});
+    REQUIRE(sv.global_2_local_index(0) ==
+            std::pair<std::size_t, std::size_t>{0, 0});
+    REQUIRE(sv.global_2_local_index(1) ==
+            std::pair<std::size_t, std::size_t>{0, 1});
+    REQUIRE(sv.global_2_local_index(7) ==
+            std::pair<std::size_t, std::size_t>{0, 7});
+    REQUIRE(sv.global_2_local_index(8) ==
+            std::pair<std::size_t, std::size_t>{1, 0});
+    REQUIRE(sv.global_2_local_index(9) ==
+            std::pair<std::size_t, std::size_t>{1, 1});
+    REQUIRE(sv.global_2_local_index(30) ==
+            std::pair<std::size_t, std::size_t>{3, 6});
+    REQUIRE(sv.global_2_local_index(31) ==
+            std::pair<std::size_t, std::size_t>{3, 7});
 }
 
-
-TEMPLATE_TEST_CASE("getDataVector", "[LKMPI]",double, float) {
+TEMPLATE_TEST_CASE("getDataVector", "[LKMPI]", double, float) {
     StateVectorKokkosMPI<TestType> sv(5);
     std::vector<Kokkos::complex<TestType>> reference_data(32, {0.0, 0.0});
     reference_data[0] = 1.0;
 
     auto data = sv.getDataVector(0);
-    if(sv.get_mpi_rank() == 0) {
+    if (sv.get_mpi_rank() == 0) {
         for (std::size_t j = 0; j < reference_data.size(); j++) {
             CHECK(real(data[j]) == Approx(real(reference_data[j])));
             CHECK(imag(data[j]) == Approx(imag(reference_data[j])));
+        }
+    }
+}
+
+TEMPLATE_TEST_CASE("setBasisState", "[LKMPI]", double, float) {
+    StateVectorKokkosMPI<TestType> sv(5);
+
+    for (std::size_t i = 0; i < 32; i++) {
+
+        std::vector<Kokkos::complex<TestType>> reference_data(32, {0.0, 0.0});
+        reference_data[i] = 1.0;
+        sv.setBasisState(i);
+        auto data = sv.getDataVector(0);
+        if (sv.get_mpi_rank() == 0) {
+            for (std::size_t j = 0; j < reference_data.size(); j++) {
+                CHECK(real(data[j]) == Approx(real(reference_data[j])));
+                CHECK(imag(data[j]) == Approx(imag(reference_data[j])));
+            }
+        }
+    }
+}
+
+TEMPLATE_TEST_CASE("setBasisState - explicit state", "[LKMPI]", double, float) {
+    StateVectorKokkosMPI<TestType> sv(5);
+
+    std::vector<std::size_t> state = {1, 1};
+    std::vector<std::vector<std::size_t>> wires = {{3, 4}, {0, 1}, {3, 0}};
+    std::vector<std::size_t> reference_location = {3, 24, 18};
+
+    for (std::size_t i = 0; i < wires.size(); i++) {
+        std::vector<Kokkos::complex<TestType>> reference_data(32, {0.0, 0.0});
+        reference_data[reference_location[i]] = 1.0;
+        sv.setBasisState(state, wires[i]);
+        auto data = sv.getDataVector(0);
+        if (sv.get_mpi_rank() == 0) {
+            for (std::size_t j = 0; j < reference_data.size(); j++) {
+                CHECK(real(data[j]) == Approx(real(reference_data[j])));
+                CHECK(imag(data[j]) == Approx(imag(reference_data[j])));
+            }
+        }
+    }
+}
+
+TEMPLATE_TEST_CASE("updateData/getData/getDataVector", "[LKMPI]", double,
+                   float) {
+    StateVectorKokkosMPI<TestType> sv(5);
+
+    // Only run with 4 mpi ranks:
+    REQUIRE(sv.get_mpi_size() == 4);
+
+    // Set the reference data
+    std::vector<Kokkos::complex<TestType>> init_sv(32, {0.0, 0.0});
+    for (std::size_t i = 0; i < 32; i++) {
+        init_sv[i] = i;
+    }
+
+    // Set initial data
+    std::vector<Kokkos::complex<TestType>> init_subsv(8, {0.0, 0.0});
+    for (std::size_t element = 0; element < 8; element++) {
+        init_subsv[element] = init_sv[sv.get_mpi_rank() * 8 + element];
+    }
+
+    // Update the state vector with the initial data with updateData()
+    sv.updateData(init_subsv);
+
+    // Check getData()
+    for (std::size_t j = 0; j < init_subsv.size(); j++) {
+        CHECK(real(sv.getData()[j]) == Approx(real(init_subsv[j])));
+        CHECK(imag(sv.getData()[j]) == Approx(imag(init_subsv[j])));
+    }
+
+    // Check getDataVector()
+    auto data = sv.getDataVector(0);
+    if (sv.get_mpi_rank() == 0) {
+        for (std::size_t j = 0; j < init_sv.size(); j++) {
+            CHECK(real(data[j]) == Approx(real(init_sv[j])));
+            CHECK(imag(data[j]) == Approx(imag(init_sv[j])));
+        }
+    }
+}
+
+TEMPLATE_TEST_CASE("Swap global local wires", "[LKMPI]", double, float) {
+    std::vector<std::vector<Kokkos::complex<TestType>>> swapped_sv(18);
+    swapped_sv[0] = {
+        {0.0, 0.0},  {1.0, 0.0},  {2.0, 0.0},  {3.0, 0.0},  {16.0, 0.0},
+        {17.0, 0.0}, {18.0, 0.0}, {19.0, 0.0}, {8.0, 0.0},  {9.0, 0.0},
+        {10.0, 0.0}, {11.0, 0.0}, {24.0, 0.0}, {25.0, 0.0}, {26.0, 0.0},
+        {27.0, 0.0}, {4.0, 0.0},  {5.0, 0.0},  {6.0, 0.0},  {7.0, 0.0},
+        {20.0, 0.0}, {21.0, 0.0}, {22.0, 0.0}, {23.0, 0.0}, {12.0, 0.0},
+        {13.0, 0.0}, {14.0, 0.0}, {15.0, 0.0}, {28.0, 0.0}, {29.0, 0.0},
+        {30.0, 0.0}, {31.0, 0.0},
+    };
+    swapped_sv[1] = {
+        {0.0, 0.0},  {1.0, 0.0},  {16.0, 0.0}, {17.0, 0.0}, {4.0, 0.0},
+        {5.0, 0.0},  {20.0, 0.0}, {21.0, 0.0}, {8.0, 0.0},  {9.0, 0.0},
+        {24.0, 0.0}, {25.0, 0.0}, {12.0, 0.0}, {13.0, 0.0}, {28.0, 0.0},
+        {29.0, 0.0}, {2.0, 0.0},  {3.0, 0.0},  {18.0, 0.0}, {19.0, 0.0},
+        {6.0, 0.0},  {7.0, 0.0},  {22.0, 0.0}, {23.0, 0.0}, {10.0, 0.0},
+        {11.0, 0.0}, {26.0, 0.0}, {27.0, 0.0}, {14.0, 0.0}, {15.0, 0.0},
+        {30.0, 0.0}, {31.0, 0.0},
+    };
+    swapped_sv[2] = {
+        {0.0, 0.0},  {16.0, 0.0}, {2.0, 0.0},  {18.0, 0.0}, {4.0, 0.0},
+        {20.0, 0.0}, {6.0, 0.0},  {22.0, 0.0}, {8.0, 0.0},  {24.0, 0.0},
+        {10.0, 0.0}, {26.0, 0.0}, {12.0, 0.0}, {28.0, 0.0}, {14.0, 0.0},
+        {30.0, 0.0}, {1.0, 0.0},  {17.0, 0.0}, {3.0, 0.0},  {19.0, 0.0},
+        {5.0, 0.0},  {21.0, 0.0}, {7.0, 0.0},  {23.0, 0.0}, {9.0, 0.0},
+        {25.0, 0.0}, {11.0, 0.0}, {27.0, 0.0}, {13.0, 0.0}, {29.0, 0.0},
+        {15.0, 0.0}, {31.0, 0.0},
+    };
+    swapped_sv[3] = {
+        {0.0, 0.0},  {1.0, 0.0},  {2.0, 0.0},  {3.0, 0.0},  {8.0, 0.0},
+        {9.0, 0.0},  {10.0, 0.0}, {11.0, 0.0}, {4.0, 0.0},  {5.0, 0.0},
+        {6.0, 0.0},  {7.0, 0.0},  {12.0, 0.0}, {13.0, 0.0}, {14.0, 0.0},
+        {15.0, 0.0}, {16.0, 0.0}, {17.0, 0.0}, {18.0, 0.0}, {19.0, 0.0},
+        {24.0, 0.0}, {25.0, 0.0}, {26.0, 0.0}, {27.0, 0.0}, {20.0, 0.0},
+        {21.0, 0.0}, {22.0, 0.0}, {23.0, 0.0}, {28.0, 0.0}, {29.0, 0.0},
+        {30.0, 0.0}, {31.0, 0.0},
+    };
+    swapped_sv[4] = {
+        {0.0, 0.0},  {1.0, 0.0},  {8.0, 0.0},  {9.0, 0.0},  {4.0, 0.0},
+        {5.0, 0.0},  {12.0, 0.0}, {13.0, 0.0}, {2.0, 0.0},  {3.0, 0.0},
+        {10.0, 0.0}, {11.0, 0.0}, {6.0, 0.0},  {7.0, 0.0},  {14.0, 0.0},
+        {15.0, 0.0}, {16.0, 0.0}, {17.0, 0.0}, {24.0, 0.0}, {25.0, 0.0},
+        {20.0, 0.0}, {21.0, 0.0}, {28.0, 0.0}, {29.0, 0.0}, {18.0, 0.0},
+        {19.0, 0.0}, {26.0, 0.0}, {27.0, 0.0}, {22.0, 0.0}, {23.0, 0.0},
+        {30.0, 0.0}, {31.0, 0.0},
+    };
+    swapped_sv[5] = {
+        {0.0, 0.0},  {8.0, 0.0},  {2.0, 0.0},  {10.0, 0.0}, {4.0, 0.0},
+        {12.0, 0.0}, {6.0, 0.0},  {14.0, 0.0}, {1.0, 0.0},  {9.0, 0.0},
+        {3.0, 0.0},  {11.0, 0.0}, {5.0, 0.0},  {13.0, 0.0}, {7.0, 0.0},
+        {15.0, 0.0}, {16.0, 0.0}, {24.0, 0.0}, {18.0, 0.0}, {26.0, 0.0},
+        {20.0, 0.0}, {28.0, 0.0}, {22.0, 0.0}, {30.0, 0.0}, {17.0, 0.0},
+        {25.0, 0.0}, {19.0, 0.0}, {27.0, 0.0}, {21.0, 0.0}, {29.0, 0.0},
+        {23.0, 0.0}, {31.0, 0.0},
+    };
+    swapped_sv[6] = {
+        {0.0, 0.0},  {1.0, 0.0},  {8.0, 0.0},  {9.0, 0.0},  {16.0, 0.0},
+        {17.0, 0.0}, {24.0, 0.0}, {25.0, 0.0}, {2.0, 0.0},  {3.0, 0.0},
+        {10.0, 0.0}, {11.0, 0.0}, {18.0, 0.0}, {19.0, 0.0}, {26.0, 0.0},
+        {27.0, 0.0}, {4.0, 0.0},  {5.0, 0.0},  {12.0, 0.0}, {13.0, 0.0},
+        {20.0, 0.0}, {21.0, 0.0}, {28.0, 0.0}, {29.0, 0.0}, {6.0, 0.0},
+        {7.0, 0.0},  {14.0, 0.0}, {15.0, 0.0}, {22.0, 0.0}, {23.0, 0.0},
+        {30.0, 0.0}, {31.0, 0.0},
+    };
+    swapped_sv[7] = {
+        {0.0, 0.0},  {1.0, 0.0},  {16.0, 0.0}, {17.0, 0.0}, {8.0, 0.0},
+        {9.0, 0.0},  {24.0, 0.0}, {25.0, 0.0}, {4.0, 0.0},  {5.0, 0.0},
+        {20.0, 0.0}, {21.0, 0.0}, {12.0, 0.0}, {13.0, 0.0}, {28.0, 0.0},
+        {29.0, 0.0}, {2.0, 0.0},  {3.0, 0.0},  {18.0, 0.0}, {19.0, 0.0},
+        {10.0, 0.0}, {11.0, 0.0}, {26.0, 0.0}, {27.0, 0.0}, {6.0, 0.0},
+        {7.0, 0.0},  {22.0, 0.0}, {23.0, 0.0}, {14.0, 0.0}, {15.0, 0.0},
+        {30.0, 0.0}, {31.0, 0.0},
+    };
+
+    swapped_sv[8] = {
+        {0.0, 0.0},  {8.0, 0.0},  {2.0, 0.0},  {10.0, 0.0}, {16.0, 0.0},
+        {24.0, 0.0}, {18.0, 0.0}, {26.0, 0.0}, {1.0, 0.0},  {9.0, 0.0},
+        {3.0, 0.0},  {11.0, 0.0}, {17.0, 0.0}, {25.0, 0.0}, {19.0, 0.0},
+        {27.0, 0.0}, {4.0, 0.0},  {12.0, 0.0}, {6.0, 0.0},  {14.0, 0.0},
+        {20.0, 0.0}, {28.0, 0.0}, {22.0, 0.0}, {30.0, 0.0}, {5.0, 0.0},
+        {13.0, 0.0}, {7.0, 0.0},  {15.0, 0.0}, {21.0, 0.0}, {29.0, 0.0},
+        {23.0, 0.0}, {31.0, 0.0},
+    };
+    swapped_sv[9] = {
+        {0.0, 0.0},  {16.0, 0.0}, {2.0, 0.0},  {18.0, 0.0}, {8.0, 0.0},
+        {24.0, 0.0}, {10.0, 0.0}, {26.0, 0.0}, {4.0, 0.0},  {20.0, 0.0},
+        {6.0, 0.0},  {22.0, 0.0}, {12.0, 0.0}, {28.0, 0.0}, {14.0, 0.0},
+        {30.0, 0.0}, {1.0, 0.0},  {17.0, 0.0}, {3.0, 0.0},  {19.0, 0.0},
+        {9.0, 0.0},  {25.0, 0.0}, {11.0, 0.0}, {27.0, 0.0}, {5.0, 0.0},
+        {21.0, 0.0}, {7.0, 0.0},  {23.0, 0.0}, {13.0, 0.0}, {29.0, 0.0},
+        {15.0, 0.0}, {31.0, 0.0},
+    };
+    swapped_sv[10] = {
+        {0.0, 0.0},  {8.0, 0.0},  {16.0, 0.0}, {24.0, 0.0}, {4.0, 0.0},
+        {12.0, 0.0}, {20.0, 0.0}, {28.0, 0.0}, {1.0, 0.0},  {9.0, 0.0},
+        {17.0, 0.0}, {25.0, 0.0}, {5.0, 0.0},  {13.0, 0.0}, {21.0, 0.0},
+        {29.0, 0.0}, {2.0, 0.0},  {10.0, 0.0}, {18.0, 0.0}, {26.0, 0.0},
+        {6.0, 0.0},  {14.0, 0.0}, {22.0, 0.0}, {30.0, 0.0}, {3.0, 0.0},
+        {11.0, 0.0}, {19.0, 0.0}, {27.0, 0.0}, {7.0, 0.0},  {15.0, 0.0},
+        {23.0, 0.0}, {31.0, 0.0},
+    };
+    swapped_sv[11] = {
+        {0.0, 0.0},  {16.0, 0.0}, {8.0, 0.0},  {24.0, 0.0}, {4.0, 0.0},
+        {20.0, 0.0}, {12.0, 0.0}, {28.0, 0.0}, {2.0, 0.0},  {18.0, 0.0},
+        {10.0, 0.0}, {26.0, 0.0}, {6.0, 0.0},  {22.0, 0.0}, {14.0, 0.0},
+        {30.0, 0.0}, {1.0, 0.0},  {17.0, 0.0}, {9.0, 0.0},  {25.0, 0.0},
+        {5.0, 0.0},  {21.0, 0.0}, {13.0, 0.0}, {29.0, 0.0}, {3.0, 0.0},
+        {19.0, 0.0}, {11.0, 0.0}, {27.0, 0.0}, {7.0, 0.0},  {23.0, 0.0},
+        {15.0, 0.0}, {31.0, 0.0},
+    };
+    swapped_sv[12] = {
+        {0.0, 0.0},  {1.0, 0.0},  {16.0, 0.0}, {17.0, 0.0}, {8.0, 0.0},
+        {9.0, 0.0},  {24.0, 0.0}, {25.0, 0.0}, {4.0, 0.0},  {5.0, 0.0},
+        {20.0, 0.0}, {21.0, 0.0}, {12.0, 0.0}, {13.0, 0.0}, {28.0, 0.0},
+        {29.0, 0.0}, {2.0, 0.0},  {3.0, 0.0},  {18.0, 0.0}, {19.0, 0.0},
+        {10.0, 0.0}, {11.0, 0.0}, {26.0, 0.0}, {27.0, 0.0}, {6.0, 0.0},
+        {7.0, 0.0},  {22.0, 0.0}, {23.0, 0.0}, {14.0, 0.0}, {15.0, 0.0},
+        {30.0, 0.0}, {31.0, 0.0},
+    };
+    swapped_sv[13] = {
+        {0.0, 0.0},  {1.0, 0.0},  {8.0, 0.0},  {9.0, 0.0},  {16.0, 0.0},
+        {17.0, 0.0}, {24.0, 0.0}, {25.0, 0.0}, {2.0, 0.0},  {3.0, 0.0},
+        {10.0, 0.0}, {11.0, 0.0}, {18.0, 0.0}, {19.0, 0.0}, {26.0, 0.0},
+        {27.0, 0.0}, {4.0, 0.0},  {5.0, 0.0},  {12.0, 0.0}, {13.0, 0.0},
+        {20.0, 0.0}, {21.0, 0.0}, {28.0, 0.0}, {29.0, 0.0}, {6.0, 0.0},
+        {7.0, 0.0},  {14.0, 0.0}, {15.0, 0.0}, {22.0, 0.0}, {23.0, 0.0},
+        {30.0, 0.0}, {31.0, 0.0},
+    };
+    swapped_sv[14] = {
+        {0.0, 0.0},  {16.0, 0.0}, {2.0, 0.0},  {18.0, 0.0}, {8.0, 0.0},
+        {24.0, 0.0}, {10.0, 0.0}, {26.0, 0.0}, {4.0, 0.0},  {20.0, 0.0},
+        {6.0, 0.0},  {22.0, 0.0}, {12.0, 0.0}, {28.0, 0.0}, {14.0, 0.0},
+        {30.0, 0.0}, {1.0, 0.0},  {17.0, 0.0}, {3.0, 0.0},  {19.0, 0.0},
+        {9.0, 0.0},  {25.0, 0.0}, {11.0, 0.0}, {27.0, 0.0}, {5.0, 0.0},
+        {21.0, 0.0}, {7.0, 0.0},  {23.0, 0.0}, {13.0, 0.0}, {29.0, 0.0},
+        {15.0, 0.0}, {31.0, 0.0},
+    };
+    swapped_sv[15] = {
+        {0.0, 0.0},  {8.0, 0.0},  {2.0, 0.0},  {10.0, 0.0}, {16.0, 0.0},
+        {24.0, 0.0}, {18.0, 0.0}, {26.0, 0.0}, {1.0, 0.0},  {9.0, 0.0},
+        {3.0, 0.0},  {11.0, 0.0}, {17.0, 0.0}, {25.0, 0.0}, {19.0, 0.0},
+        {27.0, 0.0}, {4.0, 0.0},  {12.0, 0.0}, {6.0, 0.0},  {14.0, 0.0},
+        {20.0, 0.0}, {28.0, 0.0}, {22.0, 0.0}, {30.0, 0.0}, {5.0, 0.0},
+        {13.0, 0.0}, {7.0, 0.0},  {15.0, 0.0}, {21.0, 0.0}, {29.0, 0.0},
+        {23.0, 0.0}, {31.0, 0.0},
+    };
+    swapped_sv[16] = {
+        {0.0, 0.0},  {16.0, 0.0}, {8.0, 0.0},  {24.0, 0.0}, {4.0, 0.0},
+        {20.0, 0.0}, {12.0, 0.0}, {28.0, 0.0}, {2.0, 0.0},  {18.0, 0.0},
+        {10.0, 0.0}, {26.0, 0.0}, {6.0, 0.0},  {22.0, 0.0}, {14.0, 0.0},
+        {30.0, 0.0}, {1.0, 0.0},  {17.0, 0.0}, {9.0, 0.0},  {25.0, 0.0},
+        {5.0, 0.0},  {21.0, 0.0}, {13.0, 0.0}, {29.0, 0.0}, {3.0, 0.0},
+        {19.0, 0.0}, {11.0, 0.0}, {27.0, 0.0}, {7.0, 0.0},  {23.0, 0.0},
+        {15.0, 0.0}, {31.0, 0.0},
+    };
+    swapped_sv[17] = {
+        {0.0, 0.0},  {8.0, 0.0},  {16.0, 0.0}, {24.0, 0.0}, {4.0, 0.0},
+        {12.0, 0.0}, {20.0, 0.0}, {28.0, 0.0}, {1.0, 0.0},  {9.0, 0.0},
+        {17.0, 0.0}, {25.0, 0.0}, {5.0, 0.0},  {13.0, 0.0}, {21.0, 0.0},
+        {29.0, 0.0}, {2.0, 0.0},  {10.0, 0.0}, {18.0, 0.0}, {26.0, 0.0},
+        {6.0, 0.0},  {14.0, 0.0}, {22.0, 0.0}, {30.0, 0.0}, {3.0, 0.0},
+        {11.0, 0.0}, {19.0, 0.0}, {27.0, 0.0}, {7.0, 0.0},  {15.0, 0.0},
+        {23.0, 0.0}, {31.0, 0.0},
+    };
+    std::vector<std::vector<std::size_t>> global_wires_to_swap = {
+        {0},    {0},    {0},    {1},    {1},    {1},    {0, 1}, {0, 1}, {0, 1},
+        {0, 1}, {0, 1}, {0, 1}, {1, 0}, {1, 0}, {1, 0}, {1, 0}, {1, 0}, {1, 0}};
+    std::vector<std::vector<std::size_t>> local_wires_to_swap = {
+        {2},    {3},    {4},    {2},    {3},    {4},    {2, 3}, {3, 2}, {2, 4},
+        {4, 2}, {3, 4}, {4, 3}, {2, 3}, {3, 2}, {2, 4}, {4, 2}, {3, 4}, {4, 3}};
+
+    // Set the reference data
+    std::vector<Kokkos::complex<TestType>> init_sv(32, {0.0, 0.0});
+    for (std::size_t i = 0; i < 32; i++) {
+        init_sv[i] = i;
+    }
+
+    // Loop through cases
+    for (std::size_t i = 0; i < swapped_sv.size(); i++) {
+        // Initialize the state vector
+        StateVectorKokkosMPI<TestType> sv(5);
+
+        // Only run with 4 mpi ranks:
+        REQUIRE(sv.get_mpi_size() == 4);
+
+        // Set initial data
+        std::vector<Kokkos::complex<TestType>> init_subsv(8, {0.0, 0.0});
+        for (std::size_t element = 0; element < 8; element++) {
+            init_subsv[element] = init_sv[sv.get_mpi_rank() * 8 + element];
+        }
+
+        // Update the state vector with the initial data with updateData()
+        sv.updateData(init_subsv);
+
+        // Swap Global Local wires
+        sv.swap_global_local_wires(global_wires_to_swap[i],
+                                   local_wires_to_swap[i]);
+
+        // Check getData()
+        for (std::size_t j = 0; j < init_subsv.size(); j++) {
+            CHECK(real(sv.getData()[j]) ==
+                  Approx(real(swapped_sv[i][sv.get_mpi_rank() * 8 + j])));
+            CHECK(imag(sv.getData()[j]) ==
+                  Approx(imag(swapped_sv[i][sv.get_mpi_rank() * 8 + j])));
+        }
+
+        // Check getDataVector()
+        auto data = sv.getDataVector(0);
+        if (sv.get_mpi_rank() == 0) {
+            for (std::size_t j = 0; j < init_sv.size(); j++) {
+                CHECK(real(data[j]) == Approx(real(init_sv[j])));
+                CHECK(imag(data[j]) == Approx(imag(init_sv[j])));
+            }
+        }
+    }
+}
+
+TEMPLATE_TEST_CASE("Match local wires", "[LKMPI]", double, float) {
+    // Test setBasisState with a basis state
+    StateVectorKokkosMPI<TestType> sv_0(5);
+    StateVectorKokkosMPI<TestType> sv_1(sv_0);
+
+    // Only run with 4 mpi ranks:
+    REQUIRE(sv_0.get_mpi_size() == 4);
+
+    // Set the reference data
+    std::vector<Kokkos::complex<TestType>> init_sv(32, {0.0, 0.0});
+    for (std::size_t i = 0; i < 32; i++) {
+        init_sv[i] = i;
+    }
+
+    // Set initial data
+    std::vector<Kokkos::complex<TestType>> init_subsv(8, {0.0, 0.0});
+    for (std::size_t element = 0; element < 8; element++) {
+        init_subsv[element] = init_sv[sv_0.get_mpi_rank() * 8 + element];
+    }
+
+    // Update the state vector with the initial data with updateData()
+    sv_0.updateData(init_subsv);
+    sv_1.updateData(init_subsv);
+
+    sv_1.swap_global_local_wires({0}, {2});
+    sv_1.swap_global_local_wires({2}, {3});
+    sv_1.swap_global_local_wires({3}, {0});
+
+    // Match global wires and index
+    sv_0.match_local_wires(sv_1.get_local_wires());
+    ;
+
+    // Global wires = {0, 1}
+    // Local wires = {3, 2, 4}
+    std::vector<Kokkos::complex<TestType>> swapped_sv = {
+        {0.0, 0.0},  {1.0, 0.0},  {4.0, 0.0},  {5.0, 0.0},  {2.0, 0.0},
+        {3.0, 0.0},  {6.0, 0.0},  {7.0, 0.0},  {8.0, 0.0},  {9.0, 0.0},
+        {12.0, 0.0}, {13.0, 0.0}, {10.0, 0.0}, {11.0, 0.0}, {14.0, 0.0},
+        {15.0, 0.0}, {16.0, 0.0}, {17.0, 0.0}, {20.0, 0.0}, {21.0, 0.0},
+        {18.0, 0.0}, {19.0, 0.0}, {22.0, 0.0}, {23.0, 0.0}, {24.0, 0.0},
+        {25.0, 0.0}, {28.0, 0.0}, {29.0, 0.0}, {26.0, 0.0}, {27.0, 0.0},
+        {30.0, 0.0}, {31.0, 0.0},
+    };
+
+    for (std::size_t j = 0; j < init_subsv.size(); j++) {
+        CHECK(real(sv_0.getData()[j]) ==
+              Approx(real(swapped_sv[sv_0.get_mpi_rank() * 8 + j])));
+        CHECK(real(sv_0.getData()[j]) == Approx(real(sv_1.getData()[j])));
+        CHECK(imag(sv_0.getData()[j]) ==
+              Approx(imag(swapped_sv[sv_0.get_mpi_rank() * 8 + j])));
+        CHECK(imag(sv_0.getData()[j]) == Approx(imag(sv_1.getData()[j])));
+    }
+}
+
+TEMPLATE_TEST_CASE("Match global wires", "[LKMPI]", double, float) {
+    // Test setBasisState with a basis state
+    StateVectorKokkosMPI<TestType> sv_0(5);
+    StateVectorKokkosMPI<TestType> sv_1(sv_0);
+
+    // Only run with 4 mpi ranks:
+    REQUIRE(sv_0.get_mpi_size() == 4);
+
+    // Set the reference data
+    std::vector<Kokkos::complex<TestType>> init_sv(32, {0.0, 0.0});
+    for (std::size_t i = 0; i < 32; i++) {
+        init_sv[i] = i;
+    }
+
+    // Set initial data
+    std::vector<Kokkos::complex<TestType>> init_subsv(8, {0.0, 0.0});
+    for (std::size_t element = 0; element < 8; element++) {
+        init_subsv[element] = init_sv[sv_0.get_mpi_rank() * 8 + element];
+    }
+
+    // Update the state vector with the initial data with updateData()
+    sv_0.updateData(init_subsv);
+    sv_1.updateData(init_subsv);
+
+    sv_1.swap_global_local_wires({0}, {2});
+    sv_1.swap_global_local_wires({1}, {0});
+    sv_1.swap_global_local_wires({2}, {1});
+
+    // Match global wires and index
+    sv_0.match_global_wires_and_index(sv_1);
+    ;
+
+    // Global wires = {1, 0}
+    // Local wires = {2, 3, 4}
+    std::vector<Kokkos::complex<TestType>> swapped_sv = {
+        {0.0, 0.0},  {1.0, 0.0},  {2.0, 0.0},  {3.0, 0.0},  {4.0, 0.0},
+        {5.0, 0.0},  {6.0, 0.0},  {7.0, 0.0},  {16.0, 0.0}, {17.0, 0.0},
+        {18.0, 0.0}, {19.0, 0.0}, {20.0, 0.0}, {21.0, 0.0}, {22.0, 0.0},
+        {23.0, 0.0}, {8.0, 0.0},  {9.0, 0.0},  {10.0, 0.0}, {11.0, 0.0},
+        {12.0, 0.0}, {13.0, 0.0}, {14.0, 0.0}, {15.0, 0.0}, {24.0, 0.0},
+        {25.0, 0.0}, {26.0, 0.0}, {27.0, 0.0}, {28.0, 0.0}, {29.0, 0.0},
+        {30.0, 0.0}, {31.0, 0.0},
+    };
+
+    for (std::size_t j = 0; j < init_subsv.size(); j++) {
+        CHECK(real(sv_0.getData()[j]) ==
+              Approx(real(swapped_sv[sv_0.get_mpi_rank() * 8 + j])));
+        CHECK(real(sv_0.getData()[j]) == Approx(real(sv_1.getData()[j])));
+        CHECK(imag(sv_0.getData()[j]) ==
+              Approx(imag(swapped_sv[sv_0.get_mpi_rank() * 8 + j])));
+        CHECK(imag(sv_0.getData()[j]) == Approx(imag(sv_1.getData()[j])));
+    }
+}
+
+TEMPLATE_TEST_CASE("Match wires", "[LKMPI]", double, float) {
+    // Test setBasisState with a basis state
+    StateVectorKokkosMPI<TestType> sv_0(5);
+    StateVectorKokkosMPI<TestType> sv_1(sv_0);
+
+    // Only run with 4 mpi ranks:
+    REQUIRE(sv_0.get_mpi_size() == 4);
+
+    // Set the reference data
+    std::vector<Kokkos::complex<TestType>> init_sv(32, {0.0, 0.0});
+    for (std::size_t i = 0; i < 32; i++) {
+        init_sv[i] = i;
+    }
+
+    // Set initial data
+    std::vector<Kokkos::complex<TestType>> init_subsv(8, {0.0, 0.0});
+    for (std::size_t element = 0; element < 8; element++) {
+        init_subsv[element] = init_sv[sv_0.get_mpi_rank() * 8 + element];
+    }
+
+    // Update the state vector with the initial data with updateData()
+    sv_0.updateData(init_subsv);
+    sv_1.updateData(init_subsv);
+
+    sv_1.swap_global_local_wires({0}, {2});
+    sv_1.swap_global_local_wires({1}, {0});
+
+    // Match global wires and index
+    sv_0.match_wires(sv_1);
+
+    // Global wires = {2, 0}
+    // Local wires = {1, 3, 4}
+    std::vector<Kokkos::complex<TestType>> swapped_sv = {
+        {0.0, 0.0},  {1.0, 0.0},  {2.0, 0.0},  {3.0, 0.0},  {8.0, 0.0},
+        {9.0, 0.0},  {10.0, 0.0}, {11.0, 0.0}, {16.0, 0.0}, {17.0, 0.0},
+        {18.0, 0.0}, {19.0, 0.0}, {24.0, 0.0}, {25.0, 0.0}, {26.0, 0.0},
+        {27.0, 0.0}, {4.0, 0.0},  {5.0, 0.0},  {6.0, 0.0},  {7.0, 0.0},
+        {12.0, 0.0}, {13.0, 0.0}, {14.0, 0.0}, {15.0, 0.0}, {20.0, 0.0},
+        {21.0, 0.0}, {22.0, 0.0}, {23.0, 0.0}, {28.0, 0.0}, {29.0, 0.0},
+        {30.0, 0.0}, {31.0, 0.0},
+    };
+
+    for (std::size_t j = 0; j < init_subsv.size(); j++) {
+        CHECK(real(sv_0.getData()[j]) ==
+              Approx(real(swapped_sv[sv_0.get_mpi_rank() * 8 + j])));
+        CHECK(real(sv_0.getData()[j]) == Approx(real(sv_1.getData()[j])));
+        CHECK(imag(sv_0.getData()[j]) ==
+              Approx(imag(swapped_sv[sv_0.get_mpi_rank() * 8 + j])));
+        CHECK(imag(sv_0.getData()[j]) == Approx(imag(sv_1.getData()[j])));
+    }
+}
+
+TEMPLATE_TEST_CASE("Apply PauliX", "[LKMPI]", double, float) {
+    // Test setBasisState with a basis state
+    StateVectorKokkosMPI<TestType> sv(4);
+
+    // Only run with 4 mpi ranks:
+    REQUIRE(sv.get_mpi_size() == 4);
+
+    // Set the reference data
+    std::vector<Kokkos::complex<TestType>> init_sv(16, {0.0, 0.0});
+    for (std::size_t i = 0; i < 16; i++) {
+        init_sv[i] = i;
+    }
+    // Set initial data
+    std::vector<Kokkos::complex<TestType>> init_subsv(4, {0.0, 0.0});
+    for (std::size_t element = 0; element < 4; element++) {
+        init_subsv[element] = init_sv[sv.get_mpi_rank() * 4 + element];
+    }
+
+    // Update the state vector with the initial data with updateData()
+    sv.updateData(init_subsv);
+    sv.applyOperation("PauliX", {0});
+
+        std::vector<Kokkos::complex<TestType>>
+            reference = {
+        {8.0, 0.0},  {9.0, 0.0},  {10.0, 0.0}, {11.0, 0.0},
+        {12.0, 0.0}, {13.0, 0.0}, {14.0, 0.0}, {15.0, 0.0},
+        {0.0, 0.0},  {1.0, 0.0},  {2.0, 0.0},  {3.0, 0.0},
+        {4.0, 0.0},  {5.0, 0.0},  {6.0, 0.0},  {7.0, 0.0},
+    };
+
+    auto data = sv.getDataVector(0);
+    if (sv.get_mpi_rank() == 0) {
+        for (std::size_t j = 0; j < init_sv.size(); j++) {
+            CHECK(real(data[j]) == Approx(real(reference[j])));
+            CHECK(imag(data[j]) == Approx(imag(reference[j])));
+        }
+    }
+}
+
+TEMPLATE_TEST_CASE("Match wires after apply PauliX", "[LKMPI]", double, float) {
+    // Test setBasisState with a basis state
+    StateVectorKokkosMPI<TestType> sv(4);
+    StateVectorKokkosMPI<TestType> sv_1(sv);
+
+    // Only run with 4 mpi ranks:
+    REQUIRE(sv.get_mpi_size() == 4);
+
+    // Set the reference data
+    std::vector<Kokkos::complex<TestType>> init_sv(16, {0.0, 0.0});
+    for (std::size_t i = 0; i < 16; i++) {
+        init_sv[i] = i;
+    }
+    // Set initial data
+    std::vector<Kokkos::complex<TestType>> init_subsv(4, {0.0, 0.0});
+    for (std::size_t element = 0; element < 4; element++) {
+        init_subsv[element] = init_sv[sv.get_mpi_rank() * 4 + element];
+    }
+
+    // Update the state vector with the initial data with updateData()
+    sv.updateData(init_subsv);
+    sv_1.updateData(init_subsv);
+    sv.applyOperation("PauliX", {0});
+
+        std::vector<Kokkos::complex<TestType>>
+            reference = {
+        {8.0, 0.0},  {9.0, 0.0},  {10.0, 0.0}, {11.0, 0.0},
+        {12.0, 0.0}, {13.0, 0.0}, {14.0, 0.0}, {15.0, 0.0},
+        {0.0, 0.0},  {1.0, 0.0},  {2.0, 0.0},  {3.0, 0.0},
+        {4.0, 0.0},  {5.0, 0.0},  {6.0, 0.0},  {7.0, 0.0},
+    };
+    sv_1.match_wires(sv);
+
+    for (std::size_t j = 0; j < init_subsv.size(); j++) {
+        CHECK(real(sv_1.getData()[j]) == Approx(real(reference[sv_1.get_mpi_rank() * 4 + j])));
+    }
+
+    auto data = sv_1.getDataVector(0);
+    if (sv_1.get_mpi_rank() == 0) {
+        for (std::size_t j = 0; j < init_sv.size(); j++) {
+            CHECK(real(data[j]) == Approx(real(init_sv[j])));
+            CHECK(imag(data[j]) == Approx(imag(init_sv[j])));
+        }
+    }
+
+
+    StateVectorKokkosMPI<TestType> sv_new(4);
+    sv.match_wires(sv_new);
+
+
+    for (std::size_t j = 0; j < init_subsv.size(); j++) {
+        CHECK(real(sv.getData()[j]) == Approx(real(reference[sv.get_mpi_rank() * 4 + j])));
+    }
+
+    data = sv.getDataVector(0);
+    if (sv.get_mpi_rank() == 0) {
+        for (std::size_t j = 0; j < init_sv.size(); j++) {
+            CHECK(real(data[j]) == Approx(real(reference[j])));
+            CHECK(imag(data[j]) == Approx(imag(reference[j])));
         }
     }
 }

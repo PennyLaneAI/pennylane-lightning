@@ -144,10 +144,9 @@ class MeasurementsMPI final
      * @return Expectation value with respect to the given observable.
      */
     PrecisionT expval(Observable<StateVectorT> &ob) {
-        PL_ABORT("Expval with general operator not yet supported");
-        // TODO: FIX ME - get wires first, or don't support this
         StateVectorT ob_sv{this->_statevector};
         ob.applyInPlace(ob_sv);
+        this->_statevector.match_wires(ob_sv);
         const PrecisionT expected_value = getRealOfComplexInnerProduct(
             this->_statevector.getView(), ob_sv.getView());
         const PrecisionT result =
@@ -230,8 +229,8 @@ class MeasurementsMPI final
                  this->_statevector.get_num_local_wires()),
                 "Number of X and Y gates exceeds the number of local wires.");
 
-            for (std::size_t i = 0; i < this->_statevector.get_num_local_wires();
-                 i++) {
+            for (std::size_t i = 0;
+                 i < this->_statevector.get_num_local_wires(); i++) {
                 if (local_wires_to_swap.size() ==
                     global_wires_need_to_swap.size()) {
                     break;
