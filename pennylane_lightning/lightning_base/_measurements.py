@@ -16,6 +16,7 @@ Class implementation for state vector measurements.
 """
 
 from abc import ABC, abstractmethod
+from functools import reduce
 from typing import Any, Callable, List, Union
 
 import numpy as np
@@ -23,6 +24,7 @@ import pennylane as qml
 from pennylane.devices.qubit.sampling import _group_measurements
 from pennylane.measurements import (
     ClassicalShadowMP,
+    CountsMP,
     ExpectationMP,
     MeasurementProcess,
     ProbabilityMP,
@@ -57,7 +59,18 @@ class LightningBaseMeasurements(ABC):
     ) -> None:
         self._qubit_state = qubit_state
 
+        # Declare whether to use the approximate Markov Chain Monte Carlo
+        # sampling method when generating samples.
+        self._mcmc = False
+
+        # Declare if generate_samples supports sampling of a subset of wires.
+        # Currently, Lightning-Qubit only supports this feature.
+        # TODO: implement this for other Lightning devices.
+        self._subsamples = False
+
+        # Declare if the device will use the MPI support.
         self._use_mpi = False
+
         # Dummy for the C++ bindings
         self._measurement_lightning = None
 
@@ -389,7 +402,6 @@ class LightningBaseMeasurements(ABC):
 
         self._qubit_state.apply_operations(diagonalizing_gates)
 
-    @abstractmethod
     def _measure_with_samples_diagonalizing_gates(
         self,
         mps: List[SampleMeasurement],
@@ -407,6 +419,59 @@ class LightningBaseMeasurements(ABC):
         Returns:
             TensorLike[Any]: Sample measurement results
         """
+        # apply diagonalizing gates
+        self._apply_diagonalizing_gates(mps)
+
+        if not self._mcmc and self._subsamples:
+            # To speed up the sampling process, we only need to sample a minimal
+            # subset of wires when executing in finite-shot mode.
+            wires = reduce(sum, (mp.wires for mp in mps))
+        else:
+            total_indices = self._qubit_state.num_wires
+            wires = qml.wires.Wires(range(total_indices))
+
+        def _process_single_shot(samples):
+            processed = []
+            for mp in mps:
+                res = mp.process_samples(samples, wires)
+                if not isinstance(mp, CountsMP):
+                    res = qml.math.squeeze(res)
+
+                processed.append(res)
+
+            return tuple(processed)
+
+        try:
+            if self._mcmc:
+                samples = self._measurement_lightning.generate_mcmc_samples(
+                    len(wires), self._kernel_name, self._num_burnin, shots.total_shots
+                ).astype(int, copy=False)
+            elif self._subsamples:
+                samples = self._measurement_lightning.generate_samples(
+                    list(wires), shots.total_shots
+                ).astype(int, copy=False)
+            else:
+                samples = self._measurement_lightning.generate_samples(
+                    len(wires), shots.total_shots
+                ).astype(int, copy=False)
+
+        except ValueError as e:
+            if str(e) != "probabilities contain NaN":
+                raise e
+            samples = qml.math.full((shots.total_shots, len(wires)), 0)
+
+        self._apply_diagonalizing_gates(mps, adjoint=True)
+
+        # if there is a shot vector, use the shots.bins generator to
+        # split samples w.r.t. the shots
+        processed_samples = []
+        for lower, upper in shots.bins():
+            result = _process_single_shot(samples[..., lower:upper, :])
+            processed_samples.append(result)
+
+        return (
+            tuple(zip(*processed_samples)) if shots.has_partitioned_shots else processed_samples[0]
+        )
 
     def _measure_sum_with_samples(
         self,

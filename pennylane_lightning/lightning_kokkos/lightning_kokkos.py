@@ -48,7 +48,7 @@ from pennylane_lightning.lightning_base.lightning_base import (
 )
 
 try:
-    from pennylane_lightning.lightning_kokkos_ops import backend_info, print_configuration
+    from pennylane_lightning.lightning_kokkos_ops import backend_info
 
     LK_CPP_BINARY_AVAILABLE = True
 except ImportError as ex:
@@ -382,7 +382,6 @@ class LightningKokkos(LightningBase):
                 self.simulate(
                     self.dynamic_wires_from_circuit(circuit),
                     self._statevector,
-                    mcmc=None,
                     postselect_mode=execution_config.mcm_config.postselect_mode,
                 )
             )

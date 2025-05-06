@@ -33,7 +33,6 @@ import scipy as sp
 from pennylane.measurements import MidMeasureMP
 from pennylane.ops import Conditional
 from pennylane.ops.op_math import Adjoint
-from pennylane.tape import QuantumScript
 from pennylane.wires import Wires
 
 # pylint: disable=ungrouped-imports
@@ -59,6 +58,8 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
         super().__init__(num_wires, dtype)
 
         self._device_name = "lightning.qubit"
+
+        self._subsamples = True
 
         # Initialize the state vector
         self._qubit_state = self._state_dtype()(self._num_wires)
@@ -194,34 +195,6 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
             False,
         )
 
-    def _apply_lightning_midmeasure(
-        self, operation: MidMeasureMP, mid_measurements: dict, postselect_mode: str
-    ):
-        """Execute a MidMeasureMP operation and return the sample in mid_measurements.
-
-        Args:
-            operation (~pennylane.operation.Operation): mid-circuit measurement
-            mid_measurements (None, dict): Dictionary of mid-circuit measurements
-            postselect_mode (str): Configuration for handling shots with mid-circuit measurement
-                postselection. Use ``"hw-like"`` to discard invalid shots and ``"fill-shots"`` to
-                keep the same number of shots.
-
-        Returns:
-            None
-        """
-        wires = self.wires.indices(operation.wires)
-        wire = list(wires)[0]
-        if postselect_mode == "fill-shots" and operation.postselect is not None:
-            sample = operation.postselect
-        else:
-            circuit = QuantumScript([], [qml.sample(wires=operation.wires)], shots=1)
-            sample = LightningMeasurements(self).measure_final_state(circuit)
-            sample = np.squeeze(sample)
-        mid_measurements[operation] = sample
-        getattr(self.state_vector, "collapse")(wire, bool(sample))
-        if operation.reset and bool(sample):
-            self.apply_operations([qml.PauliX(operation.wires)], mid_measurements=mid_measurements)
-
     # pylint: disable=too-many-branches
     def _apply_lightning(
         self, operations, mid_measurements: dict = None, postselect_mode: str = None
@@ -260,7 +233,10 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
                     self._apply_lightning([operation.base])
             elif isinstance(operation, MidMeasureMP):
                 self._apply_lightning_midmeasure(
-                    operation, mid_measurements, postselect_mode=postselect_mode
+                    LightningMeasurements(self).measure_final_state,
+                    operation,
+                    mid_measurements,
+                    postselect_mode=postselect_mode,
                 )
             elif isinstance(operation, qml.PauliRot):
                 method = getattr(state, "applyPauliRot")

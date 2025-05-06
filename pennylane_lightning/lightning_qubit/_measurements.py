@@ -25,13 +25,7 @@ try:
 except ImportError as ex:
     warn(str(ex), UserWarning)
 
-from functools import reduce
-from typing import List
-
 import numpy as np
-import pennylane as qml
-from pennylane.measurements import CountsMP, SampleMeasurement, Shots
-from pennylane.typing import TensorLike
 
 from pennylane_lightning.lightning_base._measurements import LightningBaseMeasurements
 
@@ -80,67 +74,3 @@ class LightningMeasurements(LightningBaseMeasurements):  # pylint: disable=too-f
         Returns: the Measurements class
         """
         return MeasurementsC64 if self.dtype == np.complex64 else MeasurementsC128
-
-    def _measure_with_samples_diagonalizing_gates(
-        self,
-        mps: List[SampleMeasurement],
-        shots: Shots,
-    ) -> TensorLike:
-        """
-        Returns the samples of the measurement process performed on the given state,
-        by rotating the state into the measurement basis using the diagonalizing gates
-        given by the measurement process.
-
-        Args:
-            mps (~.measurements.SampleMeasurement): The sample measurements to perform
-            shots (~.measurements.Shots): The number of samples to take
-
-        Returns:
-            TensorLike[Any]: Sample measurement results
-        """
-        # apply diagonalizing gates
-        self._apply_diagonalizing_gates(mps)
-
-        if self._mcmc:
-            total_indices = self._qubit_state.num_wires
-            wires = qml.wires.Wires(range(total_indices))
-        else:
-            wires = reduce(sum, (mp.wires for mp in mps))
-
-        def _process_single_shot(samples):
-            processed = []
-            for mp in mps:
-                res = mp.process_samples(samples, wires)
-                if not isinstance(mp, CountsMP):
-                    res = qml.math.squeeze(res)
-
-                processed.append(res)
-
-            return tuple(processed)
-
-        try:
-            if self._mcmc:
-                samples = self._measurement_lightning.generate_mcmc_samples(
-                    len(wires), self._kernel_name, self._num_burnin, shots.total_shots
-                ).astype(int, copy=False)
-            else:
-                samples = self._measurement_lightning.generate_samples(
-                    list(wires), shots.total_shots
-                ).astype(int, copy=False)
-        except ValueError as e:
-            if str(e) != "probabilities contain NaN":
-                raise e
-            samples = qml.math.full((shots.total_shots, len(wires)), 0)
-
-        self._apply_diagonalizing_gates(mps, adjoint=True)
-
-        # if there is a shot vector, use the shots.bins generator to
-        # split samples w.r.t. the shots
-        processed_samples = []
-        for lower, upper in shots.bins():
-            result = _process_single_shot(samples[..., lower:upper, :])
-            processed_samples.append(result)
-
-        return (
-            tuple(zip(*processed_samples)) if shots.has_partitioned_shots else processed_samples[0]
-        )

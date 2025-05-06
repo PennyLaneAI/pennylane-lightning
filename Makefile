@@ -1,10 +1,10 @@
 PYTHON := python3
+COMPILER_LAUNCHER ?= $(shell which ccache)
 COVERAGE := --cov=pennylane_lightning --cov-report term-missing --cov-report=html:coverage_html_report
 TESTRUNNER := -m pytest tests --tb=short
 
 PL_BACKEND ?= "$(if $(backend:-=),$(backend),lightning_qubit)"
 SCIPY_OPENBLAS :=$(shell $(PYTHON) -c "import scipy_openblas32; print(scipy_openblas32.get_lib_dir())")
-COMPILER_LAUNCHER ?= $(shell which ccache)
 
 ifdef check
     CHECK := --check --diff

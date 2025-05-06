@@ -185,6 +185,7 @@ class LightningBase(Device):
         self,
         circuit: QuantumScript,
         state,  # Lightning [Device] StateVector
+        *,
         mcmc: dict = None,
         postselect_mode: str = None,
     ) -> Result:
