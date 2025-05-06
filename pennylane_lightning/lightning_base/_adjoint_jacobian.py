@@ -61,13 +61,12 @@ class LightningBaseAdjointJacobian(ABC):
         """Returns the simulation data type."""
         return self._qubit_state.dtype
 
+    @abstractmethod
     def _adjoint_jacobian_dtype(self):
         """Binding to Lightning [Device] Adjoint Jacobian C++ class.
 
         Returns: A pair of the AdjointJacobian class and the create_ops_list function. Default is None.
         """
-
-        return None, None
 
     @staticmethod
     def _get_return_type(
