@@ -50,7 +50,7 @@ from pennylane.tape import QuantumScript
 from pennylane.typing import Result, TensorLike
 from pennylane.wires import Wires
 
-from pennylane_lightning._serialize import QuantumScriptSerializer
+from pennylane_lightning.lightning_base._serialize import QuantumScriptSerializer
 
 
 class LightningTensorMeasurements:

@@ -39,10 +39,9 @@ import pennylane as qml
 from pennylane.measurements import MeasurementProcess
 from pennylane.typing import TensorLike
 
-from pennylane_lightning._serialize import QuantumScriptSerializer
-
 # pylint: disable=ungrouped-imports
 from pennylane_lightning.lightning_base._measurements import LightningBaseMeasurements
+from pennylane_lightning.lightning_base._serialize import QuantumScriptSerializer
 
 
 class LightningGPUMeasurements(LightningBaseMeasurements):  # pylint: disable=too-few-public-methods

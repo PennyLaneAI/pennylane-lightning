@@ -20,7 +20,10 @@ import pytest
 from conftest import LightningDevice, device_name
 from pennylane.exceptions import DeviceError
 
-from pennylane_lightning._serialize import QuantumScriptSerializer, global_phase_diagonal
+from pennylane_lightning.lightning_base._serialize import (
+    QuantumScriptSerializer,
+    global_phase_diagonal,
+)
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)

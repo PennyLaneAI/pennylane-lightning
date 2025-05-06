@@ -19,7 +19,7 @@ import pytest
 from conftest import LightningDevice as ld
 from conftest import device_name
 
-from pennylane_lightning._serialize import QuantumScriptSerializer
+from pennylane_lightning.lightning_base._serialize import QuantumScriptSerializer
 
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
