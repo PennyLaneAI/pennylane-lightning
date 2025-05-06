@@ -18,12 +18,12 @@ git branch -d v${LVER}_rc
 git checkout -b v${LVER}_rc
 
 # update lightning version
-sed -i "/$LVER/d" pennylane_lightning/_version.py
-echo '__version__ = "'${LVER}'-rc0"' >> pennylane_lightning/_version.py
+sed -i "/$LVER/d" pennylane_lightning/core/_version.py
+echo '__version__ = "'${LVER}'-rc0"' >> pennylane_lightning/core/_version.py
 sed -i "s|Release ${LVER}-dev|Release ${LVER}|g" .github/CHANGELOG.md
 
 # commit & push lightning version
-git add -u pennylane_lightning/_version.py .github/CHANGELOG.md
+git add -u pennylane_lightning/core/_version.py .github/CHANGELOG.md
 git commit -m "Create v${LVER} RC branch."
 git push --set-upstream origin v${LVER}_rc
 
@@ -93,8 +93,8 @@ python validate_attrs.py
 # Create release
 
 git checkout -b v${LVER}_release
-sed -i "/$LVER/d" pennylane_lightning/_version.py
-echo '__version__ = "'${LVER}'"' >> pennylane_lightning/_version.py
+sed -i "/$LVER/d" pennylane_lightning/core/_version.py
+echo '__version__ = "'${LVER}'"' >> pennylane_lightning/core/_version.py
 pushd .github/workflows
 sed -i "s|event_name == 'pull_request'|event_name == 'release'|g" wheel_*
 popd

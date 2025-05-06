@@ -25,7 +25,7 @@ except ImportError as exc:
 
 DEV_PRERELEASE_TAG_PREFIX = "dev"
 DEV_PRERELEASE_TAG_START = "dev0"
-VERSION_FILE_PATH = Path("pennylane_lightning/_version.py")
+VERSION_FILE_PATH = Path("pennylane_lightning/core/_version.py")
 
 rgx_ver = re.compile(pattern=r"^__version__ = \"(.*)\"$", flags=re.MULTILINE)
 
@@ -33,7 +33,7 @@ rgx_ver = re.compile(pattern=r"^__version__ = \"(.*)\"$", flags=re.MULTILINE)
 def extract_version(repo_root_path: Path) -> Version:
     """
     Given the repository root for pennylane-lightning, this function extracts the semver version from
-    pennylane_lightning/_version.py.
+    pennylane_lightning/core/_version.py.
 
     :param repo_root_path: Path to the repository root.
     :return: Extracted version a semver.Version object.
@@ -62,7 +62,7 @@ def extract_version(repo_root_path: Path) -> Version:
 
 def update_prerelease_version(repo_root_path: Path, version: Version):
     """
-    Updates the version file within pennylane_lightning/_version.py.
+    Updates the version file within pennylane_lightning/core/_version.py.
 
     :param repo_root_path: Path to the repository root.
     :param version: The new version to use within the file.

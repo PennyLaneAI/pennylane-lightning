@@ -24,7 +24,7 @@ from backend_support import backend, device_name
 
 path_to_project = Path(__file__).parent.parent.absolute()
 
-path_to_version = path_to_project / Path("pennylane_lightning") / "_version.py"
+path_to_version = path_to_project / Path("pennylane_lightning") / "core" / "_version.py"
 with open(path_to_version, encoding="utf-8") as f:
     version = f.readlines()[-1].split()[-1].strip("\"'")
 
