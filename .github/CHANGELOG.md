@@ -1400,6 +1400,8 @@ Amintor Dusko, David Ittah, Vincent Michaud-Rioux, Lee J. O'Riordan, Shuli Shu, 
 * Update `MANIFEST.in` to include device config files and `CHANGELOG.md`
   [(#585)](https://github.com/PennyLaneAI/pennylane-lightning/pull/585)
 
+* Bump `readthedocs.yml` to Ubuntu-24.04 [(#1151)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1151)
+
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
