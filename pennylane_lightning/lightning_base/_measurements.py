@@ -61,16 +61,16 @@ class LightningBaseMeasurements(ABC):
 
         # Declare whether to use the approximate Markov Chain Monte Carlo
         # sampling method when generating samples.
-        # Currently, Lightning-Qubit only supports this feature.
+        # Currently, only Lightning-Qubit supports this feature.
         self._mcmc = False
 
         # Declare if generate_samples supports sampling of a subset of wires.
-        # Currently, Lightning-Qubit only supports this feature.
+        # Currently, only Lightning-Qubit supports this feature.
         # TODO: implement this for other Lightning devices.
         self._subsamples = False
 
         # Declare if the device will use the MPI support.
-        # Currently, Lightning-GPU only supports this feature.
+        # Currently, only Lightning-GPU supports this feature.
         self._use_mpi = False
 
         # Dummy for the C++ bindings
