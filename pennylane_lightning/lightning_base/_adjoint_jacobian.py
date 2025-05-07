@@ -40,7 +40,7 @@ class LightningBaseAdjointJacobian(ABC):
         batch_obs(bool): If serialized tape is to be batched or not.
     """
 
-    def __init__(self, qubit_state: Any, batch_obs: bool) -> None:
+    def __init__(self, qubit_state: Any, batch_obs: bool = False) -> None:
         self._qubit_state = qubit_state
         self._batch_obs = batch_obs
 
