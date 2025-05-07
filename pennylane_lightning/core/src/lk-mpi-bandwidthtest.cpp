@@ -55,9 +55,9 @@ int main(int argc, char *argv[]) {
     // Create PennyLane Lightning statevector
     StateVectorKokkosMPI<double> svmpi(nq);
     std::size_t repeats = 8;
-    std::size_t send_size = exp2(svmpi.get_num_local_wires() - 1);
+    std::size_t send_size = exp2(svmpi.getNumLocalWires() - 1);
 
-    std::size_t my_rank = svmpi.get_mpi_rank();
+    std::size_t my_rank = svmpi.getMPIRank();
     std::size_t dest_rank = my_rank ^ xor_rank;
 
     // Warmup

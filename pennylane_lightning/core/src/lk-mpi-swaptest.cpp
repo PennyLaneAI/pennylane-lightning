@@ -66,25 +66,23 @@ int main(int argc, char *argv[]) {
     StateVectorKokkosMPI<double> svmpi(nq);
     std::size_t repeats = 4;
 
-    svmpi.swap_global_local_wires({swapping_global_qubit},
-                                  {swapping_local_qubit});
-    svmpi.swap_global_local_wires({swapping_local_qubit},
-                                  {swapping_global_qubit});
+    svmpi.swapGlobalLocalWires({swapping_global_qubit}, {swapping_local_qubit});
+    svmpi.swapGlobalLocalWires({swapping_local_qubit}, {swapping_global_qubit});
 
     const auto t_start = std::chrono::high_resolution_clock::now();
 
     for (std::size_t i = 0; i < repeats; i++) {
-        svmpi.swap_global_local_wires({swapping_global_qubit},
-                                      {swapping_local_qubit});
-        svmpi.swap_global_local_wires({swapping_local_qubit},
-                                      {swapping_global_qubit});
+        svmpi.swapGlobalLocalWires({swapping_global_qubit},
+                                   {swapping_local_qubit});
+        svmpi.swapGlobalLocalWires({swapping_local_qubit},
+                                   {swapping_global_qubit});
     }
     const auto t_end = std::chrono::high_resolution_clock::now();
     const double t_duration =
         std::chrono::duration<double, t_scale>(t_end - t_start).count();
     double average_time = t_duration / (2.0 * repeats);
     double data_sent_GB =
-        exp2(svmpi.get_num_local_wires() - 1) * 128 / 8 / 1024 / 1024 / 1024;
+        exp2(svmpi.getNumLocalWires() - 1) * 128 / 8 / 1024 / 1024 / 1024;
     std::cout << "Average time for swapping " << average_time << " ms"
               << std::endl;
     std::cout << "Data sent = Data received = " << data_sent_GB << " GB"

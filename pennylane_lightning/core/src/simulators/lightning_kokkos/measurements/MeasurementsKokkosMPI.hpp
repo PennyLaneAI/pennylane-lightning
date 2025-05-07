@@ -72,12 +72,11 @@ class MeasurementsMPI final
      * @return Floating point expectation value of the observable.
      */
     PrecisionT expval(StateVectorT &sv) {
-        // TODO: IMPROVE ME - add barriers?
+        this->_statevector.matchWires(sv);
 
         const PrecisionT expected_value = getRealOfComplexInnerProduct(
             this->_statevector.getView(), sv.getView());
-        std::cout << "expected_value: " << expected_value << std::endl;
-        return this->_statevector.all_reduce_sum(expected_value);
+        return this->_statevector.allReduceSum(expected_value);
     }
     /**
      * @brief Expectation value of an observable.
@@ -89,22 +88,21 @@ class MeasurementsMPI final
     PrecisionT expval(const std::vector<ComplexT> &matrix,
                       const std::vector<std::size_t> &wires) {
 
-        if (!(this->_statevector.is_wires_local(wires))) {
+        if (!(this->_statevector.isWiresLocal(wires))) {
             auto global_wires_to_swap =
-                this->_statevector.find_global_wires(wires);
+                this->_statevector.findGlobalWires(wires);
             auto local_wires_to_swap =
-                this->_statevector.local_wires_subset_to_swap(
-                    global_wires_to_swap, wires);
-            this->_statevector.swap_global_local_wires(global_wires_to_swap,
-                                                       local_wires_to_swap);
+                this->_statevector.localWiresSubsetToSwap(global_wires_to_swap,
+                                                          wires);
+            this->_statevector.swapGlobalLocalWires(global_wires_to_swap,
+                                                    local_wires_to_swap);
         }
 
-        Measurements local_measure(this->_statevector.get_local_sv());
+        Measurements local_measure(this->_statevector.getLocalSV());
         PrecisionT local_expval = local_measure.expval(
-            matrix, this->_statevector.get_local_wires_indices(wires));
+            matrix, this->_statevector.getLocalWireIndices(wires));
         PrecisionT global_expval =
-            this->_statevector.all_reduce_sum(local_expval);
-        this->_statevector.barrier();
+            this->_statevector.allReduceSum(local_expval);
         return global_expval;
     };
 
@@ -118,21 +116,25 @@ class MeasurementsMPI final
     PrecisionT expval(const std::string &operation,
                       const std::vector<size_t> &wires) {
 
-        if (!(this->_statevector.is_wires_local(wires))) {
+        // if (operation == "Identity") {
+        //     return 1.0;
+        // }
+
+        if (!(this->_statevector.isWiresLocal(wires))) {
             auto global_wires_to_swap =
-                this->_statevector.find_global_wires(wires);
+                this->_statevector.findGlobalWires(wires);
             auto local_wires_to_swap =
-                this->_statevector.local_wires_subset_to_swap(
-                    global_wires_to_swap, wires);
-            this->_statevector.swap_global_local_wires(global_wires_to_swap,
-                                                       local_wires_to_swap);
+                this->_statevector.localWiresSubsetToSwap(global_wires_to_swap,
+                                                          wires);
+            this->_statevector.swapGlobalLocalWires(global_wires_to_swap,
+                                                    local_wires_to_swap);
         }
 
-        Measurements local_measure(this->_statevector.get_local_sv());
+        Measurements local_measure(this->_statevector.getLocalSV());
         PrecisionT local_expval = local_measure.expval(
-            operation, this->_statevector.get_local_wires_indices(wires));
+            operation, this->_statevector.getLocalWireIndices(wires));
         PrecisionT global_expval =
-            this->_statevector.all_reduce_sum(local_expval);
+            this->_statevector.allReduceSum(local_expval);
         this->_statevector.barrier();
         return global_expval;
     };
@@ -146,11 +148,11 @@ class MeasurementsMPI final
     PrecisionT expval(Observable<StateVectorT> &ob) {
         StateVectorT ob_sv{this->_statevector};
         ob.applyInPlace(ob_sv);
-        this->_statevector.match_wires(ob_sv);
+        this->_statevector.matchWires(ob_sv);
         const PrecisionT expected_value = getRealOfComplexInnerProduct(
             this->_statevector.getView(), ob_sv.getView());
         const PrecisionT result =
-            this->_statevector.all_reduce_sum(expected_value);
+            this->_statevector.allReduceSum(expected_value);
         return result;
     }
 
@@ -204,7 +206,7 @@ class MeasurementsMPI final
             for (std::size_t i = 0; i < target_wires[word].size(); i++) {
                 if (pauli_words[word][i] == 'X') {
                     X_wires.push_back(target_wires[word][i]);
-                    this->_statevector.is_wires_local({target_wires[word][i]})
+                    this->_statevector.isWiresLocal({target_wires[word][i]})
                         ? local_wires_cannot_be_swapped.push_back(
                               target_wires[word][i])
                         : global_wires_need_to_swap.push_back(
@@ -213,7 +215,7 @@ class MeasurementsMPI final
                     local_target_wires.push_back(target_wires[word][i]);
                 } else if (pauli_words[word][i] == 'Y') {
                     Y_wires.push_back(target_wires[word][i]);
-                    this->_statevector.is_wires_local({target_wires[word][i]})
+                    this->_statevector.isWiresLocal({target_wires[word][i]})
                         ? local_wires_cannot_be_swapped.push_back(
                               target_wires[word][i])
                         : global_wires_need_to_swap.push_back(
@@ -226,30 +228,30 @@ class MeasurementsMPI final
             }
             PL_ABORT_IF(
                 (X_wires.size() + Y_wires.size() >
-                 this->_statevector.get_num_local_wires()),
+                 this->_statevector.getNumLocalWires()),
                 "Number of X and Y gates exceeds the number of local wires.");
 
-            for (std::size_t i = 0;
-                 i < this->_statevector.get_num_local_wires(); i++) {
+            for (std::size_t i = 0; i < this->_statevector.getNumLocalWires();
+                 i++) {
                 if (local_wires_to_swap.size() ==
                     global_wires_need_to_swap.size()) {
                     break;
                 }
                 if (std::find(local_wires_cannot_be_swapped.begin(),
                               local_wires_cannot_be_swapped.end(),
-                              this->_statevector.get_local_wires()[i]) ==
+                              this->_statevector.getLocalWires()[i]) ==
                     local_wires_cannot_be_swapped.end()) {
                     local_wires_to_swap.push_back(
-                        this->_statevector.get_local_wires()[i]);
+                        this->_statevector.getLocalWires()[i]);
                 }
             }
 
             // DO SWAP HERE
-            this->_statevector.swap_global_local_wires(
-                global_wires_need_to_swap, local_wires_to_swap);
+            this->_statevector.swapGlobalLocalWires(global_wires_need_to_swap,
+                                                    local_wires_to_swap);
             // Construct local pauli string and local wires
             for (std::size_t z_wire : Z_wires) {
-                if (this->_statevector.is_wires_local({z_wire})) {
+                if (this->_statevector.isWiresLocal({z_wire})) {
                     local_pauli_word += 'Z';
                     local_target_wires.push_back(z_wire);
                 } else {
@@ -258,40 +260,39 @@ class MeasurementsMPI final
             }
 
             // apply local expval
-            Measurements local_measure(this->_statevector.get_local_sv());
+            Measurements local_measure(this->_statevector.getLocalSV());
             PrecisionT local_expval = local_measure.expval(
                 {local_pauli_word},
-                {this->_statevector.get_local_wires_indices(
-                    local_target_wires)},
+                {this->_statevector.getLocalWireIndices(local_target_wires)},
                 {1.0});
 
             std::size_t global_z_mask = 0;
             std::size_t global_index =
-                this->_statevector.get_global_index_from_mpi_rank(
-                    this->_statevector.get_mpi_rank());
+                this->_statevector.getGlobalIndexFromMPIRank(
+                    this->_statevector.getMPIRank());
             for (std::size_t i = 0; i < global_Z_wires.size(); i++) {
                 std::size_t distance = std::distance(
-                    this->_statevector.get_global_wires().begin(),
-                    std::find(this->_statevector.get_global_wires().begin(),
-                              this->_statevector.get_global_wires().end(),
+                    this->_statevector.getGlobalWires().begin(),
+                    std::find(this->_statevector.getGlobalWires().begin(),
+                              this->_statevector.getGlobalWires().end(),
                               global_Z_wires[i]));
                 global_z_mask |=
-                    (1U << (this->_statevector.get_num_global_wires() - 1 -
+                    (1U << (this->_statevector.getNumGlobalWires() - 1 -
                             distance));
             }
-            std::cout << "I am rank " << this->_statevector.get_mpi_rank()
+            std::cout << "I am rank " << this->_statevector.getMPIRank()
                       << " and BEFORE multiplying -1s my local expval = "
                       << local_expval << std::endl;
             if (std::popcount(global_index & global_z_mask) % 2 == 1) {
                 local_expval *= -1.0;
             }
-            std::cout << "I am rank " << this->_statevector.get_mpi_rank()
+            std::cout << "I am rank " << this->_statevector.getMPIRank()
                       << " and AFTER multiplying -1s my local expval = "
                       << local_expval << std::endl;
 
             // combine
             PrecisionT global_expval = 0.0;
-            global_expval = this->_statevector.all_reduce_sum(local_expval);
+            global_expval = this->_statevector.allReduceSum(local_expval);
             this->_statevector.barrier();
             result += global_expval * coeffs[word];
         }
@@ -309,11 +310,11 @@ class MeasurementsMPI final
         // TODO: FIX ME, IMPROVE ME
         PL_ABORT("Variance with general operator not yet supported");
         sv.barrier();
-        sv.reorder_global_wires();
-        sv.reorder_local_wires();
+        sv.reorderGlobalWires();
+        sv.reorderLocalWires();
         this->_statevector.barrier();
-        this->_statevector.reorder_global_wires();
-        this->_statevector.reorder_local_wires();
+        this->_statevector.reorderGlobalWires();
+        this->_statevector.reorderLocalWires();
         sv.barrier();
         this->_statevector.barrier();
         const PrecisionT local_mean_square =
@@ -322,10 +323,10 @@ class MeasurementsMPI final
         const PrecisionT local_mean = getRealOfComplexInnerProduct(
             this->_statevector.getView(), sv.getView());
         const PrecisionT squared_mean =
-            std::pow(this->_statevector.all_reduce_sum(local_mean), 2);
+            std::pow(this->_statevector.allReduceSum(local_mean), 2);
 
         const PrecisionT mean_square =
-            this->_statevector.all_reduce_sum(local_mean_square);
+            this->_statevector.allReduceSum(local_mean_square);
         const PrecisionT variance = mean_square - squared_mean;
         return variance;
     }
@@ -346,7 +347,7 @@ class MeasurementsMPI final
         const PrecisionT local_mean_square =
             getRealOfComplexInnerProduct(ob_sv.getView(), ob_sv.getView());
         const PrecisionT mean_square =
-            this->_statevector.all_reduce_sum(local_mean_square);
+            this->_statevector.allReduceSum(local_mean_square);
         return mean_square - squared_mean;
     };
 
@@ -366,7 +367,7 @@ class MeasurementsMPI final
         const PrecisionT local_mean_square =
             getRealOfComplexInnerProduct(ob_sv.getView(), ob_sv.getView());
         const PrecisionT mean_square =
-            this->_statevector.all_reduce_sum(local_mean_square);
+            this->_statevector.allReduceSum(local_mean_square);
         return mean_square - squared_mean;
     };
 

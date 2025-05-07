@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #pragma once
-#include <span>
-#include <iostream> 
 #include "AdjointJacobianBase.hpp"
 #include "ObservablesKokkos.hpp"
+#include <iostream>
+#include <span>
 
 /// @cond DEV
 namespace {
@@ -56,42 +56,42 @@ class AdjointJacobian final
                                PrecisionT scaling_coeff, std::size_t idx) {
 
 #if _ENABLE_MPI == 1
-        if(sv1.get_mpi_rank() == 0) {
-            std::cout << "sv1.get_global_wires(): ";
-            for (const auto& element: sv1.get_global_wires()) {
+        if (sv1.getMPIRank() == 0) {
+            std::cout << "sv1.getGlobalWires(): ";
+            for (const auto &element : sv1.getGlobalWires()) {
                 std::cout << element << " ";
             }
-            std::cout << "sv1.get_local_wires(): ";
-            for (const auto& element: sv1.get_local_wires()) {
+            std::cout << "sv1.getLocalWires(): ";
+            for (const auto &element : sv1.getLocalWires()) {
                 std::cout << element << " ";
             }
-            std::cout << "sv1.get_mpi_rank_to_global_index_map(): ";
-            for (const auto& element: sv1.get_mpi_rank_to_global_index_map()) {
+            std::cout << "sv1.getMPIRankToGlobalIndexMap(): ";
+            for (const auto &element : sv1.getMPIRankToGlobalIndexMap()) {
                 std::cout << element << " ";
             }
             std::cout << std::endl;
-            std::cout << "sv2.get_global_wires(): ";
-            for (const auto& element: sv2.get_global_wires()) {
+            std::cout << "sv2.getGlobalWires(): ";
+            for (const auto &element : sv2.getGlobalWires()) {
                 std::cout << element << " ";
             }
-            std::cout << "sv2.get_local_wires(): ";
-            for (const auto& element: sv2.get_local_wires()) {
+            std::cout << "sv2.getLocalWires(): ";
+            for (const auto &element : sv2.getLocalWires()) {
                 std::cout << element << " ";
             }
-            std::cout << "sv2.get_mpi_rank_to_global_index_map(): ";
-            for (const auto& element: sv2.get_mpi_rank_to_global_index_map()) {
+            std::cout << "sv2.getMPIRankToGlobalIndexMap(): ";
+            for (const auto &element : sv2.getMPIRankToGlobalIndexMap()) {
                 std::cout << element << " ";
             }
             std::cout << std::endl;
         }
-        sv1.match_wires(sv2);
+        sv1.matchWires(sv2);
 #endif
         auto element = -2 * scaling_coeff *
                        getImagOfComplexInnerProduct<PrecisionT>(sv1.getView(),
                                                                 sv2.getView());
 
 #if _ENABLE_MPI == 1
-        auto sum = sv1.all_reduce_sum(element);
+        auto sum = sv1.allReduceSum(element);
         element = sum;
 #endif
         jac[idx] = element;

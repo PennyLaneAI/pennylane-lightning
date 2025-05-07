@@ -142,8 +142,7 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
         [](StateVectorT &sv,
            const std::vector<std::size_t> &global_wires_to_swap,
            const std::vector<std::size_t> &local_wires_to_swap) {
-            sv.swap_global_local_wires(global_wires_to_swap,
-                                       local_wires_to_swap);
+            sv.swapGlobalLocalWires(global_wires_to_swap, local_wires_to_swap);
         },
         "Swap global and local wires.");
 #endif
