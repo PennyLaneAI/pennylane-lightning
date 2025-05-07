@@ -194,12 +194,12 @@ class LightningBase(Device):
         Args:
             circuit (QuantumTape): The single circuit to simulate
             state (Lightning [Device] StateVector): A handle to the underlying Lightning state
-            mcmc (dict): Dictionary containing the Markov Chain Monte Carlo
-                parameters: mcmc, kernel_name, num_burnin. Descriptions of
-                these fields are found in :class:`~.LightningQubit`.
             postselect_mode (str): Configuration for handling shots with mid-circuit measurement
                 postselection. Use ``"hw-like"`` to discard invalid shots and ``"fill-shots"`` to
                 keep the same number of shots. Default is ``None``.
+            mcmc (dict): Dictionary containing the Markov Chain Monte Carlo
+                parameters: mcmc, kernel_name, num_burnin. Currently only supported for
+                ``lightning.qubit``, more detail can be found in :class:`~.LightningQubit`.
 
         Returns:
             Tuple[TensorLike]: The results of the simulation

@@ -48,14 +48,6 @@ class LightningAdjointJacobian(
         batch_obs(bool): If serialized tape is to be batched or not.
     """
 
-    def __init__(
-        self,
-        qubit_state: LightningStateVector,  # pylint: disable=undefined-variable
-        batch_obs: bool = False,
-    ) -> None:
-
-        super().__init__(qubit_state, batch_obs)
-
     def _adjoint_jacobian_dtype(self):
         """Binding to Lightning Qubit Adjoint Jacobian C++ class.
 
