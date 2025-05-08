@@ -45,7 +45,9 @@ using namespace Pennylane::Util;
                             .c_str())
 #else
 #define PL_CUTENSORNET_IS_SUCCESS(err)                                         \
-    { static_cast<void>(err); }
+    {                                                                          \
+        static_cast<void>(err);                                                \
+    }
 #endif
 namespace Pennylane::LightningTensor::TNCuda::Util {
 static const std::string
