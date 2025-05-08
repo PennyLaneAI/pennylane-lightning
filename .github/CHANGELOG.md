@@ -32,6 +32,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Update type hinting to be compatible with JAX version 0.5.3+.
+  [(#1152)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1152)
+
 - The `LightningBaseStateVector`, `LightningBaseAdjointJacobian`, `LightningBaseMeasurements`, `LightningInterpreter` and `QuantumScriptSerializer` base classes now can be found at `pennylane_lightning.lightning_base`.
 
   The new `lightning_base` module further enables the relocation of core files from `pennylane_lightning/core/src/*` to `pennylane_lightning/core/*`.
@@ -71,6 +74,7 @@ Christina Lee,
 Joseph Lee,
 Anton Naim Ibrahim,
 Luis Alfredo Nuñez Meneses,
+Mudit Pandey,
 Andrija Paurevic,
 
 ---
