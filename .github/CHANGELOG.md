@@ -4,6 +4,9 @@
 
 <h3>Improvements 🛠</h3>
 
+- PennyLane-Lightning is compatible with JAX version 0.5.3+.
+  [(#1152)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1152)
+
 - Improve performance of computing expectation values of Pauli Sentences for `lightning.kokkos`.
   [(#1126)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1126)
 
@@ -31,9 +34,6 @@
 <h3>Bug fixes 🐛</h3>
 
 <h3>Internal changes ⚙️</h3>
-
-- Update type hinting to be compatible with JAX version 0.5.3+.
-  [(#1152)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1152)
 
 - The `LightningBaseStateVector`, `LightningBaseAdjointJacobian`, `LightningBaseMeasurements`, `LightningInterpreter` and `QuantumScriptSerializer` base classes now can be found at `pennylane_lightning.lightning_base`.
 
