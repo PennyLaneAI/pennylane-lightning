@@ -49,6 +49,9 @@
 - Added flags to all Codecov reports and a default carryforward flag for all flags.
   [(1144)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1144)
 
+- Bump `readthedocs.yml` to Ubuntu-24.04 [(#1151)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1151)
+
+
 <h3>Contributors ✍️</h3>
 
 This release contains contributions from (in alphabetical order):
@@ -1399,8 +1402,6 @@ Amintor Dusko, David Ittah, Vincent Michaud-Rioux, Lee J. O'Riordan, Shuli Shu, 
 
 * Update `MANIFEST.in` to include device config files and `CHANGELOG.md`
   [(#585)](https://github.com/PennyLaneAI/pennylane-lightning/pull/585)
-
-* Bump `readthedocs.yml` to Ubuntu-24.04 [(#1151)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1151)
 
 ### Contributors
 
