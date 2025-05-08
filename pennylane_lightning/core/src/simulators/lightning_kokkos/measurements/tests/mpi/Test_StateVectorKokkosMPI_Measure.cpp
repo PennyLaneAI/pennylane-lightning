@@ -806,3 +806,6 @@ TEMPLATE_TEST_CASE("Var - 2-wire matrix Hermitian obs", "[LKMPI_Var]", float, do
     CHECK(res == Approx(res_ref).margin(EP));
 }
 }
+
+
+// var Tensorprod op
