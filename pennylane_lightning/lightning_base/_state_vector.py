@@ -19,6 +19,7 @@ from abc import ABC, abstractmethod
 from typing import Optional, Union
 
 import numpy as np
+import pennylane as qml
 from pennylane import BasisState, StatePrep
 from pennylane.measurements import MidMeasureMP
 from pennylane.ops import Controlled
@@ -153,9 +154,12 @@ class LightningBaseStateVector(ABC):
             None
         """
 
-    @abstractmethod
     def _apply_lightning_midmeasure(
-        self, operation: MidMeasureMP, mid_measurements: dict, postselect_mode: str
+        self,
+        measure_final_state: callable,
+        operation: MidMeasureMP,
+        mid_measurements: dict,
+        postselect_mode: str,
     ):
         """Execute a MidMeasureMP operation and return the sample in mid_measurements.
 
@@ -169,6 +173,18 @@ class LightningBaseStateVector(ABC):
         Returns:
             None
         """
+        wires = self.wires.indices(operation.wires)
+        wire = list(wires)[0]
+        if postselect_mode == "fill-shots" and operation.postselect is not None:
+            sample = operation.postselect
+        else:
+            circuit = QuantumScript([], [qml.sample(wires=operation.wires)], shots=1)
+            sample = measure_final_state(circuit)
+            sample = np.squeeze(sample)
+        mid_measurements[operation] = sample
+        getattr(self.state_vector, "collapse")(wire, bool(sample))
+        if operation.reset and bool(sample):
+            self.apply_operations([qml.PauliX(operation.wires)], mid_measurements=mid_measurements)
 
     @abstractmethod
     def _apply_lightning(

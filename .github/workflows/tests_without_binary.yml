@@ -17,7 +17,7 @@ on:
       - synchronize
       - ready_for_review
     paths-ignore:
-      - pennylane_lightning/core/src/**
+      - pennylane_lightning/core/**
   push:
     branches:
       - master

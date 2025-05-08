@@ -32,6 +32,16 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- The `LightningBaseStateVector`, `LightningBaseAdjointJacobian`, `LightningBaseMeasurements`, `LightningInterpreter` and `QuantumScriptSerializer` base classes now can be found at `pennylane_lightning.lightning_base`.
+
+  The new `lightning_base` module further enables the relocation of core files from `pennylane_lightning/core/src/*` to `pennylane_lightning/core/*`.
+
+  The license classifier and `project.license` as a TOML table are deprecated in favor of a SPDX license expression and removed in `pyproject.toml`.
+
+  To speedup the recompilation of C++ source code, `ccache` is also added to `Makefile`.
+
+  [(#1098)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1098)
+
 - All Catalyst plugins have been updated to be compatible with the next version of Catalyst (v0.12) with changes to the `QuantumDevice` interface.
   [(#1143)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1143)
   [(#1147)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1147)

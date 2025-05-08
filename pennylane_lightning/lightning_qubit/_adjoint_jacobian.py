@@ -35,7 +35,7 @@ from pennylane.tape import QuantumTape
 from scipy.sparse import csr_matrix
 
 # pylint: disable=ungrouped-imports
-from pennylane_lightning.core._adjoint_jacobian_base import LightningBaseAdjointJacobian
+from pennylane_lightning.lightning_base._adjoint_jacobian import LightningBaseAdjointJacobian
 
 
 class LightningAdjointJacobian(
@@ -48,21 +48,10 @@ class LightningAdjointJacobian(
         batch_obs(bool): If serialized tape is to be batched or not.
     """
 
-    def __init__(
-        self,
-        qubit_state: LightningStateVector,  # pylint: disable=undefined-variable
-        batch_obs: bool = False,
-    ) -> None:
-
-        super().__init__(qubit_state, batch_obs)
-
-        # Initialize the C++ binds
-        self._jacobian_lightning, self._create_ops_list_lightning = self._adjoint_jacobian_dtype()
-
     def _adjoint_jacobian_dtype(self):
         """Binding to Lightning Qubit Adjoint Jacobian C++ class.
 
-        Returns: the AdjointJacobian class
+        Returns: A pair of the AdjointJacobian class and the create_ops_list function. Default is None.
         """
         jacobian_lightning = (
             AdjointJacobianC64() if self.dtype == np.complex64 else AdjointJacobianC128()

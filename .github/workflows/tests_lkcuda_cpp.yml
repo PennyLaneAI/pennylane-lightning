@@ -17,10 +17,10 @@ on:
       - synchronize
       - ready_for_review
     paths:
-      - pennylane_lightning/core/src/**
-      - '!pennylane_lightning/core/src/simulators/lightning_gpu/**'
-      - '!pennylane_lightning/core/src/simulators/lightning_qubit/**'
-      - '!pennylane_lightning/core/src/simulators/lightning_tensor/**'
+      - pennylane_lightning/core/**
+      - '!pennylane_lightning/core/simulators/lightning_gpu/**'
+      - '!pennylane_lightning/core/simulators/lightning_qubit/**'
+      - '!pennylane_lightning/core/simulators/lightning_tensor/**'
   push:
     branches:
       - master
@@ -208,7 +208,7 @@ jobs:
             echo "Test failed"
             exit 1
           fi
-          lcov --directory . -b ../pennylane_lightning/core/src --capture --output-file coverage.info
+          lcov --directory . -b ../pennylane_lightning/core --capture --output-file coverage.info
           lcov --remove coverage.info '/usr/*' --output-file coverage.info
           mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
 
