@@ -16,7 +16,7 @@ Internal methods for adjoint Jacobian differentiation method.
 """
 
 from abc import ABC, abstractmethod
-from typing import Any, Callable, List
+from typing import Any, List
 
 import numpy as np
 import pennylane as qml
@@ -26,7 +26,7 @@ from pennylane.measurements import ExpectationMP, MeasurementProcess, StateMP
 from pennylane.operation import Operation
 from pennylane.tape import QuantumTape
 
-from pennylane_lightning.core._serialize import QuantumScriptSerializer
+from pennylane_lightning.lightning_base._serialize import QuantumScriptSerializer
 
 
 class LightningBaseAdjointJacobian(ABC):
@@ -40,13 +40,11 @@ class LightningBaseAdjointJacobian(ABC):
         batch_obs(bool): If serialized tape is to be batched or not.
     """
 
-    def __init__(self, qubit_state: Any, batch_obs: bool) -> None:
+    def __init__(self, qubit_state: Any, batch_obs: bool = False) -> None:
         self._qubit_state = qubit_state
         self._batch_obs = batch_obs
 
-        # Dummy for the C++ bindings
-        self._jacobian_lightning: Callable = None
-        self._create_ops_list_lightning: Callable = None
+        self._jacobian_lightning, self._create_ops_list_lightning = self._adjoint_jacobian_dtype()
 
     @property
     def qubit_state(self):
@@ -67,7 +65,7 @@ class LightningBaseAdjointJacobian(ABC):
     def _adjoint_jacobian_dtype(self):
         """Binding to Lightning [Device] Adjoint Jacobian C++ class.
 
-        Returns: the AdjointJacobian class
+        Returns: A pair of the AdjointJacobian class and the create_ops_list function. Default is None.
         """
 
     @staticmethod

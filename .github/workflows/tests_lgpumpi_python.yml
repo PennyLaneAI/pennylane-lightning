@@ -23,8 +23,8 @@ on:
       - .github/**
       - '!.github/workflows/tests_lgpumpi_python.yml'
       - pennylane_lightning/core/_version.py
-      - pennylane_lightning/core/src/simulators/lightning_kokkos/**
-      - pennylane_lightning/core/src/simulators/lightning_qubit/**
+      - pennylane_lightning/core/simulators/lightning_kokkos/**
+      - pennylane_lightning/core/simulators/lightning_qubit/**
       - pennylane_lightning/lightning_kokkos/**
       - pennylane_lightning/lightning_qubit/**
 env:
