@@ -41,7 +41,11 @@ def validate_args_tangents(
         raise ValueError("The number of arguments and tangents must match")
 
     def _make_zero(tan, arg):
-        return jax.lax.zeros_like_array(arg) if isinstance(tan, jax.interpreters.ad.Zero) else tan
+        return (
+            jax.lax.zeros_like_array(arg).astype(tan.aval.dtype)
+            if isinstance(tan, jax.interpreters.ad.Zero)
+            else tan
+        )
 
     tangents = tuple(map(_make_zero, tangents, args))
 
@@ -53,12 +57,12 @@ def validate_args_tangents(
     return tangents
 
 
-def get_output_shapes(jaxpr: "jax.core.Jaxpr", num_wires: int) -> Tuple:
+def get_output_shapes(jaxpr: "jax.extend.core.Jaxpr", num_wires: int) -> Tuple:
     """
     Compute the output shapes and Jacobian shapes of a JAXPR.
 
     Args:
-        jaxpr (jax.core.Jaxpr): the JAXPR to analyze
+        jaxpr (jax.extend.core.Jaxpr): the JAXPR to analyze
         num_wires (int): the number of wires
 
     Returns:
@@ -99,13 +103,13 @@ def get_output_shapes(jaxpr: "jax.core.Jaxpr", num_wires: int) -> Tuple:
 
 
 def convert_jaxpr_to_tape(
-    jaxpr: "jax.core.Jaxpr", args: Sequence[TensorLike]
+    jaxpr: "jax.extend.core.Jaxpr", args: Sequence[TensorLike]
 ) -> qml.tape.QuantumTape:
     """
     Convert a jaxpr to a PennyLane tape and ensure parameters match.
 
     Args:
-        jaxpr (jax.core.Jaxpr): the JAXPR to convert
+        jaxpr (jax.extend.core.Jaxpr): the JAXPR to convert
         args (Sequence[TensorLike]): the arguments to the JAXPR
 
     Returns:

@@ -4,6 +4,9 @@
 
 <h3>Improvements 🛠</h3>
 
+- PennyLane-Lightning is compatible with JAX version 0.5.3+.
+  [(#1152)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1152)
+
 - Improve performance of computing expectation values of Pauli Sentences for `lightning.kokkos`.
   [(#1126)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1126)
 
@@ -71,6 +74,7 @@ Christina Lee,
 Joseph Lee,
 Anton Naim Ibrahim,
 Luis Alfredo Nuñez Meneses,
+Mudit Pandey,
 Andrija Paurevic,
 
 ---
