@@ -425,7 +425,7 @@ TEMPLATE_TEST_CASE("Expval - named obs", "[LKMPI_Expval]", float, double) {
 
 // expval pauli word
 
-
+// expval tensorprod op
 
 // var named string
 TEMPLATE_TEST_CASE("Var - named string", "[LKMPI_Var]", float, double) {
@@ -538,8 +538,6 @@ TEMPLATE_TEST_CASE("Var - 1-wire matrix", "[LKMPI_Var]",  double, float) {
 
     auto res = m.var(mat_ob, {wire});
     auto res_ref = m_ref.var(mat_ob, {wire});
-    std::cout << "res: " << res << std::endl;
-    std::cout << "res_ref: " << res_ref << std::endl;
     CHECK(res == Approx(res_ref).margin(EP));
 }
 
