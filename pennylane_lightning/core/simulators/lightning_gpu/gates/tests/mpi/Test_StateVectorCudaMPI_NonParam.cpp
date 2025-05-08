@@ -39,22 +39,14 @@ using namespace Pennylane;
 using namespace Pennylane::LightningGPU;
 
 #define num_qubits 8
-#define lsb_1qbit                                                              \
-    { 0 }
-#define msb_1qbit                                                              \
-    { num_qubits - 1 }
-#define lsb_2qbit                                                              \
-    { 0, 1 }
-#define msb_2qubit                                                             \
-    { num_qubits - 2, num_qubits - 1 }
-#define mlsb_2qubit                                                            \
-    { 0, num_qubits - 1 }
-#define lsb_3qbit                                                              \
-    { 0, 1, 2 }
-#define msb_3qubit                                                             \
-    { num_qubits - 3, num_qubits - 2, num_qubits - 1 }
-#define mlsb_3qubit                                                            \
-    { 0, num_qubits - 2, num_qubits - 1 }
+#define lsb_1qbit {0}
+#define msb_1qbit {num_qubits - 1}
+#define lsb_2qbit {0, 1}
+#define msb_2qubit {num_qubits - 2, num_qubits - 1}
+#define mlsb_2qubit {0, num_qubits - 1}
+#define lsb_3qbit {0, 1, 2}
+#define msb_3qubit {num_qubits - 3, num_qubits - 2, num_qubits - 1}
+#define mlsb_3qubit {0, num_qubits - 2, num_qubits - 1}
 
 /**
  * @brief Tests the constructability of the StateVectorCudaMPI class.
@@ -231,7 +223,7 @@ TEMPLATE_TEST_CASE("StateVectorCudaMPI::SetIthStates",
         std::size_t nGlobalIndexBits =                                         \
             std::bit_width(static_cast<std::size_t>(mpi_manager.getSize())) -  \
             1;                                                                 \
-        std::size_t nLocalIndexBits = (NUM_QUBITS)-nGlobalIndexBits;           \
+        std::size_t nLocalIndexBits = (NUM_QUBITS) - nGlobalIndexBits;         \
         std::size_t subSvLength = 1 << nLocalIndexBits;                        \
         std::size_t svLength = 1 << (NUM_QUBITS);                              \
         mpi_manager.Barrier();                                                 \
