@@ -59,6 +59,9 @@
 - Added flags to all Codecov reports and a default carryforward flag for all flags.
   [(1144)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1144)
 
+- Updated the clang-format and clang-tidy versions to v20.
+  [(#1153)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1153)
+
 <h3>Contributors ✍️</h3>
 
 This release contains contributions from (in alphabetical order):
@@ -69,6 +72,7 @@ Andrew Gardhouse,
 David Ittah,
 Christina Lee,
 Joseph Lee,
+Mehrdad Malekmohammadi,
 Anton Naim Ibrahim,
 Luis Alfredo Nuñez Meneses,
 Andrija Paurevic,
