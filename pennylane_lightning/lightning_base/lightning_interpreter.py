@@ -24,8 +24,8 @@ from pennylane.exceptions import DeviceError
 from pennylane.measurements import MidMeasureMP, Shots
 from pennylane.tape.plxpr_conversion import CollectOpsandMeas
 
-from ._measurements_base import LightningBaseMeasurements
-from ._state_vector_base import LightningBaseStateVector
+from pennylane_lightning.lightning_base._measurements import LightningBaseMeasurements
+from pennylane_lightning.lightning_base._state_vector import LightningBaseStateVector
 
 
 class LightningInterpreter(PlxprInterpreter):
