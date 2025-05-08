@@ -307,19 +307,10 @@ class MeasurementsMPI final
      * @return Floating point variance of the observable.
      */
     PrecisionT var(StateVectorT &sv) {
-        // TODO: FIX ME, IMPROVE ME
-        PL_ABORT("Variance with general operator not yet supported");
-        sv.barrier();
-        sv.reorderGlobalWires();
-        sv.reorderLocalWires();
-        this->_statevector.barrier();
-        this->_statevector.reorderGlobalWires();
-        this->_statevector.reorderLocalWires();
-        sv.barrier();
-        this->_statevector.barrier();
         const PrecisionT local_mean_square =
             getRealOfComplexInnerProduct(sv.getView(), sv.getView());
-
+            
+            this->_statevector.matchWires(sv);
         const PrecisionT local_mean = getRealOfComplexInnerProduct(
             this->_statevector.getView(), sv.getView());
         const PrecisionT squared_mean =
@@ -378,7 +369,6 @@ class MeasurementsMPI final
      * @return variance with respect to the given observable.
      */
     PrecisionT var(const Observable<StateVectorT> &ob) {
-        PL_ABORT("Var with general operator not yet supported");
         StateVectorT ob_sv{this->_statevector};
         ob.applyInPlace(ob_sv);
         return var(ob_sv);
