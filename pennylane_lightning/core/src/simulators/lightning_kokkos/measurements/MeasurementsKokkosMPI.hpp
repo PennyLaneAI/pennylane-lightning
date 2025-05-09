@@ -226,10 +226,10 @@ class MeasurementsMPI final
                     Z_wires.push_back(target_wires[word][i]);
                 }
             }
-            PL_ABORT_IF(
-                (X_wires.size() + Y_wires.size() >
-                 this->_statevector.getNumLocalWires()),
-                "Number of X and Y gates exceeds the number of local wires.");
+            PL_ABORT_IF((X_wires.size() + Y_wires.size() >
+                         this->_statevector.getNumLocalWires()),
+                        "Number of PauliX and PauliY in Pauli String exceeds "
+                        "the number of local wires.");
 
             for (std::size_t i = 0; i < this->_statevector.getNumLocalWires();
                  i++) {

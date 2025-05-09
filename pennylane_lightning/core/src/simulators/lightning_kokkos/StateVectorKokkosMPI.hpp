@@ -126,7 +126,7 @@ class StateVectorKokkosMPI final
                          const MPI_Comm &communicator = MPI_COMM_WORLD)
         : BaseType{num_qubits} {
 
-        // Init MPI
+        // TODO: move MPI initialization to Python
         int status = 0;
         MPI_Initialized(&status);
         if (!status) {
@@ -137,6 +137,7 @@ class StateVectorKokkosMPI final
         num_qubits_ = num_qubits;
 
         // TODO: FIX! with srun, each rank sees GPU ID 0
+        // Or maybe we don't need to set it
         // settings.set_device_id(getMPIRank());
         settings.set_device_id(0);
         global_wires_.resize(log2(

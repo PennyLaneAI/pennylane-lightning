@@ -16,7 +16,7 @@ target_link_libraries(lightning_kokkos_algorithms PUBLIC    lightning_kokkos_uti
                                                             lightning_kokkos_observables
                                                             )
 
-if (BUILD_TESTS AND NOT ENABLE_MPI)
+if (BUILD_TESTS)
     enable_testing()
     add_subdirectory("tests")
 endif()
