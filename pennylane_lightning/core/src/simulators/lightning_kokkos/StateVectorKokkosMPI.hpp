@@ -150,7 +150,7 @@ class StateVectorKokkosMPI final
             sv_ = std::make_unique<SVK>(getNumLocalWires(), settings);
             setBasisState(0U);
         }
-        std::cout << "Initialized LK_MPI SV!" << std::endl;
+        // std::cout << "Initialized LK_MPI SV!" << std::endl;
     };
 
     /**
@@ -677,17 +677,17 @@ class StateVectorKokkosMPI final
         // #ifdef LKMPI_DEBUG
         // roctxMark("ROCTX-MARK: Start of swapGlobalLocalWires");
         //   A little debug message:
-        if (getMPIRank() == 0) {
-            std::cout << "Swapping global wires: ";
-            for (const auto &wire : global_wires_to_swap) {
-                std::cout << wire << " ";
-            }
-            std::cout << "with local wires: ";
-            for (const auto &wire : local_wires_to_swap) {
-                std::cout << wire << " ";
-            }
-            std::cout << std::endl;
-        }
+        // if (getMPIRank() == 0) {
+        //    std::cout << "Swapping global wires: ";
+        //    for (const auto &wire : global_wires_to_swap) {
+        //        std::cout << wire << " ";
+        //    }
+        //    std::cout << "with local wires: ";
+        //    for (const auto &wire : local_wires_to_swap) {
+        //        std::cout << wire << " ";
+        //    }
+        //    std::cout << std::endl;
+        //}
         // #endif
 
         std::vector<std::size_t> rev_global_wires_index_to_swap;
@@ -1002,24 +1002,24 @@ class StateVectorKokkosMPI final
             auto global_wires_to_swap = findGlobalWires(wires);
             auto local_wires_to_swap =
                 localWiresSubsetToSwap(global_wires_to_swap, wires);
-            if (getMPIRank() == 0) {
-                std::cout << "global_wires =";
-                for (const auto &wire : global_wires_) {
-                    std::cout << wire << " ";
-                }
-                std::cout << "local_wires = ";
-                for (const auto &wire : local_wires_) {
-                    std::cout << wire << " ";
-                }
-                std::cout << "global_wires_to_swap = ";
-                for (const auto &wire : global_wires_to_swap) {
-                    std::cout << wire << " ";
-                }
-                std::cout << "local_wires_to_swap = ";
-                for (const auto &wire : local_wires_to_swap) {
-                    std::cout << wire << " ";
-                }
-            }
+            // if (getMPIRank() == 0) {
+            //     std::cout << "global_wires =";
+            //     for (const auto &wire : global_wires_) {
+            //         std::cout << wire << " ";
+            //     }
+            //     std::cout << "local_wires = ";
+            //     for (const auto &wire : local_wires_) {
+            //         std::cout << wire << " ";
+            //     }
+            //     std::cout << "global_wires_to_swap = ";
+            //     for (const auto &wire : global_wires_to_swap) {
+            //         std::cout << wire << " ";
+            //     }
+            //     std::cout << "local_wires_to_swap = ";
+            //     for (const auto &wire : local_wires_to_swap) {
+            //         std::cout << wire << " ";
+            //     }
+            // }
             swapGlobalLocalWires(global_wires_to_swap, local_wires_to_swap);
         }
 
