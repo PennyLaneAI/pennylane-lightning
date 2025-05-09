@@ -12,10 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #pragma once
+#include <span>
 #include "AdjointJacobianBase.hpp"
 #include "ObservablesKokkos.hpp"
-#include <iostream>
-#include <span>
 
 /// @cond DEV
 namespace {
@@ -56,34 +55,6 @@ class AdjointJacobian final
                                PrecisionT scaling_coeff, std::size_t idx) {
 
 #if _ENABLE_MPI == 1
-        if (sv1.getMPIRank() == 0) {
-            std::cout << "sv1.getGlobalWires(): ";
-            for (const auto &element : sv1.getGlobalWires()) {
-                std::cout << element << " ";
-            }
-            std::cout << "sv1.getLocalWires(): ";
-            for (const auto &element : sv1.getLocalWires()) {
-                std::cout << element << " ";
-            }
-            std::cout << "sv1.getMPIRankToGlobalIndexMap(): ";
-            for (const auto &element : sv1.getMPIRankToGlobalIndexMap()) {
-                std::cout << element << " ";
-            }
-            std::cout << std::endl;
-            std::cout << "sv2.getGlobalWires(): ";
-            for (const auto &element : sv2.getGlobalWires()) {
-                std::cout << element << " ";
-            }
-            std::cout << "sv2.getLocalWires(): ";
-            for (const auto &element : sv2.getLocalWires()) {
-                std::cout << element << " ";
-            }
-            std::cout << "sv2.getMPIRankToGlobalIndexMap(): ";
-            for (const auto &element : sv2.getMPIRankToGlobalIndexMap()) {
-                std::cout << element << " ";
-            }
-            std::cout << std::endl;
-        }
         sv1.matchWires(sv2);
 #endif
         auto element = -2 * scaling_coeff *
@@ -156,7 +127,6 @@ class AdjointJacobian final
         const auto tp_rend = tp.rend();
 
         // Create $U_{1:p}\vert \lambda \rangle$
-        std::cout << "creating another SV" << std::endl;
         StateVectorT lambda{ref_data};
 
         // Apply given operations to statevector if requested
@@ -165,7 +135,6 @@ class AdjointJacobian final
         }
 
         // Create observable-applied state-vectors
-        std::cout << "num_observables: " << num_observables << std::endl;
         std::vector<StateVectorT> H_lambda(num_observables,
                                            StateVectorT(lambda.getNumQubits()));
         BaseType::applyObservables(H_lambda, lambda, obs);
