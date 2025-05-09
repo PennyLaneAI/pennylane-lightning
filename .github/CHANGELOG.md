@@ -59,7 +59,8 @@
 - Added flags to all Codecov reports and a default carryforward flag for all flags.
   [(1144)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1144)
 
-- Bump `readthedocs.yml` action runner to Ubuntu-24.04 [(#1151)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1151)
+- Bump `readthedocs` Github action runner to use Ubuntu-24.04.
+[(#1151)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1151)
 
 
 <h3>Contributors ✍️</h3>
