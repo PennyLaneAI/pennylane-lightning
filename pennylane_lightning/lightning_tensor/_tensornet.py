@@ -28,7 +28,8 @@ except ImportError:
 
 import numpy as np
 import pennylane as qml
-from pennylane import BasisState, DeviceError, MPSPrep, StatePrep
+from pennylane import BasisState, MPSPrep, StatePrep
+from pennylane.exceptions import DeviceError
 from pennylane.ops.op_math import Adjoint
 from pennylane.tape import QuantumScript
 from pennylane.wires import Wires

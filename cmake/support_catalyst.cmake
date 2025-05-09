@@ -21,8 +21,8 @@ macro(FindCatalyst target_name)
         )
         message(INFO " Building against local Catalyst - path: ${LIGHTNING_CATALYST_SRC_PATH} - GIT TAG: ${CATALYST_GIT_TAG}")
 
-        target_include_directories(${target_name} PUBLIC ${LIGHTNING_CATALYST_SRC_PATH}/runtime/lib/backend/common)
-        target_include_directories(${target_name} PUBLIC ${LIGHTNING_CATALYST_SRC_PATH}/runtime/include)
+        target_include_directories(${target_name} SYSTEM PUBLIC ${LIGHTNING_CATALYST_SRC_PATH}/runtime/lib/backend/common)
+        target_include_directories(${target_name} SYSTEM PUBLIC ${LIGHTNING_CATALYST_SRC_PATH}/runtime/include)
 
     else()
         if(NOT CATALYST_GIT_TAG)
@@ -68,7 +68,7 @@ macro(FindCatalyst target_name)
             FetchContent_MakeAvailable(${HEADER_NAME})
         endforeach()
 
-        target_include_directories(${target_name} PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/../../include)
+        target_include_directories(${target_name} SYSTEM PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/../../include)
 
     endif()
 endmacro()

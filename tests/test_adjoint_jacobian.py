@@ -24,6 +24,7 @@ from conftest import LightningException, device_name
 from pennylane import QNode
 from pennylane import numpy as np
 from pennylane import qchem, qnode
+from pennylane.exceptions import QuantumFunctionError
 from scipy.stats import unitary_group
 
 I, X, Y, Z = (
@@ -111,9 +112,7 @@ class TestAdjointJacobian:
 
         method = dev.compute_derivatives
 
-        with pytest.raises(
-            qml.QuantumFunctionError, match="Adjoint differentiation method does not"
-        ):
+        with pytest.raises(QuantumFunctionError, match="Adjoint differentiation method does not"):
             method(tape)
 
         with qml.tape.QuantumTape() as tape:
@@ -121,7 +120,7 @@ class TestAdjointJacobian:
             qml.state()
 
         with pytest.raises(
-            qml.QuantumFunctionError,
+            QuantumFunctionError,
             match="Adjoint differentiation method does not support measurement StateMP.",
         ):
             method(tape)
@@ -134,7 +133,7 @@ class TestAdjointJacobian:
         tape = qml.tape.QuantumScript([], [qml.expval(qml.PauliZ(0))], shots=1)
 
         with pytest.raises(
-            qml.QuantumFunctionError,
+            QuantumFunctionError,
             match="Requested adjoint differentiation to be computed with finite shots.",
         ):
             dev.compute_derivatives(tape)
@@ -556,7 +555,7 @@ class TestAdjointJacobian:
         method = dev.compute_derivatives
 
         with pytest.raises(
-            qml.QuantumFunctionError,
+            QuantumFunctionError,
             match="Adjoint differentiation method does not support measurement StateMP.",
         ):
             method(tape)
@@ -640,7 +639,7 @@ class TestAdjointJacobianQNode:
         init_state /= np.linalg.norm(init_state)
         init_state = np.array(init_state, requires_grad=False)
 
-        num_wires = max(operation.num_wires, 1)
+        num_wires = max(operation.num_wires, 1) if operation.num_wires else 1
         if num_wires > n_qubits:
             return
 
@@ -705,7 +704,7 @@ class TestAdjointJacobianQNode:
         init_state /= np.linalg.norm(init_state)
         init_state = np.array(init_state, requires_grad=False)
 
-        num_wires = max(operation.num_wires, 1)
+        num_wires = max(operation.num_wires, 1) if operation.num_wires else 1
         if num_wires > n_qubits:
             return
 
@@ -767,7 +766,7 @@ class TestAdjointJacobianQNode:
         init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
         init_state /= np.linalg.norm(init_state)
         init_state = np.array(init_state, requires_grad=False)
-        num_wires = max(operation.num_wires, 1)
+        num_wires = max(operation.num_wires, 1) if operation.num_wires else 1
         if num_wires > n_qubits:
             return
 
