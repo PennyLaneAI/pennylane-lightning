@@ -15,9 +15,9 @@
 # Define global build defaults
 ARG PENNYLANE_VERSION=master
 
-# Create basic runtime environment base on Ubuntu 22.04 (jammy)
+# Create basic runtime environment base on Ubuntu 24.04
 # Create and activate runtime virtual environment
-FROM ubuntu:jammy AS base-runtime
+FROM ubuntu:24.04 AS base-runtime
 ARG AMD_ARCH=AMD_GFX90A
 ARG CUDA_ARCH=AMPERE80
 ARG CUDA_INSTALLER=https://developer.download.nvidia.com/compute/cuda/12.2.2/local_installers/cuda_12.2.2_535.104.05_linux.run
@@ -25,7 +25,7 @@ ARG DEBIAN_FRONTEND=noninteractive
 ARG GCC_VERSION=11
 ARG LIGHTNING_VERSION=master
 ARG PENNYLANE_VERSION
-ARG ROCM_INSTALLER=https://repo.radeon.com/amdgpu-install/5.7/ubuntu/jammy/amdgpu-install_5.7.50700-1_all.deb
+ARG ROCM_INSTALLER=https://repo.radeon.com/amdgpu-install/6.4/ubuntu/noble/amdgpu-install_6.4.60400-1_all.deb
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
     apt-utils \
@@ -123,7 +123,7 @@ RUN CMAKE_ARGS="-DKokkos_ENABLE_SERIAL:BOOL=ON -DKokkos_ENABLE_OPENMP:BOOL=ON -D
 
 # Install python3 and setup runtime virtual env in CUDA-12-runtime image (includes CUDA runtime and math libraries)
 # Install lightning-kokkos CUDA backend
-FROM nvidia/cuda:12.2.0-base-ubuntu22.04 AS wheel-lightning-kokkos-cuda
+FROM nvidia/cuda:12.2.0-base-ubuntu24.04 AS wheel-lightning-kokkos-cuda
 ARG PENNYLANE_VERSION
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
@@ -154,7 +154,7 @@ RUN CUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}
 
 # Install python3 and setup runtime virtual env in CUDA-12-runtime image (includes CUDA runtime and math libraries)
 # Install lightning-kokkos CUDA backend
-FROM nvidia/cuda:12.2.0-runtime-ubuntu22.04 AS wheel-lightning-gpu
+FROM nvidia/cuda:12.2.0-runtime-ubuntu24.04 AS wheel-lightning-gpu
 ARG PENNYLANE_VERSION
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
@@ -182,9 +182,7 @@ RUN wget --progress=dot:giga ${ROCM_INSTALLER}
 # to linux-headers-6.8.0-1021-azure, this should be fixed in the future
 RUN apt-get update \
     && apt-get install --no-install-recommends -y "linux-headers-$(uname -r)" \
-    || apt-get install --no-install-recommends -y linux-headers-6.8.0-1021-azure \
     && apt-get install --no-install-recommends -y "linux-modules-extra-$(uname -r)" \
-    || apt-get install --no-install-recommends -y linux-modules-extra-6.8.0-1021-azure \
     && apt-get install --no-install-recommends -y ./$(echo ${ROCM_INSTALLER} | xargs -I {} basename {}) \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
@@ -201,7 +199,7 @@ RUN python scripts/configure_pyproject_toml.py || true
 RUN CMAKE_ARGS="-DKokkos_ENABLE_SERIAL:BOOL=ON -DKokkos_ENABLE_OPENMP:BOOL=ON -DKokkos_ENABLE_HIP:BOOL=ON -DKokkos_ARCH_${AMD_ARCH}=ON" python -m build --wheel
 
 # Install lightning-kokkos HIP backend
-FROM rocm/dev-ubuntu-22.04:5.7 AS wheel-lightning-kokkos-rocm
+FROM rocm/dev-ubuntu-24.04:6.4 AS wheel-lightning-kokkos-rocm
 ARG PENNYLANE_VERSION
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
