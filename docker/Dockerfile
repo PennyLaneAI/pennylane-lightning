@@ -184,11 +184,10 @@ RUN apt-cache search linux-headers \
 # to linux-headers-6.8.0-1021-azure, this should be fixed in the future
 RUN apt-get update \
     && apt-get install --no-install-recommends -y "linux-headers-$(uname -r)" \
-    || apt-get install --no-install-recommends -y linux-headers-6.8.0-1021-azure \ 
+    || apt-get install --no-install-recommends -y linux-headers-6.8.0-1021-azure \
     && apt-get install --no-install-recommends -y "linux-modules-extra-$(uname -r)" \
     || apt-get install --no-install-recommends -y linux-modules-extra-6.8.0-1021-azure \
-    && apt-get install --no-install-recommends -y \
-    ./$(echo ${ROCM_INSTALLER} | xargs -I {} basename {}) \
+    && apt-get install --no-install-recommends -y ./$(echo ${ROCM_INSTALLER} | xargs -I {} basename {}) \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 RUN amdgpu-install -y --accept-eula --usecase=rocm,hiplibsdk --no-dkms
