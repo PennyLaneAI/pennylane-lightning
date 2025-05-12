@@ -179,11 +179,11 @@ RUN pip install --no-cache-dir git+https://github.com/PennyLaneAI/pennylane.git@
 FROM base-build-python AS base-build-rocm
 RUN wget --progress=dot:giga ${ROCM_INSTALLER}
 RUN apt-cache search linux-headers \
-    && apt-cache search linux-modules-extra\
+    && apt-cache search linux-modules-extra
 RUN apt-get update \
-    && apt-get install --no-install-recommends -y "linux-headers-$(uname -r)" 
-    || true && apt-get install --no-install-recommends -y linux-headers-generic 
-    && apt-get install --no-install-recommends -y "linux-modules-extra-$(uname -r)" 
+    && apt-get install --no-install-recommends -y "linux-headers-$(uname -r)" \
+    || true && apt-get install --no-install-recommends -y linux-headers-generic \
+    && apt-get install --no-install-recommends -y "linux-modules-extra-$(uname -r)" \
     || true && apt-get install --no-install-recommends -y linux-modules-extra-generic \
     ./$(echo ${ROCM_INSTALLER} | xargs -I {} basename {}) \
     && apt-get clean \
