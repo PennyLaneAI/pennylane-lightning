@@ -97,7 +97,7 @@ class LightningInterpreter(PlxprInterpreter):
             )
         self.state.apply_operations([op])
 
-    def interpret_measurement_eqn(self, eqn: "jax.core.JaxprEqn"):
+    def interpret_measurement_eqn(self, eqn: "jax.extend.core.JaxprEqn"):
         """Interpret a given measurement equation."""
         if "mcm" == eqn.primitive.name[-3:]:
             raise NotImplementedError(

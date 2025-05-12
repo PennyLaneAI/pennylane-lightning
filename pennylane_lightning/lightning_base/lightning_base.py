@@ -513,7 +513,7 @@ class LightningBase(Device):
     # pylint: disable=import-outside-toplevel, unused-argument
     def eval_jaxpr(
         self,
-        jaxpr: "jax.core.Jaxpr",
+        jaxpr: "jax.extend.core.Jaxpr",
         consts: list[TensorLike],
         *args: TensorLike,
         execution_config: Optional[ExecutionConfig] = None,
@@ -521,7 +521,7 @@ class LightningBase(Device):
         """Execute pennylane variant jaxpr using C++ simulation tools.
 
         Args:
-            jaxpr (jax.core.Jaxpr): jaxpr containing quantum operations
+            jaxpr (jax.extend.core.Jaxpr): jaxpr containing quantum operations
             consts (list[TensorLike]): List of constants for the jaxpr closure variables
             *args (TensorLike): The arguments to the jaxpr.
 
@@ -590,11 +590,11 @@ class LightningBase(Device):
             return var.aval
 
         shapes = [shape(var) for var in jaxpr.outvars]
-        return jax.pure_callback(evaluator, shapes, consts, *args, vectorized=False)
+        return jax.pure_callback(evaluator, shapes, consts, *args, vmap_method="sequential")
 
     def jaxpr_jvp(
         self,
-        jaxpr: "jax.core.Jaxpr",
+        jaxpr: "jax.extend.core.Jaxpr",
         args: Sequence[TensorLike],
         tangents: Sequence[TensorLike],
         execution_config: Optional[ExecutionConfig] = None,
@@ -603,7 +603,7 @@ class LightningBase(Device):
         An **experimental** method for computing the results and jvp for PLXPR with LightningBase devices.
 
         Args:
-            jaxpr (jax.core.Jaxpr): Pennylane variant jaxpr containing quantum operations
+            jaxpr (jax.extend.core.Jaxpr): Pennylane variant jaxpr containing quantum operations
                 and measurements
             args (Sequence[TensorLike]): the arguments to the ``jaxpr``. Should contain ``consts`` followed
                 by non-constant arguments
@@ -670,7 +670,9 @@ class LightningBase(Device):
             return self.simulate_and_jacobian(tape, state=self._statevector)
 
         shapes_res, shapes_jac = get_output_shapes(jaxpr, len(self.wires))
-        results, jacobians = jax.pure_callback(wrapper, (shapes_res, shapes_jac), *args)
+        results, jacobians = jax.pure_callback(
+            wrapper, (shapes_res, shapes_jac), *args, vmap_method="sequential"
+        )
 
         if len(tangents) == 1 and not jax.numpy.isscalar(tangents[0]):
             tangents = tangents[0]
