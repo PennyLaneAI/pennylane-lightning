@@ -77,14 +77,14 @@ jobs:
           python -m pip install -r requirements-tests.txt
 
       - name: Checkout PennyLane for release or latest build
-        if: inputs.pennylane-version == 'release' || inputs.pennylane-version == 'latest'
+        # if: inputs.pennylane-version == 'release' || inputs.pennylane-version == 'latest'
         uses: actions/checkout@v4
         with:
           path: pennylane
           repository: PennyLaneAI/pennylane
 
       - name: Switch to latest build of PennyLane
-        if: inputs.pennylane-version == 'latest'
+        # if: inputs.pennylane-version == 'latest'
         run: |
           cd pennylane
           git checkout pyproj-install-build
