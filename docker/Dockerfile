@@ -181,11 +181,11 @@ RUN wget --progress=dot:giga ${ROCM_INSTALLER}
 RUN apt-cache search linux-headers \
     && apt-cache search linux-modules-extra
 RUN apt-get update \
-    && apt-get install --no-install-recommends -y "linux-headers-$(uname -r)" \
-    || true \
+    # && apt-get install --no-install-recommends -y "linux-headers-$(uname -r)" \
+    # || true \
     && apt-get install --no-install-recommends -y linux-headers-generic \
-    && apt-get install --no-install-recommends -y "linux-modules-extra-$(uname -r)" \
-    || true \
+    # && apt-get install --no-install-recommends -y "linux-modules-extra-$(uname -r)" \
+    # || true \
     && apt-get install --no-install-recommends -y linux-modules-extra-generic \
     && apt-get install --no-install-recommends -y \
     ./$(echo ${ROCM_INSTALLER} | xargs -I {} basename {}) \
