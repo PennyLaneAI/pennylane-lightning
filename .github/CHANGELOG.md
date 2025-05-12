@@ -4,6 +4,9 @@
 
 <h3>Improvements 🛠</h3>
 
+- PennyLane-Lightning is compatible with JAX version 0.5.3+.
+  [(#1152)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1152)
+
 - Improve performance of computing expectation values of Pauli Sentences for `lightning.kokkos`.
   [(#1126)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1126)
 
@@ -62,6 +65,9 @@
 - Updated the clang-format and clang-tidy versions to v20.
   [(#1153)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1153)
 
+- Bump `readthedocs` Github action runner to use Ubuntu-24.04.
+[(#1151)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1151)
+
 <h3>Contributors ✍️</h3>
 
 This release contains contributions from (in alphabetical order):
@@ -75,6 +81,7 @@ Joseph Lee,
 Mehrdad Malekmohammadi,
 Anton Naim Ibrahim,
 Luis Alfredo Nuñez Meneses,
+Mudit Pandey,
 Andrija Paurevic,
 
 ---
