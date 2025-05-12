@@ -21,7 +21,7 @@
 
 #include <catch2/catch.hpp>
 
-#include "AdjointJacobianKokkos.hpp"
+#include "AdjointJacobianKokkosMPI.hpp"
 #include "StateVectorKokkosMPI.hpp"
 #include "TestHelpers.hpp" // createRandomStateVectorData
 
@@ -43,22 +43,23 @@ std::mt19937_64 re{1337};
 } // namespace
 /// @endcond
 
-// TODO: Add error cases
-
 // expval
-TEMPLATE_PRODUCT_TEST_CASE("Adjoint", "[LKMPI_Adjoint]", (StateVectorKokkosMPI), (float, double)) {
+TEMPLATE_PRODUCT_TEST_CASE("Adjoint", "[LKMPI_Adjoint]", (StateVectorKokkosMPI),
+                           (float, double)) {
+
     using StateVectorT = TestType;
     using PrecisionT = typename StateVectorT::PrecisionT;
-    AdjointJacobian<StateVectorT> adj;
+    AdjointJacobianMPI<StateVectorT> adj;
     std::vector<PrecisionT> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
     std::vector<std::size_t> tp{0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
     const PrecisionT ep = 1e-6;
     {
-        const std::size_t num_qubits = 6;
+        const std::size_t num_qubits = 5;
         const std::size_t num_obs = 1;
         std::vector<PrecisionT> jacobian(num_obs * tp.size(), 0);
 
         StateVectorT psi(num_qubits);
+        REQUIRE(psi.getMPISize() == 4);
 
         const auto obs = std::make_shared<TensorProdObs<StateVectorT>>(
             std::make_shared<NamedObs<StateVectorT>>(

@@ -32,13 +32,14 @@ namespace Pennylane::LightningKokkos::Algorithms {
  * @tparam StateVectorT State vector type.
  */
 template <class StateVectorT>
-class AdjointJacobian final
-    : public AdjointJacobianBase<StateVectorT, AdjointJacobian<StateVectorT>> {
+class AdjointJacobianMPI final
+    : public AdjointJacobianBase<StateVectorT,
+                                 AdjointJacobianMPI<StateVectorT>> {
   private:
     using ComplexT = typename StateVectorT::ComplexT;
     using PrecisionT = typename StateVectorT::PrecisionT;
     using BaseType =
-        AdjointJacobianBase<StateVectorT, AdjointJacobian<StateVectorT>>;
+        AdjointJacobianBase<StateVectorT, AdjointJacobianMPI<StateVectorT>>;
 
     /**
      * @brief Utility method to update the Jacobian at a given index by
@@ -53,14 +54,19 @@ class AdjointJacobian final
     inline void updateJacobian(StateVectorT &sv1, StateVectorT &sv2,
                                std::span<PrecisionT> &jac,
                                PrecisionT scaling_coeff, std::size_t idx) {
+
+        sv1.matchWires(sv2);
         auto element = -2 * scaling_coeff *
                        getImagOfComplexInnerProduct<PrecisionT>(sv1.getView(),
                                                                 sv2.getView());
+
+        auto sum = sv1.allReduceSum(element);
+        element = sum;
         jac[idx] = element;
     }
 
   public:
-    AdjointJacobian() = default;
+    AdjointJacobianMPI() = default;
 
     /**
      * @brief Calculates the Jacobian for the statevector for the selected set

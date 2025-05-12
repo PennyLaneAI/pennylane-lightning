@@ -53,7 +53,20 @@ using namespace Pennylane::LightningGPU::Algorithms;
 using namespace Pennylane::LightningGPU::Observables;
 using namespace Pennylane::LightningGPU::Measures;
 } // namespace
-/// @endcond
+
+#elif _ENABLE_PLKOKKOS == 1
+
+#include "AdjointJacobianKokkosMPI.hpp"
+#include "LKokkosBindingsMPI.hpp"
+#include "MeasurementsKokkosMPI.hpp"
+#include "ObservablesKokkosMPI.hpp"
+namespace {
+using namespace Pennylane::LightningKokkos;
+using namespace Pennylane::LightningKokkos::Algorithms;
+using namespace Pennylane::LightningKokkos::Observables;
+using namespace Pennylane::LightningKokkos::Measures;
+} // namespace
+  /// @endcond
 
 #else
 
@@ -195,7 +208,7 @@ template <class StateVectorT> void registerObservablesMPI(py::module_ &m) {
                 return self == other_cast;
             },
             "Compare two observables");
-#ifdef _ENABLE_PLGPU
+            #if _ENABLE_PLGPU == 1
     class_name = "SparseHamiltonianMPIC" + bitsize;
     using SpIDX = typename SparseHamiltonianMPI<StateVectorT>::IdxT;
     py::class_<SparseHamiltonianMPI<StateVectorT>,
@@ -236,7 +249,7 @@ template <class StateVectorT> void registerObservablesMPI(py::module_ &m) {
                 return self == other_cast;
             },
             "Compare two observables");
-#endif
+            #endif
 }
 
 /**
@@ -309,9 +322,19 @@ auto registerAdjointJacobianMPI(
     using PrecisionT = typename StateVectorT::PrecisionT;
     std::vector<PrecisionT> jac(observables.size() * trainableParams.size(),
                                 PrecisionT{0.0});
+#if _ENABLE_PLGPU == 1
     const JacobianDataMPI<StateVectorT> jd{operations.getTotalNumParams(), sv,
                                            observables, operations,
                                            trainableParams};
+#elif _ENABLE_PLKOKKOS == 1
+    const JacobianData<StateVectorT> jd{operations.getTotalNumParams(),
+                                        sv.getLength(),
+                                        sv.getData(),
+                                        observables,
+                                        operations,
+                                        trainableParams};
+#endif
+
     adjoint_jacobian.adjointJacobian(std::span{jac}, jd, sv);
     return py::array_t<PrecisionT>(py::cast(jac));
 }
@@ -416,10 +439,22 @@ void registerBackendAgnosticAlgorithmsMPI(py::module_ &m) {
                 std::vector<PrecisionT> jac(observables.size() *
                                                 trainableParams.size(),
                                             PrecisionT{0.0});
+#if _ENABLE_PLGPU == 1
                 const JacobianDataMPI<StateVectorT> jd{
                     operations.getTotalNumParams(), sv, observables, operations,
                     trainableParams};
                 adjoint_jacobian.adjointJacobian_serial(std::span{jac}, jd);
+#elif _ENABLE_PLKOKKOS == 1
+                const JacobianData<StateVectorT> jd{
+                    operations.getTotalNumParams(),
+                    sv.getLength(),
+                    sv.getData(),
+                    observables,
+                    operations,
+                    trainableParams};
+                adjoint_jacobian.adjointJacobian(std::span{jac}, jd, sv);
+
+#endif
                 return py::array_t<PrecisionT>(py::cast(jac));
             },
             "Batch Adjoint Jacobian method.")
@@ -457,7 +492,6 @@ template <class StateVectorT> void lightningClassBindingsMPI(py::module_ &m) {
     py::module_ obs_submodule =
         m.def_submodule("observablesMPI", "Submodule for observables classes.");
     registerObservablesMPI<StateVectorT>(obs_submodule);
-
     //***********************************************************************//
     //                             Measurements
     //***********************************************************************//

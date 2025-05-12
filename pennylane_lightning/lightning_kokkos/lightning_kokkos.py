@@ -245,9 +245,7 @@ class LightningKokkos(LightningBase):
 
         if mpi:
             self._statevector = self.LightningStateVector(
-                num_wires=len(self.wires),
-                dtype=self.c_dtype,
-                kokkos_args=kokkos_args,
+                num_wires=len(self.wires), dtype=self.c_dtype, kokkos_args=kokkos_args, mpi=True
             )
         else:
             self._statevector = None

@@ -21,6 +21,8 @@ try:
         InitializationSettings,
         StateVectorC64,
         StateVectorC128,
+        StateVectorMPIC64,
+        StateVectorMPIC128,
         allocate_aligned_array,
         print_configuration,
     )
@@ -65,6 +67,7 @@ class LightningKokkosStateVector(LightningBaseStateVector):
         num_wires: int,
         dtype: Union[np.complex128, np.complex64] = np.complex128,
         kokkos_args=None,
+        mpi=None,
     ):
 
         super().__init__(num_wires, dtype)
@@ -72,6 +75,8 @@ class LightningKokkosStateVector(LightningBaseStateVector):
         self._device_name = "lightning.kokkos"
 
         self._kokkos_config = {}
+
+        self._mpi = mpi
 
         # Initialize the state vector
         if kokkos_args is None:
@@ -109,7 +114,11 @@ class LightningKokkosStateVector(LightningBaseStateVector):
 
         Returns: the state vector class
         """
-        return StateVectorC128 if self.dtype == np.complex128 else StateVectorC64
+        if self._mpi:
+            return StateVectorMPIC128 if self.dtype == np.complex128 else StateVectorMPIC64
+
+        # without MPI
+        # return StateVectorC128 if self.dtype == np.complex128 else StateVectorC64
 
     def sync_h2d(self, state_vector):
         """Copy the state vector data on host provided by the user to the state

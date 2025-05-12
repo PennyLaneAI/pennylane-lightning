@@ -59,12 +59,8 @@ using namespace Pennylane::LightningQubit::Measures;
 
 #include "AdjointJacobianKokkos.hpp"
 #include "LKokkosBindings.hpp" // StateVectorBackends, registerBackendClassSpecificBindings, registerBackendSpecificMeasurements, registerBackendSpecificAlgorithms
-#include "ObservablesKokkos.hpp"
-#if _ENABLE_MPI == 1
-#include "MeasurementsKokkosMPI.hpp"
-#else
 #include "MeasurementsKokkos.hpp"
-#endif
+#include "ObservablesKokkos.hpp"
 
 /// @cond DEV
 namespace {
@@ -117,11 +113,7 @@ namespace {
 using Pennylane::Util::bestCPUMemoryModel;
 using Pennylane::Util::CPUMemoryModel;
 using Pennylane::Util::getMemoryModel;
-#if _ENABLE_PLKOKKOS == 1 && _ENABLE_MPI == 1
-template <class T> using measure = MeasurementsMPI<T>;
-#else
 template <class T> using measure = Measurements<T>;
-#endif
 } // namespace
 /// @endcond
 

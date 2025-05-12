@@ -18,7 +18,7 @@ Internal methods for adjoint Jacobian differentiation method.
 from __future__ import annotations
 
 from warnings import warn
-
+from pennylane_lightning.lightning_kokkos_ops.algorithmsMPI import OpsStructMPIC128
 try:
     from pennylane_lightning.lightning_kokkos_ops.algorithms import (
         AdjointJacobianC64,
@@ -26,6 +26,17 @@ try:
         create_ops_listC64,
         create_ops_listC128,
     )
+
+    try:
+        from pennylane_lightning.lightning_kokkos_ops.algorithmsMPI import (
+            AdjointJacobianMPIC64,
+            AdjointJacobianMPIC128,
+            create_ops_listMPIC64,
+            create_ops_listMPIC128,
+        )
+    except ImportError as ex_mpi:
+        warn(str(ex_mpi), UserWarning)
+
 except ImportError as ex:
     warn(str(ex), UserWarning)
 
@@ -53,6 +64,8 @@ class LightningKokkosAdjointJacobian(LightningBaseAdjointJacobian):
     ) -> None:
         super().__init__(qubit_state, batch_obs)
 
+        self._use_mpi = qubit_state._mpi
+
         # Initialize the C++ binds
         self._jacobian_lightning, self._create_ops_list_lightning = self._adjoint_jacobian_dtype()
 
@@ -61,6 +74,15 @@ class LightningKokkosAdjointJacobian(LightningBaseAdjointJacobian):
 
         Returns: the AdjointJacobian class
         """
+        if self._use_mpi:
+            jacobian_lightning = (
+                AdjointJacobianMPIC64() if self.dtype == np.complex64 else AdjointJacobianMPIC128()
+            )
+            create_ops_list_lightning = (
+                create_ops_listMPIC64 if self.dtype == np.complex64 else create_ops_listMPIC128
+            )
+
+            return jacobian_lightning, create_ops_list_lightning
         jacobian_lightning = (
             AdjointJacobianC64() if self.dtype == np.complex64 else AdjointJacobianC128()
         )
@@ -96,6 +118,8 @@ class LightningKokkosAdjointJacobian(LightningBaseAdjointJacobian):
             return np.array([], dtype=self.dtype)
 
         trainable_params = processed_data["tp_shift"]
+        print( processed_data["obs_serialized"][0].__class__)
+        
         jac = self._jacobian_lightning(
             processed_data["state_vector"],
             processed_data["obs_serialized"],

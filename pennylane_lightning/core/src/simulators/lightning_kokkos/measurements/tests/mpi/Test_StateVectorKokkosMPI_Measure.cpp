@@ -491,7 +491,8 @@ TEMPLATE_TEST_CASE("Expval - TensorProdobs", "[LKMPI_Expval]", float, double) {
 // expval pauli word
 // This test takes a long time - float 2.5min, double 2.8min
 TEMPLATE_TEST_CASE("Expval - pauli word - 4 wires", "[LKMPI_Expval]", float,
-double) { const TestType EP = std::is_same_v<TestType, float> ? 1e-3 : 1e-6;
+                   double) {
+    const TestType EP = std::is_same_v<TestType, float> ? 1e-3 : 1e-6;
     const std::size_t num_qubits = 6;
     StateVectorKokkosMPI<TestType> sv{num_qubits};
     StateVectorKokkos<TestType> sv_ref{num_qubits};
