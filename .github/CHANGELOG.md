@@ -33,6 +33,9 @@
 
 <h3>Bug fixes 🐛</h3>
 
+- Fix Docker build for Lighting-Kokkos with ROCM library e.g. using AMD GPUs. 
+  [(#1156)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1156)
+
 <h3>Internal changes ⚙️</h3>
 
 - The `LightningBaseStateVector`, `LightningBaseAdjointJacobian`, `LightningBaseMeasurements`, `LightningInterpreter` and `QuantumScriptSerializer` base classes now can be found at `pennylane_lightning.lightning_base`.
