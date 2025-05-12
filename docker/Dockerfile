@@ -25,7 +25,7 @@ ARG DEBIAN_FRONTEND=noninteractive
 ARG GCC_VERSION=11
 ARG LIGHTNING_VERSION=master
 ARG PENNYLANE_VERSION
-ARG ROCM_INSTALLER=https://repo.radeon.com/amdgpu-install/6.4/ubuntu/noble/amdgpu-install_6.4.60400-1_all.deb
+ARG ROCM_INSTALLER=https://repo.radeon.com/amdgpu-install/6.3.4/ubuntu/noble/amdgpu-install_6.3.60304-1_all.deb
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
     apt-utils \
@@ -199,7 +199,7 @@ RUN python scripts/configure_pyproject_toml.py || true
 RUN CMAKE_ARGS="-DKokkos_ENABLE_SERIAL:BOOL=ON -DKokkos_ENABLE_OPENMP:BOOL=ON -DKokkos_ENABLE_HIP:BOOL=ON -DKokkos_ARCH_${AMD_ARCH}=ON" python -m build --wheel
 
 # Install lightning-kokkos HIP backend
-FROM rocm/dev-ubuntu-24.04:6.4 AS wheel-lightning-kokkos-rocm
+FROM rocm/dev-ubuntu-24.04:6.3.4 AS wheel-lightning-kokkos-rocm
 ARG PENNYLANE_VERSION
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
