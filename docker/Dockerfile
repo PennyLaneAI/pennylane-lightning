@@ -178,8 +178,6 @@ RUN pip install --no-cache-dir git+https://github.com/PennyLaneAI/pennylane.git@
 # Install ROCm in build venv image
 FROM base-build-python AS base-build-rocm
 RUN wget --progress=dot:giga ${ROCM_INSTALLER}
-RUN apt-cache search linux-headers \
-    && apt-cache search linux-modules-extra
 # FIXME: the linux-headers-6.11.0-1021-azure package is not available in the repo then is hardcoded
 # to linux-headers-6.8.0-1021-azure, this should be fixed in the future
 RUN apt-get update \
