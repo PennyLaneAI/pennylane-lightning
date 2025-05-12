@@ -178,12 +178,20 @@ RUN pip install --no-cache-dir git+https://github.com/PennyLaneAI/pennylane.git@
 # Install ROCm in build venv image
 FROM base-build-python AS base-build-rocm
 RUN wget --progress=dot:giga ${ROCM_INSTALLER}
-RUN apt-get update \
-    && apt-get install --no-install-recommends -y \
-    "linux-headers-$(uname -r)" "linux-modules-extra-$(uname -r)" \
+RUN apt-get update && \
+    apt-cache search linux-headers \
+    apt-cache search linux-modules-extra\
+    apt-get install --no-install-recommends -y \
+    "linux-headers-$(uname -r)" || true && \
+    apt-get install --no-install-recommends -y \
+    linux-headers-generic && \
+    apt-get install --no-install-recommends -y \
+    "linux-modules-extra-$(uname -r)" || true && \
+    apt-get install --no-install-recommends -y \
+    linux-modules-extra-generic \
     ./$(echo ${ROCM_INSTALLER} | xargs -I {} basename {}) \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 RUN amdgpu-install -y --accept-eula --usecase=rocm,hiplibsdk --no-dkms
 
 # Download Lightning release and build lightning-kokkos backend with Kokkos-ROCm
