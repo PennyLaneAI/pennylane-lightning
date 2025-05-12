@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # Define global build defaults
-ARG PENNYLANE_VERSION=master
+ARG PENNYLANE_VERSION=pyproj-install-build
 
 # Create basic runtime environment base on Ubuntu 22.04 (jammy)
 # Create and activate runtime virtual environment
