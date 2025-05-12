@@ -77,18 +77,17 @@ jobs:
           python -m pip install -r requirements-tests.txt
 
       - name: Checkout PennyLane for release or latest build
-        # if: inputs.pennylane-version == 'release' || inputs.pennylane-version == 'latest'
+        if: inputs.pennylane-version == 'release' || inputs.pennylane-version == 'latest'
         uses: actions/checkout@v4
         with:
           path: pennylane
           repository: PennyLaneAI/pennylane
 
       - name: Switch to latest build of PennyLane
-        # if: inputs.pennylane-version == 'latest'
+        if: inputs.pennylane-version == 'latest'
         run: |
           cd pennylane
-          git fetch --all
-          git checkout pyproj-install-build
+          git checkout master
           python -m pip uninstall -y pennylane && python -m pip install . -vv --no-deps
 
       - name: Switch to release build of PennyLane
@@ -99,10 +98,10 @@ jobs:
           git checkout $(git branch -a --list "origin/v0.*rc*" | sort | tail -1)
           python -m pip uninstall -y pennylane && python -m pip install . -vv --no-deps
 
-      # - name: Install Stable PennyLane
-      #   if: inputs.pennylane-version == 'stable'
-      #   run: |
-      #     python -m pip uninstall -y pennylane && python -m pip install -U pennylane
+      - name: Install Stable PennyLane
+        if: inputs.pennylane-version == 'stable'
+        run: |
+          python -m pip uninstall -y pennylane && python -m pip install -U pennylane
 
       - name: Install the pennylane_lightning core package (lightning_qubit)
         env:
