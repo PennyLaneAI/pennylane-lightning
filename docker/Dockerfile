@@ -180,13 +180,13 @@ FROM base-build-python AS base-build-rocm
 RUN wget --progress=dot:giga ${ROCM_INSTALLER}
 RUN apt-cache search linux-headers \
     && apt-cache search linux-modules-extra
+# FIXME: the linux-headers-6.11.0-1021-azure package is not available in the repo then is hardcoded
+# to linux-headers-6.8.0-1021-azure, this should be fixed in the future
 RUN apt-get update \
-    # && apt-get install --no-install-recommends -y "linux-headers-$(uname -r)" \
-    # || true \
-    && apt-get install --no-install-recommends -y linux-headers-generic \
-    # && apt-get install --no-install-recommends -y "linux-modules-extra-$(uname -r)" \
-    # || true \
-    && apt-get install --no-install-recommends -y linux-modules-extra-generic \
+    && apt-get install --no-install-recommends -y "linux-headers-$(uname -r)" \
+    || apt-get install --no-install-recommends -y linux-headers-6.8.0-1021-azure \ 
+    && apt-get install --no-install-recommends -y "linux-modules-extra-$(uname -r)" \
+    || apt-get install --no-install-recommends -y linux-modules-extra-6.8.0-1021-azure \
     && apt-get install --no-install-recommends -y \
     ./$(echo ${ROCM_INSTALLER} | xargs -I {} basename {}) \
     && apt-get clean \
