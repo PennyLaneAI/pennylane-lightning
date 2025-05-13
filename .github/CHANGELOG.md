@@ -34,8 +34,8 @@
 <h3>Bug fixes 🐛</h3>
 
 - Fix Docker build for Lighting-Kokkos with ROCM library e.g. using AMD GPUs.
-  Update Ubuntu version from 22.04 to 24.04 for Docker images.
-  [(#1156)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1156)
+  Updating ROCM from 5.7 to 6.2.3. 
+  [(#1156)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1158)
 
 <h3>Internal changes ⚙️</h3>
 
