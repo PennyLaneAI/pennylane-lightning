@@ -62,7 +62,7 @@
 - Added flags to all Codecov reports and a default carryforward flag for all flags.
   [(1144)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1144)
 
-- Updated the `clang-format` and `clang-tidy` versions to v20.
+- Updated the `clang-format` and `clang-tidy` versions to v20 for compatibility with Catalyst.
   [(#1153)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1153)
 
 - Bump `readthedocs` Github action runner to use Ubuntu-24.04.
