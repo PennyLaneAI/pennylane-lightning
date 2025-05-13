@@ -33,7 +33,8 @@
 
 <h3>Bug fixes 🐛</h3>
 
-- Fix Docker build for Lighting-Kokkos with ROCM library e.g. using AMD GPUs. 
+- Fix Docker build for Lighting-Kokkos with ROCM library e.g. using AMD GPUs.
+  Update Ubuntu version from 22.04 to 24.04 for Docker images.
   [(#1156)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1156)
 
 <h3>Internal changes ⚙️</h3>
@@ -66,7 +67,7 @@
   [(1144)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1144)
 
 - Bump `readthedocs` Github action runner to use Ubuntu-24.04.
-[(#1151)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1151)
+  [(#1151)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1151)
 
 
 <h3>Contributors ✍️</h3>
