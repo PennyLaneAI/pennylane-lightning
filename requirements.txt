@@ -12,3 +12,4 @@ isort==5.13.2
 pylint==2.7.4
 pennylane>=0.40
 scipy-openblas32>=0.3.26
+git+https://github.com/PennyLaneAI/pennylane.git@pyproj-install-build
