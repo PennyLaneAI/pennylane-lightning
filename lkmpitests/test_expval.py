@@ -234,7 +234,7 @@ class TestExpval:
     def test_expval_non_pauli_word_hamiltonian(self, tol, c_dtype, batch_obs):
         """Tests expectation values of non-Pauli word Hamiltonians."""
         dev_mpi = qml.device(
-            "lightning.kokkos", wires=3, mpi=True, c_dtype=c_dtype, batch_obs=batch_obs
+            "lightning.kokkos", wires=6, mpi=True, c_dtype=c_dtype, batch_obs=batch_obs
         )
         dev_cpu = qml.device("lightning.qubit", wires=3)
 
@@ -259,7 +259,7 @@ class TestExpval:
     @pytest.mark.parametrize("n_wires", range(1, numQubits))
     def test_hermitian_expectation(self, n_wires, theta, phi, tol, c_dtype, batch_obs):
         """Test that Hadamard expectation value is correct"""
-        n_qubits = numQubits - 1
+        n_qubits = numQubits
         dev_def = qml.device("default.qubit", wires=n_qubits)
         dev = qml.device(
             device_name, mpi=True, wires=n_qubits, c_dtype=c_dtype, batch_obs=batch_obs
@@ -306,7 +306,7 @@ class TestExpOperatorArithmetic:
     def test_sprod(self, diff_method):
         """Test the `SProd` class with lightning qubit."""
 
-        dev = qml.device(device_name, mpi=True, wires=2)
+        dev = qml.device(device_name, mpi=True, wires=4)
 
         @qml.qnode(dev, diff_method=diff_method)
         def circuit(x):
@@ -324,7 +324,7 @@ class TestExpOperatorArithmetic:
     def test_prod(self, diff_method):
         """Test the `Prod` class with lightning qubit."""
 
-        dev = qml.device(device_name, mpi=True, wires=2)
+        dev = qml.device(device_name, mpi=True, wires=4)
 
         @qml.qnode(dev, diff_method=diff_method)
         def circuit(x):
@@ -344,7 +344,7 @@ class TestExpOperatorArithmetic:
     def test_sum(self, diff_method):
         """Test the `Sum` class with Lightning."""
 
-        dev = qml.device(device_name, mpi=True, wires=2)
+        dev = qml.device(device_name, mpi=True, wires=4)
 
         @qml.qnode(dev, diff_method=diff_method)
         def circuit(x, y):
@@ -369,7 +369,7 @@ class TestExpOperatorArithmetic:
             -0.5 * qml.prod(qml.PauliY(0), qml.PauliZ(1)),
         )
 
-        dev = qml.device(device_name, mpi=True, wires=2)
+        dev = qml.device(device_name, mpi=True, wires=4)
 
         @qml.qnode(dev, diff_method=diff_method)
         def circuit(x, y):
@@ -407,7 +407,7 @@ class TestTensorExpval:
     def test_tensor(self, theta, phi, varphi, obs, expected, tol):
         """Test that a tensor product involving PauliX and PauliY works
         correctly"""
-        dev = qml.device(device_name, mpi=True, wires=3)
+        dev = qml.device(device_name, mpi=True, wires=4)
 
         def circuit():
             qml.RX(theta, wires=[0])

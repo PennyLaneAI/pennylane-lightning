@@ -250,7 +250,7 @@ int main(int argc, char *argv[]) {
                 std::vector<double> params(npar, 0.1);
                 sv.applyOperation(gate, {target}, inverse, params);
                 svmpi.applyOperation(gate, {target}, inverse, params);
-                // svmpi.reorderGlobalWires();
+                // svmpi.reorderGlobalLocalWires();
                 // svmpi.barrier();
                 // svmpi.reorderLocalWires();
                 // svmpi.barrier();
@@ -278,7 +278,7 @@ int main(int argc, char *argv[]) {
         }
     }
     //
-    // svmpi.reorderGlobalWires();
+    // svmpi.reorderGlobalLocalWires();
     // svmpi.barrier();
     // svmpi.reorderLocalWires();
     // svmpi.barrier();
@@ -350,7 +350,7 @@ int main(int argc, char *argv[]) {
                                       params);
                     svmpi.applyOperation(gate, {target0, target1}, inverse,
                                          params);
-                    // svmpi.reorderGlobalWires();
+                    // svmpi.reorderGlobalLocalWires();
                     // svmpi.reorderLocalWires();
                     // if (svmpi.getMPIRank() == 0) {
                     //     std::cout << "global_wires = ";
@@ -373,7 +373,7 @@ int main(int argc, char *argv[]) {
             }
         }
     }
-    // svmpi.reorderGlobalWires();
+    // svmpi.reorderGlobalLocalWires();
     // svmpi.barrier();
     // svmpi.reorderLocalWires();
     // svmpi.barrier();
@@ -492,7 +492,7 @@ int main(int argc, char *argv[]) {
                                           inverse, params);
                         svmpi.applyOperation(gate, {ctrl}, {ctrl_val}, {target},
                                              inverse, params);
-                        // svmpi.reorderGlobalWires();
+                        // svmpi.reorderGlobalLocalWires();
                         // svmpi.reorderLocalWires();
                         // if (svmpi.getMPIRank() == 0) {
                         //     std::cout << "global_wires = ";
@@ -516,7 +516,7 @@ int main(int argc, char *argv[]) {
             }
         }
     }
-    // svmpi.reorderGlobalWires();
+    // svmpi.reorderGlobalLocalWires();
     // svmpi.barrier();
     // svmpi.reorderLocalWires();
     // svmpi.barrier();
@@ -586,7 +586,7 @@ int main(int argc, char *argv[]) {
                                 svmpi.applyOperation(
                                     gate, {ctrl0, ctrl1}, {ctrl_val, !ctrl_val},
                                     {target0, target1}, inverse, params);
-                                // svmpi.reorderGlobalWires();
+                                // svmpi.reorderGlobalLocalWires();
                                 // svmpi.reorderLocalWires();
 
                                 if (svmpi.getMPIRank() == 0) {
@@ -601,7 +601,7 @@ int main(int argc, char *argv[]) {
 
                                 svmpi.barrier();
                                 svmpi_copy.barrier();
-                                svmpi_copy.reorderGlobalWires();
+                                svmpi_copy.reorderGlobalLocalWires();
                                 svmpi_copy.barrier();
                                 svmpi_copy.reorderLocalWires();
                                 if (svmpi_copy.getMPIRank() == 0) {
@@ -637,7 +637,7 @@ int main(int argc, char *argv[]) {
             }
         }
     }
-    svmpi.reorderGlobalWires();
+    svmpi.reorderGlobalLocalWires();
     svmpi.barrier();
     svmpi.reorderLocalWires();
     svmpi.barrier();

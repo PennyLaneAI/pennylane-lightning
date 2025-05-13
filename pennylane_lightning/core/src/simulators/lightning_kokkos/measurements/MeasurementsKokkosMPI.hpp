@@ -22,7 +22,7 @@
 #include "MeasurementsKokkos.hpp"
 #include "MeasuresFunctors.hpp"
 #include "Observables.hpp"
-#include "ObservablesKokkos.hpp"
+#include "ObservablesKokkosMPI.hpp"
 #include "StateVectorKokkos.hpp"
 #include "Util.hpp"
 #include <Kokkos_Core.hpp>
@@ -429,5 +429,13 @@ class MeasurementsMPI final
         return variance_list;
     }
 };
+
+    auto generate_samples(std::size_t num_samples) -> std::vector<std::size_t> {
+        PL_ABORT("Generate Samples not supported in LK-MPI");
+        std::vector<std::size_t> samples(num_samples);
+        return samples;
+    }
+
+
 
 } // namespace Pennylane::LightningKokkos::Measures

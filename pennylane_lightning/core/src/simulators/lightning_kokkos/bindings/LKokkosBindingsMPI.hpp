@@ -63,15 +63,29 @@ void registerBackendClassSpecificBindingsMPI(PyClass &pyclass) {
                                  py::array::c_style | py::array::forcecast>;
     registerGatesForStateVector<StateVectorT>(pyclass);
     registerControlledGate<StateVectorT>(pyclass);
-    pyclass.def(
-        "swapGlobalLocalWires",
-        [](StateVectorT &sv,
-           const std::vector<std::size_t> &global_wires_to_swap,
-           const std::vector<std::size_t> &local_wires_to_swap) {
-            sv.swapGlobalLocalWires(global_wires_to_swap, local_wires_to_swap);
-        },
-        "Swap global and local wires.");
     pyclass
+        .def(
+            "swapGlobalLocalWires",
+            [](StateVectorT &sv,
+               const std::vector<std::size_t> &global_wires_to_swap,
+               const std::vector<std::size_t> &local_wires_to_swap) {
+                sv.swapGlobalLocalWires(global_wires_to_swap,
+                                        local_wires_to_swap);
+            },
+            "Swap global and local wires.")
+        .def(
+            "getLocalBlockSize",
+            [](StateVectorT &sv) { return sv.getLocalBlockSize(); },
+            "Get Local Block Size.")
+        .def(
+            "getMPIRank", [](StateVectorT &sv) { return sv.getMPIRank(); },
+            "Get MPI Rank.")
+        .def(
+            "resetIndices", [](StateVectorT &sv) { sv.resetIndices(); },
+            "Reset wire indices.")
+        .def(
+            "reorderAllWires", [](StateVectorT &sv) { sv.reorderAllWires(); },
+            "Reorder all wires.")
         .def(py::init([](std::size_t num_qubits) {
             return new StateVectorT(num_qubits);
         }))

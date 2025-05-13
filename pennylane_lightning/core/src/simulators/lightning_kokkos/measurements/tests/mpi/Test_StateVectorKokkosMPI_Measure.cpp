@@ -22,7 +22,7 @@
 #include <catch2/catch.hpp>
 
 #include "MeasurementsKokkosMPI.hpp"
-#include "ObservablesKokkos.hpp"
+#include "ObservablesKokkosMPI.hpp"
 #include "StateVectorKokkosMPI.hpp"
 #include "TestHelpers.hpp" // createRandomStateVectorData
 
@@ -291,7 +291,7 @@ TEMPLATE_TEST_CASE("Expval - 1-wire matrix Hermitian obs", "[LKMPI_Expval]",
 
     const std::size_t wire = GENERATE(0, 1, 2, 3);
 
-    auto ob = HermitianObs<StateVectorKokkosMPI<TestType>>(mat_ob, {wire});
+    auto ob = HermitianObsMPI<StateVectorKokkosMPI<TestType>>(mat_ob, {wire});
     auto ob_ref = HermitianObs<StateVectorKokkos<TestType>>(mat_ob, {wire});
     auto res = m.expval(ob);
     auto res_ref = m_ref.expval(ob_ref);
@@ -365,7 +365,7 @@ TEMPLATE_TEST_CASE("Expval - 2-wire matrix Hermitian obs", "[LKMPI_Expval]",
 
     if (wires.size() == num_wires) {
 
-        auto ob = HermitianObs<StateVectorKokkosMPI<TestType>>(
+        auto ob = HermitianObsMPI<StateVectorKokkosMPI<TestType>>(
             mat_ob, {wire_0, wire_1});
         auto ob_ref =
             HermitianObs<StateVectorKokkos<TestType>>(mat_ob, {wire_0, wire_1});
@@ -419,7 +419,7 @@ TEMPLATE_TEST_CASE("Expval - NamedObs", "[LKMPI_Expval]", float, double) {
         GENERATE("Identity", "PauliX", "PauliY", "PauliZ", "Hadamard");
     const std::size_t wire = GENERATE(0, 1, 2, 3);
 
-    auto ob = NamedObs<StateVectorKokkosMPI<TestType>>(ob_name, {wire});
+    auto ob = NamedObsMPI<StateVectorKokkosMPI<TestType>>(ob_name, {wire});
     auto ob_ref = NamedObs<StateVectorKokkos<TestType>>(ob_name, {wire});
 
     auto res = m.expval(ob);
@@ -479,14 +479,53 @@ TEMPLATE_TEST_CASE("Expval - TensorProdobs", "[LKMPI_Expval]", float, double) {
 
     auto ob_ref =
         TensorProdObs<StateVectorKokkos<TestType>>::create({X0_ref, Z1_ref});
-    auto ob = TensorProdObs<StateVectorKokkosMPI<TestType>>::create({X0, Z1});
+    auto ob =
+        TensorProdObsMPI<StateVectorKokkosMPI<TestType>>::create({X0, Z1});
 
     auto res = m.expval(*ob);
     auto res_ref = m_ref.expval(*ob_ref);
     CHECK(res == Approx(res_ref).margin(EP));
 }
 
-// TODO: expval HamiltonianObs not supported yet!
+// expval HamiltonianObs
+TEMPLATE_TEST_CASE("Test expectation value of HamiltonianObs", "[LKMPI_Expval]",
+                   // float,
+                   double) {
+    using ComplexT = StateVectorKokkosMPI<TestType>::ComplexT;
+    SECTION("Using expval") {
+        std::vector<ComplexT> init_sv{{0.0, 0.0}, {0.0, 0.1}, {0.1, 0.1},
+                                      {0.1, 0.2}, {0.2, 0.2}, {0.3, 0.3},
+                                      {0.3, 0.4}, {0.4, 0.5}};
+        const TestType EP = 1e-4;
+        const std::size_t num_qubits = 3;
+        StateVectorKokkosMPI<TestType> sv{num_qubits};
+        // Only run with 4 mpi ranks:
+        REQUIRE(sv.getMPISize() == 4);
+
+        auto m = MeasurementsMPI(sv);
+
+        // Set initial data
+        std::size_t block_size = sv.getLocalBlockSize();
+        std::vector<Kokkos::complex<TestType>> init_subsv(block_size,
+                                                          {0.0, 0.0});
+        for (std::size_t element = 0; element < block_size; element++) {
+            init_subsv[element] =
+                init_sv[sv.getMPIRank() * block_size + element];
+        }
+        sv.updateData(init_subsv);
+
+        auto X0 = std::make_shared<NamedObsMPI<StateVectorKokkosMPI<TestType>>>(
+            "PauliX", std::vector<std::size_t>{0});
+        auto Z1 = std::make_shared<NamedObsMPI<StateVectorKokkosMPI<TestType>>>(
+            "PauliZ", std::vector<std::size_t>{1});
+
+        auto ob = HamiltonianMPI<StateVectorKokkosMPI<TestType>>::create(
+            {0.3, 0.5}, {X0, Z1});
+        auto res = m.expval(*ob);
+        auto expected = TestType(-0.086);
+        CHECK(expected == Approx(res));
+    }
+}
 
 // expval pauli word
 // This test takes a long time - float 2.5min, double 2.8min
@@ -884,7 +923,7 @@ TEMPLATE_TEST_CASE("Var - named obs", "[LKMPI_Var]", float, double) {
         GENERATE("Identity", "PauliX", "PauliY", "PauliZ", "Hadamard");
     const std::size_t wire = GENERATE(0, 1, 2, 3);
 
-    auto ob = NamedObs<StateVectorKokkosMPI<TestType>>(ob_name, {wire});
+    auto ob = NamedObsMPI<StateVectorKokkosMPI<TestType>>(ob_name, {wire});
     auto ob_ref = NamedObs<StateVectorKokkos<TestType>>(ob_name, {wire});
 
     auto res = m.var(ob);
@@ -952,7 +991,7 @@ TEMPLATE_TEST_CASE("Var - 1-wire matrix Hermitian obs", "[LKMPI_Var]", float,
 
     const std::size_t wire = GENERATE(0, 1, 2, 3);
 
-    auto ob = HermitianObs<StateVectorKokkosMPI<TestType>>(mat_ob, {wire});
+    auto ob = HermitianObsMPI<StateVectorKokkosMPI<TestType>>(mat_ob, {wire});
     auto ob_ref = HermitianObs<StateVectorKokkos<TestType>>(mat_ob, {wire});
     auto res = m.var(ob);
     auto res_ref = m_ref.var(ob_ref);
@@ -1026,7 +1065,7 @@ TEMPLATE_TEST_CASE("Var - 2-wire matrix Hermitian obs", "[LKMPI_Var]", float,
 
     if (wires.size() == num_wires) {
 
-        auto ob = HermitianObs<StateVectorKokkosMPI<TestType>>(
+        auto ob = HermitianObsMPI<StateVectorKokkosMPI<TestType>>(
             mat_ob, {wire_0, wire_1});
         auto ob_ref =
             HermitianObs<StateVectorKokkos<TestType>>(mat_ob, {wire_0, wire_1});
@@ -1087,7 +1126,8 @@ TEMPLATE_TEST_CASE("Var - TensorProdobs", "[LKMPI_Expval]", float, double) {
 
     auto ob_ref =
         TensorProdObs<StateVectorKokkos<TestType>>::create({X0_ref, Z1_ref});
-    auto ob = TensorProdObs<StateVectorKokkosMPI<TestType>>::create({X0, Z1});
+    auto ob =
+        TensorProdObsMPI<StateVectorKokkosMPI<TestType>>::create({X0, Z1});
 
     auto res = m.var(*ob);
     auto res_ref = m_ref.var(*ob_ref);

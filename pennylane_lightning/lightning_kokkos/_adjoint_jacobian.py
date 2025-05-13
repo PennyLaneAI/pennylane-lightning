@@ -18,7 +18,9 @@ Internal methods for adjoint Jacobian differentiation method.
 from __future__ import annotations
 
 from warnings import warn
+
 from pennylane_lightning.lightning_kokkos_ops.algorithmsMPI import OpsStructMPIC128
+
 try:
     from pennylane_lightning.lightning_kokkos_ops.algorithms import (
         AdjointJacobianC64,
@@ -118,8 +120,6 @@ class LightningKokkosAdjointJacobian(LightningBaseAdjointJacobian):
             return np.array([], dtype=self.dtype)
 
         trainable_params = processed_data["tp_shift"]
-        print( processed_data["obs_serialized"][0].__class__)
-        
         jac = self._jacobian_lightning(
             processed_data["state_vector"],
             processed_data["obs_serialized"],

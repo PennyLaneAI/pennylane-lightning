@@ -56,7 +56,7 @@ class NamedObsMPI final : public NamedObsBase<StateVectorT> {
      * @param params Argument to construct parameters
      */
     NamedObsMPI(std::string obs_name, std::vector<std::size_t> wires,
-             std::vector<PrecisionT> params = {})
+                std::vector<PrecisionT> params = {})
         : BaseType{obs_name, wires, params} {
         using Pennylane::Gates::Constant::gate_names;
         using Pennylane::Gates::Constant::gate_num_params;
@@ -179,7 +179,8 @@ class HamiltonianMPI final : public HamiltonianBase<StateVectorT> {
            std::initializer_list<std::shared_ptr<Observable<StateVectorT>>> obs)
         -> std::shared_ptr<HamiltonianMPI<StateVectorT>> {
         return std::shared_ptr<HamiltonianMPI<StateVectorT>>(
-            new HamiltonianMPI<StateVectorT>{std::move(coeffs), std::move(obs)});
+            new HamiltonianMPI<StateVectorT>{std::move(coeffs),
+                                             std::move(obs)});
     }
 
     /**
@@ -187,20 +188,21 @@ class HamiltonianMPI final : public HamiltonianBase<StateVectorT> {
      * @param sv The statevector to update
      */
     void applyInPlace(StateVectorT &sv) const override {
-        StateVectorT buffer{sv.getNumQubits()};
+        StateVectorT buffer(sv);
         buffer.initZeros();
-        StateVectorT tmp{sv};
+        StateVectorT tmp(sv);
+
         for (std::size_t term_idx = 0; term_idx < this->coeffs_.size();
              term_idx++) {
-            tmp.updateData(sv.getView());
+            tmp.updateData(sv);
             this->obs_[term_idx]->applyInPlace(tmp);
+            buffer.matchWires(tmp);
             LightningKokkos::Util::axpy_Kokkos<PrecisionT>(
                 ComplexT{this->coeffs_[term_idx], 0.0}, tmp.getView(),
-                buffer.getView(), tmp.getLength());
+                buffer.getView(), tmp.getLocalBlockSize());
         }
         sv.updateData(buffer);
     }
 };
-
 
 } // namespace Pennylane::LightningKokkos::Observables

@@ -108,7 +108,6 @@ class LightningBaseAdjointJacobian(ABC):
         obs_serialized, obs_indices = QuantumScriptSerializer(
             self._qubit_state.device_name, use_csingle, use_mpi, split_obs
         ).serialize_observables(tape)
-        
 
         ops_serialized, use_sp = QuantumScriptSerializer(
             self._qubit_state.device_name, use_csingle, use_mpi, split_obs

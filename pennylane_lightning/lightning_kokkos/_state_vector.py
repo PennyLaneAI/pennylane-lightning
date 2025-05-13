@@ -105,6 +105,13 @@ class LightningKokkosStateVector(LightningBaseStateVector):
         >>> print(dev.state)
         [0.+0.j 1.+0.j]
         """
+        if self._mpi:
+            self._qubit_state.reorderAllWires()
+            local_size = self._qubit_state.getLocalBlockSize()
+            state = np.zeros(local_size, dtype=self.dtype)
+            self.sync_d2h(state)
+            print(state)
+            return state
         state = np.zeros(2**self._num_wires, dtype=self.dtype)
         self.sync_d2h(state)
         return state
@@ -117,8 +124,7 @@ class LightningKokkosStateVector(LightningBaseStateVector):
         if self._mpi:
             return StateVectorMPIC128 if self.dtype == np.complex128 else StateVectorMPIC64
 
-        # without MPI
-        # return StateVectorC128 if self.dtype == np.complex128 else StateVectorC64
+        return StateVectorC128 if self.dtype == np.complex128 else StateVectorC64
 
     def sync_h2d(self, state_vector):
         """Copy the state vector data on host provided by the user to the state
@@ -199,10 +205,18 @@ class LightningKokkosStateVector(LightningBaseStateVector):
 
         if len(device_wires) == self._num_wires and Wires(sorted(device_wires)) == device_wires:
             # Initialize the entire device state with the input state
-            output_shape = (2,) * self._num_wires
-            state = np.reshape(state, output_shape).ravel(order="C")
-            self.sync_h2d(np.reshape(state, output_shape))
-            return
+            if self._mpi:
+                self._qubit_state.resetIndices()
+                myrank = self._qubit_state.getMPIRank()
+                local_size = self._qubit_state.getLocalBlockSize()
+                local_state = state[myrank * local_size : (myrank + 1) * local_size]
+                self.sync_h2d(local_state)
+                return
+            else:
+                output_shape = (2,) * self._num_wires
+                state = np.reshape(state, output_shape).ravel(order="C")
+                self.sync_h2d(np.reshape(state, output_shape))
+                return
 
         # This operate on device
         self._qubit_state.setStateVector(state, list(device_wires))
