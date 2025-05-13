@@ -20,9 +20,9 @@ on:
       - .github/**
       - '!.github/workflows/tests_lkcpu_python.yml'
       - pennylane_lightning/core/_version.py
-      - pennylane_lightning/core/src/simulators/lightning_gpu/**
-      - pennylane_lightning/core/src/simulators/lightning_qubit/**
-      - pennylane_lightning/core/src/simulators/lightning_tensor/**
+      - pennylane_lightning/core/simulators/lightning_gpu/**
+      - pennylane_lightning/core/simulators/lightning_qubit/**
+      - pennylane_lightning/core/simulators/lightning_tensor/**
       - pennylane_lightning/lightning_tensor/**
       - pennylane_lightning/lightning_gpu/**
       - pennylane_lightning/lightning_qubit/**
@@ -200,7 +200,7 @@ jobs:
           WHEEL_NAME=$(cat ${{ github.workspace }}/${{ matrix.pl_backend }}-${{ matrix.exec_model }}_name.txt)
           mv ${{ github.workspace }}/wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}.whl ${{ github.workspace }}/$WHEEL_NAME
           python -m pip install -r requirements-tests.txt
-          python -m pip install "jax[cpu]==0.4.28; python_version<='3.12'" openfermionpyscf
+          python -m pip install "jax[cpu]==0.5.3; python_version<='3.12'" openfermionpyscf
           if [ '${{ inputs.lightning-version }}' != 'stable' ]; then
             python scripts/configure_pyproject_toml.py
             SKIP_COMPILATION=True python -m pip install . -vv
@@ -339,3 +339,4 @@ jobs:
           fail_ci_if_error: true
           verbose: true
           token: ${{ secrets.CODECOV_TOKEN }}
+          flags: unit_tests

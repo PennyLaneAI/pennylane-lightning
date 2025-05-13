@@ -97,10 +97,12 @@ coverage-cpp:
 		  -DBUILD_TESTS=ON \
 		  -DENABLE_COVERAGE=ON \
 		  -DPL_BACKEND=$(PL_BACKEND) \
+		  -DCMAKE_C_COMPILER_LAUNCHER=$(COMPILER_LAUNCHER) \
+		  -DCMAKE_CXX_COMPILER_LAUNCHER=$(COMPILER_LAUNCHER) \
 		  $(OPTIONS)
 	cmake --build ./BuildCov $(VERBOSE) --target $(target)
 	cd ./BuildCov; for file in *runner ; do ./$(file); done; \
-	lcov --directory . -b ../pennylane_lightning/core/src/ --capture --output-file coverage.info; \
+	lcov --directory . -b ../pennylane_lightning/core/ --capture --output-file coverage.info; \
 	genhtml coverage.info --output-directory out || echo "genhtml failed"
 	echo "Coverage report generated in ./BuildCov/out/index.html"
 
@@ -122,6 +124,8 @@ test-cpp:
 		  -DENABLE_WARNINGS=ON \
 		  -DPL_BACKEND=$(PL_BACKEND) \
 		  -DSCIPY_OPENBLAS=$(SCIPY_OPENBLAS) \
+		  -DCMAKE_C_COMPILER_LAUNCHER=$(COMPILER_LAUNCHER) \
+		  -DCMAKE_CXX_COMPILER_LAUNCHER=$(COMPILER_LAUNCHER) \
 		  $(OPTIONS)
 ifdef target
 	cmake --build ./BuildTests $(VERBOSE) --target $(target)
@@ -142,6 +146,8 @@ test-cpp-mpi:
 		  -DCMAKE_C_COMPILER_LAUNCHER=$(COMPILER_LAUNCHER) \
 		  -DCMAKE_CXX_COMPILER_LAUNCHER=$(COMPILER_LAUNCHER) \
 		  -DENABLE_MPI=ON \
+		  -DCMAKE_C_COMPILER_LAUNCHER=$(COMPILER_LAUNCHER) \
+		  -DCMAKE_CXX_COMPILER_LAUNCHER=$(COMPILER_LAUNCHER) \
 		  $(OPTIONS)
 ifdef target
 	cmake --build ./BuildTests $(VERBOSE) --target $(target)
@@ -174,6 +180,8 @@ check-tidy:
 		  -DENABLE_WARNINGS=ON \
 		  -DCLANG_TIDY_BINARY=clang-tidy \
 		  -DPL_BACKEND=$(PL_BACKEND) \
+		  -DCMAKE_C_COMPILER_LAUNCHER=$(COMPILER_LAUNCHER) \
+		  -DCMAKE_CXX_COMPILER_LAUNCHER=$(COMPILER_LAUNCHER) \
 		  $(OPTIONS)
 ifdef target
 	cmake --build ./BuildTidy $(VERBOSE) --target $(target)
