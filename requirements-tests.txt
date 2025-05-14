@@ -5,5 +5,5 @@ pytest-mock>=3.7.0
 pytest-xdist>=2.5.0
 pytest-split
 flaky>=3.7.0
-jax[cpu]==0.5.3; python_version <= "3.12"
+#jax[cpu]==0.5.3; python_version <= "3.12" # add after v0.42 release
 git+https://github.com/PennyLaneAI/pennylane.git@master
