@@ -113,7 +113,6 @@ namespace {
 using Pennylane::Util::bestCPUMemoryModel;
 using Pennylane::Util::CPUMemoryModel;
 using Pennylane::Util::getMemoryModel;
-template <class T> using measure = Measurements<T>;
 } // namespace
 /// @endcond
 
@@ -452,33 +451,32 @@ void registerBackendAgnosticMeasurements(PyClass &pyclass) {
         typename StateVectorT::PrecisionT; // Statevector's precision.
     using ParamT = PrecisionT;             // Parameter's data precision
 #endif
-    using measureT = measure<StateVectorT>;
     pyclass
         .def(
             "expval",
-            [](measureT &M,
+            [](Measurements<StateVectorT> &M,
                const std::shared_ptr<Observable<StateVectorT>> &ob) {
                 return M.expval(*ob);
             },
             "Expected value of an observable object.")
         .def(
             "var",
-            [](measureT &M,
+            [](Measurements<StateVectorT> &M,
                const std::shared_ptr<Observable<StateVectorT>> &ob) {
                 return M.var(*ob);
             },
             "Variance of an observable object.")
 #ifndef _ENABLE_PLKOKKOS_MPI
         .def("probs",
-             [](measureT &M, const std::vector<std::size_t> &wires) {
+             [](Measurements<StateVectorT> &M, const std::vector<std::size_t> &wires) {
                  return py::array_t<ParamT>(py::cast(M.probs(wires)));
              })
         .def("probs",
-             [](measureT &M) {
+             [](Measurements<StateVectorT> &M) {
                  return py::array_t<ParamT>(py::cast(M.probs()));
              })
         .def("generate_samples",
-             [](measureT &M, std::size_t num_wires, std::size_t num_shots) {
+             [](Measurements<StateVectorT> &M, std::size_t num_wires, std::size_t num_shots) {
                  auto &&result = M.generate_samples(num_shots);
                  const std::size_t ndim = 2;
                  const std::vector<std::size_t> shape{num_shots, num_wires};
@@ -688,7 +686,7 @@ template <class StateVectorT> void lightningClassBindings(py::module_ &m) {
     //                             Measurements
     //***********************************************************************//
     class_name = "MeasurementsC" + bitsize;
-    auto pyclass_measurements = py::class_<measure<StateVectorT>>(
+    auto pyclass_measurements = py::class_<Measurements<StateVectorT>>(
         m, class_name.c_str(), py::module_local());
 
 #if defined(_ENABLE_PLGPU) || defined(_ENABLE_PLKOKKOS)
