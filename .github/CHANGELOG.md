@@ -26,6 +26,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Use JAX version 0.4.28 for CI tests for stable version.
+  [(#1160)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1160)
+
 - Bump `readthedocs` Github action runner to use Ubuntu-24.04.
   [(#1151)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1151)
 
@@ -55,7 +58,6 @@
 
 - Added flags to all Codecov reports and a default carryforward flag for all flags.
   [(1144)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1144)
-
 
 <h3>Contributors ✍️</h3>
 
