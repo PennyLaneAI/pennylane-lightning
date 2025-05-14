@@ -35,7 +35,7 @@
 
 - Fix Docker build for Lighting-Kokkos with ROCM library for AMD GPUs.
   Updating ROCM from 5.7 to 6.2.4. 
-  [(#1156)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1158)
+  [(#1158)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1158)
 
 <h3>Internal changes ⚙️</h3>
 
