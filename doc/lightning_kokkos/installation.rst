@@ -3,7 +3,7 @@ Lightning-Kokkos installation
 
 Standard installation
 =====================
-On most Linux systems, Lightning-Kokkos can be installed via Spack or Docker by following our installation instructions at `pennylane.ai/install <https://pennylane.ai/install/#high-performance-computing-and-gpus>`__.
+On most Linux systems, Lightning-Kokkos can be installed by following our installation instructions at `pennylane.ai/install <https://pennylane.ai/install/#high-performance-computing-and-gpus>`__.
 
 Install Lightning-Kokkos from source
 ====================================
@@ -18,7 +18,7 @@ Install Kokkos (Optional)
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 We suggest first installing Kokkos with the wanted configuration following the instructions found in the `Kokkos documentation <https://kokkos.github.io/kokkos-core-wiki/building.html>`_.
-For example, the following will build Kokkos for NVIDIA A100 cards
+For example, the following will build Kokkos for NVIDIA A100 cards:
 
 Download the `Kokkos code <https://github.com/kokkos/kokkos/releases>`_. Lightning-Kokkos was tested with Kokkos version <= 4.5.0
 
