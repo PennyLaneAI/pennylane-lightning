@@ -24,6 +24,10 @@
 
 <h3>Bug fixes 🐛</h3>
 
+- Fix Docker build for Lighting-Kokkos with ROCM library for AMD GPUs.
+  Updating ROCM from 5.7 to 6.2.4. 
+  [(#1158)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1158)
+
 <h3>Internal changes ⚙️</h3>
 
 - Use JAX version 0.4.28 for CI tests for stable version.
@@ -58,6 +62,9 @@
 
 - Added flags to all Codecov reports and a default carryforward flag for all flags.
   [(1144)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1144)
+
+- Bump `readthedocs` Github action runner to use Ubuntu-24.04.
+  [(#1151)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1151)
 
 <h3>Contributors ✍️</h3>
 
