@@ -180,7 +180,6 @@ FROM base-build-python AS base-build-rocm
 RUN wget --progress=dot:giga ${ROCM_INSTALLER}
 RUN apt-get update \
     && apt-get upgrade -y \
-    && apt-get install --no-install-recommends -y "linux-headers-$(uname -r)" "linux-modules-extra-$(uname -r)" \
     && apt-get install --no-install-recommends -y ./$(echo ${ROCM_INSTALLER} | xargs -I {} basename {}) \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
