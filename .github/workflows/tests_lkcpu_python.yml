@@ -207,9 +207,10 @@ jobs:
           fi
           python -m pip install ${{ github.workspace }}/$WHEEL_NAME --no-deps
 
-      - name: Revert to older JAX version for stable (FIXME: remove after v0.42 release)
+      - name: Revert to older JAX version for stable
         if: inputs.pennylane-version == 'stable'
         run: |
+          # FIXME: remove after v0.42 release
           python -m pip install "jax[cpu]==0.4.28"
 
       - name: Checkout PennyLane for release or latest build
