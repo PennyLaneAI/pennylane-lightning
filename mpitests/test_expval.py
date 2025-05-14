@@ -132,7 +132,7 @@ class TestExpval:
         comm = MPI.COMM_WORLD
 
         dev_mpi = qml.device(
-            "lightning.gpu", wires=numQubits, mpi=True, c_dtype=c_dtype, batch_obs=batch_obs
+            device_name, wires=numQubits, mpi=True, c_dtype=c_dtype, batch_obs=batch_obs
         )
 
         dev_cpu = qml.device("lightning.qubit", wires=num_wires, c_dtype=c_dtype)
@@ -170,7 +170,7 @@ class TestExpval:
 
         dev_cpu = qml.device("lightning.qubit", wires=num_wires, c_dtype=c_dtype)
         dev_mpi = qml.device(
-            "lightning.gpu", wires=num_wires, mpi=True, c_dtype=c_dtype, batch_obs=batch_obs
+            device_name, wires=num_wires, mpi=True, c_dtype=c_dtype, batch_obs=batch_obs
         )
 
         def circuit():
@@ -218,7 +218,7 @@ class TestExpval:
 
         dev_cpu = qml.device("lightning.qubit", wires=num_wires, c_dtype=c_dtype)
         dev_mpi = qml.device(
-            "lightning.gpu", wires=num_wires, mpi=True, c_dtype=c_dtype, batch_obs=batch_obs
+            device_name, wires=num_wires, mpi=True, c_dtype=c_dtype, batch_obs=batch_obs
         )
 
         def circuit():
@@ -234,7 +234,7 @@ class TestExpval:
     def test_expval_non_pauli_word_hamiltonian(self, tol, c_dtype, batch_obs):
         """Tests expectation values of non-Pauli word Hamiltonians."""
         dev_mpi = qml.device(
-            "lightning.gpu", wires=3, mpi=True, c_dtype=c_dtype, batch_obs=batch_obs
+            device_name, wires=3, mpi=True, c_dtype=c_dtype, batch_obs=batch_obs
         )
         dev_cpu = qml.device("lightning.qubit", wires=3)
 
@@ -259,7 +259,7 @@ class TestExpval:
     @pytest.mark.parametrize("n_wires", range(1, numQubits))
     def test_hermitian_expectation(self, n_wires, theta, phi, tol, c_dtype, batch_obs):
         """Test that Hadamard expectation value is correct"""
-        n_qubits = numQubits - 1
+        n_qubits = numQubits
         dev_def = qml.device("default.qubit", wires=n_qubits)
         dev = qml.device(
             device_name, mpi=True, wires=n_qubits, c_dtype=c_dtype, batch_obs=batch_obs
