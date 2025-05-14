@@ -65,7 +65,7 @@
 - Bump `readthedocs` Github action runner to use Ubuntu-24.04.
 [(#1151)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1151)
 
-- Use JAX version from `requirements-dev.txt` for CI tests to test stable version.
+- Use JAX version 0.4.28 for CI tests for stable version.
 [(#1160)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1160)
 
 
