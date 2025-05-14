@@ -199,7 +199,7 @@ jobs:
         run: |
           WHEEL_NAME=$(cat ${{ github.workspace }}/${{ matrix.pl_backend }}-${{ matrix.exec_model }}_name.txt)
           mv ${{ github.workspace }}/wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}.whl ${{ github.workspace }}/$WHEEL_NAME
-          python -m pip install -r requirements-dev.txt # TODO: Revert back to requirements-tests.txt after v0.42 release
+          python -m pip install -r requirements-tests.txt
           python -m pip install openfermionpyscf
           if [ '${{ inputs.lightning-version }}' != 'stable' ]; then
             python scripts/configure_pyproject_toml.py
@@ -253,8 +253,6 @@ jobs:
 
       - name: Run PennyLane-Lightning unit tests
         run: |
-          # FIXME(v0.41.0): Remove pytest-split in favour of requirements-tests.txt
-          python -m pip install pytest-split
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
           # Remove `python -m` to avoid running tests with relative modules
           PL_DEVICE=${DEVICENAME} pytest tests/ $COVERAGE_FLAGS --splits 7 --group ${{ matrix.group }} \

@@ -154,7 +154,7 @@ jobs:
         run: |
           WHEEL_NAME=$(cat ${{ github.workspace }}/${{ matrix.pl_backend }}-${{ matrix.blas }}_name.txt)
           mv ${{ github.workspace }}/wheel_${{ matrix.pl_backend }}-${{ matrix.blas }}.whl ${{ github.workspace }}/$WHEEL_NAME
-          python -m pip install -r requirements-dev.txt # TODO: Revert back to requirements-tests.txt after v0.42 release
+          python -m pip install -r requirements-tests.txt
           python -m pip install openfermionpyscf semantic-version
           python -m pip install ${{ github.workspace }}/$WHEEL_NAME --no-deps --force-reinstall
 
