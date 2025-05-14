@@ -82,7 +82,6 @@ def get_device():
     """
     device = None
     if "PL_DEVICE" in os.environ:
-        print("Using device from environment variable PL_DEVICE")
         device = os.environ.get("PL_DEVICE", default_device)
         device = device.replace("_", ".")
     if device is None:
