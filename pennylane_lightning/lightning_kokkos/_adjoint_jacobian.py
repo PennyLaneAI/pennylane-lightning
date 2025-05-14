@@ -59,9 +59,6 @@ class LightningKokkosAdjointJacobian(LightningBaseAdjointJacobian):
 
     # pylint: disable=too-few-public-methods
 
-        self._use_mpi = qubit_state._mpi
-
-
     def _adjoint_jacobian_dtype(self):
         """Binding to Lightning Kokkos Adjoint Jacobian C++ class.
 
