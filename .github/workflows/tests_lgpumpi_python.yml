@@ -121,6 +121,11 @@ jobs:
           python -m pip install mpi4py openfermionpyscf
           python scripts/configure_pyproject_toml.py || true
           python -m pip install . -vv
+  
+      - name: Revert to older JAX version for stable (FIXME: remove after v0.42 release)
+        if: inputs.pennylane-version == 'stable'
+        run: |
+          python -m pip install "jax[cpu]==0.4.28"
 
       - name: Checkout PennyLane for release or latest build
         if: inputs.pennylane-version == 'release' || inputs.pennylane-version == 'latest'

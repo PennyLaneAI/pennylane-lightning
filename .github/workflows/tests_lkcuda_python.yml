@@ -214,6 +214,11 @@ jobs:
           python -m pip install -r requirements-tests.txt
           python -m pip install openfermionpyscf
 
+      - name: Revert to older JAX version for stable (FIXME: remove after v0.42 release)
+        if: inputs.pennylane-version == 'stable'
+        run: |
+          python -m pip install "jax[cpu]==0.4.28"
+
       - name: Checkout PennyLane for release or latest build
         if: inputs.pennylane-version == 'release' || inputs.pennylane-version == 'latest'
         uses: actions/checkout@v4
