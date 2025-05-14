@@ -30,6 +30,7 @@ if not ld._CPP_BINARY_AVAILABLE:
 if device_name != "lightning.gpu":
     pytest.skip("Kokkos MPI does not yet support Sparse.", allow_module_level=True)
 
+
 class TestSparseExpval:
     """Tests for the expval function"""
 

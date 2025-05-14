@@ -108,6 +108,7 @@ if device_name == "lightning.gpu":
     from pennylane_lightning.lightning_gpu._state_vector import (
         LightningGPUStateVector as LightningStateVector,
     )
+
     if hasattr(pennylane_lightning, "lightning_gpu_ops"):
         from pennylane_lightning.lightning_gpu_ops import LightningException
 elif device_name == "lightning.kokkos":
@@ -118,6 +119,7 @@ elif device_name == "lightning.kokkos":
     from pennylane_lightning.lightning_kokkos._state_vector import (
         LightningKokkosStateVector as LightningStateVector,
     )
+
     if hasattr(pennylane_lightning, "lightning_kokkos_ops"):
         from pennylane_lightning.lightning_kokkos_ops import LightningException
 else:

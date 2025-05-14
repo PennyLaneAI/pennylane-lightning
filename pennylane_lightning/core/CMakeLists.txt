@@ -27,7 +27,7 @@ if (BUILD_TESTS)
     include(CTest)
 endif()
 
-if (ENABLE_MPI)
+if (ENABLE_PLKOKKOS_MPI)
     add_executable(lightning lightning.cpp)
     target_link_libraries(lightning pennylane_lightning)
     set_property(TARGET lightning PROPERTY CXX_STANDARD 20)

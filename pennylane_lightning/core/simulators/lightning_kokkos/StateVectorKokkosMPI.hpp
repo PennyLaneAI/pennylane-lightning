@@ -76,15 +76,20 @@ inline void errhandler(int errcode, const char *str) {
             errhandler(errcode, #fn);                                          \
     }
 
-template <class T> MPI_Datatype getMPIType() {
+template <class T> [[maybe_unused]] MPI_Datatype getMPIType() {
     PL_ABORT("No corresponding MPI type.");
 }
-template <> MPI_Datatype getMPIType<float>() { return MPI_FLOAT; }
-template <> MPI_Datatype getMPIType<double>() { return MPI_DOUBLE; }
-template <> MPI_Datatype getMPIType<Kokkos::complex<float>>() {
+template <> [[maybe_unused]] MPI_Datatype getMPIType<float>() {
+    return MPI_FLOAT;
+}
+template <> [[maybe_unused]] MPI_Datatype getMPIType<double>() {
+    return MPI_DOUBLE;
+}
+template <> [[maybe_unused]] MPI_Datatype getMPIType<Kokkos::complex<float>>() {
     return MPI_C_FLOAT_COMPLEX;
 }
-template <> MPI_Datatype getMPIType<Kokkos::complex<double>>() {
+template <>
+[[maybe_unused]] MPI_Datatype getMPIType<Kokkos::complex<double>>() {
     return MPI_C_DOUBLE_COMPLEX;
 }
 
@@ -326,8 +331,12 @@ class StateVectorKokkosMPI final
         return mpi_rank_to_global_index_map_;
     }
 
-    const std::vector<std::size_t> &getGlobalWires() const { return global_wires_; }
-    const std::vector<std::size_t> &getLocalWires() const { return local_wires_; }
+    const std::vector<std::size_t> &getGlobalWires() const {
+        return global_wires_;
+    }
+    const std::vector<std::size_t> &getLocalWires() const {
+        return local_wires_;
+    }
 
     std::vector<std::size_t>
     getLocalWireIndices(const std::vector<std::size_t> &wires) const {
@@ -377,7 +386,7 @@ class StateVectorKokkosMPI final
         return std::pair<std::size_t, std::size_t>{index / blk, index % blk};
     }
 
-    std::size_t getGlobalIndexFromMPIRank(const std::size_t mpi_rank) const {
+    std::size_t getGlobalIndexFromMPIRank(const int mpi_rank) const {
         return mpi_rank_to_global_index_map_[mpi_rank];
     }
 
@@ -506,7 +515,7 @@ class StateVectorKokkosMPI final
      * @param state State.
      * @param wires Wires.
      */
-    void setStateVector(const ComplexT *state,
+    void setStateVector([[maybe_unused]] const ComplexT *state,
                         const std::vector<std::size_t> &wires) {
         PL_ABORT_IF(wires.size() != (getNumGlobalWires() + getNumLocalWires()),
                     "Setting sub-statevector not implemented yet.");
@@ -856,11 +865,13 @@ class StateVectorKokkosMPI final
         const auto other_global_wires = other_sv.getGlobalWires();
         const auto other_mpi_rank_to_global_index_map =
             other_sv.getMPIRankToGlobalIndexMap();
-        matchGlobalWiresAndIndex(other_global_wires, other_mpi_rank_to_global_index_map);
+        matchGlobalWiresAndIndex(other_global_wires,
+                                 other_mpi_rank_to_global_index_map);
     }
 
-    void matchGlobalWiresAndIndex(const std::vector<std::size_t> &global_wires_target,
-                                  const std::vector<std::size_t> &mpi_rank_to_global_index_map_target) {
+    void matchGlobalWiresAndIndex(
+        const std::vector<std::size_t> &global_wires_target,
+        const std::vector<std::size_t> &mpi_rank_to_global_index_map_target) {
         std::size_t my_global_index = getGlobalIndexFromMPIRank(getMPIRank());
         std::size_t dest_global_index = 0;
         for (std::size_t i = 0; i < global_wires_.size(); ++i) {
@@ -872,8 +883,8 @@ class StateVectorKokkosMPI final
                          global_wires_[global_wires_.size() - i - 1])));
         }
 
-        std::size_t dest_mpi_rank = getElementIndexInVector(mpi_rank_to_global_index_map_target,
-                                       dest_global_index);
+        std::size_t dest_mpi_rank = getElementIndexInVector(
+            mpi_rank_to_global_index_map_target, dest_global_index);
 
         allocateBuffers();
         std::size_t send_size = exp2(getNumLocalWires() - 1);
@@ -938,7 +949,7 @@ class StateVectorKokkosMPI final
             return;
         }
 
-        if (opName == "GlobalPhase"){
+        if (opName == "GlobalPhase") {
             (*sv_).applyOperation("GlobalPhase", {}, inverse, {params});
             return;
         }
@@ -1484,18 +1495,19 @@ class StateVectorKokkosMPI final
         }
     }
 
-    void reorderAllWires(){
+    void reorderAllWires() {
         reorderGlobalLocalWires();
         std::vector<std::size_t> global_wires_target(getNumGlobalWires());
-        std::vector<std::size_t> mpi_rank_to_global_index_map_target(getMPISize());
+        std::vector<std::size_t> mpi_rank_to_global_index_map_target(
+            getMPISize());
 
-        std::iota(global_wires_target.begin(), global_wires_target.end(), 0);  
+        std::iota(global_wires_target.begin(), global_wires_target.end(), 0);
         std::iota(mpi_rank_to_global_index_map_target.begin(),
                   mpi_rank_to_global_index_map_target.end(), 0);
 
-        matchGlobalWiresAndIndex(global_wires_target, mpi_rank_to_global_index_map_target);
+        matchGlobalWiresAndIndex(global_wires_target,
+                                 mpi_rank_to_global_index_map_target);
         reorderLocalWires();
-    
     }
 
     /**
@@ -1512,7 +1524,7 @@ class StateVectorKokkosMPI final
         std::vector<int> recvcount(getMPISize(), local_.size());
         std::vector<int> displacements(getMPISize(), 0);
 
-        for (std::size_t rank = 0; rank < getMPISize(); rank++) {
+        for (int rank = 0; rank < getMPISize(); rank++) {
             for (std::size_t i = 0; i < getNumGlobalWires(); i++) {
                 std::size_t temp =
                     ((getGlobalIndexFromMPIRank(rank) >>

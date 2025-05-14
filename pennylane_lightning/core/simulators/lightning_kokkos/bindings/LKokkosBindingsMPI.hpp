@@ -189,9 +189,6 @@ void registerBackendSpecificMeasurementsMPI(PyClass &pyclass) {
 
     using np_arr_c = py::array_t<std::complex<ParamT>,
                                  py::array::c_style | py::array::forcecast>;
-    using SparseIndexT = std::size_t;
-    using np_arr_sparse_ind =
-        py::array_t<SparseIndexT, py::array::c_style | py::array::forcecast>;
 
     pyclass
         .def("expval",
@@ -298,5 +295,5 @@ void registerBackendSpecificAlgorithmsMPI([[maybe_unused]] py::module_ &m) {}
  *
  * @param m Pybind11 module.
  */
-void registerBackendSpecificInfoMPI(py::module_ &m) {}
+void registerBackendSpecificInfoMPI([[maybe_unused]] py::module_ &m) {}
 } // namespace Pennylane::LightningKokkos

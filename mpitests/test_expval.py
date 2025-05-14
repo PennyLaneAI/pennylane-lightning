@@ -233,9 +233,7 @@ class TestExpval:
 
     def test_expval_non_pauli_word_hamiltonian(self, tol, c_dtype, batch_obs):
         """Tests expectation values of non-Pauli word Hamiltonians."""
-        dev_mpi = qml.device(
-            device_name, wires=3, mpi=True, c_dtype=c_dtype, batch_obs=batch_obs
-        )
+        dev_mpi = qml.device(device_name, wires=3, mpi=True, c_dtype=c_dtype, batch_obs=batch_obs)
         dev_cpu = qml.device("lightning.qubit", wires=3)
 
         theta = 0.432

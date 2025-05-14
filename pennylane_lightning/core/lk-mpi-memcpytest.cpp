@@ -95,7 +95,8 @@ int main(int argc, char *argv[]) {
                 "copy_sendbuf", buffer_size,
                 KOKKOS_LAMBDA(std::size_t buffer_index) {
                     std::size_t SV_index = swap_wire_mask;
-                    for (int i = 0; i < not_swapping_local_wire_size; i++) {
+                    for (std::size_t i = 0; i < not_swapping_local_wire_size;
+                         i++) {
                         SV_index |= (((buffer_index >> i) & 1)
                                      << index_not_swapped_view(i));
                     }

@@ -447,9 +447,11 @@ void registerBackendAgnosticObservables(py::module_ &m) {
  */
 template <class StateVectorT, class PyClass>
 void registerBackendAgnosticMeasurements(PyClass &pyclass) {
+#ifndef _ENABLE_PLKOKKOS_MPI
     using PrecisionT =
         typename StateVectorT::PrecisionT; // Statevector's precision.
     using ParamT = PrecisionT;             // Parameter's data precision
+#endif
     using measureT = measure<StateVectorT>;
     pyclass
         .def(
@@ -466,7 +468,7 @@ void registerBackendAgnosticMeasurements(PyClass &pyclass) {
                 return M.var(*ob);
             },
             "Variance of an observable object.")
-#if _ENABLE_MPI != 1 || _ENABLE_PLKOKKOS != 1
+#ifndef _ENABLE_PLKOKKOS_MPI
         .def("probs",
              [](measureT &M, const std::vector<std::size_t> &wires) {
                  return py::array_t<ParamT>(py::cast(M.probs(wires)));

@@ -430,12 +430,10 @@ class MeasurementsMPI final
     }
 };
 
-    auto generate_samples(std::size_t num_samples) -> std::vector<std::size_t> {
-        PL_ABORT("Generate Samples not supported in LK-MPI");
-        std::vector<std::size_t> samples(num_samples);
-        return samples;
-    }
-
-
+auto generate_samples(std::size_t num_samples) -> std::vector<std::size_t> {
+    PL_ABORT("Generate Samples not supported in LK-MPI");
+    std::vector<std::size_t> samples(num_samples);
+    return samples;
+}
 
 } // namespace Pennylane::LightningKokkos::Measures

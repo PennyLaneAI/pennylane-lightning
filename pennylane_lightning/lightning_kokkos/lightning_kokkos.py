@@ -454,7 +454,6 @@ class LightningKokkos(LightningBase):
             postselect_mode=postselect_mode,
         )
 
-
     @staticmethod
     def get_c_interface():
         """Returns a tuple consisting of the device name, and

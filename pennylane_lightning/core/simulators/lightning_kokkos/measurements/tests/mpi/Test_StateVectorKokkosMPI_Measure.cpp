@@ -496,7 +496,6 @@ TEMPLATE_TEST_CASE("Test expectation value of HamiltonianObs", "[LKMPI_Expval]",
         std::vector<ComplexT> init_sv{{0.0, 0.0}, {0.0, 0.1}, {0.1, 0.1},
                                       {0.1, 0.2}, {0.2, 0.2}, {0.3, 0.3},
                                       {0.3, 0.4}, {0.4, 0.5}};
-        const TestType EP = 1e-4;
         const std::size_t num_qubits = 3;
         StateVectorKokkosMPI<TestType> sv{num_qubits};
         // Only run with 4 mpi ranks:

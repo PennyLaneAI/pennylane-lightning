@@ -25,6 +25,7 @@ numQubits = 8
 if device_name != "lightning.gpu":
     pytest.skip("Kokkos MPI does not yet support Sparse.", allow_module_level=True)
 
+
 def create_random_init_state(numWires, c_dtype, seed_value=48):
     """Returns a random initial state of a certain type."""
     np.random.seed(seed_value)

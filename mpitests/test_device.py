@@ -97,6 +97,7 @@ def test_dynamic_wires_from_circuit_fixed_wires(circuit_in, n_wires, wires_list)
     elif device_name == "lightning.kokkos":
         assert dev._statevector._mpi
 
+
 @pytest.mark.skipif(device_name != "lightning.gpu", reason="Only for LGPU")
 def test_unsupported_mpi_buf_size():
     with pytest.raises(ValueError, match="Unsupported mpi_buf_size value"):

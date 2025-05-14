@@ -95,11 +95,13 @@ template <class StateVectorT> void registerObservablesMPI(py::module_ &m) {
 
     using np_arr_c = py::array_t<std::complex<ParamT>, py::array::c_style>;
     using np_arr_r = py::array_t<ParamT, py::array::c_style>;
+
+#if _ENABLE_PLGPU == 1
     using np_arr_sparse_ind = typename std::conditional<
         std::is_same<ParamT, float>::value,
         py::array_t<int32_t, py::array::c_style | py::array::forcecast>,
         py::array_t<int64_t, py::array::c_style | py::array::forcecast>>::type;
-
+#endif
     std::string class_name;
 
     class_name = "ObservableMPIC" + bitsize;
