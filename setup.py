@@ -170,7 +170,7 @@ class CMakeBuild(build_ext):
                 shared_lib_ext = {"Linux": ".so", "Darwin": ".dylib"}[platform.system()]
                 source = os.path.join(f"{extdir}", f"lib{backend}_catalyst{shared_lib_ext}")
                 destination = os.path.join(os.getcwd(), self.build_temp)
-                #shutil.copy(source, destination)
+                shutil.copy(source, destination)
 
 with open(os.path.join("pennylane_lightning", "core", "_version.py"), encoding="utf-8") as f:
     version = f.readlines()[-1].split()[-1].strip("\"'")
