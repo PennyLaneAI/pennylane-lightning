@@ -16,15 +16,6 @@
 
 <h3>Documentation 📝</h3>
 
-- Enable `pennylane.ai` search.
-  [(#1135)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1135)
-
-- Move the installation sections from `README.rst` to dedicated pages.
-  [(#1131)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1131)
-
-- Fix doxygen doc builds for `AVXCommon::FuncReturn`.
-  [(#1134)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1134)
-
 - Added a header/banner image to the README (`README.rst`), as in the `pennylane` and `catalyst` repositories.
   Temporarily reverted this change as PyPI forbids the `.. raw::` directive for security reasons in `rst` files.
   This will be revisited in a future PR.
@@ -34,6 +25,12 @@
 <h3>Bug fixes 🐛</h3>
 
 <h3>Internal changes ⚙️</h3>
+
+- Use JAX version 0.4.28 for CI tests for stable version.
+  [(#1160)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1160)
+
+- Bump `readthedocs` Github action runner to use Ubuntu-24.04.
+  [(#1151)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1151)
 
 - The `LightningBaseStateVector`, `LightningBaseAdjointJacobian`, `LightningBaseMeasurements`, `LightningInterpreter` and `QuantumScriptSerializer` base classes now can be found at `pennylane_lightning.lightning_base`.
 
@@ -62,20 +59,12 @@
 - Added flags to all Codecov reports and a default carryforward flag for all flags.
   [(1144)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1144)
 
-- Bump `readthedocs` Github action runner to use Ubuntu-24.04.
-[(#1151)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1151)
-
-- Use JAX version 0.4.28 for CI tests for stable version.
-[(#1160)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1160)
-
-
 <h3>Contributors ✍️</h3>
 
 This release contains contributions from (in alphabetical order):
 
 Runor Agbaire,
 Ali Asadi,
-Andrew Gardhouse,
 David Ittah,
 Christina Lee,
 Joseph Lee,
@@ -83,6 +72,37 @@ Anton Naim Ibrahim,
 Luis Alfredo Nuñez Meneses,
 Mudit Pandey,
 Andrija Paurevic,
+
+---
+
+# Release 0.41.1
+
+<h3>Breaking changes 💔</h3>
+
+- Build Catalyst Lightning plugins against Catalyst Runtime v0.11.0.
+  [(#1148)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1148)
+
+<h3>Documentation 📝</h3>
+
+- `pennylane.ai` search is enabled, so users are redirected to the PennyLane search page from the PennyLane-Lightning docs.
+  [(#1135)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1135)
+
+- Fix doxygen doc builds for `AVXCommon::FuncReturn`.
+  [(#1134)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1134)
+
+- Move the installation sections from `README.rst` to dedicated pages.
+  [(#1131)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1131)
+
+<h3>Contributors ✍️</h3>
+
+This release contains contributions from (in alphabetical order):
+
+Ali Asadi,
+Amintor Dusko,
+Andrew Gardhouse,
+Joseph Lee,
+Anton Naim Ibrahim,
+Luis Alfredo Nuñez Meneses
 
 ---
 
