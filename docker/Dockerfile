@@ -25,7 +25,7 @@ ARG DEBIAN_FRONTEND=noninteractive
 ARG GCC_VERSION=11
 ARG LIGHTNING_VERSION=master
 ARG PENNYLANE_VERSION
-ARG ROCM_INSTALLER=https://repo.radeon.com/amdgpu-install/5.7/ubuntu/jammy/amdgpu-install_5.7.50700-1_all.deb
+ARG ROCM_INSTALLER=https://repo.radeon.com/amdgpu-install/6.2.4/ubuntu/jammy/amdgpu-install_6.2.60204-1_all.deb
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
     apt-utils \
@@ -179,9 +179,8 @@ RUN pip install --no-cache-dir git+https://github.com/PennyLaneAI/pennylane.git@
 FROM base-build-python AS base-build-rocm
 RUN wget --progress=dot:giga ${ROCM_INSTALLER}
 RUN apt-get update \
-    && apt-get install --no-install-recommends -y \
-    "linux-headers-$(uname -r)" "linux-modules-extra-$(uname -r)" \
-    ./$(echo ${ROCM_INSTALLER} | xargs -I {} basename {}) \
+    && apt-get upgrade -y \
+    && apt-get install --no-install-recommends -y ./$(echo ${ROCM_INSTALLER} | xargs -I {} basename {}) \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 RUN amdgpu-install -y --accept-eula --usecase=rocm,hiplibsdk --no-dkms
@@ -194,10 +193,10 @@ ENV CXX=hipcc
 ENV PL_BACKEND=lightning_kokkos
 RUN pip uninstall -y pennylane-lightning
 RUN python scripts/configure_pyproject_toml.py || true
-RUN CMAKE_ARGS="-DKokkos_ENABLE_SERIAL:BOOL=ON -DKokkos_ENABLE_OPENMP:BOOL=ON -DKokkos_ENABLE_HIP:BOOL=ON -DKokkos_ARCH_${AMD_ARCH}=ON" python -m build --wheel
+RUN CMAKE_ARGS="-DKokkos_ENABLE_SERIAL:BOOL=ON -DKokkos_ENABLE_OPENMP:BOOL=ON -DKokkos_ENABLE_HIP:BOOL=ON -DKokkos_ARCH_${AMD_ARCH}=ON -DCMAKE_CXX_FLAGS='--gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/11/'" python -m build --wheel
 
 # Install lightning-kokkos HIP backend
-FROM rocm/dev-ubuntu-22.04:5.7 AS wheel-lightning-kokkos-rocm
+FROM rocm/dev-ubuntu-22.04:6.2.4 AS wheel-lightning-kokkos-rocm
 ARG PENNYLANE_VERSION
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \

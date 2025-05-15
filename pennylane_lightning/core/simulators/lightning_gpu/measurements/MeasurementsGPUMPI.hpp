@@ -31,7 +31,7 @@
 #include <vector>
 
 #include "MPILinearAlg.hpp"
-#include "MPIManager.hpp"
+#include "MPIManagerGPU.hpp"
 #include "MPIWorker.hpp"
 #include "MeasurementsBase.hpp"
 #include "Observables.hpp"

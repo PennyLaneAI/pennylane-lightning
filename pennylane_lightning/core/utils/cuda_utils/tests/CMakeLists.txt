@@ -50,6 +50,7 @@ target_sources(cuda_utils_tests_mpi INTERFACE ./mpi/runner_cuda_utils_mpi.cpp)
 # Define targets
 ################################################################################
 set(TEST_SOURCES ./mpi/Test_LinearAlgebraMPI.cpp
+                 ./mpi/Test_MPIManagerGPU.cpp
                  ./mpi/Test_CSRMatrix.cpp)
 
 add_executable(cuda_utils_test_runner_mpi ${TEST_SOURCES})

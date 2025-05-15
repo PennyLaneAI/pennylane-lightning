@@ -465,13 +465,12 @@ void registerBackendAgnosticAlgorithmsMPI(py::module_ &m) {
 }
 
 /**
- * @brief Register agnostic MPI.
+ * @brief Register backend agnostic MPI.
  *
  * @tparam StateVectorT
  * @param m Pybind module
  */
 void registerInfoMPI(py::module_ &m) {
-    
     using np_arr_c64 = py::array_t<std::complex<float>,
                                    py::array::c_style | py::array::forcecast>;
     using np_arr_c128 = py::array_t<std::complex<double>,
@@ -511,7 +510,6 @@ void registerInfoMPI(py::module_ &m) {
             },
             "MPI Scatter.");
 }
-
 
 /**
  * @brief Templated class to build lightning class bindings.

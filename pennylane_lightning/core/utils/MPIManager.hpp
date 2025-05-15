@@ -75,24 +75,9 @@ class MPIManager {
     std::size_t version_;
     std::size_t subversion_;
 
-    virtual auto get_cpp_mpi_type_map() const -> const std::unordered_map<std::string, MPI_Datatype>& {
+    virtual auto get_cpp_mpi_type_map() const
+        -> const std::unordered_map<std::string, MPI_Datatype> & {
         return cpp_mpi_type_map;
-    }
-
-  protected:
-    /**
-     * @brief Find C++ data type's corresponding MPI data type.
-     *
-     * @tparam T C++ data type.
-     */
-    template <typename T> auto getMPIDatatype() -> MPI_Datatype {
-        const auto cpp_mpi_type_map = get_cpp_mpi_type_map();
-        auto it = cpp_mpi_type_map.find(cppTypeToString<T>());
-        if (it != cpp_mpi_type_map.end()) {
-            return it->second;
-        } else {
-            throw std::runtime_error("Type not supported for MPIManager");
-        }
     }
   
   private:
@@ -218,29 +203,8 @@ class MPIManager {
     }
 
   public:
-    //MPIManager() : communicator_(MPI_COMM_WORLD) {
-    //    int status = 0;
-    //    MPI_Initialized(&status);
-    //    if (!status) {
-    //        PL_MPI_IS_SUCCESS(MPI_Init(nullptr, nullptr));
-    //    }
-//
-    //    isExternalComm_ = true;
-    //    int rank_int;
-    //    int size_int;
-    //    PL_MPI_IS_SUCCESS(MPI_Comm_rank(communicator_, &rank_int));
-    //    PL_MPI_IS_SUCCESS(MPI_Comm_size(communicator_, &size_int));
-//
-    //    rank_ = static_cast<std::size_t>(rank_int);
-    //    size_ = static_cast<std::size_t>(size_int);
-//
-    //    setVendor();
-    //    setVersion();
-    //    setNumProcsPerNode();
-    //    check_mpi_config();
-    //}
-
-    MPIManager(MPI_Comm communicator = MPI_COMM_WORLD) : communicator_(communicator) {
+    MPIManager(MPI_Comm communicator = MPI_COMM_WORLD)
+        : communicator_(communicator) {
         int status = 0;
         MPI_Initialized(&status);
         if (!status) {
@@ -320,6 +284,21 @@ class MPIManager {
         }
     }
     // LCOV_EXCL_STOP
+
+    /**
+     * @brief Find C++ data type's corresponding MPI data type.
+     *
+     * @tparam T C++ data type.
+     */
+    template <typename T> auto getMPIDatatype() -> MPI_Datatype {
+        const auto cpp_mpi_type_map = get_cpp_mpi_type_map();
+        auto it = cpp_mpi_type_map.find(cppTypeToString<T>());
+        if (it != cpp_mpi_type_map.end()) {
+            return it->second;
+        } else {
+            throw std::runtime_error("Type not supported for MPIManager");
+        }
+    }
 
     // General MPI operations
     /**
@@ -785,5 +764,4 @@ class MPIManager {
             MPI_Comm_split(this->getComm(), colorInt, keyInt, &newcomm));
         return MPIManager(newcomm);
     }
-
 }; // namespace Pennylane::Util

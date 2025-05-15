@@ -33,9 +33,9 @@
 #include <custatevec.h>
 #endif
 
-#include "MPIManager.hpp"
 #include "DataBuffer.hpp"
 #include "Error.hpp"
+#include "MPIManager.hpp"
 
 /// @cond DEV
 namespace {
@@ -44,26 +44,9 @@ using namespace Pennylane::Util;
 /// @endcond
 
 namespace Pennylane::LightningGPU::Util {
-// LCOV_EXCL_START
-inline void errhandler(int errcode, const char *str) {
-    char msg[MPI_MAX_ERROR_STRING];
-    int resultlen;
-    MPI_Error_string(errcode, msg, &resultlen);
-    fprintf(stderr, "%s: %s\n", str, msg);
-    MPI_Abort(MPI_COMM_WORLD, 1);
-}
-// LCOV_EXCL_STOP
-
-#define PL_MPI_IS_SUCCESS(fn)                                                  \
-    {                                                                          \
-        int errcode;                                                           \
-        errcode = (fn);                                                        \
-        if (errcode != MPI_SUCCESS)                                            \
-            errhandler(errcode, #fn);                                          \
-    }
-
 /**
- * @brief MPI operation class. Maintains MPI related operations.
+ * @brief MPI operation class for Lightning GPU. Maintains MPI related
+ * operations.
  */
 class MPIManagerGPU final : public MPIManager {
     /**
@@ -109,17 +92,19 @@ class MPIManagerGPU final : public MPIManager {
         {cppTypeToString<cudaIpcMemHandle_t>(), MPI_UINT8_T},
         {cppTypeToString<cudaIpcEventHandle_t>(), MPI_UINT8_T}};
 
-
-        auto get_cpp_mpi_type_map() const -> const std::unordered_map<std::string, MPI_Datatype>& override {
+    auto get_cpp_mpi_type_map() const
+        -> const std::unordered_map<std::string, MPI_Datatype> & override {
         return cpp_mpi_type_map_with_cuda;
     }
 
+  public:
+    MPIManagerGPU(MPI_Comm communicator = MPI_COMM_WORLD)
+        : MPIManager(communicator) {}
 
-    public:
-    MPIManagerGPU(MPI_Comm communicator = MPI_COMM_WORLD) : MPIManager(communicator) {}
+    MPIManagerGPU(int argc, char **argv) : MPIManager(argc, argv) {}
 
-    using MPIManager::Reduce;
     using MPIManager::Allgather;
+    using MPIManager::Reduce;
     /**
      * @brief MPI_Allgather wrapper.
      *
@@ -149,8 +134,6 @@ class MPIManagerGPU final : public MPIManager {
                                         this->getComm()));
     }
 
-
-
     /**
      * @brief MPI_Reduce wrapper.
      *
@@ -171,7 +154,7 @@ class MPIManagerGPU final : public MPIManager {
                                      this->getComm()));
     }
 
-        /**
+    /**
      * @brief Creates new MPIManager based on colors and keys.
      *
      * @param color Processes with the same color are in the same new
@@ -187,6 +170,5 @@ class MPIManagerGPU final : public MPIManager {
             MPI_Comm_split(this->getComm(), colorInt, keyInt, &newcomm));
         return MPIManagerGPU(newcomm);
     }
-
 };
 } // namespace Pennylane::LightningGPU::Util

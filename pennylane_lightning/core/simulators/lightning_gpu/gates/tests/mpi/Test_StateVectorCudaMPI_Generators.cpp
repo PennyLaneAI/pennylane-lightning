@@ -20,6 +20,7 @@
 #include <catch2/catch.hpp>
 
 #include "MPIManagerGPU.hpp"
+#include "MPIManagerGPU.hpp"
 #include "StateVectorCudaMPI.hpp"
 #include "StateVectorCudaManaged.hpp"
 #include "mpi.h"

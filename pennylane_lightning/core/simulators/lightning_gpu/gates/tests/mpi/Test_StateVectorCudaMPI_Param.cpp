@@ -30,6 +30,7 @@
 #include "StateVectorCudaManaged.hpp"
 
 #include "MPIManagerGPU.hpp"
+#include "MPIManagerGPU.hpp"
 
 #include "TestHelpers.hpp"
 

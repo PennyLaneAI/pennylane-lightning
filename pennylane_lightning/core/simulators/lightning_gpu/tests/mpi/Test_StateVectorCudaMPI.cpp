@@ -23,6 +23,7 @@
 
 #include "DevTag.hpp"
 #include "MPIManagerGPU.hpp"
+#include "MPIManagerGPU.hpp"
 #include "StateVectorCudaMPI.hpp"
 #include "TestHelpers.hpp" // createRandomStateVectorData
 #include "mpi.h"

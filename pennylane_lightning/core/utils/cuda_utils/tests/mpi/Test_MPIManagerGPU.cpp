@@ -21,32 +21,32 @@
 
 #include <catch2/catch.hpp>
 
-#include "MPIManager.hpp"
+#include "MPIManagerGPU.hpp"
 
 using namespace Pennylane;
-using namespace Pennylane::Util;
+using namespace Pennylane::LightningGPU::Util;
 
-TEST_CASE("MPIManager ctor", "[MPIManager]") {
+TEST_CASE("MPIManagerGPU ctor", "[MPIManagerGPU]") {
     SECTION("Default constructibility") {
-        REQUIRE(std::is_constructible_v<MPIManager>);
+        REQUIRE(std::is_constructible_v<MPIManagerGPU>);
     }
 
     SECTION("Construct with MPI_Comm") {
-        REQUIRE(std::is_constructible_v<MPIManager, MPI_Comm>);
+        REQUIRE(std::is_constructible_v<MPIManagerGPU, MPI_Comm>);
     }
 
     SECTION("Construct with args") {
-        REQUIRE(std::is_constructible_v<MPIManager, int, char **>);
+        REQUIRE(std::is_constructible_v<MPIManagerGPU, int, char **>);
     }
 
-    SECTION("MPIManager {MPIManager&}") {
-        REQUIRE(std::is_copy_constructible_v<MPIManager>);
+    SECTION("MPIManagerGPU {MPIManagerGPU&}") {
+        REQUIRE(std::is_copy_constructible_v<MPIManagerGPU>);
     }
 }
 
-TEMPLATE_TEST_CASE("MPIManager::getMPIDatatype", "[MPIManager]", float,
+TEMPLATE_TEST_CASE("MPIManagerGPU::getMPIDatatype", "[MPIManagerGPU]", float,
                    double) {
-    MPIManager mpi_manager(MPI_COMM_WORLD);
+    MPIManagerGPU mpi_manager(MPI_COMM_WORLD);
 
     SECTION("Test valid type") {
         MPI_Datatype datatype = mpi_manager.getMPIDatatype<char>();
@@ -60,11 +60,11 @@ TEMPLATE_TEST_CASE("MPIManager::getMPIDatatype", "[MPIManager]", float,
     }
 }
 
-TEMPLATE_TEST_CASE("MPIManager::Scatter", "[MPIManager]", float, double) {
+TEMPLATE_TEST_CASE("MPIManagerGPU::Scatter", "[MPIManagerGPU]", float, double) {
     using PrecisionT = TestType;
     using cp_t = std::complex<PrecisionT>;
 
-    MPIManager mpi_manager(MPI_COMM_WORLD);
+    MPIManagerGPU mpi_manager(MPI_COMM_WORLD);
     REQUIRE(mpi_manager.getSize() == 2);
 
     int rank = mpi_manager.getRank();
@@ -104,11 +104,12 @@ TEMPLATE_TEST_CASE("MPIManager::Scatter", "[MPIManager]", float, double) {
     }
 }
 
-TEMPLATE_TEST_CASE("MPIManager::Allgather", "[MPIManager]", float, double) {
+TEMPLATE_TEST_CASE("MPIManagerGPU::Allgather", "[MPIManagerGPU]", float,
+                   double) {
     using PrecisionT = TestType;
     using cp_t = std::complex<PrecisionT>;
 
-    MPIManager mpi_manager(MPI_COMM_WORLD);
+    MPIManagerGPU mpi_manager(MPI_COMM_WORLD);
     REQUIRE(mpi_manager.getSize() == 2);
 
     int rank = mpi_manager.getRank();
@@ -159,11 +160,11 @@ TEMPLATE_TEST_CASE("MPIManager::Allgather", "[MPIManager]", float, double) {
     }
 }
 
-TEMPLATE_TEST_CASE("MPIManager::Reduce", "[MPIManager]", float, double) {
+TEMPLATE_TEST_CASE("MPIManagerGPU::Reduce", "[MPIManagerGPU]", float, double) {
     using PrecisionT = TestType;
     using cp_t = std::complex<PrecisionT>;
 
-    MPIManager mpi_manager(MPI_COMM_WORLD);
+    MPIManagerGPU mpi_manager(MPI_COMM_WORLD);
     REQUIRE(mpi_manager.getSize() == 2);
 
     int rank = mpi_manager.getRank();
@@ -199,11 +200,12 @@ TEMPLATE_TEST_CASE("MPIManager::Reduce", "[MPIManager]", float, double) {
     }
 }
 
-TEMPLATE_TEST_CASE("MPIManager::Allreduce", "[MPIManager]", float, double) {
+TEMPLATE_TEST_CASE("MPIManagerGPU::Allreduce", "[MPIManagerGPU]", float,
+                   double) {
     using PrecisionT = TestType;
     using cp_t = std::complex<PrecisionT>;
 
-    MPIManager mpi_manager(MPI_COMM_WORLD);
+    MPIManagerGPU mpi_manager(MPI_COMM_WORLD);
     REQUIRE(mpi_manager.getSize() == 2);
 
     int rank = mpi_manager.getRank();
@@ -247,11 +249,11 @@ TEMPLATE_TEST_CASE("MPIManager::Allreduce", "[MPIManager]", float, double) {
     }
 }
 
-TEMPLATE_TEST_CASE("MPIManager::Bcast", "[MPIManager]", float, double) {
+TEMPLATE_TEST_CASE("MPIManagerGPU::Bcast", "[MPIManagerGPU]", float, double) {
     using PrecisionT = TestType;
     using cp_t = std::complex<PrecisionT>;
 
-    MPIManager mpi_manager(MPI_COMM_WORLD);
+    MPIManagerGPU mpi_manager(MPI_COMM_WORLD);
     REQUIRE(mpi_manager.getSize() == 2);
 
     int rank = mpi_manager.getRank();
@@ -271,11 +273,12 @@ TEMPLATE_TEST_CASE("MPIManager::Bcast", "[MPIManager]", float, double) {
     }
 }
 
-TEMPLATE_TEST_CASE("MPIManager::Sendrecv", "[MPIManager]", float, double) {
+TEMPLATE_TEST_CASE("MPIManagerGPU::Sendrecv", "[MPIManagerGPU]", float,
+                   double) {
     using PrecisionT = TestType;
     using cp_t = std::complex<PrecisionT>;
 
-    MPIManager mpi_manager(MPI_COMM_WORLD);
+    MPIManagerGPU mpi_manager(MPI_COMM_WORLD);
     REQUIRE(mpi_manager.getSize() == 2);
 
     int rank = mpi_manager.getRank();
@@ -303,8 +306,8 @@ TEMPLATE_TEST_CASE("MPIManager::Sendrecv", "[MPIManager]", float, double) {
     }
 }
 
-TEST_CASE("MPIManager::split") {
-    MPIManager mpi_manager(MPI_COMM_WORLD);
+TEST_CASE("MPIManagerGPU::split") {
+    MPIManagerGPU mpi_manager(MPI_COMM_WORLD);
     REQUIRE(mpi_manager.getSize() == 2);
 
     int rank = mpi_manager.getRank();
