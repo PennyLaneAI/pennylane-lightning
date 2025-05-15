@@ -22,7 +22,7 @@
 #include <catch2/catch.hpp>
 
 #include "DevTag.hpp"
-#include "MPIManager.hpp"
+#include "MPIManagerGPU.hpp"
 #include "StateVectorCudaMPI.hpp"
 #include "TestHelpers.hpp" // createRandomStateVectorData
 #include "mpi.h"
@@ -80,9 +80,9 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorCudaMPI::Constructibility",
         REQUIRE(!std::is_constructible_v<StateVectorT>);
     }
     SECTION(
-        "StateVectorBackend<TestType> {MPIManager, DevTag<int>, std::size_t, "
+        "StateVectorBackend<TestType> {MPIManagerGPU, DevTag<int>, std::size_t, "
         "std::size_t, std::size_t}") {
-        REQUIRE(std::is_constructible_v<StateVectorT, MPIManager, DevTag<int>,
+        REQUIRE(std::is_constructible_v<StateVectorT, MPIManagerGPU, DevTag<int>,
                                         std::size_t, std::size_t, std::size_t>);
     }
     SECTION("StateVectorBackend<TestType> {MPI_Comm, DevTag<int>, std::size_t, "
@@ -120,7 +120,7 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorCudaMPI::applyMatrix with a std::vector",
 
     const std::size_t num_qubits = 4;
 
-    MPIManager mpi_manager(MPI_COMM_WORLD);
+    MPIManagerGPU mpi_manager(MPI_COMM_WORLD);
     REQUIRE(mpi_manager.getSize() == 2);
 
     std::size_t mpi_buffersize = 128;
@@ -179,7 +179,7 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorCudaMPI::applyMatrix with a pointer",
 
     const std::size_t num_qubits = 4;
 
-    MPIManager mpi_manager(MPI_COMM_WORLD);
+    MPIManagerGPU mpi_manager(MPI_COMM_WORLD);
     REQUIRE(mpi_manager.getSize() == 2);
 
     std::size_t mpi_buffersize = 1;
@@ -242,7 +242,7 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorCudaMPI::applyOperations",
 
     const std::size_t num_qubits = 4;
 
-    MPIManager mpi_manager(MPI_COMM_WORLD);
+    MPIManagerGPU mpi_manager(MPI_COMM_WORLD);
     REQUIRE(mpi_manager.getSize() == 2);
 
     std::size_t mpi_buffersize = 1;

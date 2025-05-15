@@ -24,7 +24,7 @@
 #include "MPIManager.hpp"
 
 using namespace Pennylane;
-using namespace Pennylane::LightningGPU::MPI;
+using namespace Pennylane::Util;
 
 TEST_CASE("MPIManager ctor", "[MPIManager]") {
     SECTION("Default constructibility") {

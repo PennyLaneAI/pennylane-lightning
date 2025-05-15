@@ -437,8 +437,8 @@ class TestSparseHamExpval:  # pylint: disable=too-few-public-methods,missing-fun
             qml.StatePrep(state_vector, wires=range(3))
             return qml.expval(H_sparse)
 
-        dev_gpu = qml.device(device_name, wires=3, mpi=False, c_dtype=c_dtype)
-        gpu_qnode = qml.QNode(circuit, dev_gpu)
+        dev_mpi = qml.device(device_name, wires=3, mpi=False, c_dtype=c_dtype)
+        gpu_qnode = qml.QNode(circuit, dev_mpi)
         expected_output_gpu = gpu_qnode()
         comm.Bcast(np.array(expected_output_gpu), root=0)
 
@@ -676,9 +676,9 @@ class TestGenerateSample:
         """
         num_wires = 3
 
-        dev_gpumpi = qml.device(device_name, wires=num_wires, mpi=True, shots=1000, c_dtype=c_dtype)
+        dev_mpi = qml.device(device_name, wires=num_wires, mpi=True, shots=1000, c_dtype=c_dtype)
 
-        @qml.qnode(dev_gpumpi)
+        @qml.qnode(dev_mpi)
         def circuit():
             qml.Hadamard(0)
             qml.CNOT(wires=[0, 1])
@@ -693,13 +693,13 @@ class TestGenerateSample:
         """Test that a tensor product involving PauliX and PauliY works correctly"""
         num_wires = 3
 
-        dev_gpumpi = qml.device(device_name, wires=num_wires, mpi=True, shots=1000, c_dtype=c_dtype)
+        dev_mpi = qml.device(device_name, wires=num_wires, mpi=True, shots=1000, c_dtype=c_dtype)
 
         theta = 0.432
         phi = 0.123
         varphi = -0.543
 
-        @qml.qnode(dev_gpumpi)
+        @qml.qnode(dev_mpi)
         def circuit():
             qml.RX(theta, wires=[0])
             qml.RX(phi, wires=[1])
@@ -733,13 +733,13 @@ class TestGenerateSample:
         """Test that a tensor product involving PauliZ and PauliY and hadamard works correctly"""
         num_wires = 3
 
-        dev_gpumpi = qml.device(device_name, wires=num_wires, mpi=True, shots=1000, c_dtype=c_dtype)
+        dev_mpi = qml.device(device_name, wires=num_wires, mpi=True, shots=1000, c_dtype=c_dtype)
 
         theta = 0.432
         phi = 0.123
         varphi = -0.543
 
-        @qml.qnode(dev_gpumpi)
+        @qml.qnode(dev_mpi)
         def circuit():
             qml.RX(theta, wires=[0])
             qml.RX(phi, wires=[1])
@@ -778,13 +778,13 @@ class TestTensorVar:
         """Test that a tensor product involving PauliX and PauliY works correctly"""
         num_wires = 3
 
-        dev_gpumpi = qml.device(device_name, wires=num_wires, mpi=True, shots=1000, c_dtype=c_dtype)
+        dev_mpi = qml.device(device_name, wires=num_wires, mpi=True, shots=1000, c_dtype=c_dtype)
 
         theta = 0.432
         phi = 0.123
         varphi = -0.543
 
-        @qml.qnode(dev_gpumpi)
+        @qml.qnode(dev_mpi)
         def circuit():
             qml.RX(theta, wires=[0])
             qml.RX(phi, wires=[1])
@@ -809,13 +809,13 @@ class TestTensorVar:
     def test_pauliz_hadamard(self, c_dtype, tol=TOL_STOCHASTIC):
         """Test that a tensor product involving PauliZ and PauliY and hadamard works correctly"""
         num_wires = 3
-        dev_gpumpi = qml.device(device_name, wires=num_wires, mpi=True, shots=1000, c_dtype=c_dtype)
+        dev_mpi = qml.device(device_name, wires=num_wires, mpi=True, shots=1000, c_dtype=c_dtype)
 
         theta = 0.432
         phi = 0.123
         varphi = -0.543
 
-        @qml.qnode(dev_gpumpi)
+        @qml.qnode(dev_mpi)
         def circuit():
             qml.RX(theta, wires=[0])
             qml.RX(phi, wires=[1])
@@ -903,7 +903,7 @@ def test_integration(returns):
     operations"""
     num_wires = numQubits
     dev_default = qml.device("lightning.qubit", wires=range(num_wires))
-    dev_gpu = qml.device(device_name, wires=num_wires, mpi=True, c_dtype=np.complex128)
+    dev_mpi = qml.device(device_name, wires=num_wires, mpi=True, c_dtype=np.complex128)
 
     def circuit(params):
         circuit_ansatz(params, wires=range(num_wires))
@@ -913,7 +913,7 @@ def test_integration(returns):
     np.random.seed(1337)
     params = np.random.rand(n_params)
 
-    qnode_gpu = qml.QNode(circuit, dev_gpu, diff_method="parameter-shift")
+    qnode_gpu = qml.QNode(circuit, dev_mpi, diff_method="parameter-shift")
     qnode_default = qml.QNode(circuit, dev_default, diff_method="parameter-shift")
 
     def convert_to_array_gpu(params):
@@ -947,7 +947,7 @@ def test_integration_custom_wires(returns):
     """Integration tests that compare to default.qubit for a large circuit containing parametrized
     operations and when using custom wire labels"""
     dev_lightning = qml.device("lightning.qubit", wires=custom_wires)
-    dev_gpu = qml.device(device_name, wires=custom_wires, mpi=True, c_dtype=np.complex128)
+    dev_mpi = qml.device(device_name, wires=custom_wires, mpi=True, c_dtype=np.complex128)
 
     def circuit(params):
         circuit_ansatz(params, wires=custom_wires)
@@ -957,7 +957,7 @@ def test_integration_custom_wires(returns):
     np.random.seed(1337)
     params = np.random.rand(n_params)
 
-    qnode_gpu = qml.QNode(circuit, dev_gpu, diff_method="parameter-shift")
+    qnode_gpu = qml.QNode(circuit, dev_mpi, diff_method="parameter-shift")
     qnode_lightning = qml.QNode(circuit, dev_lightning, diff_method="parameter-shift")
 
     def convert_to_array_gpu(params):

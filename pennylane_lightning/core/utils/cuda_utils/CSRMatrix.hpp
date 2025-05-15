@@ -19,11 +19,11 @@
 #include <complex>
 #include <vector>
 
-#include "MPIManager.hpp"
+#include "MPIManagerGPU.hpp"
 
 /// @cond DEV
 namespace {
-using namespace Pennylane::LightningGPU;
+using namespace Pennylane::LightningGPU::Util;
 } // namespace
 /// @endcond
 namespace Pennylane::LightningGPU::MPI {

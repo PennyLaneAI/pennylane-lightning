@@ -34,7 +34,6 @@ std::size_t prep_input_1q(int argc, char *argv[]) {
 }
 
 int main(int argc, char *argv[]) {
-
     std::size_t nq = prep_input_1q(argc, argv);
 
     Kokkos::initialize();
@@ -88,9 +87,7 @@ int main(int argc, char *argv[]) {
         auto t_start = std::chrono::high_resolution_clock::now();
 
         for (std::size_t i = 0; i < repeats; i++) {
-
             // roctxMark("ROCTX-MARK: Starting iteration");
-
             Kokkos::parallel_for(
                 "copy_sendbuf", buffer_size,
                 KOKKOS_LAMBDA(std::size_t buffer_index) {

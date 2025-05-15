@@ -465,6 +465,56 @@ void registerBackendAgnosticAlgorithmsMPI(py::module_ &m) {
 }
 
 /**
+ * @brief Register agnostic MPI.
+ *
+ * @tparam StateVectorT
+ * @param m Pybind module
+ */
+template <class StateVectorT>
+void registerInfoMPI(py::module_ &m) {
+    
+    using np_arr_c64 = py::array_t<std::complex<float>,
+                                   py::array::c_style | py::array::forcecast>;
+    using np_arr_c128 = py::array_t<std::complex<double>,
+                                    py::array::c_style | py::array::forcecast>;
+    py::class_<MPIManager>(m, "MPIManager")
+        .def(py::init<>())
+        .def(py::init<MPIManager &>())
+        .def("Barrier", &MPIManager::Barrier)
+        .def("getRank", &MPIManager::getRank)
+        .def("getSize", &MPIManager::getSize)
+        .def("getSizeNode", &MPIManager::getSizeNode)
+        .def("getTime", &MPIManager::getTime)
+        .def("getVendor", &MPIManager::getVendor)
+        .def("getVersion", &MPIManager::getVersion)
+        .def(
+            "Scatter",
+            [](MPIManager &mpi_manager, np_arr_c64 &sendBuf,
+               np_arr_c64 &recvBuf, int root) {
+                auto send_ptr =
+                    static_cast<std::complex<float> *>(sendBuf.request().ptr);
+                auto recv_ptr =
+                    static_cast<std::complex<float> *>(recvBuf.request().ptr);
+                mpi_manager.template Scatter<std::complex<float>>(
+                    send_ptr, recv_ptr, recvBuf.request().size, root);
+            },
+            "MPI Scatter.")
+        .def(
+            "Scatter",
+            [](MPIManager &mpi_manager, np_arr_c128 &sendBuf,
+               np_arr_c128 &recvBuf, int root) {
+                auto send_ptr =
+                    static_cast<std::complex<double> *>(sendBuf.request().ptr);
+                auto recv_ptr =
+                    static_cast<std::complex<double> *>(recvBuf.request().ptr);
+                mpi_manager.template Scatter<std::complex<double>>(
+                    send_ptr, recv_ptr, recvBuf.request().size, root);
+            },
+            "MPI Scatter.");
+}
+
+
+/**
  * @brief Templated class to build lightning class bindings.
  *
  * @tparam StateVectorT State vector type

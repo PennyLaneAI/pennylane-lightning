@@ -47,7 +47,6 @@ std::pair<std::size_t, std::size_t> prep_input_1q(int argc, char *argv[]) {
 }
 
 int main(int argc, char *argv[]) {
-
     auto inputs = prep_input_1q(argc, argv);
     std::size_t nq = inputs.first;
     std::size_t xor_rank = inputs.second;
