@@ -317,6 +317,7 @@ void registerBackendSpecificInfoMPI(py::module_ &m) {
                 mpi_manager.template Scatter<std::complex<double>>(
                     send_ptr, recv_ptr, recvBuf.request().size, root);
             },
-            "MPI Scatter.");}
+            "MPI Scatter.");
+}
 } // namespace Pennylane::LightningGPU
 /// @endcond

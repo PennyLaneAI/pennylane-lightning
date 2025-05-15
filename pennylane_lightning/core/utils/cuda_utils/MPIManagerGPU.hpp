@@ -44,26 +44,9 @@ using namespace Pennylane::Util;
 /// @endcond
 
 namespace Pennylane::LightningGPU::Util {
-// LCOV_EXCL_START
-inline void errhandler(int errcode, const char *str) {
-    char msg[MPI_MAX_ERROR_STRING];
-    int resultlen;
-    MPI_Error_string(errcode, msg, &resultlen);
-    fprintf(stderr, "%s: %s\n", str, msg);
-    MPI_Abort(MPI_COMM_WORLD, 1);
-}
-// LCOV_EXCL_STOP
-
-#define PL_MPI_IS_SUCCESS(fn)                                                  \
-    {                                                                          \
-        int errcode;                                                           \
-        errcode = (fn);                                                        \
-        if (errcode != MPI_SUCCESS)                                            \
-            errhandler(errcode, #fn);                                          \
-    }
-
 /**
- * @brief MPI operation class. Maintains MPI related operations.
+ * @brief MPI operation class for Lightning GPU. Maintains MPI related
+ * operations.
  */
 class MPIManagerGPU final : public MPIManager {
     /**
@@ -117,6 +100,8 @@ class MPIManagerGPU final : public MPIManager {
   public:
     MPIManagerGPU(MPI_Comm communicator = MPI_COMM_WORLD)
         : MPIManager(communicator) {}
+
+    MPIManagerGPU(int argc, char **argv) : MPIManager(argc, argv) {}
 
     using MPIManager::Allgather;
     using MPIManager::Reduce;
