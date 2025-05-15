@@ -200,12 +200,18 @@ jobs:
           WHEEL_NAME=$(cat ${{ github.workspace }}/${{ matrix.pl_backend }}-${{ matrix.exec_model }}_name.txt)
           mv ${{ github.workspace }}/wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}.whl ${{ github.workspace }}/$WHEEL_NAME
           python -m pip install -r requirements-tests.txt
-          python -m pip install "jax[cpu]==0.5.3; python_version<='3.12'" openfermionpyscf
+          python -m pip install openfermionpyscf
           if [ '${{ inputs.lightning-version }}' != 'stable' ]; then
             python scripts/configure_pyproject_toml.py
             SKIP_COMPILATION=True python -m pip install . -vv
           fi
           python -m pip install ${{ github.workspace }}/$WHEEL_NAME --no-deps
+
+      - name: Revert to older JAX version for stable
+        if: inputs.pennylane-version == 'stable'
+        run: |
+          # FIXME: remove after v0.42 release
+          python -m pip install "jax[cpu]==0.4.28"
 
       - name: Checkout PennyLane for release or latest build
         if: inputs.pennylane-version == 'release' || inputs.pennylane-version == 'latest'
@@ -253,8 +259,6 @@ jobs:
 
       - name: Run PennyLane-Lightning unit tests
         run: |
-          # FIXME(v0.41.0): Remove pytest-split in favour of requirements-tests.txt
-          python -m pip install pytest-split
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
           # Remove `python -m` to avoid running tests with relative modules
           PL_DEVICE=${DEVICENAME} pytest tests/ $COVERAGE_FLAGS --splits 7 --group ${{ matrix.group }} \
