@@ -25,7 +25,7 @@
 #include "DevTag.hpp"
 #include "DevicePool.hpp"
 #include "Error.hpp"
-#include "MPIManager.hpp"
+#include "MPIManagerGPU.hpp"
 #include "MeasurementsGPUMPI.hpp"
 #include "ObservablesGPUMPI.hpp"
 #include "StateVectorCudaMPI.hpp"
@@ -69,10 +69,10 @@ void registerBackendClassSpecificBindingsMPI(PyClass &pyclass) {
     registerGatesForStateVector<StateVectorT>(pyclass);
 
     pyclass
-        .def(
-            py::init([](MPIManager &mpi_manager, const DevTag<int> devtag_local,
-                        std::size_t mpi_buf_size, std::size_t num_global_qubits,
-                        std::size_t num_local_qubits) {
+        .def(py::init(
+            [](MPIManagerGPU &mpi_manager, const DevTag<int> devtag_local,
+               std::size_t mpi_buf_size, std::size_t num_global_qubits,
+               std::size_t num_local_qubits) {
                 return new StateVectorT(mpi_manager, devtag_local, mpi_buf_size,
                                         num_global_qubits, num_local_qubits);
             })) // qubits, device
@@ -279,45 +279,6 @@ void registerBackendSpecificAlgorithmsMPI([[maybe_unused]] py::module_ &m) {}
  *
  * @param m Pybind11 module.
  */
-void registerBackendSpecificInfoMPI(py::module_ &m) {
-    using np_arr_c64 = py::array_t<std::complex<float>,
-                                   py::array::c_style | py::array::forcecast>;
-    using np_arr_c128 = py::array_t<std::complex<double>,
-                                    py::array::c_style | py::array::forcecast>;
-    py::class_<MPIManager>(m, "MPIManager")
-        .def(py::init<>())
-        .def(py::init<MPIManager &>())
-        .def("Barrier", &MPIManager::Barrier)
-        .def("getRank", &MPIManager::getRank)
-        .def("getSize", &MPIManager::getSize)
-        .def("getSizeNode", &MPIManager::getSizeNode)
-        .def("getTime", &MPIManager::getTime)
-        .def("getVendor", &MPIManager::getVendor)
-        .def("getVersion", &MPIManager::getVersion)
-        .def(
-            "Scatter",
-            [](MPIManager &mpi_manager, np_arr_c64 &sendBuf,
-               np_arr_c64 &recvBuf, int root) {
-                auto send_ptr =
-                    static_cast<std::complex<float> *>(sendBuf.request().ptr);
-                auto recv_ptr =
-                    static_cast<std::complex<float> *>(recvBuf.request().ptr);
-                mpi_manager.template Scatter<std::complex<float>>(
-                    send_ptr, recv_ptr, recvBuf.request().size, root);
-            },
-            "MPI Scatter.")
-        .def(
-            "Scatter",
-            [](MPIManager &mpi_manager, np_arr_c128 &sendBuf,
-               np_arr_c128 &recvBuf, int root) {
-                auto send_ptr =
-                    static_cast<std::complex<double> *>(sendBuf.request().ptr);
-                auto recv_ptr =
-                    static_cast<std::complex<double> *>(recvBuf.request().ptr);
-                mpi_manager.template Scatter<std::complex<double>>(
-                    send_ptr, recv_ptr, recvBuf.request().size, root);
-            },
-            "MPI Scatter.");
-}
+void registerBackendSpecificInfoMPI([[maybe_unused]] py::module_ &m) {}
 } // namespace Pennylane::LightningGPU
 /// @endcond

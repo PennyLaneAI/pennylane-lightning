@@ -29,7 +29,7 @@
 #include "StateVectorCudaMPI.hpp"
 #include "StateVectorCudaManaged.hpp"
 
-#include "MPIManager.hpp"
+#include "MPIManagerGPU.hpp"
 
 #include "TestHelpers.hpp"
 
@@ -75,7 +75,7 @@ using namespace Pennylane::LightningGPU::MPI;
         const bool adjoint = GENERATE(true, false);                            \
         using cp_t = std::complex<TestType>;                                   \
         using PrecisionT = TestType;                                           \
-        MPIManager mpi_manager(MPI_COMM_WORLD);                                \
+        MPIManagerGPU mpi_manager(MPI_COMM_WORLD);                             \
         REQUIRE(mpi_manager.getSize() == 2);                                   \
         std::size_t mpi_buffersize = 1;                                        \
         std::size_t nGlobalIndexBits =                                         \
@@ -382,7 +382,7 @@ TEMPLATE_TEST_CASE("StateVectorCudaMPI::PSWAP", "[StateVectorCudaMPI_Param]",
 TEMPLATE_TEST_CASE("LightningGPUMPI:applyOperation", "[LightningGPUMPI_Param]",
                    float, double) {
     using StateVectorT = StateVectorCudaMPI<TestType>;
-    MPIManager mpi_manager(MPI_COMM_WORLD);
+    MPIManagerGPU mpi_manager(MPI_COMM_WORLD);
     REQUIRE(mpi_manager.getSize() == 2);
 
     std::size_t mpi_buffersize = 1;

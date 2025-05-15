@@ -22,7 +22,7 @@
 #include <catch2/catch.hpp>
 
 #include "CSRMatrix.hpp"
-#include "MPIManager.hpp"
+#include "MPIManagerGPU.hpp"
 
 using namespace Pennylane;
 using namespace Pennylane::LightningGPU::MPI;
@@ -55,7 +55,7 @@ TEMPLATE_TEST_CASE("CRSMatrix::Split", "[CRSMatrix]", float, double) {
         typename std::conditional<std::is_same<TestType, float>::value, int32_t,
                                   int64_t>::type;
 
-    MPIManager mpi_manager(MPI_COMM_WORLD);
+    MPIManagerGPU mpi_manager(MPI_COMM_WORLD);
     REQUIRE(mpi_manager.getSize() == 2);
 
     int rank = mpi_manager.getRank();

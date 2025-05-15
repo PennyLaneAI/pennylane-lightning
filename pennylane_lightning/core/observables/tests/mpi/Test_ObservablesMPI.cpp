@@ -42,7 +42,7 @@ using Pennylane::Util::TestVector;
 #ifdef _ENABLE_PLGPU
 constexpr bool BACKEND_FOUND = true;
 
-#include "MPIManager.hpp"
+#include "MPIManagerGPU.hpp"
 #include "TestHelpersStateVectorsMPI.hpp"
 
 /// @cond DEV
@@ -266,7 +266,7 @@ template <typename TypeList> void testTensorProdObsBase() {
             };
 
             SECTION("Test using |1+0>") {
-                MPIManager mpi_manager(MPI_COMM_WORLD);
+                MPIManagerGPU mpi_manager(MPI_COMM_WORLD);
                 REQUIRE(mpi_manager.getSize() == 2);
 
                 const std::size_t num_qubits = 3;
@@ -313,7 +313,7 @@ template <typename TypeList> void testTensorProdObsBase() {
             }
 
             SECTION("Test using |+-01>") {
-                MPIManager mpi_manager(MPI_COMM_WORLD);
+                MPIManagerGPU mpi_manager(MPI_COMM_WORLD);
                 REQUIRE(mpi_manager.getSize() == 2);
 
                 const std::size_t num_qubits = 4;
@@ -379,7 +379,7 @@ template <typename TypeList> void testHamiltonianBase() {
         using TensorProdObsT = TensorProdObsBase<StateVectorT>;
         using HamiltonianT = HamiltonianBase<StateVectorT>;
 
-        MPIManager mpi_manager(MPI_COMM_WORLD);
+        MPIManagerGPU mpi_manager(MPI_COMM_WORLD);
         REQUIRE(mpi_manager.getSize() == 2);
 
         const std::size_t num_qubits = 3;
@@ -547,7 +547,7 @@ template <typename TypeList> void testSparseHamiltonianBase() {
         const std::size_t num_qubits = 3;
         std::mt19937 re{1337};
 
-        MPIManager mpi_manager(MPI_COMM_WORLD);
+        MPIManagerGPU mpi_manager(MPI_COMM_WORLD);
 
         std::size_t mpi_buffersize = 1;
         std::size_t nGlobalIndexBits =
