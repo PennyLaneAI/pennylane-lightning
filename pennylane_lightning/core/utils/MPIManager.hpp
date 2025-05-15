@@ -75,20 +75,27 @@ class MPIManager {
     std::size_t version_;
     std::size_t subversion_;
 
+    virtual auto get_cpp_mpi_type_map() const -> const std::unordered_map<std::string, MPI_Datatype>& {
+        return cpp_mpi_type_map;
+    }
+
+  protected:
     /**
      * @brief Find C++ data type's corresponding MPI data type.
      *
      * @tparam T C++ data type.
      */
     template <typename T> auto getMPIDatatype() -> MPI_Datatype {
+        const auto cpp_mpi_type_map = get_cpp_mpi_type_map();
         auto it = cpp_mpi_type_map.find(cppTypeToString<T>());
         if (it != cpp_mpi_type_map.end()) {
             return it->second;
         } else {
-            throw std::runtime_error("Type not supported");
+            throw std::runtime_error("Type not supported for MPIManager");
         }
     }
-
+  
+  private:
     /**
      * @brief Find operation string's corresponding MPI_Op type.
      *

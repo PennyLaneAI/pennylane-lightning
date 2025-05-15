@@ -470,7 +470,6 @@ void registerBackendAgnosticAlgorithmsMPI(py::module_ &m) {
  * @tparam StateVectorT
  * @param m Pybind module
  */
-template <class StateVectorT>
 void registerInfoMPI(py::module_ &m) {
     
     using np_arr_c64 = py::array_t<std::complex<float>,

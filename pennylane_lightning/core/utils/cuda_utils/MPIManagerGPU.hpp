@@ -62,11 +62,6 @@ inline void errhandler(int errcode, const char *str) {
             errhandler(errcode, #fn);                                          \
     }
 
-template <typename T> auto cppTypeToString() -> const std::string {
-    const std::string typestr = std::type_index(typeid(T)).name();
-    return typestr;
-}
-
 /**
  * @brief MPI operation class. Maintains MPI related operations.
  */
@@ -114,24 +109,17 @@ class MPIManagerGPU final : public MPIManager {
         {cppTypeToString<cudaIpcMemHandle_t>(), MPI_UINT8_T},
         {cppTypeToString<cudaIpcEventHandle_t>(), MPI_UINT8_T}};
 
-    /**
-     * @brief Find C++ data type's corresponding MPI data type.
-     *
-     * @tparam T C++ data type.
-     */
-    template <typename T> auto getMPIDatatype() -> MPI_Datatype {
-        auto it = cpp_mpi_type_map_with_cuda.find(cppTypeToString<T>());
-        if (it != cpp_mpi_type_map_with_cuda.end()) {
-            return it->second;
-        } else {
-            throw std::runtime_error("Type not supported");
-        }
+
+        auto get_cpp_mpi_type_map() const -> const std::unordered_map<std::string, MPI_Datatype>& override {
+        return cpp_mpi_type_map_with_cuda;
     }
 
-    
+
     public:
     MPIManagerGPU(MPI_Comm communicator = MPI_COMM_WORLD) : MPIManager(communicator) {}
 
+    using MPIManager::Reduce;
+    using MPIManager::Allgather;
     /**
      * @brief MPI_Allgather wrapper.
      *
@@ -161,6 +149,8 @@ class MPIManagerGPU final : public MPIManager {
                                         this->getComm()));
     }
 
+
+
     /**
      * @brief MPI_Reduce wrapper.
      *
@@ -179,6 +169,23 @@ class MPIManagerGPU final : public MPIManager {
         PL_MPI_IS_SUCCESS(MPI_Reduce(sendBuf.getData(), recvBuf.getData(),
                                      length, datatype, op, root,
                                      this->getComm()));
+    }
+
+        /**
+     * @brief Creates new MPIManager based on colors and keys.
+     *
+     * @param color Processes with the same color are in the same new
+     * communicator.
+     * @param key Rank assignment control.
+     * @return new MPIManager object.
+     */
+    auto split(std::size_t color, std::size_t key) -> MPIManagerGPU {
+        MPI_Comm newcomm;
+        int colorInt = static_cast<int>(color);
+        int keyInt = static_cast<int>(key);
+        PL_MPI_IS_SUCCESS(
+            MPI_Comm_split(this->getComm(), colorInt, keyInt, &newcomm));
+        return MPIManagerGPU(newcomm);
     }
 
 };

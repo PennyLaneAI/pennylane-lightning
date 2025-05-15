@@ -14,7 +14,7 @@
 
 #include "CSRMatrix.hpp"
 #include "LinearAlg.hpp"
-#include "MPIManager.hpp"
+#include "MPIManagerGPU.hpp"
 
 using namespace Pennylane::LightningGPU::MPI;
 
@@ -43,7 +43,7 @@ namespace Pennylane::LightningGPU::Util {
  */
 template <class IndexT, class Precision, class CFP_t, class DevTypeID = int>
 inline void
-SparseMV_cuSparseMPI(MPIManager &mpi_manager, const std::size_t &length_local,
+SparseMV_cuSparseMPI(MPIManagerGPU &mpi_manager, const std::size_t &length_local,
                      const IndexT *csrOffsets_ptr,
                      const int64_t csrOffsets_size, const IndexT *columns_ptr,
                      const std::complex<Precision> *values_ptr, CFP_t *X,
@@ -56,46 +56,45 @@ SparseMV_cuSparseMPI(MPIManager &mpi_manager, const std::size_t &length_local,
             csrOffsets_ptr, columns_ptr, values_ptr);
     }
     mpi_manager.Barrier();
-
     std::vector<CSRMatrix<Precision, IndexT>> localCSRMatVector;
     for (std::size_t i = 0; i < mpi_manager.getSize(); i++) {
         auto localCSRMat = scatterCSRMatrix<Precision, IndexT>(
             mpi_manager, csrmatrix_blocks[i], length_local, 0);
-        localCSRMatVector.push_back(localCSRMat);
-    }
-    mpi_manager.Barrier();
-
-    DataBuffer<CFP_t, int> d_res_per_block{length_local, device_id, stream_id,
-                                           true};
-
-    for (std::size_t i = 0; i < mpi_manager.getSize(); i++) {
-        // Need to investigate if non-blocking MPI operation can improve
-        // performace here.
-        auto &localCSRMatrix = localCSRMatVector[i];
-        std::size_t color = 0;
-
-        if (localCSRMatrix.getValues().size() != 0) {
-            d_res_per_block.zeroInit();
-            color = 1;
-            SparseMV_cuSparse<IndexT, Precision, CFP_t>(
-                localCSRMatrix.getCsrOffsets().data(),
-                static_cast<int64_t>(localCSRMatrix.getCsrOffsets().size()),
-                localCSRMatrix.getColumns().data(),
-                localCSRMatrix.getValues().data(),
-                static_cast<int64_t>(localCSRMatrix.getValues().size()), X,
-                d_res_per_block.getData(), device_id, stream_id, handle);
-        }
-
-        PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
-        mpi_manager.Barrier();
-
-        if (mpi_manager.getRank() == i) {
-            color = 1;
-            if (localCSRMatrix.getValues().size() == 0) {
-                d_res_per_block.zeroInit();
+            localCSRMatVector.push_back(localCSRMat);
             }
-        }
-
+            mpi_manager.Barrier();
+            
+            DataBuffer<CFP_t, int> d_res_per_block{length_local, device_id, stream_id,
+                true};
+                
+                for (std::size_t i = 0; i < mpi_manager.getSize(); i++) {
+                    // Need to investigate if non-blocking MPI operation can improve
+                    // performace here.
+                    auto &localCSRMatrix = localCSRMatVector[i];
+                    std::size_t color = 0;
+                    
+                    if (localCSRMatrix.getValues().size() != 0) {
+                        d_res_per_block.zeroInit();
+                        color = 1;
+                        SparseMV_cuSparse<IndexT, Precision, CFP_t>(
+                            localCSRMatrix.getCsrOffsets().data(),
+                            static_cast<int64_t>(localCSRMatrix.getCsrOffsets().size()),
+                            localCSRMatrix.getColumns().data(),
+                            localCSRMatrix.getValues().data(),
+                            static_cast<int64_t>(localCSRMatrix.getValues().size()), X,
+                            d_res_per_block.getData(), device_id, stream_id, handle);
+                            }
+                            
+                            PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
+                            mpi_manager.Barrier();
+                            
+                            if (mpi_manager.getRank() == i) {
+                                color = 1;
+                                if (localCSRMatrix.getValues().size() == 0) {
+                                    d_res_per_block.zeroInit();
+                                    }
+                                    }
+                                    
         PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
         mpi_manager.Barrier();
 
@@ -115,7 +114,7 @@ SparseMV_cuSparseMPI(MPIManager &mpi_manager, const std::size_t &length_local,
         }
         PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
         mpi_manager.Barrier();
-    }
+    } 
 }
 
 } // namespace Pennylane::LightningGPU::Util

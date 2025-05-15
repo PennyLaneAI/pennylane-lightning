@@ -279,7 +279,7 @@ void registerBackendSpecificAlgorithmsMPI([[maybe_unused]] py::module_ &m) {}
  *
  * @param m Pybind11 module.
  */
-void registerBackendSpecificInfoMPI(py::module_ &m) {
+void registerBackendSpecificInfoMPI([[maybe_unused]] py::module_ &m) {
 }
 } // namespace Pennylane::LightningGPU
 /// @endcond
