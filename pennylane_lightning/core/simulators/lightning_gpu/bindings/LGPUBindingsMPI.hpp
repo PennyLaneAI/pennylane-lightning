@@ -279,6 +279,44 @@ void registerBackendSpecificAlgorithmsMPI([[maybe_unused]] py::module_ &m) {}
  *
  * @param m Pybind11 module.
  */
-void registerBackendSpecificInfoMPI([[maybe_unused]] py::module_ &m) {}
+void registerBackendSpecificInfoMPI(py::module_ &m) {
+    using np_arr_c64 = py::array_t<std::complex<float>,
+                                   py::array::c_style | py::array::forcecast>;
+    using np_arr_c128 = py::array_t<std::complex<double>,
+                                    py::array::c_style | py::array::forcecast>;
+    py::class_<MPIManagerGPU>(m, "MPIManagerGPU")
+        .def(py::init<>())
+        .def(py::init<MPIManagerGPU &>())
+        .def("Barrier", &MPIManagerGPU::Barrier)
+        .def("getRank", &MPIManagerGPU::getRank)
+        .def("getSize", &MPIManagerGPU::getSize)
+        .def("getSizeNode", &MPIManagerGPU::getSizeNode)
+        .def("getTime", &MPIManagerGPU::getTime)
+        .def("getVendor", &MPIManagerGPU::getVendor)
+        .def("getVersion", &MPIManagerGPU::getVersion)
+        .def(
+            "Scatter",
+            [](MPIManagerGPU &mpi_manager, np_arr_c64 &sendBuf,
+               np_arr_c64 &recvBuf, int root) {
+                auto send_ptr =
+                    static_cast<std::complex<float> *>(sendBuf.request().ptr);
+                auto recv_ptr =
+                    static_cast<std::complex<float> *>(recvBuf.request().ptr);
+                mpi_manager.template Scatter<std::complex<float>>(
+                    send_ptr, recv_ptr, recvBuf.request().size, root);
+            },
+            "MPI Scatter.")
+        .def(
+            "Scatter",
+            [](MPIManagerGPU &mpi_manager, np_arr_c128 &sendBuf,
+               np_arr_c128 &recvBuf, int root) {
+                auto send_ptr =
+                    static_cast<std::complex<double> *>(sendBuf.request().ptr);
+                auto recv_ptr =
+                    static_cast<std::complex<double> *>(recvBuf.request().ptr);
+                mpi_manager.template Scatter<std::complex<double>>(
+                    send_ptr, recv_ptr, recvBuf.request().size, root);
+            },
+            "MPI Scatter.");}
 } // namespace Pennylane::LightningGPU
 /// @endcond

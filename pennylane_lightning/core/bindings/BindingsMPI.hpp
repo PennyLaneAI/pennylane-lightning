@@ -428,7 +428,7 @@ void registerBackendAgnosticAlgorithmsMPI(py::module_ &m) {
 }
 
 /**
- * @brief Register agnostic MPI.
+ * @brief Register backend agnostic MPI.
  *
  * @tparam StateVectorT
  * @param m Pybind module
