@@ -110,17 +110,6 @@ if device_name == "lightning.gpu":
 
     if hasattr(pennylane_lightning, "lightning_gpu_ops"):
         from pennylane_lightning.lightning_gpu_ops import LightningException
-elif device_name == "lightning.kokkos":
-    from pennylane_lightning.lightning_kokkos import LightningKokkos as LightningDevice
-    from pennylane_lightning.lightning_kokkos._measurements import (
-        LightningKokkosMeasurements as LightningMeasurements,
-    )
-    from pennylane_lightning.lightning_kokkos._state_vector import (
-        LightningKokkosStateVector as LightningStateVector,
-    )
-
-    if hasattr(pennylane_lightning, "lightning_kokkos_ops"):
-        from pennylane_lightning.lightning_kokkos_ops import LightningException
 else:
     raise DeviceError(f"The MPI tests do not apply to the {device_name} device.")
 
