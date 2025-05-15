@@ -38,6 +38,7 @@
 #include "Memory.hpp" // alignedAlloc
 #include "Observables.hpp"
 #include "Util.hpp" // for_each_enum
+#include "MPIManager.hpp"
 
 #ifdef _ENABLE_PLGPU
 #include "AdjointJacobianGPUMPI.hpp"

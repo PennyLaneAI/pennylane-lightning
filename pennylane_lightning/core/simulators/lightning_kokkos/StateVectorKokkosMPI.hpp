@@ -40,6 +40,7 @@
 #include "StateVectorKokkos.hpp"
 #include "Util.hpp"
 #include "UtilKokkos.hpp"
+#include "MPIManager.hpp"
 
 #include "CPUMemoryModel.hpp"
 // #include <roctracer/roctx.h>
@@ -58,23 +59,6 @@ using Pennylane::Util::log2;
 using Pennylane::Util::reverse_lookup;
 using std::size_t;
 
-// LCOV_EXCL_START
-inline void errhandler(int errcode, const char *str) {
-    char msg[MPI_MAX_ERROR_STRING];
-    int resultlen;
-    MPI_Error_string(errcode, msg, &resultlen);
-    fprintf(stderr, "%s: %s\n", str, msg);
-    MPI_Abort(MPI_COMM_WORLD, 1);
-}
-// LCOV_EXCL_STOP
-
-#define PL_MPI_IS_SUCCESS(fn)                                                  \
-    {                                                                          \
-        int errcode;                                                           \
-        errcode = (fn);                                                        \
-        if (errcode != MPI_SUCCESS)                                            \
-            errhandler(errcode, #fn);                                          \
-    }
 
 template <class T> [[maybe_unused]] MPI_Datatype getMPIType() {
     PL_ABORT("No corresponding MPI type.");
