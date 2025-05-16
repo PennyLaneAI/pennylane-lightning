@@ -10,8 +10,8 @@ pytest-xdist>=2.5.0
 pytest-split
 flaky>=3.7.0
 black>=25.1.0
-clang-tidy~=16.0
-clang-format~=16.0
+clang-tidy~=20.1
+clang-format~=20.1
 isort==5.13.2
 click==8.0.4
 cmake
