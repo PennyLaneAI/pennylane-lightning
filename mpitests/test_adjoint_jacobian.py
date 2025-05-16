@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Unit tests for the :mod:`pennylane_lightning_gpu.Lightning MPI` device.
+Unit tests for adjoint Jacobian on :mod:`pennylane_lightning` MPI-enabled devices.
 """
 # pylint: disable=protected-access,cell-var-from-loop,c-extension-no-member
 import itertools
@@ -30,8 +30,6 @@ from pennylane.devices import ExecutionConfig
 from pennylane.exceptions import QuantumFunctionError
 from pennylane.tape import QuantumScript
 from scipy.stats import unitary_group
-
-from pennylane_lightning.lightning_gpu_ops import LightningException
 
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)

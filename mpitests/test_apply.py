@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Unit tests for the :mod:`pennylane_lightning.Lightning` device MPI.
+Unit tests for apply on :mod:`pennylane_lightning` MPI-enabled devices.
 """
 # pylint: disable=protected-access,cell-var-from-loop,c-extension-no-member
 import itertools
@@ -384,10 +384,10 @@ class TestApply:  # pylint: disable=missing-function-docstring,too-many-argument
 
         dev_mpi._statevector.reset_state()
 
-        gpumpi_qnode = qml.QNode(circuit, dev_mpi)
+        mpi_qnode = qml.QNode(circuit, dev_mpi)
         dev_mpi._statevector.reset_state()
 
-        local_state_vector = gpumpi_qnode()
+        local_state_vector = mpi_qnode()
         assert np.allclose(local_state_vector, local_expected_output_cpu, atol=tol, rtol=0)
 
 
@@ -431,9 +431,9 @@ class TestSparseHamExpval:  # pylint: disable=too-few-public-methods,missing-fun
             return qml.expval(H_sparse)
 
         dev_mpi = qml.device(device_name, wires=3, mpi=False, c_dtype=c_dtype)
-        gpu_qnode = qml.QNode(circuit, dev_mpi)
-        expected_output_gpu = gpu_qnode()
-        comm.Bcast(np.array(expected_output_gpu), root=0)
+        mpi_qnode = qml.QNode(circuit, dev_mpi)
+        expected_output_mpi = mpi_qnode()
+        comm.Bcast(np.array(expected_output_mpi), root=0)
 
         dev_mpi = qml.device(device_name, wires=3, mpi=True, c_dtype=c_dtype)
         mpi_qnode = qml.QNode(circuit, dev_mpi)
@@ -441,7 +441,7 @@ class TestSparseHamExpval:  # pylint: disable=too-few-public-methods,missing-fun
 
         comm.Barrier()
 
-        assert np.allclose(expected_output_mpi, expected_output_gpu)
+        assert np.allclose(expected_output_mpi, expected_output_mpi)
 
 
 class TestExpval:
@@ -904,19 +904,19 @@ def test_integration(returns):
     np.random.seed(1337)
     params = np.random.rand(n_params)
 
-    qnode_gpu = qml.QNode(circuit, dev_mpi, diff_method="parameter-shift")
+    qnode_mpi = qml.QNode(circuit, dev_mpi, diff_method="parameter-shift")
     qnode_default = qml.QNode(circuit, dev_default, diff_method="parameter-shift")
 
-    def convert_to_array_gpu(params):
-        return np.array(qnode_gpu(params))
+    def convert_to_array_mpi(params):
+        return np.array(qnode_mpi(params))
 
     def convert_to_array_default(params):
         return np.array(qnode_default(params))
 
-    j_gpu = qml.jacobian(convert_to_array_gpu)(params)
+    j_mpi = qml.jacobian(convert_to_array_mpi)(params)
     j_default = qml.jacobian(convert_to_array_default)(params)
 
-    assert np.allclose(j_gpu, j_default, atol=1e-7)
+    assert np.allclose(j_mpi, j_default, atol=1e-7)
 
 
 custom_wires = ["alice", 3.14, -1, 0, "bob", "l", "m", "n"]
@@ -948,16 +948,16 @@ def test_integration_custom_wires(returns):
     np.random.seed(1337)
     params = np.random.rand(n_params)
 
-    qnode_gpu = qml.QNode(circuit, dev_mpi, diff_method="parameter-shift")
+    qnode_mpi = qml.QNode(circuit, dev_mpi, diff_method="parameter-shift")
     qnode_lightning = qml.QNode(circuit, dev_lightning, diff_method="parameter-shift")
 
-    def convert_to_array_gpu(params):
-        return np.array(qnode_gpu(params))
+    def convert_to_array_mpi(params):
+        return np.array(qnode_mpi(params))
 
     def convert_to_array_lightning(params):
         return np.array(qnode_lightning(params))
 
-    j_gpu = qml.jacobian(convert_to_array_gpu)(params)
+    j_mpi = qml.jacobian(convert_to_array_mpi)(params)
     j_lightning = qml.jacobian(convert_to_array_lightning)(params)
 
-    assert np.allclose(j_gpu, j_lightning, atol=1e-7)
+    assert np.allclose(j_mpi, j_lightning, atol=1e-7)
