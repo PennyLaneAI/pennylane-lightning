@@ -24,7 +24,7 @@
 #include "MPIManager.hpp"
 
 using namespace Pennylane;
-using namespace Pennylane::LightningGPU::MPI;
+using namespace Pennylane::Util;
 
 TEST_CASE("MPIManager ctor", "[MPIManager]") {
     SECTION("Default constructibility") {
@@ -41,6 +41,22 @@ TEST_CASE("MPIManager ctor", "[MPIManager]") {
 
     SECTION("MPIManager {MPIManager&}") {
         REQUIRE(std::is_copy_constructible_v<MPIManager>);
+    }
+}
+
+TEMPLATE_TEST_CASE("MPIManager::getMPIDatatype", "[MPIManager]", float,
+                   double) {
+    MPIManager mpi_manager(MPI_COMM_WORLD);
+
+    SECTION("Test valid type") {
+        MPI_Datatype datatype = mpi_manager.getMPIDatatype<char>();
+        REQUIRE(datatype == MPI_CHAR);
+    }
+
+    SECTION("Test invalid type") {
+        // This should throw an exception
+        REQUIRE_THROWS_AS(mpi_manager.getMPIDatatype<std::string>(),
+                          std::runtime_error);
     }
 }
 

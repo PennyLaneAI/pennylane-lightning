@@ -19,7 +19,7 @@
 
 #include <catch2/catch.hpp>
 
-#include "MPIManager.hpp"
+#include "MPIManagerGPU.hpp"
 #include "StateVectorCudaMPI.hpp"
 #include "StateVectorCudaManaged.hpp"
 #include "mpi.h"
@@ -63,7 +63,7 @@ using namespace Pennylane::LightningGPU::MPI;
     {                                                                          \
         using cp_t = std::complex<TestType>;                                   \
         using PrecisionT = TestType;                                           \
-        MPIManager mpi_manager(MPI_COMM_WORLD);                                \
+        MPIManagerGPU mpi_manager(MPI_COMM_WORLD);                             \
         REQUIRE(mpi_manager.getSize() == 2);                                   \
         std::size_t mpi_buffersize = 1;                                        \
         std::size_t nGlobalIndexBits =                                         \

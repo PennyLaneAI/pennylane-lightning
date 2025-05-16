@@ -30,7 +30,7 @@
 #include "CSRMatrix.hpp"
 #include "Constant.hpp"
 #include "Error.hpp"
-#include "MPIManager.hpp"
+#include "MPIManagerGPU.hpp"
 #include "MPIWorker.hpp"
 #include "MPI_helpers.hpp"
 #include "StateVectorCudaBase.hpp"
@@ -85,7 +85,7 @@ class StateVectorCudaMPI final
 
     std::size_t numGlobalQubits_;
     std::size_t numLocalQubits_;
-    MPIManager mpi_manager_;
+    MPIManagerGPU mpi_manager_;
 
     SharedCusvHandle handle_;
     SharedCublasCaller cublascaller_;
@@ -105,7 +105,7 @@ class StateVectorCudaMPI final
 
     StateVectorCudaMPI() = delete;
 
-    StateVectorCudaMPI(MPIManager mpi_manager, const DevTag<int> &dev_tag,
+    StateVectorCudaMPI(MPIManagerGPU mpi_manager, const DevTag<int> &dev_tag,
                        std::size_t mpi_buf_size, std::size_t num_global_qubits,
                        std::size_t num_local_qubits)
         : StateVectorCudaBase<Precision, StateVectorCudaMPI<Precision>>(

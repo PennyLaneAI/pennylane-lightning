@@ -11,7 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Tests for default qubit preprocessing."""
+"""
+Unit tests for native mid-circuit measurements on :mod:`pennylane_lightning` MPI-enabled devices.
+"""
 import numpy as np
 import pennylane as qml
 import pytest

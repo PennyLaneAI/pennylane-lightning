@@ -10,7 +10,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Unit tests for the :mod:`pennylane_lightning.LightningGPU` device (MPI).
+Unit tests for probs on :mod:`pennylane_lightning` MPI-enabled devices.
 """
 import numpy as np
 import pennylane as qml

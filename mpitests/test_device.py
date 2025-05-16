@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Unit tests for Lightning devices creation.
+Unit tests for device creation on :mod:`pennylane_lightning` MPI-enabled devices.
 """
 # pylint: disable=protected-access,unused-variable,missing-function-docstring,c-extension-no-member
 
