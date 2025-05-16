@@ -46,22 +46,22 @@ catch_discover_tests(utils_test_runner)
 install(TARGETS utils_test_runner DESTINATION bin)
 
 if(ENABLE_MPI)
-add_library(utils_tests_mpi INTERFACE)
-target_link_libraries(utils_tests_mpi INTERFACE     Catch2::Catch2
-                                                                lightning_utils
-                                                                )
+    add_library(utils_tests_mpi INTERFACE)
+    target_link_libraries(utils_tests_mpi INTERFACE     Catch2::Catch2
+                                                                    lightning_utils
+                                                                    )
 
-ProcessTestOptions(utils_tests_mpi)
+    ProcessTestOptions(utils_tests_mpi)
 
-target_sources(utils_tests_mpi INTERFACE ./mpi/runner_utils_mpi.cpp)
+    target_sources(utils_tests_mpi INTERFACE ./mpi/runner_utils_mpi.cpp)
 
-################################################################################
-# Define targets
-################################################################################
-set(TEST_SOURCES ./mpi/Test_MPIManager.cpp)
+    ################################################################################
+    # Define targets
+    ################################################################################
+    set(TEST_SOURCES ./mpi/Test_MPIManager.cpp)
 
-add_executable(utils_test_runner_mpi ${TEST_SOURCES})
-target_link_libraries(utils_test_runner_mpi PRIVATE utils_tests_mpi)
-catch_discover_tests(utils_test_runner_mpi)
+    add_executable(utils_test_runner_mpi ${TEST_SOURCES})
+    target_link_libraries(utils_test_runner_mpi PRIVATE utils_tests_mpi)
+    catch_discover_tests(utils_test_runner_mpi)
 
 endif()

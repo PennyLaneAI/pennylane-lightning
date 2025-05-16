@@ -24,6 +24,9 @@
 
 <h3>Bug fixes 🐛</h3>
 
+- Only download JAX version 0.5.3 for non-X86 MacOS. 
+  [(#1163)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1163)
+
 - Fix Docker build for Lighting-Kokkos with ROCM library for AMD GPUs.
   Updating ROCM from 5.7 to 6.2.4. 
   [(#1158)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1158)
