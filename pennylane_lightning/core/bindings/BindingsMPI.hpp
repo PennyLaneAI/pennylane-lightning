@@ -34,11 +34,11 @@
 
 #include "CPUMemoryModel.hpp" // CPUMemoryModel, getMemoryModel, bestCPUMemoryModel, getAlignment
 #include "JacobianData.hpp"
+#include "MPIManager.hpp"
 #include "Macros.hpp" // CPUArch
 #include "Memory.hpp" // alignedAlloc
 #include "Observables.hpp"
 #include "Util.hpp" // for_each_enum
-#include "MPIManager.hpp"
 
 #ifdef _ENABLE_PLGPU
 #include "AdjointJacobianGPUMPI.hpp"

@@ -269,7 +269,7 @@ class MeasurementsMPI final
             std::size_t global_z_mask = 0;
             std::size_t global_index =
                 this->_statevector.getGlobalIndexFromMPIRank(
-                    this->_statevector.getMPIRank());
+                    this->_statevector.getMPIManager().getRank());
             for (std::size_t i = 0; i < global_Z_wires.size(); i++) {
                 std::size_t distance = std::distance(
                     this->_statevector.getGlobalWires().begin(),

@@ -54,7 +54,9 @@ TEMPLATE_TEST_CASE("StateVectorKokkosMPI::Constructibility",
  */
 TEMPLATE_TEST_CASE("isElementInVector", "[LKMPI]", double, float) {
     const std::size_t num_qubits = 2;
-    StateVectorKokkosMPI<TestType> sv(num_qubits);
+
+    MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
+    StateVectorKokkosMPI<TestType> sv(mpi_manager, num_qubits);
     std::vector<std::size_t> wires = {0, 1, 4, 5};
     REQUIRE(sv.isElementInVector(wires, static_cast<std::size_t>(0)));
     REQUIRE(sv.isElementInVector(wires, static_cast<std::size_t>(1)));
@@ -68,7 +70,8 @@ TEMPLATE_TEST_CASE("isElementInVector", "[LKMPI]", double, float) {
 
 TEMPLATE_TEST_CASE("getElementIndexInVector", "[LKMPI]", double, float) {
     const std::size_t num_qubits = 2;
-    StateVectorKokkosMPI<TestType> sv(num_qubits);
+    MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
+    StateVectorKokkosMPI<TestType> sv(mpi_manager, num_qubits);
     std::vector<std::size_t> wires = {0, 1, 4, 5};
     REQUIRE(sv.getElementIndexInVector(wires, static_cast<std::size_t>(0)) ==
             0);
@@ -86,10 +89,12 @@ TEMPLATE_TEST_CASE("getElementIndexInVector", "[LKMPI]", double, float) {
 
 TEMPLATE_TEST_CASE("Local/Global wire helpers", "[LKMPI]", double, float) {
     const std::size_t num_qubits = 5;
-    StateVectorKokkosMPI<TestType> sv(num_qubits);
+    MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
+    REQUIRE(mpi_manager.getSize() == 4);
+    
+    StateVectorKokkosMPI<TestType> sv(mpi_manager, num_qubits);
 
     // Only run with 4 mpi ranks:
-    REQUIRE(sv.getMPISize() == 4);
 
     REQUIRE(sv.getNumGlobalWires() == 2);
     REQUIRE(sv.getNumLocalWires() == 3);
@@ -151,13 +156,16 @@ TEMPLATE_TEST_CASE("Local/Global wire helpers", "[LKMPI]", double, float) {
 
 TEMPLATE_TEST_CASE("getDataVector", "[LKMPI]", double, float) {
     const std::size_t num_qubits = 5;
-    StateVectorKokkosMPI<TestType> sv(num_qubits);
+    MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
+    REQUIRE(mpi_manager.getSize() == 4);
+    
+    StateVectorKokkosMPI<TestType> sv(mpi_manager, num_qubits);
     std::vector<Kokkos::complex<TestType>> reference_data(exp2(num_qubits),
                                                           {0.0, 0.0});
     reference_data[0] = 1.0;
 
     auto data = sv.getDataVector(0);
-    if (sv.getMPIRank() == 0) {
+    if (mpi_manager.getRank() == 0) {
         for (std::size_t j = 0; j < reference_data.size(); j++) {
             CHECK(real(data[j]) == Approx(real(reference_data[j])));
             CHECK(imag(data[j]) == Approx(imag(reference_data[j])));
@@ -167,7 +175,8 @@ TEMPLATE_TEST_CASE("getDataVector", "[LKMPI]", double, float) {
 
 TEMPLATE_TEST_CASE("setBasisState", "[LKMPI]", double, float) {
     const std::size_t num_qubits = 5;
-    StateVectorKokkosMPI<TestType> sv(num_qubits);
+    MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
+    StateVectorKokkosMPI<TestType> sv(mpi_manager, num_qubits);
 
     for (std::size_t i = 0; i < exp2(num_qubits); i++) {
 
@@ -175,7 +184,7 @@ TEMPLATE_TEST_CASE("setBasisState", "[LKMPI]", double, float) {
         reference_data[i] = 1.0;
         sv.setBasisState(i);
         auto data = sv.getDataVector(0);
-        if (sv.getMPIRank() == 0) {
+        if (mpi_manager.getRank() == 0) {
             for (std::size_t j = 0; j < reference_data.size(); j++) {
                 CHECK(real(data[j]) == Approx(real(reference_data[j])));
                 CHECK(imag(data[j]) == Approx(imag(reference_data[j])));
@@ -186,7 +195,10 @@ TEMPLATE_TEST_CASE("setBasisState", "[LKMPI]", double, float) {
 
 TEMPLATE_TEST_CASE("setBasisState - explicit state", "[LKMPI]", double, float) {
     const std::size_t num_qubits = 5;
-    StateVectorKokkosMPI<TestType> sv(num_qubits);
+    MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
+    REQUIRE(mpi_manager.getSize() == 4);
+    
+    StateVectorKokkosMPI<TestType> sv(mpi_manager, num_qubits);
 
     std::vector<std::size_t> state = {1, 1};
     std::vector<std::vector<std::size_t>> wires = {{3, 4}, {0, 1}, {3, 0}};
@@ -198,7 +210,7 @@ TEMPLATE_TEST_CASE("setBasisState - explicit state", "[LKMPI]", double, float) {
         reference_data[reference_location[i]] = 1.0;
         sv.setBasisState(state, wires[i]);
         auto data = sv.getDataVector(0);
-        if (sv.getMPIRank() == 0) {
+        if (mpi_manager.getRank() == 0) {
             for (std::size_t j = 0; j < reference_data.size(); j++) {
                 CHECK(real(data[j]) == Approx(real(reference_data[j])));
                 CHECK(imag(data[j]) == Approx(imag(reference_data[j])));
@@ -208,12 +220,13 @@ TEMPLATE_TEST_CASE("setBasisState - explicit state", "[LKMPI]", double, float) {
 }
 
 TEMPLATE_TEST_CASE("updateData/getData/getDataVector", "[LKMPI]", double,
-                   float) {
+                   float
+                ) {
     const std::size_t num_qubits = 5;
-    StateVectorKokkosMPI<TestType> sv(num_qubits);
-
-    // Only run with 4 mpi ranks:
-    REQUIRE(sv.getMPISize() == 4);
+    MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
+    REQUIRE(mpi_manager.getSize() == 4);
+    
+    StateVectorKokkosMPI<TestType> sv(mpi_manager, num_qubits);
 
     // Set the reference data
     std::vector<Kokkos::complex<TestType>> init_sv(exp2(num_qubits),
@@ -226,7 +239,7 @@ TEMPLATE_TEST_CASE("updateData/getData/getDataVector", "[LKMPI]", double,
     std::size_t block_size = sv.getLocalBlockSize();
     std::vector<Kokkos::complex<TestType>> init_subsv(block_size, {0.0, 0.0});
     for (std::size_t element = 0; element < block_size; element++) {
-        init_subsv[element] = init_sv[sv.getMPIRank() * block_size + element];
+        init_subsv[element] = init_sv[mpi_manager.getRank() * block_size + element];
     }
 
     // Update the state vector with the initial data with updateData()
@@ -240,7 +253,7 @@ TEMPLATE_TEST_CASE("updateData/getData/getDataVector", "[LKMPI]", double,
 
     // Check getDataVector()
     auto data = sv.getDataVector(0);
-    if (sv.getMPIRank() == 0) {
+    if (mpi_manager.getRank() == 0) {
         for (std::size_t j = 0; j < init_sv.size(); j++) {
             CHECK(real(data[j]) == Approx(real(init_sv[j])));
             CHECK(imag(data[j]) == Approx(imag(init_sv[j])));
@@ -415,11 +428,11 @@ TEMPLATE_TEST_CASE("Swap global local wires", "[LKMPI]", double, float) {
         {23.0, 0.0}, {31.0, 0.0},
     };
     std::vector<std::vector<std::size_t>> global_wires_to_swap = {
-        {0},    {0},    {0},    {1},    {1},    {1},    {0, 1}, {0, 1}, {0, 1},
-        {0, 1}, {0, 1}, {0, 1}, {1, 0}, {1, 0}, {1, 0}, {1, 0}, {1, 0}, {1, 0}};
+        {0},    {0},    {0},    {1},    {1},    {1},    {0, 1}, {0, 1}, {0, 1},{0, 1}, {0, 1}, {0, 1}, {1, 0}, {1, 0}, {1, 0}, {1, 0}, {1, 0}, {1, 0}
+    };
     std::vector<std::vector<std::size_t>> local_wires_to_swap = {
-        {2},    {3},    {4},    {2},    {3},    {4},    {2, 3}, {3, 2}, {2, 4},
-        {4, 2}, {3, 4}, {4, 3}, {2, 3}, {3, 2}, {2, 4}, {4, 2}, {3, 4}, {4, 3}};
+        {2},    {3},    {4},    {2},    {3},    {4},    {2, 3}, {3, 2}, {2, 4},{4, 2}, {3, 4}, {4, 3}, {2, 3}, {3, 2}, {2, 4}, {4, 2}, {3, 4}, {4, 3}
+    };
 
     // Set the reference data
     std::vector<Kokkos::complex<TestType>> init_sv(exp2(num_qubits),
@@ -431,56 +444,55 @@ TEMPLATE_TEST_CASE("Swap global local wires", "[LKMPI]", double, float) {
     // Loop through cases
     for (std::size_t i = 0; i < swapped_sv.size(); i++) {
         // Initialize the state vector
-        StateVectorKokkosMPI<TestType> sv(num_qubits);
-
-        // Only run with 4 mpi ranks:
-        REQUIRE(sv.getMPISize() == 4);
-
+    MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
+    REQUIRE(mpi_manager.getSize() == 4);
+    StateVectorKokkosMPI<TestType> sv(mpi_manager, num_qubits);
         // Set initial data
         std::size_t block_size = sv.getLocalBlockSize();
         std::vector<Kokkos::complex<TestType>> init_subsv(block_size,
                                                           {0.0, 0.0});
         for (std::size_t element = 0; element < block_size; element++) {
             init_subsv[element] =
-                init_sv[sv.getMPIRank() * block_size + element];
+                init_sv[mpi_manager.getRank() * block_size + element];
         }
 
         // Update the state vector with the initial data with updateData()
         sv.updateData(init_subsv);
-
         // Swap Global Local wires
         sv.swapGlobalLocalWires(global_wires_to_swap[i],
                                 local_wires_to_swap[i]);
-
         // Check getData()
         for (std::size_t j = 0; j < init_subsv.size(); j++) {
             CHECK(
                 real(sv.getData()[j]) ==
-                Approx(real(swapped_sv[i][sv.getMPIRank() * block_size + j])));
+                Approx(real(swapped_sv[i][mpi_manager.getRank() * block_size + j])));
             CHECK(
                 imag(sv.getData()[j]) ==
-                Approx(imag(swapped_sv[i][sv.getMPIRank() * block_size + j])));
+                Approx(imag(swapped_sv[i][mpi_manager.getRank() * block_size + j])));
         }
-
         // Check getDataVector()
         auto data = sv.getDataVector(0);
-        if (sv.getMPIRank() == 0) {
+        if (mpi_manager.getRank() == 0) {
             for (std::size_t j = 0; j < init_sv.size(); j++) {
                 CHECK(real(data[j]) == Approx(real(init_sv[j])));
                 CHECK(imag(data[j]) == Approx(imag(init_sv[j])));
             }
         }
+        
     }
 }
 
 TEMPLATE_TEST_CASE("Match local wires", "[LKMPI]", double, float) {
     // Test setBasisState with a basis state
     const std::size_t num_qubits = 5;
-    StateVectorKokkosMPI<TestType> sv(num_qubits);
+
+    MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
+    REQUIRE(mpi_manager.getSize() == 4);
+    
+    StateVectorKokkosMPI<TestType> sv(mpi_manager, num_qubits);
+
     StateVectorKokkosMPI<TestType> sv_1(sv);
 
-    // Only run with 4 mpi ranks:
-    REQUIRE(sv.getMPISize() == 4);
 
     // Set the reference data
     std::vector<Kokkos::complex<TestType>> init_sv(exp2(num_qubits),
@@ -493,7 +505,7 @@ TEMPLATE_TEST_CASE("Match local wires", "[LKMPI]", double, float) {
     std::size_t block_size = sv.getLocalBlockSize();
     std::vector<Kokkos::complex<TestType>> init_subsv(block_size, {0.0, 0.0});
     for (std::size_t element = 0; element < block_size; element++) {
-        init_subsv[element] = init_sv[sv.getMPIRank() * block_size + element];
+        init_subsv[element] = init_sv[mpi_manager.getRank() * block_size + element];
     }
 
     // Update the state vector with the initial data with updateData()
@@ -506,7 +518,6 @@ TEMPLATE_TEST_CASE("Match local wires", "[LKMPI]", double, float) {
 
     // Match global wires and index
     sv.matchLocalWires(sv_1.getLocalWires());
-    ;
 
     // Global wires = {0, 1}
     // Local wires = {3, 2, 4}
@@ -522,21 +533,22 @@ TEMPLATE_TEST_CASE("Match local wires", "[LKMPI]", double, float) {
 
     for (std::size_t j = 0; j < init_subsv.size(); j++) {
         CHECK(real(sv.getData()[j]) ==
-              Approx(real(swapped_sv[sv.getMPIRank() * block_size + j])));
+              Approx(real(swapped_sv[mpi_manager.getRank() * block_size + j])));
         CHECK(real(sv.getData()[j]) == Approx(real(sv_1.getData()[j])));
         CHECK(imag(sv.getData()[j]) ==
-              Approx(imag(swapped_sv[sv.getMPIRank() * block_size + j])));
+              Approx(imag(swapped_sv[mpi_manager.getRank() * block_size + j])));
         CHECK(imag(sv.getData()[j]) == Approx(imag(sv_1.getData()[j])));
     }
 }
 
 TEMPLATE_TEST_CASE("Match global wires", "[LKMPI]", double, float) {
     const std::size_t num_qubits = 5;
-    StateVectorKokkosMPI<TestType> sv(num_qubits);
+    
+    MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
+    REQUIRE(mpi_manager.getSize() == 4);
+    
+    StateVectorKokkosMPI<TestType> sv(mpi_manager, num_qubits);
     StateVectorKokkosMPI<TestType> sv_1(sv);
-
-    // Only run with 4 mpi ranks:
-    REQUIRE(sv.getMPISize() == 4);
 
     // Set the reference data
     std::vector<Kokkos::complex<TestType>> init_sv(exp2(num_qubits),
@@ -549,7 +561,7 @@ TEMPLATE_TEST_CASE("Match global wires", "[LKMPI]", double, float) {
     std::size_t block_size = sv.getLocalBlockSize();
     std::vector<Kokkos::complex<TestType>> init_subsv(block_size, {0.0, 0.0});
     for (std::size_t element = 0; element < block_size; element++) {
-        init_subsv[element] = init_sv[sv.getMPIRank() * block_size + element];
+        init_subsv[element] = init_sv[mpi_manager.getRank() * block_size + element];
     }
 
     // Update the state vector with the initial data with updateData()
@@ -578,21 +590,22 @@ TEMPLATE_TEST_CASE("Match global wires", "[LKMPI]", double, float) {
 
     for (std::size_t j = 0; j < init_subsv.size(); j++) {
         CHECK(real(sv.getData()[j]) ==
-              Approx(real(swapped_sv[sv.getMPIRank() * block_size + j])));
+              Approx(real(swapped_sv[mpi_manager.getRank() * block_size + j])));
         CHECK(real(sv.getData()[j]) == Approx(real(sv_1.getData()[j])));
         CHECK(imag(sv.getData()[j]) ==
-              Approx(imag(swapped_sv[sv.getMPIRank() * block_size + j])));
+              Approx(imag(swapped_sv[mpi_manager.getRank() * block_size + j])));
         CHECK(imag(sv.getData()[j]) == Approx(imag(sv_1.getData()[j])));
     }
 }
 
 TEMPLATE_TEST_CASE("Match wires", "[LKMPI]", double, float) {
     const std::size_t num_qubits = 5;
-    StateVectorKokkosMPI<TestType> sv(num_qubits);
+    MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
+    REQUIRE(mpi_manager.getSize() == 4);
+    
+    StateVectorKokkosMPI<TestType> sv(mpi_manager, num_qubits);
     StateVectorKokkosMPI<TestType> sv_1(sv);
 
-    // Only run with 4 mpi ranks:
-    REQUIRE(sv.getMPISize() == 4);
 
     // Set the reference data
     std::vector<Kokkos::complex<TestType>> init_sv(exp2(num_qubits),
@@ -605,7 +618,7 @@ TEMPLATE_TEST_CASE("Match wires", "[LKMPI]", double, float) {
     std::size_t block_size = sv.getLocalBlockSize();
     std::vector<Kokkos::complex<TestType>> init_subsv(block_size, {0.0, 0.0});
     for (std::size_t element = 0; element < block_size; element++) {
-        init_subsv[element] = init_sv[sv.getMPIRank() * block_size + element];
+        init_subsv[element] = init_sv[mpi_manager.getRank() * block_size + element];
     }
 
     // Update the state vector with the initial data with updateData()
@@ -632,10 +645,10 @@ TEMPLATE_TEST_CASE("Match wires", "[LKMPI]", double, float) {
 
     for (std::size_t j = 0; j < init_subsv.size(); j++) {
         CHECK(real(sv.getData()[j]) ==
-              Approx(real(swapped_sv[sv.getMPIRank() * block_size + j])));
+              Approx(real(swapped_sv[mpi_manager.getRank() * block_size + j])));
         CHECK(real(sv.getData()[j]) == Approx(real(sv_1.getData()[j])));
         CHECK(imag(sv.getData()[j]) ==
-              Approx(imag(swapped_sv[sv.getMPIRank() * block_size + j])));
+              Approx(imag(swapped_sv[mpi_manager.getRank() * block_size + j])));
         CHECK(imag(sv.getData()[j]) == Approx(imag(sv_1.getData()[j])));
     }
 }
@@ -644,10 +657,10 @@ TEMPLATE_TEST_CASE("Match wires", "[LKMPI]", double, float) {
 
 TEMPLATE_TEST_CASE("Apply PauliX", "[LKMPI]", double, float) {
     const std::size_t num_qubits = 4;
-    StateVectorKokkosMPI<TestType> sv(num_qubits);
-    // Only run with 4 mpi ranks:
-    REQUIRE(sv.getMPISize() == 4);
-
+    MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
+    REQUIRE(mpi_manager.getSize() == 4);
+    
+    StateVectorKokkosMPI<TestType> sv(mpi_manager, num_qubits);
     // Set the reference data
     std::vector<Kokkos::complex<TestType>> init_sv(exp2(num_qubits),
                                                    {0.0, 0.0});
@@ -659,7 +672,7 @@ TEMPLATE_TEST_CASE("Apply PauliX", "[LKMPI]", double, float) {
     std::size_t block_size = sv.getLocalBlockSize();
     std::vector<Kokkos::complex<TestType>> init_subsv(block_size, {0.0, 0.0});
     for (std::size_t element = 0; element < block_size; element++) {
-        init_subsv[element] = init_sv[sv.getMPIRank() * block_size + element];
+        init_subsv[element] = init_sv[mpi_manager.getRank() * block_size + element];
     }
 
     // Update the state vector with the initial data with updateData()
@@ -674,7 +687,7 @@ TEMPLATE_TEST_CASE("Apply PauliX", "[LKMPI]", double, float) {
     };
 
     auto data = sv.getDataVector(0);
-    if (sv.getMPIRank() == 0) {
+    if (mpi_manager.getRank() == 0) {
         for (std::size_t j = 0; j < init_sv.size(); j++) {
             CHECK(real(data[j]) == Approx(real(reference[j])));
             CHECK(imag(data[j]) == Approx(imag(reference[j])));
@@ -685,10 +698,10 @@ TEMPLATE_TEST_CASE("Apply PauliX", "[LKMPI]", double, float) {
 TEMPLATE_TEST_CASE("Apply non-trivial op", "[LKMPI]", double, float) {
     const TestType EP = 1e-4;
     const std::size_t num_qubits = 4;
-    StateVectorKokkosMPI<TestType> sv(num_qubits);
-
-    // Only run with 4 mpi ranks:
-    REQUIRE(sv.getMPISize() == 4);
+    MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
+    REQUIRE(mpi_manager.getSize() == 4);
+    
+    StateVectorKokkosMPI<TestType> sv(mpi_manager, num_qubits);
 
     // Set the reference data
     std::vector<Kokkos::complex<TestType>> init_sv(exp2(num_qubits),
@@ -701,7 +714,7 @@ TEMPLATE_TEST_CASE("Apply non-trivial op", "[LKMPI]", double, float) {
     std::size_t block_size = sv.getLocalBlockSize();
     std::vector<Kokkos::complex<TestType>> init_subsv(block_size, {0.0, 0.0});
     for (std::size_t element = 0; element < block_size; element++) {
-        init_subsv[element] = init_sv[sv.getMPIRank() * block_size + element];
+        init_subsv[element] = init_sv[mpi_manager.getRank() * block_size + element];
     }
 
     sv.updateData(init_subsv);
@@ -752,7 +765,7 @@ TEMPLATE_TEST_CASE("Apply non-trivial op", "[LKMPI]", double, float) {
     auto reference = sv_ref.getDataVector();
     auto data = sv.getDataVector(0);
 
-    if (sv.getMPIRank() == 0) {
+    if (mpi_manager.getRank() == 0) {
         for (std::size_t j = 0; j < init_sv.size(); j++) {
             CHECK(real(data[j]) == Approx(real(reference[j])).margin(EP));
             CHECK(imag(data[j]) == Approx(imag(reference[j])).margin(EP));
@@ -764,10 +777,10 @@ TEMPLATE_TEST_CASE("Apply Operation - non-param 1 wire", "[LKMPI]", double,
                    float) {
     const TestType EP = 1e-4;
     const std::size_t num_qubits = 4;
-    StateVectorKokkosMPI<TestType> sv(num_qubits);
-
-    // Only run with 4 mpi ranks:
-    REQUIRE(sv.getMPISize() == 4);
+    MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
+    REQUIRE(mpi_manager.getSize() == 4);
+    
+    StateVectorKokkosMPI<TestType> sv(mpi_manager, num_qubits);
 
     const bool inverse = GENERATE(false, true);
     const std::string gate_name = GENERATE(
@@ -785,7 +798,7 @@ TEMPLATE_TEST_CASE("Apply Operation - non-param 1 wire", "[LKMPI]", double,
     std::size_t block_size = sv.getLocalBlockSize();
     std::vector<Kokkos::complex<TestType>> init_subsv(block_size, {0.0, 0.0});
     for (std::size_t element = 0; element < block_size; element++) {
-        init_subsv[element] = init_sv[sv.getMPIRank() * block_size + element];
+        init_subsv[element] = init_sv[mpi_manager.getRank() * block_size + element];
     }
 
     // Update the state vector with the initial data with updateData()
@@ -802,7 +815,7 @@ TEMPLATE_TEST_CASE("Apply Operation - non-param 1 wire", "[LKMPI]", double,
         auto reference = sv_ref.getDataVector();
         auto data = sv.getDataVector(0);
 
-        if (sv.getMPIRank() == 0) {
+        if (mpi_manager.getRank() == 0) {
             for (std::size_t j = 0; j < init_sv.size(); j++) {
                 CHECK(real(data[j]) == Approx(real(reference[j])).margin(EP));
                 CHECK(imag(data[j]) == Approx(imag(reference[j])).margin(EP));
@@ -816,9 +829,10 @@ TEMPLATE_TEST_CASE("Apply Operation - non-param 2 wires", "[LKMPI]", double,
     const TestType EP = 1e-4;
 
     const std::size_t num_qubits = 6;
-    StateVectorKokkosMPI<TestType> sv(num_qubits);
-    // Only run with 4 mpi ranks:
-    REQUIRE(sv.getMPISize() == 4);
+    MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
+    REQUIRE(mpi_manager.getSize() == 4);
+    
+    StateVectorKokkosMPI<TestType> sv(mpi_manager, num_qubits);
 
     const bool inverse = GENERATE(false, true);
     const std::string gate_name = GENERATE("CNOT", "SWAP", "CY", "CZ");
@@ -845,7 +859,7 @@ TEMPLATE_TEST_CASE("Apply Operation - non-param 2 wires", "[LKMPI]", double,
                                                               {0.0, 0.0});
             for (std::size_t element = 0; element < block_size; element++) {
                 init_subsv[element] =
-                    init_sv[sv.getMPIRank() * block_size + element];
+                    init_sv[mpi_manager.getRank() * block_size + element];
             }
 
             // Update the state vector with the initial data with updateData()
@@ -860,7 +874,7 @@ TEMPLATE_TEST_CASE("Apply Operation - non-param 2 wires", "[LKMPI]", double,
             auto reference = sv_ref.getDataVector();
             auto data = sv.getDataVector(0);
 
-            if (sv.getMPIRank() == 0) {
+            if (mpi_manager.getRank() == 0) {
                 for (std::size_t j = 0; j < init_sv.size(); j++) {
                     CHECK(real(data[j]) ==
                           Approx(real(reference[j])).margin(EP));
@@ -876,10 +890,10 @@ TEMPLATE_TEST_CASE("Apply Operation - non-param 3 wires", "[LKMPI]", double,
                    float) {
     const TestType EP = 1e-4;
     const std::size_t num_qubits = 6;
-    StateVectorKokkosMPI<TestType> sv(num_qubits);
-
-    // Only run with 4 mpi ranks:
-    REQUIRE(sv.getMPISize() == 4);
+    MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
+    REQUIRE(mpi_manager.getSize() == 4);
+    
+    StateVectorKokkosMPI<TestType> sv(mpi_manager, num_qubits);
 
     const bool inverse = GENERATE(false, true);
     const std::string gate_name = GENERATE("CSWAP", "Toffoli");
@@ -905,7 +919,7 @@ TEMPLATE_TEST_CASE("Apply Operation - non-param 3 wires", "[LKMPI]", double,
                                                               {0.0, 0.0});
             for (std::size_t element = 0; element < block_size; element++) {
                 init_subsv[element] =
-                    init_sv[sv.getMPIRank() * block_size + element];
+                    init_sv[mpi_manager.getRank() * block_size + element];
             }
 
             // Update the state vector with the initial data with updateData()
@@ -920,7 +934,7 @@ TEMPLATE_TEST_CASE("Apply Operation - non-param 3 wires", "[LKMPI]", double,
             auto reference = sv_ref.getDataVector();
             auto data = sv.getDataVector(0);
 
-            if (sv.getMPIRank() == 0) {
+            if (mpi_manager.getRank() == 0) {
                 for (std::size_t j = 0; j < init_sv.size(); j++) {
                     CHECK(real(data[j]) ==
                           Approx(real(reference[j])).margin(EP));
@@ -935,10 +949,10 @@ TEMPLATE_TEST_CASE("Apply Operation - non-param 3 wires", "[LKMPI]", double,
 TEMPLATE_TEST_CASE("Apply Operation - param 1 wire", "[LKMPI]", double, float) {
     const TestType EP = 1e-4;
     const std::size_t num_qubits = 4;
-    StateVectorKokkosMPI<TestType> sv(num_qubits);
-
-    // Only run with 4 mpi ranks:
-    REQUIRE(sv.getMPISize() == 4);
+    MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
+    REQUIRE(mpi_manager.getSize() == 4);
+    
+    StateVectorKokkosMPI<TestType> sv(mpi_manager, num_qubits);
 
     const bool inverse = GENERATE(false, true);
     const std::string gate_name =
@@ -962,7 +976,7 @@ TEMPLATE_TEST_CASE("Apply Operation - param 1 wire", "[LKMPI]", double, float) {
     std::size_t block_size = sv.getLocalBlockSize();
     std::vector<Kokkos::complex<TestType>> init_subsv(block_size, {0.0, 0.0});
     for (std::size_t element = 0; element < block_size; element++) {
-        init_subsv[element] = init_sv[sv.getMPIRank() * block_size + element];
+        init_subsv[element] = init_sv[mpi_manager.getRank() * block_size + element];
     }
 
     // Update the state vector with the initial data with updateData()
@@ -979,7 +993,7 @@ TEMPLATE_TEST_CASE("Apply Operation - param 1 wire", "[LKMPI]", double, float) {
         auto reference = sv_ref.getDataVector();
         auto data = sv.getDataVector(0);
 
-        if (sv.getMPIRank() == 0) {
+        if (mpi_manager.getRank() == 0) {
             for (std::size_t j = 0; j < init_sv.size(); j++) {
                 CHECK(real(data[j]) == Approx(real(reference[j])).margin(EP));
                 CHECK(imag(data[j]) == Approx(imag(reference[j])).margin(EP));
@@ -992,10 +1006,10 @@ TEMPLATE_TEST_CASE("Apply Operation - param 2 wires", "[LKMPI]", double,
                    float) {
     const TestType EP = 1e-4;
     const std::size_t num_qubits = 6;
-    StateVectorKokkosMPI<TestType> sv(num_qubits);
-
-    // Only run with 4 mpi ranks:
-    REQUIRE(sv.getMPISize() == 4);
+    MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
+    REQUIRE(mpi_manager.getSize() == 4);
+    
+    StateVectorKokkosMPI<TestType> sv(mpi_manager, num_qubits);
 
     const bool inverse = GENERATE(false, true);
     const std::string gate_name = GENERATE(
@@ -1022,7 +1036,7 @@ TEMPLATE_TEST_CASE("Apply Operation - param 2 wires", "[LKMPI]", double,
     std::size_t block_size = sv.getLocalBlockSize();
     std::vector<Kokkos::complex<TestType>> init_subsv(block_size, {0.0, 0.0});
     for (std::size_t element = 0; element < block_size; element++) {
-        init_subsv[element] = init_sv[sv.getMPIRank() * block_size + element];
+        init_subsv[element] = init_sv[mpi_manager.getRank() * block_size + element];
     }
 
     // Update the state vector with the initial data with updateData()
@@ -1041,7 +1055,7 @@ TEMPLATE_TEST_CASE("Apply Operation - param 2 wires", "[LKMPI]", double,
             auto reference = sv_ref.getDataVector();
             auto data = sv.getDataVector(0);
 
-            if (sv.getMPIRank() == 0) {
+            if (mpi_manager.getRank() == 0) {
                 for (std::size_t j = 0; j < init_sv.size(); j++) {
                     CHECK(real(data[j]) ==
                           Approx(real(reference[j])).margin(EP));
@@ -1057,10 +1071,10 @@ TEMPLATE_TEST_CASE("Apply Operation - param 4 wires", "[LKMPI]", double,
                    float) {
     const TestType EP = 1e-4;
     const std::size_t num_qubits = 7;
-    StateVectorKokkosMPI<TestType> sv(num_qubits);
-
-    // Only run with 4 mpi ranks:
-    REQUIRE(sv.getMPISize() == 4);
+    MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
+    REQUIRE(mpi_manager.getSize() == 4);
+    
+    StateVectorKokkosMPI<TestType> sv(mpi_manager, num_qubits);
 
     const bool inverse = GENERATE(false, true);
     const std::string gate_name = GENERATE(
@@ -1089,7 +1103,7 @@ TEMPLATE_TEST_CASE("Apply Operation - param 4 wires", "[LKMPI]", double,
     std::size_t block_size = sv.getLocalBlockSize();
     std::vector<Kokkos::complex<TestType>> init_subsv(block_size, {0.0, 0.0});
     for (std::size_t element = 0; element < block_size; element++) {
-        init_subsv[element] = init_sv[sv.getMPIRank() * block_size + element];
+        init_subsv[element] = init_sv[mpi_manager.getRank() * block_size + element];
     }
 
     // Update the state vector with the initial data with updateData()
@@ -1111,7 +1125,7 @@ TEMPLATE_TEST_CASE("Apply Operation - param 4 wires", "[LKMPI]", double,
             auto reference = sv_ref.getDataVector();
             auto data = sv.getDataVector(0);
 
-            if (sv.getMPIRank() == 0) {
+            if (mpi_manager.getRank() == 0) {
                 for (std::size_t j = 0; j < init_sv.size(); j++) {
                     CHECK(real(data[j]) ==
                           Approx(real(reference[j])).margin(EP));
@@ -1127,10 +1141,10 @@ TEMPLATE_TEST_CASE("Apply Controlled Operation - 1 control 1 target wire",
                    "[LKMPI]", double, float) {
     const TestType EP = 1e-4;
     const std::size_t num_qubits = 6;
-    StateVectorKokkosMPI<TestType> sv(num_qubits);
-
-    // Only run with 4 mpi ranks:
-    REQUIRE(sv.getMPISize() == 4);
+    MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
+    REQUIRE(mpi_manager.getSize() == 4);
+    
+    StateVectorKokkosMPI<TestType> sv(mpi_manager, num_qubits);
 
     const bool inverse = GENERATE(false, true);
     const std::string gate_name = GENERATE("RX");
@@ -1151,7 +1165,7 @@ TEMPLATE_TEST_CASE("Apply Controlled Operation - 1 control 1 target wire",
     std::size_t block_size = sv.getLocalBlockSize();
     std::vector<Kokkos::complex<TestType>> init_subsv(block_size, {0.0, 0.0});
     for (std::size_t element = 0; element < block_size; element++) {
-        init_subsv[element] = init_sv[sv.getMPIRank() * block_size + element];
+        init_subsv[element] = init_sv[mpi_manager.getRank() * block_size + element];
     }
 
     // Update the state vector with the initial data with updateData()
@@ -1174,7 +1188,7 @@ TEMPLATE_TEST_CASE("Apply Controlled Operation - 1 control 1 target wire",
             auto reference = sv_ref.getDataVector();
             auto data = sv.getDataVector(0);
 
-            if (sv.getMPIRank() == 0) {
+            if (mpi_manager.getRank() == 0) {
                 for (std::size_t j = 0; j < init_sv.size(); j++) {
                     CHECK(real(data[j]) ==
                           Approx(real(reference[j])).margin(EP));
@@ -1190,10 +1204,10 @@ TEMPLATE_TEST_CASE("Apply Controlled Operation - 1 control 2 target wires",
                    "[LKMPI]", double, float) {
     const TestType EP = 1e-4;
     const std::size_t num_qubits = 6;
-    StateVectorKokkosMPI<TestType> sv(num_qubits);
-
-    // Only run with 4 mpi ranks:
-    REQUIRE(sv.getMPISize() == 4);
+    MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
+    REQUIRE(mpi_manager.getSize() == 4);
+    
+    StateVectorKokkosMPI<TestType> sv(mpi_manager, num_qubits);
 
     const bool inverse = GENERATE(false, true);
     const std::string gate_name = GENERATE("IsingXX");
@@ -1216,7 +1230,7 @@ TEMPLATE_TEST_CASE("Apply Controlled Operation - 1 control 2 target wires",
     std::size_t block_size = sv.getLocalBlockSize();
     std::vector<Kokkos::complex<TestType>> init_subsv(block_size, {0.0, 0.0});
     for (std::size_t element = 0; element < block_size; element++) {
-        init_subsv[element] = init_sv[sv.getMPIRank() * block_size + element];
+        init_subsv[element] = init_sv[mpi_manager.getRank() * block_size + element];
     }
 
     // Update the state vector with the initial data with updateData()
@@ -1241,7 +1255,7 @@ TEMPLATE_TEST_CASE("Apply Controlled Operation - 1 control 2 target wires",
             auto reference = sv_ref.getDataVector();
             auto data = sv.getDataVector(0);
 
-            if (sv.getMPIRank() == 0) {
+            if (mpi_manager.getRank() == 0) {
                 for (std::size_t j = 0; j < init_sv.size(); j++) {
                     CHECK(real(data[j]) ==
                           Approx(real(reference[j])).margin(EP));
@@ -1257,10 +1271,10 @@ TEMPLATE_TEST_CASE("Apply Controlled Operation - 2 control 1 target wire",
                    "[LKMPI]", double, float) {
     const TestType EP = 1e-4;
     const std::size_t num_qubits = 6;
-    StateVectorKokkosMPI<TestType> sv(num_qubits);
-
-    // Only run with 4 mpi ranks:
-    REQUIRE(sv.getMPISize() == 4);
+    MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
+    REQUIRE(mpi_manager.getSize() == 4);
+    
+    StateVectorKokkosMPI<TestType> sv(mpi_manager, num_qubits);
 
     const bool inverse = GENERATE(false, true);
     const std::string gate_name = GENERATE("RX");
@@ -1284,7 +1298,7 @@ TEMPLATE_TEST_CASE("Apply Controlled Operation - 2 control 1 target wire",
     std::size_t block_size = sv.getLocalBlockSize();
     std::vector<Kokkos::complex<TestType>> init_subsv(block_size, {0.0, 0.0});
     for (std::size_t element = 0; element < block_size; element++) {
-        init_subsv[element] = init_sv[sv.getMPIRank() * block_size + element];
+        init_subsv[element] = init_sv[mpi_manager.getRank() * block_size + element];
     }
 
     // Update the state vector with the initial data with updateData()
@@ -1311,7 +1325,7 @@ TEMPLATE_TEST_CASE("Apply Controlled Operation - 2 control 1 target wire",
             auto reference = sv_ref.getDataVector();
             auto data = sv.getDataVector(0);
 
-            if (sv.getMPIRank() == 0) {
+            if (mpi_manager.getRank() == 0) {
                 for (std::size_t j = 0; j < init_sv.size(); j++) {
                     CHECK(real(data[j]) ==
                           Approx(real(reference[j])).margin(EP));
@@ -1327,10 +1341,10 @@ TEMPLATE_TEST_CASE("Apply Controlled Operation - 2 control 2 target wire",
                    "[LKMPI]", double, float) {
     const TestType EP = 1e-4;
     const std::size_t num_qubits = 6;
-    StateVectorKokkosMPI<TestType> sv(num_qubits);
-
-    // Only run with 4 mpi ranks:
-    REQUIRE(sv.getMPISize() == 4);
+    MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
+    REQUIRE(mpi_manager.getSize() == 4);
+    
+    StateVectorKokkosMPI<TestType> sv(mpi_manager, num_qubits);
 
     const bool inverse = GENERATE(false, true);
     const std::string gate_name = GENERATE("IsingXX");
@@ -1355,7 +1369,7 @@ TEMPLATE_TEST_CASE("Apply Controlled Operation - 2 control 2 target wire",
     std::size_t block_size = sv.getLocalBlockSize();
     std::vector<Kokkos::complex<TestType>> init_subsv(block_size, {0.0, 0.0});
     for (std::size_t element = 0; element < block_size; element++) {
-        init_subsv[element] = init_sv[sv.getMPIRank() * block_size + element];
+        init_subsv[element] = init_sv[mpi_manager.getRank() * block_size + element];
     }
 
     // Update the state vector with the initial data with updateData()
@@ -1384,7 +1398,7 @@ TEMPLATE_TEST_CASE("Apply Controlled Operation - 2 control 2 target wire",
             auto reference = sv_ref.getDataVector();
             auto data = sv.getDataVector(0);
 
-            if (sv.getMPIRank() == 0) {
+            if (mpi_manager.getRank() == 0) {
                 for (std::size_t j = 0; j < init_sv.size(); j++) {
                     CHECK(real(data[j]) ==
                           Approx(real(reference[j])).margin(EP));
@@ -1399,11 +1413,11 @@ TEMPLATE_TEST_CASE("Apply Controlled Operation - 2 control 2 target wire",
 TEMPLATE_TEST_CASE("Match wires after apply PauliX", "[LKMPI]", double, float) {
     // Test setBasisState with a basis state
     const std::size_t num_qubits = 4;
-    StateVectorKokkosMPI<TestType> sv(num_qubits);
+    MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
+    REQUIRE(mpi_manager.getSize() == 4);
+    
+    StateVectorKokkosMPI<TestType> sv(mpi_manager, num_qubits);
     StateVectorKokkosMPI<TestType> sv_1(sv);
-
-    // Only run with 4 mpi ranks:
-    REQUIRE(sv.getMPISize() == 4);
 
     // Set the reference data
     std::vector<Kokkos::complex<TestType>> init_sv(exp2(num_qubits),
@@ -1416,7 +1430,7 @@ TEMPLATE_TEST_CASE("Match wires after apply PauliX", "[LKMPI]", double, float) {
     std::size_t block_size = sv.getLocalBlockSize();
     std::vector<Kokkos::complex<TestType>> init_subsv(block_size, {0.0, 0.0});
     for (std::size_t element = 0; element < block_size; element++) {
-        init_subsv[element] = init_sv[sv.getMPIRank() * block_size + element];
+        init_subsv[element] = init_sv[mpi_manager.getRank() * block_size + element];
     }
 
     // Update the state vector with the initial data with updateData()
@@ -1434,27 +1448,27 @@ TEMPLATE_TEST_CASE("Match wires after apply PauliX", "[LKMPI]", double, float) {
 
     for (std::size_t j = 0; j < init_subsv.size(); j++) {
         CHECK(real(sv_1.getData()[j]) ==
-              Approx(real(reference[sv_1.getMPIRank() * 4 + j])));
+              Approx(real(reference[mpi_manager.getRank() * 4 + j])));
     }
 
     auto data = sv_1.getDataVector(0);
-    if (sv_1.getMPIRank() == 0) {
+    if (mpi_manager.getRank() == 0) {
         for (std::size_t j = 0; j < init_sv.size(); j++) {
             CHECK(real(data[j]) == Approx(real(init_sv[j])));
             CHECK(imag(data[j]) == Approx(imag(init_sv[j])));
         }
     }
 
-    StateVectorKokkosMPI<TestType> sv_new(4);
+    StateVectorKokkosMPI<TestType> sv_new(mpi_manager, num_qubits);
     sv.matchWires(sv_new);
 
     for (std::size_t j = 0; j < init_subsv.size(); j++) {
         CHECK(real(sv.getData()[j]) ==
-              Approx(real(reference[sv.getMPIRank() * 4 + j])));
+              Approx(real(reference[mpi_manager.getRank() * 4 + j])));
     }
 
     data = sv.getDataVector(0);
-    if (sv.getMPIRank() == 0) {
+    if (mpi_manager.getRank() == 0) {
         for (std::size_t j = 0; j < init_sv.size(); j++) {
             CHECK(real(data[j]) == Approx(real(reference[j])));
             CHECK(imag(data[j]) == Approx(imag(reference[j])));

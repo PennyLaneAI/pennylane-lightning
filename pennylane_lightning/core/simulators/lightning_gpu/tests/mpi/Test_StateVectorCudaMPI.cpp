@@ -23,7 +23,6 @@
 
 #include "DevTag.hpp"
 #include "MPIManagerGPU.hpp"
-#include "MPIManagerGPU.hpp"
 #include "StateVectorCudaMPI.hpp"
 #include "TestHelpers.hpp" // createRandomStateVectorData
 #include "mpi.h"
@@ -80,11 +79,12 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorCudaMPI::Constructibility",
     SECTION("StateVectorBackend<TestType>") {
         REQUIRE(!std::is_constructible_v<StateVectorT>);
     }
-    SECTION(
-        "StateVectorBackend<TestType> {MPIManagerGPU, DevTag<int>, std::size_t, "
-        "std::size_t, std::size_t}") {
-        REQUIRE(std::is_constructible_v<StateVectorT, MPIManagerGPU, DevTag<int>,
-                                        std::size_t, std::size_t, std::size_t>);
+    SECTION("StateVectorBackend<TestType> {MPIManagerGPU, DevTag<int>, "
+            "std::size_t, "
+            "std::size_t, std::size_t}") {
+        REQUIRE(
+            std::is_constructible_v<StateVectorT, MPIManagerGPU, DevTag<int>,
+                                    std::size_t, std::size_t, std::size_t>);
     }
     SECTION("StateVectorBackend<TestType> {MPI_Comm, DevTag<int>, std::size_t, "
             "std::size_t, std::size_t}") {

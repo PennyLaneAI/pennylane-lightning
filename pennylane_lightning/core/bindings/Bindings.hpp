@@ -468,7 +468,8 @@ void registerBackendAgnosticMeasurements(PyClass &pyclass) {
             "Variance of an observable object.")
 #ifndef _ENABLE_PLKOKKOS_MPI
         .def("probs",
-             [](Measurements<StateVectorT> &M, const std::vector<std::size_t> &wires) {
+             [](Measurements<StateVectorT> &M,
+                const std::vector<std::size_t> &wires) {
                  return py::array_t<ParamT>(py::cast(M.probs(wires)));
              })
         .def("probs",
@@ -476,7 +477,8 @@ void registerBackendAgnosticMeasurements(PyClass &pyclass) {
                  return py::array_t<ParamT>(py::cast(M.probs()));
              })
         .def("generate_samples",
-             [](Measurements<StateVectorT> &M, std::size_t num_wires, std::size_t num_shots) {
+             [](Measurements<StateVectorT> &M, std::size_t num_wires,
+                std::size_t num_shots) {
                  auto &&result = M.generate_samples(num_shots);
                  const std::size_t ndim = 2;
                  const std::vector<std::size_t> shape{num_shots, num_wires};

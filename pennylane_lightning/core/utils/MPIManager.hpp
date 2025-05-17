@@ -25,9 +25,9 @@
 #include <typeinfo>
 #include <unordered_map>
 #include <vector>
+#include <iostream>
 
 #include "Error.hpp"
-
 
 /// @cond DEV
 namespace {
@@ -58,7 +58,7 @@ template <typename T> auto cppTypeToString() -> const std::string {
     const std::string typestr = std::type_index(typeid(T)).name();
     return typestr;
 }
-}
+} // namespace Pennylane::Util
 
 /**
  * @brief MPI operation class. Maintains MPI related operations.
@@ -79,14 +79,14 @@ class MPIManager {
         -> const std::unordered_map<std::string, MPI_Datatype> & {
         return cpp_mpi_type_map;
     }
-  
+
   private:
     /**
      * @brief Find operation string's corresponding MPI_Op type.
      *
      * @param op_str std::string of MPI_Op name.
      */
-    auto getMPIOpType(const std::string &op_str) -> MPI_Op {
+    auto getMPIOpType(const std::string &op_str) const -> MPI_Op {
         auto it = cpp_mpi_op_map.find(op_str);
         if (it != cpp_mpi_op_map.end()) {
             return it->second;
@@ -290,13 +290,13 @@ class MPIManager {
      *
      * @tparam T C++ data type.
      */
-    template <typename T> auto getMPIDatatype() -> MPI_Datatype {
+    template <typename T> auto getMPIDatatype() const -> MPI_Datatype {
         const auto cpp_mpi_type_map = get_cpp_mpi_type_map();
         auto it = cpp_mpi_type_map.find(cppTypeToString<T>());
         if (it != cpp_mpi_type_map.end()) {
             return it->second;
         } else {
-            throw std::runtime_error("Type not supported for MPIManager");
+            throw std::runtime_error("Type: " + cppTypeToString<T>() + " not supported for MPIManager");
         }
     }
 
@@ -319,12 +319,12 @@ class MPIManager {
     /**
      * @brief Get the communicator.
      */
-    MPI_Comm getComm() { return communicator_; }
+    MPI_Comm getComm() const { return communicator_; }
 
     /**
      * @brief Get an elapsed time.
      */
-    double getTime() { return MPI_Wtime(); }
+    double getTime() const { return MPI_Wtime(); }
 
     /**
      * @brief Get the MPI vendor.
@@ -337,7 +337,6 @@ class MPIManager {
     auto getVersion() const -> std::tuple<std::size_t, std::size_t> {
         return {version_, subversion_};
     }
-
 
     /**
      * @brief MPI_Allgather wrapper.
@@ -435,7 +434,7 @@ class MPIManager {
      * @return recvBuf Receive buffer.
      */
     template <typename T>
-    auto allreduce(T &sendBuf, const std::string &op_str) -> T {
+    auto allreduce(const T &sendBuf, const std::string &op_str) const -> T {
         MPI_Datatype datatype = getMPIDatatype<T>();
         MPI_Op op = getMPIOpType(op_str);
         T recvBuf;
@@ -703,11 +702,11 @@ class MPIManager {
      */
     template <typename T>
     void Sendrecv(T &sendBuf, std::size_t dest, T &recvBuf,
-                  std::size_t source) {
+                  std::size_t source, int tag = 0) {
         MPI_Datatype datatype = getMPIDatatype<T>();
         MPI_Status status;
-        int sendtag = 0;
-        int recvtag = 0;
+        int sendtag = tag;
+        int recvtag = tag;
         int destInt = static_cast<int>(dest);
         int sourceInt = static_cast<int>(source);
         PL_MPI_IS_SUCCESS(MPI_Sendrecv(&sendBuf, 1, datatype, destInt, sendtag,
@@ -726,17 +725,40 @@ class MPIManager {
      */
     template <typename T>
     void Sendrecv(std::vector<T> &sendBuf, std::size_t dest,
-                  std::vector<T> &recvBuf, std::size_t source) {
+                  std::vector<T> &recvBuf, std::size_t source, std::size_t tag = 0) {
         MPI_Datatype datatype = getMPIDatatype<T>();
         MPI_Status status;
-        int sendtag = 0;
-        int recvtag = 0;
+        int sendtag = static_cast<int>(tag);
+        int recvtag = static_cast<int>(tag);
         int destInt = static_cast<int>(dest);
         int sourceInt = static_cast<int>(source);
         PL_MPI_IS_SUCCESS(MPI_Sendrecv(sendBuf.data(), sendBuf.size(), datatype,
                                        destInt, sendtag, recvBuf.data(),
                                        recvBuf.size(), datatype, sourceInt,
                                        recvtag, this->getComm(), &status));
+    }
+
+    /**
+     * @brief MPI_GatherV wrapper.
+     *
+     * @tparam T C++ data type.
+     * @param sendBuf Send buffer vector.
+     * @param dest Rank of destination.
+     * @param recvBuf Receive buffer vector.
+     * @param source Rank of source.
+     */
+    template <typename T>
+    void GatherV(std::vector<T> &sendBuf, std::vector<T> &recvBuf, std::size_t root, std::vector<int> &displacements) {
+
+        MPI_Datatype datatype = getMPIDatatype<T>();
+        int rootInt = static_cast<int>(root);
+
+        std::vector<int> recvcount(getSize(), sendBuf.size());
+
+        PL_MPI_IS_SUCCESS( MPI_Gatherv(sendBuf.data(), sendBuf.size(), datatype,
+                        recvBuf.data(), recvcount.data(), displacements.data(),
+                        datatype, rootInt,  this->getComm()));
+                        
     }
 
     template <typename T>

@@ -26,7 +26,6 @@
 #include "DevicePool.hpp"
 #include "Error.hpp"
 #include "MPIManagerGPU.hpp"
-#include "MPIManagerGPU.hpp"
 #include "MeasurementsGPUMPI.hpp"
 #include "ObservablesGPUMPI.hpp"
 #include "StateVectorCudaMPI.hpp"
