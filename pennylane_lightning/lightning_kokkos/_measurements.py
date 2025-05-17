@@ -20,7 +20,12 @@ from __future__ import annotations
 from warnings import warn
 
 try:
-    from pennylane_lightning.lightning_kokkos_ops import MeasurementsC64, MeasurementsC128
+    from pennylane_lightning.lightning_kokkos_ops import (
+        MeasurementsC64,
+        MeasurementsC128,
+        MeasurementsMPIC64,
+        MeasurementsMPIC128,
+    )
 except ImportError as ex:
     warn(str(ex), UserWarning)
 
@@ -49,6 +54,8 @@ class LightningKokkosMeasurements(
     ) -> None:
         super().__init__(kokkos_state)
 
+        self._use_mpi = kokkos_state._mpi
+
         self._measurement_lightning = self._measurement_dtype()(kokkos_state.state_vector)
 
     def _measurement_dtype(self):
@@ -56,7 +63,10 @@ class LightningKokkosMeasurements(
 
         Returns: the Measurements class
         """
-        return MeasurementsC64 if self.dtype == np.complex64 else MeasurementsC128
+        if self._use_mpi:
+            return MeasurementsMPIC64 if self.dtype == np.complex64 else MeasurementsMPIC128
+        else:
+            return MeasurementsC64 if self.dtype == np.complex64 else MeasurementsC128
 
     def _expval_pauli_sentence(self, measurementprocess: MeasurementProcess):
         """Specialized method for computing the expectation value of a Pauli sentence.

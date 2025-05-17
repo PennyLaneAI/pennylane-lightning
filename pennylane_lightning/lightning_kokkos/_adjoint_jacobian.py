@@ -19,6 +19,8 @@ from __future__ import annotations
 
 from warnings import warn
 
+from pennylane_lightning.lightning_kokkos_ops.algorithmsMPI import OpsStructMPIC128
+
 try:
     from pennylane_lightning.lightning_kokkos_ops.algorithms import (
         AdjointJacobianC64,
@@ -26,6 +28,17 @@ try:
         create_ops_listC64,
         create_ops_listC128,
     )
+
+    try:
+        from pennylane_lightning.lightning_kokkos_ops.algorithmsMPI import (
+            AdjointJacobianMPIC64,
+            AdjointJacobianMPIC128,
+            create_ops_listMPIC64,
+            create_ops_listMPIC128,
+        )
+    except ImportError as ex_mpi:
+        warn(str(ex_mpi), UserWarning)
+
 except ImportError as ex:
     warn(str(ex), UserWarning)
 
@@ -51,6 +64,15 @@ class LightningKokkosAdjointJacobian(LightningBaseAdjointJacobian):
 
         Returns: A pair of the AdjointJacobian class and the create_ops_list function. Default is None.
         """
+        if self._use_mpi:
+            jacobian_lightning = (
+                AdjointJacobianMPIC64() if self.dtype == np.complex64 else AdjointJacobianMPIC128()
+            )
+            create_ops_list_lightning = (
+                create_ops_listMPIC64 if self.dtype == np.complex64 else create_ops_listMPIC128
+            )
+
+            return jacobian_lightning, create_ops_list_lightning
         jacobian_lightning = (
             AdjointJacobianC64() if self.dtype == np.complex64 else AdjointJacobianC128()
         )
