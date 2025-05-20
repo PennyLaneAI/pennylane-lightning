@@ -132,13 +132,12 @@ class AdjointJacobianMPI final
         }
 
         // Create observable-applied state-vectors
-        std::vector<StateVectorT> H_lambda(num_observables,
-                                           StateVectorT(lambda.getNumGlobalWires(), 
-                                                        lambda.getNumLocalWires()));
+        std::vector<StateVectorT> H_lambda(
+            num_observables, StateVectorT(lambda.getNumGlobalWires(),
+                                          lambda.getNumLocalWires()));
         BaseType::applyObservables(H_lambda, lambda, obs);
 
-        StateVectorT mu(lambda.getNumGlobalWires(), 
-                                                        lambda.getNumLocalWires());
+        StateVectorT mu(lambda.getNumGlobalWires(), lambda.getNumLocalWires());
 
         for (int op_idx = static_cast<int>(ops_name.size() - 1); op_idx >= 0;
              op_idx--) {

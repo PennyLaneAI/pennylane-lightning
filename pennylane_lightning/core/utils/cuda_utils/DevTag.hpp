@@ -16,7 +16,6 @@
 
 #include "cuError.hpp"
 #include "cuda.h"
-#include <iostream>
 #include <type_traits>
 
 namespace Pennylane::LightningGPU {

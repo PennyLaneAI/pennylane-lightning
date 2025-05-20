@@ -25,7 +25,6 @@
 #include <typeinfo>
 #include <unordered_map>
 #include <vector>
-#include <iostream>
 
 #include "Error.hpp"
 
@@ -296,7 +295,8 @@ class MPIManager {
         if (it != cpp_mpi_type_map.end()) {
             return it->second;
         } else {
-            throw std::runtime_error("Type: " + cppTypeToString<T>() + " not supported for MPIManager");
+            throw std::runtime_error("Type: " + cppTypeToString<T>() +
+                                     " not supported for MPIManager");
         }
     }
 
@@ -692,21 +692,22 @@ class MPIManager {
     }
 
     /**
-     * @brief MPI_Sendrecv wrapper.
+     * @brief MPI_Sendrecv wrapper for a single element.
      *
      * @tparam T C++ data type.
      * @param sendBuf Send buffer.
      * @param dest Rank of destination.
      * @param recvBuf Receive buffer.
      * @param source Rank of source.
+     * @param tag Tag for MPI message.
      */
     template <typename T>
-    void Sendrecv(T &sendBuf, std::size_t dest, T &recvBuf,
-                  std::size_t source, int tag = 0) {
+    void Sendrecv(T &sendBuf, std::size_t dest, T &recvBuf, std::size_t source,
+                  std::size_t tag = 0) {
         MPI_Datatype datatype = getMPIDatatype<T>();
         MPI_Status status;
-        int sendtag = tag;
-        int recvtag = tag;
+        int sendtag = static_cast<int>(tag);
+        int recvtag = sendtag;
         int destInt = static_cast<int>(dest);
         int sourceInt = static_cast<int>(source);
         PL_MPI_IS_SUCCESS(MPI_Sendrecv(&sendBuf, 1, datatype, destInt, sendtag,
@@ -722,14 +723,16 @@ class MPIManager {
      * @param dest Rank of destination.
      * @param recvBuf Receive buffer vector.
      * @param source Rank of source.
+     * @param tag Tag for MPI message.
      */
     template <typename T>
     void Sendrecv(std::vector<T> &sendBuf, std::size_t dest,
-                  std::vector<T> &recvBuf, std::size_t source, std::size_t tag = 0) {
+                  std::vector<T> &recvBuf, std::size_t source,
+                  std::size_t tag = 0) {
         MPI_Datatype datatype = getMPIDatatype<T>();
         MPI_Status status;
         int sendtag = static_cast<int>(tag);
-        int recvtag = static_cast<int>(tag);
+        int recvtag = sendtag;
         int destInt = static_cast<int>(dest);
         int sourceInt = static_cast<int>(source);
         PL_MPI_IS_SUCCESS(MPI_Sendrecv(sendBuf.data(), sendBuf.size(), datatype,
@@ -742,23 +745,24 @@ class MPIManager {
      * @brief MPI_GatherV wrapper.
      *
      * @tparam T C++ data type.
-     * @param sendBuf Send buffer vector.
-     * @param dest Rank of destination.
      * @param recvBuf Receive buffer vector.
-     * @param source Rank of source.
+     * @param sendBuf Send buffer vector.
+     * @param root Rank of destination.
+     * @param displacements Elements shifted from each rank for gather.
      */
     template <typename T>
-    void GatherV(std::vector<T> &sendBuf, std::vector<T> &recvBuf, std::size_t root, std::vector<int> &displacements) {
+    void GatherV(std::vector<T> &sendBuf, std::vector<T> &recvBuf,
+                 std::size_t root, std::vector<int> &displacements) {
 
         MPI_Datatype datatype = getMPIDatatype<T>();
         int rootInt = static_cast<int>(root);
 
         std::vector<int> recvcount(getSize(), sendBuf.size());
 
-        PL_MPI_IS_SUCCESS( MPI_Gatherv(sendBuf.data(), sendBuf.size(), datatype,
-                        recvBuf.data(), recvcount.data(), displacements.data(),
-                        datatype, rootInt,  this->getComm()));
-                        
+        PL_MPI_IS_SUCCESS(MPI_Gatherv(sendBuf.data(), sendBuf.size(), datatype,
+                                      recvBuf.data(), recvcount.data(),
+                                      displacements.data(), datatype, rootInt,
+                                      this->getComm()));
     }
 
     template <typename T>

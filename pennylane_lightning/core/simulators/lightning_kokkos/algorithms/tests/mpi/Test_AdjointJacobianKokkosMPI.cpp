@@ -22,8 +22,8 @@
 #include <catch2/catch.hpp>
 
 #include "AdjointJacobianKokkosMPI.hpp"
-#include "StateVectorKokkosMPI.hpp"
 #include "MPIManagerKokkos.hpp"
+#include "StateVectorKokkosMPI.hpp"
 #include "TestHelpers.hpp" // createRandomStateVectorData
 
 /**
@@ -58,7 +58,6 @@ TEMPLATE_PRODUCT_TEST_CASE("Adjoint", "[LKMPI_Adjoint]", (StateVectorKokkosMPI),
         const std::size_t num_qubits = 5;
         const std::size_t num_obs = 1;
         std::vector<PrecisionT> jacobian(num_obs * tp.size(), 0);
-
 
         MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
         REQUIRE(mpi_manager.getSize() == 4);

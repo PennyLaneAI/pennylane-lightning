@@ -36,8 +36,13 @@ try:
             create_ops_listMPIC64,
             create_ops_listMPIC128,
         )
+
+        mpi_error = None
+        MPI_SUPPORT = True
     except ImportError as ex_mpi:
-        warn(str(ex_mpi), UserWarning)
+        mpi_error = ex_mpi
+        MPI_SUPPORT = False
+
 
 except ImportError as ex:
     warn(str(ex), UserWarning)
@@ -65,6 +70,9 @@ class LightningKokkosAdjointJacobian(LightningBaseAdjointJacobian):
         Returns: A pair of the AdjointJacobian class and the create_ops_list function. Default is None.
         """
         if self._use_mpi:
+            if not MPI_SUPPORT:
+                warn(str(mpi_error), UserWarning)
+
             jacobian_lightning = (
                 AdjointJacobianMPIC64() if self.dtype == np.complex64 else AdjointJacobianMPIC128()
             )
@@ -73,6 +81,8 @@ class LightningKokkosAdjointJacobian(LightningBaseAdjointJacobian):
             )
 
             return jacobian_lightning, create_ops_list_lightning
+
+        # without MPI
         jacobian_lightning = (
             AdjointJacobianC64() if self.dtype == np.complex64 else AdjointJacobianC128()
         )

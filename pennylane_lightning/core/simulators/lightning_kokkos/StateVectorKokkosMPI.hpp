@@ -104,18 +104,10 @@ class StateVectorKokkosMPI final
     std::vector<std::size_t> local_wires_;
 
   public:
-    /**
-     * @brief Get MPI manager
-     */
     auto getMPIManager() const { return mpi_manager_; }
-    /**
-     * @brief  Returns the number of global wires.
-     */
+
     std::size_t getNumGlobalWires() const { return numGlobalQubits_; }
 
-    /**
-     * @brief  Returns the number of local wires.
-     */
     std::size_t getNumLocalWires() const { return numLocalQubits_; }
 
     SVK &getLocalSV() { return *sv_; }
@@ -202,28 +194,23 @@ class StateVectorKokkosMPI final
         }
     }
 
-
     StateVectorKokkosMPI(MPIManagerKokkos mpi_manager,
                          std::size_t total_num_qubits,
                          const Kokkos::InitializationSettings &kokkos_args = {})
         : StateVectorKokkosMPI(mpi_manager, log2(mpi_manager.getSize()),
-                               total_num_qubits - log2(mpi_manager.getSize()), kokkos_args) {
-    }
-
+                               total_num_qubits - log2(mpi_manager.getSize()),
+                               kokkos_args) {}
 
     StateVectorKokkosMPI(MPI_Comm mpi_communicator,
                          std::size_t total_num_qubits,
                          const Kokkos::InitializationSettings &kokkos_args = {})
-        : StateVectorKokkosMPI(MPIManagerKokkos(mpi_communicator), total_num_qubits, kokkos_args) {
-    }
-
+        : StateVectorKokkosMPI(MPIManagerKokkos(mpi_communicator),
+                               total_num_qubits, kokkos_args) {}
 
     StateVectorKokkosMPI(std::size_t total_num_qubits,
                          const Kokkos::InitializationSettings &kokkos_args = {})
-        : StateVectorKokkosMPI(MPIManagerKokkos(MPI_COMM_WORLD), total_num_qubits, kokkos_args) {
-    }
-
-
+        : StateVectorKokkosMPI(MPIManagerKokkos(MPI_COMM_WORLD),
+                               total_num_qubits, kokkos_args) {}
 
     StateVectorKokkosMPI(MPI_Comm mpi_communicator,
                          std::size_t num_global_qubits,
@@ -270,8 +257,8 @@ class StateVectorKokkosMPI final
                          const ComplexT *hostdata_, const std::size_t length,
                          const Kokkos::InitializationSettings &kokkos_args = {},
                          const MPI_Comm &communicator = MPI_COMM_WORLD)
-        : StateVectorKokkosMPI(communicator, num_global_qubits, num_local_qubits, kokkos_args
-                               ) {
+        : StateVectorKokkosMPI(communicator, num_global_qubits,
+                               num_local_qubits, kokkos_args) {
         PL_ABORT_IF_NOT(
             exp2(num_qubits_) == length,
             "length of complex data does not match the number of qubits");
@@ -305,7 +292,7 @@ class StateVectorKokkosMPI final
     StateVectorKokkosMPI(const StateVectorKokkosMPI &other,
                          const Kokkos::InitializationSettings &kokkos_args = {})
         : StateVectorKokkosMPI(other.getMPIManager(), other.getNumGlobalWires(),
-                               other.getNumLocalWires(), kokkos_args){
+                               other.getNumLocalWires(), kokkos_args) {
         global_wires_ = other.getGlobalWires();
         local_wires_ = other.getLocalWires();
         mpi_rank_to_global_index_map_ = other.getMPIRankToGlobalIndexMap();
@@ -330,7 +317,8 @@ class StateVectorKokkosMPI final
 
     void mpi_sendrecv(const std::size_t send_rank, const std::size_t recv_rank,
                       const std::size_t size, const std::size_t tag) {
-        mpi_manager_.Sendrecv(*sendbuf_, send_rank, *recvbuf_, recv_rank, size, tag);
+        mpi_manager_.Sendrecv(*sendbuf_, send_rank, *recvbuf_, recv_rank, size,
+                              tag);
     }
 
     void allocateBuffers() {
@@ -585,17 +573,17 @@ class StateVectorKokkosMPI final
         // #ifdef LKMPI_DEBUG
         // roctxMark("ROCTX-MARK: Start of swapGlobalLocalWires");
         //   A little debug message:
-         /* if (mpi_manager_.getRank() == 0) {
-            std::cout << "Swapping global wires: ";
-            for (const auto &wire : global_wires_to_swap) {
-                std::cout << wire << " ";
-            }
-            std::cout << "with local wires: ";
-            for (const auto &wire : local_wires_to_swap) {
-                std::cout << wire << " ";
-            }
-            std::cout << std::endl;
-        } */
+        /* if (mpi_manager_.getRank() == 0) {
+           std::cout << "Swapping global wires: ";
+           for (const auto &wire : global_wires_to_swap) {
+               std::cout << wire << " ";
+           }
+           std::cout << "with local wires: ";
+           for (const auto &wire : local_wires_to_swap) {
+               std::cout << wire << " ";
+           }
+           std::cout << std::endl;
+       } */
         // #endif
 
         std::vector<std::size_t> rev_global_wires_index_to_swap;
@@ -696,7 +684,6 @@ class StateVectorKokkosMPI final
                           << " with tag " << batch_index
                           << " and this number of elements " << send_size
                           << std::endl; */
-
 
                 // roctxMark("ROCTX-MARK: Start of sendrecv");
                 mpi_sendrecv(other_mpi_rank, other_mpi_rank, send_size,

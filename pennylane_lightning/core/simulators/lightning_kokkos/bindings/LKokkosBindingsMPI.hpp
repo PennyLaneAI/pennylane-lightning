@@ -23,10 +23,10 @@
 #include "Constant.hpp"
 #include "ConstantUtil.hpp" // lookup
 #include "GateOperation.hpp"
+#include "MPIManagerKokkos.hpp"
 #include "MeasurementsKokkosMPI.hpp"
 #include "ObservablesKokkos.hpp"
 #include "StateVectorKokkosMPI.hpp"
-#include "MPIManagerKokkos.hpp"
 #include "TypeList.hpp"
 #include "Util.hpp" // exp2
 
@@ -84,8 +84,13 @@ void registerBackendClassSpecificBindingsMPI(PyClass &pyclass) {
         .def(
             "reorderAllWires", [](StateVectorT &sv) { sv.reorderAllWires(); },
             "Reorder all wires.")
-        .def(py::init([](MPIManagerKokkos &mpi_manager, std::size_t num_qubits) {
-            return new StateVectorT(mpi_manager, num_qubits);
+        .def(
+            py::init([](MPIManagerKokkos &mpi_manager, std::size_t num_qubits) {
+                return new StateVectorT(mpi_manager, num_qubits);
+            }))
+        .def(py::init([](MPIManagerKokkos &mpi_manager, std::size_t num_qubits,
+                         const InitializationSettings &kokkos_args) {
+            return new StateVectorT(mpi_manager, num_qubits, kokkos_args);
         }))
         .def(py::init([](std::size_t num_qubits) {
             return new StateVectorT(num_qubits);
@@ -290,7 +295,6 @@ void registerBackendSpecificObservablesMPI(py::module_ &m) {
  */
 template <class StateVectorT>
 void registerBackendSpecificAlgorithmsMPI([[maybe_unused]] py::module_ &m) {}
-
 
 /**
  * @brief Register bindings for backend-specific info.

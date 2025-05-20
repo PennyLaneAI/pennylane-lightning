@@ -20,14 +20,19 @@ from __future__ import annotations
 from warnings import warn
 
 try:
-    from pennylane_lightning.lightning_kokkos_ops import (
-        MeasurementsC64,
-        MeasurementsC128,
-        MeasurementsMPIC64,
-        MeasurementsMPIC128,
-    )
-except ImportError as ex:
-    warn(str(ex), UserWarning)
+    from pennylane_lightning.lightning_kokkos_ops import MeasurementsC64, MeasurementsC128
+
+    try:
+        from pennylane_lightning.lightning_kokkos_ops import MeasurementsMPIC64, MeasurementsMPIC128
+
+        mpi_error = None
+        MPI_SUPPORT = True
+    except ImportError as ex_mpi:
+        mpi_error = ex_mpi
+        MPI_SUPPORT = False
+
+except ImportError as error_import:
+    warn(str(error_import), UserWarning)
 
 import numpy as np
 import pennylane as qml
@@ -64,9 +69,13 @@ class LightningKokkosMeasurements(
         Returns: the Measurements class
         """
         if self._use_mpi:
+            if not MPI_SUPPORT:
+                warn(str(mpi_error), UserWarning)
+
             return MeasurementsMPIC64 if self.dtype == np.complex64 else MeasurementsMPIC128
-        else:
-            return MeasurementsC64 if self.dtype == np.complex64 else MeasurementsC128
+
+        # without MPI
+        return MeasurementsC64 if self.dtype == np.complex64 else MeasurementsC128
 
     def _expval_pauli_sentence(self, measurementprocess: MeasurementProcess):
         """Specialized method for computing the expectation value of a Pauli sentence.

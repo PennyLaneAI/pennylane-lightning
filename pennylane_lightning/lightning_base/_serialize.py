@@ -211,7 +211,7 @@ class QuantumScriptSerializer:
 
                 self._mpi_manager = lightning_ops.MPIManagerGPU
             elif self.device_name == "lightning.kokkos":
-                self._mpi_manager = lightning_ops.MPIManager
+                self._mpi_manager = lightning_ops.MPIManagerKokkos
 
     def _set_lightning_tensor_bindings(self, tensor_backend, lightning_ops):
         """Define the variables needed to access the modules from the C++ bindings for tensor network."""

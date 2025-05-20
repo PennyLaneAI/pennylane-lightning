@@ -446,7 +446,7 @@ class LightningKokkos(LightningBase):
         """
         if circuit.shots and (any(isinstance(op, MidMeasureMP) for op in circuit.operations)):
             if self._mpi:
-                raise DeviceError("Lightning-Kokkos-MPI does not support Mid-circuit measurements.")
+                raise DeviceError("Lightning-Kokkos-MPI does not support mid-circuit measurements.")
 
         return super().simulate(
             circuit,
