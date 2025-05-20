@@ -33,6 +33,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Use local catalyst repository instead of fetching on Github CI.
+  [(#1164)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1164)
+
 - Use JAX version 0.4.28 for CI tests for stable version.
   [(#1160)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1160)
 
