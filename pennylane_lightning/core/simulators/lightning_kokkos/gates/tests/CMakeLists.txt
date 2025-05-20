@@ -40,3 +40,32 @@ target_link_libraries(lightning_kokkos_gates_test_runner PRIVATE lightning_kokko
 catch_discover_tests(lightning_kokkos_gates_test_runner)
 
 install(TARGETS lightning_kokkos_gates_test_runner DESTINATION bin)
+
+if(ENABLE_MPI)
+    add_library(${PL_BACKEND}_gates_tests_mpi INTERFACE)
+    target_link_libraries(${PL_BACKEND}_gates_tests_mpi INTERFACE     Catch2::Catch2
+                                                                ${PL_BACKEND}
+                                                                ${PL_BACKEND}_gates
+                                                                ${PL_BACKEND}_utils
+                                                                ${PL_BACKEND}_measurements
+                                                                ${PL_BACKEND}_observables
+                                                                lightning_external_libs
+                                                                )
+
+    ProcessTestOptions(${PL_BACKEND}_gates_tests_mpi)
+
+    target_sources(${PL_BACKEND}_gates_tests_mpi INTERFACE ./mpi/runner_${PL_BACKEND}_gates_mpi.cpp)
+
+    ################################################################################
+    # Define targets
+    ################################################################################
+    set(TEST_SOURCES ./mpi/Test_StateVectorKokkosMPI_Generator.cpp
+                     ./mpi/Test_StateVectorKokkosMPI_NonParam.cpp
+                     ./mpi/Test_StateVectorKokkosMPI_Param.cpp)
+
+    add_executable(${PL_BACKEND}_gates_test_runner_mpi ${TEST_SOURCES})
+    target_link_libraries(${PL_BACKEND}_gates_test_runner_mpi PRIVATE ${PL_BACKEND}_gates_tests_mpi)
+    catch_discover_tests(${PL_BACKEND}_gates_test_runner_mpi)
+
+endif()
+
