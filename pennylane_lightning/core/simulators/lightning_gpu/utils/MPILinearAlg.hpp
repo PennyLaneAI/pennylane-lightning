@@ -61,7 +61,7 @@ inline void SparseMV_cuSparseMPI(
             mpi_manager, csrmatrix_blocks[i], length_local, 0);
         localCSRMatVector.push_back(localCSRMat);
     }
-
+    
     mpi_manager.Barrier();
 
     DataBuffer<CFP_t, int> d_res_per_block{length_local, device_id, stream_id,

@@ -64,12 +64,12 @@ TEMPLATE_PRODUCT_TEST_CASE("Adjoint", "[LKMPI_Adjoint]", (StateVectorKokkosMPI),
 
         StateVectorT psi(mpi_manager, num_qubits);
 
-        const auto obs = std::make_shared<TensorProdObs<StateVectorT>>(
-            std::make_shared<NamedObs<StateVectorT>>(
+        const auto obs = std::make_shared<TensorProdObsMPI<StateVectorT>>(
+            std::make_shared<NamedObsMPI<StateVectorT>>(
                 "PauliX", std::vector<std::size_t>{0}),
-            std::make_shared<NamedObs<StateVectorT>>(
+            std::make_shared<NamedObsMPI<StateVectorT>>(
                 "PauliX", std::vector<std::size_t>{1}),
-            std::make_shared<NamedObs<StateVectorT>>(
+            std::make_shared<NamedObsMPI<StateVectorT>>(
                 "PauliX", std::vector<std::size_t>{2}));
         auto ops = OpsData<StateVectorT>(
             {"RZ", "RY", "RZ", "CNOT", "CNOT", "RX", "RY", "RZ",

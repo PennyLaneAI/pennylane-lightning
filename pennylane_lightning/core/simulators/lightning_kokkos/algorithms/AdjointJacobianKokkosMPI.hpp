@@ -1,4 +1,4 @@
-// Copyright 2018-2023 Xanadu Quantum Technologies Inc.
+// Copyright 2018-2025 Xanadu Quantum Technologies Inc.
 
 // Licensed under the Apache License, Version 2.0 (the License);
 // you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
 // limitations under the License.
 #pragma once
 #include "AdjointJacobianBase.hpp"
-#include "ObservablesKokkos.hpp"
+#include "ObservablesKokkosMPI.hpp"
 #include <span>
 
 /// @cond DEV
