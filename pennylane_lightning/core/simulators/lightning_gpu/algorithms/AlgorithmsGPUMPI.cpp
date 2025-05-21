@@ -15,7 +15,7 @@
 #include "AdjointJacobianGPUMPI.hpp"
 #include "JacobianData.hpp"
 #include "JacobianDataMPI.hpp"
-#include "MPIManager.hpp"
+#include "MPIManagerGPU.hpp"
 
 // using namespace Pennylane;
 using namespace Pennylane::LightningGPU;
