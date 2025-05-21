@@ -222,7 +222,7 @@ class LightningGPU(LightningBase):
     # pylint: disable=too-many-instance-attributes
 
     # General device options
-    _device_options = ("c_dtype", "batch_obs")
+    _device_options = ("c_dtype", "batch_obs", "mcm_method")
 
     # Device specific options
     _CPP_BINARY_AVAILABLE = LGPU_CPP_BINARY_AVAILABLE
@@ -243,6 +243,7 @@ class LightningGPU(LightningBase):
         c_dtype: Union[np.complex128, np.complex64] = np.complex128,
         shots: Union[int, List] = None,
         batch_obs: bool = False,
+        mcm_method: Optional[str] = None,
         # GPU and MPI arguments
         mpi: bool = False,
         mpi_buf_size: int = 0,
@@ -274,6 +275,8 @@ class LightningGPU(LightningBase):
         if mpi:
             if wires is None:
                 raise DeviceError("Lightning-GPU-MPI does not support dynamic wires allocation.")
+            if self.mcm_method is not None:
+                raise DeviceError("Lightning-GPU-MPI does not support Mid-Circuit Measurements.")
             self._mpi_handler = MPIHandler(mpi, mpi_buf_size, len(self.wires), c_dtype)
             self._statevector = self.LightningStateVector(
                 num_wires=len(self.wires),
@@ -285,6 +288,8 @@ class LightningGPU(LightningBase):
             self._statevector = None
             self._mpi_handler = None
             self._sv_init_kwargs = {"mpi_handler": None, "use_async": use_async}
+
+            self.mcm_method = mcm_method
 
     @property
     def name(self):

@@ -191,7 +191,7 @@ class LightningKokkos(LightningBase):
     """
 
     # General device options
-    _device_options = ("c_dtype", "batch_obs")
+    _device_options = ("c_dtype", "batch_obs", "mcm_method")
 
     # Device specific options
     _CPP_BINARY_AVAILABLE = LK_CPP_BINARY_AVAILABLE
@@ -213,6 +213,7 @@ class LightningKokkos(LightningBase):
         c_dtype: Union[np.complex128, np.complex64] = np.complex128,
         shots: Union[int, List] = None,
         batch_obs: bool = False,
+        mcm_method: Optional[str] = None,
         # Kokkos arguments
         kokkos_args=None,
     ):
@@ -235,6 +236,8 @@ class LightningKokkos(LightningBase):
 
         self._statevector = None
         self._sv_init_kwargs = {"kokkos_args": kokkos_args}
+
+        self.mcm_method = mcm_method
 
     @property
     def name(self):

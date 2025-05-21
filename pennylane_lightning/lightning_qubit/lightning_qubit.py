@@ -212,7 +212,15 @@ class LightningQubit(LightningBase):
     # pylint: disable=too-many-instance-attributes
 
     # General device options
-    _device_options = ("rng", "c_dtype", "batch_obs", "mcmc", "kernel_name", "num_burnin")
+    _device_options = (
+        "rng",
+        "c_dtype",
+        "batch_obs",
+        "mcmc",
+        "kernel_name",
+        "num_burnin",
+        "mcm_method",
+    )
     # Device specific options
     _CPP_BINARY_AVAILABLE = LQ_CPP_BINARY_AVAILABLE
     _backend_info = backend_info if LQ_CPP_BINARY_AVAILABLE else None
@@ -237,6 +245,7 @@ class LightningQubit(LightningBase):
         mcmc: bool = False,
         kernel_name: str = "Local",
         num_burnin: int = 100,
+        mcm_method: Optional[str] = None,
     ):
         if not self._CPP_BINARY_AVAILABLE:
             raise ImportError(
@@ -287,6 +296,8 @@ class LightningQubit(LightningBase):
 
         self._statevector = None
         self._sv_init_kwargs = {}
+
+        self.mcm_method = mcm_method
 
     @property
     def name(self):

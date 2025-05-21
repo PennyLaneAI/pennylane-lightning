@@ -34,6 +34,9 @@ from pennylane.typing import Result, ResultBatch, TensorLike
 
 from pennylane_lightning.core import __version__
 from pennylane_lightning.lightning_base._measurements import LightningBaseMeasurements
+from pennylane_lightning.lightning_base._mid_circuit_measure_tree_traversal import (
+    mcm_tree_traversal,
+)
 
 Result_or_ResultBatch = Union[Result, ResultBatch]
 QuantumTapeBatch = Sequence[QuantumTape]
@@ -208,6 +211,11 @@ class LightningBase(Device):
         """
         if mcmc is None:
             mcmc = {}
+
+        # Simulate a single quantum script using the tree traversal MCMC method.
+        if self.mcm_method == "tree-traversal":
+            return mcm_tree_traversal(circuit, state, self.LightningMeasurements, postselect_mode)
+
         if circuit.shots and (any(isinstance(op, MidMeasureMP) for op in circuit.operations)):
             results = []
             aux_circ = qml.tape.QuantumScript(
