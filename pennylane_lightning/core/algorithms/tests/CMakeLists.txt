@@ -44,7 +44,7 @@ catch_discover_tests(algorithms_test_runner)
 
 install(TARGETS algorithms_test_runner DESTINATION bin)
 
-if(ENABLE_PLGPU_MPI) #FIXME: Currently algo tests explicitly use LG-MPI
+if(ENABLE_PLGPU_MPI) #FIXME: Currently base MPI tests explicitly use LG-MPI
     add_library(algorithms_tests_mpi INTERFACE)
     target_link_libraries(algorithms_tests_mpi INTERFACE     Catch2::Catch2)
     foreach(BACKEND ${PL_BACKEND})

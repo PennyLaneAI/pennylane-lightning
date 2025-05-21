@@ -112,7 +112,7 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorKokkosMPI::Constructibility",
  * Test StateVectorKokkosMPI wire-related helper methods
  */
 TEMPLATE_TEST_CASE("isElementInVector", "[LKMPI]", double, float) {
-    const std::size_t num_qubits = 2;
+    const std::size_t num_qubits = 4;
 
     MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
     StateVectorKokkosMPI<TestType> sv(mpi_manager, num_qubits);
@@ -128,7 +128,7 @@ TEMPLATE_TEST_CASE("isElementInVector", "[LKMPI]", double, float) {
 }
 
 TEMPLATE_TEST_CASE("getElementIndexInVector", "[LKMPI]", double, float) {
-    const std::size_t num_qubits = 2;
+    const std::size_t num_qubits = 4;
     MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
     StateVectorKokkosMPI<TestType> sv(mpi_manager, num_qubits);
     std::vector<std::size_t> wires = {0, 1, 4, 5};

@@ -211,7 +211,7 @@ template <class StateVectorT> void registerObservablesMPI(py::module_ &m) {
                 return self == other_cast;
             },
             "Compare two observables");
-#if _ENABLE_PLGPU == 1
+#ifdef _ENABLE_PLGPU
     class_name = "SparseHamiltonianMPIC" + bitsize;
     using SpIDX = typename SparseHamiltonianMPI<StateVectorT>::IdxT;
     py::class_<SparseHamiltonianMPI<StateVectorT>,

@@ -20,7 +20,6 @@
 #include <complex>
 #include <cstddef>
 #include <cstdlib>
-#include <iostream>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -43,7 +42,6 @@
 #include "UtilKokkos.hpp"
 
 #include "CPUMemoryModel.hpp"
-// #include <roctracer/roctx.h>
 
 /// @cond DEV
 namespace {
@@ -110,8 +108,11 @@ class StateVectorKokkosMPI final
 
     std::size_t getNumLocalWires() const { return numLocalQubits_; }
 
-    SVK &getLocalSV() { return *sv_; }
-
+    /**
+     * @brief Reset the indices of the global_wires_, local_wires_ and
+     *       the mpi_rank_to_global_index_map_.
+     *
+     */
     void resetIndices() {
         std::iota(global_wires_.begin(), global_wires_.end(), 0);
         std::iota(local_wires_.begin(), local_wires_.end(),
@@ -119,8 +120,9 @@ class StateVectorKokkosMPI final
         std::iota(mpi_rank_to_global_index_map_.begin(),
                   mpi_rank_to_global_index_map_.end(), 0);
     }
+
     /**
-     * @brief Init zeros for the state-vector on device.
+     * @brief Set to initial zero state for the state-vector on device.
      */
     void initZeros() {
         resetIndices();
@@ -130,7 +132,7 @@ class StateVectorKokkosMPI final
     /**
      * @brief Set value for a single element of the state-vector on device.
      *
-     * @param index Index of the target element.
+     * @param global_index Index of the target element.
      */
     void setBasisState(std::size_t global_index) {
         const auto index = global2localIndex(global_index);
@@ -169,6 +171,17 @@ class StateVectorKokkosMPI final
         setBasisState(index);
     }
 
+    void allocateBuffers() {
+        if (!sendbuf_) {
+            sendbuf_ = std::make_shared<KokkosVector>(
+                "sendbuf_", exp2(getNumLocalWires() - 1));
+        }
+        if (!recvbuf_) {
+            recvbuf_ = std::make_shared<KokkosVector>(
+                "recvbuf_", exp2(getNumLocalWires() - 1));
+        }
+    }
+
     StateVectorKokkosMPI() = delete;
     StateVectorKokkosMPI(MPIManagerKokkos mpi_manager,
                          std::size_t num_global_qubits,
@@ -192,6 +205,7 @@ class StateVectorKokkosMPI final
             sv_ = std::make_unique<SVK>(num_local_qubits, settings);
             setBasisState(0U);
         }
+        allocateBuffers();
     }
 
     StateVectorKokkosMPI(MPIManagerKokkos mpi_manager,
@@ -303,9 +317,11 @@ class StateVectorKokkosMPI final
 
     ~StateVectorKokkosMPI() = default;
 
-    /**
-     * @brief  Calls all barriers.
-     */
+    SVK &getLocalSV() { return *sv_; }
+
+    /******************
+    MPI-related methods
+    ******************/
     void barrier() {
         Kokkos::fence();
         mpi_manager_.Barrier();
@@ -315,21 +331,10 @@ class StateVectorKokkosMPI final
         return mpi_manager_.allreduce(data, std::string{"sum"});
     }
 
-    void mpi_sendrecv(const std::size_t send_rank, const std::size_t recv_rank,
-                      const std::size_t size, const std::size_t tag) {
+    void sendrecv(const std::size_t send_rank, const std::size_t recv_rank,
+                  const std::size_t size, const std::size_t tag) {
         mpi_manager_.Sendrecv(*sendbuf_, send_rank, *recvbuf_, recv_rank, size,
                               tag);
-    }
-
-    void allocateBuffers() {
-        if (!sendbuf_) {
-            sendbuf_ = std::make_shared<KokkosVector>(
-                "sendbuf_", exp2(getNumLocalWires() - 1));
-        }
-        if (!recvbuf_) {
-            recvbuf_ = std::make_shared<KokkosVector>(
-                "recvbuf_", exp2(getNumLocalWires() - 1));
-        }
     }
     /********************
     Wires-related methods
@@ -527,15 +532,15 @@ class StateVectorKokkosMPI final
             }
             j++;
         }
-        // TODO: FIX ME with better algorithm based on memory pattern
+        // TODO: improve with algorithm based on memory pattern
         return local_wires;
     }
 
     /**
-     * @brief
+     * @brief Perform a swap between global and local wires.
      *
-     * @param global_wires_to_swap
-     * @param local_wires_to_swap
+     * @param global_wires_to_swap wire indices for global wires to swap
+     * @param local_wires_to_swap wire indices for local wires to swap
      *
      * Example:
      * For Global|Local wires = 0 | 1 2 and swapping global_wires {0} and
@@ -552,7 +557,7 @@ class StateVectorKokkosMPI final
      * that are not swapped). W e then check whether the specific batch
      * number requires communication
      *
-     * For each batch, a single pairwise MPI_Sendrecv is performed.
+     * For each batch, a single pairwise sendrecv is performed.
      * The number of batches = 2^(num_swapping_wires) - 1 .
      * The number of elements sent in each batch is 1/2^(num_swapping_wires) *
      * size_of_subSV.
@@ -570,22 +575,6 @@ class StateVectorKokkosMPI final
         PL_ABORT_IF_NOT(isWiresLocal(local_wires_to_swap),
                         "local_wires_to_swap must be local wires.");
 
-        // #ifdef LKMPI_DEBUG
-        // roctxMark("ROCTX-MARK: Start of swapGlobalLocalWires");
-        //   A little debug message:
-        /* if (mpi_manager_.getRank() == 0) {
-           std::cout << "Swapping global wires: ";
-           for (const auto &wire : global_wires_to_swap) {
-               std::cout << wire << " ";
-           }
-           std::cout << "with local wires: ";
-           for (const auto &wire : local_wires_to_swap) {
-               std::cout << wire << " ";
-           }
-           std::cout << std::endl;
-       } */
-        // #endif
-
         std::vector<std::size_t> rev_global_wires_index_to_swap;
         std::vector<std::size_t> rev_local_wires_index_to_swap;
         std::vector<std::size_t> rev_local_wires_index_not_swapping;
@@ -596,7 +585,10 @@ class StateVectorKokkosMPI final
             }
         }
         std::sort(rev_local_wires_index_not_swapping.begin(),
-                  rev_local_wires_index_not_swapping.end());
+                  rev_local_wires_index_not_swapping
+                      .end()); // This improves memcpy performance by coalescing
+                               // memory access
+
         for (std::size_t i = 0; i < local_wires_to_swap.size(); i++) {
             rev_local_wires_index_to_swap.push_back(
                 getRevLocalWireIndex(local_wires_to_swap[i]));
@@ -608,7 +600,7 @@ class StateVectorKokkosMPI final
 
         std::size_t global_index =
             getGlobalIndexFromMPIRank(mpi_manager_.getRank());
-        allocateBuffers();
+
         for (std::size_t batch_index = 1;
              batch_index < exp2(getNumGlobalWires()); batch_index++) {
             // We loop over all the global indices (ranks) and check if the
@@ -624,11 +616,6 @@ class StateVectorKokkosMPI final
                 send = send && (!batch_index_digit || is_global_wire_in_swap);
             }
             if (send) {
-#ifdef LKMPI_DEBUG
-                // A little debug message:
-                std::cout << "I am rank " << mpi_manager_.getRank()
-                          << " batch index = " << batch_index << std::endl;
-#endif
                 std::size_t swap_wire_mask = 0;
                 for (std::size_t i = 0; i < local_wires_to_swap.size(); i++) {
                     swap_wire_mask |= ((((batch_index ^ global_index) >>
@@ -637,16 +624,9 @@ class StateVectorKokkosMPI final
                                        << rev_local_wires_index_to_swap[i]);
                 }
 
-#ifdef LKMPI_DEBUG
-                // A little debug message:
-                std::cout << "I am rank " << mpi_manager_.getRank()
-                          << " and swap_wire_mask = " << swap_wire_mask
-                          << std::endl;
-#endif
-
                 // These are defined since on AMD compiler it's more strict what
                 // host functions can be included in the KOKKOS_LAMBDA - e.g.
-                // dereferencing, size are all not allowed
+                // dereferencing, size() are all not allowed
                 const std::size_t not_swapping_local_wire_size =
                     rev_local_wires_index_not_swapping.size();
                 auto rev_local_wires_index_not_swapping_view =
@@ -658,7 +638,7 @@ class StateVectorKokkosMPI final
                 std::size_t send_size =
                     exp2((getNumLocalWires() - local_wires_to_swap.size()));
 
-                // roctxMark("ROCTX-MARK: Start of copy_sendbuf");
+                // Copy to send buffer
                 Kokkos::parallel_for(
                     "copy_sendbuf", send_size,
                     KOKKOS_LAMBDA(std::size_t buffer_index) {
@@ -673,24 +653,15 @@ class StateVectorKokkosMPI final
                     });
                 Kokkos::fence();
 
-                // roctxMark("ROCTX-MARK: End of copy_sendbuf");
+                // MPI Sendrecv
                 std::size_t other_global_index = batch_index ^ global_index;
                 std::size_t other_mpi_rank =
                     getMPIRankFromGlobalIndex(other_global_index);
 
-                // A little debug message:
-                /* std::cout << "I am rank " << mpi_manager_.getRank()
-                          << " and I am sending to rank " << other_mpi_rank
-                          << " with tag " << batch_index
-                          << " and this number of elements " << send_size
-                          << std::endl; */
+                sendrecv(other_mpi_rank, other_mpi_rank, send_size,
+                         batch_index);
 
-                // roctxMark("ROCTX-MARK: Start of sendrecv");
-                mpi_sendrecv(other_mpi_rank, other_mpi_rank, send_size,
-                             batch_index);
-                // roctxMark("ROCTX-MARK: End of sendrecv");
-
-                // roctxMark("ROCTX-MARK: Start of copy_recvbuf");
+                // Copy from recv buffer
                 Kokkos::parallel_for(
                     "copy_recvbuf", send_size,
                     KOKKOS_LAMBDA(std::size_t buffer_index) {
@@ -706,7 +677,6 @@ class StateVectorKokkosMPI final
                         sv_view(SV_index) = recvbuf_view(buffer_index);
                     });
                 Kokkos::fence();
-                // roctxMark("ROCTX-MARK: End of copy_recvbuf");
             }
         }
 
@@ -721,9 +691,13 @@ class StateVectorKokkosMPI final
         }
     }
 
+    /**
+     * @brief Match the global/local wires and map from another state vector
+     *
+     * @param other_sv State vector to match
+     */
     void matchWires(const StateVectorKokkosMPI &other_sv) {
         // Swap global-local wires if necessary
-
         if (global_wires_ != other_sv.global_wires_) {
             std::vector<std::size_t> global_wires_to_swap;
             std::vector<std::size_t> local_wires_to_swap;
@@ -794,46 +768,34 @@ class StateVectorKokkosMPI final
         std::size_t dest_mpi_rank = getElementIndexInVector(
             mpi_rank_to_global_index_map_target, dest_global_index);
 
-        allocateBuffers();
         std::size_t send_size = exp2(getNumLocalWires() - 1);
         auto sendbuf_view = (*sendbuf_);
         auto recvbuf_view = (*recvbuf_);
         auto sv_view = (*sv_).getView();
-        // COPY to buffer
-        Kokkos::parallel_for(
-            "copy_sendbuf", send_size, KOKKOS_LAMBDA(std::size_t buffer_index) {
-                sendbuf_view(buffer_index) = sv_view(buffer_index);
-            });
-        Kokkos::fence();
-        // SENDRECV
-        mpi_sendrecv(dest_mpi_rank, dest_mpi_rank, send_size, 0);
-        // COPY FROM BUFFER
 
-        Kokkos::parallel_for(
-            "copy_recvbuf", send_size, KOKKOS_LAMBDA(std::size_t buffer_index) {
-                sv_view(buffer_index) = recvbuf_view(buffer_index);
-            });
+        // Since the buffer is half the size of the state vector, we need to
+        // do two copies
+        for (std::size_t i = 0; i < 2; i++) {
+            std::size_t offset = i * send_size;
+            // COPY to buffer
+            Kokkos::parallel_for(
+                "copy_sendbuf", send_size,
+                KOKKOS_LAMBDA(std::size_t buffer_index) {
+                    sendbuf_view(buffer_index) = sv_view(buffer_index + offset);
+                });
+            Kokkos::fence();
+            // SENDRECV
+            sendrecv(dest_mpi_rank, dest_mpi_rank, send_size, 0);
+            // COPY FROM BUFFER
 
-        // Repeat
+            Kokkos::parallel_for(
+                "copy_recvbuf", send_size,
+                KOKKOS_LAMBDA(std::size_t buffer_index) {
+                    sv_view(buffer_index + offset) = recvbuf_view(buffer_index);
+                });
+        }
 
-        // COPY to buffer
-        Kokkos::parallel_for(
-            "copy_sendbuf", send_size, KOKKOS_LAMBDA(std::size_t buffer_index) {
-                sendbuf_view(buffer_index) = sv_view(buffer_index + send_size);
-            });
-        Kokkos::fence();
-        // SENDRECV
-        mpi_sendrecv(dest_mpi_rank, dest_mpi_rank, send_size, 0);
-        // COPY FROM BUFFER
-
-        Kokkos::parallel_for(
-            "copy_recvbuf", send_size, KOKKOS_LAMBDA(std::size_t buffer_index) {
-                sv_view(buffer_index + send_size) = recvbuf_view(buffer_index);
-            });
-
-        // copy target index map and global wires to local index map and global
-        // wires
-
+        // copy global_wires_target and mpi_rank_to_global_index_map_target
         global_wires_ = global_wires_target;
         mpi_rank_to_global_index_map_ = mpi_rank_to_global_index_map_target;
     }
@@ -910,36 +872,9 @@ class StateVectorKokkosMPI final
             auto global_wires_to_swap = findGlobalWires(wires);
             auto local_wires_to_swap =
                 localWiresSubsetToSwap(global_wires_to_swap, wires);
-            // if (mpi_manager_.getRank() == 0) {
-            //     std::cout << "global_wires =";
-            //     for (const auto &wire : global_wires_) {
-            //         std::cout << wire << " ";
-            //     }
-            //     std::cout << "local_wires = ";
-            //     for (const auto &wire : local_wires_) {
-            //         std::cout << wire << " ";
-            //     }
-            //     std::cout << "global_wires_to_swap = ";
-            //     for (const auto &wire : global_wires_to_swap) {
-            //         std::cout << wire << " ";
-            //     }
-            //     std::cout << "local_wires_to_swap = ";
-            //     for (const auto &wire : local_wires_to_swap) {
-            //         std::cout << wire << " ";
-            //     }
-            // }
             swapGlobalLocalWires(global_wires_to_swap, local_wires_to_swap);
         }
 
-#ifdef LKMPI_DEBUG
-        if (mpi_manager_.getRank() == 0) {
-            std::cout << "I am rank " << mpi_manager_.getRank()
-                      << " and I am applying the operation " << opName
-                      << " to the wires " << wires[0] << wires[1]
-                      << "and converted to " << getLocalWireIndices(wires)[0]
-                      << getLocalWireIndices(wires)[1] << std::endl;
-        }
-#endif
         (*sv_).applyOperation(opName, getLocalWireIndices(wires), inverse,
                               params, gate_matrix);
     }
@@ -1020,15 +955,6 @@ class StateVectorKokkosMPI final
                 global_control_values.push_back(controlled_values[i]);
             }
         }
-
-#ifdef LKMPI_DEBUG
-        for (auto wire : global_control_wires) {
-            std::cout << "I am rank " << mpi_manager_.getRank()
-                      << " applying to the global control wire " << wire
-                      << std::endl;
-        }
-#endif
-
         std::size_t global_index =
             getGlobalIndexFromMPIRank(mpi_manager_.getRank());
         bool operate = true;
@@ -1039,22 +965,6 @@ class StateVectorKokkosMPI final
                              1) == global_control_values[i]);
         }
         if (operate) {
-#ifdef LKMPI_DEBUG
-            // A little debug message:
-            for (auto lcw : local_control_wires) {
-                std::cout << "I am rank " << mpi_manager_.getRank()
-                          << " applying to the local control wire " << lcw
-                          << "and local index = " << getLocalWireIndex(lcw)
-                          << std::endl;
-            }
-            for (auto w : wires) {
-                std::cout << "I am rank " << mpi_manager_.getRank()
-                          << " applying to the target wire " << w
-                          << " and local index = " << getLocalWireIndex(w)
-                          << std::endl;
-            }
-#endif
-
             (*sv_).applyOperation(
                 opName, getLocalWireIndices(local_control_wires),
                 local_control_values, getLocalWireIndices(wires), inverse,
@@ -1244,15 +1154,6 @@ class StateVectorKokkosMPI final
      */
     void collapse([[maybe_unused]] std::size_t wire,
                   [[maybe_unused]] bool branch) {
-        /* KokkosVector matrix("gate_matrix", 4);
-        Kokkos::parallel_for(
-            matrix.size(), KOKKOS_LAMBDA(std::size_t k) {
-                matrix(k) = ((k == 0 && branch == 0) || (k == 3 && branch == 1))
-                                ? ComplexT{1.0, 0.0}
-                                : ComplexT{0.0, 0.0};
-            });
-        applyMultiQubitOp(matrix, {wire}, false);
-        normalize(); */
         PL_ABORT("Not implemented yet.");
     }
 
@@ -1362,6 +1263,10 @@ class StateVectorKokkosMPI final
         (*sv_).DeviceToDevice(vector_to_copy);
     }
 
+    /**
+     * @brief Make sure local wires are in ascending order
+     *        Must be used after reorderGlobalLocalWires()
+     */
     void reorderLocalWires() {
         PL_ABORT_IF_NOT(std::all_of(local_wires_.begin(), local_wires_.end(),
                                     [this](const auto i) {
@@ -1374,17 +1279,17 @@ class StateVectorKokkosMPI final
         for (std::size_t i = 0; i < getNumLocalWires(); ++i) {
             std::size_t wire_i = i + getNumGlobalWires();
             if (local_wires_[i] > wire_i) {
-                /* std::cout << "I am rank " << mpi_manager_.getRank()
-                          << " and I am swapping " << local_wires_[i]
-                          << " with " << wire_i << std::endl; */
                 applyOperation("SWAP", {local_wires_[i], wire_i}, false);
             }
         }
-
         std::iota(local_wires_.begin(), local_wires_.end(),
                   getNumGlobalWires());
     }
 
+    /**
+     * @brief Make sure global wires are lowest numbered wires and in ascending
+     *        order
+     */
     void reorderGlobalLocalWires() {
         std::vector<std::size_t> global_wires;
         std::vector<std::size_t> local_wires;
@@ -1420,7 +1325,7 @@ class StateVectorKokkosMPI final
     }
 
     /**
-     * @brief Get underlying data vector
+     * @brief Get underlying data vector at root rank
      */
     [[nodiscard]] auto getDataVector(const std::size_t root = 0)
         -> std::vector<ComplexT> {
