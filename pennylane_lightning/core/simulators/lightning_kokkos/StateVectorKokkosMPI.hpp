@@ -218,7 +218,7 @@ class StateVectorKokkosMPI final
                          const Kokkos::InitializationSettings &kokkos_args = {})
         : StateVectorKokkosMPI(MPIManagerKokkos(mpi_communicator),
                                num_global_qubits, num_local_qubits,
-                               kokkos_args){};
+                               kokkos_args) {};
 
     StateVectorKokkosMPI(std::size_t num_global_qubits,
                          std::size_t num_local_qubits,
