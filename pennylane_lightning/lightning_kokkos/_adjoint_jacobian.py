@@ -19,8 +19,6 @@ from __future__ import annotations
 
 from warnings import warn
 
-from pennylane_lightning.lightning_kokkos_ops.algorithmsMPI import OpsStructMPIC128
-
 try:
     from pennylane_lightning.lightning_kokkos_ops.algorithms import (
         AdjointJacobianC64,
