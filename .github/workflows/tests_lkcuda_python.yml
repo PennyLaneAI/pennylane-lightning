@@ -33,7 +33,7 @@ on:
 env:
   GCC_VERSION: 11
   CI_CUDA_ARCH: 86
-  TF_VERSION: 2.16.2
+  TF_VERSION: 2.19.0
   KERAS_VERSION: 3.9.0
   TORCH_VERSION: 2.5.1
   COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:./coverage.xml --no-flaky-report -p no:warnings --tb=native"
