@@ -26,22 +26,3 @@ if (BUILD_TESTS)
 
     include(CTest)
 endif()
-
-if (ENABLE_PLKOKKOS_MPI)
-    add_executable(lightning lightning.cpp)
-    target_link_libraries(lightning pennylane_lightning)
-    set_property(TARGET lightning PROPERTY CXX_STANDARD 20)
-
-    add_executable(lk-mpi-swaptest lk-mpi-swaptest.cpp)
-    target_link_libraries(lk-mpi-swaptest pennylane_lightning)
-    set_property(TARGET lk-mpi-swaptest PROPERTY CXX_STANDARD 20)
-
-    add_executable(lk-mpi-bandwidthtest lk-mpi-bandwidthtest.cpp)
-    target_link_libraries(lk-mpi-bandwidthtest pennylane_lightning)
-    set_property(TARGET lk-mpi-bandwidthtest PROPERTY CXX_STANDARD 20)
-
-    add_executable(lk-mpi-memcpytest lk-mpi-memcpytest.cpp)
-    target_link_libraries(lk-mpi-memcpytest pennylane_lightning)
-    set_property(TARGET lk-mpi-memcpytest PROPERTY CXX_STANDARD 20)
-
-endif()
