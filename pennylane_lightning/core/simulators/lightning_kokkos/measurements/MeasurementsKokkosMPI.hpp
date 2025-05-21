@@ -14,7 +14,6 @@
 #pragma once
 #include <chrono>
 #include <cstdint>
-#include <iostream>
 
 #include "ExpValFunctors.hpp"
 #include "LinearAlgebraKokkos.hpp" // getRealOfComplexInnerProduct
@@ -115,11 +114,6 @@ class MeasurementsMPI final
      */
     PrecisionT expval(const std::string &operation,
                       const std::vector<size_t> &wires) {
-
-        // if (operation == "Identity") {
-        //     return 1.0;
-        // }
-
         if (!(this->_statevector.isWiresLocal(wires))) {
             auto global_wires_to_swap =
                 this->_statevector.findGlobalWires(wires);
@@ -246,7 +240,7 @@ class MeasurementsMPI final
                 }
             }
 
-            // DO SWAP HERE
+            // Do swap here
             this->_statevector.swapGlobalLocalWires(global_wires_need_to_swap,
                                                     local_wires_to_swap);
             // Construct local pauli string and local wires
@@ -280,45 +274,10 @@ class MeasurementsMPI final
                     (1U << (this->_statevector.getNumGlobalWires() - 1 -
                             distance));
             }
-            /* std::cout << "global wires = ";
-            for (auto const& wire : this->_statevector.getGlobalWires()) {
-                std::cout << wire << " ";
-            }
-            std::cout << std::endl;
-            std::cout << "local wires = ";
-            for (auto const& wire : this->_statevector.getLocalWires()) {
-                std::cout << wire << " ";
-            }
-            std::cout << "global index MPI map = ";
-            for (auto const& wire :
-            this->_statevector.getMPIRankToGlobalIndexMap()) { std::cout << wire
-            << " ";
-            }
-            std::cout << " Local pauli word = " << local_pauli_word << " and
-            local target wires = "; for (const auto& wire: local_target_wires) {
-                std::cout << wire << " ";
-            }
-            std::cout          << " and converted to local wire indices = " ;
-            for (const auto& wire:
-            this->_statevector.getLocalWireIndices(local_target_wires)) {
-                std::cout << wire << " ";
-            }
-            std::cout << "I am rank " << this->_statevector.getMPIRank() << "
-            and global index = " <<
-            this->_statevector.getGlobalIndexFromMPIRank(this->_statevector.getMPIRank())
-                      << " and BEFORE multiplying -1s my local expval = "
-                      << local_expval << std::endl;
- */
 
             if (std::popcount(global_index & global_z_mask) % 2 == 1) {
                 local_expval *= -1.0;
             }
-            /* std::cout << "I am rank " << this->_statevector.getMPIRank() << "
-               and global index = " <<
-               this->_statevector.getGlobalIndexFromMPIRank(this->_statevector.getMPIRank())
-                      << " and AFTER multiplying -1s my local expval = "
-                      << local_expval << std::endl;
- */
             // combine
             PrecisionT global_expval = 0.0;
             global_expval = this->_statevector.allReduceSum(local_expval);

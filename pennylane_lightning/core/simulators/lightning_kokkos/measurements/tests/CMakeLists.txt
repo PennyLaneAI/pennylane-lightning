@@ -30,7 +30,8 @@ target_sources(lightning_kokkos_measurements_tests INTERFACE runner_lightning_ko
 ################################################################################
 # Define targets
 ################################################################################
-set(TEST_SOURCES    Test_StateVectorKokkos_Expval.cpp  
+set(TEST_SOURCES    
+                    Test_StateVectorKokkos_Expval.cpp  
                     Test_StateVectorKokkos_Measure.cpp  
                     Test_StateVectorKokkos_Var.cpp
 )
@@ -60,7 +61,9 @@ if(ENABLE_MPI)
     ################################################################################
     # Define targets
     ################################################################################
-    set(TEST_SOURCES ./mpi/Test_StateVectorKokkosMPI_Measure.cpp)
+    set(TEST_SOURCES 
+                        ./mpi/Test_StateVectorKokkosMPI_Measure.cpp
+                        )
 
     add_executable(${PL_BACKEND}_measurements_test_runner_mpi ${TEST_SOURCES})
     target_link_libraries(${PL_BACKEND}_measurements_test_runner_mpi PRIVATE ${PL_BACKEND}_measurements_tests_mpi)

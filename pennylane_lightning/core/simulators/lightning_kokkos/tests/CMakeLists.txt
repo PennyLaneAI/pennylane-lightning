@@ -44,12 +44,16 @@ if(ENABLE_MPI)
 
     ProcessTestOptions(${PL_BACKEND}_tests_mpi)
 
-    target_sources(${PL_BACKEND}_tests_mpi INTERFACE ./mpi/runner_${PL_BACKEND}_mpi.cpp)
+    target_sources(${PL_BACKEND}_tests_mpi INTERFACE 
+                                                        ./mpi/runner_${PL_BACKEND}_mpi.cpp
+                                                        )
 
     ################################################################################
     # Define targets
     ################################################################################
-    set(TEST_SOURCES ./mpi/Test_StateVectorKokkosMPI.cpp)
+    set(TEST_SOURCES 
+                            ./mpi/Test_StateVectorKokkosMPI.cpp
+                            )
 
     add_executable(${PL_BACKEND}_test_runner_mpi ${TEST_SOURCES})
     target_link_libraries(${PL_BACKEND}_test_runner_mpi PRIVATE ${PL_BACKEND}_tests_mpi)

@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
+
 project(lightning_kokkos_catalyst LANGUAGES CXX)
 
 set(LK_CATALYST_FILES LightningKokkosSimulator.cpp CACHE INTERNAL "")

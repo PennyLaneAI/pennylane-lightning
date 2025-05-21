@@ -59,7 +59,8 @@ if(ENABLE_MPI)
     ################################################################################
     # Define targets
     ################################################################################
-    set(TEST_SOURCES ./mpi/Test_StateVectorKokkosMPI_Generator.cpp
+    set(TEST_SOURCES 
+                     ./mpi/Test_StateVectorKokkosMPI_Generator.cpp
                      ./mpi/Test_StateVectorKokkosMPI_NonParam.cpp
                      ./mpi/Test_StateVectorKokkosMPI_Param.cpp)
 
