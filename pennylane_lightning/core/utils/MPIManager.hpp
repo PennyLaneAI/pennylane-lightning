@@ -327,7 +327,7 @@ class MPIManager {
      *
      * @param op_str std::string of MPI_Op name.
      */
-    auto getMPIOpType(const std::string &op_str) -> MPI_Op {
+    auto getMPIOpType(const std::string &op_str) const -> MPI_Op {
         auto it = cpp_mpi_op_map.find(op_str);
         if (it != cpp_mpi_op_map.end()) {
             return it->second;
