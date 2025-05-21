@@ -38,6 +38,12 @@ jobs:
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
 
+      - name: Checkout Catalyst
+        uses: actions/checkout@v4
+        with:
+          repository: PennyLaneAI/catalyst
+          path: ${{ github.workspace}}/catalyst
+
       - name: Kokkos execution strategy
         id: exec_model
         run: echo "exec_model=[\"SERIAL\"]" >> $GITHUB_OUTPUT # We may also adopt [OPENMP, THREADS] in later iterations
@@ -98,7 +104,8 @@ jobs:
                           -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF `
                           -DCMAKE_CXX_STANDARD=20 `
                           -DCMAKE_POSITION_INDEPENDENT_CODE=ON `
-                          -DCMAKE_BUILD_TYPE=Debug `
+                          -DCMAKE_BUILD_TYPE=Debug 
+                          -DLIGHTNING_CATALYST_SRC_PATH=${{ github.workspace }}/catalyst`
                           -T clangcl
           cmake --build ./Build --config Debug --verbose
           cmake --install ./Build --config Debug --verbose
