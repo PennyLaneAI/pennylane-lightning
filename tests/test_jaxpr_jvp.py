@@ -22,7 +22,6 @@ from conftest import LightningDevice, device_name
 from pennylane.devices import DefaultExecutionConfig
 
 jax = pytest.importorskip("jax")
-jaxlib = pytest.importorskip("jaxlib")
 jnp = pytest.importorskip("jax.numpy")
 
 if device_name == "lightning.tensor":
@@ -100,7 +99,7 @@ class TestErrors:
         args = (0.5, 0.6)
         jaxpr = jax.make_jaxpr(circuit)(*args)
 
-        with pytest.raises(jax.lib.xla_extension.XlaRuntimeError) as exc_info:
+        with pytest.raises(jax.errors.JaxRuntimeError) as exc_info:
             qml.device(device_name, wires=1).jaxpr_jvp(jaxpr.jaxpr, args, (0.5, 0.6))
 
         assert (
@@ -122,7 +121,7 @@ class TestErrors:
         args = (0.5,)
         jaxpr = jax.make_jaxpr(f)(*args)
 
-        with pytest.raises(jax.lib.xla_extension.XlaRuntimeError) as exc_info:
+        with pytest.raises(jax.errors.JaxRuntimeError) as exc_info:
             qml.device(device_name, wires=1).jaxpr_jvp(jaxpr.jaxpr, args, (0.5,))
 
         assert (
@@ -141,7 +140,7 @@ class TestErrors:
         args = (0.5,)
         jaxpr = jax.make_jaxpr(circuit)(*args)
 
-        with pytest.raises(jax.lib.xla_extension.XlaRuntimeError) as exc_info:
+        with pytest.raises(jax.errors.JaxRuntimeError) as exc_info:
             qml.device(device_name, wires=1).jaxpr_jvp(jaxpr.jaxpr, args, (0.5,))
 
         assert (
@@ -162,7 +161,7 @@ class TestErrors:
         dx = jnp.array([2.0, 3.0])
         jaxpr = jax.make_jaxpr(f)(x)
 
-        with pytest.raises(jax.lib.xla_extension.XlaRuntimeError) as exc_info:
+        with pytest.raises(jax.errors.JaxRuntimeError) as exc_info:
             qml.device(device_name, wires=1).jaxpr_jvp(jaxpr.jaxpr, (x,), (dx,))
 
         assert (
