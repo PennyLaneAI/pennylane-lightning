@@ -55,13 +55,13 @@ inline void SparseMV_cuSparseMPI(
             csrOffsets_ptr, columns_ptr, values_ptr);
     }
     mpi_manager.Barrier();
-
     std::vector<CSRMatrix<Precision, IndexT>> localCSRMatVector;
     for (std::size_t i = 0; i < mpi_manager.getSize(); i++) {
         auto localCSRMat = scatterCSRMatrix<Precision, IndexT>(
             mpi_manager, csrmatrix_blocks[i], length_local, 0);
         localCSRMatVector.push_back(localCSRMat);
     }
+
     mpi_manager.Barrier();
 
     DataBuffer<CFP_t, int> d_res_per_block{length_local, device_id, stream_id,

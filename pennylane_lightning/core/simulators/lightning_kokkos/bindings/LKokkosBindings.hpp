@@ -108,11 +108,10 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
     using ParamT = PrecisionT; // Parameter's data precision
     using np_arr_c = py::array_t<std::complex<ParamT>,
                                  py::array::c_style | py::array::forcecast>;
-
     registerGatesForStateVector<StateVectorT>(pyclass);
     registerControlledGate<StateVectorT>(pyclass);
     pyclass.def(
-        "applyPauliRot",
+        "applyPauliRot", // TODO: update this support
         [](StateVectorT &sv, const std::vector<std::size_t> &wires,
            const bool inverse, const std::vector<ParamT> &params,
            const std::string &word) {
@@ -189,10 +188,11 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
                                   conv_matrix);
             },
             "Apply operation via the gate matrix")
-        .def("collapse", &StateVectorT::collapse,
-             "Collapse the statevector onto the 0 or 1 branch of a given wire.")
         .def("applyControlledMatrix", &applyControlledMatrix<StateVectorT>,
-             "Apply controlled operation");
+             "Apply controlled operation")
+        .def(
+            "collapse", &StateVectorT::collapse,
+            "Collapse the statevector onto the 0 or 1 branch of a given wire.");
 }
 
 /**
@@ -264,18 +264,7 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
              static_cast<PrecisionT (Measurements<StateVectorT>::*)(
                  const std::string &, const std::vector<std::size_t> &)>(
                  &Measurements<StateVectorT>::var),
-             "Variance of an operation by name.")
-        .def(
-            "var",
-            [](Measurements<StateVectorT> &M, const np_arr_sparse_ind &row_map,
-               const np_arr_sparse_ind &entries, const np_arr_c &values) {
-                return M.var(static_cast<SparseIndexT *>(row_map.request().ptr),
-                             static_cast<SparseIndexT>(row_map.request().size),
-                             static_cast<SparseIndexT *>(entries.request().ptr),
-                             static_cast<ComplexT *>(values.request().ptr),
-                             static_cast<SparseIndexT>(values.request().size));
-            },
-            "Variance of a sparse Hamiltonian.");
+             "Variance of an operation by name.");
 }
 
 /**

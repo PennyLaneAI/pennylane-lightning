@@ -1,4 +1,4 @@
-// Copyright 2018-2023 Xanadu Quantum Technologies Inc.
+// Copyright 2018-2025 Xanadu Quantum Technologies Inc.
 
 // Licensed under the Apache License, Version 2.0 (the License);
 // you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
 // limitations under the License.
 #pragma once
 #include "AdjointJacobianBase.hpp"
-#include "ObservablesKokkos.hpp"
+#include "ObservablesKokkosMPI.hpp"
 #include <span>
 
 /// @cond DEV
@@ -32,13 +32,14 @@ namespace Pennylane::LightningKokkos::Algorithms {
  * @tparam StateVectorT State vector type.
  */
 template <class StateVectorT>
-class AdjointJacobian final
-    : public AdjointJacobianBase<StateVectorT, AdjointJacobian<StateVectorT>> {
+class AdjointJacobianMPI final
+    : public AdjointJacobianBase<StateVectorT,
+                                 AdjointJacobianMPI<StateVectorT>> {
   private:
     using ComplexT = typename StateVectorT::ComplexT;
     using PrecisionT = typename StateVectorT::PrecisionT;
     using BaseType =
-        AdjointJacobianBase<StateVectorT, AdjointJacobian<StateVectorT>>;
+        AdjointJacobianBase<StateVectorT, AdjointJacobianMPI<StateVectorT>>;
 
     /**
      * @brief Utility method to update the Jacobian at a given index by
@@ -53,14 +54,19 @@ class AdjointJacobian final
     inline void updateJacobian(StateVectorT &sv1, StateVectorT &sv2,
                                std::span<PrecisionT> &jac,
                                PrecisionT scaling_coeff, std::size_t idx) {
+
+        sv1.matchWires(sv2);
         auto element = -2 * scaling_coeff *
                        getImagOfComplexInnerProduct<PrecisionT>(sv1.getView(),
                                                                 sv2.getView());
+
+        auto sum = sv1.allReduceSum(element);
+        element = sum;
         jac[idx] = element;
     }
 
   public:
-    AdjointJacobian() = default;
+    AdjointJacobianMPI() = default;
 
     /**
      * @brief Calculates the Jacobian for the statevector for the selected set
@@ -126,11 +132,12 @@ class AdjointJacobian final
         }
 
         // Create observable-applied state-vectors
-        std::vector<StateVectorT> H_lambda(num_observables,
-                                           StateVectorT(lambda.getNumQubits()));
+        std::vector<StateVectorT> H_lambda(
+            num_observables, StateVectorT(lambda.getNumGlobalWires(),
+                                          lambda.getNumLocalWires()));
         BaseType::applyObservables(H_lambda, lambda, obs);
 
-        StateVectorT mu{lambda.getNumQubits()};
+        StateVectorT mu(lambda.getNumGlobalWires(), lambda.getNumLocalWires());
 
         for (int op_idx = static_cast<int>(ops_name.size() - 1); op_idx >= 0;
              op_idx--) {
