@@ -6,6 +6,7 @@
 
 - PennyLane-Lightning is compatible with JAX version 0.5.3+.
   [(#1152)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1152)
+  [(#1161)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1161)
 
 - Improve performance of computing expectation values of Pauli Sentences for `lightning.kokkos`.
   [(#1126)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1126)
@@ -32,6 +33,9 @@
   [(#1158)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1158)
 
 <h3>Internal changes ⚙️</h3>
+
+- Use JAX version 0.6.0 for CI tests for latest version.
+  [(#1161)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1161)
 
 - Use JAX version 0.4.28 for CI tests for stable version.
   [(#1160)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1160)
@@ -66,6 +70,9 @@
 - Added flags to all Codecov reports and a default carryforward flag for all flags.
   [(1144)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1144)
 
+- Updated the `clang-format` and `clang-tidy` versions to v20 for compatibility with Catalyst.
+  [(#1153)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1153)
+
 - Bump `readthedocs` Github action runner to use Ubuntu-24.04.
   [(#1151)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1151)
 
@@ -78,6 +85,7 @@ Ali Asadi,
 David Ittah,
 Christina Lee,
 Joseph Lee,
+Mehrdad Malekmohammadi,
 Anton Naim Ibrahim,
 Luis Alfredo Nuñez Meneses,
 Mudit Pandey,
