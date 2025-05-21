@@ -67,7 +67,7 @@ def n_subsystems(request):
 
 # Looking for the device for testing.
 default_device = "lightning.gpu"
-supported_devices = {"lightning.gpu", "lightning.kokkos"}
+supported_devices = {"lightning.gpu"}
 supported_devices.update({sb.replace(".", "_") for sb in supported_devices})
 
 

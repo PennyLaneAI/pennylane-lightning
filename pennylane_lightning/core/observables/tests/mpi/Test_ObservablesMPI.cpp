@@ -265,8 +265,8 @@ template <typename TypeList> void testTensorProdObsBase() {
                                             std::vector<std::size_t>{2}),
             };
 
+            MPIManagerGPU mpi_manager(MPI_COMM_WORLD);
             SECTION("Test using |1+0>") {
-                MPIManagerGPU mpi_manager(MPI_COMM_WORLD);
                 REQUIRE(mpi_manager.getSize() == 2);
 
                 const std::size_t num_qubits = 3;
@@ -313,7 +313,6 @@ template <typename TypeList> void testTensorProdObsBase() {
             }
 
             SECTION("Test using |+-01>") {
-                MPIManagerGPU mpi_manager(MPI_COMM_WORLD);
                 REQUIRE(mpi_manager.getSize() == 2);
 
                 const std::size_t num_qubits = 4;

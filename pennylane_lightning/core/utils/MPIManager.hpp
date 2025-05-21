@@ -57,7 +57,6 @@ template <typename T> auto cppTypeToString() -> const std::string {
     const std::string typestr = std::type_index(typeid(T)).name();
     return typestr;
 }
-} // namespace Pennylane::Util
 
 /**
  * @brief MPI operation class. Maintains MPI related operations.
@@ -73,25 +72,6 @@ class MPIManager {
     std::string vendor_;
     std::size_t version_;
     std::size_t subversion_;
-
-    virtual auto get_cpp_mpi_type_map() const
-        -> const std::unordered_map<std::string, MPI_Datatype> & {
-        return cpp_mpi_type_map;
-    }
-
-    /**
-     * @brief Find operation string's corresponding MPI_Op type.
-     *
-     * @param op_str std::string of MPI_Op name.
-     */
-    auto getMPIOpType(const std::string &op_str) -> MPI_Op {
-        auto it = cpp_mpi_op_map.find(op_str);
-        if (it != cpp_mpi_op_map.end()) {
-            return it->second;
-        } else {
-            throw std::runtime_error("Op not supported");
-        }
-    }
 
     /**
      * @brief Map of std::string and MPI_Op.
@@ -137,6 +117,7 @@ class MPIManager {
         {cppTypeToString<std::complex<double>>(), MPI_C_DOUBLE_COMPLEX},
         {cppTypeToString<std::complex<long double>>(),
          MPI_C_LONG_DOUBLE_COMPLEX}};
+
     /**
      * @brief Set the MPI vendor.
      */
@@ -294,7 +275,7 @@ class MPIManager {
         if (it != cpp_mpi_type_map.end()) {
             return it->second;
         } else {
-            throw std::runtime_error("Type not supported for MPIManager");
+            PL_ABORT("Type not supported for MPIManager");
         }
     }
 
@@ -334,6 +315,25 @@ class MPIManager {
      */
     auto getVersion() const -> std::tuple<std::size_t, std::size_t> {
         return {version_, subversion_};
+    }
+
+    virtual auto get_cpp_mpi_type_map() const
+        -> const std::unordered_map<std::string, MPI_Datatype> & {
+        return cpp_mpi_type_map;
+    }
+
+    /**
+     * @brief Find operation string's corresponding MPI_Op type.
+     *
+     * @param op_str std::string of MPI_Op name.
+     */
+    auto getMPIOpType(const std::string &op_str) -> MPI_Op {
+        auto it = cpp_mpi_op_map.find(op_str);
+        if (it != cpp_mpi_op_map.end()) {
+            return it->second;
+        } else {
+            PL_ABORT("Op not supported");
+        }
     }
 
     /**
@@ -761,4 +761,5 @@ class MPIManager {
             MPI_Comm_split(this->getComm(), colorInt, keyInt, &newcomm));
         return MPIManager(newcomm);
     }
-}; // namespace Pennylane::Util
+};
+} // namespace Pennylane::Util

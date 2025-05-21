@@ -31,7 +31,8 @@ target_sources(${PL_BACKEND}_utils_tests INTERFACE runner_${PL_BACKEND}_utils.cp
 ################################################################################
 # Define targets
 ################################################################################
-set(TEST_SOURCES    Test_LinearAlgebra.cpp)
+set(TEST_SOURCES    
+                            Test_LinearAlgebra.cpp)
 
 add_executable(${PL_BACKEND}_utils_test_runner ${TEST_SOURCES})
 target_link_libraries(${PL_BACKEND}_utils_test_runner PRIVATE ${PL_BACKEND}_utils_tests)
@@ -56,7 +57,8 @@ if(ENABLE_MPI)
     ################################################################################
     # Define targets
     ################################################################################
-    set(TEST_SOURCES    ./mpi/Test_MPIManagerGPU.cpp
+    set(TEST_SOURCES    
+                        ./mpi/Test_MPIManagerGPU.cpp
                         ./mpi/Test_CSRMatrix.cpp
                         ./mpi/Test_LinearAlgebraMPI.cpp
     )

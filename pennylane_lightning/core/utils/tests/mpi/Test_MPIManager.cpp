@@ -55,8 +55,8 @@ TEMPLATE_TEST_CASE("MPIManager::getMPIDatatype", "[MPIManager]", float,
 
     SECTION("Test invalid type") {
         // This should throw an exception
-        REQUIRE_THROWS_AS(mpi_manager.getMPIDatatype<std::string>(),
-                          std::runtime_error);
+        REQUIRE_THROWS_WITH(mpi_manager.getMPIDatatype<std::string>(),
+                            Catch::Matchers::Contains("Type not supported"));
     }
 }
 
