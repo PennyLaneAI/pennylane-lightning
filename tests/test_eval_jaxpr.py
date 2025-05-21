@@ -23,7 +23,6 @@ from pennylane.exceptions import DeviceError
 from pennylane.transforms.defer_measurements import DeferMeasurementsInterpreter
 
 jax = pytest.importorskip("jax")
-jaxlib = pytest.importorskip("jaxlib")
 
 if device_name == "lightning.tensor":
     pytest.skip("Skipping tests for the LightningTensor class.", allow_module_level=True)
@@ -114,7 +113,7 @@ def test_capture_remains_enabled_if_measurement_error():
 
     jaxpr = jax.make_jaxpr(g)()
 
-    with pytest.raises(jaxlib.xla_extension.XlaRuntimeError):
+    with pytest.raises(jax.errors.JaxRuntimeError):
         dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts)
 
     assert qml.capture.enabled()
@@ -232,7 +231,7 @@ class TestSampling:
         dev = qml.device(device_name, wires=1, shots=2)
         jaxpr = jax.make_jaxpr(f)()
 
-        with pytest.raises(jaxlib.xla_extension.XlaRuntimeError):
+        with pytest.raises(jax.errors.JaxRuntimeError):
             dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts)
 
 
@@ -635,7 +634,7 @@ class TestDeferMeasurements:
             return qml.expval(qml.PauliZ(0))
 
         jaxpr = jax.make_jaxpr(f)()
-        with pytest.raises(jaxlib.xla_extension.XlaRuntimeError):
+        with pytest.raises(jax.errors.JaxRuntimeError):
             with pytest.raises(DeviceError, match="Lightning devices do not support postselection"):
                 dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts)
 

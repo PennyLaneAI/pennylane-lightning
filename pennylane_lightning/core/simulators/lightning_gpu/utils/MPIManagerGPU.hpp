@@ -26,12 +26,10 @@
 #include <unordered_map>
 #include <vector>
 
-#ifdef _ENABLE_PLGPU
 #include <cuComplex.h>
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <custatevec.h>
-#endif
 
 #include "DataBuffer.hpp"
 #include "Error.hpp"
@@ -49,6 +47,7 @@ namespace Pennylane::LightningGPU::Util {
  * operations.
  */
 class MPIManagerGPU final : public MPIManager {
+  private:
     /**
      * @brief Map of std::string and MPI_Datatype.
      */
@@ -85,23 +84,21 @@ class MPIManagerGPU final : public MPIManager {
         {cppTypeToString<cuFloatComplex>(), MPI_C_FLOAT_COMPLEX},
         {cppTypeToString<double2>(), MPI_C_DOUBLE_COMPLEX},
         {cppTypeToString<cuDoubleComplex>(), MPI_C_DOUBLE_COMPLEX},
-#ifdef _ENABLE_PLGPU
         {cppTypeToString<custatevecIndex_t>(), MPI_INT64_T},
-#endif
         // cuda related types
         {cppTypeToString<cudaIpcMemHandle_t>(), MPI_UINT8_T},
         {cppTypeToString<cudaIpcEventHandle_t>(), MPI_UINT8_T}};
-
-    auto get_cpp_mpi_type_map() const
-        -> const std::unordered_map<std::string, MPI_Datatype> & override {
-        return cpp_mpi_type_map_with_cuda;
-    }
 
   public:
     MPIManagerGPU(MPI_Comm communicator = MPI_COMM_WORLD)
         : MPIManager(communicator) {}
 
     MPIManagerGPU(int argc, char **argv) : MPIManager(argc, argv) {}
+
+    auto get_cpp_mpi_type_map() const
+        -> const std::unordered_map<std::string, MPI_Datatype> & override {
+        return cpp_mpi_type_map_with_cuda;
+    }
 
     using MPIManager::Allgather;
     using MPIManager::Reduce;
@@ -121,8 +118,7 @@ class MPIManagerGPU final : public MPIManager {
             if (cppTypeToString<T>() != cppTypeToString<cudaIpcMemHandle_t>() &&
                 cppTypeToString<T>() !=
                     cppTypeToString<cudaIpcEventHandle_t>()) {
-                throw std::runtime_error(
-                    "Unsupported MPI DataType implementation.\n");
+                PL_ABORT("Unsupported MPI DataType implementation.\n");
             }
         }
         PL_ABORT_IF(recvBuf.size() != this->getSize(),
