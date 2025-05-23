@@ -85,7 +85,14 @@ def stopping_condition(op: Operator) -> bool:
         return reduce(lambda x, y: x + (y != "I"), word, 0) > 2
     if op.name in ("C(SProd)", "C(Exp)"):
         return True
-    return _supports_operation(op.name)
+    # return _supports_operation(op.name)
+    return (
+        (isinstance(op, Conditional) and stopping_condition(op.base))
+        or isinstance(op, MidMeasureMP)
+        or op.has_matrix
+        or op.has_sparse_matrix
+        or _supports_operation(op.name)
+    )
 
 
 def stopping_condition_shots(op: Operator) -> bool:
@@ -212,7 +219,14 @@ class LightningQubit(LightningBase):
     # pylint: disable=too-many-instance-attributes
 
     # General device options
-    _device_options = ("rng", "c_dtype", "batch_obs", "mcmc", "kernel_name", "num_burnin")
+    _device_options = (
+        "rng",
+        "c_dtype",
+        "batch_obs",
+        "mcmc",
+        "kernel_name",
+        "num_burnin"
+    )
     # Device specific options
     _CPP_BINARY_AVAILABLE = LQ_CPP_BINARY_AVAILABLE
     _backend_info = backend_info if LQ_CPP_BINARY_AVAILABLE else None
@@ -329,6 +343,7 @@ class LightningQubit(LightningBase):
             if option not in new_device_options:
                 new_device_options[option] = getattr(self, f"_{option}", None)
 
+        # print(f"mcm_config: {config.mcm_config}")
         if qml.capture.enabled():
             mcm_config = config.mcm_config
             mcm_updated_values = {}
@@ -352,6 +367,27 @@ class LightningQubit(LightningBase):
             if mcm_method is None:
                 mcm_updated_values["mcm_method"] = "deferred"
             updated_values["mcm_config"] = replace(mcm_config, **mcm_updated_values)
+        else:
+            mcm_config = config.mcm_config
+            mcm_updated_values = {}
+
+            if (mcm_method := mcm_config.mcm_method) not in (
+                "deferred",
+                "tree-traversal",
+                "one-shot",
+                None,
+            ):
+                raise DeviceError(
+                    f"Unsupported mid-circuit measurement method '{mcm_method}' for device lightning.qubit."
+                )
+
+            # if mcm_method is None and self.shots:
+            #     mcm_updated_values["mcm_method"] = "one-shot"
+
+            # # elif mcm_method is None and not self.shots:
+            # #     mcm_updated_values["mcm_method"] = "deferred"
+
+            # updated_values["mcm_config"] = replace(mcm_config, **mcm_updated_values)
 
         return replace(config, **updated_values, device_options=new_device_options)
 
@@ -387,11 +423,25 @@ class LightningQubit(LightningBase):
             return program, exec_config
 
         program.add_transform(validate_measurements, name=self.name)
+
         program.add_transform(validate_observables, accepted_observables, name=self.name)
+
+        # if exec_config.mcm_config.mcm_method != "tree-traversal":
+        #     program.add_transform(validate_device_wires, self.wires, name=self.name)
+        #     program.add_transform(qml.transforms.broadcast_expand)
+
+        # print(f"exec_config.mcm_config.mcm_method: {exec_config.mcm_config}")
+
+
+
         program.add_transform(
             mid_circuit_measurements, device=self, mcm_config=exec_config.mcm_config
         )
         program.add_transform(validate_device_wires, self.wires, name=self.name)
+
+        # if exec_config.mcm_config.mcm_method == "deferred":
+        #     program.add_transform(qml.defer_measurements, num_wires=len(self.wires))
+
 
         program.add_transform(
             decompose,
@@ -400,7 +450,12 @@ class LightningQubit(LightningBase):
             skip_initial_state_prep=True,
             name=self.name,
         )
+
+
+
         program.add_transform(qml.transforms.broadcast_expand)
+        
+        
 
         if exec_config.gradient_method == "adjoint":
             _add_adjoint_transforms(program)
@@ -436,6 +491,7 @@ class LightningQubit(LightningBase):
                     self._statevector,
                     mcmc=mcmc,
                     postselect_mode=execution_config.mcm_config.postselect_mode,
+                    mcm_method=execution_config.mcm_config.mcm_method,
                 )
             )
 
