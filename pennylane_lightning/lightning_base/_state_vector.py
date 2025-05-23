@@ -186,7 +186,6 @@ class LightningBaseStateVector(ABC):
         if operation.reset and bool(sample):
             self.apply_operations([qml.PauliX(operation.wires)], mid_measurements=mid_measurements)
 
-
     def _apply_collapse(self, wire, branch):
         """Apply a collapse operation to the state tensor.
 

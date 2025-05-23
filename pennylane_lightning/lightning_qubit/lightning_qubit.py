@@ -95,7 +95,6 @@ def stopping_condition(op: Operator) -> bool:
     )
 
 
-
 def stopping_condition_shots(op: Operator) -> bool:
     """A function that determines whether or not an operation is supported by ``lightning.qubit``
     with finite shots."""
@@ -226,8 +225,7 @@ class LightningQubit(LightningBase):
         "batch_obs",
         "mcmc",
         "kernel_name",
-        "num_burnin",
-        "mcm_method",
+        "num_burnin"
     )
     # Device specific options
     _CPP_BINARY_AVAILABLE = LQ_CPP_BINARY_AVAILABLE
@@ -253,7 +251,6 @@ class LightningQubit(LightningBase):
         mcmc: bool = False,
         kernel_name: str = "Local",
         num_burnin: int = 100,
-        mcm_method: Optional[str] = None,
     ):
         if not self._CPP_BINARY_AVAILABLE:
             raise ImportError(
@@ -305,8 +302,6 @@ class LightningQubit(LightningBase):
         self._statevector = None
         self._sv_init_kwargs = {}
 
-        self.mcm_method = None
-
     @property
     def name(self):
         """The name of the device."""
@@ -348,7 +343,7 @@ class LightningQubit(LightningBase):
             if option not in new_device_options:
                 new_device_options[option] = getattr(self, f"_{option}", None)
 
-        print(f"mcm_config: {config.mcm_config}")
+        # print(f"mcm_config: {config.mcm_config}")
         if qml.capture.enabled():
             mcm_config = config.mcm_config
             mcm_updated_values = {}
@@ -383,14 +378,16 @@ class LightningQubit(LightningBase):
                 None,
             ):
                 raise DeviceError(
-                    f"mcm_method='{mcm_method}' is not supported with lightning.qubit "
-                    "when program capture is enabled."
+                    f"Unsupported mid-circuit measurement method '{mcm_method}' for device lightning.qubit."
                 )
 
-            if mcm_config.mcm_method is None:
-                mcm_updated_values["mcm_method"] = "deferred"
+            # if mcm_method is None and self.shots:
+            #     mcm_updated_values["mcm_method"] = "one-shot"
 
-            updated_values["mcm_config"] = replace(mcm_config, **mcm_updated_values)
+            # # elif mcm_method is None and not self.shots:
+            # #     mcm_updated_values["mcm_method"] = "deferred"
+
+            # updated_values["mcm_config"] = replace(mcm_config, **mcm_updated_values)
 
         return replace(config, **updated_values, device_options=new_device_options)
 
@@ -428,15 +425,23 @@ class LightningQubit(LightningBase):
         program.add_transform(validate_measurements, name=self.name)
 
         program.add_transform(validate_observables, accepted_observables, name=self.name)
+
         # if exec_config.mcm_config.mcm_method != "tree-traversal":
         #     program.add_transform(validate_device_wires, self.wires, name=self.name)
         #     program.add_transform(qml.transforms.broadcast_expand)
-            
+
+        # print(f"exec_config.mcm_config.mcm_method: {exec_config.mcm_config}")
+
+
+
         program.add_transform(
             mid_circuit_measurements, device=self, mcm_config=exec_config.mcm_config
         )
-
         program.add_transform(validate_device_wires, self.wires, name=self.name)
+
+        # if exec_config.mcm_config.mcm_method == "deferred":
+        #     program.add_transform(qml.defer_measurements, num_wires=len(self.wires))
+
 
         program.add_transform(
             decompose,
@@ -447,7 +452,10 @@ class LightningQubit(LightningBase):
         )
 
 
+
         program.add_transform(qml.transforms.broadcast_expand)
+        
+        
 
         if exec_config.gradient_method == "adjoint":
             _add_adjoint_transforms(program)

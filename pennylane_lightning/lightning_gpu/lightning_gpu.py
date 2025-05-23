@@ -91,7 +91,15 @@ def stopping_condition(op: Operator) -> bool:
     """A function that determines whether or not an operation is supported by ``lightning.gpu``."""
     if op.name in ("C(SProd)", "C(Exp)"):
         return True
-    return _supports_operation(op.name)
+    # return _supports_operation(op.name)
+    return (
+        (isinstance(op, Conditional) and stopping_condition(op.base))
+        or isinstance(op, MidMeasureMP)
+        or op.has_matrix
+        or op.has_sparse_matrix
+        or _supports_operation(op.name)
+    )
+
 
 
 def stopping_condition_shots(op: Operator) -> bool:
@@ -222,7 +230,7 @@ class LightningGPU(LightningBase):
     # pylint: disable=too-many-instance-attributes
 
     # General device options
-    _device_options = ("c_dtype", "batch_obs", "mcm_method")
+    _device_options = ("c_dtype", "batch_obs")
 
     # Device specific options
     _CPP_BINARY_AVAILABLE = LGPU_CPP_BINARY_AVAILABLE
@@ -243,7 +251,6 @@ class LightningGPU(LightningBase):
         c_dtype: Union[np.complex128, np.complex64] = np.complex128,
         shots: Union[int, List] = None,
         batch_obs: bool = False,
-        mcm_method: Optional[str] = None,
         # GPU and MPI arguments
         mpi: bool = False,
         mpi_buf_size: int = 0,
@@ -275,8 +282,6 @@ class LightningGPU(LightningBase):
         if mpi:
             if wires is None:
                 raise DeviceError("Lightning-GPU-MPI does not support dynamic wires allocation.")
-            if self.mcm_method is not None:
-                raise DeviceError("Lightning-GPU-MPI does not support Mid-Circuit Measurements.")
             self._mpi_handler = MPIHandler(mpi, mpi_buf_size, len(self.wires), c_dtype)
             self._statevector = self.LightningStateVector(
                 num_wires=len(self.wires),
@@ -288,8 +293,6 @@ class LightningGPU(LightningBase):
             self._statevector = None
             self._mpi_handler = None
             self._sv_init_kwargs = {"mpi_handler": None, "use_async": use_async}
-
-            self.mcm_method = mcm_method
 
     @property
     def name(self):
@@ -361,6 +364,21 @@ class LightningGPU(LightningBase):
             if mcm_method is None:
                 mcm_updated_values["mcm_method"] = "deferred"
             updated_values["mcm_config"] = replace(mcm_config, **mcm_updated_values)
+            
+        else:
+            mcm_config = config.mcm_config
+            mcm_updated_values = {}
+
+            if (mcm_method := mcm_config.mcm_method) not in (
+                "deferred",
+                "tree-traversal",
+                "one-shot",
+                None,
+            ):
+                raise DeviceError(
+                    f"Unsupported mid-circuit measurement method '{mcm_method}' for device lightning.gpu."
+                )
+
 
         return replace(config, **updated_values, device_options=new_device_options)
 
@@ -438,6 +456,7 @@ class LightningGPU(LightningBase):
                     self.dynamic_wires_from_circuit(circuit),
                     self._statevector,
                     postselect_mode=execution_config.mcm_config.postselect_mode,
+                    mcm_method=execution_config.mcm_config.mcm_method,
                 )
             )
 
@@ -473,6 +492,7 @@ class LightningGPU(LightningBase):
         circuit: QuantumScript,
         state: LightningGPUStateVector,
         postselect_mode: Optional[str] = None,
+        mcm_method: Optional[str] = None,
     ) -> Result:
         """Simulate a single quantum script.
 
@@ -496,6 +516,7 @@ class LightningGPU(LightningBase):
             circuit,
             state,
             postselect_mode=postselect_mode,
+            mcm_method=mcm_method,
         )
 
     @staticmethod

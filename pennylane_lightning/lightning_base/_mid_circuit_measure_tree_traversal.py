@@ -122,6 +122,7 @@ def mcm_tree_traversal(
         results = []
         for s in circuit.shots:
             aux_circuit = circuit.copy(shots=s)
+            lightning_state.reset_state()
             results.append(
                 mcm_tree_traversal(
                     aux_circuit, lightning_state, lightning_measurement, postselect_mode
