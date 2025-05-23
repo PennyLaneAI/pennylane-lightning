@@ -105,6 +105,7 @@ def mcm_tree_traversal(
     """
 
     print_results = False
+    print("Tree traversal Run")
 
     if print_results:
         # print type for circuit state and postselect_mode
@@ -172,7 +173,7 @@ def mcm_tree_traversal(
     mid_measurements = dict(zip(mcms[1:], mcm_current[1:].tolist()))
     # Split circuit into segments
     circuits = split_circuit_at_mcms(circuit)
-    circuits[0] = prepend_state_prep(circuits[0], lightning_state.state, circuit.wires)
+    circuits[0] = prepend_state_prep(circuits[0], lightning_state.state, lightning_state.wires)
     terminal_measurements = circuits[-1].measurements if finite_shots else circuit.measurements
     # Initialize stacks
     cumcounts = [0] * (n_mcms + 1)
@@ -297,7 +298,7 @@ def mcm_tree_traversal(
             # print("initial_state", initial_state)
 
             circtmp = circuits[depth].copy(shots=qml.measurements.shots.Shots(shots))
-            circtmp = prepend_state_prep(circtmp, initial_state, circuit.wires)
+            circtmp = prepend_state_prep(circtmp, initial_state, lightning_state.wires)
 
             lightning_state = lightning_state.get_final_state(
                 circtmp,

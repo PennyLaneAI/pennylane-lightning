@@ -33,8 +33,20 @@ def get_device(wires, **kwargs):
     kwargs.setdefault("shots", None)
     return qml.device(device_name, wires=wires, **kwargs)
 
+@pytest.fixture(
+    scope="function",
+    params=[
+        None,
+        "deferred",
+        "one-shot",
+        "tree-traversal",
+    ],
+)
+def mcm_method(request):
+    """Fixture to set the MCM method for the tests."""
+    return request.param
 
-def test_all_invalid_shots_circuit():
+def test_all_invalid_shots_circuit(mcm_method):
     """Test all invalid cases: expval, probs, var measurements."""
 
     dev = qml.device(device_name, wires=2)
@@ -50,7 +62,7 @@ def test_all_invalid_shots_circuit():
         )
 
     res1 = qml.QNode(circuit_op, dq)()
-    res2 = qml.QNode(circuit_op, dev)(shots=10)
+    res2 = qml.QNode(circuit_op, dev, mcm_method=mcm_method)(shots=10)
     for r1, r2 in zip(res1, res2):
         if isinstance(r1, Sequence):
             assert len(r1) == len(r2)
@@ -63,7 +75,7 @@ def test_all_invalid_shots_circuit():
         return qml.expval(op=m), qml.probs(op=m), qml.var(op=m)
 
     res1 = qml.QNode(circuit_mcm, dq)()
-    res2 = qml.QNode(circuit_mcm, dev)(shots=10)
+    res2 = qml.QNode(circuit_mcm, dev, mcm_method=mcm_method)(shots=10)
     for r1, r2 in zip(res1, res2):
         if isinstance(r1, Sequence):
             assert len(r1) == len(r2)
@@ -71,52 +83,73 @@ def test_all_invalid_shots_circuit():
         assert np.all(np.isnan(r2))
 
 
-def test_unsupported_measurement():
-    """Test unsupported ``qml.classical_shadow`` measurement on ``lightning.qubit`` or ``lightning.kokkos`` ."""
+class TestUnsupported:
 
-    dev = qml.device(device_name, wires=2, shots=1000)
-    params = np.pi / 4 * np.ones(2)
 
-    @qml.qnode(dev)
-    def func(x, y):
-        qml.RX(x, wires=0)
-        m0 = qml.measure(0)
-        qml.cond(m0, qml.RY)(y, wires=1)
-        return qml.classical_shadow(wires=0)
+    def generate_circuit(self, shots, wires, measurement, obs, mcm_method):
+        """Generate a circuit with a mid-circuit measurement."""
+        dev = qml.device(device_name, wires=wires, shots=shots)
 
-    if device_name == "lightning.qubit":
+        @qml.qnode(dev, mcm_method=mcm_method)
+        def func(y):
+            qml.RX(y, wires=0)
+            m0 = qml.measure(0)
+            qml.cond(m0, qml.RY)(y, wires=1)
+            return measurement(obs)
+
+        return func
+
+    def test_unsupported_measurement(self, mcm_method):
+        """Test unsupported ``qml.classical_shadow`` measurement on ``lightning.qubit`` or ``lightning.kokkos`` ."""
+        
+
+        circuit = self.generate_circuit(shots=10, 
+                                        wires=2, 
+                                        measurement=qml.classical_shadow,
+                                        obs=[0],
+                                        mcm_method=mcm_method)
+
+        if device_name == "lightning.qubit":
+            with pytest.raises(
+                DeviceError,
+                match=f"not accepted with finite shots on lightning.qubit",
+            ):
+                circuit(1.33)
+        if device_name in ("lightning.kokkos", "lightning.gpu"):
+            with pytest.raises(
+                DeviceError,
+                match=r"Measurement shadow\(wires=\[0\]\) not accepted with finite shots on "
+                + device_name,
+            ):
+                circuit(1.33)
+                
+    def test_unsupported_configuration_deferred(self):
+        """Test unsupported configuration for wires=1, shots=None"""
+        
+        circuit = self.generate_circuit(shots=None, wires=1, 
+                                        measurement=qml.expval,
+                                        obs=qml.PauliZ(0),
+                                        mcm_method="deferred")
+
         with pytest.raises(
-            DeviceError,
-            match=f"not accepted with finite shots on lightning.qubit",
+            qml.wires.WireError,
+            match=f"on {device_name} as they contain wires not found on the device: {{1}}",
         ):
-            func(*params)
-    if device_name in ("lightning.kokkos", "lightning.gpu"):
+            circuit(1.33)
+            
+    def test_unsupported_configuration_one_shot(self):
+        """Test unsupported configuration for wires=1, shots=None"""
+        
+        circuit = self.generate_circuit(shots=None, wires=1, 
+                                        measurement=qml.expval,
+                                        obs=qml.PauliZ(0),
+                                        mcm_method="one-shot")
+
         with pytest.raises(
-            DeviceError,
-            match=r"Measurement shadow\(wires=\[0\]\) not accepted with finite shots on "
-            + device_name,
+            ValueError,
+            match="Cannot use the 'one-shot' method for mid-circuit measurements with analytic mode."
         ):
-            func(*params)
-
-
-def test_unsupported_configuration():
-    """Test unsupported configuration for wires=1, shots=None"""
-
-    dev = qml.device(device_name, wires=1, shots=None)
-
-    @qml.qnode(dev)
-    def circuit():
-        qml.Hadamard(0)
-        m = qml.measure(0)
-        qml.cond(m, qml.Hadamard)(0)
-        return qml.expval(qml.X(0))
-
-    with pytest.raises(
-        qml.wires.WireError,
-        match=r"Cannot run circuit\(s\) "
-        + f"on {device_name} as they contain wires not found on the device: {{1}}",
-    ):
-        circuit()
+            circuit(1.33)
 
 
 @pytest.mark.parametrize("mcm_method", ["deferred", "one-shot"])
@@ -206,7 +239,7 @@ def test_simple_dynamic_circuit(shots, measure_f, postselect, meas_obj):
 
         * qml.counts with obs (comp basis or not), single wire, multiple wires (ordered/unordered), MCM, f(MCM), MCM list
         * qml.expval with obs (comp basis or not), MCM, f(MCM), MCM list
-        * qml.probs with obs (comp basis or not), single wire, multiple wires (ordered/unordered), MCM, f(MCM), MCM list
+        * qml.probs  with obs (comp basis or not), single wire, multiple wires (ordered/unordered), MCM, f(MCM), MCM list
         * qml.sample with obs (comp basis or not), single wire, multiple wires (ordered/unordered), MCM, f(MCM), MCM list
         * qml.var with obs (comp basis or not), MCM, f(MCM), MCM list
 

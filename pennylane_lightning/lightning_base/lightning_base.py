@@ -191,6 +191,7 @@ class LightningBase(Device):
         *,
         postselect_mode: str = None,
         mcmc: dict = None,
+        mcm_method: str = None,
     ) -> Result:
         """Simulate a single quantum script.
 
@@ -212,30 +213,72 @@ class LightningBase(Device):
         if mcmc is None:
             mcmc = {}
 
-        # Simulate a single quantum script using the tree traversal MCMC method.
-        if self.mcm_method == "tree-traversal":
-            return mcm_tree_traversal(circuit, state, self.LightningMeasurements, postselect_mode)
 
-        if circuit.shots and (any(isinstance(op, MidMeasureMP) for op in circuit.operations)):
-            results = []
-            aux_circ = qml.tape.QuantumScript(
-                circuit.operations,
-                circuit.measurements,
-                shots=[1],
-                trainable_params=circuit.trainable_params,
-            )
-            for _ in range(circuit.shots.total_shots):
-                state.reset_state()
-                mid_measurements = {}
-                final_state = state.get_final_state(
-                    aux_circ, mid_measurements=mid_measurements, postselect_mode=postselect_mode
+# -------------------------------------------
+        # Simulate with Mid Circuit Measurement
+        print(f"LightningBase simulate. MCM method: {mcm_method}")
+        if any(isinstance(op, MidMeasureMP) for op in circuit.operations):
+
+            # Mid-circuit measurement with deferred method replace MidMeasureMP with additional qubits. 
+
+            # if mcm_method == "tree-traversal" or self.mcm_method == "tree-traversal":
+            if mcm_method == "tree-traversal":
+                # Simulate a single quantum script using the tree traversal MCMC method.
+                print("Running tree traversal MCMC method")
+                return mcm_tree_traversal(circuit, state, self.LightningMeasurements, postselect_mode)
+            
+            if mcm_method == "one-shot" or mcm_method is None and circuit.shots:
+                # One-shot MCMC method
+                print("Running one-shot MCMC method")
+                
+                results = []
+                aux_circ = qml.tape.QuantumScript(
+                    circuit.operations,
+                    circuit.measurements,
+                    shots=[1],
+                    trainable_params=circuit.trainable_params,
                 )
-                results.append(
-                    self.LightningMeasurements(final_state, **mcmc).measure_final_state(
-                        aux_circ, mid_measurements=mid_measurements
+                for _ in range(circuit.shots.total_shots):
+                    state.reset_state()
+                    mid_measurements = {}
+                    final_state = state.get_final_state(
+                        aux_circ, mid_measurements=mid_measurements, postselect_mode=postselect_mode
                     )
-                )
-            return tuple(results)
+                    results.append(
+                        self.LightningMeasurements(final_state, **mcmc).measure_final_state(
+                            aux_circ, mid_measurements=mid_measurements
+                        )
+                    )
+                return tuple(results)
+#---------------------------------------------------------------------------
+
+
+        # # Simulate a single quantum script using the tree traversal MCMC method.
+        # if self.mcm_method == "tree-traversal":
+        #     return mcm_tree_traversal(circuit, state, self.LightningMeasurements, postselect_mode)
+
+        # if circuit.shots and (any(isinstance(op, MidMeasureMP) for op in circuit.operations)):
+            
+        #     print("Running one-shot MCMC method")
+        #     results = []
+        #     aux_circ = qml.tape.QuantumScript(
+        #         circuit.operations,
+        #         circuit.measurements,
+        #         shots=[1],
+        #         trainable_params=circuit.trainable_params,
+        #     )
+        #     for _ in range(circuit.shots.total_shots):
+        #         state.reset_state()
+        #         mid_measurements = {}
+        #         final_state = state.get_final_state(
+        #             aux_circ, mid_measurements=mid_measurements, postselect_mode=postselect_mode
+        #         )
+        #         results.append(
+        #             self.LightningMeasurements(final_state, **mcmc).measure_final_state(
+        #                 aux_circ, mid_measurements=mid_measurements
+        #             )
+        #         )
+        #     return tuple(results)
 
         final_state = state.get_final_state(circuit)
         return self.LightningMeasurements(final_state, **mcmc).measure_final_state(circuit)
