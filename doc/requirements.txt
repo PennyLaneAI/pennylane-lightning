@@ -1,10 +1,20 @@
-tomlkit
+# Build Dependencies
 build
+wheel
+pybind11
+tomlkit
+custatevec-cu12; sys_platform == "linux"
+cutensornet-cu12; sys_platform == "linux"
+git+https://github.com/PennyLaneAI/pennylane.git@master
+
+# Testing Dependencies
+matplotlib
+
+# Documentation / Formatting / Linting Dependencies
 breathe
 docutils==0.16
 exhale>=0.3.3
 graphviz
-pybind11
 sphinx
 sphinx-automodapi
 sphinxcontrib-applehelp==1.0.4
@@ -13,9 +23,4 @@ sphinxcontrib-qthelp==1.0.3
 sphinxcontrib-htmlhelp==2.0.1
 sphinxcontrib-serializinghtml==1.1.5
 pennylane-sphinx-theme
-custatevec-cu12
-cutensornet-cu12
-wheel
 sphinxext-opengraph
-matplotlib
-git+https://github.com/PennyLaneAI/pennylane.git@master

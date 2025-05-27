@@ -1,5 +1,5 @@
 [build-system]
-requires = ["cmake~=3.27.0", "ninja; platform_system!='Windows'", "setuptools>=42", "tomli"]
+requires = ["cmake", "ninja; platform_system!='Windows'", "setuptools>=42", "tomli"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -26,7 +26,7 @@ classifiers = [
     "Programming Language :: Python :: 3.13", 
     "Topic :: Scientific/Engineering :: Physics",
 ]
-dependencies = ["pennylane>=0.41", "scipy-openblas32>=0.3.26"]
+dependencies = ["pennylane>=0.41", "scipy-openblas32"]
 dynamic = [ "version",]
 [[project.maintainers]]
 name = "Xanadu Quantum Technologies Inc."

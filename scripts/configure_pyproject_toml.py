@@ -89,7 +89,7 @@ if __name__ == "__main__":
     # Configure Build.
     # ------------------------
     requires = [
-        "cmake~=3.27.0",
+        "cmake",
         "ninja; platform_system!='Windows'",
         "setuptools>=42",
         "tomli",
@@ -119,7 +119,7 @@ if __name__ == "__main__":
 
     dependencies = [
         "pennylane>=0.41",
-        "scipy-openblas32>=0.3.26",
+        "scipy-openblas32",
     ]
 
     if backend == "lightning_gpu":
