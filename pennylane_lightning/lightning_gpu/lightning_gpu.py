@@ -91,15 +91,12 @@ def stopping_condition(op: Operator) -> bool:
     """A function that determines whether or not an operation is supported by ``lightning.gpu``."""
     if op.name in ("C(SProd)", "C(Exp)"):
         return True
-    # return _supports_operation(op.name)
-    return (
-        (isinstance(op, Conditional) and stopping_condition(op.base))
-        or isinstance(op, MidMeasureMP)
-        or op.has_matrix
-        or op.has_sparse_matrix
-        or _supports_operation(op.name)
-    )
 
+    if  (isinstance(op, Conditional) and stopping_condition(op.base)) or isinstance(op, MidMeasureMP):
+        # Conditional and MidMeasureMP should not be decomposed
+        return True
+    
+    return _supports_operation(op.name)
 
 
 def stopping_condition_shots(op: Operator) -> bool:
@@ -364,10 +361,9 @@ class LightningGPU(LightningBase):
             if mcm_method is None:
                 mcm_updated_values["mcm_method"] = "deferred"
             updated_values["mcm_config"] = replace(mcm_config, **mcm_updated_values)
-            
+
         else:
             mcm_config = config.mcm_config
-            mcm_updated_values = {}
 
             if (mcm_method := mcm_config.mcm_method) not in (
                 "deferred",
@@ -378,7 +374,6 @@ class LightningGPU(LightningBase):
                 raise DeviceError(
                     f"Unsupported mid-circuit measurement method '{mcm_method}' for device lightning.gpu."
                 )
-
 
         return replace(config, **updated_values, device_options=new_device_options)
 

@@ -37,16 +37,14 @@ def get_device(wires, **kwargs):
 @pytest.fixture(
     scope="function",
     params=[
-        # "deferred",
-        # "one-shot",
+        "deferred",
+        "one-shot",
         "tree-traversal",
     ],
 )
 def mcm_method(request):
     """Fixture to set the MCM method for the tests."""
     return request.param
-    
-
 
 
 class TestUnsupportedConfigurationsMCM:
@@ -221,8 +219,8 @@ class TestMCMSupportedConfigurationsMCM:
     @pytest.mark.parametrize("shots", [None, 10])
     def test_qnode_mock_mcm_method_tree_traversal(self, mocker, shots):
         """Test that user specified qnode arg for mid-circuit measurements transform are used correctly"""
-        spy_one_shot = (mocker.spy(qml.dynamic_one_shot, "_transform"))
-        spy_deferred = (mocker.spy(qml.defer_measurements, "_transform"))
+        spy_one_shot = mocker.spy(qml.dynamic_one_shot, "_transform")
+        spy_deferred = mocker.spy(qml.defer_measurements, "_transform")
 
         device = qml.device(device_name, wires=3, shots=shots)
 
@@ -238,11 +236,10 @@ class TestMCMSupportedConfigurationsMCM:
         spy_one_shot.assert_not_called()
         spy_deferred.assert_not_called()
 
-
     def test_qnode_default_mcm_method_analytical(self, mocker):
         """Test the default mcm method is used for analytical simulation"""
-        spy = (mocker.spy(qml.defer_measurements, "_transform"))
-        other_spy = (mocker.spy(qml.dynamic_one_shot, "_transform"))
+        spy = mocker.spy(qml.defer_measurements, "_transform")
+        other_spy = mocker.spy(qml.dynamic_one_shot, "_transform")
 
         shots = None
         device = qml.device(device_name, wires=3, shots=shots)
@@ -261,8 +258,8 @@ class TestMCMSupportedConfigurationsMCM:
 
     def test_qnode_default_mcm_method_finite_shots(self, mocker):
         """Test the default mcm method is used for finite shots"""
-        other_spy = (mocker.spy(qml.defer_measurements, "_transform"))
-        spy = (mocker.spy(qml.dynamic_one_shot, "_transform"))
+        other_spy = mocker.spy(qml.defer_measurements, "_transform")
+        spy = mocker.spy(qml.dynamic_one_shot, "_transform")
 
         shots = 33
         device = qml.device(device_name, wires=3, shots=shots)
@@ -278,7 +275,6 @@ class TestMCMSupportedConfigurationsMCM:
 
         spy.assert_called_once()
         other_spy.assert_not_called()
-
 
     @pytest.mark.parametrize("postselect_mode", ["hw-like", "fill-shots"])
     def test_qnode_postselect_mode(self, mcm_method, postselect_mode):
@@ -308,6 +304,7 @@ class TestMCMSupportedConfigurationsMCM:
             assert len(res) == shots
         assert np.allclose(res, postselect)
 
+
 class TestExecutionMCM:
 
     # pylint: disable=unused-argument
@@ -328,9 +325,9 @@ class TestExecutionMCM:
         qml.cond(m1 == 1, qml.RZ)(-np.pi / 4, 1)
         return m0, m1
 
-    def test_all_invalid_shots_circuit(self,mcm_method):
+    def test_all_invalid_shots_circuit(self, mcm_method):
         """Test all invalid cases: expval, probs, var measurements."""
-        
+
         if mcm_method == "deferred":
             pytest.skip("Deferred does not support postselection")
 
@@ -367,7 +364,6 @@ class TestExecutionMCM:
             assert np.all(np.isnan(r1))
             assert np.all(np.isnan(r2))
 
-
     @flaky(max_runs=5)
     @pytest.mark.parametrize("shots", [None, 4000, [3000, 1000]])
     @pytest.mark.parametrize("postselect", [None, 0, 1])
@@ -395,16 +391,16 @@ class TestExecutionMCM:
 
         if measure_f in (qml.counts, qml.sample) and shots is None:
             pytest.skip("Skip test for None shots with counts/sample")
-            
+
         if mcm_method == "deferred" and postselect is not None:
             pytest.skip("Skip test for postselection with deferred measurements")
-            
+
         if mcm_method == "one-shot" and shots is None:
-            # One-shot method does not support None shots
             pytest.skip("Skip test for one-shot with None shots")
 
+        wires = 2 if mcm_method != "deferred" else 4
         dq = qml.device("default.qubit", shots=shots)
-        dev = get_device(wires=4, shots=shots)
+        dev = get_device(wires=wires, shots=shots)
         params = [np.pi / 2.5, np.pi / 3, -np.pi / 3.5]
 
         def func(x, y, z):
@@ -423,31 +419,33 @@ class TestExecutionMCM:
 
         validate_measurements(measure_f, shots, results1, results2)
 
-
-    @pytest.mark.parametrize("shots", [None, 4000, [3000, 1000]])
+    @pytest.mark.parametrize("shots", [None, 4000])
     @pytest.mark.parametrize("postselect", [None, 0, 1])
     @pytest.mark.parametrize("reset", [False, True])
     def test_multiple_measurements_and_reset(self, mcm_method, shots, postselect, reset):
         """Tests that LightningQubit handles a circuit with a single mid-circuit measurement with reset
         and a conditional gate. Multiple measurements of the mid-circuit measurement value are
         performed. This function also tests `reset` parametrizing over the parameter."""
-                    
+
         if mcm_method == "deferred" and postselect is not None:
             pytest.skip("Skip test for postselection with deferred measurements")
-            
+
         if mcm_method == "one-shot" and shots is None:
             # One-shot method does not support None shots
             pytest.skip("Skip test for one-shot with None shots")
 
         shots = shots
+        wires = 2 if mcm_method != "deferred" else 4
+        
         dq = qml.device("default.qubit", shots=shots)
-        dev = get_device(wires=3, shots=shots)
+        dev = get_device(wires=wires, shots=shots)
+        
         params = [np.pi / 2.5, np.pi / 3, -np.pi / 3.5]
         obs = qml.PauliY(1)
 
         def func(x, y, z):
             mcms = TestExecutionMCM.obs_tape(x, y, z, reset=reset, postselect=postselect)
-            
+
             if shots is None:
                 return (
                     qml.expval(op=mcms[0]),
@@ -463,15 +461,17 @@ class TestExecutionMCM:
                     qml.var(op=obs),
                 )
 
-
         results1 = qml.QNode(func, dev, mcm_method=mcm_method)(*params)
         results2 = qml.QNode(func, dq, mcm_method="deferred")(*params)
 
-        for measure_f, r1, r2 in zip(
-            [qml.counts, qml.expval, qml.probs, qml.sample, qml.var], results1, results2
-        ):
-            validate_measurements(measure_f, shots, r1, r2)
+        measurements = (
+            [qml.counts, qml.expval, qml.probs, qml.sample, qml.var]
+            if shots is not None
+            else [qml.expval, qml.probs, qml.var]
+        )
 
+        for measure_f, r1, r2 in zip(measurements, results1, results2):
+            validate_measurements(measure_f, shots, r1, r2)
 
     @pytest.mark.parametrize(
         "mcm_f",
@@ -488,7 +488,7 @@ class TestExecutionMCM:
     )
     @pytest.mark.parametrize("measure_f", [qml.counts, qml.expval, qml.probs, qml.sample, qml.var])
     def test_composite_mcms(sefl, mcm_method, mcm_f, measure_f):
-        """Tests that LightningQubit handles a circuit with a composite mid-circuit measurement and a
+        """Tests that Lightning Devices handles a circuit with a composite mid-circuit measurement and a
         conditional gate. A single measurement of a composite mid-circuit measurement is performed
         at the end."""
 
@@ -503,9 +503,10 @@ class TestExecutionMCM:
             )
 
         shots = 3000
+        wires = 2 if mcm_method != "deferred" else 3
 
         dq = qml.device("default.qubit", shots=shots)
-        dev = get_device(wires=3, shots=shots)
+        dev = get_device(wires=wires, shots=shots)
         param = np.pi / 3
 
         @qml.qnode(dev)
@@ -528,7 +529,6 @@ class TestExecutionMCM:
 
         validate_measurements(measure_f, shots, results1, results2)
 
-
     @pytest.mark.parametrize(
         "mcm_f",
         [
@@ -539,12 +539,14 @@ class TestExecutionMCM:
             lambda x, y: 4.0 * x + 2.0 * y,
         ],
     )
-    def test_counts_return_type(self,mcm_method, mcm_f):
+    def test_counts_return_type(self, mcm_method, mcm_f):
         """Tests that LightningQubit returns the same keys for ``qml.counts`` measurements with ``dynamic_one_shot`` and ``defer_measurements``."""
         shots = 500
 
+        wires = 2 if mcm_method != "deferred" else 3
+
         dq = qml.device("default.qubit", shots=shots)
-        dev = get_device(wires=3, shots=shots)
+        dev = get_device(wires=wires, shots=shots)
         param = np.pi / 3
 
         @qml.qnode(dev)

@@ -104,15 +104,6 @@ def mcm_tree_traversal(
         tuple(TensorLike): The results of the simulation
     """
 
-    print_results = False
-    print("Tree traversal Run")
-
-    if print_results:
-        # print type for circuit state and postselect_mode
-        print("Type of circuit", type(circuit))
-        print("Type of state", type(lightning_state))
-        print("Type of postselect_mode", type(postselect_mode))
-
     PROBS_TOL = 0.0
 
     ##########################
@@ -184,39 +175,12 @@ def mcm_tree_traversal(
     # zero-branch and one-branch measurements are available.
     depth = 0
 
-    if print_results:
-        print("*" * 100)
-        print("Prepare the tree")
-        print("mcms", mcms)
-        print("n_mcms", n_mcms)
-        print("circuits", len(circuits))
-        print("stack", stack)
-        # print("mcm_samples", mcm_samples)
-        # print("terminal_measurements", terminal_measurements)
-        tmp_state = lightning_state.state
-        print("tmp_state\n", tmp_state)
-        print("*" * 100)
-
     visited = 0
     while stack.any_is_empty(1):
 
         ###########################################
         # Combine measurements & step up the tree #
         ###########################################
-
-        if print_results:
-            tmp_state = lightning_state.state
-            print("-" * 100)
-            print("visited", visited)
-            print("tmp_state\n", tmp_state)
-
-            print("depth", depth)
-            print("mcms", mcms)
-            print("mcm_current", mcm_current)
-            # print("mid_measurements", mid_measurements)
-            # print("stack.results_0", stack.results_0)
-            # print("stack.results_1", stack.results_1)
-            # print("stack.probs", stack.probs)
 
         visited += 1
 
@@ -241,8 +205,6 @@ def mcm_tree_traversal(
             mid_measurements.update(
                 (k, v) for k, v in zip(mcms[depth:], mcm_current[depth:].tolist())
             )
-            if print_results:
-                print("STEP: stack.is_full")
             continue
 
         ################################################
@@ -268,8 +230,6 @@ def mcm_tree_traversal(
             and mcms[depth].postselect is not None
             and mcm_current[depth] != mcms[depth].postselect
         )
-        if print_results:
-            print("STEP: Determine whether to execute the active edge #")
 
         ###########################################
         # Obtain measurements for the active edge #
@@ -296,8 +256,6 @@ def mcm_tree_traversal(
                     lightning_state, stack.states[depth], mcm_current[depth], mcms[depth]
                 )
 
-            # print("initial_state", initial_state)
-
             circtmp = circuits[depth].copy(shots=qml.measurements.shots.Shots(shots))
             circtmp = prepend_state_prep(circtmp, initial_state, lightning_state.wires)
 
@@ -308,9 +266,6 @@ def mcm_tree_traversal(
             )
 
             measurements = lightning_measurement(lightning_state).measure_final_state(circtmp)
-
-        if print_results:
-            print("STEP: Obtain measurements for the active edge #")
 
         #####################################
         # Update stack & step down the tree #
@@ -337,8 +292,6 @@ def mcm_tree_traversal(
             # Store a copy of the state-vector to project on the one-branch
             stack.states[depth] = lightning_state.state
             mcm_samples, cumcounts = update_mcm_samples(samples, mcm_samples, depth, cumcounts)
-            if print_results:
-                print("STEP: Update stack & step down the tree #")
             continue
 
         ################################################
@@ -353,15 +306,9 @@ def mcm_tree_traversal(
             stack.results_0[depth] = measurements
             mcm_current[depth] = True
             mid_measurements[mcms[depth]] = True
-            if print_results:
-                print("Update for results_0")
             continue
         # If at a one-branch leaf, update measurements
         stack.results_1[depth] = measurements
-        if print_results:
-            print("Update for results_1")
-
-            print("STEP: Update terminal measurements & step sideways #")
 
     ##################################################
     # Finalize terminal measurements post-processing #
@@ -492,10 +439,6 @@ def prepend_state_prep(
     if len(circuit) > 0 and isinstance(circuit[0], qml.operation.StatePrepBase):
         return circuit
 
-    # state = create_initial_state(wires, None, like=interface.get_like()) if state is None else state
-    # state_numpy = state
-    # print("Type of state_numpy", type(state_numpy))
-    # print("State_numpy", state_numpy)
     new_ops = [qml.StatePrep(state, wires=wires, validate_norm=False)] + circuit.operations
     return circuit.copy(operations=new_ops)
 

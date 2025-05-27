@@ -213,27 +213,19 @@ class LightningBase(Device):
         if mcmc is None:
             mcmc = {}
 
-        # -------------------------------------------
-        # Simulate with Mid Circuit Measurement
-        print(
-            f"LightningBase simulate. MCM method: {mcm_method}, postselect_mode: {postselect_mode}"
-        )
+        # Simulate with Mid Circuit Measurements
         if any(isinstance(op, MidMeasureMP) for op in circuit.operations):
 
             # Mid-circuit measurement with deferred method replace MidMeasureMP with additional qubits.
 
-            # if mcm_method == "tree-traversal" or self.mcm_method == "tree-traversal":
             if mcm_method == "tree-traversal":
-                # Simulate a single quantum script using the tree traversal MCMC method.
-                print("Running tree traversal MCMC method")
+                # Using the tree traversal MCM method.
                 return mcm_tree_traversal(
                     circuit, state, self.LightningMeasurements, postselect_mode
                 )
 
             if mcm_method == "one-shot" or mcm_method is None and circuit.shots:
-                # One-shot MCMC method
-                print("Running one-shot MCMC method")
-
+                # Using the one-shot MCM method.
                 results = []
                 aux_circ = qml.tape.QuantumScript(
                     circuit.operations,
@@ -253,8 +245,6 @@ class LightningBase(Device):
                         )
                     )
                 return tuple(results)
-        # ---------------------------------------------------------------------------
-
 
         final_state = state.get_final_state(circuit)
         return self.LightningMeasurements(final_state, **mcmc).measure_final_state(circuit)
