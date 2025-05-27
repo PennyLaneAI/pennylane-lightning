@@ -14,7 +14,6 @@
 
 """
 This module implements a tree traversal algorithm for simulating quantum circuits with mid-circuit measurements (MCMs) using PennyLane's Lightning backend. The core functionality enables the simulation of dynamic quantum circuits, including support for post-selection, shot vectors, and various measurement types (expectation, probability, sample, counts, and variance).
-Key Classes and Functions:
 
 """
 
@@ -91,17 +90,12 @@ def mcm_tree_traversal(
 
     Args:
         circuit (QuantumTape): The single circuit to simulate
-        rng (Union[None, int, array_like[int], SeedSequence, BitGenerator, Generator]): A
-            seed-like parameter matching that of ``seed`` for ``numpy.random.default_rng``.
-            If no value is provided, a default RNG will be used.
-        prng_key (Optional[jax.random.PRNGKey]): An optional ``jax.random.PRNGKey``. This is
-            the key to the JAX pseudo random number generator. If None, a random key will be
-            generated. Only for simulation using JAX.
-        debugger (_Debugger): The debugger to use
-        interface (str): The machine learning interface to create the initial state with
+        lightning_state (LightningBaseStateVector): The state vector class used to handle the state
+        lightning_measurement (LightningBaseMeasurements): The measurement class used to perform measurements
+        postselect_mode (str): Configuration for shots with mid-circuit measurement
 
     Returns:
-        tuple(TensorLike): The results of the simulation
+        Result: The result of the simulation, which can be a scalar or a tuple of scalars.
     """
 
     PROBS_TOL = 0.0
@@ -576,12 +570,13 @@ def branch_state(
     """Collapse the state on a given branch.
 
     Args:
-        state (TensorLike): The initial state
+        lightning_state (LightningBaseStateVector): The state vector class used to handle the state
+        state (np.ndarray): The state vector to collapse
         branch (int): The branch on which the state is collapsed
         mcm (MidMeasureMP): Mid-circuit measurement object used to obtain the wires and ``reset``
 
     Returns:
-        TensorLike: The collapsed state
+        np.ndarray: The collapsed state vector
     """
     # Set the state to the initial state
     lightning_state._apply_state_vector(state, lightning_state.wires)
