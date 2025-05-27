@@ -216,7 +216,7 @@ class LightningBase(Device):
         # Simulate with Mid Circuit Measurements
         if any(isinstance(op, MidMeasureMP) for op in circuit.operations):
 
-            # Mid-circuit measurement with deferred method replace MidMeasureMP with additional qubits.
+            # Mid-circuit measurement with deferred method replace MidMeasureMP with additional qubits and control operations
 
             if mcm_method == "tree-traversal":
                 # Using the tree traversal MCM method.

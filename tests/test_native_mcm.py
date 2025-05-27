@@ -436,10 +436,10 @@ class TestExecutionMCM:
 
         shots = shots
         wires = 2 if mcm_method != "deferred" else 4
-        
+
         dq = qml.device("default.qubit", shots=shots)
         dev = get_device(wires=wires, shots=shots)
-        
+
         params = [np.pi / 2.5, np.pi / 3, -np.pi / 3.5]
         obs = qml.PauliY(1)
 

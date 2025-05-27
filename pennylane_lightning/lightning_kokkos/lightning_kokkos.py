@@ -81,12 +81,15 @@ def stopping_condition(op: Operator) -> bool:
         return reduce(lambda x, y: x + (y != "I"), word, 0) > 2
     if op.name in ("C(SProd)", "C(Exp)"):
         return True
-    
-    if  (isinstance(op, Conditional) and stopping_condition(op.base)) or isinstance(op, MidMeasureMP):
+
+    if (isinstance(op, Conditional) and stopping_condition(op.base)) or isinstance(
+        op, MidMeasureMP
+    ):
         # Conditional and MidMeasureMP should not be decomposed
         return True
 
     return _supports_operation(op.name)
+
 
 def stopping_condition_shots(op: Operator) -> bool:
     """A function that determines whether or not an operation is supported by ``lightning.kokkos``
