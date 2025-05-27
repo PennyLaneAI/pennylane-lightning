@@ -7,9 +7,6 @@ custatevec-cu12; sys_platform == "linux"
 cutensornet-cu12; sys_platform == "linux"
 git+https://github.com/PennyLaneAI/pennylane.git@master
 
-# Testing Dependencies
-matplotlib
-
 # Documentation / Formatting / Linting Dependencies
 breathe
 docutils==0.16
@@ -24,3 +21,4 @@ sphinxcontrib-htmlhelp==2.0.1
 sphinxcontrib-serializinghtml==1.1.5
 pennylane-sphinx-theme
 sphinxext-opengraph
+matplotlib
