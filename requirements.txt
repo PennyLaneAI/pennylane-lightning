@@ -1,7 +1,7 @@
 # Build Dependencies
 ninja
 pybind11>=2.12.0
-scipy-openblas32
+scipy-openblas32>=0.3.26
 
 # Testing Dependencies
 pytest>=7.1.2

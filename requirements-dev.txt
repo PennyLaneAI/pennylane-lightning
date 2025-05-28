@@ -3,7 +3,7 @@ build
 ninja
 pybind11>=2.12.0
 cmake
-scipy-openblas32
+scipy-openblas32>=0.3.26
 custatevec-cu12; sys_platform == "linux"
 cutensornet-cu12; sys_platform == "linux"
 git+https://github.com/PennyLaneAI/pennylane.git@master

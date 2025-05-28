@@ -26,7 +26,7 @@ classifiers = [
     "Programming Language :: Python :: 3.13", 
     "Topic :: Scientific/Engineering :: Physics",
 ]
-dependencies = ["pennylane>=0.41", "scipy-openblas32"]
+dependencies = ["pennylane>=0.41", "scipy-openblas32>=0.3.26"]
 dynamic = [ "version",]
 [[project.maintainers]]
 name = "Xanadu Quantum Technologies Inc."
