@@ -9,7 +9,7 @@ pytest-cov>=3.0.0
 pytest-mock>=3.7.0
 pytest-xdist>=2.5.0
 flaky>=3.7.0
-pennylane>=0.40
+pennylane>=0.41
 
 # Formatting / Linting Dependencies
 black>=21

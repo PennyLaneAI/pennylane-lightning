@@ -91,7 +91,7 @@ if __name__ == "__main__":
     requires = [
         "cmake",
         "ninja; platform_system!='Windows'",
-        "setuptools>=42",
+        "setuptools>=75.8.1",
         "tomli",
     ]
     if backend == "lightning_gpu":
