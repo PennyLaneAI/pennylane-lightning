@@ -15,8 +15,6 @@ r"""
 This module contains the LightningQubit class, a PennyLane simulator device that
 interfaces with C++ for fast linear algebra calculations.
 """
-import os
-import sys
 from dataclasses import replace
 from functools import reduce
 from pathlib import Path
@@ -41,11 +39,9 @@ from pennylane.exceptions import DeviceError
 from pennylane.measurements import MidMeasureMP
 from pennylane.operation import DecompositionUndefinedError, Operator
 from pennylane.ops import Conditional, PauliRot, Prod, SProd, Sum
-from pennylane.tape import QuantumScript
 from pennylane.transforms.core import TransformProgram
-from pennylane.typing import Result
 
-from pennylane_lightning.core.lightning_base import (
+from pennylane_lightning.lightning_base.lightning_base import (
     LightningBase,
     QuantumTape_or_Batch,
     Result_or_ResultBatch,
@@ -141,7 +137,8 @@ def _adjoint_ops(op: qml.operation.Operator) -> bool:
     """Specify whether or not an Operator is supported by adjoint differentiation."""
 
     return not isinstance(op, (Conditional, MidMeasureMP, PauliRot)) and (
-        not qml.operation.is_trainable(op) or (op.num_params == 1 and op.has_generator)
+        not any(qml.math.requires_grad(d) for d in op.data)
+        or (op.num_params == 1 and op.has_generator)
     )
 
 
@@ -469,97 +466,13 @@ class LightningQubit(LightningBase):
             return True
         return _supports_adjoint(circuit=circuit)
 
-    def simulate(
-        self,
-        circuit: QuantumScript,
-        state: LightningStateVector,
-        mcmc: dict = None,
-        postselect_mode: str = None,
-    ) -> Result:
-        """Simulate a single quantum script.
-
-        Args:
-            circuit (QuantumTape): The single circuit to simulate
-            state (LightningStateVector): handle to Lightning state vector
-            mcmc (dict): Dictionary containing the Markov Chain Monte Carlo
-                parameters: mcmc, kernel_name, num_burnin. Descriptions of
-                these fields are found in :class:`~.LightningQubit`.
-            postselect_mode (str): Configuration for handling shots with mid-circuit measurement
-                postselection. Use ``"hw-like"`` to discard invalid shots and ``"fill-shots"`` to
-                keep the same number of shots. Default is ``None``.
-
-        Returns:
-            Tuple[TensorLike]: The results of the simulation
-
-        Note that this function can return measurements for non-commuting observables simultaneously.
-        """
-        if mcmc is None:
-            mcmc = {}
-        if circuit.shots and (any(isinstance(op, MidMeasureMP) for op in circuit.operations)):
-            results = []
-            aux_circ = qml.tape.QuantumScript(
-                circuit.operations,
-                circuit.measurements,
-                shots=[1],
-                trainable_params=circuit.trainable_params,
-            )
-            for _ in range(circuit.shots.total_shots):
-                state.reset_state()
-                mid_measurements = {}
-                final_state = state.get_final_state(
-                    aux_circ, mid_measurements=mid_measurements, postselect_mode=postselect_mode
-                )
-                results.append(
-                    LightningMeasurements(final_state, **mcmc).measure_final_state(
-                        aux_circ, mid_measurements=mid_measurements
-                    )
-                )
-            return tuple(results)
-
-        final_state = state.get_final_state(circuit)
-        return self.LightningMeasurements(final_state, **mcmc).measure_final_state(circuit)
-
     @staticmethod
     def get_c_interface():
         """Returns a tuple consisting of the device name, and
         the location to the shared object with the C/C++ device implementation.
         """
 
-        # The shared object file extension varies depending on the underlying operating system
-        file_extension = ""
-        OS = sys.platform
-        if OS == "linux":
-            file_extension = ".so"
-        elif OS == "darwin":
-            file_extension = ".dylib"
-        else:
-            raise RuntimeError(
-                f"'LightningSimulator' shared library not available for '{OS}' platform"
-            )  # pragma: no cover
-
-        lib_name = "liblightning_qubit_catalyst" + file_extension
-        package_root = Path(__file__).parent
-
-        # The absolute path of the plugin shared object varies according to the installation mode.
-
-        # Wheel mode:
-        # Fixed location at the root of the project
-        wheel_mode_location = package_root.parent / lib_name
-        if wheel_mode_location.is_file():
-            return "LightningSimulator", wheel_mode_location.as_posix()
-
-        # Editable mode:
-        # The build directory contains a folder which varies according to the platform:
-        #   lib.<system>-<architecture>-<python-id>"
-        # To avoid mismatching the folder name, we search for the shared object instead.
-        # TODO: locate where the naming convention of the folder is decided and replicate it here.
-        editable_mode_path = package_root.parent.parent / "build_lightning_qubit"
-        for path, _, files in os.walk(editable_mode_path):
-            if lib_name in files:
-                lib_location = (Path(path) / lib_name).as_posix()
-                return "LightningSimulator", lib_location
-
-        raise RuntimeError("'LightningSimulator' shared library not found")  # pragma: no cover
+        return LightningBase.get_c_interface_impl("LightningSimulator", "lightning_qubit")
 
 
 _supports_operation = LightningQubit.capabilities.supports_operation

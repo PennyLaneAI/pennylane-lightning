@@ -18,8 +18,6 @@ interfaces with the NVIDIA cuQuantum cuStateVec simulator library for GPU-enable
 """
 from __future__ import annotations
 
-import os
-import sys
 from ctypes.util import find_library
 from dataclasses import replace
 from importlib import util as imp_util
@@ -49,7 +47,7 @@ from pennylane.tape import QuantumScript
 from pennylane.transforms.core import TransformProgram
 from pennylane.typing import Result
 
-from pennylane_lightning.core.lightning_base import (
+from pennylane_lightning.lightning_base.lightning_base import (
     LightningBase,
     QuantumTape_or_Batch,
     Result_or_ResultBatch,
@@ -145,7 +143,8 @@ def _adjoint_ops(op: qml.operation.Operator) -> bool:
     """Specify whether or not an Operator is supported by adjoint differentiation."""
 
     return not isinstance(op, (Conditional, MidMeasureMP, PauliRot)) and (
-        not qml.operation.is_trainable(op) or (op.num_params == 1 and op.has_generator)
+        not any(qml.math.requires_grad(d) for d in op.data)
+        or (op.num_params == 1 and op.has_generator)
     )
 
 
@@ -488,28 +487,11 @@ class LightningGPU(LightningBase):
             if self._mpi_handler and self._mpi_handler.use_mpi:
                 raise DeviceError("Lightning-GPU-MPI does not support Mid-circuit measurements.")
 
-            results = []
-            aux_circ = QuantumScript(
-                circuit.operations,
-                circuit.measurements,
-                shots=[1],
-                trainable_params=circuit.trainable_params,
-            )
-            for _ in range(circuit.shots.total_shots):
-                state.reset_state()
-                mid_measurements = {}
-                final_state = state.get_final_state(
-                    aux_circ, mid_measurements=mid_measurements, postselect_mode=postselect_mode
-                )
-                results.append(
-                    self.LightningMeasurements(final_state).measure_final_state(
-                        aux_circ, mid_measurements=mid_measurements
-                    )
-                )
-            return tuple(results)
-
-        final_state = state.get_final_state(circuit)
-        return self.LightningMeasurements(final_state).measure_final_state(circuit)
+        return super().simulate(
+            circuit,
+            state,
+            postselect_mode=postselect_mode,
+        )
 
     @staticmethod
     def get_c_interface():
@@ -517,39 +499,7 @@ class LightningGPU(LightningBase):
         the location to the shared object with the C/C++ device implementation.
         """
 
-        # The shared object file extension varies depending on the underlying operating system
-        file_extension = ""
-        OS = sys.platform
-        if OS == "linux":
-            file_extension = ".so"
-        else:
-            raise RuntimeError(
-                f"'LightningGPUSimulator' shared library not available for '{OS}' platform"
-            )  # pragma: no cover
-
-        lib_name = "liblightning_gpu_catalyst" + file_extension
-        package_root = Path(__file__).parent
-
-        # The absolute path of the plugin shared object varies according to the installation mode.
-
-        # Wheel mode:
-        # Fixed location at the root of the project
-        wheel_mode_location = package_root.parent / lib_name
-        if wheel_mode_location.is_file():
-            return "LightningGPUSimulator", wheel_mode_location.as_posix()
-
-        # Editable mode:
-        # The build directory contains a folder which varies according to the platform:
-        #   lib.<system>-<architecture>-<python-id>"
-        # To avoid mismatching the folder name, we search for the shared object instead.
-        # TODO: locate where the naming convention of the folder is decided and replicate it here.
-        editable_mode_path = package_root.parent.parent / "build_lightning_gpu"
-        for path, _, files in os.walk(editable_mode_path):
-            if lib_name in files:
-                lib_location = (Path(path) / lib_name).as_posix()
-                return "LightningGPUSimulator", lib_location
-
-        raise RuntimeError("'LightningGPUSimulator' shared library not found")  # pragma: no cover
+        return LightningBase.get_c_interface_impl("LightningGPUSimulator", "lightning_gpu")
 
 
 _supports_operation = LightningGPU.capabilities.supports_operation

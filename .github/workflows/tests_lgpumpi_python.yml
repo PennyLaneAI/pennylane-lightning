@@ -23,8 +23,8 @@ on:
       - .github/**
       - '!.github/workflows/tests_lgpumpi_python.yml'
       - pennylane_lightning/core/_version.py
-      - pennylane_lightning/core/src/simulators/lightning_kokkos/**
-      - pennylane_lightning/core/src/simulators/lightning_qubit/**
+      - pennylane_lightning/core/simulators/lightning_kokkos/**
+      - pennylane_lightning/core/simulators/lightning_qubit/**
       - pennylane_lightning/lightning_kokkos/**
       - pennylane_lightning/lightning_qubit/**
 env:
@@ -122,6 +122,12 @@ jobs:
           python scripts/configure_pyproject_toml.py || true
           python -m pip install . -vv
 
+      - name: Revert to older JAX version for stable
+        if: inputs.pennylane-version == 'stable'
+        run: |
+          # FIXME: remove after v0.42 release
+          python -m pip install "jax[cpu]==0.4.28"
+
       - name: Checkout PennyLane for release or latest build
         if: inputs.pennylane-version == 'release' || inputs.pennylane-version == 'latest'
         uses: actions/checkout@v4
@@ -200,6 +206,7 @@ jobs:
           fail_ci_if_error: true
           verbose: true
           token: ${{ secrets.CODECOV_TOKEN }}
+          flags: unit_tests
 
       - name: Cleanup
         if: always()

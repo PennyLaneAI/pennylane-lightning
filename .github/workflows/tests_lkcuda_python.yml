@@ -20,9 +20,9 @@ on:
       - .github/**
       - '!.github/workflows/tests_lkcuda_python.yml'
       - pennylane_lightning/core/_version.py
-      - pennylane_lightning/core/src/simulators/lightning_gpu/**
-      - pennylane_lightning/core/src/simulators/lightning_qubit/**
-      - pennylane_lightning/core/src/simulators/lightning_tensor/**
+      - pennylane_lightning/core/simulators/lightning_gpu/**
+      - pennylane_lightning/core/simulators/lightning_qubit/**
+      - pennylane_lightning/core/simulators/lightning_tensor/**
       - pennylane_lightning/lightning_gpu/**
       - pennylane_lightning/lightning_qubit/**
       - pennylane_lightning/lightning_tensor/**
@@ -33,7 +33,7 @@ on:
 env:
   GCC_VERSION: 11
   CI_CUDA_ARCH: 86
-  TF_VERSION: 2.16.2
+  TF_VERSION: 2.19.0
   KERAS_VERSION: 3.9.0
   TORCH_VERSION: 2.5.1
   COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:./coverage.xml --no-flaky-report -p no:warnings --tb=native"
@@ -212,7 +212,13 @@ jobs:
         run: |
           cd main
           python -m pip install -r requirements-tests.txt
-          python -m pip install "jax[cpu]==0.4.28; python_version<='3.12'" openfermionpyscf
+          python -m pip install openfermionpyscf
+
+      - name: Revert to older JAX version for stable
+        if: inputs.pennylane-version == 'stable'
+        run: |
+          # FIXME: remove after v0.42 release
+          python -m pip install "jax[cpu]==0.4.28"
 
       - name: Checkout PennyLane for release or latest build
         if: inputs.pennylane-version == 'release' || inputs.pennylane-version == 'latest'
