@@ -4,6 +4,9 @@
 
 <h3>Improvements 🛠</h3>
 
+- Add native `MultiControlledX` support to Lightning-Tensor.
+  [(#1169)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1169)
+
 - PennyLane-Lightning is compatible with JAX version 0.5.3+.
   [(#1152)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1152)
   [(#1161)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1161)
@@ -93,6 +96,7 @@ Anton Naim Ibrahim,
 Luis Alfredo Nuñez Meneses,
 Mudit Pandey,
 Andrija Paurevic,
+Shuli Shu,
 
 ---
 
