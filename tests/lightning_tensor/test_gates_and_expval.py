@@ -204,10 +204,8 @@ def test_integration_for_all_supported_gates(returns, expected_value, method):
     qnode_ltensor = qml.QNode(circuit, dev_ltensor)
     j_ltensor = qnode_ltensor(params)
 
-    if method["method"] == "tn":
-        assert np.allclose(j_ltensor, expected_value, rtol=1e-6)
-    else:
-        assert np.allclose(j_ltensor, expected_value, atol=1e-2, rtol=1e-2)
+    assert np.allclose(j_ltensor, expected_value, rtol=1e-6)
+
 
 
 @pytest.mark.parametrize("method", [{"method": "mps", "max_bond_dim": 128}, {"method": "tn"}])
