@@ -169,7 +169,7 @@ class MPSTNCuda final : public TNCuda<Precision, MPSTNCuda<Precision>> {
             /* const cutensornetHandle_t */ BaseType::getTNCudaHandle(),
             /* cutensornetState_t */ BaseType::getQuantumState(),
             /* cutensornetStateAttributes_t */
-            //CUTENSORNET_STATE_CONFIG_MPS_SVD_ALGO,
+            // CUTENSORNET_STATE_CONFIG_MPS_SVD_ALGO,
             CUTENSORNET_STATE_CONFIG_MPS_GAUGE_OPTION,
             /* const void * */ &algo,
             /* std::size_t */ sizeof(algo)));
@@ -177,15 +177,15 @@ class MPSTNCuda final : public TNCuda<Precision, MPSTNCuda<Precision>> {
         PL_ABORT_IF_NOT(cutoff_mode == "rel" || cutoff_mode == "abs",
                         "cutoff_mode should either 'rel' or 'abs'.");
 
-        cutensornetStateAttributes_t svd_cutoff_mode =
-            (cutoff_mode == "abs")
-                ? CUTENSORNET_STATE_CONFIG_MPS_SVD_ABS_CUTOFF
-                : CUTENSORNET_STATE_CONFIG_MPS_SVD_REL_CUTOFF;
+        // cutensornetStateAttributes_t svd_cutoff_mode =
+        //     (cutoff_mode == "abs")
+        //         ? CUTENSORNET_STATE_CONFIG_MPS_SVD_ABS_CUTOFF
+        //         : CUTENSORNET_STATE_CONFIG_MPS_SVD_REL_CUTOFF;
 
         PL_CUTENSORNET_IS_SUCCESS(cutensornetStateConfigure(
             /* const cutensornetHandle_t */ BaseType::getTNCudaHandle(),
             /* cutensornetState_t */ BaseType::getQuantumState(),
-            /* cutensornetStateAttributes_t */ //svd_cutoff_mode,
+            /* cutensornetStateAttributes_t */ // svd_cutoff_mode,
             CUTENSORNET_STATE_CONFIG_MPS_GAUGE_OPTION,
             /* const void * */ &cutoff,
             /* std::size_t */ sizeof(cutoff)));
