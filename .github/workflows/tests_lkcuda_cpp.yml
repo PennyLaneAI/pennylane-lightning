@@ -44,7 +44,7 @@ jobs:
       max-parallel: 1
       matrix:
         os: [ubuntu-22.04]
-        kokkos_version: ["4.5.00"]
+        kokkos_version: ["4.6.01"]
         exec_model: ["CUDA"]
         cuda_version_maj: ["12"]
         cuda_version_min: ["4"]
@@ -108,7 +108,7 @@ jobs:
       matrix:
         os: [ubuntu-22.04]
         pl_backend: ["lightning_kokkos"]
-        kokkos_version: ["4.5.00"]
+        kokkos_version: ["4.6.01"]
         exec_model: ["CUDA"]
         cuda_version_maj: ["12"]
         cuda_version_min: ["4"]
