@@ -5,7 +5,7 @@
 <h3>Improvements 🛠</h3>
 
 - `lightning.kokkos` supports Kokkos 4.6.01.
-  [(#xxxx)](https://github.com/PennyLaneAI/pennylane-lightning/pull/xxxx)
+  [(#1170)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1170)
 
 - PennyLane-Lightning is compatible with JAX version 0.5.3+.
   [(#1152)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1152)
