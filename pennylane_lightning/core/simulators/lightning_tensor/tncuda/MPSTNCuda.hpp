@@ -169,26 +169,35 @@ class MPSTNCuda final : public TNCuda<Precision, MPSTNCuda<Precision>> {
             /* const cutensornetHandle_t */ BaseType::getTNCudaHandle(),
             /* cutensornetState_t */ BaseType::getQuantumState(),
             /* cutensornetStateAttributes_t */
-            // CUTENSORNET_STATE_CONFIG_MPS_SVD_ALGO,
-            CUTENSORNET_STATE_CONFIG_MPS_GAUGE_OPTION,
+            CUTENSORNET_STATE_CONFIG_MPS_SVD_ALGO,
             /* const void * */ &algo,
             /* std::size_t */ sizeof(algo)));
 
         PL_ABORT_IF_NOT(cutoff_mode == "rel" || cutoff_mode == "abs",
                         "cutoff_mode should either 'rel' or 'abs'.");
 
-        // cutensornetStateAttributes_t svd_cutoff_mode =
-        //     (cutoff_mode == "abs")
-        //         ? CUTENSORNET_STATE_CONFIG_MPS_SVD_ABS_CUTOFF
-        //         : CUTENSORNET_STATE_CONFIG_MPS_SVD_REL_CUTOFF;
+        cutensornetStateAttributes_t svd_cutoff_mode =
+            (cutoff_mode == "abs")
+                ? CUTENSORNET_STATE_CONFIG_MPS_SVD_ABS_CUTOFF
+                : CUTENSORNET_STATE_CONFIG_MPS_SVD_REL_CUTOFF;
 
         PL_CUTENSORNET_IS_SUCCESS(cutensornetStateConfigure(
             /* const cutensornetHandle_t */ BaseType::getTNCudaHandle(),
             /* cutensornetState_t */ BaseType::getQuantumState(),
-            /* cutensornetStateAttributes_t */ // svd_cutoff_mode,
-            CUTENSORNET_STATE_CONFIG_MPS_GAUGE_OPTION,
+            /* cutensornetStateAttributes_t */ svd_cutoff_mode,
             /* const void * */ &cutoff,
             /* std::size_t */ sizeof(cutoff)));
+
+        cutensornetStateMPSGaugeOption_t gauge_option =
+            CUTENSORNET_STATE_MPS_GAUGE_SIMPLE;
+
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetStateConfigure(
+            /* const cutensornetHandle_t */ BaseType::getTNCudaHandle(),
+            /* cutensornetState_t */ BaseType::getQuantumState(),
+            /* cutensornetStateAttributes_t */
+            CUTENSORNET_STATE_CONFIG_MPS_GAUGE_OPTION,
+            /* const void * */ &gauge_option,
+            /* std::size_t */ sizeof(gauge_option)));
 
         // MPO configurations
         // Note that CUTENSORNET_STATE_MPO_APPLICATION_INEXACT is applied if the
