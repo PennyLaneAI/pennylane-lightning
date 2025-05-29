@@ -210,7 +210,6 @@ def test_integration_for_all_supported_gates(returns, expected_value, method):
         assert np.allclose(j_ltensor, expected_value, atol=1e-2, rtol=1e-2)
 
 
-
 @pytest.mark.parametrize("method", [{"method": "mps", "max_bond_dim": 128}, {"method": "tn"}])
 class TestSparseHExpval:
     """Test sparseH expectation values"""
