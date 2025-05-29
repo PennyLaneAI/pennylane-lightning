@@ -169,7 +169,8 @@ class MPSTNCuda final : public TNCuda<Precision, MPSTNCuda<Precision>> {
             /* const cutensornetHandle_t */ BaseType::getTNCudaHandle(),
             /* cutensornetState_t */ BaseType::getQuantumState(),
             /* cutensornetStateAttributes_t */
-            CUTENSORNET_STATE_CONFIG_MPS_SVD_ALGO,
+            //CUTENSORNET_STATE_CONFIG_MPS_SVD_ALGO,
+            CUTENSORNET_STATE_CONFIG_MPS_GAUGE_OPTION,
             /* const void * */ &algo,
             /* std::size_t */ sizeof(algo)));
 
@@ -184,7 +185,8 @@ class MPSTNCuda final : public TNCuda<Precision, MPSTNCuda<Precision>> {
         PL_CUTENSORNET_IS_SUCCESS(cutensornetStateConfigure(
             /* const cutensornetHandle_t */ BaseType::getTNCudaHandle(),
             /* cutensornetState_t */ BaseType::getQuantumState(),
-            /* cutensornetStateAttributes_t */ svd_cutoff_mode,
+            /* cutensornetStateAttributes_t */ //svd_cutoff_mode,
+            CUTENSORNET_STATE_CONFIG_MPS_GAUGE_OPTION,
             /* const void * */ &cutoff,
             /* std::size_t */ sizeof(cutoff)));
 
