@@ -52,6 +52,7 @@ class LightningMeasurements(LightningBaseMeasurements):  # pylint: disable=too-f
     def __init__(
         self,
         qubit_state: LightningStateVector,  # pylint: disable=undefined-variable
+        seed: int = None,
         mcmc: bool = None,
         kernel_name: str = None,
         num_burnin: int = None,
@@ -68,6 +69,8 @@ class LightningMeasurements(LightningBaseMeasurements):  # pylint: disable=too-f
             self._num_burnin = 100
 
         self._measurement_lightning = self._measurement_dtype()(qubit_state.state_vector)
+        if seed:
+            self._measurement_lightning.set_seed(seed)
 
     def _measurement_dtype(self):
         """Binding to Lightning Measurements C++ class.

@@ -491,6 +491,10 @@ void registerBackendAgnosticMeasurements(PyClass &pyclass) {
                 shape,  /* shape of the matrix       */
                 strides /* strides for each axis     */
                 ));
+        })
+        .def("set_seed", [](Measurements<StateVectorT> &M,
+                                    std::size_t seed) {
+            M.setSeed(seed);
         });
 }
 

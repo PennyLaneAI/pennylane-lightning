@@ -71,12 +71,14 @@ class LightningBase(Device):
         *,
         c_dtype: Union[np.complex64, np.complex128],
         shots: Union[int, List],
+        seed: Optional[int] = None,
         batch_obs: bool,
     ):
         super().__init__(wires=wires, shots=shots)
 
         self._c_dtype = c_dtype
         self._batch_obs = batch_obs
+        self._seed = seed
 
         # State-vector is dynamically allocated just before execution
         self._statevector = None
@@ -223,14 +225,14 @@ class LightningBase(Device):
                     aux_circ, mid_measurements=mid_measurements, postselect_mode=postselect_mode
                 )
                 results.append(
-                    self.LightningMeasurements(final_state, **mcmc).measure_final_state(
+                    self.LightningMeasurements(final_state, self._seed, **mcmc).measure_final_state(
                         aux_circ, mid_measurements=mid_measurements
                     )
                 )
             return tuple(results)
 
         final_state = state.get_final_state(circuit)
-        return self.LightningMeasurements(final_state, **mcmc).measure_final_state(circuit)
+        return self.LightningMeasurements(final_state,  self._seed, **mcmc).measure_final_state(circuit)
 
     @abstractmethod
     def supports_derivatives(

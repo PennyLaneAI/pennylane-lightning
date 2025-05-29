@@ -233,7 +233,7 @@ class LightningQubit(LightningBase):
         shots: Union[int, List] = None,
         batch_obs: bool = False,
         # Markov Chain Monte Carlo (MCMC) sampling method arguments
-        seed: Union[str, int] = "global",
+        seed: int = None,
         mcmc: bool = False,
         kernel_name: str = "Local",
         num_burnin: int = 100,
@@ -249,6 +249,7 @@ class LightningQubit(LightningBase):
             wires=wires,
             c_dtype=c_dtype,
             shots=shots,
+            seed=seed,
             batch_obs=batch_obs,
         )
 
