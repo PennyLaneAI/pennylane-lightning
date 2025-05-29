@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Pytest configuration file for PennyLane-Lightning-GPU test suite.
+Pytest configuration file for PennyLane-Lightning MPI test suite.
 """
 # pylint: disable=missing-function-docstring,wrong-import-order,unused-import
 
@@ -23,6 +23,8 @@ import pennylane as qml
 import pytest
 from pennylane import numpy as np
 from pennylane.exceptions import DeviceError
+
+import pennylane_lightning
 
 # Tuple passed to distributed device ctor
 # np.complex for data type and True or False
@@ -73,7 +75,7 @@ def get_device():
     """Return the pennylane lightning device.
 
     The device is ``lightning.gpu`` by default.
-    Allowed values are: "lightning.gpu".
+    Allowed values are: "lightning.gpu, lightning.kokkos".
     An underscore can also be used instead of a dot.
     If the environment variable ``PL_DEVICE`` is defined, its value is used.
     Underscores are replaced by dots upon exiting.
@@ -106,6 +108,8 @@ if device_name == "lightning.gpu":
         LightningGPUStateVector as LightningStateVector,
     )
 
+    if hasattr(pennylane_lightning, "lightning_gpu_ops"):
+        from pennylane_lightning.lightning_gpu_ops import LightningException
 else:
     raise DeviceError(f"The MPI tests do not apply to the {device_name} device.")
 

@@ -18,9 +18,6 @@
 #include <bit>
 #include <complex>
 #include <cstring>
-#include <cuComplex.h>
-#include <cuda.h>
-#include <cuda_runtime.h>
 #include <mpi.h>
 #include <stdexcept>
 #include <string>
@@ -29,20 +26,15 @@
 #include <unordered_map>
 #include <vector>
 
-#ifdef _ENABLE_PLGPU
-#include <custatevec.h>
-#endif
-
-#include "DataBuffer.hpp"
 #include "Error.hpp"
 
 /// @cond DEV
 namespace {
-using namespace Pennylane::LightningGPU;
+using namespace Pennylane::Util;
 } // namespace
 /// @endcond
 
-namespace Pennylane::LightningGPU::MPI {
+namespace Pennylane::Util {
 // LCOV_EXCL_START
 inline void errhandler(int errcode, const char *str) {
     char msg[MPI_MAX_ERROR_STRING];
@@ -69,7 +61,7 @@ template <typename T> auto cppTypeToString() -> const std::string {
 /**
  * @brief MPI operation class. Maintains MPI related operations.
  */
-class MPIManager final {
+class MPIManager {
   private:
     bool isExternalComm_;
     std::size_t rank_;
@@ -80,34 +72,6 @@ class MPIManager final {
     std::string vendor_;
     std::size_t version_;
     std::size_t subversion_;
-
-    /**
-     * @brief Find C++ data type's corresponding MPI data type.
-     *
-     * @tparam T C++ data type.
-     */
-    template <typename T> auto getMPIDatatype() -> MPI_Datatype {
-        auto it = cpp_mpi_type_map.find(cppTypeToString<T>());
-        if (it != cpp_mpi_type_map.end()) {
-            return it->second;
-        } else {
-            throw std::runtime_error("Type not supported");
-        }
-    }
-
-    /**
-     * @brief Find operation string's corresponding MPI_Op type.
-     *
-     * @param op_str std::string of MPI_Op name.
-     */
-    auto getMPIOpType(const std::string &op_str) -> MPI_Op {
-        auto it = cpp_mpi_op_map.find(op_str);
-        if (it != cpp_mpi_op_map.end()) {
-            return it->second;
-        } else {
-            throw std::runtime_error("Op not supported");
-        }
-    }
 
     /**
      * @brief Map of std::string and MPI_Op.
@@ -152,18 +116,7 @@ class MPIManager final {
         {cppTypeToString<std::complex<float>>(), MPI_C_FLOAT_COMPLEX},
         {cppTypeToString<std::complex<double>>(), MPI_C_DOUBLE_COMPLEX},
         {cppTypeToString<std::complex<long double>>(),
-         MPI_C_LONG_DOUBLE_COMPLEX},
-        {cppTypeToString<float2>(), MPI_C_FLOAT_COMPLEX},
-        {cppTypeToString<cuComplex>(), MPI_C_FLOAT_COMPLEX},
-        {cppTypeToString<cuFloatComplex>(), MPI_C_FLOAT_COMPLEX},
-        {cppTypeToString<double2>(), MPI_C_DOUBLE_COMPLEX},
-        {cppTypeToString<cuDoubleComplex>(), MPI_C_DOUBLE_COMPLEX},
-#ifdef _ENABLE_PLGPU
-        {cppTypeToString<custatevecIndex_t>(), MPI_INT64_T},
-#endif
-        // cuda related types
-        {cppTypeToString<cudaIpcMemHandle_t>(), MPI_UINT8_T},
-        {cppTypeToString<cudaIpcEventHandle_t>(), MPI_UINT8_T}};
+         MPI_C_LONG_DOUBLE_COMPLEX}};
 
     /**
      * @brief Set the MPI vendor.
@@ -229,29 +182,8 @@ class MPIManager final {
     }
 
   public:
-    MPIManager() : communicator_(MPI_COMM_WORLD) {
-        int status = 0;
-        MPI_Initialized(&status);
-        if (!status) {
-            PL_MPI_IS_SUCCESS(MPI_Init(nullptr, nullptr));
-        }
-
-        isExternalComm_ = true;
-        int rank_int;
-        int size_int;
-        PL_MPI_IS_SUCCESS(MPI_Comm_rank(communicator_, &rank_int));
-        PL_MPI_IS_SUCCESS(MPI_Comm_size(communicator_, &size_int));
-
-        rank_ = static_cast<std::size_t>(rank_int);
-        size_ = static_cast<std::size_t>(size_int);
-
-        setVendor();
-        setVersion();
-        setNumProcsPerNode();
-        check_mpi_config();
-    }
-
-    MPIManager(MPI_Comm communicator) : communicator_(communicator) {
+    MPIManager(MPI_Comm communicator = MPI_COMM_WORLD)
+        : communicator_(communicator) {
         int status = 0;
         MPI_Initialized(&status);
         if (!status) {
@@ -332,6 +264,21 @@ class MPIManager final {
     }
     // LCOV_EXCL_STOP
 
+    /**
+     * @brief Find C++ data type's corresponding MPI data type.
+     *
+     * @tparam T C++ data type.
+     */
+    template <typename T> auto getMPIDatatype() -> MPI_Datatype {
+        const auto cpp_mpi_type_map = get_cpp_mpi_type_map();
+        auto it = cpp_mpi_type_map.find(cppTypeToString<T>());
+        if (it != cpp_mpi_type_map.end()) {
+            return it->second;
+        } else {
+            PL_ABORT("Type not supported for MPIManager");
+        }
+    }
+
     // General MPI operations
     /**
      * @brief Get the process rank in the communicator.
@@ -370,6 +317,25 @@ class MPIManager final {
         return {version_, subversion_};
     }
 
+    virtual auto get_cpp_mpi_type_map() const
+        -> const std::unordered_map<std::string, MPI_Datatype> & {
+        return cpp_mpi_type_map;
+    }
+
+    /**
+     * @brief Find operation string's corresponding MPI_Op type.
+     *
+     * @param op_str std::string of MPI_Op name.
+     */
+    auto getMPIOpType(const std::string &op_str) -> MPI_Op {
+        auto it = cpp_mpi_op_map.find(op_str);
+        if (it != cpp_mpi_op_map.end()) {
+            return it->second;
+        } else {
+            PL_ABORT("Op not supported");
+        }
+    }
+
     /**
      * @brief MPI_Allgather wrapper.
      *
@@ -382,14 +348,6 @@ class MPIManager final {
     void Allgather(T &sendBuf, std::vector<T> &recvBuf,
                    std::size_t sendCount = 1) {
         MPI_Datatype datatype = getMPIDatatype<T>();
-        if (sendCount != 1) {
-            if (cppTypeToString<T>() != cppTypeToString<cudaIpcMemHandle_t>() &&
-                cppTypeToString<T>() !=
-                    cppTypeToString<cudaIpcEventHandle_t>()) {
-                throw std::runtime_error(
-                    "Unsupported MPI DataType implementation.\n");
-            }
-        }
         PL_ABORT_IF(recvBuf.size() != this->getSize(),
                     "Incompatible size of sendBuf and recvBuf.");
 
@@ -557,26 +515,6 @@ class MPIManager final {
         MPI_Op op = getMPIOpType(op_str);
         PL_MPI_IS_SUCCESS(MPI_Reduce(sendBuf.data(), recvBuf.data(),
                                      sendBuf.size(), datatype, op, root,
-                                     this->getComm()));
-    }
-
-    /**
-     * @brief MPI_Reduce wrapper.
-     *
-     * @tparam T C++ data type.
-     * @param sendBuf Send buffer (DataBuffer type).
-     * @param recvBuf Receive buffer (DataBuffer type).
-     * @param root Rank of root process.
-     * @param op_str String of MPI_Op.
-     */
-    template <typename T>
-    void Reduce(DataBuffer<T> &sendBuf, DataBuffer<T> &recvBuf,
-                std::size_t length, std::size_t root,
-                const std::string &op_str) {
-        MPI_Datatype datatype = getMPIDatatype<T>();
-        MPI_Op op = getMPIOpType(op_str);
-        PL_MPI_IS_SUCCESS(MPI_Reduce(sendBuf.getData(), recvBuf.getData(),
-                                     length, datatype, op, root,
                                      this->getComm()));
     }
 
@@ -824,4 +762,4 @@ class MPIManager final {
         return MPIManager(newcomm);
     }
 };
-} // namespace Pennylane::LightningGPU::MPI
+} // namespace Pennylane::Util
