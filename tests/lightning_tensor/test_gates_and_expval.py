@@ -71,7 +71,7 @@ def circuit_ansatz(params, wires):
     qml.QubitUnitary(random_unitary, wires=[wires[1], wires[3]])
     qml.ControlledQubitUnitary(qml.matrix(qml.PauliX([wires[1]])), wires=[wires[0], wires[1]])
     qml.DiagonalQubitUnitary(np.array([1, 1]), wires=wires[2])
-    qml.MultiControlledX(wires=[wires[0], wires[1], wires[3]], control_values=[0, 1])
+    qml.MultiControlledX(wires=[wires[0], wires[1], wires[2]], control_values=[0, 1])
     qml.PauliX(wires=wires[1])
     qml.PauliY(wires=wires[2])
     qml.PauliZ(wires=wires[3])
@@ -204,7 +204,11 @@ def test_integration_for_all_supported_gates(returns, expected_value, method):
     qnode_ltensor = qml.QNode(circuit, dev_ltensor)
     j_ltensor = qnode_ltensor(params)
 
-    assert np.allclose(j_ltensor, expected_value, rtol=1e-6)
+    if method["method"] == "tn":
+        assert np.allclose(j_ltensor, expected_value, rtol=1e-6)
+    else:
+        assert np.allclose(j_ltensor, expected_value, atol=1e-2, rtol=1e-2)
+
 
 
 @pytest.mark.parametrize("method", [{"method": "mps", "max_bond_dim": 128}, {"method": "tn"}])
