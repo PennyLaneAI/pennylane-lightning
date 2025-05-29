@@ -167,12 +167,14 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
         self, G, theta, batch_obs, dev
     ):  # pylint: disable=too-many-arguments
         """Tests that the automatic gradients of Pauli rotations are correct."""
-        random_state = np.array(
-            [0.43593284 - 0.02945156j, 0.40812291 + 0.80158023j], requires_grad=False
+        n_qubits = 8
+        random_state = np.tile(
+            np.array([0.43593284 - 0.02945156j, 0.40812291 + 0.80158023j], requires_grad=False), 128
         )
+        random_state = random_state / np.linalg.norm(random_state)
 
         qs = QuantumScript(
-            [qml.StatePrep(random_state, 0), G(theta, 0)],
+            [qml.StatePrep(random_state, range(n_qubits)), G(theta, 0)],
             [qml.expval(qml.PauliZ(0))],
             trainable_params=[1],
         )
@@ -193,10 +195,15 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
         """Tests that the device gradient of an arbitrary Euler-angle-parameterized gate is
         correct."""
         params = np.array([theta, theta**3, np.sqrt(2) * theta])
+        n_qubits = 8
+        random_state = np.tile(
+            np.array([0.43593284 - 0.02945156j, 0.40812291 + 0.80158023j], requires_grad=False), 128
+        )
+        random_state = random_state / np.linalg.norm(random_state)
 
         qs = QuantumScript(
             [
-                qml.StatePrep(np.array([1.0, -1.0], requires_grad=False) / np.sqrt(2), wires=0),
+                qml.StatePrep(random_state, wires=range(n_qubits)),
                 qml.Rot(*params, wires=[0]),
             ],
             [qml.expval(qml.PauliZ(0))],
@@ -1096,6 +1103,9 @@ def test_integration_H2_Hamiltonian(
     assert np.allclose(jacs, jacs_comp)
 
 
+@pytest.mark.skipif(
+    device_name == "lightning.kokkos", reason="Kokkos MPI does not support SparseHamiltonian"
+)
 @pytest.mark.parametrize(
     "returns",
     [
@@ -1157,6 +1167,9 @@ def test_adjoint_SparseHamiltonian_custom_wires(returns):
     assert np.allclose(j_cpu, j_gpu)
 
 
+@pytest.mark.skipif(
+    device_name == "lightning.kokkos", reason="Kokkos MPI does not support SparseHamiltonian"
+)
 @pytest.mark.parametrize(
     "returns",
     [
