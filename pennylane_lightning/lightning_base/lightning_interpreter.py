@@ -23,6 +23,7 @@ from pennylane.capture.primitives import adjoint_transform_prim, ctrl_transform_
 from pennylane.exceptions import DeviceError
 from pennylane.measurements import MidMeasureMP, Shots
 from pennylane.tape.plxpr_conversion import CollectOpsandMeas
+from numpy.random import Generator
 
 from pennylane_lightning.lightning_base._measurements import LightningBaseMeasurements
 from pennylane_lightning.lightning_base._state_vector import LightningBaseStateVector
@@ -36,6 +37,7 @@ class LightningInterpreter(PlxprInterpreter):
         measurement_class (type[LightningBaseMeasurement]): The type to use to perform
             measurements on the statevector
         shots (Shots): the number of shots to use. Shot vectors are not yet supported.
+        rng (Generator): A random number generator to use for sampling measurement.
 
     .. code-block:: python
 
@@ -70,12 +72,14 @@ class LightningInterpreter(PlxprInterpreter):
         state: LightningBaseStateVector,
         measurement_class: type[LightningBaseMeasurements],
         shots: Shots = Shots(),
+        rng: Generator = None,
     ):
         self.state = state
         self.measurement_class = measurement_class
         self.shots = shots
         if self.shots.has_partitioned_shots:
             raise NotImplementedError("LightningInterpreter does not support partitioned shots.")
+        self.rng = rng
         self.reset = True
         super().__init__()
 
@@ -111,10 +115,10 @@ class LightningInterpreter(PlxprInterpreter):
         disable()
         try:
             if self.shots:
-                return self.measurement_class(self.state).measure_with_samples(
+                return self.measurement_class(self.state, rng=self.rng).measure_with_samples(
                     [measurement], self.shots
                 )
-            return self.measurement_class(self.state).measurement(measurement)
+            return self.measurement_class(self.state, rng=self.rng).measurement(measurement)
         finally:
             enable()
 

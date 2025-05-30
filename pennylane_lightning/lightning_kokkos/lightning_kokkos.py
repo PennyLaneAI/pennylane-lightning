@@ -23,6 +23,8 @@ from warnings import warn
 
 import numpy as np
 import pennylane as qml
+from numpy.random import BitGenerator, Generator, SeedSequence
+from numpy.typing import ArrayLike
 from pennylane.devices import DefaultExecutionConfig, ExecutionConfig
 from pennylane.devices.capabilities import OperatorProperties
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
@@ -185,6 +187,11 @@ class LightningKokkos(LightningBase):
             the expectation values. Defaults to ``None`` if not specified. Setting
             to ``None`` results in computing statistics like expectation values and
             variances analytically.
+        seed (Union[str, None, int, array_like[int], SeedSequence, BitGenerator, Generator]): A
+            seed-like parameter matching that of ``seed`` for ``numpy.random.default_rng``, or
+            a request to seed from numpy's global random number generator.
+            The default, ``seed="global"`` pulls a seed from NumPy's global generator. ``seed=None``
+            will pull a seed from the OS entropy.
         sync (bool): immediately sync with host-sv after applying operations
         kokkos_args (InitializationSettings): binding for Kokkos::InitializationSettings
             (threading parameters).
@@ -213,6 +220,7 @@ class LightningKokkos(LightningBase):
         c_dtype: Union[np.complex128, np.complex64] = np.complex128,
         shots: Union[int, List] = None,
         batch_obs: bool = False,
+        seed: Union[str, None, int, ArrayLike, SeedSequence, BitGenerator, Generator] = "global",
         # Kokkos arguments
         kokkos_args=None,
     ):
@@ -227,6 +235,7 @@ class LightningKokkos(LightningBase):
             wires=wires,
             c_dtype=c_dtype,
             shots=shots,
+            seed=seed,
             batch_obs=batch_obs,
         )
 

@@ -846,6 +846,75 @@ class TestMeasurements:
         expected = qml.QNode(circuit, qml.device("default.qubit", wires=cases[1]))()
         results = qml.QNode(circuit, dev)()
         assert np.allclose(expected, results, tol)
+        
+    @pytest.mark.skipif(
+        device_name in ("lightning.tensor"),
+        reason=f"{device_name} does not support seeding device.",
+    )
+    @pytest.mark.parametrize("shots", [500, [500, 500]])
+    @pytest.mark.parametrize("measurement", [qml.expval, qml.probs, qml.var])
+    @pytest.mark.parametrize(
+        "observable",
+        (
+            qml.PauliX(0),
+            qml.PauliY(1),
+            qml.PauliZ(2),
+            qml.sum(qml.PauliX(0), qml.PauliY(0)),
+            qml.prod(qml.PauliX(0), qml.PauliY(1)),
+            qml.s_prod(2.0, qml.PauliX(0)),
+            qml.Hermitian(get_hermitian_matrix(2**2), wires=[0, 1]),
+            qml.Hermitian(get_hermitian_matrix(2**2), wires=[2, 3]),
+            qml.Hamiltonian(
+                [1.0, 2.0, 3.0],
+                [qml.PauliX(0), qml.PauliY(1), qml.PauliZ(2) @ qml.PauliZ(3)],
+            ),
+        ),
+    )
+    def test_seeded_shots_measurement(self, shots, measurement, observable, lightning_sv, tol):
+        if measurement is qml.probs and isinstance(
+            observable,
+            (
+                qml.ops.Sum,
+                qml.ops.SProd,
+                qml.ops.Prod,
+            ),
+        ):
+            pytest.skip(
+                f"Observable of type {type(observable).__name__} is not supported for rotating probabilities."
+            )
+
+        n_qubits = 4
+        n_layers = 1
+        np.random.seed(0)
+        weights = np.random.rand(n_layers, n_qubits, 3)
+        ops = [qml.Hadamard(i) for i in range(n_qubits)]
+        ops += [qml.StronglyEntanglingLayers(weights, wires=range(n_qubits))]
+        measurements = (
+            [measurement(wires=observable)]
+            if isinstance(observable, list)
+            else [measurement(op=observable)]
+        )
+        tape = qml.tape.QuantumScript(ops, measurements, shots=shots)
+
+        statevector = lightning_sv(n_qubits)
+        statevector = get_final_state(statevector, tape)
+        m_1 = LightningMeasurements(statevector, seed=123)
+        m_2 = LightningMeasurements(statevector, seed=123)
+        m_3 = LightningMeasurements(statevector, seed=213)
+
+        skip_list = (qml.ops.Sum,)
+        do_skip = measurement is qml.var and isinstance(observable, skip_list)
+        if do_skip:
+            with pytest.raises(TypeError):
+                _ = measure_final_state(m_1, tape)
+            return
+        else:
+            result_1 = measure_final_state(m_1, tape)
+            result_2 = measure_final_state(m_2, tape)
+            result_3 = measure_final_state(m_3, tape)
+
+        assert np.allclose(result_1, result_2)
+        assert not np.allclose(result_1, result_3)
 
 
 class TestControlledOps:

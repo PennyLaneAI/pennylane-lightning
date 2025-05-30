@@ -474,26 +474,26 @@ void registerBackendAgnosticMeasurements(PyClass &pyclass) {
                 return M.var(*ob);
             },
             "Variance of an observable object.")
-        .def("generate_samples", [](Measurements<StateVectorT> &M,
-                                    std::size_t num_wires,
-                                    std::size_t num_shots) {
-            auto &&result = M.generate_samples(num_shots);
-            const std::size_t ndim = 2;
-            const std::vector<std::size_t> shape{num_shots, num_wires};
-            constexpr auto sz = sizeof(std::size_t);
-            const std::vector<std::size_t> strides{sz * num_wires, sz};
-            // return 2-D NumPy array
-            return py::array(py::buffer_info(
-                result.data(), /* data as contiguous array  */
-                sz,            /* size of one scalar        */
-                py::format_descriptor<std::size_t>::format(), /* data type */
-                ndim,   /* number of dimensions      */
-                shape,  /* shape of the matrix       */
-                strides /* strides for each axis     */
-                ));
-        })
-        .def("set_seed", [](Measurements<StateVectorT> &M,
-                                    std::size_t seed) {
+        .def("generate_samples",
+             [](Measurements<StateVectorT> &M, std::size_t num_wires,
+                std::size_t num_shots) {
+                 auto &&result = M.generate_samples(num_shots);
+                 const std::size_t ndim = 2;
+                 const std::vector<std::size_t> shape{num_shots, num_wires};
+                 constexpr auto sz = sizeof(std::size_t);
+                 const std::vector<std::size_t> strides{sz * num_wires, sz};
+                 // return 2-D NumPy array
+                 return py::array(py::buffer_info(
+                     result.data(), /* data as contiguous array  */
+                     sz,            /* size of one scalar        */
+                     py::format_descriptor<std::size_t>::format(), /* data type
+                                                                    */
+                     ndim,   /* number of dimensions      */
+                     shape,  /* shape of the matrix       */
+                     strides /* strides for each axis     */
+                     ));
+             })
+        .def("set_seed", [](Measurements<StateVectorT> &M, std::size_t seed) {
             M.setSeed(seed);
         });
 }

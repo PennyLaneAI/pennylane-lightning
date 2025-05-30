@@ -26,6 +26,8 @@ from typing import Callable, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 import pennylane as qml
+from numpy.random import BitGenerator, Generator, SeedSequence
+from numpy.typing import ArrayLike
 from pennylane.devices import DefaultExecutionConfig, Device, ExecutionConfig
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
 from pennylane.measurements import MidMeasureMP
@@ -57,6 +59,11 @@ class LightningBase(Device):
             stochastic return values. Defaults to ``None`` if not specified. Setting
             to ``None`` results in computing statistics like expectation values and
             variances analytically.
+        seed (Union[str, None, int, array_like[int], SeedSequence, BitGenerator, Generator]): A
+            seed-like parameter matching that of ``seed`` for ``numpy.random.default_rng``, or
+            a request to seed from numpy's global random number generator.
+            The default, ``seed="global"`` pulls a seed from NumPy's global generator. ``seed=None``
+            will pull a seed from the OS entropy.
         batch_obs (bool): Determine whether we process observables in parallel when
             computing the jacobian.
     """
@@ -71,14 +78,15 @@ class LightningBase(Device):
         *,
         c_dtype: Union[np.complex64, np.complex128],
         shots: Union[int, List],
-        seed: Optional[int] = None,
+        seed: Union[str, None, int, ArrayLike, SeedSequence, BitGenerator, Generator],
         batch_obs: bool,
     ):
         super().__init__(wires=wires, shots=shots)
 
         self._c_dtype = c_dtype
         self._batch_obs = batch_obs
-        self._seed = seed
+        self._seed = np.random.randint(2**32 - 1) if seed == "global" else seed
+        self._rng = np.random.default_rng(self._seed)
 
         # State-vector is dynamically allocated just before execution
         self._statevector = None
@@ -225,14 +233,16 @@ class LightningBase(Device):
                     aux_circ, mid_measurements=mid_measurements, postselect_mode=postselect_mode
                 )
                 results.append(
-                    self.LightningMeasurements(final_state, self._seed, **mcmc).measure_final_state(
-                        aux_circ, mid_measurements=mid_measurements
-                    )
+                    self.LightningMeasurements(
+                        final_state, self._rng, **mcmc
+                    ).measure_final_state(aux_circ, mid_measurements=mid_measurements)
                 )
             return tuple(results)
 
         final_state = state.get_final_state(circuit)
-        return self.LightningMeasurements(final_state,  self._seed, **mcmc).measure_final_state(circuit)
+        return self.LightningMeasurements(
+            final_state, self._rng, **mcmc
+        ).measure_final_state(circuit)
 
     @abstractmethod
     def supports_derivatives(
@@ -580,7 +590,7 @@ class LightningBase(Device):
         )
 
         interpreter = LightningInterpreter(
-            self._statevector, self.LightningMeasurements, shots=self.shots
+            self._statevector, self.LightningMeasurements, shots=self.shots, rng=self._rng
         )
         evaluator = partial(interpreter.eval, jaxpr)
 
