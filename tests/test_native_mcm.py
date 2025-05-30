@@ -241,8 +241,6 @@ def test_simple_dynamic_circuit(shots, measure_f, postselect, meas_obj):
     results1 = qml.QNode(func, dev, mcm_method="one-shot")(*params)
     results2 = qml.QNode(func, dq, mcm_method="deferred")(*params)
 
-    print(results1)
-
     validate_measurements(measure_f, shots, results1, results2)
 
 
