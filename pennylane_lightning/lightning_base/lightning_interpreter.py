@@ -76,7 +76,6 @@ class LightningInterpreter(PlxprInterpreter):
         self.shots = shots
         if self.shots.has_partitioned_shots:
             raise NotImplementedError("LightningInterpreter does not support partitioned shots.")
-        self.rng = state._rng
         self.reset = True
         super().__init__()
 

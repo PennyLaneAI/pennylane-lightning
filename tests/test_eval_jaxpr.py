@@ -186,7 +186,7 @@ class TestSampling:
 
         finally:
             jax.config.update("jax_enable_x64", original_x64)
-            
+
     @pytest.mark.parametrize("use_jit", (True, False))
     @pytest.mark.parametrize("x64", (True, False))
     def test_seeded_sampling(self, use_jit, x64):
@@ -213,7 +213,6 @@ class TestSampling:
                 [results1] = dev1.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts)
                 [results2] = dev2.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts)
                 [results3] = dev3.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts)
-
 
             assert qml.math.allclose(results1, results2)
             assert not qml.math.allclose(results1, results3)

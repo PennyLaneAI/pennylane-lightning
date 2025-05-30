@@ -23,8 +23,8 @@ from conftest import (  # tested device
     PHI,
     THETA,
     LightningDevice,
-    LightningStateVector,
     LightningMeasurements,
+    LightningStateVector,
     device_name,
 )
 from flaky import flaky
@@ -899,7 +899,6 @@ class TestMeasurements:
         )
         tape = qml.tape.QuantumScript(ops, measurements, shots=shots)
 
-
         skip_list = (qml.ops.Sum,)
         do_skip = measurement is qml.var and isinstance(observable, skip_list)
         if not do_skip:
@@ -922,7 +921,7 @@ class TestMeasurements:
                 result_1.append(measure_final_state(m_1, tape))
                 result_2.append(measure_final_state(m_2, tape))
                 result_3.append(measure_final_state(m_3, tape))
-            
+
             assert np.allclose(result_1, result_2)
             assert not np.allclose(result_1, result_3)
 

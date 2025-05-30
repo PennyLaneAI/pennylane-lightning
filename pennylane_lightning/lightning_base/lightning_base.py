@@ -240,9 +240,7 @@ class LightningBase(Device):
             return tuple(results)
 
         final_state = state.get_final_state(circuit)
-        return self.LightningMeasurements(final_state, **mcmc).measure_final_state(
-            circuit
-        )
+        return self.LightningMeasurements(final_state, **mcmc).measure_final_state(circuit)
 
     @abstractmethod
     def supports_derivatives(
