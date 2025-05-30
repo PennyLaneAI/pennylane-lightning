@@ -36,7 +36,6 @@ except ImportError as error_import:
 
 import numpy as np
 import pennylane as qml
-from numpy.random import Generator
 from pennylane.measurements import MeasurementProcess
 from pennylane.typing import TensorLike
 
