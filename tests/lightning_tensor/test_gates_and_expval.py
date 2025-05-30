@@ -190,6 +190,7 @@ def test_integration_for_all_supported_gates(returns, expected_value, method):
 
     num_wires = 8
     dev_ltensor = LightningTensor(wires=range(num_wires), c_dtype=np.complex128, **method)
+    dev_default = qml.device("default.qubit", wires=range(num_wires))
 
     def circuit(params):
         qml.BasisState(np.array([1, 0, 1, 0, 1, 0, 1, 0]), wires=range(num_wires))
@@ -204,8 +205,9 @@ def test_integration_for_all_supported_gates(returns, expected_value, method):
     qnode_ltensor = qml.QNode(circuit, dev_ltensor)
     j_ltensor = qnode_ltensor(params)
 
-    assert np.allclose(j_ltensor, expected_value, rtol=1e-6)
+    ref = qml.QNode(circuit, dev_default)(params)
 
+    assert np.allclose(j_ltensor, ref, rtol=1e-6)
 
 
 @pytest.mark.parametrize("method", [{"method": "mps", "max_bond_dim": 128}, {"method": "tn"}])

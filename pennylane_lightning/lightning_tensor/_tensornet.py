@@ -702,14 +702,7 @@ class LightningTensorNet:
             method = getattr(tensornet, name, None)
             wires = list(operation.wires)
 
-            is_control_supported = False
-
             if isinstance(operation, qml.ops.Controlled) and len(list(operation.target_wires)) == 1:
-                control_values = all(v == 1 for v in operation.control_values)
-
-
-
-            if is_control_supported:
                 self._apply_lightning_controlled(operation)
             elif isinstance(operation, qml.GlobalPhase):
                 matrix = np.eye(2) * operation.matrix().flatten()[0]
