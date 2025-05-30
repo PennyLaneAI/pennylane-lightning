@@ -11,6 +11,9 @@
 - Improve performance of computing expectation values of Pauli Sentences for `lightning.kokkos`.
   [(#1126)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1126)
 
+- Adding support for mid-circuit measures with tree-traversal algorithm for for `lightning.qubit`, `lightning.kokkos` and `lightning.gpu`.
+  [(#1166)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1166)
+
 <h3>Breaking changes 💔</h3>
 
 <h3>Deprecations 👋</h3>

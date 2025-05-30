@@ -85,8 +85,7 @@ class TestUnsupportedConfigurationsMCM:
             obs=qml.PauliZ(0),
         )
         with pytest.raises(
-            DeviceError,
-            match=f"Unsupported mid-circuit measurement method '{method}' for device {device_name}",
+            DeviceError, match=f"mcm_method='{method}' is not supported with {device_name}"
         ):
             circuit(1.33)
 

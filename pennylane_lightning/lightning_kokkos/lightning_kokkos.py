@@ -290,18 +290,20 @@ class LightningKokkos(LightningBase):
 
         new_device_options.update(mcmc_default)
 
+        mcm_supported_methods = (
+            ("deferred", "tree-traversal", "one-shot", None)
+            if not qml.capture.enabled()
+            else ("deferred", "single-branch-statistics", None)
+        )
+
+        mcm_config = config.mcm_config
+
+        if (mcm_method := mcm_config.mcm_method) not in mcm_supported_methods:
+            raise DeviceError(f"mcm_method='{mcm_method}' is not supported with lightning.kokkos.")
+
         if qml.capture.enabled():
-            mcm_config = config.mcm_config
+
             mcm_updated_values = {}
-            if (mcm_method := mcm_config.mcm_method) not in (
-                "deferred",
-                "single-branch-statistics",
-                None,
-            ):
-                raise DeviceError(
-                    f"mcm_method='{mcm_method}' is not supported with lightning.qubit "
-                    "when program capture is enabled."
-                )
 
             if mcm_method == "single-branch-statistics" and mcm_config.postselect_mode is not None:
                 warn(
@@ -310,22 +312,10 @@ class LightningKokkos(LightningBase):
                     UserWarning,
                 )
                 mcm_updated_values["postselect_mode"] = None
-            if mcm_method is None:
+            elif mcm_method is None:
                 mcm_updated_values["mcm_method"] = "deferred"
+
             updated_values["mcm_config"] = replace(mcm_config, **mcm_updated_values)
-
-        else:
-            mcm_config = config.mcm_config
-
-            if (mcm_method := mcm_config.mcm_method) not in (
-                "deferred",
-                "tree-traversal",
-                "one-shot",
-                None,
-            ):
-                raise DeviceError(
-                    f"Unsupported mid-circuit measurement method '{mcm_method}' for device lightning.kokkos."
-                )
 
         return replace(config, **updated_values, device_options=new_device_options)
 

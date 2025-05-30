@@ -21,31 +21,27 @@ from typing import Sequence
 
 import numpy as np
 import pennylane as qml
-from pennylane.measurements import (
-    MidMeasureMP,
-    find_post_processed_mcms,
-)
-from pennylane.tape import QuantumScript
-from pennylane.typing import Result
-
 from pennylane.devices.qubit.simulate import (
     TreeTraversalStack,
-    variance_transform,
-    split_circuit_at_mcms,
-    get_measurement_dicts,
     combine_measurements,
-    update_mcm_samples,
+    counts_to_probs,
+    get_measurement_dicts,
     insert_mcms,
     prune_mcm_samples,
     samples_to_counts,
-    counts_to_probs
+    split_circuit_at_mcms,
+    update_mcm_samples,
+    variance_transform,
 )
+from pennylane.measurements import MidMeasureMP, find_post_processed_mcms
+from pennylane.tape import QuantumScript
+from pennylane.typing import Result
 
 from pennylane_lightning.lightning_base._measurements import LightningBaseMeasurements
 from pennylane_lightning.lightning_base._state_vector import LightningBaseStateVector
 
 
-
+# pylint: disable=too-many-branches, too-many-statements
 def mcm_tree_traversal(
     circuit: QuantumScript,
     lightning_state: LightningBaseStateVector,
@@ -290,6 +286,7 @@ def mcm_tree_traversal(
 # ---------------------------------------------------------------------
 # ---------------------------------------------------------------------
 
+
 def prepend_state_prep(
     circuit: QuantumScript, state: np.ndarray, wires: Sequence[int]
 ) -> QuantumScript:
@@ -304,6 +301,7 @@ def prepend_state_prep(
 
     new_ops = [qml.StatePrep(state, wires=wires, validate_norm=False)] + circuit.operations
     return circuit.copy(operations=new_ops)
+
 
 def branch_state(
     lightning_state: LightningBaseStateVector, state: np.ndarray, branch: int, mcm: MidMeasureMP
@@ -320,13 +318,16 @@ def branch_state(
         np.ndarray: The collapsed state vector
     """
     # Set the state to the initial state
-    lightning_state._apply_state_vector(state, lightning_state.wires)
+    lightning_state._apply_state_vector(  # pylint: disable=protected-access
+        state, lightning_state.wires
+    )
 
     # Apply the collapse operation
-    lightning_state.state_vector.collapse(
-        mcm.wires.tolist()[0], bool(branch))
+    lightning_state.state_vector.collapse(mcm.wires.tolist()[0], bool(branch))
 
     if mcm.reset and branch == 1:
-        lightning_state._apply_lightning([qml.PauliX(mcm.wires)])
+        lightning_state._apply_lightning(  # pylint: disable=protected-access
+            [qml.PauliX(mcm.wires)]
+        )
 
     return lightning_state.state
