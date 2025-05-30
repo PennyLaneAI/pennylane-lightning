@@ -52,13 +52,11 @@ class LightningGPUMeasurements(LightningBaseMeasurements):  # pylint: disable=to
 
     Args:
         qubit_state(LightningGPUStateVector): Lightning state-vector class containing the state vector to be measured.
-        rng (Generator): random number generator to use for seeding sampling measurement.
     """
 
     def __init__(
         self,
         qubit_state: LightningGPUStateVector,  # pylint: disable=undefined-variable
-        rng: Generator = None,
     ) -> TensorLike:
 
         super().__init__(qubit_state)
@@ -70,8 +68,7 @@ class LightningGPUMeasurements(LightningBaseMeasurements):  # pylint: disable=to
             self._num_local_wires = qubit_state._mpi_handler.num_local_wires
 
         self._measurement_lightning = self._measurement_dtype()(qubit_state.state_vector)
-        if rng:
-            self._measurement_lightning.set_seed(rng.integers(0, 2**32 - 1))
+        self._measurement_lightning.set_seed(qubit_state._rng.integers(0, 2**32 - 1))
 
     def _measurement_dtype(self):
         """Binding to Lightning GPU Measurements C++ class.

@@ -36,6 +36,7 @@ from typing import Union
 import numpy as np
 import pennylane as qml
 import scipy as sp
+from numpy.random import Generator
 from pennylane.exceptions import DeviceError
 from pennylane.measurements import MidMeasureMP
 from pennylane.ops import Conditional
@@ -68,7 +69,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
         num_wires(int): the number of wires to initialize the device with
         dtype: Datatypes for state-vector representation. Must be one of
             ``np.complex64`` or ``np.complex128``. Default is ``np.complex128``
-        device_name(string): state vector device name. Options: ["lightning.gpu"]
+        rng (Generator): random number generator to use for seeding sampling measurement.
         mpi_handler(MPIHandler): MPI handler for PennyLane Lightning GPU device.
             Provides functionality to distribute the state-vector to multiple devices.
         use_async (bool): is host-device data copy asynchronized or not.
@@ -78,11 +79,12 @@ class LightningGPUStateVector(LightningBaseStateVector):
         self,
         num_wires: int,
         dtype: Union[np.complex128, np.complex64] = np.complex128,
+        rng: Generator = None,
         mpi_handler: MPIHandler = None,
         use_async: bool = False,
     ):
 
-        super().__init__(num_wires, dtype)
+        super().__init__(num_wires, dtype, rng)
 
         self._device_name = "lightning.gpu"
 

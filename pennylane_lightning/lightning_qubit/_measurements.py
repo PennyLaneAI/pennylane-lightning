@@ -26,7 +26,6 @@ except ImportError as ex:
     warn(str(ex), UserWarning)
 
 import numpy as np
-from numpy.random import Generator
 
 from pennylane_lightning.lightning_base._measurements import LightningBaseMeasurements
 
