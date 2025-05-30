@@ -26,6 +26,7 @@ except ImportError as ex:
     warn(str(ex), UserWarning)
 
 import numpy as np
+from numpy.random import Generator
 
 from pennylane_lightning.lightning_base._measurements import LightningBaseMeasurements
 
@@ -39,7 +40,7 @@ class LightningMeasurements(LightningBaseMeasurements):  # pylint: disable=too-f
         qubit_state(LightningStateVector): Lightning state-vector class containing the state vector to be measured.
         mcmc (bool): Determine whether to use the approximate Markov Chain Monte Carlo
             sampling method when generating samples.
-        rng (Generator)
+        rng (Generator): random number generator to use for seeding sampling measurement.
         kernel_name (str): name of MCMC transition kernel. The current version supports
             two kernels: ``"Local"`` and ``"NonZeroRandom"``.
             The local kernel conducts a bit-flip local transition between states.
@@ -53,7 +54,7 @@ class LightningMeasurements(LightningBaseMeasurements):  # pylint: disable=too-f
     def __init__(
         self,
         qubit_state: LightningStateVector,  # pylint: disable=undefined-variable
-        rng=None,
+        rng: Generator = None,
         mcmc: bool = None,
         kernel_name: str = None,
         num_burnin: int = None,

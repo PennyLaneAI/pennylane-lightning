@@ -30,6 +30,7 @@ from typing import Union
 import numpy as np
 import pennylane as qml
 import scipy as sp
+from numpy.random import Generator
 from pennylane.measurements import MidMeasureMP
 from pennylane.ops import Conditional
 from pennylane.ops.op_math import Adjoint
@@ -50,12 +51,17 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
         num_wires(int): the number of wires to initialize the device with
         dtype: Datatypes for state-vector representation. Must be one of
             ``np.complex64`` or ``np.complex128``. Default is ``np.complex128``
-        device_name(string): state vector device name. Options: ["lightning.qubit"]
+        rng (Generator): random number generator to use for seeding sampling measurement.
     """
 
-    def __init__(self, num_wires: int, dtype: Union[np.complex128, np.complex64] = np.complex128):
+    def __init__(
+        self,
+        num_wires: int,
+        dtype: Union[np.complex128, np.complex64] = np.complex128,
+        rng: Generator = None,
+    ):
 
-        super().__init__(num_wires, dtype)
+        super().__init__(num_wires, dtype, rng)
 
         self._device_name = "lightning.qubit"
 
@@ -231,7 +237,7 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
                     self._apply_lightning([operation.base])
             elif isinstance(operation, MidMeasureMP):
                 self._apply_lightning_midmeasure(
-                    LightningMeasurements(self).measure_final_state,
+                    LightningMeasurements(self, self._rng).measure_final_state,
                     operation,
                     mid_measurements,
                     postselect_mode=postselect_mode,

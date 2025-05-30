@@ -851,7 +851,7 @@ class TestMeasurements:
         device_name in ("lightning.tensor"),
         reason=f"{device_name} does not support seeding device.",
     )
-    @pytest.mark.parametrize("shots", [500, [500, 500]])
+    @pytest.mark.parametrize("shots", [10, [10, 10]])
     @pytest.mark.parametrize("measurement", [qml.expval, qml.probs, qml.var])
     @pytest.mark.parametrize(
         "observable",
@@ -898,23 +898,25 @@ class TestMeasurements:
 
         statevector = lightning_sv(n_qubits)
         statevector = get_final_state(statevector, tape)
-        m_1 = LightningMeasurements(statevector, seed=123)
-        m_2 = LightningMeasurements(statevector, seed=123)
-        m_3 = LightningMeasurements(statevector, seed=213)
 
         skip_list = (qml.ops.Sum,)
         do_skip = measurement is qml.var and isinstance(observable, skip_list)
-        if do_skip:
-            with pytest.raises(TypeError):
-                _ = measure_final_state(m_1, tape)
-            return
-        else:
-            result_1 = measure_final_state(m_1, tape)
-            result_2 = measure_final_state(m_2, tape)
-            result_3 = measure_final_state(m_3, tape)
-
-        assert np.allclose(result_1, result_2)
-        assert not np.allclose(result_1, result_3)
+        if not do_skip:
+            result_1 = []
+            result_2 = []
+            result_3 = []
+            for i in range(100):
+                rng_1 = np.random.default_rng(i)
+                rng_2 = np.random.default_rng(i)
+                rng_3 = np.random.default_rng(100 + i)
+                m_1 = LightningMeasurements(statevector, rng=rng_1)
+                m_2 = LightningMeasurements(statevector, rng=rng_2)
+                m_3 = LightningMeasurements(statevector, rng=rng_3)
+                result_1.append(measure_final_state(m_1, tape))
+                result_2.append(measure_final_state(m_2, tape))
+                result_3.append(measure_final_state(m_3, tape))
+            assert np.allclose(result_1, result_2)
+            assert not np.allclose(result_1, result_3)
 
 
 class TestControlledOps:

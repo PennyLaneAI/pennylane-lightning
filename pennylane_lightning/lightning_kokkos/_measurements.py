@@ -26,6 +26,7 @@ except ImportError as ex:
 
 import numpy as np
 import pennylane as qml
+from numpy.random import Generator
 from pennylane.measurements import MeasurementProcess
 
 # pylint: disable=ungrouped-imports
@@ -41,15 +42,19 @@ class LightningKokkosMeasurements(
 
     Args:
         qubit_state(LightningKokkosStateVector): Lightning state-vector class containing the state vector to be measured.
+        rng (Generator): random number generator to use for seeding sampling measurement.
     """
 
     def __init__(
         self,
         kokkos_state: LightningKokkosStateVector,  # pylint: disable=undefined-variable
+        rng: Generator = None,
     ) -> None:
         super().__init__(kokkos_state)
 
         self._measurement_lightning = self._measurement_dtype()(kokkos_state.state_vector)
+        if rng:
+            self._measurement_lightning.set_seed(rng.integers(0, 2**32 - 1))
 
     def _measurement_dtype(self):
         """Binding to Lightning Kokkos Measurements C++ class.
