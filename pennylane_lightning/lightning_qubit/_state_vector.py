@@ -237,7 +237,7 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
                     self._apply_lightning([operation.base])
             elif isinstance(operation, MidMeasureMP):
                 self._apply_lightning_midmeasure(
-                    LightningMeasurements(self, self._rng).measure_final_state,
+                    LightningMeasurements(self).measure_final_state,
                     operation,
                     mid_measurements,
                     postselect_mode=postselect_mode,

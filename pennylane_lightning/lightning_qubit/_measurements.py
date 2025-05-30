@@ -40,7 +40,6 @@ class LightningMeasurements(LightningBaseMeasurements):  # pylint: disable=too-f
         qubit_state(LightningStateVector): Lightning state-vector class containing the state vector to be measured.
         mcmc (bool): Determine whether to use the approximate Markov Chain Monte Carlo
             sampling method when generating samples.
-        rng (Generator): random number generator to use for seeding sampling measurement.
         kernel_name (str): name of MCMC transition kernel. The current version supports
             two kernels: ``"Local"`` and ``"NonZeroRandom"``.
             The local kernel conducts a bit-flip local transition between states.
@@ -54,7 +53,6 @@ class LightningMeasurements(LightningBaseMeasurements):  # pylint: disable=too-f
     def __init__(
         self,
         qubit_state: LightningStateVector,  # pylint: disable=undefined-variable
-        rng: Generator = None,
         mcmc: bool = None,
         kernel_name: str = None,
         num_burnin: int = None,
@@ -70,8 +68,7 @@ class LightningMeasurements(LightningBaseMeasurements):  # pylint: disable=too-f
         if self._mcmc and not self._num_burnin:
             self._num_burnin = 100
         self._measurement_lightning = self._measurement_dtype()(qubit_state.state_vector)
-        if rng:
-            self._measurement_lightning.set_seed(rng.integers(0, 2**32 - 1))
+        self._measurement_lightning.set_seed(qubit_state._rng.integers(0, 2**32 - 1))
 
     def _measurement_dtype(self):
         """Binding to Lightning Measurements C++ class.

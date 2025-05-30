@@ -17,7 +17,6 @@ This module contains a class for executing plxpr using default qubit tools.
 
 import jax
 import pennylane as qml
-from numpy.random import Generator
 from pennylane.capture import disable, enable, pause
 from pennylane.capture.base_interpreter import FlattenedHigherOrderPrimitives, PlxprInterpreter
 from pennylane.capture.primitives import adjoint_transform_prim, ctrl_transform_prim, measure_prim
@@ -113,10 +112,10 @@ class LightningInterpreter(PlxprInterpreter):
         disable()
         try:
             if self.shots:
-                return self.measurement_class(self.state, rng=self.rng).measure_with_samples(
+                return self.measurement_class(self.state).measure_with_samples(
                     [measurement], self.shots
                 )
-            return self.measurement_class(self.state, rng=self.rng).measurement(measurement)
+            return self.measurement_class(self.state).measurement(measurement)
         finally:
             enable()
 

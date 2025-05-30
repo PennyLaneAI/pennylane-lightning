@@ -233,14 +233,14 @@ class LightningBase(Device):
                     aux_circ, mid_measurements=mid_measurements, postselect_mode=postselect_mode
                 )
                 results.append(
-                    self.LightningMeasurements(final_state, self._rng, **mcmc).measure_final_state(
+                    self.LightningMeasurements(final_state, **mcmc).measure_final_state(
                         aux_circ, mid_measurements=mid_measurements
                     )
                 )
             return tuple(results)
 
         final_state = state.get_final_state(circuit)
-        return self.LightningMeasurements(final_state, self._rng, **mcmc).measure_final_state(
+        return self.LightningMeasurements(final_state, **mcmc).measure_final_state(
             circuit
         )
 

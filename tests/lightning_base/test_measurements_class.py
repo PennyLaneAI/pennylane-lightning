@@ -23,6 +23,7 @@ from conftest import (  # tested device
     PHI,
     THETA,
     LightningDevice,
+    LightningStateVector,
     LightningMeasurements,
     device_name,
 )
@@ -851,6 +852,7 @@ class TestMeasurements:
         device_name in ("lightning.tensor"),
         reason=f"{device_name} does not support seeding device.",
     )
+    @pytest.mark.parametrize("dtype", [np.complex64, np.complex128])
     @pytest.mark.parametrize("shots", [10, [10, 10]])
     @pytest.mark.parametrize("measurement", [qml.expval, qml.probs, qml.var])
     @pytest.mark.parametrize(
@@ -870,7 +872,8 @@ class TestMeasurements:
             ),
         ),
     )
-    def test_seeded_shots_measurement(self, shots, measurement, observable, lightning_sv, tol):
+    def test_seeded_shots_measurement(self, dtype, shots, measurement, observable, tol):
+        """Test that seeded measurements with shots return same results with same seed and different results for different seeds."""
         if measurement is qml.probs and isinstance(
             observable,
             (
@@ -896,25 +899,30 @@ class TestMeasurements:
         )
         tape = qml.tape.QuantumScript(ops, measurements, shots=shots)
 
-        statevector = lightning_sv(n_qubits)
-        statevector = get_final_state(statevector, tape)
 
         skip_list = (qml.ops.Sum,)
         do_skip = measurement is qml.var and isinstance(observable, skip_list)
         if not do_skip:
+            rng_1 = np.random.default_rng(123)
+            rng_2 = np.random.default_rng(123)
+            rng_3 = np.random.default_rng(321)
+            statevector1 = LightningStateVector(n_qubits, dtype, rng=rng_1)
+            statevector1 = get_final_state(statevector1, tape)
+            statevector2 = LightningStateVector(n_qubits, dtype, rng=rng_2)
+            statevector2 = get_final_state(statevector2, tape)
+            statevector3 = LightningStateVector(n_qubits, dtype, rng=rng_3)
+            statevector3 = get_final_state(statevector3, tape)
             result_1 = []
             result_2 = []
             result_3 = []
-            for i in range(100):
-                rng_1 = np.random.default_rng(i)
-                rng_2 = np.random.default_rng(i)
-                rng_3 = np.random.default_rng(100 + i)
-                m_1 = LightningMeasurements(statevector, rng=rng_1)
-                m_2 = LightningMeasurements(statevector, rng=rng_2)
-                m_3 = LightningMeasurements(statevector, rng=rng_3)
+            for i in range(20):
+                m_1 = LightningMeasurements(statevector1)
+                m_2 = LightningMeasurements(statevector2)
+                m_3 = LightningMeasurements(statevector3)
                 result_1.append(measure_final_state(m_1, tape))
                 result_2.append(measure_final_state(m_2, tape))
                 result_3.append(measure_final_state(m_3, tape))
+            
             assert np.allclose(result_1, result_2)
             assert not np.allclose(result_1, result_3)
 
