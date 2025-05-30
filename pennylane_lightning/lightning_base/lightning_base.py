@@ -586,11 +586,11 @@ class LightningBase(Device):
             raise NotImplementedError("Wires must be specified for integration with plxpr capture.")
 
         self._statevector = self.LightningStateVector(
-            num_wires=len(self.wires), dtype=self._c_dtype
+            num_wires=len(self.wires), dtype=self._c_dtype, rng=self._rng
         )
 
         interpreter = LightningInterpreter(
-            self._statevector, self.LightningMeasurements, shots=self.shots, rng=self._rng
+            self._statevector, self.LightningMeasurements, shots=self.shots
         )
         evaluator = partial(interpreter.eval, jaxpr)
 

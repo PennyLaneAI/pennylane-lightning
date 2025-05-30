@@ -37,7 +37,6 @@ class LightningInterpreter(PlxprInterpreter):
         measurement_class (type[LightningBaseMeasurement]): The type to use to perform
             measurements on the statevector
         shots (Shots): the number of shots to use. Shot vectors are not yet supported.
-        rng (Generator): A random number generator to use for sampling measurement.
 
     .. code-block:: python
 
@@ -72,14 +71,13 @@ class LightningInterpreter(PlxprInterpreter):
         state: LightningBaseStateVector,
         measurement_class: type[LightningBaseMeasurements],
         shots: Shots = Shots(),
-        rng: Generator = None,
     ):
         self.state = state
         self.measurement_class = measurement_class
         self.shots = shots
         if self.shots.has_partitioned_shots:
             raise NotImplementedError("LightningInterpreter does not support partitioned shots.")
-        self.rng = rng
+        self.rng = state._rng
         self.reset = True
         super().__init__()
 
