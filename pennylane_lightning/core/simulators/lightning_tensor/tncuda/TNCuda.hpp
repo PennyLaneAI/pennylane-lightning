@@ -332,7 +332,7 @@ class TNCuda : public TNCudaBase<PrecisionT, Derived> {
                 controlled_wires, BaseType::getNumQubits());
 
         std::vector<int64_t> controlled_values_int64(controlled_values.size());
-        std::transform(controlled_values.begin(), controlled_values.end(),
+        std::transform(controlled_values.rbegin(), controlled_values.rend(),
                        controlled_values_int64.begin(),
                        [](bool val) { return static_cast<int64_t>(val); });
 

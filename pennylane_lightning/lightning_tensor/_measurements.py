@@ -156,12 +156,12 @@ class LightningTensorMeasurements:
             self._tensornet.apply_operations(diagonalizing_gates)
             self._tensornet.appendFinalState()
 
-        if measurementprocess.wires == Wires([]):
-            # For the case where no wires is specified for tensornet
-            # and measurement process, wires are determined here
-            measurewires = self._tensornet._wires
-        else:
-            measurewires = measurementprocess.wires.tolist()
+        measurewires = (
+            self._tensornet._wires
+            if measurementprocess.wires == Wires([])
+            else measurementprocess.wires.tolist()
+        )
+
         results = self._measurement_lightning.probs(measurewires)
         if diagonalizing_gates:
             self._tensornet.apply_operations(
