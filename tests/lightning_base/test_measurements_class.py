@@ -846,7 +846,7 @@ class TestMeasurements:
         expected = qml.QNode(circuit, qml.device("default.qubit", wires=cases[1]))()
         results = qml.QNode(circuit, dev)()
         assert np.allclose(expected, results, tol)
-        
+
     @pytest.mark.skipif(
         device_name in ("lightning.tensor"),
         reason=f"{device_name} does not support seeding device.",

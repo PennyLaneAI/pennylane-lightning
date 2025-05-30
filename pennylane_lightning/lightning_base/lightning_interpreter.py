@@ -17,13 +17,13 @@ This module contains a class for executing plxpr using default qubit tools.
 
 import jax
 import pennylane as qml
+from numpy.random import Generator
 from pennylane.capture import disable, enable, pause
 from pennylane.capture.base_interpreter import FlattenedHigherOrderPrimitives, PlxprInterpreter
 from pennylane.capture.primitives import adjoint_transform_prim, ctrl_transform_prim, measure_prim
 from pennylane.exceptions import DeviceError
 from pennylane.measurements import MidMeasureMP, Shots
 from pennylane.tape.plxpr_conversion import CollectOpsandMeas
-from numpy.random import Generator
 
 from pennylane_lightning.lightning_base._measurements import LightningBaseMeasurements
 from pennylane_lightning.lightning_base._state_vector import LightningBaseStateVector

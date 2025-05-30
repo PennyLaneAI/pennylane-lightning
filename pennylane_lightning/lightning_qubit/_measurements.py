@@ -53,7 +53,7 @@ class LightningMeasurements(LightningBaseMeasurements):  # pylint: disable=too-f
     def __init__(
         self,
         qubit_state: LightningStateVector,  # pylint: disable=undefined-variable
-        rng = None,
+        rng=None,
         mcmc: bool = None,
         kernel_name: str = None,
         num_burnin: int = None,
