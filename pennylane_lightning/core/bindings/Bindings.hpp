@@ -493,9 +493,8 @@ void registerBackendAgnosticMeasurements(PyClass &pyclass) {
                      strides /* strides for each axis     */
                      ));
              })
-        .def("set_random_seed", [](Measurements<StateVectorT> &M, std::size_t seed) {
-            M.setSeed(seed);
-        });
+        .def("set_random_seed", [](Measurements<StateVectorT> &M,
+                                   std::size_t seed) { M.setSeed(seed); });
 }
 
 /**
