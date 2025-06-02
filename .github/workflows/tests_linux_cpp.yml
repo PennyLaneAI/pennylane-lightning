@@ -65,6 +65,7 @@ jobs:
         with:
           repository: PennyLaneAI/catalyst
           path: ${{ github.workspace}}/catalyst
+          ref: ${{ (inputs.pennylane-version == 'stable' && 'v0.11.0') || 'main' }} # FIXME: remove after v0.42 release
 
       - name: Install dependencies
         run: |
@@ -143,6 +144,7 @@ jobs:
         with:
           repository: PennyLaneAI/catalyst
           path: ${{ github.workspace}}/catalyst
+          ref: ${{ (inputs.pennylane-version == 'stable' && 'v0.11.0') || 'main' }} # FIXME: remove after v0.42 release
 
       - name: Install dependencies
         run: |
@@ -229,6 +231,7 @@ jobs:
         with:
           repository: PennyLaneAI/catalyst
           path: ${{ github.workspace}}/catalyst
+          ref: ${{ (inputs.pennylane-version == 'stable' && 'v0.11.0') || 'main' }} # FIXME: remove after v0.42 release
 
       - name: Restoring cached dependencies
         id: kokkos-cache
@@ -345,6 +348,7 @@ jobs:
         with:
           repository: PennyLaneAI/catalyst
           path: ${{ github.workspace}}/catalyst
+          ref: ${{ (inputs.pennylane-version == 'stable' && 'v0.11.0') || 'main' }} # FIXME: remove after v0.42 release
 
       - name: Restoring cached dependencies
         id: kokkos-cache

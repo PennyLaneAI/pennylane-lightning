@@ -96,6 +96,7 @@ jobs:
         with:
           repository: PennyLaneAI/catalyst
           path: ${{ github.workspace}}/catalyst
+          ref: ${{ (inputs.pennylane-version == 'stable' && 'v0.11.0') || 'main' }} # FIXME: remove after v0.42 release
 
       - uses: actions/setup-python@v5
         id: setup_python

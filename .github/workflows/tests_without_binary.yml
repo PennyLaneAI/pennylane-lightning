@@ -108,6 +108,7 @@ jobs:
         with:
           repository: PennyLaneAI/catalyst
           path: ${{ github.workspace}}/catalyst
+          ref: ${{ (inputs.pennylane-version == 'stable' && 'v0.11.0') || 'main' }} # FIXME: remove after v0.42 release
 
       - name: Install the pennylane_lightning core package (lightning_qubit)
         env:
