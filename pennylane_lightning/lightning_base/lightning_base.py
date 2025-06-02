@@ -85,7 +85,7 @@ class LightningBase(Device):
 
         self._c_dtype = c_dtype
         self._batch_obs = batch_obs
-        self._seed = np.random.randint(2**32 - 1) if seed == "global" else seed
+        self._seed = np.random.randint(0, high=10000000) if seed == "global" else seed
         self._rng = np.random.default_rng(self._seed)
 
         # State-vector is dynamically allocated just before execution

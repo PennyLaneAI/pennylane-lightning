@@ -4,7 +4,7 @@
 
 <h3>Improvements 🛠</h3>
 
-- Lightning devices accepts a `seed` argument to enable deterministic shots measurements.
+- Lightning devices accept a `seed` argument to enable deterministic shots measurements.
   [(#1171)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1171)
 
 - PennyLane-Lightning is compatible with JAX version 0.5.3+.

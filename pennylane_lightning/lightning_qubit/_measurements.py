@@ -67,7 +67,7 @@ class LightningMeasurements(LightningBaseMeasurements):  # pylint: disable=too-f
         if self._mcmc and not self._num_burnin:
             self._num_burnin = 100
         self._measurement_lightning = self._measurement_dtype()(qubit_state.state_vector)
-        self._measurement_lightning.set_seed(qubit_state._rng.integers(0, 2**32 - 1))
+        self._measurement_lightning.set_random_seed(qubit_state._rng.integers(0, 2**31 - 1))
 
     def _measurement_dtype(self):
         """Binding to Lightning Measurements C++ class.
