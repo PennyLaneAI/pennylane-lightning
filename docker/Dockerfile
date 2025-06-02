@@ -123,7 +123,7 @@ RUN CMAKE_ARGS="-DKokkos_ENABLE_SERIAL:BOOL=ON -DKokkos_ENABLE_OPENMP:BOOL=ON -D
 
 # Install python3 and setup runtime virtual env in CUDA-12-runtime image (includes CUDA runtime and math libraries)
 # Install lightning-kokkos CUDA backend
-FROM nvidia/cuda:12.9.0-base-ubuntu24.04 AS wheel-lightning-kokkos-cuda
+FROM nvidia/cuda:12.2.0-base-ubuntu22.04 AS wheel-lightning-kokkos-cuda
 ARG PENNYLANE_VERSION
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
@@ -154,7 +154,7 @@ RUN CUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}
 
 # Install python3 and setup runtime virtual env in CUDA-12-runtime image (includes CUDA runtime and math libraries)
 # Install lightning-kokkos CUDA backend
-FROM nvidia/cuda:12.9.0-base-ubuntu24.04 AS wheel-lightning-gpu
+FROM nvidia/cuda:12.2.0-runtime-ubuntu22.04 AS wheel-lightning-gpu
 ARG PENNYLANE_VERSION
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
@@ -196,7 +196,7 @@ RUN python scripts/configure_pyproject_toml.py || true
 RUN CMAKE_ARGS="-DKokkos_ENABLE_SERIAL:BOOL=ON -DKokkos_ENABLE_OPENMP:BOOL=ON -DKokkos_ENABLE_HIP:BOOL=ON -DKokkos_ARCH_${AMD_ARCH}=ON -DCMAKE_CXX_FLAGS='--gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/11/'" python -m build --wheel
 
 # Install lightning-kokkos HIP backend
-FROM rocm/dev-ubuntu-24.04:6.4.1 AS wheel-lightning-kokkos-rocm
+FROM rocm/dev-ubuntu-22.04:6.2.4 AS wheel-lightning-kokkos-rocm
 ARG PENNYLANE_VERSION
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
