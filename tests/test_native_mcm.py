@@ -237,8 +237,8 @@ class TestMCMSupportedConfigurationsMCM:
 
     def test_qnode_default_mcm_method_analytical(self, mocker):
         """Test the default mcm method is used for analytical simulation"""
-        spy = mocker.spy(qml.defer_measurements, "_transform")
-        other_spy = mocker.spy(qml.dynamic_one_shot, "_transform")
+        spy_defer_meas = mocker.spy(qml.defer_measurements, "_transform")
+        spy_dynamic_one_shot = mocker.spy(qml.dynamic_one_shot, "_transform")
 
         shots = None
         device = qml.device(device_name, wires=3, shots=shots)
@@ -397,7 +397,7 @@ class TestExecutionMCM:
         if mcm_method == "one-shot" and shots is None:
             pytest.skip("Skip test for one-shot with None shots")
 
-        wires = 2 if mcm_method != "deferred" else 4
+        wires = 4 if mcm_method == "deferred" else 2
         dq = qml.device("default.qubit", shots=shots)
         dev = get_device(wires=wires, shots=shots)
         params = [np.pi / 2.5, np.pi / 3, -np.pi / 3.5]
@@ -434,7 +434,7 @@ class TestExecutionMCM:
             pytest.skip("Skip test for one-shot with None shots")
 
         shots = shots
-        wires = 2 if mcm_method != "deferred" else 4
+        wires = 4 if mcm_method == "deferred" else 2
 
         dq = qml.device("default.qubit", shots=shots)
         dev = get_device(wires=wires, shots=shots)
