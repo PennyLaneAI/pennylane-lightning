@@ -67,7 +67,8 @@ class LightningGPUMeasurements(LightningBaseMeasurements):  # pylint: disable=to
             self._num_local_wires = qubit_state._mpi_handler.num_local_wires
 
         self._measurement_lightning = self._measurement_dtype()(qubit_state.state_vector)
-        self._measurement_lightning.set_random_seed(qubit_state._rng.integers(0, 2**31 - 1))
+        if qubit_state._rng:
+            self._measurement_lightning.set_random_seed(qubit_state._rng.integers(0, 2**31 - 1))
 
     def _measurement_dtype(self):
         """Binding to Lightning GPU Measurements C++ class.
