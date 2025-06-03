@@ -17,8 +17,6 @@ This module implements a tree traversal algorithm for simulating quantum circuit
 
 """
 
-from typing import Sequence
-
 import numpy as np
 import pennylane as qml
 from pennylane.devices.qubit.simulate import (

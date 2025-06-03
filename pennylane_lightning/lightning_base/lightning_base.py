@@ -184,14 +184,14 @@ class LightningBase(Device):
             TensorLike, tuple[TensorLike], tuple[tuple[TensorLike]]: A numeric result of the computation.
         """
 
-    def simulate(
+    def simulate( # pylint: disable=too-many-arguments
         self,
         circuit: QuantumScript,
         state,  # Lightning [Device] StateVector
         *,
         postselect_mode: str = None,
         mcmc: dict = None,
-        mcm_method: str = None,  # pylint: disable=too-many-arguments
+        mcm_method: str = None,  
     ) -> Result:
         """Simulate a single quantum script.
 
