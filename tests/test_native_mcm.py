@@ -178,6 +178,30 @@ class TestUnsupportedConfigurationsMCM:
             ):
                 circuit(1.33)
 
+    def test_impossible_state_for_TT(self):
+        """Test impossible state with mid-circuit measurement for tree-traversal method."""
+
+        def circuit():
+            qml.X(0)
+            qml.measure(1,  postselect=1)
+            return qml.expval(qml.PauliZ(0))
+
+        dev_dq = qml.device("default.qubit", wires=2)
+        dev_lq = qml.device("lightning.qubit", wires=2)
+
+        mcm_method = "tree-traversal"
+        qnode_dq = qml.QNode( circuit,dev_dq, mcm_method=mcm_method)
+        qnode_lq = qml.QNode( circuit,dev_lq, mcm_method=mcm_method)
+        
+        with pytest.raises(
+            ZeroDivisionError,
+            match="division by zero"):
+            qnode_dq()
+            
+        with pytest.raises(
+            ZeroDivisionError,
+            match="division by zero"):
+            qnode_lq()
 
 class TestSupportedConfigurationsMCM:
 
@@ -377,7 +401,7 @@ class TestExecutionMCM:
         [qml.PauliZ(0), qml.PauliY(1), [0], [0, 1], [1, 0], "mcm", "composite_mcm", "mcm_list"],
     )
     def test_simple_dynamic_circuit(self, mcm_method, shots, measure_f, postselect, measure_obj):
-        """Tests that LightningQubit handles a simple dynamic circuit with the following measurements:
+        """Tests that LightningDevices handles a simple dynamic circuit with the following measurements:
 
             * qml.counts with obs (comp basis or not), single wire, multiple wires (ordered/unordered), MCM, f(MCM), MCM list
             * qml.expval with obs (comp basis or not), MCM, f(MCM), MCM list
@@ -427,7 +451,7 @@ class TestExecutionMCM:
     @pytest.mark.parametrize("postselect", [None, 0, 1])
     @pytest.mark.parametrize("reset", [False, True])
     def test_multiple_measurements_and_reset(self, mcm_method, shots, postselect, reset):
-        """Tests that LightningQubit handles a circuit with a single mid-circuit measurement with reset
+        """Tests that LightningDevices handles a circuit with a single mid-circuit measurement with reset
         and a conditional gate. Multiple measurements of the mid-circuit measurement value are
         performed. This function also tests `reset` parametrizing over the parameter."""
 
@@ -544,7 +568,7 @@ class TestExecutionMCM:
         ],
     )
     def test_counts_return_type(self, mcm_method, mcm_f):
-        """Tests that LightningQubit returns the same keys for ``qml.counts`` measurements with ``dynamic_one_shot`` and ``defer_measurements``."""
+        """Tests that LightningDevices returns the same keys for ``qml.counts`` measurements with ``dynamic_one_shot`` and ``defer_measurements``."""
         shots = 500
 
         wires = 3 if mcm_method == "deferred" else 2

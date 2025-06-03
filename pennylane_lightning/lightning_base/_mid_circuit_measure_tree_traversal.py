@@ -58,15 +58,13 @@ def mcm_tree_traversal(
 
     Args:
         circuit (QuantumTape): The single circuit to simulate
-        lightning_state (LightningBaseStateVector): The state vector class used to handle the state
+        lightning_state (LightningBaseStateVector): The state vector.
         lightning_measurement (LightningBaseMeasurements): The measurement class used to perform measurements
         postselect_mode (str): Configuration for shots with mid-circuit measurement
 
     Returns:
         Result: The result of the simulation, which can be a scalar or a tuple of scalars.
     """
-
-    print("I have been called with mcm_tree_traversal")
 
     ##########################
     # shot vector processing #
@@ -127,8 +125,6 @@ def mcm_tree_traversal(
     mid_measurements = dict(zip(mcms[1:], mcm_current[1:].tolist()))
     # Split circuit into segments
     circuits = split_circuit_at_mcms(circuit)
-
-    # circuits[0] = prepend_state_prep(circuits[0], lightning_state.state, lightning_state.wires)
 
     terminal_measurements = circuits[-1].measurements if finite_shots else circuit.measurements
     # Initialize stacks
@@ -210,13 +206,6 @@ def mcm_tree_traversal(
             measurements = tuple()
         else:
             # If num_shots is non-zero, simulate the current depth circuit segment
-            # if depth == 0:
-            #     initial_state = stack.states[0]  # None
-            # else:
-            #     initial_state = branch_state(
-            #         lightning_state, stack.states[depth], mcm_current[depth], mcms[depth]
-            #     )
-
 
             initial_state = stack.states[depth]  # None
             if depth != 0:
@@ -225,7 +214,6 @@ def mcm_tree_traversal(
                 )
 
             circtmp = circuits[depth].copy(shots=qml.measurements.shots.Shots(shots))
-            # circtmp = prepend_state_prep(circtmp, lightning_state)
 
             lightning_state = lightning_state.get_final_state(
                 circtmp,
@@ -296,22 +284,6 @@ def mcm_tree_traversal(
 # ---------------------------------------------------------------------
 
 
-def prepend_state_prep(
-    circuit: QuantumScript, lightning_state) -> QuantumScript:
-    """Prepend a ``StatePrep`` operation with the prescribed ``wires`` to the circuit.
-
-    ``get_final_state`` executes a circuit on a subset of wires found in operations
-    or measurements. This function makes sure that an initial state with the correct size is created
-    on the first invocation of ``simulate_tree_mcm``. ``wires`` should be the wires attribute
-    of the original circuit (which included all wires)."""
-    if len(circuit) > 0 and isinstance(circuit[0], qml.operation.StatePrepBase):
-        return circuit
-
-    # new_ops = [qml.StatePrep(lightning_state.state, wires=lightning_state.wires, validate_norm=False)] + circuit.operations
-    new_ops = circuit.operations
-    return circuit.copy(operations=new_ops)
-
-
 def branch_state(
     lightning_state: LightningBaseStateVector, state: np.ndarray, branch: int, mcm: MidMeasureMP
 ) -> np.ndarray:
@@ -339,4 +311,3 @@ def branch_state(
             [qml.PauliX(mcm.wires)]
         )
 
-    # return lightning_state.state
