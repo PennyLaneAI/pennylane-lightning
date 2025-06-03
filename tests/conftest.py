@@ -219,6 +219,7 @@ def lightning_sv(request):
 
     return _statevector
 
+
 @pytest.fixture(autouse=True)
 def restore_global_seed():
     original_state = np.random.get_state()
@@ -247,6 +248,7 @@ def seed(request):
     if marker and marker.args:
         return original_seed + marker.args[0]
     return original_seed
+
 
 def validate_counts(shots, results1, results2, rtol=20, atol=0.2):
     """Compares two counts.
