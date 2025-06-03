@@ -37,6 +37,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Remove flaky tests and add random seed to measurement tests.
+  [(#11XX)](https://github.com/PennyLaneAI/pennylane-lightning/pull/11XX)
+
 - Update the Lightning build dependencies.
   [(#1168)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1168)
 

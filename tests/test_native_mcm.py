@@ -26,7 +26,6 @@ from conftest import (
     validate_others,
     validate_samples,
 )
-from flaky import flaky
 from pennylane.exceptions import DeviceError
 
 if device_name not in ("lightning.qubit", "lightning.kokkos", "lightning.gpu"):
@@ -200,7 +199,7 @@ def obs_tape(x, y, z, reset=False, postselect=None):
     return m0, m1
 
 
-@flaky(max_runs=5)
+@pytest.mark.local_salt(42)
 @pytest.mark.parametrize("shots", [5000, [5000, 5001]])
 @pytest.mark.parametrize("postselect", [None, 0, 1])
 @pytest.mark.parametrize("measure_f", [qml.counts, qml.expval, qml.probs, qml.sample, qml.var])
@@ -208,7 +207,7 @@ def obs_tape(x, y, z, reset=False, postselect=None):
     "meas_obj",
     [qml.PauliZ(0), qml.PauliY(1), [0], [0, 1], [1, 0], "mcm", "composite_mcm", "mcm_list"],
 )
-def test_simple_dynamic_circuit(shots, measure_f, postselect, meas_obj):
+def test_simple_dynamic_circuit(shots, measure_f, postselect, meas_obj, seed):
     """Tests that LightningQubit handles a simple dynamic circuit with the following measurements:
 
         * qml.counts with obs (comp basis or not), single wire, multiple wires (ordered/unordered), MCM, f(MCM), MCM list
@@ -225,8 +224,8 @@ def test_simple_dynamic_circuit(shots, measure_f, postselect, meas_obj):
     ):
         pytest.skip("Can't use wires/mcm lists with var or expval")
 
-    dq = qml.device("default.qubit", shots=shots)
-    dev = get_device(wires=3, shots=shots)
+    dq = qml.device("default.qubit", shots=shots, seed=seed)
+    dev = get_device(wires=3, shots=shots, seed=seed)
     params = [np.pi / 2.5, np.pi / 3, -np.pi / 3.5]
 
     def func(x, y, z):
@@ -240,19 +239,19 @@ def test_simple_dynamic_circuit(shots, measure_f, postselect, meas_obj):
 
     results1 = qml.QNode(func, dev, mcm_method="one-shot")(*params)
     results2 = qml.QNode(func, dq, mcm_method="deferred")(*params)
+    validate_measurements(measure_f, shots, results1, results2, atol=0.02)
 
-    validate_measurements(measure_f, shots, results1, results2)
 
-
+@pytest.mark.local_salt(42)
 @pytest.mark.parametrize("postselect", [None, 0, 1])
 @pytest.mark.parametrize("reset", [False, True])
-def test_multiple_measurements_and_reset(postselect, reset):
+def test_multiple_measurements_and_reset(postselect, reset, seed):
     """Tests that LightningQubit handles a circuit with a single mid-circuit measurement with reset
     and a conditional gate. Multiple measurements of the mid-circuit measurement value are
     performed. This function also tests `reset` parametrizing over the parameter."""
     shots = 5000
-    dq = qml.device("default.qubit", shots=shots)
-    dev = get_device(wires=3, shots=shots)
+    dq = qml.device("default.qubit", shots=shots, seed=seed)
+    dev = get_device(wires=3, shots=shots, seed=seed)
     params = [np.pi / 2.5, np.pi / 3, -np.pi / 3.5]
     obs = qml.PauliY(1)
 
@@ -275,6 +274,7 @@ def test_multiple_measurements_and_reset(postselect, reset):
         validate_measurements(measure_f, shots, r1, r2)
 
 
+@pytest.mark.local_salt(42)
 @pytest.mark.parametrize(
     "mcm_f",
     [
@@ -289,7 +289,7 @@ def test_multiple_measurements_and_reset(postselect, reset):
     ],
 )
 @pytest.mark.parametrize("measure_f", [qml.counts, qml.expval, qml.probs, qml.sample, qml.var])
-def test_composite_mcms(mcm_f, measure_f):
+def test_composite_mcms(mcm_f, measure_f, seed):
     """Tests that LightningQubit handles a circuit with a composite mid-circuit measurement and a
     conditional gate. A single measurement of a composite mid-circuit measurement is performed
     at the end."""
@@ -306,8 +306,8 @@ def test_composite_mcms(mcm_f, measure_f):
 
     shots = 3000
 
-    dq = qml.device("default.qubit", shots=shots)
-    dev = get_device(wires=3, shots=shots)
+    dq = qml.device("default.qubit", shots=shots, seed=seed)
+    dev = get_device(wires=3, shots=shots, seed=seed)
     param = np.pi / 3
 
     @qml.qnode(dev)
