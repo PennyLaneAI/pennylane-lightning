@@ -122,6 +122,7 @@ _operations = frozenset(
         "C(DoubleExcitationPlus)",
         "C(GlobalPhase)",
         "C(MultiRZ)",
+        "C(X)"
         "MultiControlledX",
         "RX",
         "RY",

@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <complex>
 #include <memory>
 #include <set>
@@ -314,7 +315,10 @@ class TNCuda : public TNCudaBase<PrecisionT, Derived> {
 
         auto &&par = (params.empty()) ? std::vector<PrecisionT>{0.0} : params;
 
-        int64_t dummy_id = gate_ids_.empty() ? 1 : *gate_ids_.rbegin() + 1;
+        int64_t dummy_id =
+            gate_ids_.empty()
+                ? 1
+                : *std::max_element(gate_ids_.begin(), gate_ids_.end()) + 1;
 
         if (gate_matrix.empty()) {
             gate_cache_->add_gate(dummy_id, baseOpName, par, adjoint);
@@ -332,7 +336,7 @@ class TNCuda : public TNCudaBase<PrecisionT, Derived> {
                 controlled_wires, BaseType::getNumQubits());
 
         std::vector<int64_t> controlled_values_int64(controlled_values.size());
-        std::transform(controlled_values.rbegin(), controlled_values.rend(),
+        std::transform(controlled_values.begin(), controlled_values.end(),
                        controlled_values_int64.begin(),
                        [](bool val) { return static_cast<int64_t>(val); });
 
