@@ -215,7 +215,7 @@ def lightning_sv(request):
         if seed:
             rng = np.random.default_rng(seed)
             return LightningStateVector(num_wires=num_wires, dtype=request.param, rng=rng)
-        _statevector = LightningStateVector(num_wires=num_wires, dtype=request.param)
+        return LightningStateVector(num_wires=num_wires, dtype=request.param)
 
     return _statevector
 
