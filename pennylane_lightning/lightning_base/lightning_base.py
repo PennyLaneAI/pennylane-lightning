@@ -191,7 +191,7 @@ class LightningBase(Device):
         *,
         postselect_mode: str = None,
         mcmc: dict = None,
-        mcm_method: str = None,
+        mcm_method: str = None, # pylint: disable=too-many-arguments
     ) -> Result:
         """Simulate a single quantum script.
 
@@ -204,6 +204,7 @@ class LightningBase(Device):
             mcmc (dict): Dictionary containing the Markov Chain Monte Carlo
                 parameters: mcmc, kernel_name, num_burnin. Currently only supported for
                 ``lightning.qubit``, more detail can be found in :class:`~.LightningQubit`.
+            mcm_method (str): The method to use for mid-circuit measurements. Default is ``"one-shot"`` if ``circuit.shots`` is set, otherwise it defaults to ``"deferred"``.
 
         Returns:
             Tuple[TensorLike]: The results of the simulation
@@ -216,7 +217,8 @@ class LightningBase(Device):
         # Simulate with Mid Circuit Measurements
         if any(isinstance(op, MidMeasureMP) for op in circuit.operations):
 
-            # Mid-circuit measurement with deferred method replace MidMeasureMP with additional qubits and control operations
+            # If mcm_method is not specified and the circuit does not have shots, default to "deferred". 
+            # It is not listed here because all mid-circuit measurements are replaced with additional wires.
 
             if mcm_method == "tree-traversal":
                 # Using the tree traversal MCM method.
@@ -224,7 +226,7 @@ class LightningBase(Device):
                     circuit, state, self.LightningMeasurements, postselect_mode
                 )
 
-            if mcm_method == "one-shot" or mcm_method is None and circuit.shots:
+            if mcm_method == "one-shot" or (mcm_method is None and circuit.shots):
                 # Using the one-shot MCM method.
                 results = []
                 aux_circ = qml.tape.QuantumScript(

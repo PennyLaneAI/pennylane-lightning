@@ -50,7 +50,7 @@ def mcm_method(request):
 class TestUnsupportedConfigurationsMCM:
     """Test unsupported configurations for different mid-circuit measurement methods."""
 
-    def generate_circuit(
+    def generate_mcm_circuit(
         self,
         device_kwargs={},
         qnode_kwargs={},
@@ -60,10 +60,6 @@ class TestUnsupportedConfigurationsMCM:
     ):
         """Generate a circuit with a mid-circuit measurement."""
         dev = qml.device(device_name, **device_kwargs)
-
-        print(f"device_kwargs: {device_kwargs}")
-        print(f"qnode_kwargs: {qnode_kwargs}")
-        print(f"mcm_kwargs: {mcm_kwargs}")
 
         @qml.qnode(dev, **qnode_kwargs)
         def func(y):
@@ -77,7 +73,7 @@ class TestUnsupportedConfigurationsMCM:
     def test_unsupported_method(self):
 
         method = "roller-coaster"
-        circuit = self.generate_circuit(
+        circuit = self.generate_mcm_circuit(
             device_kwargs={"wires": 1, "shots": 100},
             qnode_kwargs={"mcm_method": method},
             mcm_kwargs={"postselect": None, "reset": False},
@@ -90,9 +86,9 @@ class TestUnsupportedConfigurationsMCM:
             circuit(1.33)
 
     def test_unsupported_measurement(self, mcm_method):
-        """Test unsupported ``qml.classical_shadow`` measurement on ``lightning.qubit`` or ``lightning.kokkos`` ."""
+        """Test unsupported ``qml.classical_shadow`` measurement on Lightning devices."""
 
-        circuit = self.generate_circuit(
+        circuit = self.generate_mcm_circuit(
             device_kwargs={"wires": 1, "shots": 100},
             qnode_kwargs={"mcm_method": mcm_method},
             mcm_kwargs={"postselect": None, "reset": False},
@@ -115,9 +111,9 @@ class TestUnsupportedConfigurationsMCM:
                 circuit(1.33)
 
     def test_unsupported_configuration_deferred(self):
-        """Test unsupported configuration for wires=1, shots=None"""
+        """Test unsupported configuration for deferred mcm method."""
 
-        circuit = self.generate_circuit(
+        circuit = self.generate_mcm_circuit(
             device_kwargs={"wires": 1, "shots": None},
             qnode_kwargs={"mcm_method": "deferred"},
             mcm_kwargs={"postselect": None, "reset": False},
@@ -133,7 +129,7 @@ class TestUnsupportedConfigurationsMCM:
 
         for postsel in ["hw-like", "fill-shots"]:
 
-            circuit = self.generate_circuit(
+            circuit = self.generate_mcm_circuit(
                 device_kwargs={"wires": 1, "shots": 100},
                 qnode_kwargs={"mcm_method": "deferred", "postselect_mode": postsel},
                 mcm_kwargs={"postselect": 1, "reset": False},
@@ -148,9 +144,9 @@ class TestUnsupportedConfigurationsMCM:
                 circuit(1.33)
 
     def test_unsupported_configuration_one_shot(self):
-        """Test unsupported configuration for wires=1, shots=None"""
+        """Test unsupported configuration for one-shot mcm method."""
 
-        circuit = self.generate_circuit(
+        circuit = self.generate_mcm_circuit(
             device_kwargs={"wires": 1, "shots": None},
             qnode_kwargs={"mcm_method": "one-shot"},
             mcm_kwargs={"postselect": None, "reset": False},
@@ -165,10 +161,10 @@ class TestUnsupportedConfigurationsMCM:
             circuit(1.33)
 
     def test_unsupported_configuration_tree_traversal(self):
-        """Test unsupported configuration for wires=1, shots=None"""
+        """Test unsupported configuration for tree-traversal mcm method."""
 
         for measurement in [qml.counts, qml.sample]:
-            circuit = self.generate_circuit(
+            circuit = self.generate_mcm_circuit(
                 device_kwargs={"wires": 1, "shots": None},
                 qnode_kwargs={"mcm_method": "tree-traversal"},
                 mcm_kwargs={"postselect": None, "reset": False},
@@ -183,37 +179,107 @@ class TestUnsupportedConfigurationsMCM:
                 circuit(1.33)
 
 
-class TestMCMSupportedConfigurationsMCM:
+class TestSupportedConfigurationsMCM:
 
-    @pytest.mark.parametrize("mcm_method", ["deferred", "one-shot"])
+    def generate_mcm_circuit(
+        self,
+        device_kwargs={},
+        qnode_kwargs={},
+        mcm_kwargs={},
+        measurement=qml.expval,
+        obs=qml.PauliZ(0),
+    ):
+        """Generate a circuit with a mid-circuit measurement."""
+        dev = qml.device(device_name, **device_kwargs)
+
+        @qml.qnode(dev, **qnode_kwargs)
+        def func(y):
+            qml.RX(y, wires=0)
+            m0 = qml.measure(0, **mcm_kwargs)
+            qml.cond(m0, qml.RY)(y, wires=1)
+            return measurement(obs)
+
+        return func
+
+
     def test_qnode_mcm_method(self, mcm_method, mocker):
         """Test that user specified qnode arg for mid-circuit measurements transform are used correctly"""
-        mocker.stopall()
-        spy = (
-            mocker.spy(qml.dynamic_one_shot, "_transform")
-            if mcm_method == "one-shot"
-            else mocker.spy(qml.defer_measurements, "_transform")
-        )
-        other_spy = (
-            mocker.spy(qml.defer_measurements, "_transform")
-            if mcm_method == "one-shot"
-            else mocker.spy(qml.dynamic_one_shot, "_transform")
-        )
-
-        shots = 10
-        device = qml.device(device_name, wires=3, shots=shots)
+        
+        from pennylane_lightning.lightning_base import _mid_circuit_measure_tree_traversal
+        
+        from pennylane_lightning.lightning_base._mid_circuit_measure_tree_traversal import mcm_tree_traversal
+        
+        
+        # mocker.stopall()
+        
+        spy_deffered = mocker.spy(qml.defer_measurements, "_transform")
+        spy_one_shot = mocker.spy(qml.dynamic_one_shot, "_transform")
+        # spy_tree_traversal = mocker.spy(None, "mcm_tree_traversal")
+        # spy_tree_traversal = mocker.spy(mcm_tree_traversal)
+        # spy_tree_traversal = mocker.spy("pennylane_lightning.lightning_qubit._mid_circuit_measure_tree_traversal", "mcm_tree_traversal")
+        # spy_tree_traversal = mocker.spy(mcm_mod, "mcm_tree_traversal")
+        # spy_tree_traversal = mocker.spy(pennylane_lightning.lightning_qubit
+        #                                 "mcm_tree_traversal")
+        
+        # spy_tree_traversal = mocker.spy("pennylane_lightning.lightning_base._mid_circuit_measure_tree_traversal", "mcm_tree_traversal")
+        
+        # spy_tree_traversal = mocker.spy(mcm_tree_traversal, "__call__")
+        
+        # spy_tree_traversal = mocker.patch(
+        #     "pennylane_lightning.lightning_base._mid_circuit_measure_tree_traversal.mcm_tree_traversal"
+        # )
+        
+        
+        
+        # spy_tree_traversal = mocker.patch("pennylane_lightning.lightning_base._mid_circuit_measure_tree_traversal.mcm_tree_traversal")
+        
+        # spy_tree_traversal = mocker.spy(_mid_circuit_measure_tree_traversal, "mcm_tree_traversal")
+        
+        print(f"Using mcm_method: {mcm_method}")
+        # circuit = self.generate_mcm_circuit(
+        #     device_kwargs={"wires": 3, "shots": 10},
+        #     qnode_kwargs={"mcm_method": mcm_method},
+        #     mcm_kwargs={},
+        # )
+        
+    
+        device = qml.device(device_name, wires=3, shots=10)
 
         @qml.qnode(device, mcm_method=mcm_method)
-        def f(x):
+        def circuit(x):
             qml.RX(x, 0)
             _ = qml.measure(0)
             qml.CNOT([0, 1])
-            return qml.sample(wires=[0, 1])
+            return qml.expval(qml.PauliX(0))
 
-        _ = f(np.pi / 8)
+        print(type(circuit))
+        _ = circuit(np.pi / 8)
 
-        spy.assert_called_once()
-        other_spy.assert_not_called()
+
+        # print(dir(circuit.device))
+        # spy_tree_traversal = mocker.spy(pennylane_lightning.lightning_qubit.lightning_qubit.LightningBase._mid_circuit_measure_tree_traversal, "mcm_tree_traversal")
+
+        # spy_tree_traversal = mocker.spy(device, "mcm_tree_traversal")
+
+        
+        # print(spy_tree_traversal)
+        
+
+
+
+        if mcm_method == "deferred":
+            spy_deffered.assert_called_once()
+            spy_one_shot.assert_not_called()
+            # spy_tree_traversal.assert_not_called()
+        elif mcm_method == "one-shot":
+            spy_one_shot.assert_called_once()
+            spy_deffered.assert_not_called()
+            # spy_tree_traversal.assert_not_called()
+        elif mcm_method == "tree-traversal":
+            # spy_tree_traversal.assert_called_once()
+            spy_deffered.assert_not_called()
+            spy_one_shot.assert_not_called()
+
 
     @pytest.mark.parametrize("shots", [None, 10])
     def test_qnode_mock_mcm_method_tree_traversal(self, mocker, shots):
@@ -252,8 +318,8 @@ class TestMCMSupportedConfigurationsMCM:
 
         _ = f(np.pi / 8)
 
-        spy.assert_called_once()
-        other_spy.assert_not_called()
+        spy_defer_meas.assert_called_once()
+        spy_dynamic_one_shot.assert_not_called()
 
     def test_qnode_default_mcm_method_finite_shots(self, mocker):
         """Test the default mcm method is used for finite shots"""
@@ -542,7 +608,7 @@ class TestExecutionMCM:
         """Tests that LightningQubit returns the same keys for ``qml.counts`` measurements with ``dynamic_one_shot`` and ``defer_measurements``."""
         shots = 500
 
-        wires = 2 if mcm_method != "deferred" else 3
+        wires = 3 if mcm_method == "deferred" else 2
 
         dq = qml.device("default.qubit", shots=shots)
         dev = get_device(wires=wires, shots=shots)

@@ -66,7 +66,7 @@ def mcm_tree_traversal(
         Result: The result of the simulation, which can be a scalar or a tuple of scalars.
     """
 
-    PROBS_TOL = 0.0
+    print("I have been called with mcm_tree_traversal")
 
     ##########################
     # shot vector processing #
@@ -127,7 +127,9 @@ def mcm_tree_traversal(
     mid_measurements = dict(zip(mcms[1:], mcm_current[1:].tolist()))
     # Split circuit into segments
     circuits = split_circuit_at_mcms(circuit)
-    circuits[0] = prepend_state_prep(circuits[0], lightning_state.state, lightning_state.wires)
+
+    # circuits[0] = prepend_state_prep(circuits[0], lightning_state.state, lightning_state.wires)
+
     terminal_measurements = circuits[-1].measurements if finite_shots else circuit.measurements
     # Initialize stacks
     cumcounts = [0] * (n_mcms + 1)
@@ -181,7 +183,7 @@ def mcm_tree_traversal(
             shots = None
             skip_subtree = (
                 stack.probs[depth] is not None
-                and float(stack.probs[depth][mcm_current[depth]]) <= PROBS_TOL
+                and float(stack.probs[depth][mcm_current[depth]]) <= 0.0 # PROBS_TOL
             )
         # Update active branch dict
         invalid_postselect = (
@@ -208,15 +210,22 @@ def mcm_tree_traversal(
             measurements = tuple()
         else:
             # If num_shots is non-zero, simulate the current depth circuit segment
-            if depth == 0:
-                initial_state = stack.states[0]  # None
-            else:
-                initial_state = branch_state(
-                    lightning_state, stack.states[depth], mcm_current[depth], mcms[depth]
+            # if depth == 0:
+            #     initial_state = stack.states[0]  # None
+            # else:
+            #     initial_state = branch_state(
+            #         lightning_state, stack.states[depth], mcm_current[depth], mcms[depth]
+            #     )
+
+
+            initial_state = stack.states[depth]  # None
+            if depth != 0:
+                branch_state(
+                    lightning_state, initial_state, mcm_current[depth], mcms[depth]
                 )
 
             circtmp = circuits[depth].copy(shots=qml.measurements.shots.Shots(shots))
-            circtmp = prepend_state_prep(circtmp, initial_state, lightning_state.wires)
+            # circtmp = prepend_state_prep(circtmp, lightning_state)
 
             lightning_state = lightning_state.get_final_state(
                 circtmp,
@@ -288,8 +297,7 @@ def mcm_tree_traversal(
 
 
 def prepend_state_prep(
-    circuit: QuantumScript, state: np.ndarray, wires: Sequence[int]
-) -> QuantumScript:
+    circuit: QuantumScript, lightning_state) -> QuantumScript:
     """Prepend a ``StatePrep`` operation with the prescribed ``wires`` to the circuit.
 
     ``get_final_state`` executes a circuit on a subset of wires found in operations
@@ -299,7 +307,8 @@ def prepend_state_prep(
     if len(circuit) > 0 and isinstance(circuit[0], qml.operation.StatePrepBase):
         return circuit
 
-    new_ops = [qml.StatePrep(state, wires=wires, validate_norm=False)] + circuit.operations
+    # new_ops = [qml.StatePrep(lightning_state.state, wires=lightning_state.wires, validate_norm=False)] + circuit.operations
+    new_ops = circuit.operations
     return circuit.copy(operations=new_ops)
 
 
@@ -330,4 +339,4 @@ def branch_state(
             [qml.PauliX(mcm.wires)]
         )
 
-    return lightning_state.state
+    # return lightning_state.state
