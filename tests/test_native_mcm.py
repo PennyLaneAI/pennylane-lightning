@@ -202,109 +202,44 @@ class TestSupportedConfigurationsMCM:
         return func
 
 
-    def test_qnode_mcm_method(self, mcm_method, mocker):
+    @pytest.mark.parametrize("shots", [None, 10])
+    def test_qnode_mcm_method(self, mocker, mcm_method, shots):
         """Test that user specified qnode arg for mid-circuit measurements transform are used correctly"""
         
-        from pennylane_lightning.lightning_base import _mid_circuit_measure_tree_traversal
-        
-        from pennylane_lightning.lightning_base._mid_circuit_measure_tree_traversal import mcm_tree_traversal
-        
-        
-        # mocker.stopall()
+        if mcm_method == "one-shot" and shots is None:
+            pytest.skip("Skip test for one-shot with None shots")
         
         spy_deffered = mocker.spy(qml.defer_measurements, "_transform")
-        spy_one_shot = mocker.spy(qml.dynamic_one_shot, "_transform")
-        # spy_tree_traversal = mocker.spy(None, "mcm_tree_traversal")
-        # spy_tree_traversal = mocker.spy(mcm_tree_traversal)
-        # spy_tree_traversal = mocker.spy("pennylane_lightning.lightning_qubit._mid_circuit_measure_tree_traversal", "mcm_tree_traversal")
-        # spy_tree_traversal = mocker.spy(mcm_mod, "mcm_tree_traversal")
-        # spy_tree_traversal = mocker.spy(pennylane_lightning.lightning_qubit
-        #                                 "mcm_tree_traversal")
+        spy_one_shot = mocker.spy(qml.dynamic_one_shot, "_transform")        
+        spy_tree_traversal = mocker.patch("pennylane_lightning.lightning_base.lightning_base.mcm_tree_traversal")
         
-        # spy_tree_traversal = mocker.spy("pennylane_lightning.lightning_base._mid_circuit_measure_tree_traversal", "mcm_tree_traversal")
-        
-        # spy_tree_traversal = mocker.spy(mcm_tree_traversal, "__call__")
-        
-        # spy_tree_traversal = mocker.patch(
-        #     "pennylane_lightning.lightning_base._mid_circuit_measure_tree_traversal.mcm_tree_traversal"
-        # )
-        
-        
-        
-        # spy_tree_traversal = mocker.patch("pennylane_lightning.lightning_base._mid_circuit_measure_tree_traversal.mcm_tree_traversal")
-        
-        # spy_tree_traversal = mocker.spy(_mid_circuit_measure_tree_traversal, "mcm_tree_traversal")
-        
-        print(f"Using mcm_method: {mcm_method}")
-        # circuit = self.generate_mcm_circuit(
-        #     device_kwargs={"wires": 3, "shots": 10},
-        #     qnode_kwargs={"mcm_method": mcm_method},
-        #     mcm_kwargs={},
-        # )
-        
-    
-        device = qml.device(device_name, wires=3, shots=10)
-
-        @qml.qnode(device, mcm_method=mcm_method)
-        def circuit(x):
-            qml.RX(x, 0)
-            _ = qml.measure(0)
-            qml.CNOT([0, 1])
-            return qml.expval(qml.PauliX(0))
-
-        print(type(circuit))
+        circuit = self.generate_mcm_circuit(
+            device_kwargs={"wires": 3, "shots": shots},
+            qnode_kwargs={"mcm_method": mcm_method},
+            mcm_kwargs={},
+        )
+            
         _ = circuit(np.pi / 8)
-
-
-        # print(dir(circuit.device))
-        # spy_tree_traversal = mocker.spy(pennylane_lightning.lightning_qubit.lightning_qubit.LightningBase._mid_circuit_measure_tree_traversal, "mcm_tree_traversal")
-
-        # spy_tree_traversal = mocker.spy(device, "mcm_tree_traversal")
-
-        
-        # print(spy_tree_traversal)
-        
-
-
 
         if mcm_method == "deferred":
             spy_deffered.assert_called_once()
             spy_one_shot.assert_not_called()
-            # spy_tree_traversal.assert_not_called()
+            spy_tree_traversal.assert_not_called()
         elif mcm_method == "one-shot":
             spy_one_shot.assert_called_once()
             spy_deffered.assert_not_called()
-            # spy_tree_traversal.assert_not_called()
+            spy_tree_traversal.assert_not_called()
         elif mcm_method == "tree-traversal":
-            # spy_tree_traversal.assert_called_once()
+            spy_tree_traversal.assert_called_once()
             spy_deffered.assert_not_called()
             spy_one_shot.assert_not_called()
 
 
-    @pytest.mark.parametrize("shots", [None, 10])
-    def test_qnode_mock_mcm_method_tree_traversal(self, mocker, shots):
-        """Test that user specified qnode arg for mid-circuit measurements transform are used correctly"""
-        spy_one_shot = mocker.spy(qml.dynamic_one_shot, "_transform")
-        spy_deferred = mocker.spy(qml.defer_measurements, "_transform")
-
-        device = qml.device(device_name, wires=3, shots=shots)
-
-        @qml.qnode(device, mcm_method="tree-traversal")
-        def f(x):
-            qml.RX(x, 0)
-            _ = qml.measure(0)
-            qml.CNOT([0, 1])
-            return qml.expval(qml.PauliX(0))
-
-        _ = f(np.pi / 8)
-
-        spy_one_shot.assert_not_called()
-        spy_deferred.assert_not_called()
-
     def test_qnode_default_mcm_method_analytical(self, mocker):
         """Test the default mcm method is used for analytical simulation"""
-        spy_defer_meas = mocker.spy(qml.defer_measurements, "_transform")
+        spy_deferred = mocker.spy(qml.defer_measurements, "_transform")
         spy_dynamic_one_shot = mocker.spy(qml.dynamic_one_shot, "_transform")
+        spy_tree_traversal = mocker.patch("pennylane_lightning.lightning_base.lightning_base.mcm_tree_traversal")
 
         shots = None
         device = qml.device(device_name, wires=3, shots=shots)
@@ -318,13 +253,16 @@ class TestSupportedConfigurationsMCM:
 
         _ = f(np.pi / 8)
 
-        spy_defer_meas.assert_called_once()
+        spy_deferred.assert_called_once()
         spy_dynamic_one_shot.assert_not_called()
+        spy_tree_traversal.assert_not_called()
 
     def test_qnode_default_mcm_method_finite_shots(self, mocker):
         """Test the default mcm method is used for finite shots"""
-        other_spy = mocker.spy(qml.defer_measurements, "_transform")
-        spy = mocker.spy(qml.dynamic_one_shot, "_transform")
+
+        spy_deferred = mocker.spy(qml.defer_measurements, "_transform")
+        spy_dynamic_one_shot = mocker.spy(qml.dynamic_one_shot, "_transform")
+        spy_tree_traversal = mocker.patch("pennylane_lightning.lightning_base.lightning_base.mcm_tree_traversal")
 
         shots = 33
         device = qml.device(device_name, wires=3, shots=shots)
@@ -338,8 +276,9 @@ class TestSupportedConfigurationsMCM:
 
         _ = f(np.pi / 8)
 
-        spy.assert_called_once()
-        other_spy.assert_not_called()
+        spy_deferred.assert_not_called()
+        spy_dynamic_one_shot.assert_called_once()
+        spy_tree_traversal.assert_not_called()
 
     @pytest.mark.parametrize("postselect_mode", ["hw-like", "fill-shots"])
     def test_qnode_postselect_mode(self, mcm_method, postselect_mode):
@@ -430,7 +369,7 @@ class TestExecutionMCM:
             assert np.all(np.isnan(r2))
 
     @flaky(max_runs=5)
-    @pytest.mark.parametrize("shots", [None, 4000, [3000, 1000]])
+    @pytest.mark.parametrize("shots", [None, 4000, [3000, 2500]])
     @pytest.mark.parametrize("postselect", [None, 0, 1])
     @pytest.mark.parametrize("measure_f", [qml.counts, qml.expval, qml.probs, qml.sample, qml.var])
     @pytest.mark.parametrize(
