@@ -188,17 +188,6 @@ class MPSTNCuda final : public TNCuda<Precision, MPSTNCuda<Precision>> {
             /* const void * */ &cutoff,
             /* std::size_t */ sizeof(cutoff)));
 
-        cutensornetStateMPSGaugeOption_t gauge_option =
-            CUTENSORNET_STATE_MPS_GAUGE_SIMPLE;
-
-        PL_CUTENSORNET_IS_SUCCESS(cutensornetStateConfigure(
-            /* const cutensornetHandle_t */ BaseType::getTNCudaHandle(),
-            /* cutensornetState_t */ BaseType::getQuantumState(),
-            /* cutensornetStateAttributes_t */
-            CUTENSORNET_STATE_CONFIG_MPS_GAUGE_OPTION,
-            /* const void * */ &gauge_option,
-            /* std::size_t */ sizeof(gauge_option)));
-
         // MPO configurations
         // Note that CUTENSORNET_STATE_MPO_APPLICATION_INEXACT is applied if the
         // `cutoff` value is not set to 0 for the MPO application.
