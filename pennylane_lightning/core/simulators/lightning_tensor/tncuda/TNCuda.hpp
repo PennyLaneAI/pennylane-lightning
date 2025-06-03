@@ -20,7 +20,6 @@
 
 #pragma once
 
-#include <algorithm>
 #include <complex>
 #include <memory>
 #include <set>
