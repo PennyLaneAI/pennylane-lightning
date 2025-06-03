@@ -315,10 +315,7 @@ class TNCuda : public TNCudaBase<PrecisionT, Derived> {
 
         auto &&par = (params.empty()) ? std::vector<PrecisionT>{0.0} : params;
 
-        int64_t dummy_id =
-            gate_ids_.empty()
-                ? 1
-                : *std::max_element(gate_ids_.begin(), gate_ids_.end()) + 1;
+        int64_t dummy_id = gate_ids_.empty() ? 1 : *gate_ids_.rbegin() + 1;
 
         if (gate_matrix.empty()) {
             gate_cache_->add_gate(dummy_id, baseOpName, par, adjoint);
