@@ -179,7 +179,7 @@ def mcm_tree_traversal(
             shots = None
             skip_subtree = (
                 stack.probs[depth] is not None
-                and float(stack.probs[depth][mcm_current[depth]]) <= 0.0 # PROBS_TOL
+                and float(stack.probs[depth][mcm_current[depth]]) <= 0.0  # PROBS_TOL
             )
         # Update active branch dict
         invalid_postselect = (
@@ -209,9 +209,7 @@ def mcm_tree_traversal(
 
             initial_state = stack.states[depth]  # None
             if depth != 0:
-                branch_state(
-                    lightning_state, initial_state, mcm_current[depth], mcms[depth]
-                )
+                branch_state(lightning_state, initial_state, mcm_current[depth], mcms[depth])
 
             circtmp = circuits[depth].copy(shots=qml.measurements.shots.Shots(shots))
 
@@ -310,4 +308,3 @@ def branch_state(
         lightning_state._apply_lightning(  # pylint: disable=protected-access
             [qml.PauliX(mcm.wires)]
         )
-

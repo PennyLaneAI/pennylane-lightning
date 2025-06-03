@@ -191,7 +191,7 @@ class LightningBase(Device):
         *,
         postselect_mode: str = None,
         mcmc: dict = None,
-        mcm_method: str = None, # pylint: disable=too-many-arguments
+        mcm_method: str = None,  # pylint: disable=too-many-arguments
     ) -> Result:
         """Simulate a single quantum script.
 
@@ -217,7 +217,7 @@ class LightningBase(Device):
         # Simulate with Mid Circuit Measurements
         if any(isinstance(op, MidMeasureMP) for op in circuit.operations):
 
-            # If mcm_method is not specified and the circuit does not have shots, default to "deferred". 
+            # If mcm_method is not specified and the circuit does not have shots, default to "deferred".
             # It is not listed here because all mid-circuit measurements are replaced with additional wires.
 
             if mcm_method == "tree-traversal":
