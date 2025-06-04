@@ -517,8 +517,6 @@ def test_controlled_qubit_unitary(n_qubits, control_value, tol):
                         wires=control_wires + target_wires,
                         control_values=(
                             [control_value or bool(i % 2) for i, _ in enumerate(control_wires)]
-                            if device_name != "lightning.tensor"
-                            else [control_value for _ in control_wires]
                         ),
                     )
                     return qml.state()
@@ -657,8 +655,6 @@ def test_controlled_qubit_gates(operation, n_qubits, control_value, adjoint, tol
                         control_wires,
                         control_values=(
                             [control_value or bool(i % 2) for i, _ in enumerate(control_wires)]
-                            if device_name != "lightning.tensor"
-                            else [control_value for _ in control_wires]
                         ),
                     )
                 else:
@@ -667,8 +663,6 @@ def test_controlled_qubit_gates(operation, n_qubits, control_value, adjoint, tol
                         control_wires,
                         control_values=(
                             [control_value or bool(i % 2) for i, _ in enumerate(control_wires)]
-                            if device_name != "lightning.tensor"
-                            else [control_value for _ in control_wires]
                         ),
                     )
                 return qml.state()
@@ -790,8 +784,6 @@ def test_controlled_globalphase(n_qubits, control_value, tol):
                     control_wires,
                     control_values=(
                         [control_value or bool(i % 2) for i, _ in enumerate(control_wires)]
-                        if device_name != "lightning.tensor"
-                        else [control_value for _ in control_wires]
                     ),
                 )
                 return qml.state()
@@ -866,8 +858,6 @@ def test_adjoint_controlled_qubit_gates(operation, n_qubits, control_value, tol,
                         control_wires,
                         control_values=(
                             [control_value or bool(i % 2) for i, _ in enumerate(control_wires)]
-                            if device_name != "lightning.tensor"
-                            else [control_value for _ in control_wires]
                         ),
                     )
                 )
@@ -908,8 +898,6 @@ def test_adjoint_controlled_qubit_unitary(n_qubits, control_value, tol):
                             wires=control_wires + target_wires,
                             control_values=(
                                 [control_value or bool(i % 2) for i, _ in enumerate(control_wires)]
-                                if device_name != "lightning.tensor"
-                                else [control_value for _ in control_wires]
                             ),
                         )
                     )
@@ -949,8 +937,6 @@ def test_controlled_adjoint_qubit_unitary(n_qubits, control_value, tol):
                         control=control_wires,
                         control_values=(
                             [control_value or bool(i % 2) for i, _ in enumerate(control_wires)]
-                            if device_name != "lightning.tensor"
-                            else [control_value for _ in control_wires]
                         ),
                     )
                     return qml.state()
