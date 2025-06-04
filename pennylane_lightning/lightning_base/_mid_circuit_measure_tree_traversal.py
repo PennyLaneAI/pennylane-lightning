@@ -1,4 +1,4 @@
-# Copyright 2018-2025 Xanadu Quantum Technologies Inc.
+# Copyright 2025 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -282,7 +282,7 @@ def mcm_tree_traversal(
 
 def branch_state(
     lightning_state: LightningBaseStateVector, state: np.ndarray, branch: int, mcm: MidMeasureMP
-) -> np.ndarray:
+):
     """Collapse the state on a given branch.
 
     Args:
@@ -290,9 +290,6 @@ def branch_state(
         state (np.ndarray): The state vector to collapse
         branch (int): The branch on which the state is collapsed
         mcm (MidMeasureMP): Mid-circuit measurement object used to obtain the wires and ``reset``
-
-    Returns:
-        np.ndarray: The collapsed state vector
     """
     # Set the state to the initial state
     lightning_state._apply_state_vector(  # pylint: disable=protected-access
