@@ -502,7 +502,7 @@ class TestExecution:
 
     @staticmethod
     def calculate_reference(tape):
-        device = DefaultQubit(max_workers=1)
+        device = DefaultQubit()
         program, _ = device.preprocess()
         tapes, transf_fn = program([tape])
         results = device.execute(tapes)
@@ -907,7 +907,7 @@ class TestExecution:
         dev = LightningDevice(wires=None)
         result = dev.execute([qs0, qs1, qs2])
 
-        dev_ref = DefaultQubit(max_workers=1)
+        dev_ref = DefaultQubit()
         result_ref = dev_ref.execute([qs0, qs1, qs2])
 
         for r, e in zip(result, result_ref):
@@ -974,7 +974,7 @@ class TestDerivatives:
 
     @staticmethod
     def calculate_reference(tape, execute_and_derivatives=False):
-        device = DefaultQubit(max_workers=1)
+        device = DefaultQubit()
         program, config = device.preprocess(ExecutionConfig(gradient_method="adjoint"))
         tapes, transf_fn = program([tape])
 
@@ -1208,7 +1208,7 @@ class TestDerivatives:
                 dev.compute_derivatives(tapes, new_config),
             )
 
-        dev_ref = DefaultQubit(max_workers=1)
+        dev_ref = DefaultQubit()
         config = ExecutionConfig(gradient_method="adjoint")
         program, new_config = dev_ref.preprocess(config)
         tapes, fn = program([qs])
@@ -1351,7 +1351,7 @@ class TestVJP:
 
     @staticmethod
     def calculate_reference(tape, dy, execute_and_derivatives=False):
-        device = DefaultQubit(max_workers=1)
+        device = DefaultQubit()
         program, config = device.preprocess(ExecutionConfig(gradient_method="adjoint"))
         tapes, transf_fn = program([tape])
         dy = [dy]
@@ -1583,7 +1583,7 @@ class TestVJP:
                 dev.compute_vjp(tapes, dy, new_config),
             )
 
-        dev_ref = DefaultQubit(max_workers=1)
+        dev_ref = DefaultQubit()
         config = ExecutionConfig(gradient_method="adjoint")
         program, new_config = dev_ref.preprocess(config)
         tapes, fn = program([qs])
