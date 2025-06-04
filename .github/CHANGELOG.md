@@ -28,7 +28,7 @@
 
 <h3>Bug fixes 🐛</h3>
 
-- Fix multi-control gates with arbitrary multi-control conditions support to Lightning-Tensor.
+- Fix multi-control one-wire target gates with arbitrary multi-control conditions support to Lightning-Tensor.
   [(#1169)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1169)
 
 - Only download JAX version 0.5.3 for non-X86 MacOS. 
