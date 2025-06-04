@@ -265,16 +265,14 @@ class TestSupportedConfigurationsMCM:
         )
 
         shots = None
-        device = qml.device(device_name, wires=3, shots=shots)
 
-        @qml.qnode(device)
-        def f(x):
-            qml.RX(x, 0)
-            _ = qml.measure(0)
-            qml.CNOT([0, 1])
-            return qml.expval(qml.PauliX(0))
+        circuit = self.generate_mcm_circuit(
+            device_kwargs={"wires": 3, "shots": shots},
+            qnode_kwargs={},
+            mcm_kwargs={},
+        )
 
-        _ = f(np.pi / 8)
+        _ = circuit(np.pi / 8)
 
         spy_deferred.assert_called_once()
         spy_dynamic_one_shot.assert_not_called()
@@ -290,16 +288,14 @@ class TestSupportedConfigurationsMCM:
         )
 
         shots = 33
-        device = qml.device(device_name, wires=3, shots=shots)
 
-        @qml.qnode(device)
-        def f(x):
-            qml.RX(x, 0)
-            _ = qml.measure(0)
-            qml.CNOT([0, 1])
-            return qml.expval(qml.PauliX(0))
+        circuit = self.generate_mcm_circuit(
+            device_kwargs={"wires": 3, "shots": shots},
+            qnode_kwargs={},
+            mcm_kwargs={},
+        )
 
-        _ = f(np.pi / 8)
+        _ = circuit(np.pi / 8)
 
         spy_deferred.assert_not_called()
         spy_dynamic_one_shot.assert_called_once()
