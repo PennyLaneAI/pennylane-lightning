@@ -32,7 +32,7 @@ class TestJacobian:
 
     @staticmethod
     def calculate_reference(tape, execute_and_derivatives=False):
-        device = DefaultQubit(max_workers=1)
+        device = DefaultQubit()
         program, config = device.preprocess(ExecutionConfig(gradient_method="adjoint"))
         tapes, transf_fn = program([tape])
 
@@ -106,7 +106,7 @@ class TestVJP:
 
     @staticmethod
     def calculate_reference(tape, dy, execute_and_derivatives=False):
-        device = DefaultQubit(max_workers=1)
+        device = DefaultQubit()
         program, config = device.preprocess(ExecutionConfig(gradient_method="adjoint"))
         tapes, transf_fn = program([tape])
         dy = [dy]
