@@ -28,7 +28,7 @@ on:
 env:
   CI_CUDA_ARCH: 86
   COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:./coverage.xml --no-flaky-report -p no:warnings --tb=native"
-  GCC_VERSION: 13
+  GCC_VERSION: 11
 
 concurrency:
   group: tests_lkcuda_cpp-${{ github.ref }}-${{ github.event_name }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}

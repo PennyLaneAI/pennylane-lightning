@@ -28,7 +28,7 @@ on:
 
 env:
   COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:./coverage.xml --no-flaky-report -p no:warnings --tb=native"
-  GCC_VERSION: 13
+  GCC_VERSION: 11
   OMP_NUM_THREADS: "2"
   CI_CUDA_ARCH: 86
 
