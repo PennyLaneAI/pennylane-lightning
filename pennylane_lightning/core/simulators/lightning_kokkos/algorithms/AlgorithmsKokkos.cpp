@@ -29,5 +29,5 @@ template class Pennylane::Algorithms::OpsData<StateVectorKokkos<double>>;
 template class Pennylane::Algorithms::JacobianData<StateVectorKokkos<float>>;
 template class Pennylane::Algorithms::JacobianData<StateVectorKokkos<double>>;
 
-template class AdjointJacobian<StateVectorKokkos<float>>;
-template class AdjointJacobian<StateVectorKokkos<double>>;
+template class Algorithms::AdjointJacobian<StateVectorKokkos<float>>;
+template class Algorithms::AdjointJacobian<StateVectorKokkos<double>>;
