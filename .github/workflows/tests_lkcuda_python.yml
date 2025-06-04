@@ -31,7 +31,7 @@ on:
       - master
 
 env:
-  GCC_VERSION: 11
+  GCC_VERSION: 13
   CI_CUDA_ARCH: 86
   TF_VERSION: 2.19.0
   KERAS_VERSION: 3.9.0

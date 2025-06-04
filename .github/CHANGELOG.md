@@ -79,6 +79,9 @@
 - Bump `readthedocs` Github action runner to use Ubuntu-24.04.
   [(#1151)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1151)
 
+- Bump Github action runner to use `Ubuntu-24.04` or `Ubuntu-latest`.
+  [(#1167)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1167)
+
 <h3>Contributors ✍️</h3>
 
 This release contains contributions from (in alphabetical order):

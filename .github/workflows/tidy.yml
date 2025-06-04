@@ -28,7 +28,7 @@ jobs:
         pl_backend: ["lightning_qubit"]
 
     name: Tidy (C++)
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout PennyLane-Lightning

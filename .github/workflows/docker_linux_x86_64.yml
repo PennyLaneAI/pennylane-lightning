@@ -1,6 +1,6 @@
 name: Docker::Linux::x86_64
 
-# **What it does**: Builds Docker images for Linux (ubuntu-24.04) architecture x86_64 and store it as artifacts.
+# **What it does**: Builds Docker images for Linux (ubuntu-22.04) architecture x86_64 and store it as artifacts.
 # **Why we have it**: To build Docker images to be uploaded to Docker Hub.
 # **Who does it impact**: Docker images uploaded to Docker Hub provide yet another way to install and use PennyLane + Lightning. It is especially useful on HPC platforms where environments can be difficult to set up.
 
