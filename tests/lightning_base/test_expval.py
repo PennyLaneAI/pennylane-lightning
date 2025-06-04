@@ -33,7 +33,7 @@ def dev(request):
 
 
 def calculate_reference(tape):
-    dev = DefaultQubit(max_workers=1)
+    dev = DefaultQubit()
     program, _ = dev.preprocess()
     tapes, transf_fn = program([tape])
     results = dev.execute(tapes)

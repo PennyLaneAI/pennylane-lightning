@@ -85,6 +85,9 @@
 - Bump `readthedocs` Github action runner to use Ubuntu-24.04.
   [(#1151)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1151)
 
+- Removed `max_workers` argument for `default.qubit` device in Python tests to reduce CI testing time.
+  [(##1174)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1174)
+
 <h3>Contributors ✍️</h3>
 
 This release contains contributions from (in alphabetical order):
@@ -100,6 +103,7 @@ Luis Alfredo Nuñez Meneses,
 Mudit Pandey,
 Andrija Paurevic,
 Shuli Shu,
+Marc Vandelle
 
 ---
 
