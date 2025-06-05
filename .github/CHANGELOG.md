@@ -34,12 +34,15 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Use local catalyst repository instead of fetching on Github CI.
+  [(#1164)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1164)
+  
 - Update the Lightning build dependencies.
   [(#1168)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1168)
 
 - Use JAX version 0.6.0 for CI tests for latest version.
   [(#1161)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1161)
-
+  
 - Use JAX version 0.4.28 for CI tests for stable version.
   [(#1160)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1160)
 
@@ -79,6 +82,9 @@
 - Bump `readthedocs` Github action runner to use Ubuntu-24.04.
   [(#1151)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1151)
 
+- Removed `max_workers` argument for `default.qubit` device in Python tests to reduce CI testing time.
+  [(##1174)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1174)
+
 <h3>Contributors ✍️</h3>
 
 This release contains contributions from (in alphabetical order):
@@ -93,6 +99,7 @@ Anton Naim Ibrahim,
 Luis Alfredo Nuñez Meneses,
 Mudit Pandey,
 Andrija Paurevic,
+Marc Vandelle
 
 ---
 
