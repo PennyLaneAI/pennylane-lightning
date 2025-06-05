@@ -30,7 +30,7 @@ concurrency:
 
 jobs:
   set-builder-matrix:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout PennyLane-Lightning
