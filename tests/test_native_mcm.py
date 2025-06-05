@@ -187,7 +187,7 @@ class TestUnsupportedConfigurationsMCM:
             return qml.expval(qml.PauliZ(0))
 
         dev_dq = qml.device("default.qubit", wires=2)
-        dev_lq = qml.device("lightning.qubit", wires=2)
+        dev_lq = qml.device(device_name, wires=2)
 
         mcm_method = "tree-traversal"
         qnode_dq = qml.QNode(circuit, dev_dq, mcm_method=mcm_method)
