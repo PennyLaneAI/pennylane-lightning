@@ -27,8 +27,7 @@ target_sources(cuda_utils_tests INTERFACE runner_cuda_utils.cpp)
 ################################################################################
 # Define targets
 ################################################################################
-set(TEST_SOURCES 
-                        Test_LinearAlgebra.cpp)
+set(TEST_SOURCES Test_LinearAlgebra.cpp)
 
 add_executable(cuda_utils_test_runner ${TEST_SOURCES})
 target_link_libraries(cuda_utils_test_runner PRIVATE cuda_utils_tests)

@@ -1,4 +1,4 @@
-// Copyright 2022-2023 Xanadu Quantum Technologies Inc.
+// Copyright 2025 Xanadu Quantum Technologies Inc.
 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -112,7 +112,7 @@ TEMPLATE_TEST_CASE("MPIManagerGPU::Scatter Complex", "[MPIManagerGPU]", float,
     int size = mpi_manager.getSize();
     int root = 0;
 
-    SECTION("Apply scatter") {
+    SECTION("Apply Scatter") {
         std::vector<cp_t> sendBuf(size);
         cp_t result(2.0 * rank, 2.0 * rank + 1);
         if (rank == root) {

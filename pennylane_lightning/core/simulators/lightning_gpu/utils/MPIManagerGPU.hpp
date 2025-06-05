@@ -33,7 +33,7 @@
 
 #include "DataBuffer.hpp"
 #include "Error.hpp"
-#include "MPIManager.hpp"
+#include "MPIManager.hpp" // cppTypeToString
 
 /// @cond DEV
 namespace {
