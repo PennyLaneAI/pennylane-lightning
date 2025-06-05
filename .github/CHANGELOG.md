@@ -33,7 +33,7 @@
   [(#1158)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1158)
 
 - Fix using Torch with `AmplitudeEmbedding` by applying `qml.broadcast_expand` before decomposition in the preprocessing stage. 
-  [(#)]()
+  [(#1175)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1175)
 
 <h3>Internal changes ⚙️</h3>
 
