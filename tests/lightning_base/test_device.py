@@ -102,7 +102,9 @@ else:
 if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-access
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
-fixture_params = list(itertools.product([3, None], [np.complex64, np.complex128]))  # wires x c_dtype
+fixture_params = list(
+    itertools.product([3, None], [np.complex64, np.complex128])
+)  # wires x c_dtype
 
 
 @pytest.fixture(params=fixture_params)

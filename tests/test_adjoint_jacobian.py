@@ -46,9 +46,11 @@ if device_name == "lightning.kokkos":
 
     kokkos_args += [InitializationSettings().set_num_threads(2)]
 
-fixture_params = list(itertools.product(
-    [np.complex64, np.complex128], kokkos_args, [None, 3]  # c_dtype x kokkos_args x wires
-))
+fixture_params = list(
+    itertools.product(
+        [np.complex64, np.complex128], kokkos_args, [None, 3]  # c_dtype x kokkos_args x wires
+    )
+)
 
 
 def Rx(theta):
@@ -991,7 +993,7 @@ class TestAdjointJacobianQNode:
 
         assert np.allclose(grad_adjoint, grad_fd, atol=tol)
 
-    def test_torch_amplitude_embedding(self,dev):
+    def test_torch_amplitude_embedding(self, dev):
         """Test that the adjoint Jacobian works with AmplitudeEmbedding in a TorchLayer"""
 
         torch = pytest.importorskip("torch")
@@ -1011,10 +1013,11 @@ class TestAdjointJacobianQNode:
 
         qlayer = qml.qnn.TorchLayer(qnode, weight_shapes)
         clayer_1 = torch.nn.Linear(2, 8)
-        xs_test = torch.tensor([[-0.7380,  0.3596], [-0.1870,  0.9423]])
+        xs_test = torch.tensor([[-0.7380, 0.3596], [-0.1870, 0.9423]])
 
         t = clayer_1(xs_test)
         qlayer(t)
+
 
 def circuit_ansatz(params, wires):
     """Circuit ansatz containing all the parametrized gates"""
