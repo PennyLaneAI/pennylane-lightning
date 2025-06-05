@@ -147,6 +147,13 @@ jobs:
         with:
           path: main
 
+      - name: Checkout Catalyst
+        uses: actions/checkout@v4
+        with:
+          repository: PennyLaneAI/catalyst
+          path: ${{ github.workspace}}/catalyst
+          ref: ${{ (inputs.pennylane-version == 'stable' && 'v0.11.0') || 'main' }} # FIXME: remove after v0.42 release
+
       - uses: actions/setup-python@v5
         id: setup_python
         name: Install Python
@@ -196,7 +203,8 @@ jobs:
             -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos \
             -DPL_BACKEND=${{ matrix.pl_backend }} \
             -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
-            -DENABLE_COVERAGE=ON
+            -DENABLE_COVERAGE=ON \
+            -DLIGHTNING_CATALYST_SRC_PATH=${{ github.workspace }}/catalyst
           cmake --build ./Build --verbose
           cd ./Build
           mkdir -p ./tests/results_${{ github.job }}_${{ matrix.pl_backend }}
