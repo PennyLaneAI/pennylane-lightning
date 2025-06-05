@@ -853,8 +853,8 @@ class TestMeasurements:
         reason=f"{device_name} does not support seeding device.",
     )
     @pytest.mark.parametrize("dtype", [np.complex64, np.complex128])
-    def test_seeded_shots_measurement_rngstate(self, dtype):
-        """Test that seeded measurements with shots uses identical rng state"""
+    def test_seeded_measurement_rngstate(self, dtype):
+        """Test that seeded measurement uses identical rng state"""
 
         n_qubits = 4
 
