@@ -185,7 +185,10 @@ info = {
     "packages": find_namespace_packages(include=packages_list),
     "include_package_data": True,
     "ext_modules": (
-        [] if os.environ.get("SKIP_COMPILATION", False) else [CMakeExtension(f"{backend}_ops")]
+        [] if os.environ.get("SKIP_COMPILATION", False) else [
+            CMakeExtension(f"{backend}_ops"),
+            CMakeExtension(f"{backend}_nb")
+        ]
     ),
     "cmdclass": {"build_ext": CMakeBuild},
     "ext_package": "pennylane_lightning",
