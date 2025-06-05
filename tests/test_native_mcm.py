@@ -395,16 +395,18 @@ class TestExecutionMCM:
             assert np.all(np.isnan(r1))
             assert np.all(np.isnan(r2))
 
-@pytest.mark.local_salt(42)
-@pytest.mark.parametrize("shots", [None, 4000, [3000, 2500]])
-@pytest.mark.parametrize("postselect", [None, 0, 1])
-@pytest.mark.parametrize("measure_f", [qml.counts, qml.expval, qml.probs, qml.sample, qml.var])
-@pytest.mark.parametrize(
-    "meas_obj",
-    [qml.PauliZ(0), qml.PauliY(1), [0], [0, 1], [1, 0], "mcm", "composite_mcm", "mcm_list"],
-)
-def test_simple_dynamic_circuit(self, mcm_method, shots, measure_f, postselect, measure_obj, seed):
-    """Tests that LightningDevices handles a simple dynamic circuit with the following measurements:
+    @pytest.mark.local_salt(42)
+    @pytest.mark.parametrize("shots", [None, 5000, [4000, 4001]])
+    @pytest.mark.parametrize("postselect", [None, 0, 1])
+    @pytest.mark.parametrize("measure_f", [qml.counts, qml.expval, qml.probs, qml.sample, qml.var])
+    @pytest.mark.parametrize(
+        "measure_obj",
+        [qml.PauliZ(0), qml.PauliY(1), [0], [0, 1], [1, 0], "mcm", "composite_mcm", "mcm_list"],
+    )
+    def test_simple_dynamic_circuit(
+        self, mcm_method, shots, measure_f, postselect, measure_obj, seed
+    ):
+        """Tests that LightningDevices handles a simple dynamic circuit with the following measurements:
 
             * qml.counts with obs (comp basis or not), single wire, multiple wires (ordered/unordered), MCM, f(MCM), MCM list
             * qml.expval with obs (comp basis or not), MCM, f(MCM), MCM list
@@ -538,9 +540,9 @@ def test_simple_dynamic_circuit(self, mcm_method, shots, measure_f, postselect, 
         shots = 3000
         wires = 2 if mcm_method != "deferred" else 3
 
-    dq = qml.device("default.qubit", shots=shots, seed=seed)
-    dev = get_device(wires=wires, shots=shots, seed=seed)
-    param = np.pi / 3
+        dq = qml.device("default.qubit", shots=shots, seed=seed)
+        dev = get_device(wires=wires, shots=shots, seed=seed)
+        param = np.pi / 3
 
         @qml.qnode(dev)
         def func(x):
