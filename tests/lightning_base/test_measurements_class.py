@@ -606,7 +606,7 @@ class TestMeasurements:
                 continue
             new_meas.append(m)
         if use_default:
-            dev = DefaultQubit(max_workers=1)
+            dev = DefaultQubit()
             program, _ = dev.preprocess()
             tapes, transf_fn = program([tape])
             results = dev.execute(tapes)
@@ -852,6 +852,30 @@ class TestMeasurements:
         reason=f"{device_name} does not support seeding device.",
     )
     @pytest.mark.parametrize("dtype", [np.complex64, np.complex128])
+    def test_seeded_measurement_rngstate(self, dtype):
+        """Test that seeded measurement uses identical rng state"""
+
+        n_qubits = 4
+
+        rng_1 = np.random.default_rng(123)
+        rng_2 = np.random.default_rng(123)
+        rng_3 = np.random.default_rng(321)
+
+        statevector1 = LightningStateVector(n_qubits, dtype, rng=rng_1)
+        statevector2 = LightningStateVector(n_qubits, dtype, rng=rng_2)
+        statevector3 = LightningStateVector(n_qubits, dtype, rng=rng_3)
+        LightningMeasurements(statevector1)
+        LightningMeasurements(statevector2)
+        LightningMeasurements(statevector3)
+
+        assert statevector1._rng.bit_generator.state == statevector2._rng.bit_generator.state
+        assert statevector1._rng.bit_generator.state != statevector3._rng.bit_generator.state
+
+    @pytest.mark.skipif(
+        device_name in ("lightning.tensor"),
+        reason=f"{device_name} does not support seeding device.",
+    )
+    @pytest.mark.parametrize("dtype", [np.complex64, np.complex128])
     @pytest.mark.parametrize("shots", [10, [10, 10]])
     @pytest.mark.parametrize("measurement", [qml.expval, qml.probs, qml.var])
     @pytest.mark.parametrize(
@@ -930,7 +954,7 @@ class TestControlledOps:
 
     @staticmethod
     def calculate_reference(tape):
-        dev = DefaultQubit(max_workers=1)
+        dev = DefaultQubit()
         program, _ = dev.preprocess()
         tapes, transf_fn = program([tape])
         results = dev.execute(tapes)
