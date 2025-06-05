@@ -596,40 +596,40 @@ class TestExecutionMCM:
             assert r1 == r2
 
 
-@pytest.mark.parametrize("shots", [20, [20, 20]])
-@pytest.mark.parametrize("postselect", [None, 0, 1])
-@pytest.mark.parametrize("measure_f", [qml.counts, qml.expval, qml.probs, qml.sample, qml.var])
-@pytest.mark.parametrize(
-    "meas_obj",
-    [qml.PauliZ(0), qml.PauliY(1), [0], [0, 1], [1, 0], "mcm", "composite_mcm", "mcm_list"],
-)
-def test_seeded_mcm(shots, measure_f, postselect, meas_obj):
-    """Tests that mcm with the same seed produce the same results"""
+    @pytest.mark.parametrize("shots", [20, [20, 20]])
+    @pytest.mark.parametrize("postselect", [None, 0, 1])
+    @pytest.mark.parametrize("measure_f", [qml.counts, qml.expval, qml.probs, qml.sample, qml.var])
+    @pytest.mark.parametrize(
+        "meas_obj",
+        [qml.PauliZ(0), qml.PauliY(1), [0], [0, 1], [1, 0], "mcm", "composite_mcm", "mcm_list"],
+    )
+    def test_seeded_mcm(self, shots, measure_f, postselect, meas_obj):
+        """Tests that mcm with the same seed produce the same results"""
 
-    if measure_f in (qml.expval, qml.var) and (
-        isinstance(meas_obj, list) or meas_obj == "mcm_list"
-    ):
-        pytest.skip("Can't use wires/mcm lists with var or expval")
+        if measure_f in (qml.expval, qml.var) and (
+            isinstance(meas_obj, list) or meas_obj == "mcm_list"
+        ):
+            pytest.skip("Can't use wires/mcm lists with var or expval")
 
-    dev_1 = get_device(wires=3, shots=shots, seed=123)
-    dev_2 = get_device(wires=3, shots=shots, seed=123)
-    params = [np.pi / 2.5, np.pi / 3, -np.pi / 3.5]
+        dev_1 = get_device(wires=3, shots=shots, seed=123)
+        dev_2 = get_device(wires=3, shots=shots, seed=123)
+        params = [np.pi / 2.5, np.pi / 3, -np.pi / 3.5]
 
-    def func(x, y, z):
-        m0, m1 = obs_tape(x, y, z, postselect=postselect)
-        mid_measure = (
-            m0 if meas_obj == "mcm" else (0.5 * m0 if meas_obj == "composite_mcm" else [m0, m1])
-        )
-        measurement_key = "wires" if isinstance(meas_obj, list) else "op"
-        measurement_value = mid_measure if isinstance(meas_obj, str) else meas_obj
-        return measure_f(**{measurement_key: measurement_value})
+        def func(x, y, z):
+            m0, m1 = TestExecutionMCM.obs_tape(x, y, z, postselect=postselect)
+            mid_measure = (
+                m0 if meas_obj == "mcm" else (0.5 * m0 if meas_obj == "composite_mcm" else [m0, m1])
+            )
+            measurement_key = "wires" if isinstance(meas_obj, list) else "op"
+            measurement_value = mid_measure if isinstance(meas_obj, str) else meas_obj
+            return measure_f(**{measurement_key: measurement_value})
 
-    results1 = qml.QNode(func, dev_1, mcm_method="one-shot")(*params)
-    results2 = qml.QNode(func, dev_2, mcm_method="one-shot")(*params)
+        results1 = qml.QNode(func, dev_1, mcm_method="one-shot")(*params)
+        results2 = qml.QNode(func, dev_2, mcm_method="one-shot")(*params)
 
-    if measure_f is qml.counts:
-        validate_counts(shots, results1, results2, rtol=1e-05, atol=1e-08)
-    elif measure_f is qml.sample:
-        validate_samples(shots, results1, results2, rtol=1e-05, atol=1e-08)
-    else:
-        validate_others(shots, results1, results2, rtol=1e-05, atol=1e-08)
+        if measure_f is qml.counts:
+            validate_counts(shots, results1, results2, rtol=1e-05, atol=1e-08)
+        elif measure_f is qml.sample:
+            validate_samples(shots, results1, results2, rtol=1e-05, atol=1e-08)
+        else:
+            validate_others(shots, results1, results2, rtol=1e-05, atol=1e-08)
