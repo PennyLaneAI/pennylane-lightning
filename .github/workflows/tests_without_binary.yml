@@ -103,12 +103,19 @@ jobs:
         run: |
           python -m pip uninstall -y pennylane && python -m pip install -U pennylane
 
+      - name: Checkout Catalyst
+        uses: actions/checkout@v4
+        with:
+          repository: PennyLaneAI/catalyst
+          path: ${{ github.workspace}}/catalyst
+          ref: ${{ (inputs.pennylane-version == 'stable' && 'v0.11.0') || 'main' }} # FIXME: remove after v0.42 release
+
       - name: Install the pennylane_lightning core package (lightning_qubit)
         env:
           SKIP_COMPILATION: True
         run: |
           PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py || true
-          PL_BACKEND="lightning_qubit" python -m pip install . -vv
+          CMAKE_ARGS="-DLIGHTNING_CATALYST_SRC_PATH=${{ github.workspace }}/catalyst" PL_BACKEND=${{ matrix.pl_backend }} PL_BACKEND="lightning_qubit" python -m pip install . -vv
 
       - name: Install extra backend device
         if: matrix.pl_backend != 'lightning_qubit'
@@ -116,7 +123,7 @@ jobs:
           SKIP_COMPILATION: True
         run: |
           PL_BACKEND=${{ matrix.pl_backend }} python scripts/configure_pyproject_toml.py || true
-          PL_BACKEND=${{ matrix.pl_backend }} python -m pip install . -vv
+          CMAKE_ARGS="-DLIGHTNING_CATALYST_SRC_PATH=${{ github.workspace }}/catalyst" PL_BACKEND=${{ matrix.pl_backend }} PL_BACKEND=${{ matrix.pl_backend }} python -m pip install . -vv
 
       - name: Run PennyLane-Lightning unit tests for all backends
         run: |
