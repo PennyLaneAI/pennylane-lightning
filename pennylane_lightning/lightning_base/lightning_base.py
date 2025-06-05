@@ -36,6 +36,9 @@ from pennylane.typing import Result, ResultBatch, TensorLike
 
 from pennylane_lightning.core import __version__
 from pennylane_lightning.lightning_base._measurements import LightningBaseMeasurements
+from pennylane_lightning.lightning_base._mid_circuit_measure_tree_traversal import (
+    mcm_tree_traversal,
+)
 
 Result_or_ResultBatch = Union[Result, ResultBatch]
 QuantumTapeBatch = Sequence[QuantumTape]
@@ -191,13 +194,14 @@ class LightningBase(Device):
             TensorLike, tuple[TensorLike], tuple[tuple[TensorLike]]: A numeric result of the computation.
         """
 
-    def simulate(
+    def simulate(  # pylint: disable=too-many-arguments
         self,
         circuit: QuantumScript,
         state,  # Lightning [Device] StateVector
         *,
         postselect_mode: str = None,
         mcmc: dict = None,
+        mcm_method: str = None,
     ) -> Result:
         """Simulate a single quantum script.
 
@@ -210,6 +214,7 @@ class LightningBase(Device):
             mcmc (dict): Dictionary containing the Markov Chain Monte Carlo
                 parameters: mcmc, kernel_name, num_burnin. Currently only supported for
                 ``lightning.qubit``, more detail can be found in :class:`~.LightningQubit`.
+            mcm_method (str): The method to use for mid-circuit measurements. Default is ``"one-shot"`` if ``circuit.shots`` is set, otherwise it defaults to ``"deferred"``.
 
         Returns:
             Tuple[TensorLike]: The results of the simulation
@@ -218,26 +223,40 @@ class LightningBase(Device):
         """
         if mcmc is None:
             mcmc = {}
-        if circuit.shots and (any(isinstance(op, MidMeasureMP) for op in circuit.operations)):
-            results = []
-            aux_circ = qml.tape.QuantumScript(
-                circuit.operations,
-                circuit.measurements,
-                shots=[1],
-                trainable_params=circuit.trainable_params,
-            )
-            for _ in range(circuit.shots.total_shots):
-                state.reset_state()
-                mid_measurements = {}
-                final_state = state.get_final_state(
-                    aux_circ, mid_measurements=mid_measurements, postselect_mode=postselect_mode
+
+        # Simulate with Mid Circuit Measurements
+        if any(isinstance(op, MidMeasureMP) for op in circuit.operations):
+
+            # If mcm_method is not specified and the circuit does not have shots, default to "deferred".
+            # It is not listed here because all mid-circuit measurements are replaced with additional wires.
+
+            if mcm_method == "tree-traversal":
+                # Using the tree traversal MCM method.
+                return mcm_tree_traversal(
+                    circuit, state, self.LightningMeasurements, postselect_mode
                 )
-                results.append(
-                    self.LightningMeasurements(final_state, **mcmc).measure_final_state(
-                        aux_circ, mid_measurements=mid_measurements
+
+            if mcm_method == "one-shot" or (mcm_method is None and circuit.shots):
+                # Using the one-shot MCM method.
+                results = []
+                aux_circ = qml.tape.QuantumScript(
+                    circuit.operations,
+                    circuit.measurements,
+                    shots=[1],
+                    trainable_params=circuit.trainable_params,
+                )
+                for _ in range(circuit.shots.total_shots):
+                    state.reset_state()
+                    mid_measurements = {}
+                    final_state = state.get_final_state(
+                        aux_circ, mid_measurements=mid_measurements, postselect_mode=postselect_mode
                     )
-                )
-            return tuple(results)
+                    results.append(
+                        self.LightningMeasurements(final_state, **mcmc).measure_final_state(
+                            aux_circ, mid_measurements=mid_measurements
+                        )
+                    )
+                return tuple(results)
 
         final_state = state.get_final_state(circuit)
         return self.LightningMeasurements(final_state, **mcmc).measure_final_state(circuit)
