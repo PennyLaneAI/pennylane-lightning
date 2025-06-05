@@ -595,7 +595,6 @@ class TestExecutionMCM:
         for r1, r2 in zip(results1.keys(), results2.keys()):
             assert r1 == r2
 
-
     @pytest.mark.parametrize("shots", [20, [20, 20]])
     @pytest.mark.parametrize("postselect", [None, 0, 1])
     @pytest.mark.parametrize("measure_f", [qml.counts, qml.expval, qml.probs, qml.sample, qml.var])
