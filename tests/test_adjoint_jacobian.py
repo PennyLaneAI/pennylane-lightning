@@ -46,9 +46,9 @@ if device_name == "lightning.kokkos":
 
     kokkos_args += [InitializationSettings().set_num_threads(2)]
 
-fixture_params = itertools.product(
+fixture_params = list(itertools.product(
     [np.complex64, np.complex128], kokkos_args, [None, 3]  # c_dtype x kokkos_args x wires
-)
+))
 
 
 def Rx(theta):
@@ -566,7 +566,10 @@ class TestAdjointJacobianQNode:
 
     @pytest.fixture(params=fixture_params)
     def dev(self, request):
-        return qml.device(device_name, wires=request.param[1], c_dtype=request.param[0])
+        params = request.param
+        if device_name == "lightning.kokkos":
+            return qml.device(device_name, wires=3, c_dtype=params[0], kokkos_args=params[1])
+        return qml.device(device_name, wires=params[2], c_dtype=params[0])
 
     def test_qnode(self, mocker, dev):
         """Test that specifying diff_method allows the adjoint method to be selected"""
@@ -988,6 +991,30 @@ class TestAdjointJacobianQNode:
 
         assert np.allclose(grad_adjoint, grad_fd, atol=tol)
 
+    def test_torch_amplitude_embedding(self,dev):
+        """Test that the adjoint Jacobian works with AmplitudeEmbedding in a TorchLayer"""
+
+        torch = pytest.importorskip("torch")
+
+        # Define a simple circuit with AmplitudeEmbedding and BasicEntanglerLayers
+        n_qubits = 3
+        qml.AmplitudeEmbedding.ndim_params = (1,)
+
+        @qml.qnode(dev)
+        def qnode(inputs, weights):
+            qml.AmplitudeEmbedding(inputs, wires=range(n_qubits), normalize=True)
+            qml.BasicEntanglerLayers(weights, wires=range(n_qubits))
+            return [qml.expval(qml.PauliZ(wires=i)) for i in range(n_qubits)]
+
+        n_layers = 1
+        weight_shapes = {"weights": (n_layers, n_qubits)}
+
+        qlayer = qml.qnn.TorchLayer(qnode, weight_shapes)
+        clayer_1 = torch.nn.Linear(2, 8)
+        xs_test = torch.tensor([[-0.7380,  0.3596], [-0.1870,  0.9423]])
+
+        t = clayer_1(xs_test)
+        qlayer(t)
 
 def circuit_ansatz(params, wires):
     """Circuit ansatz containing all the parametrized gates"""
