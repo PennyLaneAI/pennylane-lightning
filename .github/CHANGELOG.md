@@ -4,7 +4,7 @@
 
 <h3>Improvements 🛠</h3>
 
-- Add native `MultiControlledX` support to Lightning-Tensor.
+- `MultiControlledX` gates are now natively supported in Lightning-Tensor.
   [(#1169)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1169)
 
 - PennyLane-Lightning is compatible with JAX version 0.5.3+.
