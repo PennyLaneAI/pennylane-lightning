@@ -91,6 +91,13 @@ def stopping_condition(op: Operator) -> bool:
     """A function that determines whether or not an operation is supported by ``lightning.gpu``."""
     if op.name in ("C(SProd)", "C(Exp)"):
         return True
+
+    if (isinstance(op, Conditional) and stopping_condition(op.base)) or isinstance(
+        op, MidMeasureMP
+    ):
+        # Conditional and MidMeasureMP should not be decomposed
+        return True
+
     return _supports_operation(op.name)
 
 
@@ -162,6 +169,7 @@ def _add_adjoint_transforms(program: TransformProgram) -> None:
 
     name = "adjoint + lightning.gpu"
     program.add_transform(no_sampling, name=name)
+    program.add_transform(qml.transforms.broadcast_expand)
     program.add_transform(
         decompose,
         stopping_condition=_adjoint_ops,
@@ -173,7 +181,6 @@ def _add_adjoint_transforms(program: TransformProgram) -> None:
     program.add_transform(
         validate_measurements, analytic_measurements=adjoint_measurements, name=name
     )
-    program.add_transform(qml.transforms.broadcast_expand)
     program.add_transform(validate_adjoint_trainable_params)
 
 
@@ -333,18 +340,20 @@ class LightningGPU(LightningBase):
 
         new_device_options.update(mcmc_default)
 
+        mcm_supported_methods = (
+            ("deferred", "tree-traversal", "one-shot", None)
+            if not qml.capture.enabled()
+            else ("deferred", "single-branch-statistics", None)
+        )
+
+        mcm_config = config.mcm_config
+
+        if (mcm_method := mcm_config.mcm_method) not in mcm_supported_methods:
+            raise DeviceError(f"mcm_method='{mcm_method}' is not supported with lightning.gpu.")
+
         if qml.capture.enabled():
-            mcm_config = config.mcm_config
+
             mcm_updated_values = {}
-            if (mcm_method := mcm_config.mcm_method) not in (
-                "deferred",
-                "single-branch-statistics",
-                None,
-            ):
-                raise DeviceError(
-                    f"mcm_method='{mcm_method}' is not supported with lightning.qubit "
-                    "when program capture is enabled."
-                )
 
             if mcm_method == "single-branch-statistics" and mcm_config.postselect_mode is not None:
                 warn(
@@ -353,8 +362,9 @@ class LightningGPU(LightningBase):
                     UserWarning,
                 )
                 mcm_updated_values["postselect_mode"] = None
-            if mcm_method is None:
+            elif mcm_method is None:
                 mcm_updated_values["mcm_method"] = "deferred"
+
             updated_values["mcm_config"] = replace(mcm_config, **mcm_updated_values)
 
         return replace(config, **updated_values, device_options=new_device_options)
@@ -433,6 +443,7 @@ class LightningGPU(LightningBase):
                     self.dynamic_wires_from_circuit(circuit),
                     self._statevector,
                     postselect_mode=execution_config.mcm_config.postselect_mode,
+                    mcm_method=execution_config.mcm_config.mcm_method,
                 )
             )
 
@@ -468,6 +479,7 @@ class LightningGPU(LightningBase):
         circuit: QuantumScript,
         state: LightningGPUStateVector,
         postselect_mode: Optional[str] = None,
+        mcm_method: Optional[str] = None,
     ) -> Result:
         """Simulate a single quantum script.
 
@@ -491,6 +503,7 @@ class LightningGPU(LightningBase):
             circuit,
             state,
             postselect_mode=postselect_mode,
+            mcm_method=mcm_method,
         )
 
     @staticmethod

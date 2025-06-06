@@ -36,7 +36,7 @@ jobs:
       (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'ci:build_wheels'))
     timeout-minutes: 30
     name: Set builder matrix
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout PennyLane-Lightning
@@ -96,7 +96,7 @@ jobs:
 
           # Python build settings
           CIBW_BEFORE_BUILD: |
-            python -m pip install pybind11 ninja cmake~=3.27.0 setuptools
+            python -m pip install pybind11 ninja cmake setuptools
 
           CIBW_ENVIRONMENT: |
             CMAKE_ARGS="-DCMAKE_CXX_COMPILER_TARGET=arm64-apple-macos11 -DCMAKE_SYSTEM_NAME=Darwin -DCMAKE_SYSTEM_PROCESSOR=ARM64 -DENABLE_OPENMP=OFF -DCMAKE_BUILD_TYPE=Release"
@@ -142,7 +142,7 @@ jobs:
         arch: [arm64]
         pl_backend: ["lightning_qubit", "lightning_kokkos"]
         cibw_build: ${{ fromJson(needs.mac-set-matrix-arm.outputs.python_version) }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       id-token: write
     if: |

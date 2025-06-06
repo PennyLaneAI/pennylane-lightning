@@ -208,7 +208,6 @@ class QuantumScriptSerializer:
                 self.sparse_hamiltonian_mpi_c128 = (
                     lightning_ops.observablesMPI.SparseHamiltonianMPIC128
                 )
-
                 self._mpi_manager = lightning_ops.MPIManagerGPU
             elif self.device_name == "lightning.kokkos":
                 self._mpi_manager = lightning_ops.MPIManagerKokkos

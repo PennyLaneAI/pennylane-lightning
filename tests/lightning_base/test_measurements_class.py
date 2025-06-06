@@ -606,7 +606,7 @@ class TestMeasurements:
                 continue
             new_meas.append(m)
         if use_default:
-            dev = DefaultQubit(max_workers=1)
+            dev = DefaultQubit()
             program, _ = dev.preprocess()
             tapes, transf_fn = program([tape])
             results = dev.execute(tapes)
@@ -853,7 +853,7 @@ class TestControlledOps:
 
     @staticmethod
     def calculate_reference(tape):
-        dev = DefaultQubit(max_workers=1)
+        dev = DefaultQubit()
         program, _ = dev.preprocess()
         tapes, transf_fn = program([tape])
         results = dev.execute(tapes)
@@ -930,8 +930,6 @@ class TestControlledOps:
                             control_wires,
                             control_values=(
                                 [control_value or bool(i % 2) for i, _ in enumerate(control_wires)]
-                                if device_name != "lightning.tensor"
-                                else [control_value for _ in control_wires]
                             ),
                         ),
                     ]
@@ -942,8 +940,6 @@ class TestControlledOps:
                             control_wires,
                             control_values=(
                                 [control_value or bool(i % 2) for i, _ in enumerate(control_wires)]
-                                if device_name != "lightning.tensor"
-                                else [control_value for _ in control_wires]
                             ),
                         ),
                     ]
@@ -1048,8 +1044,6 @@ class TestControlledOps:
                             control_wires,
                             control_values=(
                                 [control_value or bool(i % 2) for i, _ in enumerate(control_wires)]
-                                if device_name != "lightning.tensor"
-                                else [control_value for _ in control_wires]
                             ),
                         ),
                     ],

@@ -4,12 +4,20 @@
 
 <h3>Improvements 🛠</h3>
 
+- `MultiControlledX` gates are now natively supported in Lightning-Tensor.
+  [(#1169)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1169)
+
 - PennyLane-Lightning is compatible with JAX version 0.5.3+.
   [(#1152)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1152)
   [(#1161)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1161)
 
 - Improve performance of computing expectation values of Pauli Sentences for `lightning.kokkos`.
   [(#1126)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1126)
+
+- Mid-circuit measurements using the tree-traversal algorithm are now supported
+  in the `lightning.qubit`, `lightning.kokkos` and `lightning.gpu` devices,
+  providing both significant memory savings and sampling efficiency!
+  [(#1166)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1166)
 
 <h3>Breaking changes 💔</h3>
 
@@ -25,6 +33,9 @@
 
 <h3>Bug fixes 🐛</h3>
 
+- Fixed the implementation of multi-controlled gates with a single target wire for arbitrary control values in Lightning-Tensor.
+  [(#1169)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1169)
+
 - Only download JAX version 0.5.3 for non-X86 MacOS. 
   [(#1163)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1163)
 
@@ -32,11 +43,20 @@
   Updating ROCM from 5.7 to 6.2.4. 
   [(#1158)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1158)
 
+- Fix using Torch with `AmplitudeEmbedding` by applying `qml.broadcast_expand` before decomposition in the preprocessing stage. 
+  [(#1175)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1175)
+
 <h3>Internal changes ⚙️</h3>
+
+- Use local catalyst repository instead of fetching on Github CI.
+  [(#1164)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1164)
+  
+- Update the Lightning build dependencies.
+  [(#1168)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1168)
 
 - Use JAX version 0.6.0 for CI tests for latest version.
   [(#1161)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1161)
-
+  
 - Use JAX version 0.4.28 for CI tests for stable version.
   [(#1160)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1160)
 
@@ -76,6 +96,12 @@
 - Bump `readthedocs` Github action runner to use Ubuntu-24.04.
   [(#1151)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1151)
 
+- Removed `max_workers` argument for `default.qubit` device in Python tests to reduce CI testing time.
+  [(##1174)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1174)
+  
+ - Bump Github action runner to use `Ubuntu-24.04` or `Ubuntu-latest`. Fixing all `ubuntu-latest` action runners to `ubuntu-24.04`.
+  [(#1167)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1167)
+
 <h3>Contributors ✍️</h3>
 
 This release contains contributions from (in alphabetical order):
@@ -90,6 +116,8 @@ Anton Naim Ibrahim,
 Luis Alfredo Nuñez Meneses,
 Mudit Pandey,
 Andrija Paurevic,
+Shuli Shu,
+Marc Vandelle
 
 ---
 

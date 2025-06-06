@@ -941,11 +941,11 @@ def test_integration_custom_wires_batching(returns):
     np.random.seed(1337)
     params = np.random.rand(n_params)
 
-    qnode_gpu = qml.QNode(circuit, dev_mpi, diff_method="adjoint")
+    qnode_mpi = qml.QNode(circuit, dev_mpi, diff_method="adjoint")
     qnode_def = qml.QNode(circuit, dev_def)
 
     def convert_to_array_gpu(params):
-        return np.hstack(qnode_gpu(params))
+        return np.hstack(qnode_mpi(params))
 
     def convert_to_array_def(params):
         return np.hstack(qnode_def(params))
@@ -1004,12 +1004,12 @@ def test_batching_H(returns):
     params = np.random.rand(n_params)
 
     qnode_cpu = qml.QNode(circuit, dev_cpu, diff_method="parameter-shift")
-    qnode_gpu = qml.QNode(circuit, dev_mpi, diff_method="adjoint")
-    qnode_gpu_default = qml.QNode(circuit, dev_mpi_default, diff_method="adjoint")
+    qnode_mpi = qml.QNode(circuit, dev_mpi, diff_method="adjoint")
+    qnode_mpi_default = qml.QNode(circuit, dev_mpi_default, diff_method="adjoint")
 
     j_cpu = qml.jacobian(qnode_cpu)(params)
-    j_gpu = qml.jacobian(qnode_gpu)(params)
-    j_gpu_default = qml.jacobian(qnode_gpu_default)(params)
+    j_gpu = qml.jacobian(qnode_mpi)(params)
+    j_gpu_default = qml.jacobian(qnode_mpi_default)(params)
 
     assert np.allclose(j_cpu, j_gpu)
     assert np.allclose(j_gpu, j_gpu_default)
@@ -1156,10 +1156,10 @@ def test_adjoint_SparseHamiltonian_custom_wires(returns):
 
     params = comm.bcast(params, root=0)
 
-    qnode_gpu = qml.QNode(circuit, dev_mpi, diff_method="adjoint")
+    qnode_mpi = qml.QNode(circuit, dev_mpi, diff_method="adjoint")
     qnode_cpu = qml.QNode(circuit, dev_cpu, diff_method="parameter-shift")
 
-    j_gpu = qml.jacobian(qnode_gpu)(params)
+    j_gpu = qml.jacobian(qnode_mpi)(params)
     j_cpu = qml.jacobian(qnode_cpu)(params)
 
     comm.Barrier()
@@ -1249,10 +1249,10 @@ def test_adjoint_SparseHamiltonian(returns):
 
     params = comm.bcast(params, root=0)
 
-    qnode_gpu = qml.QNode(circuit, dev_mpi, diff_method="adjoint")
+    qnode_mpi = qml.QNode(circuit, dev_mpi, diff_method="adjoint")
     qnode_cpu = qml.QNode(circuit, dev_cpu, diff_method="parameter-shift")
 
-    j_gpu = qml.jacobian(qnode_gpu)(params)
+    j_gpu = qml.jacobian(qnode_mpi)(params)
     j_cpu = qml.jacobian(qnode_cpu)(params)
 
     comm.Barrier()
