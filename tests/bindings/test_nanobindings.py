@@ -164,6 +164,7 @@ def test_nanobind_int_vector_class(module_name):
         3,
     ], "Vector elements don't match expected values"
 
+
 @pytest.mark.parametrize(
     "module_name",
     [
@@ -188,7 +189,7 @@ def test_simple_statevector(module_name):
 
     sv = module.SimpleStateVector(2)
     assert sv is not None
-    
+
     # Test that we can call the applyMatrix method
     matrix = np.array([[1, 0], [0, 1]], dtype=np.complex128)
     sv.applyMatrix(matrix, [0], False)
