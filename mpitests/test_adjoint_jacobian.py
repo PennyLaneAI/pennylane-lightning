@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Unit tests for the :mod:`pennylane_lightning_gpu.LightningGPU` device (MPI).
+Unit tests for adjoint Jacobian on :mod:`pennylane_lightning` MPI-enabled devices.
 """
 # pylint: disable=protected-access,cell-var-from-loop,c-extension-no-member
 import itertools
@@ -21,7 +21,7 @@ import math
 import pennylane as qml
 import pytest
 from conftest import LightningDevice as ld
-from conftest import device_name
+from conftest import LightningException, device_name
 from mpi4py import MPI
 from pennylane import QNode
 from pennylane import numpy as np
@@ -30,8 +30,6 @@ from pennylane.devices import ExecutionConfig
 from pennylane.exceptions import QuantumFunctionError
 from pennylane.tape import QuantumScript
 from scipy.stats import unitary_group
-
-from pennylane_lightning.lightning_gpu_ops import LightningException
 
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
@@ -926,7 +924,7 @@ def test_integration_custom_wires_batching(returns):
     operations and when using custom wire labels"""
 
     dev_def = qml.device("default.qubit", wires=custom_wires)
-    dev_gpu = qml.device("lightning.gpu", wires=custom_wires, mpi=True, batch_obs=True)
+    dev_mpi = qml.device(device_name, wires=custom_wires, mpi=True, batch_obs=True)
 
     def circuit(params):
         circuit_ansatz(params, wires=custom_wires)
@@ -936,11 +934,11 @@ def test_integration_custom_wires_batching(returns):
     np.random.seed(1337)
     params = np.random.rand(n_params)
 
-    qnode_gpu = qml.QNode(circuit, dev_gpu, diff_method="adjoint")
+    qnode_mpi = qml.QNode(circuit, dev_mpi, diff_method="adjoint")
     qnode_def = qml.QNode(circuit, dev_def)
 
     def convert_to_array_gpu(params):
-        return np.hstack(qnode_gpu(params))
+        return np.hstack(qnode_mpi(params))
 
     def convert_to_array_def(params):
         return np.hstack(qnode_def(params))
@@ -987,8 +985,8 @@ def test_batching_H(returns):
     operations and when using custom wire labels"""
 
     dev_cpu = qml.device("default.qubit", wires=custom_wires + [10, 72])
-    dev_gpu = qml.device(device_name, wires=custom_wires + [10, 72], batch_obs=True)
-    dev_gpu_default = qml.device(device_name, wires=custom_wires + [10, 72], batch_obs=False)
+    dev_mpi = qml.device(device_name, wires=custom_wires + [10, 72], batch_obs=True)
+    dev_mpi_default = qml.device(device_name, wires=custom_wires + [10, 72], batch_obs=False)
 
     def circuit(params):
         circuit_ansatz(params, wires=custom_wires)
@@ -999,12 +997,12 @@ def test_batching_H(returns):
     params = np.random.rand(n_params)
 
     qnode_cpu = qml.QNode(circuit, dev_cpu, diff_method="parameter-shift")
-    qnode_gpu = qml.QNode(circuit, dev_gpu, diff_method="adjoint")
-    qnode_gpu_default = qml.QNode(circuit, dev_gpu_default, diff_method="adjoint")
+    qnode_mpi = qml.QNode(circuit, dev_mpi, diff_method="adjoint")
+    qnode_mpi_default = qml.QNode(circuit, dev_mpi_default, diff_method="adjoint")
 
     j_cpu = qml.jacobian(qnode_cpu)(params)
-    j_gpu = qml.jacobian(qnode_gpu)(params)
-    j_gpu_default = qml.jacobian(qnode_gpu_default)(params)
+    j_gpu = qml.jacobian(qnode_mpi)(params)
+    j_gpu_default = qml.jacobian(qnode_mpi_default)(params)
 
     assert np.allclose(j_cpu, j_gpu)
     assert np.allclose(j_gpu, j_gpu_default)
@@ -1132,7 +1130,7 @@ def test_adjoint_SparseHamiltonian_custom_wires(returns):
     operations and when using custom wire labels"""
 
     comm = MPI.COMM_WORLD
-    dev_gpu = qml.device("lightning.gpu", wires=custom_wires, mpi=True)
+    dev_mpi = qml.device(device_name, wires=custom_wires, mpi=True)
     dev_cpu = qml.device("default.qubit", wires=custom_wires)
 
     def circuit(params):
@@ -1148,10 +1146,10 @@ def test_adjoint_SparseHamiltonian_custom_wires(returns):
 
     params = comm.bcast(params, root=0)
 
-    qnode_gpu = qml.QNode(circuit, dev_gpu, diff_method="adjoint")
+    qnode_mpi = qml.QNode(circuit, dev_mpi, diff_method="adjoint")
     qnode_cpu = qml.QNode(circuit, dev_cpu, diff_method="parameter-shift")
 
-    j_gpu = qml.jacobian(qnode_gpu)(params)
+    j_gpu = qml.jacobian(qnode_mpi)(params)
     j_cpu = qml.jacobian(qnode_cpu)(params)
 
     comm.Barrier()
@@ -1222,7 +1220,7 @@ def test_adjoint_SparseHamiltonian(returns):
     operations and when using custom wire labels"""
 
     comm = MPI.COMM_WORLD
-    dev_gpu = qml.device("lightning.gpu", wires=len(custom_wires), mpi=True)
+    dev_mpi = qml.device(device_name, wires=len(custom_wires), mpi=True)
     dev_cpu = qml.device("default.qubit", wires=len(custom_wires))
 
     def circuit(params):
@@ -1238,10 +1236,10 @@ def test_adjoint_SparseHamiltonian(returns):
 
     params = comm.bcast(params, root=0)
 
-    qnode_gpu = qml.QNode(circuit, dev_gpu, diff_method="adjoint")
+    qnode_mpi = qml.QNode(circuit, dev_mpi, diff_method="adjoint")
     qnode_cpu = qml.QNode(circuit, dev_cpu, diff_method="parameter-shift")
 
-    j_gpu = qml.jacobian(qnode_gpu)(params)
+    j_gpu = qml.jacobian(qnode_mpi)(params)
     j_cpu = qml.jacobian(qnode_cpu)(params)
 
     comm.Barrier()

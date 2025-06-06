@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Unit tests for the expval method of Lightning devices.
+Unit tests for expval on :mod:`pennylane_lightning` MPI-enabled devices.
 """
 # pylint: disable=protected-access,too-few-public-methods,unused-import,missing-function-docstring,too-many-arguments,c-extension-no-member
 
@@ -132,7 +132,7 @@ class TestExpval:
         comm = MPI.COMM_WORLD
 
         dev_mpi = qml.device(
-            "lightning.gpu", wires=numQubits, mpi=True, c_dtype=c_dtype, batch_obs=batch_obs
+            device_name, wires=numQubits, mpi=True, c_dtype=c_dtype, batch_obs=batch_obs
         )
 
         dev_cpu = qml.device("lightning.qubit", wires=num_wires, c_dtype=c_dtype)
@@ -170,7 +170,7 @@ class TestExpval:
 
         dev_cpu = qml.device("lightning.qubit", wires=num_wires, c_dtype=c_dtype)
         dev_mpi = qml.device(
-            "lightning.gpu", wires=num_wires, mpi=True, c_dtype=c_dtype, batch_obs=batch_obs
+            device_name, wires=num_wires, mpi=True, c_dtype=c_dtype, batch_obs=batch_obs
         )
 
         def circuit():
@@ -218,7 +218,7 @@ class TestExpval:
 
         dev_cpu = qml.device("lightning.qubit", wires=num_wires, c_dtype=c_dtype)
         dev_mpi = qml.device(
-            "lightning.gpu", wires=num_wires, mpi=True, c_dtype=c_dtype, batch_obs=batch_obs
+            device_name, wires=num_wires, mpi=True, c_dtype=c_dtype, batch_obs=batch_obs
         )
 
         def circuit():
@@ -231,11 +231,9 @@ class TestExpval:
 
         assert np.allclose(cpu_qnode(), mpi_qnode(), atol=tol, rtol=0)
 
-    def test_expval_non_pauli_word_hamiltionian(self, tol, c_dtype, batch_obs):
+    def test_expval_non_pauli_word_hamiltonian(self, tol, c_dtype, batch_obs):
         """Tests expectation values of non-Pauli word Hamiltonians."""
-        dev_mpi = qml.device(
-            "lightning.gpu", wires=3, mpi=True, c_dtype=c_dtype, batch_obs=batch_obs
-        )
+        dev_mpi = qml.device(device_name, wires=3, mpi=True, c_dtype=c_dtype, batch_obs=batch_obs)
         dev_cpu = qml.device("lightning.qubit", wires=3)
 
         theta = 0.432
