@@ -683,7 +683,7 @@ class LightningBase(Device):
         tangents = validate_args_tangents(args, tangents)
 
         self._statevector = self.LightningStateVector(
-            num_wires=len(self.wires), dtype=self._c_dtype
+            num_wires=len(self.wires), dtype=self._c_dtype, rng=self._rng
         )
 
         def wrapper(*args):

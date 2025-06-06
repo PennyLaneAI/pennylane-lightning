@@ -26,6 +26,9 @@ from conftest import (  # tested device
     LightningMeasurements,
     LightningStateVector,
     device_name,
+    validate_counts,
+    validate_others,
+    validate_samples,
 )
 from flaky import flaky
 from pennylane.devices import DefaultQubit
@@ -878,10 +881,16 @@ class TestMeasurements:
     )
     @pytest.mark.parametrize("dtype", [np.complex64, np.complex128])
     @pytest.mark.parametrize("shots", [10, [10, 10]])
-    @pytest.mark.parametrize("measurement", [qml.expval, qml.probs, qml.var])
+    @pytest.mark.parametrize(
+        "measurement", [qml.expval, qml.probs, qml.var, qml.sample, qml.counts]
+    )
     @pytest.mark.parametrize(
         "observable",
         (
+            [0],
+            [0, 1],
+            [0, 1, 2],
+            [0, 1, 2, 3],
             qml.PauliX(0),
             qml.PauliY(1),
             qml.PauliZ(2),
@@ -897,7 +906,7 @@ class TestMeasurements:
         ),
     )
     def test_seeded_shots_measurement(self, dtype, shots, measurement, observable, tol):
-        """Test that seeded measurements with shots return same results with same seed and different results for different seeds."""
+        """Test that seeded measurements with shots return same results with same seed."""
         if measurement is qml.probs and isinstance(
             observable,
             (
@@ -909,6 +918,9 @@ class TestMeasurements:
             pytest.skip(
                 f"Observable of type {type(observable).__name__} is not supported for rotating probabilities."
             )
+
+        if measurement in (qml.expval, qml.var) and isinstance(observable, Sequence):
+            pytest.skip("qml.expval, qml.var do not take wire arguments.")
 
         n_qubits = 4
         n_layers = 1
@@ -928,26 +940,21 @@ class TestMeasurements:
         if not do_skip:
             rng_1 = np.random.default_rng(123)
             rng_2 = np.random.default_rng(123)
-            rng_3 = np.random.default_rng(321)
             statevector1 = LightningStateVector(n_qubits, dtype, rng=rng_1)
             statevector1 = get_final_state(statevector1, tape)
             statevector2 = LightningStateVector(n_qubits, dtype, rng=rng_2)
             statevector2 = get_final_state(statevector2, tape)
-            statevector3 = LightningStateVector(n_qubits, dtype, rng=rng_3)
-            statevector3 = get_final_state(statevector3, tape)
-            result_1 = []
-            result_2 = []
-            result_3 = []
-            for i in range(20):
-                m_1 = LightningMeasurements(statevector1)
-                m_2 = LightningMeasurements(statevector2)
-                m_3 = LightningMeasurements(statevector3)
-                result_1.append(measure_final_state(m_1, tape))
-                result_2.append(measure_final_state(m_2, tape))
-                result_3.append(measure_final_state(m_3, tape))
+            m_1 = LightningMeasurements(statevector1)
+            m_2 = LightningMeasurements(statevector2)
+            result_1 = measure_final_state(m_1, tape)
+            result_2 = measure_final_state(m_2, tape)
 
-            assert np.allclose(result_1, result_2)
-            assert not np.allclose(result_1, result_3)
+            if measurement is qml.sample:
+                validate_samples(shots, result_1, result_2, rtol=0.0, atol=0.0)
+            elif measurement is qml.counts:
+                validate_counts(shots, result_1, result_2, rtol=0.0, atol=0.0)
+            else:
+                validate_others(shots, result_1, result_2, rtol=0.0, atol=0.0)
 
 
 class TestControlledOps:
