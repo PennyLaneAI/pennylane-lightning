@@ -103,20 +103,22 @@ class SimpleStateVector {
 
     SimpleStateVector(size_t num_qubits) : num_qubits_(num_qubits) {}
 
-    void applyMatrix(const ComplexT* matrix, const std::vector<std::size_t> &wires, bool inverse) {
+    void applyMatrix(const ComplexT *matrix,
+                     const std::vector<std::size_t> &wires, bool inverse) {
         // Placeholder implementation that uses parameters to avoid warnings
-        (void)matrix;      // Silence unused parameter warning
-        (void)wires;       // Silence unused parameter warning
-        (void)inverse;     // Silence unused parameter warning
+        (void)matrix;  // Silence unused parameter warning
+        (void)wires;   // Silence unused parameter warning
+        (void)inverse; // Silence unused parameter warning
     }
 
-    void applyOperation(const std::string& gate_name, const std::vector<std::size_t> &wires, 
-                        bool inverse, const std::vector<PrecisionT> &params) {
+    void applyOperation(const std::string &gate_name,
+                        const std::vector<std::size_t> &wires, bool inverse,
+                        const std::vector<PrecisionT> &params) {
         // Placeholder implementation that uses parameters to avoid warnings
-        (void)gate_name;   // Silence unused parameter warning
-        (void)wires;       // Silence unused parameter warning
-        (void)inverse;     // Silence unused parameter warning
-        (void)params;      // Silence unused parameter warning
+        (void)gate_name; // Silence unused parameter warning
+        (void)wires;     // Silence unused parameter warning
+        (void)inverse;   // Silence unused parameter warning
+        (void)params;    // Silence unused parameter warning
     }
 
   private:
