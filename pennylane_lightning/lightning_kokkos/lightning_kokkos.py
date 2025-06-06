@@ -39,7 +39,9 @@ from pennylane.exceptions import DeviceError
 from pennylane.measurements import MidMeasureMP
 from pennylane.operation import DecompositionUndefinedError, Operator
 from pennylane.ops import Conditional, PauliRot, Prod, SProd, Sum
+from pennylane.tape import QuantumScript
 from pennylane.transforms.core import TransformProgram
+from pennylane.typing import Result
 
 from pennylane_lightning.lightning_base.lightning_base import (
     LightningBase,
@@ -192,7 +194,7 @@ class LightningKokkos(LightningBase):
             the expectation values. Defaults to ``None`` if not specified. Setting
             to ``None`` results in computing statistics like expectation values and
             variances analytically.
-        sync (bool): immediately sync with host-sv after applying operations
+        mpi  (bool): Use MPI to distribute statevector across multiple processes.
         kokkos_args (InitializationSettings): binding for Kokkos::InitializationSettings
             (threading parameters).
     """
@@ -221,6 +223,7 @@ class LightningKokkos(LightningBase):
         shots: Union[int, List] = None,
         batch_obs: bool = False,
         # Kokkos arguments
+        mpi: bool = False,
         kokkos_args=None,
     ):
         if not self._CPP_BINARY_AVAILABLE:
@@ -240,8 +243,16 @@ class LightningKokkos(LightningBase):
         # Set the attributes to call the Lightning classes
         self._set_lightning_classes()
 
-        self._statevector = None
-        self._sv_init_kwargs = {"kokkos_args": kokkos_args}
+        self._mpi = mpi
+        if mpi:
+            if wires is None:
+                raise DeviceError("Lightning-Kokkos-MPI does not support dynamic wires allocation.")
+            self._statevector = self.LightningStateVector(
+                num_wires=len(self.wires), dtype=self.c_dtype, kokkos_args=kokkos_args, mpi=True
+            )
+        else:
+            self._statevector = None
+            self._sv_init_kwargs = {"kokkos_args": kokkos_args}
 
     @property
     def name(self):
@@ -423,6 +434,36 @@ class LightningKokkos(LightningBase):
         if circuit is None:
             return True
         return _supports_adjoint(circuit=circuit)
+
+    def simulate(
+        self,
+        circuit: QuantumScript,
+        state: LightningKokkosStateVector,
+        postselect_mode: Optional[str] = None,
+    ) -> Result:
+        """Simulate a single quantum script.
+
+        Args:
+            circuit (QuantumTape): The single circuit to simulate
+            state (LightningGPUStateVector): handle to Lightning state vector
+            postselect_mode (str): Configuration for handling shots with mid-circuit measurement
+                postselection. Use ``"hw-like"`` to discard invalid shots and ``"fill-shots"`` to
+                keep the same number of shots. Default is ``None``.
+
+        Returns:
+            Tuple[TensorLike]: The results of the simulation
+
+        Note that this function can return measurements for non-commuting observables simultaneously.
+        """
+        if circuit.shots and (any(isinstance(op, MidMeasureMP) for op in circuit.operations)):
+            if self._mpi:
+                raise DeviceError("Lightning-Kokkos-MPI does not support mid-circuit measurements.")
+
+        return super().simulate(
+            circuit,
+            state,
+            postselect_mode=postselect_mode,
+        )
 
     @staticmethod
     def get_c_interface():

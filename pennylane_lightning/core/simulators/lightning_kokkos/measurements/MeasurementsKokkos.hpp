@@ -72,8 +72,7 @@ class Measurements final
     using TeamPolicy = typename StateVectorT::TeamPolicy;
 
   public:
-    explicit Measurements(const StateVectorT &statevector)
-        : BaseType{statevector} {
+    explicit Measurements(StateVectorT &statevector) : BaseType{statevector} {
         init_expval_funcs_();
     };
 
@@ -229,7 +228,12 @@ class Measurements final
                 const std::vector<std::size_t> &wires) -> PrecisionT {
         switch (expval_funcs_[operation]) {
         case ExpValFunc::Identity:
+#if _ENABLE_MPI == 1
+            return applyExpValNamedFunctor<getExpectationValueIdentityFunctor,
+                                           0>(wires);
+#else
             return 1.0;
+#endif
         case ExpValFunc::PauliX:
             return applyExpValNamedFunctor<getExpectationValuePauliXFunctor, 1>(
                 wires);

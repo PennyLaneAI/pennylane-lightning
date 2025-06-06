@@ -141,21 +141,33 @@ test-cpp-mpi:
 		  -DCMAKE_BUILD_TYPE=Debug \
 		  -DBUILD_TESTS=ON \
 		  -DENABLE_WARNINGS=ON \
-		  -DPL_BACKEND=lightning_gpu \
+		  -DPL_BACKEND=$(PL_BACKEND) \
 		  -DSCIPY_OPENBLAS=$(SCIPY_OPENBLAS) \
-		  -DENABLE_MPI=ON \
 		  -DCMAKE_C_COMPILER_LAUNCHER=$(COMPILER_LAUNCHER) \
 		  -DCMAKE_CXX_COMPILER_LAUNCHER=$(COMPILER_LAUNCHER) \
+		  -DENABLE_MPI=ON \
 		  $(OPTIONS)
 ifdef target
 	cmake --build ./BuildTests $(VERBOSE) --target $(target)
 	mpirun -np 2 ./BuildTests/$(target)
 else
 	cmake --build ./BuildTests $(VERBOSE)
-	for file in ./BuildTests/*_test_runner_mpi; do \
-		echo "Running $$file"; \
-		mpirun -np 2 $$file ; \
-	done
+	
+	if [ "$(PL_BACKEND)" = "lightning_gpu" ]; then \
+		for file in ./BuildTests/*_test_runner_mpi; do \
+			echo "Running $$file"; \
+			mpirun -np 2 $$file ; \
+		done ; \
+	elif [ "$(PL_BACKEND)" = "lightning_kokkos" ]; then \
+		for file in ./BuildTests/lightning_kokkos_*_test_runner_mpi; do \
+			echo "Running $$file"; \
+			mpirun -np 4 $$file ; \
+		done ; \
+		for file in ./BuildTests/utils_test_runner_mpi; do \
+			echo "Running $$file"; \
+			mpirun -np 2 $$file ; \
+		done; \
+	fi
 endif
 
 
