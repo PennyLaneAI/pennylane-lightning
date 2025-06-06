@@ -72,6 +72,8 @@ def circuit_ansatz(params, wires):
     qml.ControlledQubitUnitary(qml.matrix(qml.PauliX([wires[1]])), wires=[wires[0], wires[1]])
     qml.DiagonalQubitUnitary(np.array([1, 1]), wires=wires[2])
     qml.MultiControlledX(wires=[wires[0], wires[1], wires[3]], control_values=[0, 1])
+    qml.MultiControlledX(wires=[wires[0], wires[1], wires[3]], control_values=[1, 1])
+    qml.MultiControlledX(wires=[wires[0], wires[1], wires[3]], control_values=[0, 0])
     qml.PauliX(wires=wires[1])
     qml.PauliY(wires=wires[2])
     qml.PauliZ(wires=wires[3])
@@ -139,57 +141,49 @@ def circuit_ansatz(params, wires):
 # The expected values were generated using default.qubit
 @pytest.mark.parametrize("method", [{"method": "mps", "max_bond_dim": 128}, {"method": "tn"}])
 @pytest.mark.parametrize(
-    "returns,expected_value",
+    "returns",
     [
-        ((qml.PauliX(0),), -0.094606003),
-        ((qml.PauliY(0),), -0.138130983),
-        ((qml.PauliZ(0),), 0.052683073),
-        ((qml.PauliX(1),), -0.027114956),
-        ((qml.PauliY(1),), 0.035227835),
-        ((qml.PauliZ(1),), 0.130383680),
-        ((qml.PauliX(2),), -0.112239026),
-        ((qml.PauliY(2),), -0.043408985),
-        ((qml.PauliZ(2),), -0.186733557),
-        ((qml.PauliX(3),), 0.081030290),
-        ((qml.PauliY(3),), 0.136389367),
-        ((qml.PauliZ(3),), -0.024382650),
-        ((qml.PauliX(0), qml.PauliY(1)), [-0.094606, 0.03522784]),
+        (qml.PauliX(0),),
+        (qml.PauliY(0),),
+        (qml.PauliZ(0),),
+        (qml.PauliX(1),),
+        (qml.PauliY(1),),
+        (qml.PauliZ(1),),
+        (qml.PauliX(2),),
+        (qml.PauliY(2),),
+        (qml.PauliZ(2),),
+        (qml.PauliX(3),),
+        (qml.PauliY(3),),
+        (qml.PauliZ(3),),
+        (qml.PauliX(0), qml.PauliY(1)),
         (
-            (
-                qml.PauliZ(0),
-                qml.PauliX(1),
-                qml.PauliY(2),
-            ),
-            [0.05268307, -0.02711496, -0.04340899],
+            qml.PauliZ(0),
+            qml.PauliX(1),
+            qml.PauliY(2),
         ),
         (
-            (
-                qml.PauliY(0),
-                qml.PauliZ(1),
-                qml.PauliY(3),
-            ),
-            [-0.13813098, 0.13038368, 0.13638937],
+            qml.PauliY(0),
+            qml.PauliZ(1),
+            qml.PauliY(3),
         ),
-        ((qml.PauliZ(0) @ qml.PauliY(3),), 0.174335019),
-        ((qml.Hadamard(2),), -0.211405541),
-        ((qml.Hadamard(3) @ qml.PauliZ(2),), -0.024206963),
-        ((qml.PauliX(0) @ qml.PauliY(3),), 0.088232689),
-        ((qml.PauliY(0) @ qml.PauliY(2) @ qml.PauliY(3),), 0.193644667),
-        ((qml.PauliZ(0) @ qml.PauliZ(1) @ qml.PauliZ(2),), -0.034583947),
-        ((0.5 * qml.PauliZ(0) @ qml.PauliZ(2),), 0.002016079),
-        (
-            (qml.ops.LinearCombination([1.0, 2.0], [qml.X(0) @ qml.Z(1), qml.Y(3) @ qml.Z(2)])),
-            [0.08618213, 0.09506244],
-        ),
-        ((qml.ops.prod(qml.X(0), qml.Y(1))), [-0.094606, 0.03522784]),
+        (qml.PauliZ(0) @ qml.PauliY(3),),
+        (qml.Hadamard(2),),
+        (qml.Hadamard(3) @ qml.PauliZ(2),),
+        (qml.PauliX(0) @ qml.PauliY(3),),
+        (qml.PauliY(0) @ qml.PauliY(2) @ qml.PauliY(3),),
+        (qml.PauliZ(0) @ qml.PauliZ(1) @ qml.PauliZ(2),),
+        (0.5 * qml.PauliZ(0) @ qml.PauliZ(2),),
+        (qml.ops.LinearCombination([1.0, 2.0], [qml.X(0) @ qml.Z(1), qml.Y(3) @ qml.Z(2)])),
+        (qml.ops.prod(qml.X(0), qml.Y(1))),
     ],
 )
-def test_integration_for_all_supported_gates(returns, expected_value, method):
+def test_integration_for_all_supported_gates(returns, method):
     """Integration tests that compare to default.qubit for a large circuit containing parametrized
     operations"""
 
     num_wires = 8
     dev_ltensor = LightningTensor(wires=range(num_wires), c_dtype=np.complex128, **method)
+    dev_default = qml.device("default.qubit", wires=range(num_wires))
 
     def circuit(params):
         qml.BasisState(np.array([1, 0, 1, 0, 1, 0, 1, 0]), wires=range(num_wires))
@@ -204,7 +198,9 @@ def test_integration_for_all_supported_gates(returns, expected_value, method):
     qnode_ltensor = qml.QNode(circuit, dev_ltensor)
     j_ltensor = qnode_ltensor(params)
 
-    assert np.allclose(j_ltensor, expected_value, rtol=1e-6)
+    ref = qml.QNode(circuit, dev_default)(params)
+
+    assert np.allclose(j_ltensor, ref, rtol=1e-6)
 
 
 @pytest.mark.parametrize("method", [{"method": "mps", "max_bond_dim": 128}, {"method": "tn"}])
