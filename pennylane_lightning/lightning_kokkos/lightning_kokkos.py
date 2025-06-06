@@ -159,6 +159,7 @@ def _add_adjoint_transforms(program: TransformProgram) -> None:
 
     name = "adjoint + lightning.kokkos"
     program.add_transform(no_sampling, name=name)
+    program.add_transform(qml.transforms.broadcast_expand)
     program.add_transform(
         decompose,
         stopping_condition=_adjoint_ops,
@@ -170,7 +171,6 @@ def _add_adjoint_transforms(program: TransformProgram) -> None:
     program.add_transform(
         validate_measurements, analytic_measurements=adjoint_measurements, name=name
     )
-    program.add_transform(qml.transforms.broadcast_expand)
     program.add_transform(validate_adjoint_trainable_params)
 
 
