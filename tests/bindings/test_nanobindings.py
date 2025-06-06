@@ -163,3 +163,32 @@ def test_nanobind_int_vector_class(module_name):
         2,
         3,
     ], "Vector elements don't match expected values"
+
+@pytest.mark.parametrize(
+    "module_name",
+    [
+        "pennylane_lightning.lightning_qubit_nb",
+        "pennylane_lightning.lightning_kokkos_nb",
+        "pennylane_lightning.lightning_gpu_nb",
+    ],
+)
+def test_simple_statevector(module_name):
+    """Test the SimpleStateVector class"""
+    result = get_module_attributes(module_name)
+
+    # Skip test if module is not available
+    if not result["importable"]:
+        pytest.skip(f"Module {module_name} not available: {result.get('error')}")
+
+    module = result["module"]
+
+    # Check if SimpleStateVector class exists
+    if not hasattr(module, "SimpleStateVector"):
+        pytest.skip(f"SimpleStateVector class not found in {module_name}")
+
+    sv = module.SimpleStateVector(2)
+    assert sv is not None
+    
+    # Test that we can call the applyMatrix method
+    matrix = np.array([[1, 0], [0, 1]], dtype=np.complex128)
+    sv.applyMatrix(matrix, [0], False)

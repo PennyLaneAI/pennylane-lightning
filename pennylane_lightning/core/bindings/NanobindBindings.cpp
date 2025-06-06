@@ -17,25 +17,25 @@
  */
 
 #include <nanobind/nanobind.h>
-#include <nanobind/ndarray.h>
-#include <nanobind/stl/map.h>
 #include <nanobind/stl/string.h>
+#include <nanobind/stl/map.h>
 #include <nanobind/stl/vector.h>
+#include <nanobind/ndarray.h>
+#include <nanobind/stl/complex.h>
 
 #include <map>
-#include <memory>
 #include <string>
 #include <vector>
+#include <complex>
 
 namespace nb = nanobind;
 using namespace nb::literals;
 
 // Mark STL containers as opaque
 NB_MAKE_OPAQUE(std::vector<int>)
-// NB_MAKE_OPAQUE(std::map<std::string, std::string>)
+NB_MAKE_OPAQUE(std::vector<double>)
 
-// Defining the module name with _nb suffix to differentiate from pybind11
-// modules
+// Defining the module name with _nb suffix to differentiate from pybind11 modules
 #if defined(_ENABLE_PLQUBIT)
 #define LIGHTNING_NB_MODULE_NAME lightning_qubit_nb
 #elif _ENABLE_PLKOKKOS == 1
@@ -47,13 +47,11 @@ NB_MAKE_OPAQUE(std::vector<int>)
 #endif
 
 /**
- * @brief Simple info function that returns a nanobind/python dictionary
- * directly
+ * @brief Simple info function that returns a nanobind dictionary directly
  */
 nb::dict nb_info() {
     nb::dict info;
     info["binding_type"] = "nanobind";
-    info["version"] = "1.0.0";
     info["description"] = "Nanobind implementation of PennyLane-Lightning";
     return info;
 }
@@ -96,12 +94,35 @@ nb_add_vectors(nb::ndarray<nb::numpy, const PrecisionT> a,
     return nb::ndarray<nb::numpy, PrecisionT>(result_data, 1, shape, capsule);
 }
 
+// Example StateVector class for testing
+class SimpleStateVector {
+public:
+    using PrecisionT = double;
+    using ComplexT = std::complex<PrecisionT>;
+    
+    SimpleStateVector(size_t num_qubits) : num_qubits_(num_qubits) {}
+    
+    void applyMatrix(const ComplexT* matrix, const std::vector<std::size_t> &wires, bool inverse) {
+        // Placeholder implementation
+    }
+    
+    void applyOperation(const std::string& gate_name, const std::vector<std::size_t> &wires, 
+                        bool inverse, const std::vector<PrecisionT> &params) {
+        // Placeholder implementation
+    }
+    
+private:
+    size_t num_qubits_;
+};
+
 #if defined(LIGHTNING_NB_MODULE_NAME)
 /**
  * @brief Add Lightning State-vector C++ classes, methods and functions to
  * Python module using Nanobind.
  */
-NB_MODULE(LIGHTNING_NB_MODULE_NAME, m) {
+NB_MODULE(
+    LIGHTNING_NB_MODULE_NAME,
+    m) {
     // Register basic info function
     m.def("nb_info", &nb_info,
           "Get information about the Nanobind implementation");
@@ -116,9 +137,21 @@ NB_MODULE(LIGHTNING_NB_MODULE_NAME, m) {
         .def("append", [](std::vector<int> &v, int x) { v.push_back(x); })
         .def("__len__", [](const std::vector<int> &v) { return v.size(); })
         .def("__getitem__", [](const std::vector<int> &v, size_t i) {
-            if (i >= v.size())
-                throw nb::index_error();
+            if (i >= v.size()) throw nb::index_error();
             return v[i];
         });
+        
+    // Test the SimpleStateVector class
+    nb::class_<SimpleStateVector> sv_class(m, "SimpleStateVector");
+    sv_class.def(nb::init<size_t>());
+    
+    // Manually register a few methods
+    sv_class.def("applyMatrix", [](SimpleStateVector &sv, 
+                                  const nb::ndarray<std::complex<double>, nb::numpy> &matrix,
+                                  const std::vector<std::size_t> &wires, 
+                                  bool inverse) {
+        const std::complex<double> *data_ptr = reinterpret_cast<const std::complex<double>*>(matrix.data());
+        sv.applyMatrix(data_ptr, wires, inverse);
+    }, "Apply a given matrix to wires.");
 }
 #endif
