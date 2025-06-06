@@ -20,7 +20,7 @@
 
 #include "DataBuffer.hpp"
 #include "MPILinearAlg.hpp"
-#include "MPIManager.hpp"
+#include "MPIManagerGPU.hpp"
 #include "TestHelpers.hpp"
 #include "Util.hpp" // exp2
 #include "cuda_helpers.hpp"
@@ -47,7 +47,7 @@ TEMPLATE_TEST_CASE("Linear Algebra::SparseMV", "[Linear Algebra]", float,
     using IdxT = typename std::conditional<std::is_same<TestType, float>::value,
                                            int32_t, int64_t>::type;
 
-    MPIManager mpi_manager(MPI_COMM_WORLD);
+    MPIManagerGPU mpi_manager(MPI_COMM_WORLD);
     REQUIRE(mpi_manager.getSize() == 2);
 
     std::size_t num_qubits = 3;

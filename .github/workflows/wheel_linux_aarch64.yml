@@ -1,6 +1,6 @@
 name: Wheel::Linux::ARM
 
-# **What it does**: Builds python wheels for Linux (ubuntu-latest) architecture ARM 64 and store it as artifacts.
+# **What it does**: Builds python wheels for Linux (ubuntu-24.04) architecture ARM 64 and store it as artifacts.
 #                   Python versions: 3.10, 3.11, 3.12, 3.13.
 # **Why we have it**: To build wheels for pennylane-lightning installation.
 # **Who does it impact**: Wheels to be uploaded to PyPI.
@@ -221,7 +221,7 @@ jobs:
         arch: [aarch64]
         pl_backend: ["lightning_qubit", "lightning_kokkos"]
         cibw_build: ${{ fromJson(needs.set_wheel_build_matrix.outputs.python_version) }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       id-token: write
     if: |

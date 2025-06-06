@@ -14,13 +14,13 @@
 #pragma once
 #include "DevTag.hpp"
 #include "JacobianData.hpp"
-#include "MPIManager.hpp"
+#include "MPIManagerGPU.hpp"
 
 /// @cond DEV
 namespace {
 using Pennylane::Observables::Observable;
 using namespace Pennylane::LightningGPU;
-using namespace Pennylane::LightningGPU::MPI;
+using namespace Pennylane::LightningGPU::Util;
 } // namespace
 /// @endcond
 
@@ -32,7 +32,7 @@ class JacobianDataMPI final : public JacobianData<StateVectorT> {
     const std::size_t numGlobalQubits_;
     const std::size_t numLocalQubits_;
 
-    MPIManager mpi_manager_;
+    MPIManagerGPU mpi_manager_;
     const DevTag<int> dev_tag_;
 
   public:

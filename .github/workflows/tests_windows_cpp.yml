@@ -32,7 +32,7 @@ jobs:
   win-set-matrix-x86:
     if: github.event.pull_request.draft == false
     name: Set builder matrix
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout PennyLane-Lightning
@@ -290,7 +290,7 @@ jobs:
   upload-to-codecov-windows:
     needs: [cpptests, cpptestswithkokkos]
     name: Upload coverage data to codecov
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4

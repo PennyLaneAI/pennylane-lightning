@@ -255,7 +255,7 @@ jobs:
     if: github.event_name == 'pull_request'
     needs: [test_lightning_qubit_wheels]
     name: Upload python coverage data to codecov
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/setup-python@v5
         name: Install Python

@@ -31,7 +31,7 @@
 #include <vector>
 
 #include "MPILinearAlg.hpp"
-#include "MPIManager.hpp"
+#include "MPIManagerGPU.hpp"
 #include "MPIWorker.hpp"
 #include "MeasurementsBase.hpp"
 #include "Observables.hpp"
@@ -75,7 +75,7 @@ class MeasurementsMPI final
         MeasurementsBase<StateVectorT, MeasurementsMPI<StateVectorT>>;
     using CFP_t = decltype(cuUtil::getCudaType(PrecisionT{}));
     cudaDataType_t data_type_;
-    MPIManager mpi_manager_;
+    MPIManagerGPU mpi_manager_;
     GateCache<PrecisionT> gate_cache_;
 
   public:

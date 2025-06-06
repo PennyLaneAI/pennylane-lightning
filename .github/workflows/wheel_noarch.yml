@@ -1,6 +1,6 @@
 name: Wheel::Any::None
 
-# **What it does**: Builds a pure python wheel for Linux (ubuntu-latest) and store it as an artifact.
+# **What it does**: Builds a pure python wheel for Linux (ubuntu-24.04) and store it as an artifact.
 #                   Python version: 3.10.
 # **Why we have it**: To test the wheel build in the python layer, with no compilation.
 # **Who does it impact**: Wheels to be uploaded to PyPI.
@@ -89,7 +89,7 @@ jobs:
     strategy:
       matrix:
         pl_backend: ["lightning_gpu", "lightning_kokkos", "lightning_qubit"]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - uses: actions/download-artifact@v4
