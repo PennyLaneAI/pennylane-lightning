@@ -33,7 +33,7 @@ on:
 env:
   GCC_VERSION: 11
   CI_CUDA_ARCH: 86
-  TF_VERSION: 2.16.2
+  TF_VERSION: 2.19.0
   KERAS_VERSION: 3.9.0
   TORCH_VERSION: 2.5.1
   COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:./coverage.xml --no-flaky-report -p no:warnings --tb=native"
@@ -212,7 +212,13 @@ jobs:
         run: |
           cd main
           python -m pip install -r requirements-tests.txt
-          python -m pip install "jax[cpu]==0.5.3; python_version<='3.12'" openfermionpyscf
+          python -m pip install openfermionpyscf
+
+      - name: Revert to older JAX version for stable
+        if: inputs.pennylane-version == 'stable'
+        run: |
+          # FIXME: remove after v0.42 release
+          python -m pip install "jax[cpu]==0.4.28"
 
       - name: Checkout PennyLane for release or latest build
         if: inputs.pennylane-version == 'release' || inputs.pennylane-version == 'latest'
@@ -242,6 +248,13 @@ jobs:
           cd main
           python -m pip uninstall -y pennylane && python -m pip install -U pennylane
 
+      - name: Checkout Catalyst
+        uses: actions/checkout@v4
+        with:
+          repository: PennyLaneAI/catalyst
+          path: ${{ github.workspace}}/catalyst
+          ref: ${{ (inputs.pennylane-version == 'stable' && 'v0.11.0') || 'main' }} # FIXME: remove after v0.42 release
+
       - name: Install ML libraries for interfaces
         run: |
           python -m pip install --upgrade torch==$TORCH_VERSION --index-url https://download.pytorch.org/whl/cpu
@@ -257,7 +270,7 @@ jobs:
           PL_BACKEND=lightning_qubit SKIP_COMPILATION=True python -m pip install . -vv
 
           PL_BACKEND=${{ matrix.pl_backend }} python scripts/configure_pyproject_toml.py || true
-          PL_BACKEND=${{ matrix.pl_backend }} CMAKE_ARGS="-DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos" \
+          PL_BACKEND=${{ matrix.pl_backend }} CMAKE_ARGS="-DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DLIGHTNING_CATALYST_SRC_PATH=${{ github.workspace }}/catalyst" \
           python -m pip install . -vv
 
       - name: Run PennyLane-Lightning integration tests

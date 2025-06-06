@@ -1,14 +1,19 @@
+# Build Dependencies
 ninja
-pybind11
+pybind11>=2.12.0
+scipy-openblas32>=0.3.26
+
+# Testing Dependencies
 pytest>=7.1.2
 pytest-cov>=3.0.0
 pytest-mock>=3.7.0
 pytest-xdist>=2.5.0
 flaky>=3.7.0
-black>=25.1.0
-clang-tidy~=16.0
-clang-format~=16.0
+pennylane>=0.41
+
+# Formatting / Linting Dependencies
+black>=21
+clang-tidy~=20.1
+clang-format~=20.1
 isort==5.13.2
 pylint==2.7.4
-pennylane>=0.40
-scipy-openblas32>=0.3.26

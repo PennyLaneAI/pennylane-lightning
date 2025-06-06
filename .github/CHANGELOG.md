@@ -4,11 +4,20 @@
 
 <h3>Improvements 🛠</h3>
 
+- `MultiControlledX` gates are now natively supported in Lightning-Tensor.
+  [(#1169)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1169)
+
 - PennyLane-Lightning is compatible with JAX version 0.5.3+.
   [(#1152)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1152)
+  [(#1161)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1161)
 
 - Improve performance of computing expectation values of Pauli Sentences for `lightning.kokkos`.
   [(#1126)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1126)
+
+- Mid-circuit measurements using the tree-traversal algorithm are now supported
+  in the `lightning.qubit`, `lightning.kokkos` and `lightning.gpu` devices,
+  providing both significant memory savings and sampling efficiency!
+  [(#1166)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1166)
 
 <h3>Breaking changes 💔</h3>
 
@@ -16,24 +25,41 @@
 
 <h3>Documentation 📝</h3>
 
-- Enable `pennylane.ai` search.
-  [(#1135)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1135)
-
-- Move the installation sections from `README.rst` to dedicated pages.
-  [(#1131)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1131)
-
-- Fix doxygen doc builds for `AVXCommon::FuncReturn`.
-  [(#1134)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1134)
-
-- Changed the README to markdown `README.md`, and removed `.. include` references to the old `README.RST`.
-  and added a header/banner image to the README (`README.rst`), as in the `pennylane` and `catalyst` repositories.
+- Added a header/banner image to the README (`README.rst`), as in the `pennylane` and `catalyst` repositories.
+  Temporarily reverted this change as PyPI forbids the `.. raw::` directive for security reasons in `rst` files.
+  This will be revisited in a future PR.
   [(#1139)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1139)
   [(#1141)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1141)
   [(#1142)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1142)
 
 <h3>Bug fixes 🐛</h3>
 
+- Fixed the implementation of multi-controlled gates with a single target wire for arbitrary control values in Lightning-Tensor.
+  [(#1169)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1169)
+
+- Only download JAX version 0.5.3 for non-X86 MacOS. 
+  [(#1163)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1163)
+
+- Fix Docker build for Lighting-Kokkos with ROCM library for AMD GPUs.
+  Updating ROCM from 5.7 to 6.2.4. 
+  [(#1158)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1158)
+
 <h3>Internal changes ⚙️</h3>
+
+- Use local catalyst repository instead of fetching on Github CI.
+  [(#1164)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1164)
+  
+- Update the Lightning build dependencies.
+  [(#1168)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1168)
+
+- Use JAX version 0.6.0 for CI tests for latest version.
+  [(#1161)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1161)
+  
+- Use JAX version 0.4.28 for CI tests for stable version.
+  [(#1160)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1160)
+
+- Bump `readthedocs` Github action runner to use Ubuntu-24.04.
+  [(#1151)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1151)
 
 - The `LightningBaseStateVector`, `LightningBaseAdjointJacobian`, `LightningBaseMeasurements`, `LightningInterpreter` and `QuantumScriptSerializer` base classes now can be found at `pennylane_lightning.lightning_base`.
 
@@ -62,9 +88,14 @@
 - Added flags to all Codecov reports and a default carryforward flag for all flags.
   [(1144)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1144)
 
-- Bump `readthedocs` Github action runner to use Ubuntu-24.04.
-[(#1151)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1151)
+- Updated the `clang-format` and `clang-tidy` versions to v20 for compatibility with Catalyst.
+  [(#1153)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1153)
 
+- Bump `readthedocs` Github action runner to use Ubuntu-24.04.
+  [(#1151)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1151)
+
+- Removed `max_workers` argument for `default.qubit` device in Python tests to reduce CI testing time.
+  [(##1174)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1174)
 
 <h3>Contributors ✍️</h3>
 
@@ -72,14 +103,47 @@ This release contains contributions from (in alphabetical order):
 
 Runor Agbaire,
 Ali Asadi,
-Andrew Gardhouse,
 David Ittah,
 Christina Lee,
 Joseph Lee,
+Mehrdad Malekmohammadi,
 Anton Naim Ibrahim,
 Luis Alfredo Nuñez Meneses,
 Mudit Pandey,
 Andrija Paurevic,
+Shuli Shu,
+Marc Vandelle
+
+---
+
+# Release 0.41.1
+
+<h3>Breaking changes 💔</h3>
+
+- Build Catalyst Lightning plugins against Catalyst Runtime v0.11.0.
+  [(#1148)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1148)
+
+<h3>Documentation 📝</h3>
+
+- `pennylane.ai` search is enabled, so users are redirected to the PennyLane search page from the PennyLane-Lightning docs.
+  [(#1135)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1135)
+
+- Fix doxygen doc builds for `AVXCommon::FuncReturn`.
+  [(#1134)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1134)
+
+- Move the installation sections from `README.rst` to dedicated pages.
+  [(#1131)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1131)
+
+<h3>Contributors ✍️</h3>
+
+This release contains contributions from (in alphabetical order):
+
+Ali Asadi,
+Amintor Dusko,
+Andrew Gardhouse,
+Joseph Lee,
+Anton Naim Ibrahim,
+Luis Alfredo Nuñez Meneses
 
 ---
 
