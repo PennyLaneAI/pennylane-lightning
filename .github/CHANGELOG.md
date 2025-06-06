@@ -47,10 +47,13 @@
   [(#1158)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1158)
 
 <h3>Internal changes ⚙️</h3>
+  
+- Remove flaky tests and add random seed to measurement tests.
+  [(#1172)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1172)
 
 - Use local catalyst repository instead of fetching on Github CI.
   [(#1164)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1164)
-  
+
 - Update the Lightning build dependencies.
   [(#1168)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1168)
 

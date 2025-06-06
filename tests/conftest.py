@@ -207,14 +207,47 @@ def qubit_device(request):
     ),
 )
 def lightning_sv(request):
-    def _statevector(num_wires):
+    def _statevector(num_wires, seed=None):
         if device_name == "lightning.tensor":
             return LightningStateVector(
                 num_wires=num_wires, c_dtype=request.param[0], method=request.param[1]
             )
+        if seed:
+            rng = np.random.default_rng(seed)
+            return LightningStateVector(num_wires=num_wires, dtype=request.param, rng=rng)
         return LightningStateVector(num_wires=num_wires, dtype=request.param)
 
     return _statevector
+
+
+@pytest.fixture(autouse=True)
+def restore_global_seed():
+    original_state = np.random.get_state()
+    yield
+    np.random.set_state(original_state)
+
+
+@pytest.fixture
+def seed(request):
+    """An integer random number generator seed
+    This fixture overrides the ``seed`` fixture provided by pytest-rng, adding the flexibility
+    of locally getting a new seed for a test case by applying the ``local_salt`` marker. This is
+    useful when the seed from pytest-rng happens to be a bad seed that causes your test to fail.
+    .. code_block:: python
+        @pytest.mark.local_salt(42)
+        def test_something(seed):
+            ...
+    The value passed to ``local_salt`` needs to be an integer.
+    """
+
+    fixture_manager = request._fixturemanager  # pylint:disable=protected-access
+    fixture_defs = fixture_manager.getfixturedefs("seed", request.node)
+    original_fixture_def = fixture_defs[0]  # the original seed fixture provided by pytest-rng
+    original_seed = original_fixture_def.func(request)
+    marker = request.node.get_closest_marker("local_salt")
+    if marker and marker.args:
+        return original_seed + marker.args[0]
+    return original_seed
 
 
 def validate_counts(shots, results1, results2, rtol=0.15, atol=20):
@@ -283,7 +316,7 @@ def validate_others(shots, results1, results2, atol=0.01, rtol=0.2):
     assert np.allclose(results1, results2, atol=atol, rtol=rtol)
 
 
-def validate_measurements(func, shots, results1, results2):
+def validate_measurements(func, shots, results1, results2, atol=0.01, rtol=0.2):
     """Calls the correct validation function based on measurement type."""
     if func is qml.counts:
         validate_counts(shots, results1, results2)
@@ -293,7 +326,7 @@ def validate_measurements(func, shots, results1, results2):
         validate_samples(shots, results1, results2)
         return
 
-    validate_others(shots, results1, results2)
+    validate_others(shots, results1, results2, atol=atol, rtol=rtol)
 
 
 # This hook is called to add info to test report header
