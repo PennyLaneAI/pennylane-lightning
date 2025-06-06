@@ -86,9 +86,9 @@ class StateVectorKokkosMPI final
     using KokkosExecSpace = typename SVK::KokkosExecSpace;
     using HostExecSpace = typename SVK::HostExecSpace;
 
-  private:
     using BaseType = StateVectorBase<fp_t, StateVectorKokkosMPI<fp_t>>;
 
+  private:
     std::unique_ptr<SVK> sv_;
     std::shared_ptr<KokkosVector> recvbuf_;
     std::shared_ptr<KokkosVector> sendbuf_;
@@ -102,6 +102,203 @@ class StateVectorKokkosMPI final
     std::vector<std::size_t> local_wires_;
 
   public:
+    StateVectorKokkosMPI() = delete;
+
+    /**
+     * @brief Create a new state vector with mpi_manager.
+     *
+     * @param mpi_manager Kokkos MPIManager
+     * @param num_global_qubits Number of global qubits
+     * @param num_local_qubits Number of local qubits
+     * @param kokkos_args Arguments for Kokkos initialization
+     */
+    StateVectorKokkosMPI(MPIManagerKokkos mpi_manager,
+                         std::size_t num_global_qubits,
+                         std::size_t num_local_qubits,
+                         const Kokkos::InitializationSettings &kokkos_args = {})
+        : BaseType{num_global_qubits + num_local_qubits},
+          mpi_manager_(mpi_manager),
+          num_qubits_(num_global_qubits + num_local_qubits),
+          numGlobalQubits_(num_global_qubits),
+          numLocalQubits_(num_local_qubits) {
+
+        Kokkos::InitializationSettings settings = kokkos_args;
+
+        global_wires_.resize(numGlobalQubits_); // set to constructor line
+        local_wires_.resize(num_local_qubits);
+        mpi_rank_to_global_index_map_.resize(mpi_manager_.getSize());
+
+        resetIndices();
+
+        if (num_local_qubits > 0) {
+            sv_ = std::make_unique<SVK>(num_local_qubits, settings);
+            setBasisState(0U);
+        }
+        allocateBuffers();
+    }
+
+    /**
+     * @brief Create a new state vector with mpi_manager.
+     *
+     * @param mpi_manager Kokkos MPIManager
+     * @param total_num_qubits Number of qubits
+     * @param kokkos_args Arguments for Kokkos initialization
+     */
+    StateVectorKokkosMPI(MPIManagerKokkos mpi_manager,
+                         std::size_t total_num_qubits,
+                         const Kokkos::InitializationSettings &kokkos_args = {})
+        : StateVectorKokkosMPI(mpi_manager, log2(mpi_manager.getSize()),
+                               total_num_qubits - log2(mpi_manager.getSize()),
+                               kokkos_args) {}
+
+    /**
+     * @brief Create a new state vector with MPI Comm.
+     *
+     * @param mpi_communicator MPI_Comm communicator
+     * @param total_num_qubits Number of qubits
+     * @param kokkos_args Arguments for Kokkos initialization
+     */
+    StateVectorKokkosMPI(MPI_Comm mpi_communicator,
+                         std::size_t total_num_qubits,
+                         const Kokkos::InitializationSettings &kokkos_args = {})
+        : StateVectorKokkosMPI(MPIManagerKokkos(mpi_communicator),
+                               total_num_qubits, kokkos_args) {}
+
+    /**
+     * @brief Create a new state vector with default MPI_COMM_WORLD
+     *
+     * @param total_num_qubits Number of qubits
+     * @param kokkos_args Arguments for Kokkos initialization
+     */
+    StateVectorKokkosMPI(std::size_t total_num_qubits,
+                         const Kokkos::InitializationSettings &kokkos_args = {})
+        : StateVectorKokkosMPI(MPIManagerKokkos(MPI_COMM_WORLD),
+                               total_num_qubits, kokkos_args) {}
+
+    /**
+     * @brief Create a new state vector with MPI Comm.
+     *
+     * @param mpi_communicator MPI_Comm communicator
+     * @param num_global_qubits Number of global qubits
+     * @param num_local_qubits Number of local qubits
+     * @param kokkos_args Arguments for Kokkos initialization
+     */
+    StateVectorKokkosMPI(MPI_Comm mpi_communicator,
+                         std::size_t num_global_qubits,
+                         std::size_t num_local_qubits,
+                         const Kokkos::InitializationSettings &kokkos_args = {})
+        : StateVectorKokkosMPI(MPIManagerKokkos(mpi_communicator),
+                               num_global_qubits, num_local_qubits,
+                               kokkos_args) {};
+
+    /**
+     * @brief Create a new state vector with default MPI_COMM_WORLD
+     *
+     * @param num_global_qubits Number of global qubits
+     * @param num_local_qubits Number of local qubits
+     * @param kokkos_args Arguments for Kokkos initialization
+     */
+    StateVectorKokkosMPI(std::size_t num_global_qubits,
+                         std::size_t num_local_qubits,
+                         const Kokkos::InitializationSettings &kokkos_args = {})
+        : StateVectorKokkosMPI(MPIManagerKokkos(MPI_COMM_WORLD),
+                               num_global_qubits, num_local_qubits,
+                               kokkos_args) {}
+
+    /**
+     * @brief Create a new state vector from data on the host.
+     *
+     * @param num_global_qubits Number of global qubits
+     * @param num_local_qubits Number of local qubits
+     * @param hostdata_ Host array for state vector
+     * @param length Length of host array (must be equal to exp2(total qubits))
+     * @param kokkos_args Arguments for Kokkos initialization
+     * @param communicator MPI Communicator
+     */
+    template <class complex>
+    StateVectorKokkosMPI(std::size_t num_global_qubits,
+                         std::size_t num_local_qubits, complex *hostdata_,
+                         const std::size_t length,
+                         const Kokkos::InitializationSettings &kokkos_args = {},
+                         const MPI_Comm &communicator = MPI_COMM_WORLD)
+        : StateVectorKokkosMPI(num_global_qubits, num_local_qubits,
+                               communicator) {
+        PL_ABORT_IF_NOT(
+            exp2(num_qubits_) == length,
+            "length of complex data does not match the number of qubits");
+        const std::size_t blk{getLocalBlockSize()};
+        const std::size_t offset{blk * mpi_manager_.getRank()};
+        (*sv_).HostToDevice(reinterpret_cast<ComplexT *>(hostdata_ + offset),
+                            blk);
+    }
+
+    /**
+     * @brief Create a new state vector from data on the host.
+     *
+     * @param num_global_qubits Number of global qubits
+     * @param num_local_qubits Number of local qubits
+     * @param hostdata_ Host array for state vector
+     * @param length Length of host array (must be equal to exp2(total qubits))
+     * @param kokkos_args Arguments for Kokkos initialization
+     * @param communicator MPI Communicator
+     */
+    StateVectorKokkosMPI(std::size_t num_global_qubits,
+                         std::size_t num_local_qubits,
+                         const ComplexT *hostdata_, const std::size_t length,
+                         const Kokkos::InitializationSettings &kokkos_args = {},
+                         const MPI_Comm &communicator = MPI_COMM_WORLD)
+        : StateVectorKokkosMPI(communicator, num_global_qubits,
+                               num_local_qubits, kokkos_args) {
+        PL_ABORT_IF_NOT(
+            exp2(num_qubits_) == length,
+            "length of complex data does not match the number of qubits");
+        const std::size_t blk{getLocalBlockSize()};
+        const std::size_t offset{blk * mpi_manager_.getRank()};
+        std::vector<ComplexT> hostdata_copy(hostdata_ + offset,
+                                            hostdata_ + offset + blk);
+        (*sv_).HostToDevice(hostdata_copy.data(), hostdata_copy.size());
+    }
+
+    /**
+     * @brief Create a new state vector from data on the host.
+     *
+     * @param num_global_qubits Number of global qubits
+     * @param num_local_qubits Number of local qubits
+     * @param hostdata_ Host array for state vector
+     * @param kokkos_args Arguments for Kokkos initialization
+     * @param communicator MPI Communicator
+     */
+    template <class complex>
+    StateVectorKokkosMPI(std::size_t num_global_qubits,
+                         std::size_t num_local_qubits,
+                         std::vector<complex> hostdata_,
+                         const Kokkos::InitializationSettings &kokkos_args = {},
+                         const MPI_Comm &communicator = MPI_COMM_WORLD)
+        : StateVectorKokkosMPI(num_global_qubits, num_local_qubits,
+                               hostdata_.data(), hostdata_.size(), kokkos_args,
+                               communicator) {}
+
+    /**
+     * @brief Copy constructor
+     *
+     * @param other Another state vector
+     */
+    StateVectorKokkosMPI(const StateVectorKokkosMPI &other,
+                         const Kokkos::InitializationSettings &kokkos_args = {})
+        : StateVectorKokkosMPI(other.getMPIManager(), other.getNumGlobalWires(),
+                               other.getNumLocalWires(), kokkos_args) {
+        global_wires_ = other.getGlobalWires();
+        local_wires_ = other.getLocalWires();
+        mpi_rank_to_global_index_map_ = other.getMPIRankToGlobalIndexMap();
+        sendbuf_ = other.sendbuf_;
+        recvbuf_ = other.recvbuf_;
+        (*sv_).DeviceToDevice(other.getView());
+    }
+
+    ~StateVectorKokkosMPI() = default;
+
+    SVK &getLocalSV() { return *sv_; }
+
     auto getMPIManager() const { return mpi_manager_; }
 
     std::size_t getNumGlobalWires() const { return numGlobalQubits_; }
@@ -137,7 +334,7 @@ class StateVectorKokkosMPI final
     void setBasisState(std::size_t global_index) {
         const auto index = global2localIndex(global_index);
         resetIndices();
-        const auto rank = static_cast<std::size_t>(mpi_manager_.getRank());
+        const auto rank = mpi_manager_.getRank();
         if (index.first == rank) {
             (*sv_).setBasisState(index.second);
         } else {
@@ -146,31 +343,8 @@ class StateVectorKokkosMPI final
     }
 
     /**
-     * @brief Prepares a single computational basis state.
-     *
-     * @param state Binary number representing the index
-     * @param wires Wires.
+     * @brief Allocate send and recv buffers for MPI communication.
      */
-    void setBasisState(const std::vector<std::size_t> &state,
-                       const std::vector<std::size_t> &wires) {
-        PL_ABORT_IF_NOT(state.size() == wires.size(),
-                        "state and wires must have equal dimensions.");
-        const auto num_qubits = this->getNumQubits();
-        PL_ABORT_IF_NOT(
-            std::find_if(wires.begin(), wires.end(),
-                         [&num_qubits](const auto i) {
-                             return i >= num_qubits;
-                         }) == wires.end(),
-            "wires must take values lower than the number of qubits.");
-        const auto n_wires = wires.size();
-        std::size_t index{0U};
-        for (std::size_t k = 0; k < n_wires; k++) {
-            const auto bit = static_cast<std::size_t>(state[k]);
-            index |= bit << (num_qubits - 1 - wires[k]);
-        }
-        setBasisState(index);
-    }
-
     void allocateBuffers() {
         if (!sendbuf_) {
             sendbuf_ = std::make_shared<KokkosVector>(
@@ -182,143 +356,6 @@ class StateVectorKokkosMPI final
         }
     }
 
-    StateVectorKokkosMPI() = delete;
-    StateVectorKokkosMPI(MPIManagerKokkos mpi_manager,
-                         std::size_t num_global_qubits,
-                         std::size_t num_local_qubits,
-                         const Kokkos::InitializationSettings &kokkos_args = {})
-        : BaseType{num_global_qubits + num_local_qubits},
-          mpi_manager_(mpi_manager),
-          num_qubits_(num_global_qubits + num_local_qubits),
-          numGlobalQubits_(num_global_qubits),
-          numLocalQubits_(num_local_qubits) {
-
-        Kokkos::InitializationSettings settings = kokkos_args;
-
-        global_wires_.resize(numGlobalQubits_); // set to constructor line
-        local_wires_.resize(num_local_qubits);
-        mpi_rank_to_global_index_map_.resize(mpi_manager_.getSize());
-
-        resetIndices();
-
-        if (num_local_qubits > 0) {
-            sv_ = std::make_unique<SVK>(num_local_qubits, settings);
-            setBasisState(0U);
-        }
-        allocateBuffers();
-    }
-
-    StateVectorKokkosMPI(MPIManagerKokkos mpi_manager,
-                         std::size_t total_num_qubits,
-                         const Kokkos::InitializationSettings &kokkos_args = {})
-        : StateVectorKokkosMPI(mpi_manager, log2(mpi_manager.getSize()),
-                               total_num_qubits - log2(mpi_manager.getSize()),
-                               kokkos_args) {}
-
-    StateVectorKokkosMPI(MPI_Comm mpi_communicator,
-                         std::size_t total_num_qubits,
-                         const Kokkos::InitializationSettings &kokkos_args = {})
-        : StateVectorKokkosMPI(MPIManagerKokkos(mpi_communicator),
-                               total_num_qubits, kokkos_args) {}
-
-    StateVectorKokkosMPI(std::size_t total_num_qubits,
-                         const Kokkos::InitializationSettings &kokkos_args = {})
-        : StateVectorKokkosMPI(MPIManagerKokkos(MPI_COMM_WORLD),
-                               total_num_qubits, kokkos_args) {}
-
-    StateVectorKokkosMPI(MPI_Comm mpi_communicator,
-                         std::size_t num_global_qubits,
-                         std::size_t num_local_qubits,
-                         const Kokkos::InitializationSettings &kokkos_args = {})
-        : StateVectorKokkosMPI(MPIManagerKokkos(mpi_communicator),
-                               num_global_qubits, num_local_qubits,
-                               kokkos_args) {};
-
-    StateVectorKokkosMPI(std::size_t num_global_qubits,
-                         std::size_t num_local_qubits,
-                         const Kokkos::InitializationSettings &kokkos_args = {})
-        : StateVectorKokkosMPI(MPIManagerKokkos(MPI_COMM_WORLD),
-                               num_global_qubits, num_local_qubits,
-                               kokkos_args) {}
-
-    /**
-     * @brief Create a new state vector from data on the host.
-     */
-    template <class complex>
-    StateVectorKokkosMPI(std::size_t num_global_qubits,
-                         std::size_t num_local_qubits, complex *hostdata_,
-                         const std::size_t length,
-                         const Kokkos::InitializationSettings &kokkos_args = {},
-                         const MPI_Comm &communicator = MPI_COMM_WORLD)
-        : StateVectorKokkosMPI(num_global_qubits, num_local_qubits,
-                               communicator) {
-        PL_ABORT_IF_NOT(
-            exp2(num_qubits_) == length,
-            "length of complex data does not match the number of qubits");
-        const std::size_t blk{getLocalBlockSize()};
-        const std::size_t offset{blk * mpi_manager_.getRank()};
-        (*sv_).HostToDevice(reinterpret_cast<ComplexT *>(hostdata_ + offset),
-                            blk);
-    }
-
-    /**
-     * @brief Create a new state vector from data on the host.
-     *
-     * @param num_qubits Number of qubits
-     */
-    StateVectorKokkosMPI(std::size_t num_global_qubits,
-                         std::size_t num_local_qubits,
-                         const ComplexT *hostdata_, const std::size_t length,
-                         const Kokkos::InitializationSettings &kokkos_args = {},
-                         const MPI_Comm &communicator = MPI_COMM_WORLD)
-        : StateVectorKokkosMPI(communicator, num_global_qubits,
-                               num_local_qubits, kokkos_args) {
-        PL_ABORT_IF_NOT(
-            exp2(num_qubits_) == length,
-            "length of complex data does not match the number of qubits");
-        const std::size_t blk{getLocalBlockSize()};
-        const std::size_t offset{blk * mpi_manager_.getRank()};
-        std::vector<ComplexT> hostdata_copy(hostdata_ + offset,
-                                            hostdata_ + offset + blk);
-        (*sv_).HostToDevice(hostdata_copy.data(), hostdata_copy.size());
-    }
-
-    /**
-     * @brief Create a new state vector from data on the host.
-     *
-     * @param num_qubits Number of qubits
-     */
-    template <class complex>
-    StateVectorKokkosMPI(std::size_t num_global_qubits,
-                         std::size_t num_local_qubits,
-                         std::vector<complex> hostdata_,
-                         const Kokkos::InitializationSettings &kokkos_args = {},
-                         const MPI_Comm &communicator = MPI_COMM_WORLD)
-        : StateVectorKokkosMPI(num_global_qubits, num_local_qubits,
-                               hostdata_.data(), hostdata_.size(), kokkos_args,
-                               communicator) {}
-
-    /**
-     * @brief Copy constructor
-     *
-     * @param other Another state vector
-     */
-    StateVectorKokkosMPI(const StateVectorKokkosMPI &other,
-                         const Kokkos::InitializationSettings &kokkos_args = {})
-        : StateVectorKokkosMPI(other.getMPIManager(), other.getNumGlobalWires(),
-                               other.getNumLocalWires(), kokkos_args) {
-        global_wires_ = other.getGlobalWires();
-        local_wires_ = other.getLocalWires();
-        mpi_rank_to_global_index_map_ = other.getMPIRankToGlobalIndexMap();
-        sendbuf_ = other.sendbuf_;
-        recvbuf_ = other.recvbuf_;
-        (*sv_).DeviceToDevice(other.getView());
-    }
-
-    ~StateVectorKokkosMPI() = default;
-
-    SVK &getLocalSV() { return *sv_; }
-
     /******************
     MPI-related methods
     ******************/
@@ -327,12 +364,27 @@ class StateVectorKokkosMPI final
         mpi_manager_.Barrier();
     }
 
+    /**
+     * @brief Perform an all-reduce operation with the sum operation
+     *
+     * @param data Data to be reduced
+     */
     template <typename T> T allReduceSum(const T &data) const {
         return mpi_manager_.allreduce(data, std::string{"sum"});
     }
 
-    void sendrecv(const std::size_t send_rank, const std::size_t recv_rank,
-                  const std::size_t size, const std::size_t tag) {
+    /**
+     * @brief Perform a send-receive operation between two ranks using the
+     * sendbuf_ and recvbuf_
+     *
+     * @param send_rank Rank to send data to
+     * @param recv_rank Rank to receive data from
+     * @param size Size of the data to send/receive
+     * @param tag Tag for the MPI message
+     */
+    void sendrecvBuffers(const std::size_t send_rank,
+                         const std::size_t recv_rank, const std::size_t size,
+                         const std::size_t tag) {
         mpi_manager_.Sendrecv(*sendbuf_, send_rank, *recvbuf_, recv_rank, size,
                               tag);
     }
@@ -395,9 +447,10 @@ class StateVectorKokkosMPI final
     std::vector<std::size_t>
     getLocalWireIndices(const std::vector<std::size_t> &wires) const {
         std::vector<std::size_t> local_wires_indices;
-        for (const auto &wire : wires) {
-            local_wires_indices.push_back(getLocalWireIndex(wire));
-        }
+        local_wires_indices.reserve(wires.size());
+        std::transform(
+            wires.begin(), wires.end(), std::back_inserter(local_wires_indices),
+            [&](std::size_t wire) { return getLocalWireIndex(wire); });
         return local_wires_indices;
     }
 
@@ -408,9 +461,11 @@ class StateVectorKokkosMPI final
     std::vector<std::size_t>
     getGlobalWiresIndices(const std::vector<std::size_t> &wires) const {
         std::vector<std::size_t> global_wires_indices;
-        for (const auto &wire : wires) {
-            global_wires_indices.push_back(getGlobalWireIndex(wire));
-        }
+        global_wires_indices.reserve(wires.size());
+        std::transform(
+            wires.begin(), wires.end(),
+            std::back_inserter(global_wires_indices),
+            [&](std::size_t wire) { return getGlobalWireIndex(wire); });
         return global_wires_indices;
     }
 
@@ -421,21 +476,22 @@ class StateVectorKokkosMPI final
     std::vector<std::size_t>
     findGlobalWires(const std::vector<std::size_t> &wires) const {
         std::vector<std::size_t> global_wires;
-        for (const auto &wire : wires) {
-            if (isWiresGlobal({wire})) {
-                global_wires.push_back(wire);
-            }
-        }
+        std::copy_if(wires.begin(), wires.end(),
+                     std::back_inserter(global_wires),
+                     [&](std::size_t wire) { return isWiresGlobal({wire}); });
         return global_wires;
     }
 
     /**
      * @brief  Converts a global state vector index to a local one.
      *
-     * @param index Global index.
+     * @param index Pair containing {global index/rank location, local index}
      */
     std::pair<std::size_t, std::size_t>
     global2localIndex(const std::size_t index) const {
+        PL_ABORT_IF_NOT(
+            index < exp2(this->getNumQubits()),
+            "Index out of bounds.");
         auto blk = getLocalBlockSize();
         return std::pair<std::size_t, std::size_t>{index / blk, index % blk};
     }
@@ -472,6 +528,32 @@ class StateVectorKokkosMPI final
     }
 
     /**
+     * @brief Prepares a single computational basis state.
+     *
+     * @param state Binary number representing the index
+     * @param wires Wires.
+     */
+    void setBasisState(const std::vector<std::size_t> &state,
+                       const std::vector<std::size_t> &wires) {
+        PL_ABORT_IF_NOT(state.size() == wires.size(),
+                        "state and wires must have equal dimensions.");
+        const auto num_qubits = this->getNumQubits();
+        PL_ABORT_IF_NOT(
+            std::find_if(wires.begin(), wires.end(),
+                         [&num_qubits](const auto i) {
+                             return i >= num_qubits;
+                         }) == wires.end(),
+            "wires must take values lower than the number of qubits.");
+        const auto n_wires = wires.size();
+        std::size_t index{0U};
+        for (std::size_t k = 0; k < n_wires; k++) {
+            const auto bit = static_cast<std::size_t>(state[k]);
+            index |= bit << (num_qubits - 1 - wires[k]);
+        }
+        setBasisState(index);
+    }
+
+    /**
      * @brief Set values for a batch of elements of the state-vector.
      *
      * @param indices Indices of the target elements.
@@ -479,6 +561,8 @@ class StateVectorKokkosMPI final
      */
     void setStateVector(const std::vector<std::size_t> &indices,
                         const std::vector<ComplexT> &values) {
+        PL_ABORT_IF_NOT(indices.size() == values.size(),
+                        "Indices and values must have equal dimensions.");
         resetIndices();
         const std::size_t blk{getLocalBlockSize()};
         const std::size_t offset{blk * mpi_manager_.getRank()};
@@ -524,14 +608,16 @@ class StateVectorKokkosMPI final
         PL_ABORT_IF(global_wires.size() > local_wires_.size(),
                     "global_wires must be smaller than local_wires.");
         std::vector<std::size_t> local_wires;
-        int j = 0;
-
-        while (local_wires.size() != global_wires.size()) {
-            if (!isElementInVector(wires, local_wires_[j])) {
-                local_wires.push_back(local_wires_[j]);
+        for (std::size_t i = 0; i < local_wires_.size(); i++) {
+            if (local_wires.size() == global_wires.size()) {
+                break;
             }
-            j++;
+            if (!isElementInVector(wires, local_wires_[i])) {
+                local_wires.push_back(local_wires_[i]);
+            }
         }
+        PL_ABORT_IF(local_wires.size() != global_wires.size(),
+                    "Not enough local wires to swap with global wires.");
         // TODO: improve with algorithm based on memory pattern
         return local_wires;
     }
@@ -576,108 +662,109 @@ class StateVectorKokkosMPI final
                         "local_wires_to_swap must be local wires.");
 
         std::vector<std::size_t> rev_global_wires_index_to_swap;
+        rev_global_wires_index_to_swap.reserve(global_wires_to_swap.size());
         std::vector<std::size_t> rev_local_wires_index_to_swap;
+        rev_local_wires_index_to_swap.reserve(local_wires_to_swap.size());
+
+        std::transform(
+            local_wires_to_swap.begin(), local_wires_to_swap.end(),
+            std::back_inserter(rev_local_wires_index_to_swap),
+            [this](std::size_t wire) { return getRevLocalWireIndex(wire); });
+
+        std::transform(
+            global_wires_to_swap.begin(), global_wires_to_swap.end(),
+            std::back_inserter(rev_global_wires_index_to_swap),
+            [this](std::size_t wire) { return getRevGlobalWireIndex(wire); });
+
         std::vector<std::size_t> rev_local_wires_index_not_swapping;
+        rev_local_wires_index_not_swapping.reserve(getNumLocalWires() -
+                                                   local_wires_to_swap.size());
         for (std::size_t i = 0; i < getNumLocalWires(); i++) {
-            if (!isElementInVector(local_wires_to_swap, local_wires_[i])) {
-                rev_local_wires_index_not_swapping.push_back(
-                    getRevLocalWireIndex(local_wires_[i]));
+            if (!isElementInVector(rev_local_wires_index_to_swap, i)) {
+                rev_local_wires_index_not_swapping.push_back(i);
             }
         }
-        std::sort(rev_local_wires_index_not_swapping.begin(),
-                  rev_local_wires_index_not_swapping
-                      .end()); // This improves memcpy performance by coalescing
-                               // memory access
-
-        for (std::size_t i = 0; i < local_wires_to_swap.size(); i++) {
-            rev_local_wires_index_to_swap.push_back(
-                getRevLocalWireIndex(local_wires_to_swap[i]));
-        }
-        for (std::size_t i = 0; i < global_wires_to_swap.size(); i++) {
-            rev_global_wires_index_to_swap.push_back(
-                getRevGlobalWireIndex(global_wires_to_swap[i]));
-        }
-
         std::size_t global_index =
             getGlobalIndexFromMPIRank(mpi_manager_.getRank());
 
-        for (std::size_t batch_index = 1;
-             batch_index < exp2(getNumGlobalWires()); batch_index++) {
-            // We loop over all the global indices (ranks) and check if the
-            // batch index actually requires swapping
-
-            bool send = true;
-            for (std::size_t digits = 0; digits < global_wires_.size();
-                 digits++) {
-                bool is_global_wire_in_swap = isElementInVector(
-                    global_wires_to_swap,
-                    global_wires_[getNumGlobalWires() - 1 - digits]);
-                bool batch_index_digit = (batch_index >> digits) & 1;
-                send = send && (!batch_index_digit || is_global_wire_in_swap);
+        // To get the relevant batch_index, we loop a compressed_batch_index
+        // over 1 to 2^(num_swapping_wires) - 1 then map to the batch_index (we
+        // start from 1 since the global index does not need to swap with
+        // itself). For example, if we have global_wires_={0,1,2} and
+        // global_wires_to_swap={0,2}, the compressed_batch_index will be {01,
+        // 10, 11} and the batch_index will be {001, 100, 101}, where a 0 is
+        // inserted in the middle to wire 1 which is not being swapped.
+        for (std::size_t compressed_batch_index = 1;
+             compressed_batch_index < exp2(global_wires_to_swap.size());
+             compressed_batch_index++) {
+            std::size_t batch_index = 0;
+            for (std::size_t i = 0; i < global_wires_to_swap.size(); i++) {
+                batch_index |=
+                    ((compressed_batch_index >> i) & 1)
+                    << rev_global_wires_index_to_swap[i];
             }
-            if (send) {
-                std::size_t swap_wire_mask = 0;
-                for (std::size_t i = 0; i < local_wires_to_swap.size(); i++) {
-                    swap_wire_mask |= ((((batch_index ^ global_index) >>
-                                         rev_global_wires_index_to_swap[i]) &
-                                        1)
-                                       << rev_local_wires_index_to_swap[i]);
-                }
 
-                // These are defined since on AMD compiler it's more strict what
-                // host functions can be included in the KOKKOS_LAMBDA - e.g.
-                // dereferencing, size() are all not allowed
-                const std::size_t not_swapping_local_wire_size =
-                    rev_local_wires_index_not_swapping.size();
-                auto rev_local_wires_index_not_swapping_view =
-                    vector2view(rev_local_wires_index_not_swapping);
-
-                auto sendbuf_view = (*sendbuf_);
-                auto recvbuf_view = (*recvbuf_);
-                auto sv_view = (*sv_).getView();
-                std::size_t send_size =
-                    exp2((getNumLocalWires() - local_wires_to_swap.size()));
-
-                // Copy to send buffer
-                Kokkos::parallel_for(
-                    "copy_sendbuf", send_size,
-                    KOKKOS_LAMBDA(std::size_t buffer_index) {
-                        std::size_t SV_index = swap_wire_mask;
-                        for (std::size_t i = 0;
-                             i < not_swapping_local_wire_size; i++) {
-                            SV_index |=
-                                (((buffer_index >> i) & 1)
-                                 << rev_local_wires_index_not_swapping_view(i));
-                        }
-                        sendbuf_view(buffer_index) = sv_view(SV_index);
-                    });
-                Kokkos::fence();
-
-                // MPI Sendrecv
-                std::size_t other_global_index = batch_index ^ global_index;
-                std::size_t other_mpi_rank =
-                    getMPIRankFromGlobalIndex(other_global_index);
-
-                sendrecv(other_mpi_rank, other_mpi_rank, send_size,
-                         batch_index);
-
-                // Copy from recv buffer
-                Kokkos::parallel_for(
-                    "copy_recvbuf", send_size,
-                    KOKKOS_LAMBDA(std::size_t buffer_index) {
-                        std::size_t SV_index = swap_wire_mask;
-
-                        for (std::size_t i = 0;
-                             i < not_swapping_local_wire_size; i++) {
-                            SV_index |=
-                                (((buffer_index >> i) & 1)
-                                 << rev_local_wires_index_not_swapping_view(i));
-                        }
-
-                        sv_view(SV_index) = recvbuf_view(buffer_index);
-                    });
-                Kokkos::fence();
+            std::size_t swap_wire_mask = 0;
+            for (std::size_t i = 0; i < local_wires_to_swap.size(); i++) {
+                swap_wire_mask |= ((((batch_index ^ global_index) >>
+                                     rev_global_wires_index_to_swap[i]) &
+                                    1)
+                                   << rev_local_wires_index_to_swap[i]);
             }
+
+            // These are defined since on AMD compiler it's more strict what
+            // host functions can be included in the KOKKOS_LAMBDA - e.g.
+            // dereferencing, size() are all not allowed
+            const std::size_t not_swapping_local_wire_size =
+                rev_local_wires_index_not_swapping.size();
+            auto rev_local_wires_index_not_swapping_view =
+                vector2view(rev_local_wires_index_not_swapping);
+
+            auto sendbuf_view = (*sendbuf_);
+            auto recvbuf_view = (*recvbuf_);
+            auto sv_view = (*sv_).getView();
+            std::size_t send_size =
+                exp2((getNumLocalWires() - local_wires_to_swap.size()));
+
+            // Copy to send buffer
+            Kokkos::parallel_for(
+                "copy_sendbuf", send_size,
+                KOKKOS_LAMBDA(std::size_t buffer_index) {
+                    std::size_t SV_index = swap_wire_mask;
+                    for (std::size_t i = 0; i < not_swapping_local_wire_size;
+                         i++) {
+                        SV_index |=
+                            (((buffer_index >> i) & 1)
+                             << rev_local_wires_index_not_swapping_view(i));
+                    }
+                    sendbuf_view(buffer_index) = sv_view(SV_index);
+                });
+            Kokkos::fence();
+
+            // MPI Sendrecv
+            std::size_t other_global_index = batch_index ^ global_index;
+            std::size_t other_mpi_rank =
+                getMPIRankFromGlobalIndex(other_global_index);
+
+            sendrecvBuffers(other_mpi_rank, other_mpi_rank, send_size,
+                            batch_index);
+
+            // Copy from recv buffer
+            Kokkos::parallel_for(
+                "copy_recvbuf", send_size,
+                KOKKOS_LAMBDA(std::size_t buffer_index) {
+                    std::size_t SV_index = swap_wire_mask;
+
+                    for (std::size_t i = 0; i < not_swapping_local_wire_size;
+                         i++) {
+                        SV_index |=
+                            (((buffer_index >> i) & 1)
+                             << rev_local_wires_index_not_swapping_view(i));
+                    }
+
+                    sv_view(SV_index) = recvbuf_view(buffer_index);
+                });
+            Kokkos::fence();
         }
 
         // Swap global and local wires labels
@@ -693,6 +780,10 @@ class StateVectorKokkosMPI final
 
     /**
      * @brief Match the global/local wires and map from another state vector
+     * The following steps are performed (if necessary):
+     * Swap Global Local Wires (so that the first n-wires are global, and last wires a local, e.g. G={2,0,1}, L={3,5,4})
+     * Swap Global Global Wires (make sure the global wires are in order, so move G to {0, 1, 2}
+     * Swap Local Local Wires (make sure the local wires are in order, so move L to {3, 4, 5}
      *
      * @param other_sv State vector to match
      */
@@ -757,12 +848,12 @@ class StateVectorKokkosMPI final
             getGlobalIndexFromMPIRank(mpi_manager_.getRank());
         std::size_t dest_global_index = 0;
         for (std::size_t i = 0; i < global_wires_.size(); ++i) {
+            std::size_t dest_global_wire_index = getElementIndexInVector(
+                         global_wires_target,
+                         global_wires_[global_wires_.size() - i - 1]);
             dest_global_index |=
                 (((my_global_index >> i) & 1)
-                 << (global_wires_.size() - 1 -
-                     getElementIndexInVector(
-                         global_wires_target,
-                         global_wires_[global_wires_.size() - i - 1])));
+                 << getRevWireIndex(global_wires_, dest_global_wire_index));
         }
 
         std::size_t dest_mpi_rank = getElementIndexInVector(
@@ -785,7 +876,7 @@ class StateVectorKokkosMPI final
                 });
             Kokkos::fence();
             // SENDRECV
-            sendrecv(dest_mpi_rank, dest_mpi_rank, send_size, 0);
+            sendrecvBuffers(dest_mpi_rank, dest_mpi_rank, send_size, 0);
             // COPY FROM BUFFER
 
             Kokkos::parallel_for(
@@ -868,6 +959,8 @@ class StateVectorKokkosMPI final
             // etc.
         }
 
+        PL_ABORT_IF(wires.size() > getNumLocalWires(),
+                    "Number of wires must be smaller than or equal to the number of local wires.");
         if (!isWiresLocal(wires)) {
             auto global_wires_to_swap = findGlobalWires(wires);
             auto local_wires_to_swap =
@@ -878,24 +971,6 @@ class StateVectorKokkosMPI final
         (*sv_).applyOperation(opName, getLocalWireIndices(wires), inverse,
                               params, gate_matrix);
     }
-
-    /**
-     * @brief Apply a PauliRot gate to the state-vector.
-     *
-     * @param wires Wires to apply gate to.
-     * @param inverse Indicates whether to use inverse of gate.
-     * @param params Rotation angle.
-     * @param word A Pauli word (e.g. "XYYX").
-     */
-    /* void applyPauliRot(const std::vector<std::size_t> &wires, bool inverse,
-                       const std::vector<PrecisionT> &params,
-                       const std::string &word) {
-        PL_ABORT_IF_NOT(wires.size() == word.size(),
-                        "wires and word have incompatible dimensions.");
-        Pennylane::LightningKokkos::Functors::applyPauliRot<KokkosExecSpace,
-                                                            PrecisionT>(
-            getView(), this->getNumQubits(), wires, inverse, params[0], word);
-    } */
 
     /**
      * @brief Apply a controlled-single gate to the state vector.

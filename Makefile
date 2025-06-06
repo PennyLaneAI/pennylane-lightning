@@ -146,8 +146,6 @@ test-cpp-mpi:
 		  -DCMAKE_C_COMPILER_LAUNCHER=$(COMPILER_LAUNCHER) \
 		  -DCMAKE_CXX_COMPILER_LAUNCHER=$(COMPILER_LAUNCHER) \
 		  -DENABLE_MPI=ON \
-		  -DCMAKE_C_COMPILER_LAUNCHER=$(COMPILER_LAUNCHER) \
-		  -DCMAKE_CXX_COMPILER_LAUNCHER=$(COMPILER_LAUNCHER) \
 		  $(OPTIONS)
 ifdef target
 	cmake --build ./BuildTests $(VERBOSE) --target $(target)
@@ -161,7 +159,7 @@ else
 			mpirun -np 2 $$file ; \
 		done ; \
 	elif [ "$(PL_BACKEND)" = "lightning_kokkos" ]; then \
-		for file in ./BuildTests/lightning_*_test_runner_mpi; do \
+		for file in ./BuildTests/lightning_kokkos_*_test_runner_mpi; do \
 			echo "Running $$file"; \
 			mpirun -np 4 $$file ; \
 		done ; \

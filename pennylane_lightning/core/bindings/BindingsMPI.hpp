@@ -54,13 +54,14 @@ using namespace Pennylane::LightningGPU::Algorithms;
 using namespace Pennylane::LightningGPU::Observables;
 using namespace Pennylane::LightningGPU::Measures;
 } // namespace
+/// @endcond
 
 #elif _ENABLE_PLKOKKOS == 1
 
 #include "AdjointJacobianKokkosMPI.hpp"
 #include "LKokkosBindingsMPI.hpp"
 #include "MeasurementsKokkosMPI.hpp"
-#include "ObservablesKokkosMPI.hpp"
+/// @cond DEV
 namespace {
 using namespace Pennylane::LightningKokkos;
 using namespace Pennylane::LightningKokkos::Algorithms;

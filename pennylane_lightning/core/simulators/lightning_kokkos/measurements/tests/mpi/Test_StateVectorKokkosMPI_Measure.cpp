@@ -99,6 +99,28 @@ TEMPLATE_TEST_CASE("Expval - named string", "[LKMPI_Expval]", float, double) {
 }
 
 // expval matrix
+TEMPLATE_TEST_CASE("Expval - raise error", "[LKMPI_Expval]", float, double) {
+    const std::size_t num_qubits = 4;
+    MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
+    REQUIRE(mpi_manager.getSize() == 4);
+
+    StateVectorKokkosMPI<TestType> sv(mpi_manager, num_qubits);
+    auto m = MeasurementsMPI(sv);
+
+
+    std::size_t num_wires = 3;
+    std::vector<Kokkos::complex<TestType>> mat_ob(exp2(num_wires * 2),
+                                                  {0.0, 0.0});
+    for (std::size_t i = 0; i < mat_ob.size(); i++) {
+        mat_ob[i] = i * Kokkos::complex<TestType>(0.2, 1.1);
+    }
+
+REQUIRE_THROWS_WITH(
+    m.expval(mat_ob, {0, 1, 2}),
+        Catch::Contains("Not enough local wires to swap with global wires."));
+}
+
+
 TEMPLATE_TEST_CASE("Expval - 1-wire matrix", "[LKMPI_Expval]", float, double) {
     const TestType EP = 1e-4;
     const std::size_t num_qubits = 4;
@@ -541,7 +563,7 @@ TEMPLATE_TEST_CASE("Test expectation value of HamiltonianObs", "[LKMPI_Expval]",
 
 // expval pauli word
 // This test takes a long time
-/* TEMPLATE_TEST_CASE("Expval - pauli word - 4 wires", "[LKMPI_Expval]", float,
+TEMPLATE_TEST_CASE("Expval - pauli word - 4 wires", "[LKMPI_Expval]", float,
                    double) {
     const TestType EP = std::is_same_v<TestType, float> ? 1e-3 : 1e-6;
     const std::size_t num_qubits = 6;
@@ -621,7 +643,7 @@ element];
             CHECK(res == Approx(res_ref).margin(EP));
         }
     }
-} */
+}
 
 TEMPLATE_TEST_CASE("Expval - pauli word - 4 wires linear combin",
                    "[LKMPI_Expval]", float, double) {

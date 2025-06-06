@@ -86,6 +86,9 @@ class MeasurementsMPI final
      */
     PrecisionT expval(const std::vector<ComplexT> &matrix,
                       const std::vector<std::size_t> &wires) {
+        PL_ABORT_IF(matrix.size() != exp2(2 * wires.size()),
+                    "The size of matrix does not match with the given "
+                    "number of wires");
 
         if (!(this->_statevector.isWiresLocal(wires))) {
             auto global_wires_to_swap =

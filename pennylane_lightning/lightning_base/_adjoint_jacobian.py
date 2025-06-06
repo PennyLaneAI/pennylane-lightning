@@ -43,7 +43,6 @@ class LightningBaseAdjointJacobian(ABC):
     def __init__(self, qubit_state: Any, batch_obs: bool = False) -> None:
         self._qubit_state = qubit_state
         self._batch_obs = batch_obs
-        self._use_mpi = qubit_state._mpi
 
         self._jacobian_lightning, self._create_ops_list_lightning = self._adjoint_jacobian_dtype()
 
@@ -102,7 +101,7 @@ class LightningBaseAdjointJacobian(ABC):
         """
         use_csingle = self._qubit_state.dtype == np.complex64
 
-        use_mpi = self._use_mpi
+        use_mpi = False
         obs_serialized, obs_indices = QuantumScriptSerializer(
             self._qubit_state.device_name, use_csingle, use_mpi, split_obs
         ).serialize_observables(tape)

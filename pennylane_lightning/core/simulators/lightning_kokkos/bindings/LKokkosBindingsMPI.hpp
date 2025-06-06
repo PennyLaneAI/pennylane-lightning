@@ -66,37 +66,18 @@ void registerBackendClassSpecificBindingsMPI(PyClass &pyclass) {
     registerControlledGate<StateVectorT>(pyclass);
     pyclass
         .def(
-            "swapGlobalLocalWires",
-            [](StateVectorT &sv,
-               const std::vector<std::size_t> &global_wires_to_swap,
-               const std::vector<std::size_t> &local_wires_to_swap) {
-                sv.swapGlobalLocalWires(global_wires_to_swap,
-                                        local_wires_to_swap);
-            },
-            "Swap global and local wires.")
-        .def(
-            "getLocalBlockSize",
-            [](StateVectorT &sv) { return sv.getLocalBlockSize(); },
-            "Get Local Block Size.")
-        .def(
-            "resetIndices", [](StateVectorT &sv) { sv.resetIndices(); },
-            "Reset wire indices.")
-        .def(
-            "reorderAllWires", [](StateVectorT &sv) { sv.reorderAllWires(); },
-            "Reorder all wires.")
-        .def(
             py::init([](MPIManagerKokkos &mpi_manager, std::size_t num_qubits) {
                 return new StateVectorT(mpi_manager, num_qubits);
             }))
         .def(py::init([](MPIManagerKokkos &mpi_manager, std::size_t num_qubits,
-                         const InitializationSettings &kokkos_args) {
+                        const InitializationSettings &kokkos_args) {
             return new StateVectorT(mpi_manager, num_qubits, kokkos_args);
         }))
         .def(py::init([](std::size_t num_qubits) {
             return new StateVectorT(num_qubits);
         }))
         .def(py::init([](std::size_t num_qubits,
-                         const InitializationSettings &kokkos_args) {
+                        const InitializationSettings &kokkos_args) {
             return new StateVectorT(num_qubits, kokkos_args);
         }))
         .def("resetStateVector", &StateVectorT::resetStateVector)
@@ -175,7 +156,27 @@ void registerBackendClassSpecificBindingsMPI(PyClass &pyclass) {
              "Apply controlled operation")
         .def(
             "collapse", &StateVectorT::collapse,
-            "Collapse the statevector onto the 0 or 1 branch of a given wire.");
+            "Collapse the statevector onto the 0 or 1 branch of a given wire.")
+        // MPI related functions
+        .def(
+            "swapGlobalLocalWires",
+            [](StateVectorT &sv,
+               const std::vector<std::size_t> &global_wires_to_swap,
+               const std::vector<std::size_t> &local_wires_to_swap) {
+                sv.swapGlobalLocalWires(global_wires_to_swap,
+                                        local_wires_to_swap);
+            },
+            "Swap global and local wires.")
+        .def(
+            "getLocalBlockSize",
+            [](StateVectorT &sv) { return sv.getLocalBlockSize(); },
+            "Get Local Block Size.")
+        .def(
+            "resetIndices", [](StateVectorT &sv) { sv.resetIndices(); },
+            "Reset wire indices.")
+        .def(
+            "reorderAllWires", [](StateVectorT &sv) { sv.reorderAllWires(); },
+            "Reorder all wires.");
 }
 
 /**

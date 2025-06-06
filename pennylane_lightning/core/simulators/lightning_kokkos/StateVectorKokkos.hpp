@@ -305,7 +305,8 @@ class StateVectorKokkos final
     /**
      * @brief Create a new state vector from data on the host.
      *
-     * @param num_qubits Number of qubits
+     * @param hostdata_ Host vector for state vector
+     * @param kokkos_args Arguments for Kokkos initialization
      */
     template <class complex>
     StateVectorKokkos(std::vector<complex> hostdata_,
