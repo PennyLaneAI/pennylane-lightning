@@ -25,9 +25,7 @@
 
 <h3>Documentation 📝</h3>
 
-- Added a header/banner image to the README (`README.rst`), as in the `pennylane` and `catalyst` repositories.
-  Temporarily reverted this change as PyPI forbids the `.. raw::` directive for security reasons in `rst` files.
-  This will be revisited in a future PR.
+- Converted the `README` to markdown (as in the `pennylane` and `catalyst` repositories), and added a header image.
   [(#1139)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1139)
   [(#1141)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1141)
   [(#1142)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1142)
