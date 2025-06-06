@@ -570,7 +570,9 @@ class TestAdjointJacobianQNode:
     def dev(self, request):
         params = request.param
         if device_name == "lightning.kokkos":
-            return qml.device(device_name, wires=params[2], c_dtype=params[0], kokkos_args=params[1])
+            return qml.device(
+                device_name, wires=params[2], c_dtype=params[0], kokkos_args=params[1]
+            )
         return qml.device(device_name, wires=params[2], c_dtype=params[0])
 
     def test_qnode(self, mocker, dev):
