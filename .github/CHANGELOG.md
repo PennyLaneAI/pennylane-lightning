@@ -46,6 +46,9 @@
   Updating ROCM from 5.7 to 6.2.4. 
   [(#1158)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1158)
 
+- Fix using Torch with `AmplitudeEmbedding` by applying `qml.broadcast_expand` before decomposition in the preprocessing stage. 
+  [(#1175)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1175)
+
 <h3>Internal changes ⚙️</h3>
 
 - Use local catalyst repository instead of fetching on Github CI.
