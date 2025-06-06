@@ -1031,8 +1031,6 @@ class TestControlledOps:
                             control_wires,
                             control_values=(
                                 [control_value or bool(i % 2) for i, _ in enumerate(control_wires)]
-                                if device_name != "lightning.tensor"
-                                else [control_value for _ in control_wires]
                             ),
                         ),
                     ]
@@ -1043,8 +1041,6 @@ class TestControlledOps:
                             control_wires,
                             control_values=(
                                 [control_value or bool(i % 2) for i, _ in enumerate(control_wires)]
-                                if device_name != "lightning.tensor"
-                                else [control_value for _ in control_wires]
                             ),
                         ),
                     ]
@@ -1149,8 +1145,6 @@ class TestControlledOps:
                             control_wires,
                             control_values=(
                                 [control_value or bool(i % 2) for i, _ in enumerate(control_wires)]
-                                if device_name != "lightning.tensor"
-                                else [control_value for _ in control_wires]
                             ),
                         ),
                     ],

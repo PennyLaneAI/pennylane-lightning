@@ -7,6 +7,9 @@
 - Lightning devices accept a `seed` argument to enable deterministic shots measurements.
   [(#1171)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1171)
 
+- `MultiControlledX` gates are now natively supported in Lightning-Tensor.
+  [(#1169)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1169)
+
 - PennyLane-Lightning is compatible with JAX version 0.5.3+.
   [(#1152)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1152)
   [(#1161)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1161)
@@ -32,6 +35,9 @@
   [(#1141)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1141)
 
 <h3>Bug fixes 🐛</h3>
+
+- Fixed the implementation of multi-controlled gates with a single target wire for arbitrary control values in Lightning-Tensor.
+  [(#1169)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1169)
 
 - Only download JAX version 0.5.3 for non-X86 MacOS. 
   [(#1163)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1163)
@@ -110,6 +116,7 @@ Anton Naim Ibrahim,
 Luis Alfredo Nuñez Meneses,
 Mudit Pandey,
 Andrija Paurevic,
+Shuli Shu,
 Marc Vandelle
 
 ---
