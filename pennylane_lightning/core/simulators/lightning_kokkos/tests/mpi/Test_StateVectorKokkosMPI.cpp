@@ -222,10 +222,9 @@ TEMPLATE_TEST_CASE("Local/Global wire helpers", "[LKMPI]", double, float) {
             std::pair<std::size_t, std::size_t>{3, 6});
     REQUIRE(sv.global2localIndex(31) ==
             std::pair<std::size_t, std::size_t>{3, 7});
-    
-    PL_REQUIRE_THROWS_MATCHES(
-        sv.global2localIndex(33),
-        LightningException, "out of bounds");
+
+    PL_REQUIRE_THROWS_MATCHES(sv.global2localIndex(33), LightningException,
+                              "out of bounds");
 }
 
 TEMPLATE_TEST_CASE("getDataVector", "[LKMPI]", double, float) {
@@ -234,8 +233,8 @@ TEMPLATE_TEST_CASE("getDataVector", "[LKMPI]", double, float) {
     REQUIRE(mpi_manager.getSize() == 4);
 
     StateVectorKokkosMPI<TestType> sv(mpi_manager, num_qubits);
-    REQUIRE(sv.getNumGlobalWires() == 2);  
-    REQUIRE(sv.getNumLocalWires() == 3);  
+    REQUIRE(sv.getNumGlobalWires() == 2);
+    REQUIRE(sv.getNumLocalWires() == 3);
     std::vector<Kokkos::complex<TestType>> reference_data(exp2(num_qubits),
                                                           {0.0, 0.0});
     reference_data[0] = 1.0;

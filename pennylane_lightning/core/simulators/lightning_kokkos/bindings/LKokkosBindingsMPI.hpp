@@ -70,14 +70,14 @@ void registerBackendClassSpecificBindingsMPI(PyClass &pyclass) {
                 return new StateVectorT(mpi_manager, num_qubits);
             }))
         .def(py::init([](MPIManagerKokkos &mpi_manager, std::size_t num_qubits,
-                        const InitializationSettings &kokkos_args) {
+                         const InitializationSettings &kokkos_args) {
             return new StateVectorT(mpi_manager, num_qubits, kokkos_args);
         }))
         .def(py::init([](std::size_t num_qubits) {
             return new StateVectorT(num_qubits);
         }))
         .def(py::init([](std::size_t num_qubits,
-                        const InitializationSettings &kokkos_args) {
+                         const InitializationSettings &kokkos_args) {
             return new StateVectorT(num_qubits, kokkos_args);
         }))
         .def("resetStateVector", &StateVectorT::resetStateVector)
@@ -154,9 +154,8 @@ void registerBackendClassSpecificBindingsMPI(PyClass &pyclass) {
             "Apply operation via the gate matrix")
         .def("applyControlledMatrix", &applyControlledMatrix<StateVectorT>,
              "Apply controlled operation")
-        .def(
-            "collapse", &StateVectorT::collapse,
-            "Collapse the statevector onto the 0 or 1 branch of a given wire.")
+        .def("collapse", &StateVectorT::collapse,
+             "Collapse the statevector onto the 0 or 1 branch of a given wire.")
         // MPI related functions
         .def(
             "swapGlobalLocalWires",

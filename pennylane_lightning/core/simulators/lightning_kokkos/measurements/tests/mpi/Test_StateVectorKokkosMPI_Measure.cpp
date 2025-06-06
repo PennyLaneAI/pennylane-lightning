@@ -107,7 +107,6 @@ TEMPLATE_TEST_CASE("Expval - raise error", "[LKMPI_Expval]", float, double) {
     StateVectorKokkosMPI<TestType> sv(mpi_manager, num_qubits);
     auto m = MeasurementsMPI(sv);
 
-
     std::size_t num_wires = 3;
     std::vector<Kokkos::complex<TestType>> mat_ob(exp2(num_wires * 2),
                                                   {0.0, 0.0});
@@ -115,11 +114,10 @@ TEMPLATE_TEST_CASE("Expval - raise error", "[LKMPI_Expval]", float, double) {
         mat_ob[i] = i * Kokkos::complex<TestType>(0.2, 1.1);
     }
 
-REQUIRE_THROWS_WITH(
-    m.expval(mat_ob, {0, 1, 2}),
+    REQUIRE_THROWS_WITH(
+        m.expval(mat_ob, {0, 1, 2}),
         Catch::Contains("Not enough local wires to swap with global wires."));
 }
-
 
 TEMPLATE_TEST_CASE("Expval - 1-wire matrix", "[LKMPI_Expval]", float, double) {
     const TestType EP = 1e-4;
@@ -586,8 +584,8 @@ TEMPLATE_TEST_CASE("Expval - pauli word - 4 wires", "[LKMPI_Expval]", float,
     std::size_t block_size = sv.getLocalBlockSize();
     std::vector<Kokkos::complex<TestType>> init_subsv(block_size, {0.0, 0.0});
     for (std::size_t element = 0; element < block_size; element++) {
-        init_subsv[element] = init_sv[mpi_manager.getRank() * block_size +
-element];
+        init_subsv[element] =
+            init_sv[mpi_manager.getRank() * block_size + element];
     }
     sv.updateData(init_subsv);
     sv_ref.updateData(init_sv);

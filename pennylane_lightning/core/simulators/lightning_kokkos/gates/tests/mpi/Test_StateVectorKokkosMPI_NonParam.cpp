@@ -42,19 +42,20 @@ std::mt19937_64 re{1337};
 } // namespace
 /// @endcond
 
-TEMPLATE_TEST_CASE("Apply op with wires more than local wires", "[LKMPI]", double, float) {
+TEMPLATE_TEST_CASE("Apply op with wires more than local wires", "[LKMPI]",
+                   double, float) {
     const std::size_t num_qubits = 4;
     MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
     REQUIRE(mpi_manager.getSize() == 4);
 
     StateVectorKokkosMPI<TestType> sv(mpi_manager, num_qubits);
-REQUIRE_THROWS_WITH(
-    sv.applyOperation("XXX", {0, 1, 2}),
+    REQUIRE_THROWS_WITH(
+        sv.applyOperation("XXX", {0, 1, 2}),
         Catch::Contains("smaller than or equal to the number of local wires."));
 
-    std::vector<Kokkos::complex<TestType>> matrix(64,{0.0, 0.0});
-REQUIRE_THROWS_WITH(
-    sv.applyMatrix(matrix, {0, 1, 2}),
+    std::vector<Kokkos::complex<TestType>> matrix(64, {0.0, 0.0});
+    REQUIRE_THROWS_WITH(
+        sv.applyMatrix(matrix, {0, 1, 2}),
         Catch::Contains("smaller than or equal to the number of local wires."));
 }
 

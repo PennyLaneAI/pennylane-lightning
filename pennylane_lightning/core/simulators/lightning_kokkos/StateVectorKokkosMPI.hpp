@@ -489,9 +489,8 @@ class StateVectorKokkosMPI final
      */
     std::pair<std::size_t, std::size_t>
     global2localIndex(const std::size_t index) const {
-        PL_ABORT_IF_NOT(
-            index < exp2(this->getNumQubits()),
-            "Index out of bounds.");
+        PL_ABORT_IF_NOT(index < exp2(this->getNumQubits()),
+                        "Index out of bounds.");
         auto blk = getLocalBlockSize();
         return std::pair<std::size_t, std::size_t>{index / blk, index % blk};
     }
@@ -699,9 +698,8 @@ class StateVectorKokkosMPI final
              compressed_batch_index++) {
             std::size_t batch_index = 0;
             for (std::size_t i = 0; i < global_wires_to_swap.size(); i++) {
-                batch_index |=
-                    ((compressed_batch_index >> i) & 1)
-                    << rev_global_wires_index_to_swap[i];
+                batch_index |= ((compressed_batch_index >> i) & 1)
+                               << rev_global_wires_index_to_swap[i];
             }
 
             std::size_t swap_wire_mask = 0;
@@ -781,9 +779,11 @@ class StateVectorKokkosMPI final
     /**
      * @brief Match the global/local wires and map from another state vector
      * The following steps are performed (if necessary):
-     * Swap Global Local Wires (so that the first n-wires are global, and last wires a local, e.g. G={2,0,1}, L={3,5,4})
-     * Swap Global Global Wires (make sure the global wires are in order, so move G to {0, 1, 2}
-     * Swap Local Local Wires (make sure the local wires are in order, so move L to {3, 4, 5}
+     * Swap Global Local Wires (so that the first n-wires are global, and last
+     * wires a local, e.g. G={2,0,1}, L={3,5,4}) Swap Global Global Wires (make
+     * sure the global wires are in order, so move G to {0, 1, 2} Swap Local
+     * Local Wires (make sure the local wires are in order, so move L to {3, 4,
+     * 5}
      *
      * @param other_sv State vector to match
      */
@@ -849,8 +849,8 @@ class StateVectorKokkosMPI final
         std::size_t dest_global_index = 0;
         for (std::size_t i = 0; i < global_wires_.size(); ++i) {
             std::size_t dest_global_wire_index = getElementIndexInVector(
-                         global_wires_target,
-                         global_wires_[global_wires_.size() - i - 1]);
+                global_wires_target,
+                global_wires_[global_wires_.size() - i - 1]);
             dest_global_index |=
                 (((my_global_index >> i) & 1)
                  << getRevWireIndex(global_wires_, dest_global_wire_index));
@@ -960,7 +960,8 @@ class StateVectorKokkosMPI final
         }
 
         PL_ABORT_IF(wires.size() > getNumLocalWires(),
-                    "Number of wires must be smaller than or equal to the number of local wires.");
+                    "Number of wires must be smaller than or equal to the "
+                    "number of local wires.");
         if (!isWiresLocal(wires)) {
             auto global_wires_to_swap = findGlobalWires(wires);
             auto local_wires_to_swap =
