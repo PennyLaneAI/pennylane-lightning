@@ -476,7 +476,7 @@ class TestInitialization:
     @pytest.mark.parametrize("n_wires", [None, 3])
     @pytest.mark.parametrize("seed", ["global", None, 42, [42, 43, 44]])
     def test_device_seed(self, shots, n_wires, seed):
-        """Test that the wires mapping is set correctly"""
+        """Test that seeding the lightning device works correctly"""
         dev = LightningDevice(wires=n_wires, shots=shots, seed=seed)
         assert dev._rng is not None
 
