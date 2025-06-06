@@ -85,6 +85,9 @@ set(CMAKE_POLICY_DEFAULT_CMP0127 NEW) # To suppress pybind11 CMP0127 warning
 # Add pybind11
 include(FetchContent)
 
+# Enable Nanobind support
+option(ENABLE_NANOBIND "Enable Nanobind Python bindings" ON)
+
 if(ENABLE_PYTHON)
     find_package(Python COMPONENTS Interpreter Development)
     FetchContent_Declare(pybind11
@@ -93,11 +96,22 @@ if(ENABLE_PYTHON)
     )
     FetchContent_MakeAvailable(pybind11)
 
-    FetchContent_Declare(nanobind
-                    GIT_REPOSITORY https://github.com/wjakob/nanobind.git
-                    GIT_TAG        v2.7.0       
-    )
-    FetchContent_MakeAvailable(nanobind)
+    if(ENABLE_NANOBIND)
+        message(STATUS "Enabling Nanobind Python bindings")
+        
+        include(FetchContent)
+        FetchContent_Declare(nanobind
+                        GIT_REPOSITORY https://github.com/wjakob/nanobind.git
+                        GIT_TAG        v2.7.0
+        )
+        FetchContent_MakeAvailable(nanobind)
+        
+        # Print nanobind include directory for debugging
+        message(STATUS "Nanobind include directory: ${nanobind_SOURCE_DIR}/include")
+        
+        # Add compile definitions for nanobind modules
+        add_compile_definitions(_ENABLE_NANOBIND=1)
+    endif()
 endif()
 
 # Print Python site-packages directory for reference
