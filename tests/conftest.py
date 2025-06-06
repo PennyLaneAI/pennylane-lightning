@@ -217,14 +217,14 @@ def lightning_sv(request):
     return _statevector
 
 
-def validate_counts(shots, results1, results2):
+def validate_counts(shots, results1, results2, rtol=0.15, atol=20):
     """Compares two counts.
 
     If the results are ``Sequence``s, loop over entries.
 
     Fails if a key of ``results1`` is not found in ``results2``.
     Passes if counts are too low, chosen as ``100``.
-    Otherwise, fails if counts differ by more than ``20`` plus 20 percent.
+    Otherwise, fails if counts differ by more than 15 percent plus ``20``.
     """
     if isinstance(results1, Sequence):
         assert isinstance(results2, Sequence)
@@ -235,17 +235,17 @@ def validate_counts(shots, results1, results2):
     for key1, val1 in results1.items():
         val2 = results2[key1]
         if abs(val1 + val2) > 100:
-            assert np.allclose(val1, val2, rtol=20, atol=0.2)
+            assert np.allclose(val1, val2, rtol=rtol, atol=atol)
 
 
-def validate_samples(shots, results1, results2):
+def validate_samples(shots, results1, results2, rtol=0.15, atol=20):
     """Compares two samples.
 
     If the results are ``Sequence``s, loop over entries.
 
-    Fails if the results do not have the same shape, within ``20`` entries plus 20 percent.
+    Fails if the results do not have the same shape, within 15 percent plus ``20`` entries.
     This is to handle cases when post-selection yields variable shapes.
-    Otherwise, fails if the sums of samples differ by more than ``20`` plus 20 percent.
+    Otherwise, fails if the sums of samples differ by more than 15 percent plus ``20``.
     """
     if isinstance(shots, Sequence):
         assert isinstance(results1, Sequence)
@@ -259,10 +259,10 @@ def validate_samples(shots, results1, results2):
         assert results1.ndim == results2.ndim
         if results2.ndim > 1:
             assert results1.shape[1] == results2.shape[1]
-        np.allclose(np.sum(results1), np.sum(results2), rtol=20, atol=0.2)
+        np.allclose(np.sum(results1), np.sum(results2), rtol=rtol, atol=atol)
 
 
-def validate_others(shots, results1, results2):
+def validate_others(shots, results1, results2, atol=0.01, rtol=0.2):
     """Compares two expval, probs or var.
 
     If the results are ``Sequence``s, validate the average of items.
@@ -280,7 +280,7 @@ def validate_others(shots, results1, results2):
     if shots is None:
         assert np.allclose(results1, results2)
         return
-    assert np.allclose(results1, results2, atol=0.01, rtol=0.2)
+    assert np.allclose(results1, results2, atol=atol, rtol=rtol)
 
 
 def validate_measurements(func, shots, results1, results2):

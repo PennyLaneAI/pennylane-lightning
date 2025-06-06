@@ -4,6 +4,9 @@
 
 <h3>Improvements 🛠</h3>
 
+- Lightning devices accept a `seed` argument to enable deterministic shots measurements.
+  [(#1171)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1171)
+
 - `MultiControlledX` gates are now natively supported in Lightning-Tensor.
   [(#1169)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1169)
 

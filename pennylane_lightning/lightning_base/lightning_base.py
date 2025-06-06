@@ -26,6 +26,8 @@ from typing import Callable, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 import pennylane as qml
+from numpy.random import BitGenerator, Generator, SeedSequence
+from numpy.typing import ArrayLike
 from pennylane.devices import DefaultExecutionConfig, Device, ExecutionConfig
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
 from pennylane.measurements import MidMeasureMP
@@ -60,6 +62,11 @@ class LightningBase(Device):
             stochastic return values. Defaults to ``None`` if not specified. Setting
             to ``None`` results in computing statistics like expectation values and
             variances analytically.
+        seed (Union[str, None, int, array_like[int], SeedSequence, BitGenerator, Generator]): A
+            seed-like parameter matching that of ``seed`` for ``numpy.random.default_rng``, or
+            a request to seed from numpy's global random number generator.
+            The default, ``seed="global"`` pulls a seed from NumPy's global generator. ``seed=None``
+            will pull a seed from the OS entropy.
         batch_obs (bool): Determine whether we process observables in parallel when
             computing the jacobian.
     """
@@ -74,12 +81,16 @@ class LightningBase(Device):
         *,
         c_dtype: Union[np.complex64, np.complex128],
         shots: Union[int, List],
+        seed: Union[str, None, int, ArrayLike, SeedSequence, BitGenerator, Generator],
         batch_obs: bool,
     ):
         super().__init__(wires=wires, shots=shots)
 
         self._c_dtype = c_dtype
         self._batch_obs = batch_obs
+        self._rng = np.random.default_rng(
+            np.random.randint(2**31 - 1) if seed == "global" else seed
+        )
 
         # State-vector is dynamically allocated just before execution
         self._statevector = None
@@ -140,7 +151,7 @@ class LightningBase(Device):
 
         if (self._statevector is None) or (self._statevector.num_wires != num_wires):
             self._statevector = self.LightningStateVector(
-                num_wires=num_wires, dtype=self._c_dtype, **self._sv_init_kwargs
+                num_wires=num_wires, dtype=self._c_dtype, rng=self._rng, **self._sv_init_kwargs
             )
         else:
             self._statevector.reset_state()
@@ -593,7 +604,7 @@ class LightningBase(Device):
             raise NotImplementedError("Wires must be specified for integration with plxpr capture.")
 
         self._statevector = self.LightningStateVector(
-            num_wires=len(self.wires), dtype=self._c_dtype
+            num_wires=len(self.wires), dtype=self._c_dtype, rng=self._rng
         )
 
         interpreter = LightningInterpreter(
@@ -673,7 +684,7 @@ class LightningBase(Device):
         tangents = validate_args_tangents(args, tangents)
 
         self._statevector = self.LightningStateVector(
-            num_wires=len(self.wires), dtype=self._c_dtype
+            num_wires=len(self.wires), dtype=self._c_dtype, rng=self._rng
         )
 
         def wrapper(*args):
