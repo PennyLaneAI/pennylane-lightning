@@ -917,7 +917,7 @@ class TestMeasurements:
             pytest.skip(
                 f"Observable of type {type(observable).__name__} is not supported for rotating probabilities."
             )
-            
+
         if measurement in (qml.expval, qml.var) and isinstance(observable, Sequence):
             pytest.skip("qml.expval, qml.var do not take wire arguments.")
         n_qubits = 4
