@@ -18,7 +18,7 @@
 #include <string>
 #include <vector>
 
-#include "MPIManager.hpp"
+#include "MPIManagerGPU.hpp"
 #include "MPI_helpers.hpp"
 #include "cuError.hpp"
 #include "cuStateVecError.hpp"
@@ -102,7 +102,7 @@ inline SharedLocalStream make_shared_local_stream() {
  */
 template <typename CFP_t>
 SharedMPIWorker
-make_shared_mpi_worker(custatevecHandle_t handle, MPIManager &mpi_manager,
+make_shared_mpi_worker(custatevecHandle_t handle, MPIManagerGPU &mpi_manager,
                        const std::size_t mpi_buf_size, CFP_t *sv,
                        const std::size_t numLocalQubits,
                        cudaStream_t localStream) {

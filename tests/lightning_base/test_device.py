@@ -102,7 +102,9 @@ else:
 if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-access
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
-fixture_params = itertools.product([3, None], [np.complex64, np.complex128])  # wires x c_dtype
+fixture_params = list(
+    itertools.product([3, None], [np.complex64, np.complex128])
+)  # wires x c_dtype
 
 
 @pytest.fixture(params=fixture_params)
@@ -191,6 +193,7 @@ class TestHelpers:
 
         name = f"adjoint + {device_name}"
         expected_program.add_transform(no_sampling, name=name)
+        expected_program.add_transform(qml.transforms.broadcast_expand)
         expected_program.add_transform(
             decompose,
             stopping_condition=_adjoint_ops,
@@ -204,7 +207,6 @@ class TestHelpers:
             analytic_measurements=adjoint_measurements,
             name=name,
         )
-        expected_program.add_transform(qml.transforms.broadcast_expand)
         expected_program.add_transform(validate_adjoint_trainable_params)
 
         actual_program = qml.transforms.core.TransformProgram()
@@ -469,6 +471,17 @@ class TestInitialization:
         assert dev.LightningMeasurements == LightningMeasurements
         assert dev.LightningAdjointJacobian == LightningAdjointJacobian
 
+    @pytest.mark.skipif(
+        device_name == "lightning.tensor", reason="lightning.tensor does not support seeding"
+    )
+    @pytest.mark.parametrize("shots", [None, 10])
+    @pytest.mark.parametrize("n_wires", [None, 3])
+    @pytest.mark.parametrize("seed", ["global", None, 42, [42, 43, 44]])
+    def test_device_seed(self, shots, n_wires, seed):
+        """Test that seeding the lightning device works correctly"""
+        dev = LightningDevice(wires=n_wires, shots=shots, seed=seed)
+        assert dev._rng is not None
+
 
 @pytest.mark.skipif(
     device_name != "lightning.qubit",
@@ -699,6 +712,7 @@ class TestExecution:
         if adjoint:
             name = f"adjoint + {device_name}"
             expected_program.add_transform(no_sampling, name=name)
+            expected_program.add_transform(qml.transforms.broadcast_expand)
             expected_program.add_transform(
                 decompose,
                 stopping_condition=_adjoint_ops,
@@ -712,7 +726,6 @@ class TestExecution:
                 analytic_measurements=adjoint_measurements,
                 name=name,
             )
-            expected_program.add_transform(qml.transforms.broadcast_expand)
             expected_program.add_transform(validate_adjoint_trainable_params)
 
         gradient_method = "adjoint" if adjoint else None

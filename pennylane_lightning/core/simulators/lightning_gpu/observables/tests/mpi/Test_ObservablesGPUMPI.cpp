@@ -13,7 +13,7 @@
 // limitations under the License.
 #include <catch2/catch.hpp>
 
-#include "MPIManager.hpp"
+#include "MPIManagerGPU.hpp"
 #include "ObservablesGPU.hpp"
 #include "ObservablesGPUMPI.hpp"
 #include "StateVectorCudaMPI.hpp"
@@ -171,7 +171,7 @@ TEMPLATE_PRODUCT_TEST_CASE("HamiltonianMPI::ApplyInPlace", "[Observables]",
     using NamedObs = NamedObs<StateVectorCudaManaged<PrecisionT>>;
     using Hamiltonian = Hamiltonian<StateVectorCudaManaged<PrecisionT>>;
 
-    MPIManager mpi_manager(MPI_COMM_WORLD);
+    MPIManagerGPU mpi_manager(MPI_COMM_WORLD);
     REQUIRE(mpi_manager.getSize() == 2);
 
     std::size_t num_qubits = 8;
@@ -303,7 +303,7 @@ TEMPLATE_PRODUCT_TEST_CASE("SparseHamiltonian::ApplyInPlace", "[Observables]",
     using StateVectorT = TestType;
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
-    MPIManager mpi_manager(MPI_COMM_WORLD);
+    MPIManagerGPU mpi_manager(MPI_COMM_WORLD);
 
     const std::size_t num_qubits = 3;
     std::mt19937 re{1337};

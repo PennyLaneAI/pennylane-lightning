@@ -204,7 +204,7 @@ class QuantumScriptSerializer:
             self.sparse_hamiltonian_mpi_c64 = lightning_ops.observablesMPI.SparseHamiltonianMPIC64
             self.sparse_hamiltonian_mpi_c128 = lightning_ops.observablesMPI.SparseHamiltonianMPIC128
 
-            self._mpi_manager = lightning_ops.MPIManager
+            self._mpi_manager = lightning_ops.MPIManagerGPU
 
     def _set_lightning_tensor_bindings(self, tensor_backend, lightning_ops):
         """Define the variables needed to access the modules from the C++ bindings for tensor network."""

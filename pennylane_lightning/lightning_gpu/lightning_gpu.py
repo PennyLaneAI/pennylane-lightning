@@ -27,6 +27,8 @@ from warnings import warn
 
 import numpy as np
 import pennylane as qml
+from numpy.random import BitGenerator, Generator, SeedSequence
+from numpy.typing import ArrayLike
 from pennylane.devices import DefaultExecutionConfig, ExecutionConfig
 from pennylane.devices.capabilities import OperatorProperties
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
@@ -169,6 +171,7 @@ def _add_adjoint_transforms(program: TransformProgram) -> None:
 
     name = "adjoint + lightning.gpu"
     program.add_transform(no_sampling, name=name)
+    program.add_transform(qml.transforms.broadcast_expand)
     program.add_transform(
         decompose,
         stopping_condition=_adjoint_ops,
@@ -180,7 +183,6 @@ def _add_adjoint_transforms(program: TransformProgram) -> None:
     program.add_transform(
         validate_measurements, analytic_measurements=adjoint_measurements, name=name
     )
-    program.add_transform(qml.transforms.broadcast_expand)
     program.add_transform(validate_adjoint_trainable_params)
 
 
@@ -221,6 +223,11 @@ class LightningGPU(LightningBase):
         batch_obs (bool): Determine whether we process observables in parallel when
             computing the jacobian. This value is only relevant when the lightning.gpu
             is built with MPI. Default is False.
+        seed (Union[str, None, int, array_like[int], SeedSequence, BitGenerator, Generator]): A
+            seed-like parameter matching that of ``seed`` for ``numpy.random.default_rng``, or
+            a request to seed from numpy's global random number generator.
+            The default, ``seed="global"`` pulls a seed from NumPy's global generator. ``seed=None``
+            will pull a seed from the OS entropy.
         mpi (bool): declare if the device will use the MPI support.
         mpi_buf_size (int): size of GPU memory (in MiB) set for MPI operation and its default value is 64 MiB.
         use_async (bool): is host-device data copy asynchronized or not.
@@ -250,6 +257,7 @@ class LightningGPU(LightningBase):
         c_dtype: Union[np.complex128, np.complex64] = np.complex128,
         shots: Union[int, List] = None,
         batch_obs: bool = False,
+        seed: Union[str, None, int, ArrayLike, SeedSequence, BitGenerator, Generator] = "global",
         # GPU and MPI arguments
         mpi: bool = False,
         mpi_buf_size: int = 0,
@@ -268,6 +276,7 @@ class LightningGPU(LightningBase):
             wires=wires,
             c_dtype=c_dtype,
             shots=shots,
+            seed=seed,
             batch_obs=batch_obs,
         )
 

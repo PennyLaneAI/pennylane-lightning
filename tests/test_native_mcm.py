@@ -18,7 +18,14 @@ from typing import Sequence
 import numpy as np
 import pennylane as qml
 import pytest
-from conftest import LightningDevice, device_name, validate_measurements
+from conftest import (
+    LightningDevice,
+    device_name,
+    validate_counts,
+    validate_measurements,
+    validate_others,
+    validate_samples,
+)
 from flaky import flaky
 from pennylane.exceptions import DeviceError
 
@@ -587,3 +594,47 @@ class TestExecutionMCM:
         results2 = qml.QNode(func, dq, mcm_method="deferred")(param)
         for r1, r2 in zip(results1.keys(), results2.keys()):
             assert r1 == r2
+
+    @pytest.mark.parametrize("shots", [40, [40, 40]])
+    @pytest.mark.parametrize("postselect", [None, 0, 1])
+    @pytest.mark.parametrize("measure_f", [qml.counts, qml.expval, qml.probs, qml.sample, qml.var])
+    @pytest.mark.parametrize(
+        "measure_obj",
+        [qml.PauliZ(0), qml.PauliY(1), [0], [0, 1], [1, 0], "mcm", "composite_mcm", "mcm_list"],
+    )
+    def test_seeded_mcm(self, mcm_method, shots, measure_f, postselect, measure_obj):
+        """Tests that seeded MCM measurements return the same results for two devices with the same seed."""
+
+        if measure_f in (qml.expval, qml.var) and (
+            isinstance(measure_obj, list) or measure_obj == "mcm_list"
+        ):
+            pytest.skip("Can't use wires/mcm lists with var or expval")
+
+        if mcm_method == "deferred" and postselect is not None:
+            pytest.skip("Skip test for postselection with deferred measurements")
+
+        wires = 4 if mcm_method == "deferred" else 2
+        dev_1 = get_device(wires=wires, shots=shots, seed=123)
+        dev_2 = get_device(wires=wires, shots=shots, seed=123)
+        params = [np.pi / 2.5, np.pi / 3, -np.pi / 3.5]
+
+        def func(x, y, z):
+            m0, m1 = TestExecutionMCM.obs_tape(x, y, z, postselect=postselect)
+            mid_measure = (
+                m0
+                if measure_obj == "mcm"
+                else (0.5 * m0 if measure_obj == "composite_mcm" else [m0, m1])
+            )
+            measurement_key = "wires" if isinstance(measure_obj, list) else "op"
+            measurement_value = mid_measure if isinstance(measure_obj, str) else measure_obj
+            return measure_f(**{measurement_key: measurement_value})
+
+        results1 = qml.QNode(func, dev_1, mcm_method=mcm_method)(*params)
+        results2 = qml.QNode(func, dev_2, mcm_method=mcm_method)(*params)
+
+        if measure_f is qml.counts:
+            validate_counts(shots, results1, results2, rtol=0, atol=0)
+        elif measure_f is qml.sample:
+            validate_samples(shots, results1, results2, rtol=0, atol=0)
+        else:
+            validate_others(shots, results1, results2, rtol=0, atol=0)
