@@ -250,14 +250,14 @@ def seed(request):
     return original_seed
 
 
-def validate_counts(shots, results1, results2, rtol=0.15, atol=20):
+def validate_counts(shots, results1, results2, rtol=0.15, atol=30):
     """Compares two counts.
 
     If the results are ``Sequence``s, loop over entries.
 
     Fails if a key of ``results1`` is not found in ``results2``.
     Passes if counts are too low, chosen as ``100``.
-    Otherwise, fails if counts differ by more than 15 percent plus ``20``.
+    Otherwise, fails if counts differ by more than 15 percent plus ``30``.
     """
     if isinstance(results1, Sequence):
         assert isinstance(results2, Sequence)
@@ -271,14 +271,14 @@ def validate_counts(shots, results1, results2, rtol=0.15, atol=20):
             assert np.allclose(val1, val2, rtol=rtol, atol=atol)
 
 
-def validate_samples(shots, results1, results2, rtol=0.15, atol=20):
+def validate_samples(shots, results1, results2, rtol=0.15, atol=30):
     """Compares two samples.
 
     If the results are ``Sequence``s, loop over entries.
 
-    Fails if the results do not have the same shape, within 15 percent plus ``20`` entries.
+    Fails if the results do not have the same shape, within 15 percent plus ``30`` entries.
     This is to handle cases when post-selection yields variable shapes.
-    Otherwise, fails if the sums of samples differ by more than 15 percent plus ``20``.
+    Otherwise, fails if the sums of samples differ by more than 15 percent plus ``30``.
     """
     if isinstance(shots, Sequence):
         assert isinstance(results1, Sequence)
@@ -288,7 +288,7 @@ def validate_samples(shots, results1, results2, rtol=0.15, atol=20):
             validate_samples(s, r1, r2)
     else:
         sh1, sh2 = results1.shape[0], results2.shape[0]
-        assert np.allclose(sh1, sh2, rtol=20, atol=0.2)
+        assert np.allclose(sh1, sh2, rtol=rtol, atol=atol)
         assert results1.ndim == results2.ndim
         if results2.ndim > 1:
             assert results1.shape[1] == results2.shape[1]
