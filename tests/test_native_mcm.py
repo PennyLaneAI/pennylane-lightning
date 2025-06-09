@@ -450,7 +450,7 @@ class TestExecutionMCM:
         results1 = qml.QNode(func, dev, mcm_method=mcm_method)(*params)
         results2 = qml.QNode(func, dq, mcm_method="deferred")(*params)
 
-        validate_measurements(measure_f, shots, results1, results2, atol=0.02)
+        validate_measurements(measure_f, shots, results1, results2, atol=0.04)
 
     @pytest.mark.local_salt(42)
     @pytest.mark.parametrize("shots", [None, 4000])

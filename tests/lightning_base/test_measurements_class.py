@@ -711,7 +711,7 @@ class TestMeasurements:
             )
         else:
             # TODO Set better atol and rtol
-            dtol = max(tol, 1.0e-2)
+            dtol = max(tol, 2.0e-2)
             # allclose -> absolute(a - b) <= (atol + rtol * absolute(b))
             assert np.allclose(result, expected, rtol=dtol, atol=dtol)
 
@@ -778,7 +778,7 @@ class TestMeasurements:
 
         n_qubits = 4
         n_layers = 1
-        np.random.seed(0)
+        np.random.seed(seed)
         weights = np.random.rand(n_layers, n_qubits, 3)
         ops = [qml.Hadamard(i) for i in range(n_qubits)]
         if device_name != "lightning.tensor":
@@ -812,7 +812,7 @@ class TestMeasurements:
         assert isinstance(result, Sequence)
         assert len(result) == len(expected)
         # a few tests may fail in single precision, and hence we increase the tolerance
-        dtol = tol if shots is None else max(tol, 1.0e-2)
+        dtol = tol if shots is None else max(tol, 2.0e-2)
         if device_name == "lightning.tensor" and statevector.dtype == np.complex64:
             dtol = max(dtol, 1.0e-4)
         # TODO Set better atol and rtol

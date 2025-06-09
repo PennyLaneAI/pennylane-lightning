@@ -319,11 +319,11 @@ def validate_others(shots, results1, results2, atol=0.01, rtol=0.2):
 def validate_measurements(func, shots, results1, results2, atol=0.01, rtol=0.2):
     """Calls the correct validation function based on measurement type."""
     if func is qml.counts:
-        validate_counts(shots, results1, results2)
+        validate_counts(shots, results1, results2, rtol=rtol)
         return
 
     if func is qml.sample:
-        validate_samples(shots, results1, results2)
+        validate_samples(shots, results1, results2, rtol=rtol)
         return
 
     validate_others(shots, results1, results2, atol=atol, rtol=rtol)
