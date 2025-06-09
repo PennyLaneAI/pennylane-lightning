@@ -507,7 +507,7 @@ class TestExecutionMCM:
         for measure_f, r1, r2 in zip(measurements, results1, results2):
             validate_measurements(measure_f, shots, r1, r2)
 
-    @pytest.mark.local_salt(42)
+    @pytest.mark.local_salt(43)
     @pytest.mark.parametrize(
         "mcm_f",
         [
