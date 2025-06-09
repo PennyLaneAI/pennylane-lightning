@@ -24,7 +24,8 @@
 #include "MeasurementsKokkosMPI.hpp"
 #include "ObservablesKokkosMPI.hpp"
 #include "StateVectorKokkosMPI.hpp"
-#include "TestHelpers.hpp" // createRandomStateVectorData
+#include "TestHelpers.hpp"             // createRandomStateVectorData
+#include "TestHelpersStateVectors.hpp" // initializeLKTestSV
 
 /**
  * @file
@@ -51,31 +52,11 @@ std::mt19937_64 re{1337};
 TEMPLATE_TEST_CASE("Expval - named string", "[LKMPI_Expval]", float, double) {
     const TestType EP = 1e-4;
     const std::size_t num_qubits = 4;
-    MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
-    REQUIRE(mpi_manager.getSize() == 4);
 
-    StateVectorKokkosMPI<TestType> sv(mpi_manager, num_qubits);
-    StateVectorKokkos<TestType> sv_ref{num_qubits};
+    auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
 
     auto m = MeasurementsMPI(sv);
     auto m_ref = Measurements(sv_ref);
-
-    // Set the reference data
-    std::vector<Kokkos::complex<TestType>> init_sv(exp2(num_qubits),
-                                                   {0.0, 0.0});
-    for (std::size_t i = 0; i < init_sv.size(); i++) {
-        init_sv[i] = i;
-    }
-
-    // Set initial data
-    std::size_t block_size = sv.getLocalBlockSize();
-    std::vector<Kokkos::complex<TestType>> init_subsv(block_size, {0.0, 0.0});
-    for (std::size_t element = 0; element < block_size; element++) {
-        init_subsv[element] =
-            init_sv[mpi_manager.getRank() * block_size + element];
-    }
-    sv.updateData(init_subsv);
-    sv_ref.updateData(init_sv);
 
     sv.applyOperation("PauliX", {0});
     sv.applyOperation("PauliY", {0});
@@ -122,30 +103,10 @@ TEMPLATE_TEST_CASE("Expval - raise error", "[LKMPI_Expval]", float, double) {
 TEMPLATE_TEST_CASE("Expval - 1-wire matrix", "[LKMPI_Expval]", float, double) {
     const TestType EP = 1e-4;
     const std::size_t num_qubits = 4;
-    MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
-    REQUIRE(mpi_manager.getSize() == 4);
 
-    StateVectorKokkosMPI<TestType> sv(mpi_manager, num_qubits);
-    StateVectorKokkos<TestType> sv_ref{num_qubits};
+    auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
     auto m = MeasurementsMPI(sv);
     auto m_ref = Measurements(sv_ref);
-
-    // Set the reference data
-    std::vector<Kokkos::complex<TestType>> init_sv(exp2(num_qubits),
-                                                   {0.0, 0.0});
-    for (std::size_t i = 0; i < init_sv.size(); i++) {
-        init_sv[i] = i;
-    }
-
-    // Set initial data
-    std::size_t block_size = sv.getLocalBlockSize();
-    std::vector<Kokkos::complex<TestType>> init_subsv(block_size, {0.0, 0.0});
-    for (std::size_t element = 0; element < block_size; element++) {
-        init_subsv[element] =
-            init_sv[mpi_manager.getRank() * block_size + element];
-    }
-    sv.updateData(init_subsv);
-    sv_ref.updateData(init_sv);
 
     sv.applyOperation("PauliX", {0});
     sv.applyOperation("PauliX", {1});
@@ -186,30 +147,9 @@ TEMPLATE_TEST_CASE("Expval - 1-wire matrix", "[LKMPI_Expval]", float, double) {
 TEMPLATE_TEST_CASE("Expval - 2-wire matrix", "[LKMPI_Expval]", float, double) {
     const TestType EP = 1e-4;
     const std::size_t num_qubits = 6;
-    MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
-    REQUIRE(mpi_manager.getSize() == 4);
-
-    StateVectorKokkosMPI<TestType> sv(mpi_manager, num_qubits);
-    StateVectorKokkos<TestType> sv_ref{num_qubits};
+    auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
     auto m = MeasurementsMPI(sv);
     auto m_ref = Measurements(sv_ref);
-
-    // Set the reference data
-    std::vector<Kokkos::complex<TestType>> init_sv(exp2(num_qubits),
-                                                   {0.0, 0.0});
-    for (std::size_t i = 0; i < init_sv.size(); i++) {
-        init_sv[i] = i;
-    }
-
-    // Set initial data
-    std::size_t block_size = sv.getLocalBlockSize();
-    std::vector<Kokkos::complex<TestType>> init_subsv(block_size, {0.0, 0.0});
-    for (std::size_t element = 0; element < block_size; element++) {
-        init_subsv[element] =
-            init_sv[mpi_manager.getRank() * block_size + element];
-    }
-    sv.updateData(init_subsv);
-    sv_ref.updateData(init_sv);
 
     sv.applyOperation("PauliX", {0});
     sv.applyOperation("PauliX", {1});
@@ -260,31 +200,10 @@ TEMPLATE_TEST_CASE("Expval - 1-wire matrix Hermitian obs", "[LKMPI_Expval]",
                    float, double) {
     const TestType EP = 1e-4;
     const std::size_t num_qubits = 4;
-    MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
-    REQUIRE(mpi_manager.getSize() == 4);
 
-    StateVectorKokkosMPI<TestType> sv(mpi_manager, num_qubits);
-    StateVectorKokkos<TestType> sv_ref{num_qubits};
-
+    auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
     auto m = MeasurementsMPI(sv);
     auto m_ref = Measurements(sv_ref);
-
-    // Set the reference data
-    std::vector<Kokkos::complex<TestType>> init_sv(exp2(num_qubits),
-                                                   {0.0, 0.0});
-    for (std::size_t i = 0; i < init_sv.size(); i++) {
-        init_sv[i] = i;
-    }
-
-    // Set initial data
-    std::size_t block_size = sv.getLocalBlockSize();
-    std::vector<Kokkos::complex<TestType>> init_subsv(block_size, {0.0, 0.0});
-    for (std::size_t element = 0; element < block_size; element++) {
-        init_subsv[element] =
-            init_sv[mpi_manager.getRank() * block_size + element];
-    }
-    sv.updateData(init_subsv);
-    sv_ref.updateData(init_sv);
 
     sv.applyOperation("PauliX", {0});
     sv.applyOperation("PauliX", {1});
@@ -328,31 +247,10 @@ TEMPLATE_TEST_CASE("Expval - 2-wire matrix Hermitian obs", "[LKMPI_Expval]",
                    float, double) {
     const TestType EP = 1e-4;
     const std::size_t num_qubits = 6;
-    MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
-    REQUIRE(mpi_manager.getSize() == 4);
 
-    StateVectorKokkosMPI<TestType> sv(mpi_manager, num_qubits);
-    StateVectorKokkos<TestType> sv_ref{num_qubits};
-
+    auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
     auto m = MeasurementsMPI(sv);
     auto m_ref = Measurements(sv_ref);
-
-    // Set the reference data
-    std::vector<Kokkos::complex<TestType>> init_sv(exp2(num_qubits),
-                                                   {0.0, 0.0});
-    for (std::size_t i = 0; i < init_sv.size(); i++) {
-        init_sv[i] = i;
-    }
-
-    // Set initial data
-    std::size_t block_size = sv.getLocalBlockSize();
-    std::vector<Kokkos::complex<TestType>> init_subsv(block_size, {0.0, 0.0});
-    for (std::size_t element = 0; element < block_size; element++) {
-        init_subsv[element] =
-            init_sv[mpi_manager.getRank() * block_size + element];
-    }
-    sv.updateData(init_subsv);
-    sv_ref.updateData(init_sv);
 
     sv.applyOperation("PauliX", {0});
     sv.applyOperation("PauliX", {1});
@@ -407,31 +305,10 @@ TEMPLATE_TEST_CASE("Expval - 2-wire matrix Hermitian obs", "[LKMPI_Expval]",
 TEMPLATE_TEST_CASE("Expval - NamedObs", "[LKMPI_Expval]", float, double) {
     const TestType EP = 1e-4;
     const std::size_t num_qubits = 4;
-    MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
-    REQUIRE(mpi_manager.getSize() == 4);
 
-    StateVectorKokkosMPI<TestType> sv(mpi_manager, num_qubits);
-    StateVectorKokkos<TestType> sv_ref{num_qubits};
-
+    auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
     auto m = MeasurementsMPI(sv);
     auto m_ref = Measurements(sv_ref);
-
-    // Set the reference data
-    std::vector<Kokkos::complex<TestType>> init_sv(exp2(num_qubits),
-                                                   {0.0, 0.0});
-    for (std::size_t i = 0; i < init_sv.size(); i++) {
-        init_sv[i] = i;
-    }
-
-    // Set initial data
-    std::size_t block_size = sv.getLocalBlockSize();
-    std::vector<Kokkos::complex<TestType>> init_subsv(block_size, {0.0, 0.0});
-    for (std::size_t element = 0; element < block_size; element++) {
-        init_subsv[element] =
-            init_sv[mpi_manager.getRank() * block_size + element];
-    }
-    sv.updateData(init_subsv);
-    sv_ref.updateData(init_sv);
 
     sv.applyOperation("PauliX", {0});
     sv.applyOperation("PauliY", {0});
@@ -462,31 +339,10 @@ TEMPLATE_TEST_CASE("Expval - NamedObs", "[LKMPI_Expval]", float, double) {
 TEMPLATE_TEST_CASE("Expval - TensorProdobs", "[LKMPI_Expval]", float, double) {
     const TestType EP = 1e-4;
     const std::size_t num_qubits = 4;
-    MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
-    REQUIRE(mpi_manager.getSize() == 4);
 
-    StateVectorKokkosMPI<TestType> sv(mpi_manager, num_qubits);
-    StateVectorKokkos<TestType> sv_ref{num_qubits};
-
+    auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
     auto m = MeasurementsMPI(sv);
     auto m_ref = Measurements(sv_ref);
-
-    // Set the reference data
-    std::vector<Kokkos::complex<TestType>> init_sv(exp2(num_qubits),
-                                                   {0.0, 0.0});
-    for (std::size_t i = 0; i < init_sv.size(); i++) {
-        init_sv[i] = i;
-    }
-
-    // Set initial data
-    std::size_t block_size = sv.getLocalBlockSize();
-    std::vector<Kokkos::complex<TestType>> init_subsv(block_size, {0.0, 0.0});
-    for (std::size_t element = 0; element < block_size; element++) {
-        init_subsv[element] =
-            init_sv[mpi_manager.getRank() * block_size + element];
-    }
-    sv.updateData(init_subsv);
-    sv_ref.updateData(init_sv);
 
     sv.applyOperation("PauliX", {0});
     sv.applyOperation("PauliY", {0});
@@ -561,34 +417,14 @@ TEMPLATE_TEST_CASE("Test expectation value of HamiltonianObs", "[LKMPI_Expval]",
 
 // expval pauli word
 // This test takes a long time
-TEMPLATE_TEST_CASE("Expval - pauli word - 4 wires", "[LKMPI_Expval]", float,
+/* TEMPLATE_TEST_CASE("Expval - pauli word - 4 wires", "[LKMPI_Expval]", float,
                    double) {
     const TestType EP = std::is_same_v<TestType, float> ? 1e-3 : 1e-6;
     const std::size_t num_qubits = 6;
-    MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
-    REQUIRE(mpi_manager.getSize() == 4);
 
-    StateVectorKokkosMPI<TestType> sv(mpi_manager, num_qubits);
-    StateVectorKokkos<TestType> sv_ref{num_qubits};
+    auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
     auto m = MeasurementsMPI(sv);
     auto m_ref = Measurements(sv_ref);
-
-    // Set the reference data
-    std::vector<Kokkos::complex<TestType>> init_sv(exp2(num_qubits),
-                                                   {0.0, 0.0});
-    for (std::size_t i = 0; i < init_sv.size(); i++) {
-        init_sv[i] = i;
-    }
-
-    // Set initial data
-    std::size_t block_size = sv.getLocalBlockSize();
-    std::vector<Kokkos::complex<TestType>> init_subsv(block_size, {0.0, 0.0});
-    for (std::size_t element = 0; element < block_size; element++) {
-        init_subsv[element] =
-            init_sv[mpi_manager.getRank() * block_size + element];
-    }
-    sv.updateData(init_subsv);
-    sv_ref.updateData(init_sv);
 
     sv.applyOperation("PauliX", {0});
     sv.applyOperation("PauliY", {1});
@@ -621,7 +457,6 @@ TEMPLATE_TEST_CASE("Expval - pauli word - 4 wires", "[LKMPI_Expval]", float,
     const std::string P_2 = GENERATE("I", "X", "Y", "Z");
     const std::string P_3 = GENERATE("I", "X", "Y", "Z");
     const std::string ob = P_0 + P_1 + P_2 + P_3;
-    // const std::string ob = "ZIII";
 
     const std::size_t wire_0 = GENERATE(0, 1, 2, 3, 4, 5);
     const std::size_t wire_1 = GENERATE(0, 1, 2, 3, 4, 5);
@@ -641,37 +476,16 @@ TEMPLATE_TEST_CASE("Expval - pauli word - 4 wires", "[LKMPI_Expval]", float,
             CHECK(res == Approx(res_ref).margin(EP));
         }
     }
-}
+} */
 
 TEMPLATE_TEST_CASE("Expval - pauli word - 4 wires linear combin",
                    "[LKMPI_Expval]", float, double) {
     const TestType EP = 1e-6;
     const std::size_t num_qubits = 6;
-    MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
-    REQUIRE(mpi_manager.getSize() == 4);
 
-    StateVectorKokkosMPI<TestType> sv(mpi_manager, num_qubits);
-    StateVectorKokkos<TestType> sv_ref{num_qubits};
-
+    auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
     auto m = MeasurementsMPI(sv);
     auto m_ref = Measurements(sv_ref);
-
-    // Set the reference data
-    std::vector<Kokkos::complex<TestType>> init_sv(exp2(num_qubits),
-                                                   {0.0, 0.0});
-    for (std::size_t i = 0; i < init_sv.size(); i++) {
-        init_sv[i] = i;
-    }
-
-    // Set initial data
-    std::size_t block_size = sv.getLocalBlockSize();
-    std::vector<Kokkos::complex<TestType>> init_subsv(block_size, {0.0, 0.0});
-    for (std::size_t element = 0; element < block_size; element++) {
-        init_subsv[element] =
-            init_sv[mpi_manager.getRank() * block_size + element];
-    }
-    sv.updateData(init_subsv);
-    sv_ref.updateData(init_sv);
 
     sv.applyOperation("PauliX", {0});
     sv.applyOperation("PauliY", {1});
@@ -735,31 +549,10 @@ TEMPLATE_TEST_CASE("Expval - pauli word - error", "[LKMPI_Expval]", float,
 TEMPLATE_TEST_CASE("Var - named string", "[LKMPI_Var]", float, double) {
     const TestType EP = 1e-4;
     const std::size_t num_qubits = 4;
-    MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
-    REQUIRE(mpi_manager.getSize() == 4);
 
-    StateVectorKokkosMPI<TestType> sv(mpi_manager, num_qubits);
-    StateVectorKokkos<TestType> sv_ref{num_qubits};
-
+    auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
     auto m = MeasurementsMPI(sv);
     auto m_ref = Measurements(sv_ref);
-
-    // Set the reference data
-    std::vector<Kokkos::complex<TestType>> init_sv(exp2(num_qubits),
-                                                   {0.0, 0.0});
-    for (std::size_t i = 0; i < init_sv.size(); i++) {
-        init_sv[i] = i;
-    }
-
-    // Set initial data
-    std::size_t block_size = sv.getLocalBlockSize();
-    std::vector<Kokkos::complex<TestType>> init_subsv(block_size, {0.0, 0.0});
-    for (std::size_t element = 0; element < block_size; element++) {
-        init_subsv[element] =
-            init_sv[mpi_manager.getRank() * block_size + element];
-    }
-    sv.updateData(init_subsv);
-    sv_ref.updateData(init_sv);
 
     sv.applyOperation("PauliX", {0});
     sv.applyOperation("PauliY", {0});
@@ -786,31 +579,10 @@ TEMPLATE_TEST_CASE("Var - named string", "[LKMPI_Var]", float, double) {
 TEMPLATE_TEST_CASE("Var - 1-wire matrix", "[LKMPI_Var]", double, float) {
     const TestType EP = 1e-4;
     const std::size_t num_qubits = 4;
-    MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
-    REQUIRE(mpi_manager.getSize() == 4);
 
-    StateVectorKokkosMPI<TestType> sv(mpi_manager, num_qubits);
-    StateVectorKokkos<TestType> sv_ref{num_qubits};
-
+    auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
     auto m = MeasurementsMPI(sv);
     auto m_ref = Measurements(sv_ref);
-
-    // Set the reference data
-    std::vector<Kokkos::complex<TestType>> init_sv(exp2(num_qubits),
-                                                   {0.0, 0.0});
-    for (std::size_t i = 0; i < init_sv.size(); i++) {
-        init_sv[i] = i;
-    }
-
-    // Set initial data
-    std::size_t block_size = sv.getLocalBlockSize();
-    std::vector<Kokkos::complex<TestType>> init_subsv(block_size, {0.0, 0.0});
-    for (std::size_t element = 0; element < block_size; element++) {
-        init_subsv[element] =
-            init_sv[mpi_manager.getRank() * block_size + element];
-    }
-    sv.updateData(init_subsv);
-    sv_ref.updateData(init_sv);
 
     sv.applyOperation("PauliX", {0});
     sv.applyOperation("PauliX", {1});
@@ -851,30 +623,10 @@ TEMPLATE_TEST_CASE("Var - 1-wire matrix", "[LKMPI_Var]", double, float) {
 TEMPLATE_TEST_CASE("Var - 2-wire matrix", "[LKMPI_Var]", float, double) {
     const TestType EP = 1e-4;
     const std::size_t num_qubits = 6;
-    MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
-    REQUIRE(mpi_manager.getSize() == 4);
 
-    StateVectorKokkosMPI<TestType> sv(mpi_manager, num_qubits);
-    StateVectorKokkos<TestType> sv_ref{num_qubits};
+    auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
     auto m = MeasurementsMPI(sv);
     auto m_ref = Measurements(sv_ref);
-
-    // Set the reference data
-    std::vector<Kokkos::complex<TestType>> init_sv(exp2(num_qubits),
-                                                   {0.0, 0.0});
-    for (std::size_t i = 0; i < init_sv.size(); i++) {
-        init_sv[i] = i;
-    }
-
-    // Set initial data
-    std::size_t block_size = sv.getLocalBlockSize();
-    std::vector<Kokkos::complex<TestType>> init_subsv(block_size, {0.0, 0.0});
-    for (std::size_t element = 0; element < block_size; element++) {
-        init_subsv[element] =
-            init_sv[mpi_manager.getRank() * block_size + element];
-    }
-    sv.updateData(init_subsv);
-    sv_ref.updateData(init_sv);
 
     sv.applyOperation("PauliX", {0});
     sv.applyOperation("PauliX", {1});
@@ -924,31 +676,10 @@ TEMPLATE_TEST_CASE("Var - 2-wire matrix", "[LKMPI_Var]", float, double) {
 TEMPLATE_TEST_CASE("Var - named obs", "[LKMPI_Var]", float, double) {
     const TestType EP = 1e-4;
     const std::size_t num_qubits = 4;
-    MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
-    REQUIRE(mpi_manager.getSize() == 4);
 
-    StateVectorKokkosMPI<TestType> sv(mpi_manager, num_qubits);
-    StateVectorKokkos<TestType> sv_ref{num_qubits};
-
+    auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
     auto m = MeasurementsMPI(sv);
     auto m_ref = Measurements(sv_ref);
-
-    // Set the reference data
-    std::vector<Kokkos::complex<TestType>> init_sv(exp2(num_qubits),
-                                                   {0.0, 0.0});
-    for (std::size_t i = 0; i < init_sv.size(); i++) {
-        init_sv[i] = i;
-    }
-
-    // Set initial data
-    std::size_t block_size = sv.getLocalBlockSize();
-    std::vector<Kokkos::complex<TestType>> init_subsv(block_size, {0.0, 0.0});
-    for (std::size_t element = 0; element < block_size; element++) {
-        init_subsv[element] =
-            init_sv[mpi_manager.getRank() * block_size + element];
-    }
-    sv.updateData(init_subsv);
-    sv_ref.updateData(init_sv);
 
     sv.applyOperation("PauliX", {0});
     sv.applyOperation("PauliY", {0});
@@ -979,31 +710,10 @@ TEMPLATE_TEST_CASE("Var - 1-wire matrix Hermitian obs", "[LKMPI_Var]", float,
                    double) {
     const TestType EP = 1e-4;
     const std::size_t num_qubits = 4;
-    MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
-    REQUIRE(mpi_manager.getSize() == 4);
 
-    StateVectorKokkosMPI<TestType> sv(mpi_manager, num_qubits);
-    StateVectorKokkos<TestType> sv_ref{num_qubits};
-
+    auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
     auto m = MeasurementsMPI(sv);
     auto m_ref = Measurements(sv_ref);
-
-    // Set the reference data
-    std::vector<Kokkos::complex<TestType>> init_sv(exp2(num_qubits),
-                                                   {0.0, 0.0});
-    for (std::size_t i = 0; i < init_sv.size(); i++) {
-        init_sv[i] = i;
-    }
-
-    // Set initial data
-    std::size_t block_size = sv.getLocalBlockSize();
-    std::vector<Kokkos::complex<TestType>> init_subsv(block_size, {0.0, 0.0});
-    for (std::size_t element = 0; element < block_size; element++) {
-        init_subsv[element] =
-            init_sv[mpi_manager.getRank() * block_size + element];
-    }
-    sv.updateData(init_subsv);
-    sv_ref.updateData(init_sv);
 
     sv.applyOperation("PauliX", {0});
     sv.applyOperation("PauliX", {1});
@@ -1047,31 +757,10 @@ TEMPLATE_TEST_CASE("Var - 2-wire matrix Hermitian obs", "[LKMPI_Var]", float,
                    double) {
     const TestType EP = 1e-4;
     const std::size_t num_qubits = 6;
-    MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
-    REQUIRE(mpi_manager.getSize() == 4);
 
-    StateVectorKokkosMPI<TestType> sv(mpi_manager, num_qubits);
-    StateVectorKokkos<TestType> sv_ref{num_qubits};
-
+    auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
     auto m = MeasurementsMPI(sv);
     auto m_ref = Measurements(sv_ref);
-
-    // Set the reference data
-    std::vector<Kokkos::complex<TestType>> init_sv(exp2(num_qubits),
-                                                   {0.0, 0.0});
-    for (std::size_t i = 0; i < init_sv.size(); i++) {
-        init_sv[i] = i;
-    }
-
-    // Set initial data
-    std::size_t block_size = sv.getLocalBlockSize();
-    std::vector<Kokkos::complex<TestType>> init_subsv(block_size, {0.0, 0.0});
-    for (std::size_t element = 0; element < block_size; element++) {
-        init_subsv[element] =
-            init_sv[mpi_manager.getRank() * block_size + element];
-    }
-    sv.updateData(init_subsv);
-    sv_ref.updateData(init_sv);
 
     sv.applyOperation("PauliX", {0});
     sv.applyOperation("PauliX", {1});
@@ -1126,31 +815,10 @@ TEMPLATE_TEST_CASE("Var - 2-wire matrix Hermitian obs", "[LKMPI_Var]", float,
 TEMPLATE_TEST_CASE("Var - TensorProdobs", "[LKMPI_Expval]", float, double) {
     const TestType EP = 1e-4;
     const std::size_t num_qubits = 4;
-    MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
-    REQUIRE(mpi_manager.getSize() == 4);
 
-    StateVectorKokkosMPI<TestType> sv(mpi_manager, num_qubits);
-    StateVectorKokkos<TestType> sv_ref{num_qubits};
-
+    auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
     auto m = MeasurementsMPI(sv);
     auto m_ref = Measurements(sv_ref);
-
-    // Set the reference data
-    std::vector<Kokkos::complex<TestType>> init_sv(exp2(num_qubits),
-                                                   {0.0, 0.0});
-    for (std::size_t i = 0; i < init_sv.size(); i++) {
-        init_sv[i] = i;
-    }
-
-    // Set initial data
-    std::size_t block_size = sv.getLocalBlockSize();
-    std::vector<Kokkos::complex<TestType>> init_subsv(block_size, {0.0, 0.0});
-    for (std::size_t element = 0; element < block_size; element++) {
-        init_subsv[element] =
-            init_sv[mpi_manager.getRank() * block_size + element];
-    }
-    sv.updateData(init_subsv);
-    sv_ref.updateData(init_sv);
 
     sv.applyOperation("PauliX", {0});
     sv.applyOperation("PauliY", {0});

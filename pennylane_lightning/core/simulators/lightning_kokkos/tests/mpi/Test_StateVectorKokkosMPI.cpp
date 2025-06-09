@@ -22,7 +22,8 @@
 #include <catch2/catch.hpp>
 
 #include "StateVectorKokkosMPI.hpp"
-#include "TestHelpers.hpp" // createRandomStateVectorData
+#include "TestHelpers.hpp"             // createRandomStateVectorData
+#include "TestHelpersStateVectors.hpp" // initializeLKTestSV
 #include "mpi.h"
 
 /**

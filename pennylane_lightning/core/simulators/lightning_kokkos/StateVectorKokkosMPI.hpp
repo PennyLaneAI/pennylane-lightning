@@ -400,7 +400,10 @@ class StateVectorKokkosMPI final
 
     template <typename T>
     bool isElementInVector(const std::vector<T> &vec, const T &element) const {
-        return findElementInVector(vec, element) != vec.end();
+        return std::any_of(vec.begin(), vec.end(),
+                           [&](const T &current_element) {
+                               return current_element == element;
+                           });
     }
 
     template <typename T>

@@ -22,7 +22,8 @@
 #include <catch2/catch.hpp>
 
 #include "StateVectorKokkosMPI.hpp"
-#include "TestHelpers.hpp" // createRandomStateVectorData
+#include "TestHelpers.hpp"             // createRandomStateVectorData
+#include "TestHelpersStateVectors.hpp" // initializeLKTestSV
 #include "mpi.h"
 
 /**
@@ -45,42 +46,22 @@ std::mt19937_64 re{1337};
 TEMPLATE_TEST_CASE("Apply Generator - 1 wire", "[LKMPI]", double, float) {
     const TestType EP = 1e-4;
     const std::size_t num_qubits = 6;
-    MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
-    REQUIRE(mpi_manager.getSize() == 4);
-
-    StateVectorKokkosMPI<TestType> sv(mpi_manager, num_qubits);
+    auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
 
     const bool inverse = GENERATE(false, true);
     const std::string gate_name = GENERATE("PhaseShift", "RX", "RY", "RZ");
     const std::size_t wire = GENERATE(0, 1, 2, 3, 4, 5);
 
-    std::vector<Kokkos::complex<TestType>> init_sv(exp2(num_qubits),
-                                                   {0.0, 0.0});
-    for (std::size_t i = 0; i < init_sv.size(); i++) {
-        init_sv[i] = i;
-    }
-
-    std::size_t block_size = sv.getLocalBlockSize();
-    std::vector<Kokkos::complex<TestType>> init_subsv(block_size, {0.0, 0.0});
-    for (std::size_t element = 0; element < block_size; element++) {
-        init_subsv[element] =
-            init_sv[mpi_manager.getRank() * block_size + element];
-    }
-
     DYNAMIC_SECTION("Gate = " << gate_name << " Inverse = " << inverse
                               << " Wire = " << wire) {
-        sv.resetStateVector();
-        StateVectorKokkos<TestType> sv_ref(num_qubits);
-        sv.updateData(init_subsv);
         auto scale = sv.applyGenerator(gate_name, {wire}, inverse);
-        sv_ref.updateData(init_sv);
         auto scale_ref = sv_ref.applyGenerator(gate_name, {wire}, inverse);
 
         auto reference = sv_ref.getDataVector();
         auto data = sv.getDataVector(0);
 
-        if (mpi_manager.getRank() == 0) {
-            for (std::size_t j = 0; j < init_sv.size(); j++) {
+        if (sv.getMPIManager().getRank() == 0) {
+            for (std::size_t j = 0; j < sv.getLocalBlockSize(); j++) {
                 CHECK(real(data[j]) == Approx(real(reference[j])).margin(EP));
                 CHECK(imag(data[j]) == Approx(imag(reference[j])).margin(EP));
             }
@@ -92,10 +73,7 @@ TEMPLATE_TEST_CASE("Apply Generator - 1 wire", "[LKMPI]", double, float) {
 TEMPLATE_TEST_CASE("Apply Generator - 2 wires", "[LKMPI]", double, float) {
     const TestType EP = 1e-4;
     const std::size_t num_qubits = 6;
-    MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
-    REQUIRE(mpi_manager.getSize() == 4);
-
-    StateVectorKokkosMPI<TestType> sv(mpi_manager, num_qubits);
+    auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
 
     const bool inverse = GENERATE(false, true);
     const std::string gate_name = GENERATE(
@@ -105,27 +83,11 @@ TEMPLATE_TEST_CASE("Apply Generator - 2 wires", "[LKMPI]", double, float) {
 
     const std::size_t wire_0 = GENERATE(0, 1, 2, 3, 4, 5);
     const std::size_t wire_1 = GENERATE(0, 1, 2, 3, 4, 5);
-    std::vector<Kokkos::complex<TestType>> init_sv(exp2(num_qubits),
-                                                   {0.0, 0.0});
-    for (std::size_t i = 0; i < init_sv.size(); i++) {
-        init_sv[i] = i;
-    }
-
-    std::size_t block_size = sv.getLocalBlockSize();
-    std::vector<Kokkos::complex<TestType>> init_subsv(block_size, {0.0, 0.0});
-    for (std::size_t element = 0; element < block_size; element++) {
-        init_subsv[element] =
-            init_sv[mpi_manager.getRank() * block_size + element];
-    }
 
     DYNAMIC_SECTION("Gate = " << gate_name << " Inverse = " << inverse
                               << " Wire 0 = " << wire_0
                               << " Wire 1 = " << wire_1) {
         if (wire_0 != wire_1) {
-            sv.resetStateVector();
-            StateVectorKokkos<TestType> sv_ref(num_qubits);
-            sv.updateData(init_subsv);
-            sv_ref.updateData(init_sv);
             auto scale =
                 sv.applyGenerator(gate_name, {wire_0, wire_1}, inverse);
             auto scale_ref =
@@ -134,8 +96,8 @@ TEMPLATE_TEST_CASE("Apply Generator - 2 wires", "[LKMPI]", double, float) {
             auto reference = sv_ref.getDataVector();
             auto data = sv.getDataVector(0);
 
-            if (mpi_manager.getRank() == 0) {
-                for (std::size_t j = 0; j < init_sv.size(); j++) {
+            if (sv.getMPIManager().getRank() == 0) {
+                for (std::size_t j = 0; j < sv.getLocalBlockSize(); j++) {
                     CHECK(real(data[j]) ==
                           Approx(real(reference[j])).margin(EP));
                     CHECK(imag(data[j]) ==
@@ -150,10 +112,7 @@ TEMPLATE_TEST_CASE("Apply Generator - 2 wires", "[LKMPI]", double, float) {
 TEMPLATE_TEST_CASE("Apply Generator - 4 wires", "[LKMPI]", double, float) {
     const TestType EP = 1e-4;
     const std::size_t num_qubits = 7;
-    MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
-    REQUIRE(mpi_manager.getSize() == 4);
-
-    StateVectorKokkosMPI<TestType> sv(mpi_manager, num_qubits);
+    auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
 
     const bool inverse = GENERATE(false, true);
     const std::string gate_name = GENERATE(
@@ -165,28 +124,11 @@ TEMPLATE_TEST_CASE("Apply Generator - 4 wires", "[LKMPI]", double, float) {
     const std::size_t wire_3 = GENERATE(0, 1, 2, 3, 4, 5, 6);
     std::set<std::size_t> wires = {wire_0, wire_1, wire_2, wire_3};
 
-    std::vector<Kokkos::complex<TestType>> init_sv(exp2(num_qubits),
-                                                   {0.0, 0.0});
-    for (std::size_t i = 0; i < init_sv.size(); i++) {
-        init_sv[i] = i;
-    }
-
-    std::size_t block_size = sv.getLocalBlockSize();
-    std::vector<Kokkos::complex<TestType>> init_subsv(block_size, {0.0, 0.0});
-    for (std::size_t element = 0; element < block_size; element++) {
-        init_subsv[element] =
-            init_sv[mpi_manager.getRank() * block_size + element];
-    }
-
     DYNAMIC_SECTION("Gate = " << gate_name << " Inverse = " << inverse
                               << " Wire 0 = " << wire_0 << " Wire 1 = "
                               << wire_1 << " Wire 2 = " << wire_2
                               << " Wire 3 = " << wire_3) {
         if (wires.size() == 4) {
-            sv.resetStateVector();
-            StateVectorKokkos<TestType> sv_ref(num_qubits);
-            sv.updateData(init_subsv);
-            sv_ref.updateData(init_sv);
             auto scale = sv.applyGenerator(
                 gate_name, {wire_0, wire_1, wire_2, wire_3}, inverse);
             auto scale_ref = sv_ref.applyGenerator(
@@ -195,8 +137,8 @@ TEMPLATE_TEST_CASE("Apply Generator - 4 wires", "[LKMPI]", double, float) {
             auto reference = sv_ref.getDataVector();
             auto data = sv.getDataVector(0);
 
-            if (mpi_manager.getRank() == 0) {
-                for (std::size_t j = 0; j < init_sv.size(); j++) {
+            if (sv.getMPIManager().getRank() == 0) {
+                for (std::size_t j = 0; j < sv.getLocalBlockSize(); j++) {
                     CHECK(real(data[j]) ==
                           Approx(real(reference[j])).margin(EP));
                     CHECK(imag(data[j]) ==
@@ -214,10 +156,7 @@ TEMPLATE_TEST_CASE("Apply Controlled Generator - 1 control 1 target wire",
                    "[LKMPI]", double, float) {
     const TestType EP = 1e-4;
     const std::size_t num_qubits = 6;
-    MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
-    REQUIRE(mpi_manager.getSize() == 4);
-
-    StateVectorKokkosMPI<TestType> sv(mpi_manager, num_qubits);
+    auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
 
     const bool inverse = GENERATE(false, true);
     const std::string gate_name =
@@ -227,29 +166,12 @@ TEMPLATE_TEST_CASE("Apply Controlled Generator - 1 control 1 target wire",
     const std::size_t target_wire = GENERATE(0, 1, 2, 3, 4, 5);
     const std::set<std::size_t> wires = {target_wire, control_wire};
 
-    std::vector<Kokkos::complex<TestType>> init_sv(exp2(num_qubits),
-                                                   {0.0, 0.0});
-    for (std::size_t i = 0; i < init_sv.size(); i++) {
-        init_sv[i] = i;
-    }
-
-    std::size_t block_size = sv.getLocalBlockSize();
-    std::vector<Kokkos::complex<TestType>> init_subsv(block_size, {0.0, 0.0});
-    for (std::size_t element = 0; element < block_size; element++) {
-        init_subsv[element] =
-            init_sv[mpi_manager.getRank() * block_size + element];
-    }
-
     DYNAMIC_SECTION("Gate = " << gate_name << " Inverse = " << inverse
                               << " Target Wire = " << target_wire
                               << " Control Wire = " << control_wire
                               << " Control Value = " << control_value) {
 
         if (wires.size() == 2) {
-            sv.resetStateVector();
-            StateVectorKokkos<TestType> sv_ref(num_qubits);
-            sv.updateData(init_subsv);
-            sv_ref.updateData(init_sv);
             auto scale = sv.applyControlledGenerator(gate_name, {control_wire},
                                                      {control_value},
                                                      {target_wire}, inverse);
@@ -260,8 +182,8 @@ TEMPLATE_TEST_CASE("Apply Controlled Generator - 1 control 1 target wire",
             auto reference = sv_ref.getDataVector();
             auto data = sv.getDataVector(0);
 
-            if (mpi_manager.getRank() == 0) {
-                for (std::size_t j = 0; j < init_sv.size(); j++) {
+            if (sv.getMPIManager().getRank() == 0) {
+                for (std::size_t j = 0; j < sv.getLocalBlockSize(); j++) {
                     CHECK(real(data[j]) ==
                           Approx(real(reference[j])).margin(EP));
                     CHECK(imag(data[j]) ==
@@ -277,10 +199,7 @@ TEMPLATE_TEST_CASE("Apply Controlled Generator - 1 control 2 target wires",
                    "[LKMPI]", double, float) {
     const TestType EP = 1e-4;
     const std::size_t num_qubits = 6;
-    MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
-    REQUIRE(mpi_manager.getSize() == 4);
-
-    StateVectorKokkosMPI<TestType> sv(mpi_manager, num_qubits);
+    auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
 
     const bool inverse = GENERATE(false, true);
     const std::string gate_name =
@@ -293,19 +212,6 @@ TEMPLATE_TEST_CASE("Apply Controlled Generator - 1 control 2 target wires",
     const std::set<std::size_t> wires = {target_wire_0, target_wire_1,
                                          control_wire};
 
-    std::vector<Kokkos::complex<TestType>> init_sv(exp2(num_qubits),
-                                                   {0.0, 0.0});
-    for (std::size_t i = 0; i < init_sv.size(); i++) {
-        init_sv[i] = i;
-    }
-
-    std::size_t block_size = sv.getLocalBlockSize();
-    std::vector<Kokkos::complex<TestType>> init_subsv(block_size, {0.0, 0.0});
-    for (std::size_t element = 0; element < block_size; element++) {
-        init_subsv[element] =
-            init_sv[mpi_manager.getRank() * block_size + element];
-    }
-
     DYNAMIC_SECTION("Gate = " << gate_name << " Inverse = " << inverse
                               << " Target Wire 0 = " << target_wire_0
                               << " Target Wire 1 = " << target_wire_1
@@ -313,13 +219,9 @@ TEMPLATE_TEST_CASE("Apply Controlled Generator - 1 control 2 target wires",
                               << " Control Value = " << control_value) {
 
         if (wires.size() == 3) {
-            sv.resetStateVector();
-            StateVectorKokkos<TestType> sv_ref(num_qubits);
-            sv.updateData(init_subsv);
             auto scale = sv.applyControlledGenerator(
                 gate_name, {control_wire}, {control_value},
                 {target_wire_0, target_wire_1}, inverse);
-            sv_ref.updateData(init_sv);
             auto scale_ref = sv_ref.applyControlledGenerator(
                 gate_name, {control_wire}, {control_value},
                 {target_wire_0, target_wire_1}, inverse);
@@ -327,8 +229,8 @@ TEMPLATE_TEST_CASE("Apply Controlled Generator - 1 control 2 target wires",
             auto reference = sv_ref.getDataVector();
             auto data = sv.getDataVector(0);
 
-            if (mpi_manager.getRank() == 0) {
-                for (std::size_t j = 0; j < init_sv.size(); j++) {
+            if (sv.getMPIManager().getRank() == 0) {
+                for (std::size_t j = 0; j < sv.getLocalBlockSize(); j++) {
                     CHECK(real(data[j]) ==
                           Approx(real(reference[j])).margin(EP));
                     CHECK(imag(data[j]) ==

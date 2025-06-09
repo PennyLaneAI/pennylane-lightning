@@ -98,16 +98,6 @@ void registerBackendClassSpecificBindingsMPI(PyClass &pyclass) {
             },
             "Set the state vector to the data contained in `state`.")
         .def(
-            "getPrintState",
-            [](StateVectorT &sv) {
-                auto state = sv.getDataVector(0);
-                for (auto i : state) {
-                    std::cout << i << " ";
-                }
-                std::cout << std::endl;
-            },
-            "Get the state vector as a string.")
-        .def(
             "DeviceToHost",
             [](StateVectorT &device_sv, np_arr_c &host_sv) {
                 py::buffer_info numpyArrayInfo = host_sv.request();
@@ -233,6 +223,11 @@ void registerBackendSpecificMeasurementsMPI(PyClass &pyclass) {
                  const std::string &, const std::vector<std::size_t> &)>(
                  &MeasurementsMPI<StateVectorT>::var),
              "Variance of an operation by name.");
+    // LK-MPI currently only support analytical expval, and var.
+    // Features below are not yet supported:
+    // - Sparse Hamiltonian
+    // - Probs
+    // - Shots (Counts, Samples)
 }
 
 /**
