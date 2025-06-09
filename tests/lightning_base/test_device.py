@@ -471,6 +471,17 @@ class TestInitialization:
         assert dev.LightningMeasurements == LightningMeasurements
         assert dev.LightningAdjointJacobian == LightningAdjointJacobian
 
+    @pytest.mark.skipif(
+        device_name == "lightning.tensor", reason="lightning.tensor does not support seeding"
+    )
+    @pytest.mark.parametrize("shots", [None, 10])
+    @pytest.mark.parametrize("n_wires", [None, 3])
+    @pytest.mark.parametrize("seed", ["global", None, 42, [42, 43, 44]])
+    def test_device_seed(self, shots, n_wires, seed):
+        """Test that seeding the lightning device works correctly"""
+        dev = LightningDevice(wires=n_wires, shots=shots, seed=seed)
+        assert dev._rng is not None
+
 
 @pytest.mark.skipif(
     device_name != "lightning.qubit",

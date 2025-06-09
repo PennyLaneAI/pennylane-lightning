@@ -62,6 +62,8 @@ class LightningKokkosMeasurements(
         self._use_mpi = kokkos_state._mpi
 
         self._measurement_lightning = self._measurement_dtype()(kokkos_state.state_vector)
+        if kokkos_state._rng:
+            self._measurement_lightning.set_random_seed(kokkos_state._rng.integers(0, 2**31 - 1))
 
     def _measurement_dtype(self):
         """Binding to Lightning Kokkos Measurements C++ class.

@@ -46,6 +46,7 @@ from typing import Union
 import numpy as np
 import pennylane as qml
 import scipy as sp
+from numpy.random import Generator
 from pennylane.measurements import MidMeasureMP
 from pennylane.ops import Conditional
 from pennylane.ops.op_math import Adjoint
@@ -66,7 +67,7 @@ class LightningKokkosStateVector(LightningBaseStateVector):
         num_wires(int): the number of wires to initialize the device with
         dtype: Datatypes for state-vector representation. Must be one of
             ``np.complex64`` or ``np.complex128``. Default is ``np.complex128``
-        device_name(string): state vector device name. Options: ["lightning.kokkos"]
+        rng (Generator): random number generator to use for seeding sampling measurement.
         kokkos_args(InitializationSettings): binding for Kokkos::InitializationSettings
             (threading parameters).
         sync(bool): immediately sync with host-sv after applying operations
@@ -77,11 +78,12 @@ class LightningKokkosStateVector(LightningBaseStateVector):
         self,
         num_wires: int,
         dtype: Union[np.complex128, np.complex64] = np.complex128,
+        rng: Generator = None,
         kokkos_args=None,
         mpi=None,
     ):
 
-        super().__init__(num_wires, dtype)
+        super().__init__(num_wires, dtype, rng)
 
         self._device_name = "lightning.kokkos"
 

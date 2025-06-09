@@ -187,6 +187,39 @@ class TestSampling:
         finally:
             jax.config.update("jax_enable_x64", original_x64)
 
+    @pytest.mark.parametrize("use_jit", (True, False))
+    @pytest.mark.parametrize("x64", (True, False))
+    def test_seeded_sampling(self, use_jit, x64):
+        """Test sampling output with deterministic sampling output"""
+
+        original_x64 = jax.config.jax_enable_x64
+        try:
+            jax.config.update("jax_enable_x64", x64)
+
+            def sampler():
+                qml.Hadamard(0)
+                return qml.sample(wires=0)
+
+            dev1 = qml.device(device_name, wires=2, shots=10, seed=123)
+            dev2 = qml.device(device_name, wires=2, shots=10, seed=123)
+            dev3 = qml.device(device_name, wires=2, shots=10, seed=321)
+            jaxpr = jax.make_jaxpr(sampler)()
+
+            if use_jit:
+                [results1] = jax.jit(partial(dev1.eval_jaxpr, jaxpr.jaxpr))(jaxpr.consts)
+                [results2] = jax.jit(partial(dev2.eval_jaxpr, jaxpr.jaxpr))(jaxpr.consts)
+                [results3] = jax.jit(partial(dev3.eval_jaxpr, jaxpr.jaxpr))(jaxpr.consts)
+            else:
+                [results1] = dev1.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts)
+                [results2] = dev2.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts)
+                [results3] = dev3.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts)
+
+            assert qml.math.allclose(results1, results2)
+            assert not qml.math.allclose(results1, results3)
+
+        finally:
+            jax.config.update("jax_enable_x64", original_x64)
+
     @pytest.mark.parametrize("mcm_value", (0, 1))
     def test_return_mcm(self, mcm_value):
         """Test that the interpreter can return the result of mid circuit measurements"""
