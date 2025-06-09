@@ -71,6 +71,29 @@ initializeLKTestSV(const std::size_t num_qubits) {
 
     return std::make_pair(std::move(sv), std::move(sv_ref));
 }
+
+template <typename TestType>
+void applyNonTrivialOperations(const std::size_t num_qubits, StateVectorKokkosMPI<TestType> &sv,
+                            StateVectorKokkos<TestType> &sv_ref) {
+    for (std::size_t i = 0; i < num_qubits; i++) {
+        sv.applyOperation("PauliX", {i});
+        sv_ref.applyOperation("PauliX", {i});
+        sv.applyOperation("PauliY", {i});
+        sv_ref.applyOperation("PauliY", {i});
+        sv.applyOperation("PauliZ", {i});
+        sv_ref.applyOperation("PauliZ", {i});
+        sv.applyOperation("Hadamard", {i});
+        sv_ref.applyOperation("Hadamard", {i});
+        sv.applyOperation("RX", {i}, false, {0.5});
+        sv_ref.applyOperation("RX", {i}, false, {0.5});
+        sv.applyOperation("RY", {i}, true, {0.3});
+        sv_ref.applyOperation("RY", {i}, true, {0.3});
+        sv.applyOperation("RZ", {i}, true, {0.2});
+        sv_ref.applyOperation("RZ", {i}, true, {0.2});
+    }
+    sv.applyOperation("CNOT", {1, 3});
+    sv_ref.applyOperation("CNOT", {1, 3});
+}
 #endif
 
 } // namespace Pennylane::LightningKokkos::Util

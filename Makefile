@@ -159,7 +159,7 @@ else
 			mpirun -np 2 $$file ; \
 		done ; \
 	elif [ "$(PL_BACKEND)" = "lightning_kokkos" ]; then \
-		for file in ./BuildTests/lightning_kokkos_*_test_runner_mpi; do \
+		for file in ./BuildTests/lightning_kokkos*test_runner_mpi; do \
 			echo "Running $$file"; \
 			mpirun -np 4 $$file ; \
 		done ; \

@@ -25,7 +25,7 @@
 #include "ObservablesKokkosMPI.hpp"
 #include "StateVectorKokkosMPI.hpp"
 #include "TestHelpers.hpp"             // createRandomStateVectorData
-#include "TestHelpersStateVectors.hpp" // initializeLKTestSV
+#include "TestHelpersStateVectors.hpp" // initializeLKTestSV, applyNonTrivialOperations
 
 /**
  * @file
@@ -49,37 +49,6 @@ std::mt19937_64 re{1337};
 // TODO: Add error cases
 
 // expval
-TEMPLATE_TEST_CASE("Expval - named string", "[LKMPI_Expval]", float, double) {
-    const TestType EP = 1e-4;
-    const std::size_t num_qubits = 4;
-
-    auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
-
-    auto m = MeasurementsMPI(sv);
-    auto m_ref = Measurements(sv_ref);
-
-    sv.applyOperation("PauliX", {0});
-    sv.applyOperation("PauliY", {0});
-    sv.applyOperation("PauliZ", {0});
-    sv.applyOperation("Hadamard", {0});
-    sv.applyOperation("CNOT", {1, 3});
-
-    sv_ref.applyOperation("PauliX", {0});
-    sv_ref.applyOperation("PauliY", {0});
-    sv_ref.applyOperation("PauliZ", {0});
-    sv_ref.applyOperation("Hadamard", {0});
-    sv_ref.applyOperation("CNOT", {1, 3});
-
-    const std::string ob_name =
-        GENERATE("Identity", "PauliX", "PauliY", "PauliZ", "Hadamard");
-    const std::size_t wire = GENERATE(0, 1, 2, 3);
-
-    auto res = m.expval(ob_name, {wire});
-    auto res_ref = m_ref.expval(ob_name, {wire});
-    CHECK(res == Approx(res_ref).margin(EP));
-}
-
-// expval matrix
 TEMPLATE_TEST_CASE("Expval - raise error", "[LKMPI_Expval]", float, double) {
     const std::size_t num_qubits = 4;
     MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
@@ -100,6 +69,27 @@ TEMPLATE_TEST_CASE("Expval - raise error", "[LKMPI_Expval]", float, double) {
         Catch::Contains("Not enough local wires to swap with global wires."));
 }
 
+TEMPLATE_TEST_CASE("Expval - named string", "[LKMPI_Expval]", float, double) {
+    const TestType EP = 1e-4;
+    const std::size_t num_qubits = 4;
+
+    auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
+
+    auto m = MeasurementsMPI(sv);
+    auto m_ref = Measurements(sv_ref);
+
+    applyNonTrivialOperations(num_qubits, sv, sv_ref);
+
+    const std::string ob_name =
+        GENERATE("Identity", "PauliX", "PauliY", "PauliZ", "Hadamard");
+    const std::size_t wire = GENERATE(0, 1, 2, 3);
+
+    auto res = m.expval(ob_name, {wire});
+    auto res_ref = m_ref.expval(ob_name, {wire});
+    CHECK(res == Approx(res_ref).margin(EP));
+}
+
+// expval matrix
 TEMPLATE_TEST_CASE("Expval - 1-wire matrix", "[LKMPI_Expval]", float, double) {
     const TestType EP = 1e-4;
     const std::size_t num_qubits = 4;
@@ -108,27 +98,7 @@ TEMPLATE_TEST_CASE("Expval - 1-wire matrix", "[LKMPI_Expval]", float, double) {
     auto m = MeasurementsMPI(sv);
     auto m_ref = Measurements(sv_ref);
 
-    sv.applyOperation("PauliX", {0});
-    sv.applyOperation("PauliX", {1});
-    sv.applyOperation("PauliY", {0});
-    sv.applyOperation("PauliZ", {0});
-    sv.applyOperation("Hadamard", {0});
-    sv.applyOperation("CNOT", {1, 3});
-    sv.applyOperation("RX", {1}, false, {0.5});
-    sv.applyOperation("RX", {2}, false, {0.5});
-    sv.applyOperation("RY", {1}, true, {0.3});
-    sv.applyOperation("RZ", {3}, true, {0.2});
-
-    sv_ref.applyOperation("PauliX", {0});
-    sv_ref.applyOperation("PauliX", {1});
-    sv_ref.applyOperation("PauliY", {0});
-    sv_ref.applyOperation("PauliZ", {0});
-    sv_ref.applyOperation("Hadamard", {0});
-    sv_ref.applyOperation("CNOT", {1, 3});
-    sv_ref.applyOperation("RX", {1}, false, {0.5});
-    sv_ref.applyOperation("RX", {2}, false, {0.5});
-    sv_ref.applyOperation("RY", {1}, true, {0.3});
-    sv_ref.applyOperation("RZ", {3}, true, {0.2});
+    applyNonTrivialOperations(num_qubits, sv, sv_ref);
 
     std::size_t num_wires = 1;
     std::vector<Kokkos::complex<TestType>> mat_ob(exp2(num_wires * 2),
@@ -151,31 +121,7 @@ TEMPLATE_TEST_CASE("Expval - 2-wire matrix", "[LKMPI_Expval]", float, double) {
     auto m = MeasurementsMPI(sv);
     auto m_ref = Measurements(sv_ref);
 
-    sv.applyOperation("PauliX", {0});
-    sv.applyOperation("PauliX", {1});
-    sv.applyOperation("PauliY", {0});
-    sv.applyOperation("PauliZ", {0});
-    sv.applyOperation("Hadamard", {0});
-    sv.applyOperation("CNOT", {1, 3});
-    sv.applyOperation("RX", {1}, false, {0.5});
-    sv.applyOperation("RX", {2}, false, {0.5});
-    sv.applyOperation("RY", {1}, true, {0.3});
-    sv.applyOperation("RZ", {3}, true, {0.2});
-    sv.applyOperation("RX", {4}, false, {0.5});
-    sv.applyOperation("RY", {5}, true, {0.3});
-
-    sv_ref.applyOperation("PauliX", {0});
-    sv_ref.applyOperation("PauliX", {1});
-    sv_ref.applyOperation("PauliY", {0});
-    sv_ref.applyOperation("PauliZ", {0});
-    sv_ref.applyOperation("Hadamard", {0});
-    sv_ref.applyOperation("CNOT", {1, 3});
-    sv_ref.applyOperation("RX", {1}, false, {0.5});
-    sv_ref.applyOperation("RX", {2}, false, {0.5});
-    sv_ref.applyOperation("RY", {1}, true, {0.3});
-    sv_ref.applyOperation("RZ", {3}, true, {0.2});
-    sv_ref.applyOperation("RX", {4}, false, {0.5});
-    sv_ref.applyOperation("RY", {5}, true, {0.3});
+    applyNonTrivialOperations(num_qubits, sv, sv_ref);
 
     std::size_t num_wires = 2;
     std::vector<Kokkos::complex<TestType>> mat_ob(exp2(num_wires * 2),
@@ -205,27 +151,7 @@ TEMPLATE_TEST_CASE("Expval - 1-wire matrix Hermitian obs", "[LKMPI_Expval]",
     auto m = MeasurementsMPI(sv);
     auto m_ref = Measurements(sv_ref);
 
-    sv.applyOperation("PauliX", {0});
-    sv.applyOperation("PauliX", {1});
-    sv.applyOperation("PauliY", {0});
-    sv.applyOperation("PauliZ", {0});
-    sv.applyOperation("Hadamard", {0});
-    sv.applyOperation("CNOT", {1, 3});
-    sv.applyOperation("RX", {1}, false, {0.5});
-    sv.applyOperation("RX", {2}, false, {0.5});
-    sv.applyOperation("RY", {1}, true, {0.3});
-    sv.applyOperation("RZ", {3}, true, {0.2});
-
-    sv_ref.applyOperation("PauliX", {0});
-    sv_ref.applyOperation("PauliX", {1});
-    sv_ref.applyOperation("PauliY", {0});
-    sv_ref.applyOperation("PauliZ", {0});
-    sv_ref.applyOperation("Hadamard", {0});
-    sv_ref.applyOperation("CNOT", {1, 3});
-    sv_ref.applyOperation("RX", {1}, false, {0.5});
-    sv_ref.applyOperation("RX", {2}, false, {0.5});
-    sv_ref.applyOperation("RY", {1}, true, {0.3});
-    sv_ref.applyOperation("RZ", {3}, true, {0.2});
+    applyNonTrivialOperations(num_qubits, sv, sv_ref);
 
     std::size_t num_wires = 1;
     std::vector<Kokkos::complex<TestType>> mat_ob(exp2(num_wires * 2),
@@ -252,31 +178,7 @@ TEMPLATE_TEST_CASE("Expval - 2-wire matrix Hermitian obs", "[LKMPI_Expval]",
     auto m = MeasurementsMPI(sv);
     auto m_ref = Measurements(sv_ref);
 
-    sv.applyOperation("PauliX", {0});
-    sv.applyOperation("PauliX", {1});
-    sv.applyOperation("PauliY", {0});
-    sv.applyOperation("PauliZ", {0});
-    sv.applyOperation("Hadamard", {0});
-    sv.applyOperation("CNOT", {1, 3});
-    sv.applyOperation("RX", {1}, false, {0.5});
-    sv.applyOperation("RX", {2}, false, {0.5});
-    sv.applyOperation("RY", {1}, true, {0.3});
-    sv.applyOperation("RZ", {3}, true, {0.2});
-    sv.applyOperation("RX", {4}, false, {0.5});
-    sv.applyOperation("RY", {5}, true, {0.3});
-
-    sv_ref.applyOperation("PauliX", {0});
-    sv_ref.applyOperation("PauliX", {1});
-    sv_ref.applyOperation("PauliY", {0});
-    sv_ref.applyOperation("PauliZ", {0});
-    sv_ref.applyOperation("Hadamard", {0});
-    sv_ref.applyOperation("CNOT", {1, 3});
-    sv_ref.applyOperation("RX", {1}, false, {0.5});
-    sv_ref.applyOperation("RX", {2}, false, {0.5});
-    sv_ref.applyOperation("RY", {1}, true, {0.3});
-    sv_ref.applyOperation("RZ", {3}, true, {0.2});
-    sv_ref.applyOperation("RX", {4}, false, {0.5});
-    sv_ref.applyOperation("RY", {5}, true, {0.3});
+    applyNonTrivialOperations(num_qubits, sv, sv_ref);
 
     std::size_t num_wires = 2;
     std::vector<Kokkos::complex<TestType>> mat_ob(exp2(num_wires * 2),
@@ -310,17 +212,7 @@ TEMPLATE_TEST_CASE("Expval - NamedObs", "[LKMPI_Expval]", float, double) {
     auto m = MeasurementsMPI(sv);
     auto m_ref = Measurements(sv_ref);
 
-    sv.applyOperation("PauliX", {0});
-    sv.applyOperation("PauliY", {0});
-    sv.applyOperation("PauliZ", {0});
-    sv.applyOperation("Hadamard", {0});
-    sv.applyOperation("CNOT", {1, 3});
-
-    sv_ref.applyOperation("PauliX", {0});
-    sv_ref.applyOperation("PauliY", {0});
-    sv_ref.applyOperation("PauliZ", {0});
-    sv_ref.applyOperation("Hadamard", {0});
-    sv_ref.applyOperation("CNOT", {1, 3});
+    applyNonTrivialOperations(num_qubits, sv, sv_ref);
 
     const std::string ob_name =
         GENERATE("Identity", "PauliX", "PauliY", "PauliZ", "Hadamard");
@@ -344,17 +236,7 @@ TEMPLATE_TEST_CASE("Expval - TensorProdobs", "[LKMPI_Expval]", float, double) {
     auto m = MeasurementsMPI(sv);
     auto m_ref = Measurements(sv_ref);
 
-    sv.applyOperation("PauliX", {0});
-    sv.applyOperation("PauliY", {0});
-    sv.applyOperation("PauliZ", {0});
-    sv.applyOperation("Hadamard", {0});
-    sv.applyOperation("CNOT", {1, 3});
-
-    sv_ref.applyOperation("PauliX", {0});
-    sv_ref.applyOperation("PauliY", {0});
-    sv_ref.applyOperation("PauliZ", {0});
-    sv_ref.applyOperation("Hadamard", {0});
-    sv_ref.applyOperation("CNOT", {1, 3});
+    applyNonTrivialOperations(num_qubits, sv, sv_ref);
 
     auto X0_ref = std::make_shared<NamedObs<StateVectorKokkos<TestType>>>(
         "PauliX", std::vector<std::size_t>{0});
@@ -417,7 +299,7 @@ TEMPLATE_TEST_CASE("Test expectation value of HamiltonianObs", "[LKMPI_Expval]",
 
 // expval pauli word
 // This test takes a long time
-/* TEMPLATE_TEST_CASE("Expval - pauli word - 4 wires", "[LKMPI_Expval]", float,
+TEMPLATE_TEST_CASE("Expval - pauli word - 4 wires", "[LKMPI_Expval]", float,
                    double) {
     const TestType EP = std::is_same_v<TestType, float> ? 1e-3 : 1e-6;
     const std::size_t num_qubits = 6;
@@ -426,31 +308,7 @@ TEMPLATE_TEST_CASE("Test expectation value of HamiltonianObs", "[LKMPI_Expval]",
     auto m = MeasurementsMPI(sv);
     auto m_ref = Measurements(sv_ref);
 
-    sv.applyOperation("PauliX", {0});
-    sv.applyOperation("PauliY", {1});
-    sv.applyOperation("PauliZ", {0});
-    sv.applyOperation("Hadamard", {0});
-    sv.applyOperation("Rot", {0}, false, {0.1, 0.2, 0.3});
-    sv.applyOperation("Rot", {1}, false, {0.2, 0.3, 0.4});
-    sv.applyOperation("Rot", {2}, false, {0.3, 0.4, 0.5});
-    sv.applyOperation("Rot", {3}, false, {0.4, 0.5, 0.6});
-    sv.applyOperation("Rot", {4}, false, {0.5, 0.6, 0.7});
-    sv.applyOperation("Rot", {5}, false, {0.6, 0.7, 0.8});
-    sv.applyOperation("RX", {0}, false, {0.1});
-    sv.applyOperation("CNOT", {1, 3});
-
-    sv_ref.applyOperation("PauliX", {0});
-    sv_ref.applyOperation("PauliY", {1});
-    sv_ref.applyOperation("PauliZ", {0});
-    sv_ref.applyOperation("Hadamard", {0});
-    sv_ref.applyOperation("Rot", {0}, false, {0.1, 0.2, 0.3});
-    sv_ref.applyOperation("Rot", {1}, false, {0.2, 0.3, 0.4});
-    sv_ref.applyOperation("Rot", {2}, false, {0.3, 0.4, 0.5});
-    sv_ref.applyOperation("Rot", {3}, false, {0.4, 0.5, 0.6});
-    sv_ref.applyOperation("Rot", {4}, false, {0.5, 0.6, 0.7});
-    sv_ref.applyOperation("Rot", {5}, false, {0.6, 0.7, 0.8});
-    sv_ref.applyOperation("RX", {0}, false, {0.1});
-    sv_ref.applyOperation("CNOT", {1, 3});
+    applyNonTrivialOperations(num_qubits, sv, sv_ref);
 
     const std::string P_0 = GENERATE("I", "X", "Y", "Z");
     const std::string P_1 = GENERATE("I", "X", "Y", "Z");
@@ -458,17 +316,16 @@ TEMPLATE_TEST_CASE("Test expectation value of HamiltonianObs", "[LKMPI_Expval]",
     const std::string P_3 = GENERATE("I", "X", "Y", "Z");
     const std::string ob = P_0 + P_1 + P_2 + P_3;
 
-    const std::size_t wire_0 = GENERATE(0, 1, 2, 3, 4, 5);
-    const std::size_t wire_1 = GENERATE(0, 1, 2, 3, 4, 5);
-    const std::size_t wire_2 = GENERATE(0, 1, 2, 3, 4, 5);
-    const std::size_t wire_3 = GENERATE(0, 1, 2, 3, 4, 5);
+    const std::size_t wire_0 = 2;
+    const std::size_t wire_1 = 4;
+    const std::size_t wire_2 = GENERATE(0, 1, 3, 5);
+    const std::size_t wire_3 = GENERATE(0, 1, 3, 5);
     const std::set<std::size_t> wires = {wire_0, wire_1, wire_2, wire_3};
 
     DYNAMIC_SECTION("Pauli word = " << ob << " on wires " << wire_0 << ", "
                                     << wire_1 << ", " << wire_2 << ", "
                                     << wire_3) {
         if (wires.size() == 4) {
-
             auto res =
                 m.expval({ob}, {{wire_0, wire_1, wire_2, wire_3}}, {0.1});
             auto res_ref =
@@ -476,7 +333,7 @@ TEMPLATE_TEST_CASE("Test expectation value of HamiltonianObs", "[LKMPI_Expval]",
             CHECK(res == Approx(res_ref).margin(EP));
         }
     }
-} */
+}
 
 TEMPLATE_TEST_CASE("Expval - pauli word - 4 wires linear combin",
                    "[LKMPI_Expval]", float, double) {
@@ -487,31 +344,8 @@ TEMPLATE_TEST_CASE("Expval - pauli word - 4 wires linear combin",
     auto m = MeasurementsMPI(sv);
     auto m_ref = Measurements(sv_ref);
 
-    sv.applyOperation("PauliX", {0});
-    sv.applyOperation("PauliY", {1});
-    sv.applyOperation("PauliZ", {0});
-    sv.applyOperation("Hadamard", {0});
-    sv.applyOperation("Rot", {0}, false, {0.1, 0.2, 0.3});
-    sv.applyOperation("Rot", {1}, false, {0.2, 0.3, 0.4});
-    sv.applyOperation("Rot", {2}, false, {0.3, 0.4, 0.5});
-    sv.applyOperation("Rot", {3}, false, {0.4, 0.5, 0.6});
-    sv.applyOperation("Rot", {4}, false, {0.5, 0.6, 0.7});
-    sv.applyOperation("Rot", {5}, false, {0.6, 0.7, 0.8});
-    sv.applyOperation("RX", {0}, false, {0.1});
-    sv.applyOperation("CNOT", {1, 3});
-
-    sv_ref.applyOperation("PauliX", {0});
-    sv_ref.applyOperation("PauliY", {1});
-    sv_ref.applyOperation("PauliZ", {0});
-    sv_ref.applyOperation("Hadamard", {0});
-    sv_ref.applyOperation("Rot", {0}, false, {0.1, 0.2, 0.3});
-    sv_ref.applyOperation("Rot", {1}, false, {0.2, 0.3, 0.4});
-    sv_ref.applyOperation("Rot", {2}, false, {0.3, 0.4, 0.5});
-    sv_ref.applyOperation("Rot", {3}, false, {0.4, 0.5, 0.6});
-    sv_ref.applyOperation("Rot", {4}, false, {0.5, 0.6, 0.7});
-    sv_ref.applyOperation("Rot", {5}, false, {0.6, 0.7, 0.8});
-    sv_ref.applyOperation("RX", {0}, false, {0.1});
-    sv_ref.applyOperation("CNOT", {1, 3});
+   
+    applyNonTrivialOperations(num_qubits, sv, sv_ref);
 
     const std::string ob_0 = "ZZYYX";
     const std::string ob_1 = "XYIZX";
@@ -554,17 +388,7 @@ TEMPLATE_TEST_CASE("Var - named string", "[LKMPI_Var]", float, double) {
     auto m = MeasurementsMPI(sv);
     auto m_ref = Measurements(sv_ref);
 
-    sv.applyOperation("PauliX", {0});
-    sv.applyOperation("PauliY", {0});
-    sv.applyOperation("PauliZ", {0});
-    sv.applyOperation("Hadamard", {0});
-    sv.applyOperation("CNOT", {1, 3});
-
-    sv_ref.applyOperation("PauliX", {0});
-    sv_ref.applyOperation("PauliY", {0});
-    sv_ref.applyOperation("PauliZ", {0});
-    sv_ref.applyOperation("Hadamard", {0});
-    sv_ref.applyOperation("CNOT", {1, 3});
+    applyNonTrivialOperations(num_qubits, sv, sv_ref);
 
     const std::string ob_name =
         GENERATE("Identity", "PauliX", "PauliY", "PauliZ", "Hadamard");
@@ -584,27 +408,7 @@ TEMPLATE_TEST_CASE("Var - 1-wire matrix", "[LKMPI_Var]", double, float) {
     auto m = MeasurementsMPI(sv);
     auto m_ref = Measurements(sv_ref);
 
-    sv.applyOperation("PauliX", {0});
-    sv.applyOperation("PauliX", {1});
-    sv.applyOperation("PauliY", {0});
-    sv.applyOperation("PauliZ", {0});
-    sv.applyOperation("Hadamard", {0});
-    sv.applyOperation("CNOT", {1, 3});
-    sv.applyOperation("RX", {1}, false, {0.5});
-    sv.applyOperation("RX", {2}, false, {0.5});
-    sv.applyOperation("RY", {1}, true, {0.3});
-    sv.applyOperation("RZ", {3}, true, {0.2});
-
-    sv_ref.applyOperation("PauliX", {0});
-    sv_ref.applyOperation("PauliX", {1});
-    sv_ref.applyOperation("PauliY", {0});
-    sv_ref.applyOperation("PauliZ", {0});
-    sv_ref.applyOperation("Hadamard", {0});
-    sv_ref.applyOperation("CNOT", {1, 3});
-    sv_ref.applyOperation("RX", {1}, false, {0.5});
-    sv_ref.applyOperation("RX", {2}, false, {0.5});
-    sv_ref.applyOperation("RY", {1}, true, {0.3});
-    sv_ref.applyOperation("RZ", {3}, true, {0.2});
+    applyNonTrivialOperations(num_qubits, sv, sv_ref);
 
     std::size_t num_wires = 1;
     std::vector<Kokkos::complex<TestType>> mat_ob(exp2(num_wires * 2),
@@ -628,31 +432,7 @@ TEMPLATE_TEST_CASE("Var - 2-wire matrix", "[LKMPI_Var]", float, double) {
     auto m = MeasurementsMPI(sv);
     auto m_ref = Measurements(sv_ref);
 
-    sv.applyOperation("PauliX", {0});
-    sv.applyOperation("PauliX", {1});
-    sv.applyOperation("PauliY", {0});
-    sv.applyOperation("PauliZ", {0});
-    sv.applyOperation("Hadamard", {0});
-    sv.applyOperation("CNOT", {1, 3});
-    sv.applyOperation("RX", {1}, false, {0.5});
-    sv.applyOperation("RX", {2}, false, {0.5});
-    sv.applyOperation("RY", {1}, true, {0.3});
-    sv.applyOperation("RZ", {3}, true, {0.2});
-    sv.applyOperation("RX", {4}, false, {0.5});
-    sv.applyOperation("RY", {5}, true, {0.3});
-
-    sv_ref.applyOperation("PauliX", {0});
-    sv_ref.applyOperation("PauliX", {1});
-    sv_ref.applyOperation("PauliY", {0});
-    sv_ref.applyOperation("PauliZ", {0});
-    sv_ref.applyOperation("Hadamard", {0});
-    sv_ref.applyOperation("CNOT", {1, 3});
-    sv_ref.applyOperation("RX", {1}, false, {0.5});
-    sv_ref.applyOperation("RX", {2}, false, {0.5});
-    sv_ref.applyOperation("RY", {1}, true, {0.3});
-    sv_ref.applyOperation("RZ", {3}, true, {0.2});
-    sv_ref.applyOperation("RX", {4}, false, {0.5});
-    sv_ref.applyOperation("RY", {5}, true, {0.3});
+    applyNonTrivialOperations(num_qubits, sv, sv_ref);
 
     std::size_t num_wires = 2;
     std::vector<Kokkos::complex<TestType>> mat_ob(exp2(num_wires * 2),
@@ -681,17 +461,7 @@ TEMPLATE_TEST_CASE("Var - named obs", "[LKMPI_Var]", float, double) {
     auto m = MeasurementsMPI(sv);
     auto m_ref = Measurements(sv_ref);
 
-    sv.applyOperation("PauliX", {0});
-    sv.applyOperation("PauliY", {0});
-    sv.applyOperation("PauliZ", {0});
-    sv.applyOperation("Hadamard", {0});
-    sv.applyOperation("CNOT", {1, 3});
-
-    sv_ref.applyOperation("PauliX", {0});
-    sv_ref.applyOperation("PauliY", {0});
-    sv_ref.applyOperation("PauliZ", {0});
-    sv_ref.applyOperation("Hadamard", {0});
-    sv_ref.applyOperation("CNOT", {1, 3});
+    applyNonTrivialOperations(num_qubits, sv, sv_ref);
 
     const std::string ob_name =
         GENERATE("Identity", "PauliX", "PauliY", "PauliZ", "Hadamard");
@@ -715,27 +485,7 @@ TEMPLATE_TEST_CASE("Var - 1-wire matrix Hermitian obs", "[LKMPI_Var]", float,
     auto m = MeasurementsMPI(sv);
     auto m_ref = Measurements(sv_ref);
 
-    sv.applyOperation("PauliX", {0});
-    sv.applyOperation("PauliX", {1});
-    sv.applyOperation("PauliY", {0});
-    sv.applyOperation("PauliZ", {0});
-    sv.applyOperation("Hadamard", {0});
-    sv.applyOperation("CNOT", {1, 3});
-    sv.applyOperation("RX", {1}, false, {0.5});
-    sv.applyOperation("RX", {2}, false, {0.5});
-    sv.applyOperation("RY", {1}, true, {0.3});
-    sv.applyOperation("RZ", {3}, true, {0.2});
-
-    sv_ref.applyOperation("PauliX", {0});
-    sv_ref.applyOperation("PauliX", {1});
-    sv_ref.applyOperation("PauliY", {0});
-    sv_ref.applyOperation("PauliZ", {0});
-    sv_ref.applyOperation("Hadamard", {0});
-    sv_ref.applyOperation("CNOT", {1, 3});
-    sv_ref.applyOperation("RX", {1}, false, {0.5});
-    sv_ref.applyOperation("RX", {2}, false, {0.5});
-    sv_ref.applyOperation("RY", {1}, true, {0.3});
-    sv_ref.applyOperation("RZ", {3}, true, {0.2});
+    applyNonTrivialOperations(num_qubits, sv, sv_ref);
 
     std::size_t num_wires = 1;
     std::vector<Kokkos::complex<TestType>> mat_ob(exp2(num_wires * 2),
@@ -762,31 +512,7 @@ TEMPLATE_TEST_CASE("Var - 2-wire matrix Hermitian obs", "[LKMPI_Var]", float,
     auto m = MeasurementsMPI(sv);
     auto m_ref = Measurements(sv_ref);
 
-    sv.applyOperation("PauliX", {0});
-    sv.applyOperation("PauliX", {1});
-    sv.applyOperation("PauliY", {0});
-    sv.applyOperation("PauliZ", {0});
-    sv.applyOperation("Hadamard", {0});
-    sv.applyOperation("CNOT", {1, 3});
-    sv.applyOperation("RX", {1}, false, {0.5});
-    sv.applyOperation("RX", {2}, false, {0.5});
-    sv.applyOperation("RY", {1}, true, {0.3});
-    sv.applyOperation("RZ", {3}, true, {0.2});
-    sv.applyOperation("RX", {4}, false, {0.5});
-    sv.applyOperation("RY", {5}, true, {0.3});
-
-    sv_ref.applyOperation("PauliX", {0});
-    sv_ref.applyOperation("PauliX", {1});
-    sv_ref.applyOperation("PauliY", {0});
-    sv_ref.applyOperation("PauliZ", {0});
-    sv_ref.applyOperation("Hadamard", {0});
-    sv_ref.applyOperation("CNOT", {1, 3});
-    sv_ref.applyOperation("RX", {1}, false, {0.5});
-    sv_ref.applyOperation("RX", {2}, false, {0.5});
-    sv_ref.applyOperation("RY", {1}, true, {0.3});
-    sv_ref.applyOperation("RZ", {3}, true, {0.2});
-    sv_ref.applyOperation("RX", {4}, false, {0.5});
-    sv_ref.applyOperation("RY", {5}, true, {0.3});
+    applyNonTrivialOperations(num_qubits, sv, sv_ref);
 
     std::size_t num_wires = 2;
     std::vector<Kokkos::complex<TestType>> mat_ob(exp2(num_wires * 2),
@@ -820,17 +546,7 @@ TEMPLATE_TEST_CASE("Var - TensorProdobs", "[LKMPI_Expval]", float, double) {
     auto m = MeasurementsMPI(sv);
     auto m_ref = Measurements(sv_ref);
 
-    sv.applyOperation("PauliX", {0});
-    sv.applyOperation("PauliY", {0});
-    sv.applyOperation("PauliZ", {0});
-    sv.applyOperation("Hadamard", {0});
-    sv.applyOperation("CNOT", {1, 3});
-
-    sv_ref.applyOperation("PauliX", {0});
-    sv_ref.applyOperation("PauliY", {0});
-    sv_ref.applyOperation("PauliZ", {0});
-    sv_ref.applyOperation("Hadamard", {0});
-    sv_ref.applyOperation("CNOT", {1, 3});
+    applyNonTrivialOperations(num_qubits, sv, sv_ref);
 
     auto X0_ref = std::make_shared<NamedObs<StateVectorKokkos<TestType>>>(
         "PauliX", std::vector<std::size_t>{0});

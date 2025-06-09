@@ -23,7 +23,7 @@
 
 #include "StateVectorKokkosMPI.hpp"
 #include "TestHelpers.hpp"             // createRandomStateVectorData
-#include "TestHelpersStateVectors.hpp" // initializeLKTestSV
+#include "TestHelpersStateVectors.hpp" // initializeLKTestSV, applyNonTrivialOperations
 #include "mpi.h"
 
 /**
@@ -109,44 +109,10 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorKokkosMPI::Constructibility",
         REQUIRE(std::is_copy_constructible_v<StateVectorT>);
     }
 }
+
 /**
  * Test StateVectorKokkosMPI wire-related helper methods
  */
-TEMPLATE_TEST_CASE("isElementInVector", "[LKMPI]", double, float) {
-    const std::size_t num_qubits = 4;
-
-    MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
-    StateVectorKokkosMPI<TestType> sv(mpi_manager, num_qubits);
-    std::vector<std::size_t> wires = {0, 1, 4, 5};
-    REQUIRE(sv.isElementInVector(wires, static_cast<std::size_t>(0)));
-    REQUIRE(sv.isElementInVector(wires, static_cast<std::size_t>(1)));
-    REQUIRE(sv.isElementInVector(wires, static_cast<std::size_t>(4)));
-    REQUIRE(sv.isElementInVector(wires, static_cast<std::size_t>(5)));
-    REQUIRE(!sv.isElementInVector(wires, static_cast<std::size_t>(2)));
-
-    wires = {};
-    REQUIRE(!sv.isElementInVector(wires, static_cast<std::size_t>(0)));
-}
-
-TEMPLATE_TEST_CASE("getElementIndexInVector", "[LKMPI]", double, float) {
-    const std::size_t num_qubits = 4;
-    MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
-    StateVectorKokkosMPI<TestType> sv(mpi_manager, num_qubits);
-    std::vector<std::size_t> wires = {0, 1, 4, 5};
-    REQUIRE(sv.getElementIndexInVector(wires, static_cast<std::size_t>(0)) ==
-            0);
-    REQUIRE(sv.getElementIndexInVector(wires, static_cast<std::size_t>(1)) ==
-            1);
-    REQUIRE(sv.getElementIndexInVector(wires, static_cast<std::size_t>(4)) ==
-            2);
-    REQUIRE(sv.getElementIndexInVector(wires, static_cast<std::size_t>(5)) ==
-            3);
-
-    PL_REQUIRE_THROWS_MATCHES(
-        sv.getElementIndexInVector(wires, static_cast<std::size_t>(2)),
-        LightningException, "Element not in vector");
-}
-
 TEMPLATE_TEST_CASE("Local/Global wire helpers", "[LKMPI]", double, float) {
     const std::size_t num_qubits = 5;
     MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
@@ -311,6 +277,33 @@ TEMPLATE_TEST_CASE("updateData/getData/getDataVector", "[LKMPI]", double,
     }
 }
 
+TEMPLATE_TEST_CASE("resetIndices/initZeros", "[LKMPI]", double,
+                   float) {
+    const std::size_t num_qubits = 5;
+    auto [sv,sv_ref] = initializeLKTestSV<TestType>(num_qubits);
+    applyNonTrivialOperations(num_qubits, sv, sv_ref);
+
+    sv.initZeros();
+    CHECK(sv.getGlobalWires() == std::vector<std::size_t>{0, 1});
+    CHECK(sv.getLocalWires() == std::vector<std::size_t>{2,3,4});
+    CHECK(sv.getMPIRankToGlobalIndexMap() ==
+          std::vector<std::size_t>{0, 1, 2, 3});
+    
+          Kokkos::complex<TestType> zero{0.0, 0.0};
+    for (std::size_t j = 0; j < sv.getLocalBlockSize(); j++) {
+        CHECK(real(sv.getData()[j]) == Approx(real(zero)));
+        CHECK(imag(sv.getData()[j]) == Approx(imag(zero)));
+    }
+}
+
+TEMPLATE_TEST_CASE("getLocalSV", "[LKMPI]", double,
+                   float) {
+    const std::size_t num_qubits = 5;
+    StateVectorKokkosMPI<TestType> sv(num_qubits);
+    auto local_sv = sv.getLocalSV();
+    REQUIRE(local_sv.getNumQubits() == sv.getNumLocalWires());
+}
+
 TEMPLATE_TEST_CASE("setBasisState - explicit state", "[LKMPI]", double, float) {
     const std::size_t num_qubits = 5;
     MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
@@ -334,6 +327,31 @@ TEMPLATE_TEST_CASE("setBasisState - explicit state", "[LKMPI]", double, float) {
                 CHECK(imag(data[j]) == Approx(imag(reference_data[j])));
             }
         }
+    }
+}
+
+TEMPLATE_TEST_CASE("resetStateVector", "[LKMPI]", double, float) {
+    const std::size_t num_qubits = 5;
+    MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
+    REQUIRE(mpi_manager.getSize() == 4);
+
+    StateVectorKokkosMPI<TestType> sv(mpi_manager, num_qubits);
+
+    std::vector<std::size_t> state = {1, 1};
+    std::vector<std::size_t> wires = {3, 4};
+    sv.setBasisState(state, wires);
+    sv.resetStateVector();
+
+    std::vector<Kokkos::complex<TestType>> reference_data(exp2(num_qubits),
+                                                            {0.0, 0.0});
+    reference_data[0] = 1.0;
+    auto data = sv.getDataVector(0);
+    if (mpi_manager.getRank() == 0) {
+        for (std::size_t j = 0; j < reference_data.size(); j++) {
+            CHECK(real(data[j]) == Approx(real(reference_data[j])));
+            CHECK(imag(data[j]) == Approx(imag(reference_data[j])));
+        }
+        
     }
 }
 

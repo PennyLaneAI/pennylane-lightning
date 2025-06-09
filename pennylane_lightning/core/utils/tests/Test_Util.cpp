@@ -279,3 +279,61 @@ TEST_CASE("Util::createRandomWiresSubset", "[createRandomWiresSubset]") {
         }
     }
 }
+
+TEST_CASE("Util::isElementInVector", "[isElementInVector]") {
+    std::vector<std::size_t> wires = {0, 1, 4, 5};
+    REQUIRE(isElementInVector(wires, 0UL));
+    REQUIRE(isElementInVector(wires, 1UL));
+    REQUIRE(isElementInVector(wires, 4UL));
+    REQUIRE(isElementInVector(wires, 5UL));
+    REQUIRE(!isElementInVector(wires, 2UL));
+
+}
+
+TEST_CASE("Util::findElementInVector", "[findElementInVector]") {
+    std::vector<std::size_t> wires = {0, 1, 4};
+    auto it = findElementInVector(wires, 0UL);
+    REQUIRE(it != wires.end());
+    REQUIRE(*it == static_cast<std::size_t>(0));
+    it = findElementInVector(wires, 1UL);
+    REQUIRE(it != wires.end());
+    REQUIRE(*it == static_cast<std::size_t>(1));
+    it = findElementInVector(wires, 4UL);
+    REQUIRE(it != wires.end());
+    REQUIRE(*it == static_cast<std::size_t>(4));
+    it = findElementInVector(wires, 2UL);
+    REQUIRE(it == wires.end());
+    
+    wires = {};
+    it = findElementInVector(wires, 7UL);
+    REQUIRE(it == wires.end());
+
+}
+
+TEST_CASE("Util::getElementIndexInVector", "[getElementIndexInVector]") {
+    std::vector<std::size_t> wires = {0, 1, 4, 5};
+    REQUIRE(getElementIndexInVector(wires, 0UL) ==
+            0);
+    REQUIRE(getElementIndexInVector(wires, 1UL) ==
+            1);
+    REQUIRE(getElementIndexInVector(wires, 4UL) ==
+            2);
+    REQUIRE(getElementIndexInVector(wires, 5UL) ==
+            3);
+
+    PL_REQUIRE_THROWS_MATCHES(
+        getElementIndexInVector(wires, static_cast<std::size_t>(2)),
+        LightningException, "Element not in vector");
+}
+
+
+TEST_CASE("Util::getRevWireIndex", "[getRevWireIndex]") {
+    std::vector<std::size_t> wires = {0, 1, 4, 5};
+    REQUIRE(getRevWireIndex(wires, 0UL) == 3);
+    REQUIRE(getRevWireIndex(wires, 1UL) == 2);
+    REQUIRE(getRevWireIndex(wires, 2UL) == 1);
+    REQUIRE(getRevWireIndex(wires, 3UL) == 0);
+    PL_REQUIRE_THROWS_MATCHES(
+        getRevWireIndex(wires, 4UL), 
+        LightningException, "out of bounds");
+}

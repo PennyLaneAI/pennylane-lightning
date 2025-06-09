@@ -55,6 +55,9 @@ using Pennylane::Util::exp2;
 using Pennylane::Util::isPerfectPowerOf2;
 using Pennylane::Util::log2;
 using Pennylane::Util::reverse_lookup;
+using Pennylane::Util::isElementInVector;
+using Pennylane::Util::findElementInVector;
+using Pennylane::Util::getElementIndexInVector;
 using std::size_t;
 
 } // namespace
@@ -397,36 +400,6 @@ class StateVectorKokkosMPI final
      * state vector data.
      */
     std::size_t getLocalBlockSize() const { return exp2(getNumLocalWires()); }
-
-    template <typename T>
-    bool isElementInVector(const std::vector<T> &vec, const T &element) const {
-        return std::any_of(vec.begin(), vec.end(),
-                           [&](const T &current_element) {
-                               return current_element == element;
-                           });
-    }
-
-    template <typename T>
-    auto findElementInVector(const std::vector<T> &vec,
-                             const T &element) const {
-        return std::find(vec.begin(), vec.end(), element);
-    }
-
-    template <typename T>
-    std::size_t getElementIndexInVector(const std::vector<T> &vec,
-                                        const T &element) const {
-        auto it = findElementInVector(vec, element);
-        if (it != vec.end()) {
-            return std::distance(vec.begin(), it);
-        } else {
-            PL_ABORT("Element not in vector");
-        }
-    }
-
-    std::size_t getRevWireIndex(const std::vector<std::size_t> &wires,
-                                std::size_t element_index) const {
-        return wires.size() - 1 - element_index;
-    }
 
     std::size_t getRevLocalWireIndex(const std::size_t wire) const {
         return getRevWireIndex(local_wires_, getLocalWireIndex(wire));
