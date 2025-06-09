@@ -46,6 +46,9 @@
   Updating ROCM from 5.7 to 6.2.4. 
   [(#1158)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1158)
 
+- Fix using Torch with `AmplitudeEmbedding` by applying `qml.broadcast_expand` before decomposition in the preprocessing stage. 
+  [(#1175)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1175)
+
 <h3>Internal changes ⚙️</h3>
   
 - Remove flaky tests and add random seed to measurement tests.
@@ -101,6 +104,9 @@
 
 - Removed `max_workers` argument for `default.qubit` device in Python tests to reduce CI testing time.
   [(##1174)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1174)
+  
+ - Bump Github action runner to use `Ubuntu-24.04` or `Ubuntu-latest`. Fixing all `ubuntu-latest` action runners to `ubuntu-24.04`.
+  [(#1167)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1167)
 
 <h3>Contributors ✍️</h3>
 

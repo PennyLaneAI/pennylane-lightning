@@ -88,8 +88,9 @@ class LightningBase(Device):
 
         self._c_dtype = c_dtype
         self._batch_obs = batch_obs
-        self._seed = np.random.randint(2**31 - 1) if seed == "global" else seed
-        self._rng = np.random.default_rng(self._seed)
+        self._rng = np.random.default_rng(
+            np.random.randint(2**31 - 1) if seed == "global" else seed
+        )
 
         # State-vector is dynamically allocated just before execution
         self._statevector = None
@@ -683,7 +684,7 @@ class LightningBase(Device):
         tangents = validate_args_tangents(args, tangents)
 
         self._statevector = self.LightningStateVector(
-            num_wires=len(self.wires), dtype=self._c_dtype
+            num_wires=len(self.wires), dtype=self._c_dtype, rng=self._rng
         )
 
         def wrapper(*args):
