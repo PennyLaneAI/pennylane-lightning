@@ -496,7 +496,8 @@ void registerBackendAgnosticMeasurements(PyClass &pyclass) {
                      ));
              })
 #endif
-        ;
+        .def("set_random_seed", [](Measurements<StateVectorT> &M,
+                                   std::size_t seed) { M.setSeed(seed); });
 }
 
 /**
