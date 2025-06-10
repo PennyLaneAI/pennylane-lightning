@@ -110,7 +110,7 @@ jobs:
             fi
           CIBW_TEST_COMMAND: |
             DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
-            pl-device-test --device=${DEVICENAME} --skip-ops -x --tb=short --no-flaky-report
+            pl-device-test --device=${DEVICENAME} --skip-ops -x --tb=short
 
           CIBW_BUILD_VERBOSITY: 3
 
