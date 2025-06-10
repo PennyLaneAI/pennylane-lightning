@@ -58,6 +58,7 @@ using Pennylane::Util::reverse_lookup;
 using Pennylane::Util::isElementInVector;
 using Pennylane::Util::findElementInVector;
 using Pennylane::Util::getElementIndexInVector;
+using Pennylane::Util::getRevWireIndex;
 using std::size_t;
 
 } // namespace
@@ -304,6 +305,9 @@ class StateVectorKokkosMPI final
 
     auto getMPIManager() const { return mpi_manager_; }
 
+    auto getSendBuffer() const {return sendbuf_;} ;
+    auto getRecvBuffer() const {return recvbuf_;} ;
+
     std::size_t getNumGlobalWires() const { return numGlobalQubits_; }
 
     std::size_t getNumLocalWires() const { return numLocalQubits_; }
@@ -458,6 +462,15 @@ class StateVectorKokkosMPI final
         return global_wires;
     }
 
+    std::vector<std::size_t>
+    findLocalWires(const std::vector<std::size_t> &wires) const {
+        std::vector<std::size_t> local_wires;
+        std::copy_if(wires.begin(), wires.end(),
+                     std::back_inserter(local_wires),
+                     [&](std::size_t wire) { return isWiresLocal({wire}); });
+        return local_wires;
+    }
+
     /**
      * @brief  Converts a global state vector index to a local one.
      *
@@ -531,29 +544,6 @@ class StateVectorKokkosMPI final
     /**
      * @brief Set values for a batch of elements of the state-vector.
      *
-     * @param indices Indices of the target elements.
-     * @param values Values to be set for the target elements.
-     */
-    void setStateVector(const std::vector<std::size_t> &indices,
-                        const std::vector<ComplexT> &values) {
-        PL_ABORT_IF_NOT(indices.size() == values.size(),
-                        "Indices and values must have equal dimensions.");
-        resetIndices();
-        const std::size_t blk{getLocalBlockSize()};
-        const std::size_t offset{blk * mpi_manager_.getRank()};
-        initZeros();
-        std::vector<std::size_t> d_indices(blk);
-        std::vector<ComplexT> d_values(blk);
-        std::copy(indices.data() + offset, indices.data() + offset + blk,
-                  d_indices.begin());
-        std::copy(values.data() + offset, values.data() + offset + blk,
-                  d_values.begin());
-        (*sv_).setStateVector(d_indices, d_values);
-    }
-
-    /**
-     * @brief Set values for a batch of elements of the state-vector.
-     *
      * @param state State.
      * @param wires Wires.
      */
@@ -570,11 +560,54 @@ class StateVectorKokkosMPI final
      * @param state State.
      * @param wires Wires.
      */
-    void setStateVector([[maybe_unused]] const ComplexT *state,
+    void setStateVector(const ComplexT *state,
                         const std::vector<std::size_t> &wires) {
-        PL_ABORT_IF(wires.size() != (getNumGlobalWires() + getNumLocalWires()),
-                    "Setting sub-statevector not implemented yet.");
-        PL_ABORT("Not yet implemented.");
+        const auto num_qubits = this->getNumQubits();
+        PL_ABORT_IF_NOT(
+            std::find_if(wires.begin(), wires.end(),
+                         [&num_qubits](const auto i) {
+                             return i >= num_qubits;
+                         }) == wires.end(),
+            "wires must take values lower than the number of qubits.");
+        initZeros();
+        auto global_wires = findGlobalWires(wires);
+        auto local_wires = findLocalWires(wires);
+        
+        std::size_t global_index = getMPIManager().getRank();
+
+        std::size_t global_mask = 0U;
+        for (std::size_t i = 0; i < global_wires.size(); i++) {
+            global_mask |= ((global_index >> getRevGlobalWireIndex(global_wires[i]) ) & 1U) << getRevWireIndex(wires,getElementIndexInVector(wires, global_wires[i]));
+        }
+        std::cout << "I am rank " << mpi_manager_.getRank()
+                  << " with global_index " << global_index
+                  << " and global_mask " << global_mask << std::endl;
+        std::vector<ComplexT> local_state(exp2(local_wires.size()));
+        for (std::size_t i = 0; i < exp2(local_wires.size()); i++) {
+            std::size_t index = global_mask;
+            for (std::size_t j = 0; j < local_wires.size(); j++) {
+                    index |= (((i >> j) & 1U) << getRevWireIndex(wires,getElementIndexInVector(wires, local_wires[j])));
+            }
+            std::cout << "I am rank " << mpi_manager_.getRank()
+                      << " with local_state index " << i
+                      << " and input state index " << index << std::endl;
+            local_state[i] = state[index];
+        }
+ 
+        bool set = true;
+        for (std::size_t i = 0; i < getNumGlobalWires(); i++) {
+            if (!isElementInVector(global_wires, global_wires_[i])) {
+                if ((global_index >> getRevGlobalWireIndex(global_wires_[i])) & 1U) {
+                    set = false;
+                    break;
+                }
+            }
+        }
+        if (set) {
+            std::cout << "I am rank " << mpi_manager_.getRank() << 
+                      " setting local state vector." << std::endl;
+            (*sv_).setStateVector(local_state, getLocalWireIndices(local_wires));
+        }
     }
 
     std::vector<std::size_t>

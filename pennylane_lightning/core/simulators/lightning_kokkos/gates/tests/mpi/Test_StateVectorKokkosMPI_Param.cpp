@@ -68,7 +68,7 @@ TEMPLATE_TEST_CASE("Apply Operation - param 1 wire", "[LKMPI]", double, float) {
         auto data = sv.getDataVector(0);
 
         if (sv.getMPIManager().getRank() == 0) {
-            for (std::size_t j = 0; j < sv.getLocalBlockSize(); j++) {
+            for (std::size_t j = 0; j < data.size(); j++) {
                 CHECK(real(data[j]) == Approx(real(reference[j])).margin(EP));
                 CHECK(imag(data[j]) == Approx(imag(reference[j])).margin(EP));
             }
@@ -107,7 +107,7 @@ TEMPLATE_TEST_CASE("Apply Operation - param 2 wires", "[LKMPI]", double,
             auto data = sv.getDataVector(0);
 
             if (sv.getMPIManager().getRank() == 0) {
-                for (std::size_t j = 0; j < sv.getLocalBlockSize(); j++) {
+                for (std::size_t j = 0; j < data.size(); j++) {
                     CHECK(real(data[j]) ==
                           Approx(real(reference[j])).margin(EP));
                     CHECK(imag(data[j]) ==
@@ -154,7 +154,7 @@ TEMPLATE_TEST_CASE("Apply Operation - param 4 wires", "[LKMPI]", double,
             auto data = sv.getDataVector(0);
 
             if (sv.getMPIManager().getRank() == 0) {
-                for (std::size_t j = 0; j < sv.getLocalBlockSize(); j++) {
+                for (std::size_t j = 0; j < data.size(); j++) {
                     CHECK(real(data[j]) ==
                           Approx(real(reference[j])).margin(EP));
                     CHECK(imag(data[j]) ==
@@ -194,7 +194,7 @@ TEMPLATE_TEST_CASE("Apply Controlled Operation - param 1 control 1 target wire",
             auto data = sv.getDataVector(0);
 
             if (sv.getMPIManager().getRank() == 0) {
-                for (std::size_t j = 0; j < sv.getLocalBlockSize(); j++) {
+                for (std::size_t j = 0; j < data.size(); j++) {
                     CHECK(real(data[j]) ==
                           Approx(real(reference[j])).margin(EP));
                     CHECK(imag(data[j]) ==
@@ -241,7 +241,7 @@ TEMPLATE_TEST_CASE(
             auto data = sv.getDataVector(0);
 
             if (sv.getMPIManager().getRank() == 0) {
-                for (std::size_t j = 0; j < sv.getLocalBlockSize(); j++) {
+                for (std::size_t j = 0; j < data.size(); j++) {
                     CHECK(real(data[j]) ==
                           Approx(real(reference[j])).margin(EP));
                     CHECK(imag(data[j]) ==
@@ -288,7 +288,7 @@ TEMPLATE_TEST_CASE("Apply Controlled Operation - param 2 control 1 target wire",
             auto data = sv.getDataVector(0);
 
             if (sv.getMPIManager().getRank() == 0) {
-                for (std::size_t j = 0; j < sv.getLocalBlockSize(); j++) {
+                for (std::size_t j = 0; j < data.size(); j++) {
                     CHECK(real(data[j]) ==
                           Approx(real(reference[j])).margin(EP));
                     CHECK(imag(data[j]) ==
@@ -338,7 +338,7 @@ TEMPLATE_TEST_CASE("Apply Controlled Operation - param 2 control 2 target wire",
             auto data = sv.getDataVector(0);
 
             if (sv.getMPIManager().getRank() == 0) {
-                for (std::size_t j = 0; j < sv.getLocalBlockSize(); j++) {
+                for (std::size_t j = 0; j < data.size(); j++) {
                     CHECK(real(data[j]) ==
                           Approx(real(reference[j])).margin(EP));
                     CHECK(imag(data[j]) ==

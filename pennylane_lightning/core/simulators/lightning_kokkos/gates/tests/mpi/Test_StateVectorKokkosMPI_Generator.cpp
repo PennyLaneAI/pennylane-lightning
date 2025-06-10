@@ -61,7 +61,7 @@ TEMPLATE_TEST_CASE("Apply Generator - 1 wire", "[LKMPI]", double, float) {
         auto data = sv.getDataVector(0);
 
         if (sv.getMPIManager().getRank() == 0) {
-            for (std::size_t j = 0; j < sv.getLocalBlockSize(); j++) {
+            for (std::size_t j = 0; j < data.size(); j++) {
                 CHECK(real(data[j]) == Approx(real(reference[j])).margin(EP));
                 CHECK(imag(data[j]) == Approx(imag(reference[j])).margin(EP));
             }
@@ -97,7 +97,7 @@ TEMPLATE_TEST_CASE("Apply Generator - 2 wires", "[LKMPI]", double, float) {
             auto data = sv.getDataVector(0);
 
             if (sv.getMPIManager().getRank() == 0) {
-                for (std::size_t j = 0; j < sv.getLocalBlockSize(); j++) {
+                for (std::size_t j = 0; j < data.size(); j++) {
                     CHECK(real(data[j]) ==
                           Approx(real(reference[j])).margin(EP));
                     CHECK(imag(data[j]) ==
@@ -138,7 +138,7 @@ TEMPLATE_TEST_CASE("Apply Generator - 4 wires", "[LKMPI]", double, float) {
             auto data = sv.getDataVector(0);
 
             if (sv.getMPIManager().getRank() == 0) {
-                for (std::size_t j = 0; j < sv.getLocalBlockSize(); j++) {
+                for (std::size_t j = 0; j < data.size(); j++) {
                     CHECK(real(data[j]) ==
                           Approx(real(reference[j])).margin(EP));
                     CHECK(imag(data[j]) ==
@@ -183,7 +183,7 @@ TEMPLATE_TEST_CASE("Apply Controlled Generator - 1 control 1 target wire",
             auto data = sv.getDataVector(0);
 
             if (sv.getMPIManager().getRank() == 0) {
-                for (std::size_t j = 0; j < sv.getLocalBlockSize(); j++) {
+                for (std::size_t j = 0; j < data.size(); j++) {
                     CHECK(real(data[j]) ==
                           Approx(real(reference[j])).margin(EP));
                     CHECK(imag(data[j]) ==
@@ -230,7 +230,7 @@ TEMPLATE_TEST_CASE("Apply Controlled Generator - 1 control 2 target wires",
             auto data = sv.getDataVector(0);
 
             if (sv.getMPIManager().getRank() == 0) {
-                for (std::size_t j = 0; j < sv.getLocalBlockSize(); j++) {
+                for (std::size_t j = 0; j < data.size(); j++) {
                     CHECK(real(data[j]) ==
                           Approx(real(reference[j])).margin(EP));
                     CHECK(imag(data[j]) ==
