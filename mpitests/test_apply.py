@@ -288,10 +288,6 @@ class TestApply:  # pylint: disable=missing-function-docstring,too-many-argument
 
         assert np.allclose(local_state_vector, local_expected_output_cpu, atol=tol, rtol=0)
 
-    @pytest.mark.skipif(
-        device_name == "lightning.kokkos",
-        reason="StatePrep with sub-statevector not supported on Kokkos MPI",
-    )
     @pytest.mark.parametrize(
         "par, Wires",
         [

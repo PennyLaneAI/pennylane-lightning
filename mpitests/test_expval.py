@@ -257,7 +257,7 @@ class TestExpval:
     @pytest.mark.parametrize("n_wires", range(1, numQubits))
     def test_hermitian_expectation(self, n_wires, theta, phi, tol, c_dtype, batch_obs):
         """Test that Hadamard expectation value is correct"""
-        n_qubits = numQubits
+        n_qubits = numQubits - 1
         dev_def = qml.device("default.qubit", wires=n_qubits)
         dev = qml.device(
             device_name, mpi=True, wires=n_qubits, c_dtype=c_dtype, batch_obs=batch_obs
