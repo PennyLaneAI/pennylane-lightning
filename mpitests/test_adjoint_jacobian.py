@@ -168,7 +168,8 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
     ):  # pylint: disable=too-many-arguments
         """Tests that the automatic gradients of Pauli rotations are correct."""
         random_state = np.array(
-            [0.43593284 - 0.02945156j, 0.40812291 + 0.80158023j], requires_grad=False)
+            [0.43593284 - 0.02945156j, 0.40812291 + 0.80158023j], requires_grad=False
+        )
 
         qs = QuantumScript(
             [qml.StatePrep(random_state, 0), G(theta, 0)],
