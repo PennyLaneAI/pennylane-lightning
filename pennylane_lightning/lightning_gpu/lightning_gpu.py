@@ -483,7 +483,7 @@ class LightningGPU(LightningBase):
             return True
         return _supports_adjoint(circuit=circuit)
 
-    def simulate(
+    def simulate(  # pylint: disable=arguments-differ
         self,
         circuit: QuantumScript,
         state: LightningGPUStateVector,

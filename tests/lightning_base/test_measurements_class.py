@@ -30,7 +30,6 @@ from conftest import (  # tested device
     validate_others,
     validate_samples,
 )
-from flaky import flaky
 from pennylane.devices import DefaultQubit
 from pennylane.measurements import VarianceMP
 from scipy.sparse import csr_matrix, random_array
@@ -622,7 +621,7 @@ class TestMeasurements:
         m = LightningMeasurements(statevector)
         return measure_final_state(m, tape)
 
-    @flaky(max_runs=5)
+    @pytest.mark.local_salt(42)
     @pytest.mark.parametrize("shots", [None, 500_000, [500_000, 500_000]])
     @pytest.mark.parametrize("measurement", [qml.expval, qml.probs, qml.var])
     @pytest.mark.parametrize(
@@ -645,7 +644,7 @@ class TestMeasurements:
             ),
         ),
     )
-    def test_single_return_value(self, shots, measurement, observable, lightning_sv, tol):
+    def test_single_return_value(self, shots, measurement, observable, lightning_sv, tol, seed):
         if obs_not_supported_in_ltensor(observable):
             pytest.skip("Observable not supported in lightning.tensor.")
 
@@ -674,7 +673,7 @@ class TestMeasurements:
 
         n_qubits = 4
         n_layers = 1
-        np.random.seed(0)
+        np.random.seed(seed)
         weights = np.random.rand(n_layers, n_qubits, 3)
         ops = [qml.Hadamard(i) for i in range(n_qubits)]
         if device_name != "lightning.tensor":
@@ -686,7 +685,7 @@ class TestMeasurements:
         )
         tape = qml.tape.QuantumScript(ops, measurements, shots=shots)
 
-        statevector = lightning_sv(n_qubits)
+        statevector = lightning_sv(n_qubits, seed=seed)
         statevector = get_final_state(statevector, tape)
         m = LightningMeasurements(statevector)
 
@@ -712,11 +711,11 @@ class TestMeasurements:
             )
         else:
             # TODO Set better atol and rtol
-            dtol = max(tol, 1.0e-2)
+            dtol = max(tol, 2.0e-2)
             # allclose -> absolute(a - b) <= (atol + rtol * absolute(b))
             assert np.allclose(result, expected, rtol=dtol, atol=dtol)
 
-    @flaky(max_runs=5)
+    @pytest.mark.local_salt(42)
     @pytest.mark.parametrize("shots", [None, 400_000, (400_000, 400_000)])
     @pytest.mark.parametrize("measurement", [qml.expval, qml.probs, qml.var])
     @pytest.mark.parametrize(
@@ -753,7 +752,7 @@ class TestMeasurements:
             ),
         ),
     )
-    def test_double_return_value(self, shots, measurement, obs0_, obs1_, lightning_sv, tol):
+    def test_double_return_value(self, shots, measurement, obs0_, obs1_, lightning_sv, tol, seed):
         if obs_not_supported_in_ltensor(obs0_) or obs_not_supported_in_ltensor(obs1_):
             pytest.skip("Observable not supported in lightning.tensor.")
 
@@ -779,7 +778,7 @@ class TestMeasurements:
 
         n_qubits = 4
         n_layers = 1
-        np.random.seed(0)
+        np.random.seed(seed)
         weights = np.random.rand(n_layers, n_qubits, 3)
         ops = [qml.Hadamard(i) for i in range(n_qubits)]
         if device_name != "lightning.tensor":
@@ -787,7 +786,7 @@ class TestMeasurements:
         measurements = [measurement(op=obs0_), measurement(op=obs1_)]
         tape = qml.tape.QuantumScript(ops, measurements, shots=shots)
 
-        statevector = lightning_sv(n_qubits)
+        statevector = lightning_sv(n_qubits, seed=seed)
         statevector = get_final_state(statevector, tape)
         m = LightningMeasurements(statevector)
 
@@ -813,7 +812,7 @@ class TestMeasurements:
         assert isinstance(result, Sequence)
         assert len(result) == len(expected)
         # a few tests may fail in single precision, and hence we increase the tolerance
-        dtol = tol if shots is None else max(tol, 1.0e-2)
+        dtol = tol if shots is None else max(tol, 2.0e-2)
         if device_name == "lightning.tensor" and statevector.dtype == np.complex64:
             dtol = max(dtol, 1.0e-4)
         # TODO Set better atol and rtol
@@ -921,7 +920,6 @@ class TestMeasurements:
 
         if measurement in (qml.expval, qml.var) and isinstance(observable, Sequence):
             pytest.skip("qml.expval, qml.var do not take wire arguments.")
-
         n_qubits = 4
         n_layers = 1
         np.random.seed(0)

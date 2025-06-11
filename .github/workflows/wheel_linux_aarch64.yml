@@ -188,7 +188,7 @@ jobs:
             python -c "import pennylane as qml; dev = qml.device(\"lightning.qubit\", wires=3); print(dev); dev2 = qml.device(\"lightning.kokkos\", wires=5); print(dev2)"
             which pl-device-test
             ls
-            pl-device-test --device=${DEVICENAME} --skip-ops -x --tb=short --no-flaky-report
+            pl-device-test --device=${DEVICENAME} --skip-ops -x --tb=short
 
         run: python3.10 -m cibuildwheel --output-dir wheelhouse
 
