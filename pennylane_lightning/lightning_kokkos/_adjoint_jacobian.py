@@ -68,7 +68,6 @@ class LightningKokkosAdjointJacobian(LightningBaseAdjointJacobian):
     ) -> None:
 
         self._use_mpi = qubit_state._mpi
-
         super().__init__(qubit_state, batch_obs)
 
     def _adjoint_jacobian_dtype(self):
@@ -118,8 +117,7 @@ class LightningKokkosAdjointJacobian(LightningBaseAdjointJacobian):
 
         if empty_array:
             return np.array([], dtype=self.dtype)
-
-        processed_data = self._process_jacobian_tape(tape)
+        processed_data = self._process_jacobian_tape(tape, use_mpi=self._use_mpi)
 
         if not processed_data:  # training_params is empty
             return np.array([], dtype=self.dtype)

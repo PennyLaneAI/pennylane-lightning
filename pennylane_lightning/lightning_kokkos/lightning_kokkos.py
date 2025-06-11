@@ -230,7 +230,6 @@ class LightningKokkos(LightningBase):
         shots: Union[int, List] = None,
         batch_obs: bool = False,
         seed: Union[str, None, int, ArrayLike, SeedSequence, BitGenerator, Generator] = "global",
-        seed: Union[str, None, int, ArrayLike, SeedSequence, BitGenerator, Generator] = "global",
         # Kokkos arguments
         mpi: bool = False,
         kokkos_args=None,
@@ -450,6 +449,7 @@ class LightningKokkos(LightningBase):
         circuit: QuantumScript,
         state: LightningKokkosStateVector,
         postselect_mode: Optional[str] = None,
+        mcm_method: Optional[str] = None,
     ) -> Result:
         """Simulate a single quantum script.
 
@@ -473,6 +473,7 @@ class LightningKokkos(LightningBase):
             circuit,
             state,
             postselect_mode=postselect_mode,
+            mcm_method=mcm_method,
         )
 
     @staticmethod

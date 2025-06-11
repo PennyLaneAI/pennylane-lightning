@@ -148,6 +148,10 @@ void registerBackendClassSpecificBindingsMPI(PyClass &pyclass) {
              "Collapse the statevector onto the 0 or 1 branch of a given wire.")
         // MPI related functions
         .def(
+            "getNumLocalWires",
+            [](StateVectorT &sv) { return sv.getNumLocalWires(); },
+            "Get number of local wires.")
+        .def(
             "swapGlobalLocalWires",
             [](StateVectorT &sv,
                const std::vector<std::size_t> &global_wires_to_swap,

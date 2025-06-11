@@ -54,7 +54,6 @@ from scipy.sparse import csr_matrix
 
 # pylint: disable=ungrouped-imports
 from pennylane_lightning.lightning_base._adjoint_jacobian import LightningBaseAdjointJacobian
-from pennylane_lightning.lightning_base._serialize import QuantumScriptSerializer
 
 
 class LightningGPUAdjointJacobian(LightningBaseAdjointJacobian):
@@ -119,68 +118,6 @@ class LightningGPUAdjointJacobian(LightningBaseAdjointJacobian):
             create_ops_listC64 if self.dtype == np.complex64 else create_ops_listC128
         )
         return jacobian_lightning, create_ops_list_lightning
-
-    def _process_jacobian_tape(
-        self, tape: QuantumTape, split_obs: bool = False, use_mpi: bool = False
-    ):
-        """Process a tape, serializing and building a dictionary proper for
-        the adjoint Jacobian calculation in the C++ layer.
-
-        Args:
-            tape (QuantumTape): Operations and measurements that represent instructions for execution on Lightning.
-            split_obs (bool, optional): If splitting the observables in a list. Defaults to False.
-            use_mpi (bool, optional): If distributing computation with MPI. Defaults to False.
-
-        Returns:
-            dictionary: dictionary providing serialized data for Jacobian calculation.
-        """
-        use_csingle = self._qubit_state.dtype == np.complex64
-
-        obs_serialized, obs_indices = QuantumScriptSerializer(
-            self._qubit_state.device_name, use_csingle, use_mpi, split_obs
-        ).serialize_observables(tape)
-
-        ops_serialized, use_sp = QuantumScriptSerializer(
-            self._qubit_state.device_name, use_csingle, use_mpi, split_obs
-        ).serialize_ops(tape)
-
-        ops_serialized = self._create_ops_list_lightning(*ops_serialized)
-
-        # We need to filter out indices in trainable_params which do not
-        # correspond to operators.
-        trainable_params = sorted(tape.trainable_params)
-        if len(trainable_params) == 0:
-            return None
-
-        tp_shift = []
-        record_tp_rows = []
-        all_params = 0
-
-        for op_idx, trainable_param in enumerate(trainable_params):
-            # get op_idx-th operator among differentiable operators
-            operation, _, _ = tape.get_operation(op_idx)
-            if isinstance(operation, Operation) and not isinstance(
-                operation, (BasisState, StatePrep)
-            ):
-                # We now just ignore non-op or state preps
-                tp_shift.append(trainable_param)
-                record_tp_rows.append(all_params)
-            all_params += 1
-
-        if use_sp:
-            # When the first element of the tape is state preparation. Still, I am not sure
-            # whether there must be only one state preparation...
-            tp_shift = [i - 1 for i in tp_shift]
-
-        return {
-            "state_vector": self.state,
-            "obs_serialized": obs_serialized,
-            "ops_serialized": ops_serialized,
-            "tp_shift": tp_shift,
-            "record_tp_rows": record_tp_rows,
-            "all_params": all_params,
-            "obs_indices": obs_indices,
-        }
 
     def calculate_jacobian(self, tape: QuantumTape):
         """Computes the Jacobian with the adjoint method.
