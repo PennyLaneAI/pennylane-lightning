@@ -190,7 +190,7 @@ jobs:
           }
           popd
           $DEVICENAME=(echo ${{ matrix.pl_backend }} | %{$_ -replace "_","."})
-          pl-device-test --device=$DEVICENAME --skip-ops -x --tb=short --no-flaky-report
+          pl-device-test --device=$DEVICENAME --skip-ops -x --tb=short
 
       - name: Validate wheels
         run: |

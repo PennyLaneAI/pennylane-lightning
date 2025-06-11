@@ -1504,7 +1504,7 @@ template <typename TypeList> void testHamiltonianObsExpvalShot() {
 
         DYNAMIC_SECTION("With shots_range "
                         << StateVectorToName<StateVectorT>::name) {
-            std::size_t num_shots = 20000;
+            std::size_t num_shots = 100000;
             std::vector<std::size_t> shots_range;
             for (std::size_t i = 0; i < num_shots; i += 2) {
                 shots_range.push_back(i);
@@ -1556,7 +1556,7 @@ template <typename TypeList> void testHamiltonianObsExpvalShot() {
 
             auto ob = Hamiltonian<StateVectorT>::create({0.5, 0.5}, {Y0, Her1});
 
-            std::size_t num_shots = 100000;
+            std::size_t num_shots = 500000;
 
             auto res = Measurer.expval(*ob, num_shots, {});
             auto expected = Measurer.expval(*ob);
