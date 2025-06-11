@@ -113,6 +113,7 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorKokkosMPI::Constructibility",
 /**
  * Test StateVectorKokkosMPI wire-related helper methods
  */
+
 TEMPLATE_TEST_CASE("Local/Global wire helpers", "[LKMPI]", double, float) {
     const std::size_t num_qubits = 5;
     MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
@@ -202,6 +203,27 @@ TEMPLATE_TEST_CASE("Local/Global wire helpers", "[LKMPI]", double, float) {
 
     PL_REQUIRE_THROWS_MATCHES(sv.global2localIndex(33), LightningException,
                               "out of bounds");
+
+    // Test localWiresSubsetToSwap
+    REQUIRE(sv.localWiresSubsetToSwap({0}, {}) ==
+            std::vector<std::size_t>{2});
+    REQUIRE(sv.localWiresSubsetToSwap({1}, {}) ==
+            std::vector<std::size_t>{2});
+    REQUIRE(sv.localWiresSubsetToSwap({0}, {2, 3}) ==
+            std::vector<std::size_t>{4});
+    REQUIRE(sv.localWiresSubsetToSwap({1}, {2, 3}) ==
+            std::vector<std::size_t>{4});
+    REQUIRE(sv.localWiresSubsetToSwap({0, 1}, {2}) ==
+            std::vector<std::size_t>{3, 4});
+    REQUIRE(sv.localWiresSubsetToSwap({1}, {2, 4}) ==
+            std::vector<std::size_t>{3});
+    REQUIRE(sv.localWiresSubsetToSwap({}, {2, 4}) ==
+            std::vector<std::size_t>{});
+    
+    PL_REQUIRE_THROWS_MATCHES(sv.localWiresSubsetToSwap({0, 1, 2, 3}, {}), LightningException,
+                              "global_wires to swap must be have less wires than local_wires.");
+    PL_REQUIRE_THROWS_MATCHES(sv.localWiresSubsetToSwap({0, 1}, {2, 3}), LightningException,
+                              "Not enough local wires to swap with global wires");
 }
 
 TEMPLATE_TEST_CASE("getDataVector", "[LKMPI]", double, float) {
@@ -365,10 +387,72 @@ TEMPLATE_TEST_CASE("resetStateVector", "[LKMPI]", double, float) {
     }
 }
 
-TEMPLATE_TEST_CASE("setStateVector", "[LKMPI]", double, float) {
+TEMPLATE_TEST_CASE("setStateVector - 1 wire", "[LKMPI]", double, float) {
     const std::size_t num_qubits = 5;
     auto [sv,sv_ref] = initializeLKTestSV<TestType>(num_qubits);
 
+    std::size_t indices_0 = GENERATE(0, 1, 2, 3, 4);
+    DYNAMIC_SECTION("Indices = " << indices_0  ) {
+            std::vector<std::size_t> indices{indices_0};
+    std::vector<Kokkos::complex<TestType>> state(exp2(indices.size()), {0.0, 0.0});
+
+    for (std::size_t i = 0; i < state.size(); i++) {
+        state[i] = static_cast<TestType>(i + 1);
+    }
+
+    sv.setStateVector(state, indices);
+    sv_ref.setStateVector(state, indices);
+
+    
+    auto reference = sv_ref.getDataVector();
+    auto data = sv.getDataVector(0);
+
+    if (sv.getMPIManager().getRank() == 0) {
+        for (std::size_t j = 0; j < data.size(); j++) {
+            CHECK(real(data[j]) == Approx(real(reference[j])));
+            CHECK(imag(data[j]) == Approx(imag(reference[j])));
+        }
+    }
+    }
+}
+TEMPLATE_TEST_CASE("setStateVector - 2 wires", "[LKMPI]", double, float) {
+    const std::size_t num_qubits = 5;
+    auto [sv,sv_ref] = initializeLKTestSV<TestType>(num_qubits);
+
+    std::size_t indices_0 = GENERATE(0, 1, 2, 3, 4);
+    std::size_t indices_1 = GENERATE(0, 1, 2, 3, 4);
+    std::set<std::size_t> indices_set = {indices_0, indices_1};
+
+    DYNAMIC_SECTION("Indices = " << indices_0 << ", "
+                                  << indices_1 ) {
+        if (indices_set.size() == 2) {
+            std::vector<std::size_t> indices{indices_0, indices_1};
+    std::vector<Kokkos::complex<TestType>> state(exp2(indices.size()), {0.0, 0.0});
+
+    for (std::size_t i = 0; i < state.size(); i++) {
+        state[i] = static_cast<TestType>(i + 1);
+    }
+
+    sv.setStateVector(state, indices);
+    sv_ref.setStateVector(state, indices);
+
+    
+    auto reference = sv_ref.getDataVector();
+    auto data = sv.getDataVector(0);
+
+    if (sv.getMPIManager().getRank() == 0) {
+        for (std::size_t j = 0; j < data.size(); j++) {
+            CHECK(real(data[j]) == Approx(real(reference[j])));
+            CHECK(imag(data[j]) == Approx(imag(reference[j])));
+        }
+    }
+        }
+    }
+}
+
+TEMPLATE_TEST_CASE("setStateVector - 3 wires", "[LKMPI]", double, float) {
+    const std::size_t num_qubits = 5;
+    auto [sv,sv_ref] = initializeLKTestSV<TestType>(num_qubits);
 
     std::size_t indices_0 = GENERATE(0, 1, 2, 3, 4);
     std::size_t indices_1 = GENERATE(0, 1, 2, 3, 4);
@@ -388,14 +472,90 @@ TEMPLATE_TEST_CASE("setStateVector", "[LKMPI]", double, float) {
     sv.setStateVector(state, indices);
     sv_ref.setStateVector(state, indices);
 
+    auto reference = sv_ref.getDataVector();
+    auto data = sv.getDataVector(0);
+
+    if (sv.getMPIManager().getRank() == 0) {
+        for (std::size_t j = 0; j < data.size(); j++) {
+            CHECK(real(data[j]) == Approx(real(reference[j])));
+            CHECK(imag(data[j]) == Approx(imag(reference[j])));
+        }
+    }
+        }
+    }
+}
+
+
+TEMPLATE_TEST_CASE("setStateVector - 4 wires", "[LKMPI]", double, float) {
+    const std::size_t num_qubits = 5;
+    auto [sv,sv_ref] = initializeLKTestSV<TestType>(num_qubits);
+
+    std::size_t indices_0 = GENERATE(0, 1, 2, 3, 4);
+    std::size_t indices_1 = GENERATE(0, 1, 2, 3, 4);
+    std::size_t indices_2 = GENERATE(0, 1, 2, 3, 4);
+    std::size_t indices_3 = GENERATE(0, 1, 2, 3, 4);
+    std::set<std::size_t> indices_set = {indices_0, indices_1, indices_2, indices_3};
+
+    DYNAMIC_SECTION("Indices = " << indices_0 << ", "
+                                  << indices_1 << ", " << indices_2 << ", "
+                                  << indices_3) {
+        if (indices_set.size() == 4) {
+            std::vector<std::size_t> indices{indices_0, indices_1, indices_2};
+    std::vector<Kokkos::complex<TestType>> state(exp2(indices.size()), {0.0, 0.0});
+
+    for (std::size_t i = 0; i < state.size(); i++) {
+        state[i] = static_cast<TestType>(i + 1);
+    }
+
+    sv.setStateVector(state, indices);
+    sv_ref.setStateVector(state, indices);
+
     
     auto reference = sv_ref.getDataVector();
     auto data = sv.getDataVector(0);
 
     if (sv.getMPIManager().getRank() == 0) {
         for (std::size_t j = 0; j < data.size(); j++) {
-            std::cout << "Data[" << j << "] = " << data[j] << std::endl;
-            std::cout << "Reference[" << j << "] = " << reference[j] << std::endl;
+            CHECK(real(data[j]) == Approx(real(reference[j])));
+            CHECK(imag(data[j]) == Approx(imag(reference[j])));
+        }
+    }
+        }
+    }
+}
+
+TEMPLATE_TEST_CASE("setStateVector - 5 wires", "[LKMPI]", double, float) {
+    const std::size_t num_qubits = 5;
+    auto [sv,sv_ref] = initializeLKTestSV<TestType>(num_qubits);
+
+
+    std::size_t indices_0 = GENERATE(0, 1, 2, 3, 4);
+    std::size_t indices_1 = GENERATE(0, 1, 2, 3, 4);
+    std::size_t indices_2 = GENERATE(0, 1, 2, 3, 4);
+    std::size_t indices_3 = GENERATE(0, 1, 2, 3, 4);
+    std::size_t indices_4 = GENERATE(0, 1, 2, 3, 4);
+    std::set<std::size_t> indices_set = {indices_0, indices_1, indices_2, indices_3, indices_4};
+
+    DYNAMIC_SECTION("Indices = " << indices_0 << ", "
+                                  << indices_1 << ", " << indices_2 << ", "
+                                  << indices_3 << ", " << indices_4) {
+        if (indices_set.size() == 5) {
+            std::vector<std::size_t> indices{indices_0, indices_1, indices_2};
+    std::vector<Kokkos::complex<TestType>> state(exp2(indices.size()), {0.0, 0.0});
+
+    for (std::size_t i = 0; i < state.size(); i++) {
+        state[i] = static_cast<TestType>(i + 1);
+    }
+
+    sv.setStateVector(state, indices);
+    sv_ref.setStateVector(state, indices);
+
+    
+    auto reference = sv_ref.getDataVector();
+    auto data = sv.getDataVector(0);
+
+    if (sv.getMPIManager().getRank() == 0) {
+        for (std::size_t j = 0; j < data.size(); j++) {
             CHECK(real(data[j]) == Approx(real(reference[j])));
             CHECK(imag(data[j]) == Approx(imag(reference[j])));
         }
@@ -404,7 +564,6 @@ TEMPLATE_TEST_CASE("setStateVector", "[LKMPI]", double, float) {
         }
     }
 }
-
 TEMPLATE_TEST_CASE("setStateVector error", "[LKMPI]", double, float) {
     const std::size_t num_qubits = 5;
     MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
@@ -658,6 +817,69 @@ TEMPLATE_TEST_CASE("Swap global local wires", "[LKMPI]", double, float) {
     }
 }
 
+TEMPLATE_TEST_CASE("reorderLocalWires", "[LKMPI]", double, float) {
+    const std::size_t num_qubits = 5;
+    auto [sv,sv_ref] = initializeLKTestSV<TestType>(num_qubits);
+
+    // Swap wires so local wires are out of order
+    sv.swapGlobalLocalWires({0}, {2});
+    sv.swapGlobalLocalWires({2}, {3});
+    sv.swapGlobalLocalWires({3}, {0});
+
+    sv.reorderLocalWires();
+
+    std::vector<Kokkos::complex<TestType>> reference(exp2(num_qubits));
+    for (std::size_t i = 0; i < reference.size(); i++) {
+        reference[i] = static_cast<TestType>(i);
+    }
+
+
+    auto data = sv.getDataVector(0);
+    if (sv.getMPIManager().getRank() == 0) {
+        for (std::size_t j = 0; j < data.size(); j++) {
+            CHECK(real(data[j]) ==
+                    Approx(real(reference[j])));
+            CHECK(imag(data[j]) ==
+                    Approx(imag(reference[j])));
+        }
+    }
+}
+
+TEMPLATE_TEST_CASE("reorderLocalWires - error", "[LKMPI]", double, float) {
+    const std::size_t num_qubits = 5;
+    auto [sv,sv_ref] = initializeLKTestSV<TestType>(num_qubits);
+
+    // Swap wires so local wires are out of order
+    sv.swapGlobalLocalWires({0}, {2});
+
+   
+    PL_REQUIRE_THROWS_MATCHES( sv.reorderLocalWires(), LightningException,
+                              "local wires must only contain least significant indices.");
+}
+
+TEMPLATE_TEST_CASE("reorderGlobalLocalWires", "[LKMPI]", double, float) {
+    const std::size_t num_qubits = 5;
+    auto [sv,sv_ref] = initializeLKTestSV<TestType>(num_qubits);
+
+    // Swap wires so local wires are out of order
+    sv.swapGlobalLocalWires({0}, {3});
+    sv.swapGlobalLocalWires({1}, {2});
+    // Global wires = {3, 2}
+    // Local wires  = {1, 0, 4}
+
+    sv.reorderGlobalLocalWires();
+    // Global wires = {1, 0}
+    // Local wires  = {3, 2, 4}
+
+    std::vector<Kokkos::complex<TestType>> reference(exp2(num_qubits));
+    for (std::size_t i = 0; i < reference.size(); i++) {
+        reference[i] = static_cast<TestType>(i);
+    }
+
+    CHECK(sv.getGlobalWires() == std::vector<std::size_t>({1, 0}));
+    CHECK(sv.getLocalWires() == std::vector<std::size_t>({3, 2, 4}));
+}
+
 TEMPLATE_TEST_CASE("Match local wires", "[LKMPI]", double, float) {
     const std::size_t num_qubits = 5;
 
@@ -707,13 +929,55 @@ TEMPLATE_TEST_CASE("Match local wires", "[LKMPI]", double, float) {
         {30.0, 0.0}, {31.0, 0.0},
     };
 
-    for (std::size_t j = 0; j < init_subsv.size(); j++) {
+    for (std::size_t j = 0; j < block_size; j++) {
         CHECK(real(sv.getData()[j]) ==
               Approx(real(swapped_sv[mpi_manager.getRank() * block_size + j])));
         CHECK(real(sv.getData()[j]) == Approx(real(sv_1.getData()[j])));
         CHECK(imag(sv.getData()[j]) ==
               Approx(imag(swapped_sv[mpi_manager.getRank() * block_size + j])));
         CHECK(imag(sv.getData()[j]) == Approx(imag(sv_1.getData()[j])));
+    }
+}
+
+TEMPLATE_TEST_CASE("reorderAllWires", "[LKMPI]", double, float) {
+    const std::size_t num_qubits = 5;
+
+    MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
+    REQUIRE(mpi_manager.getSize() == 4);
+
+    StateVectorKokkosMPI<TestType> sv(mpi_manager, num_qubits);
+    // Set the reference data
+    std::vector<Kokkos::complex<TestType>> init_sv(exp2(num_qubits),
+                                                   {0.0, 0.0});
+    for (std::size_t i = 0; i < init_sv.size(); i++) {
+        init_sv[i] = i;
+    }
+
+    // Set initial data
+    std::size_t block_size = sv.getLocalBlockSize();
+    std::vector<Kokkos::complex<TestType>> init_subsv(block_size, {0.0, 0.0});
+    for (std::size_t element = 0; element < block_size; element++) {
+        init_subsv[element] =
+            init_sv[mpi_manager.getRank() * block_size + element];
+    }
+
+    // Update the state vector with the initial data with updateData()
+    sv.updateData(init_subsv);
+
+    // Swap wires so local wires are out of order
+    sv.swapGlobalLocalWires({0}, {2});
+    sv.swapGlobalLocalWires({2}, {3});
+    sv.swapGlobalLocalWires({3}, {0});
+
+    // Match global wires and index
+    sv.reorderAllWires();
+
+
+    for (std::size_t j = 0; j < block_size; j++) {
+        CHECK(real(sv.getData()[j]) ==
+              Approx(real(init_sv[mpi_manager.getRank() * block_size + j])));
+        CHECK(imag(sv.getData()[j]) ==
+              Approx(imag(init_sv[mpi_manager.getRank() * block_size + j])));
     }
 }
 
@@ -870,3 +1134,4 @@ TEMPLATE_TEST_CASE("allReduceSum", "[LKMPI]", double, float) {
 
     CHECK(real(sum) == 10.0); // (0+1+2+3) + 1*4
 }
+

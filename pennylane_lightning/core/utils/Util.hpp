@@ -598,15 +598,14 @@ bool areVecsDisjoint(const std::vector<T> &v1, const std::vector<T> &v2) {
  * @tparam T Data type.
  * @param vec Vector to check.
  * @param element Element to check for.
- * 
+ *
  * @return bool True if the element is in the vector, false otherwise.
  */
 template <typename T>
 bool isElementInVector(const std::vector<T> &vec, const T &element) {
-    return std::any_of(vec.begin(), vec.end(),
-                        [&](const T &current_element) {
-                            return current_element == element;
-                        });
+    return std::any_of(vec.begin(), vec.end(), [&](const T &current_element) {
+        return current_element == element;
+    });
 }
 
 /**
@@ -614,13 +613,12 @@ bool isElementInVector(const std::vector<T> &vec, const T &element) {
  * @tparam T Data type.
  * @param vec Vector to check.
  * @param element Element to find.
- * 
+ *
  * @return std::vector<T>::const_iterator Iterator to the found element, or
  * vec.end() if the element is not found.
  */
 template <typename T>
-auto findElementInVector(const std::vector<T> &vec,
-                            const T &element) {
+auto findElementInVector(const std::vector<T> &vec, const T &element) {
     return std::find(vec.begin(), vec.end(), element);
 }
 
@@ -629,7 +627,7 @@ auto findElementInVector(const std::vector<T> &vec,
  * @tparam T Data type.
  * @param vec Vector to check.
  * @param element Element to find.
- * 
+ *
  * @return std::size_t Index of the found element.
  * @throws Error if the element is not found in the vector.
  */
@@ -645,12 +643,10 @@ std::size_t getElementIndexInVector(const std::vector<T> &vec,
 }
 
 inline std::size_t getRevWireIndex(const std::vector<std::size_t> &wires,
-                            std::size_t element_index) {
-    PL_ABORT_IF(
-        element_index >= wires.size(),
-        "Element index is out of bounds for the given wires.");
+                                   std::size_t element_index) {
+    PL_ABORT_IF(element_index >= wires.size(),
+                "Element index is out of bounds for the given wires.");
     return wires.size() - 1 - element_index;
 }
-
 
 } // namespace Pennylane::Util

@@ -73,8 +73,9 @@ initializeLKTestSV(const std::size_t num_qubits) {
 }
 
 template <typename TestType>
-void applyNonTrivialOperations(const std::size_t num_qubits, StateVectorKokkosMPI<TestType> &sv,
-                            StateVectorKokkos<TestType> &sv_ref) {
+void applyNonTrivialOperations(const std::size_t num_qubits,
+                               StateVectorKokkosMPI<TestType> &sv,
+                               StateVectorKokkos<TestType> &sv_ref) {
     for (std::size_t i = 0; i < num_qubits; i++) {
         sv.applyOperation("PauliX", {i});
         sv_ref.applyOperation("PauliX", {i});

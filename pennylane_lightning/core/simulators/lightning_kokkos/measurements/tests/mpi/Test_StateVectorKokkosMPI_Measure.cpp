@@ -344,7 +344,6 @@ TEMPLATE_TEST_CASE("Expval - pauli word - 4 wires linear combin",
     auto m = MeasurementsMPI(sv);
     auto m_ref = Measurements(sv_ref);
 
-   
     applyNonTrivialOperations(num_qubits, sv, sv_ref);
 
     const std::string ob_0 = "ZZYYX";

@@ -52,13 +52,13 @@ using Pennylane::Gates::GateOperation;
 using Pennylane::Gates::GeneratorOperation;
 using Pennylane::Util::array_contains;
 using Pennylane::Util::exp2;
-using Pennylane::Util::isPerfectPowerOf2;
-using Pennylane::Util::log2;
-using Pennylane::Util::reverse_lookup;
-using Pennylane::Util::isElementInVector;
 using Pennylane::Util::findElementInVector;
 using Pennylane::Util::getElementIndexInVector;
 using Pennylane::Util::getRevWireIndex;
+using Pennylane::Util::isElementInVector;
+using Pennylane::Util::isPerfectPowerOf2;
+using Pennylane::Util::log2;
+using Pennylane::Util::reverse_lookup;
 using std::size_t;
 
 } // namespace
@@ -305,8 +305,8 @@ class StateVectorKokkosMPI final
 
     auto getMPIManager() const { return mpi_manager_; }
 
-    auto getSendBuffer() const {return sendbuf_;} ;
-    auto getRecvBuffer() const {return recvbuf_;} ;
+    auto getSendBuffer() const { return sendbuf_; };
+    auto getRecvBuffer() const { return recvbuf_; };
 
     std::size_t getNumGlobalWires() const { return numGlobalQubits_; }
 
@@ -572,49 +572,58 @@ class StateVectorKokkosMPI final
         initZeros();
         auto global_wires = findGlobalWires(wires);
         auto local_wires = findLocalWires(wires);
-        
+
         std::size_t global_index = getMPIManager().getRank();
 
         std::size_t global_mask = 0U;
         for (std::size_t i = 0; i < global_wires.size(); i++) {
-            global_mask |= ((global_index >> getRevGlobalWireIndex(global_wires[i]) ) & 1U) << getRevWireIndex(wires,getElementIndexInVector(wires, global_wires[i]));
+            global_mask |=
+                ((global_index >> getRevGlobalWireIndex(global_wires[i])) & 1U)
+                << getRevWireIndex(
+                       wires, getElementIndexInVector(wires, global_wires[i]));
         }
-        std::cout << "I am rank " << mpi_manager_.getRank()
-                  << " with global_index " << global_index
-                  << " and global_mask " << global_mask << std::endl;
         std::vector<ComplexT> local_state(exp2(local_wires.size()));
         for (std::size_t i = 0; i < exp2(local_wires.size()); i++) {
             std::size_t index = global_mask;
             for (std::size_t j = 0; j < local_wires.size(); j++) {
-                    index |= (((i >> j) & 1U) << getRevWireIndex(wires,getElementIndexInVector(wires, local_wires[j])));
+                index |=
+                    (((i >> (local_wires.size() - 1 - j)) & 1U)
+                     << getRevWireIndex(wires, getElementIndexInVector(
+                                                   wires, local_wires[j])));
             }
-            std::cout << "I am rank " << mpi_manager_.getRank()
-                      << " with local_state index " << i
-                      << " and input state index " << index << std::endl;
             local_state[i] = state[index];
         }
- 
+
         bool set = true;
         for (std::size_t i = 0; i < getNumGlobalWires(); i++) {
             if (!isElementInVector(global_wires, global_wires_[i])) {
-                if ((global_index >> getRevGlobalWireIndex(global_wires_[i])) & 1U) {
+                if ((global_index >> getRevGlobalWireIndex(global_wires_[i])) &
+                    1U) {
                     set = false;
                     break;
                 }
             }
         }
         if (set) {
-            std::cout << "I am rank " << mpi_manager_.getRank() << 
-                      " setting local state vector." << std::endl;
-            (*sv_).setStateVector(local_state, getLocalWireIndices(local_wires));
+            (*sv_).setStateVector(local_state,
+                                  getLocalWireIndices(local_wires));
         }
     }
 
+    /**
+     * @brief Get the local wires that could be used for global/local swaps.
+     * It will return a set of local wires of the same size as the global wires to be swapped.
+     * The local wires will also not be in wires, i.e. wires used in an operation.
+     * 
+     * @param global_wires Global wires to swap, obtained from findGlobalWires()
+     * @param wires Wires used in an operation to be excluded in returned wires
+     *  
+     */
     std::vector<std::size_t>
     localWiresSubsetToSwap(const std::vector<std::size_t> &global_wires,
                            const std::vector<std::size_t> &wires) {
         PL_ABORT_IF(global_wires.size() > local_wires_.size(),
-                    "global_wires must be smaller than local_wires.");
+                    "global_wires to swap must be have less wires than local_wires.");
         std::vector<std::size_t> local_wires;
         for (std::size_t i = 0; i < local_wires_.size(); i++) {
             if (local_wires.size() == global_wires.size()) {
@@ -1358,7 +1367,7 @@ class StateVectorKokkosMPI final
                                         return (getNumGlobalWires() <= i) &&
                                                (i < num_qubits_);
                                     }),
-                        "local wires must be least significant indices. Run "
+                        "local wires must only contain least significant indices. Run "
                         "reorder_global_wires first.");
 
         for (std::size_t i = 0; i < getNumLocalWires(); ++i) {
@@ -1378,17 +1387,14 @@ class StateVectorKokkosMPI final
     void reorderGlobalLocalWires() {
         std::vector<std::size_t> global_wires;
         std::vector<std::size_t> local_wires;
-        for (const auto &wire : global_wires_) {
-            if (wire >= getNumGlobalWires()) {
-                global_wires.push_back(wire);
-            }
-        }
+        
+    std::copy_if(global_wires_.begin(), global_wires_.end(),
+                 std::back_inserter(global_wires),
+                 [&](std::size_t wire) { return wire >= numGlobalQubits_; });
 
-        for (const auto &wire : local_wires_) {
-            if (wire < getNumGlobalWires()) {
-                local_wires.push_back(wire);
-            }
-        }
+    std::copy_if(local_wires_.begin(), local_wires_.end(),
+                 std::back_inserter(local_wires),
+                 [&](std::size_t wire) { return wire < numGlobalQubits_; });
         if (!global_wires.empty()) {
             swapGlobalLocalWires(global_wires, local_wires);
         }

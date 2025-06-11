@@ -69,8 +69,7 @@ TEMPLATE_TEST_CASE("MPIManager::Sendrecv", "[MPIManager]", float, double) {
     std::size_t mpi_size = mpi_manager.getSize();
 
     std::size_t message_size = 3;
-    
-    
+
     SECTION("Sendrecv cyclic") {
         std::size_t dest = (mpi_rank + 1) % mpi_size;
         std::size_t source = (mpi_rank - 1 + mpi_size) % mpi_size;
@@ -86,7 +85,6 @@ TEMPLATE_TEST_CASE("MPIManager::Sendrecv", "[MPIManager]", float, double) {
         }
     }
 
-    
     SECTION("Sendrecv 0-1 2-3") {
         std::size_t dest = mpi_rank ^ 1U;
         std::size_t source = dest;
@@ -97,9 +95,9 @@ TEMPLATE_TEST_CASE("MPIManager::Sendrecv", "[MPIManager]", float, double) {
         }
         mpi_manager.Sendrecv(sendBuf, dest, recvBuf, source, message_size);
         for (std::size_t i = 0; i < message_size; ++i) {
-            CHECK(recvBuf(i).real() == static_cast<PrecisionT>((mpi_rank ^ 1U) + i));
+            CHECK(recvBuf(i).real() ==
+                  static_cast<PrecisionT>((mpi_rank ^ 1U) + i));
             CHECK(recvBuf(i).imag() == static_cast<PrecisionT>(0));
         }
     }
-
 }
