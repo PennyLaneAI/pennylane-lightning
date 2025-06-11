@@ -42,6 +42,6 @@ def test_unspported_mid_measurement():
 
     with pytest.raises(
         DeviceError,
-        match="MPI does not support mid-circuit measurements.",
+        match="Lightning Device with MPI does not support Mid-circuit measurements.",
     ):
         func(*params)

@@ -444,38 +444,6 @@ class LightningKokkos(LightningBase):
             return True
         return _supports_adjoint(circuit=circuit)
 
-    def simulate(
-        self,
-        circuit: QuantumScript,
-        state: LightningKokkosStateVector,
-        postselect_mode: Optional[str] = None,
-        mcm_method: Optional[str] = None,
-    ) -> Result:
-        """Simulate a single quantum script.
-
-        Args:
-            circuit (QuantumTape): The single circuit to simulate
-            state (LightningGPUStateVector): handle to Lightning state vector
-            postselect_mode (str): Configuration for handling shots with mid-circuit measurement
-                postselection. Use ``"hw-like"`` to discard invalid shots and ``"fill-shots"`` to
-                keep the same number of shots. Default is ``None``.
-
-        Returns:
-            Tuple[TensorLike]: The results of the simulation
-
-        Note that this function can return measurements for non-commuting observables simultaneously.
-        """
-        if circuit.shots and (any(isinstance(op, MidMeasureMP) for op in circuit.operations)):
-            if self._mpi:
-                raise DeviceError("Lightning-Kokkos-MPI does not support mid-circuit measurements.")
-
-        return super().simulate(
-            circuit,
-            state,
-            postselect_mode=postselect_mode,
-            mcm_method=mcm_method,
-        )
-
     @staticmethod
     def get_c_interface():
         """Returns a tuple consisting of the device name, and
