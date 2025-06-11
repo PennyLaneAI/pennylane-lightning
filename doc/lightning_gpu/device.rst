@@ -125,14 +125,14 @@ Supported operations and observables
 
 The ``lightning.gpu`` device directly supports the `adjoint differentiation method <https://pennylane.ai/qml/demos/tutorial_adjoint_diff.html>`__, and enables parallelization over the requested observables. This supports direct controlling of observable batching, which can be used to run concurrent calculations across multiple available GPUs.
 
-If you are computing a large number of expectation values, or if you are using a large number of wires on your device, it may be best to evenly divide the number of expectation value calculations across all available GPUs. This will reduce the overall memory cost of the observables per GPU, at the cost of additional compute time. Assuming `m` observables, and `n` GPUs, the default behaviour is to pre-allocate all storage for `n` observables on a single GPU. To divide the workload amongst many GPUs, initialize a ``lightning.gpu`` device with the ``batch_obs=True`` keyword argument, as:
+If you are computing a large number of expectation values, or if you are using a large number of wires on your device, it may be best to evenly divide the number of expectation value calculations across all available GPUs. This will reduce the overall memory cost of the observables per GPU, at the cost of additional compute time. Assuming `m` observables, and `n` GPUs, the default behaviour is to pre-allocate all storage for `m` observables on a single GPU. To divide the workload amongst many GPUs, initialize a ``lightning.gpu`` device with the ``batch_obs=True`` keyword argument, as:
 
 .. code-block:: python
 
     import pennylane as qml
     dev = qml.device("lightning.gpu", wires=20, batch_obs=True)
 
-With the above, each GPU will see at most `m/n` observables to process, reducing the preallocated memory footprint.
+With the above, each GPU will see at most `ceil(m/n)` observables to process, reducing the preallocated memory footprint.
 
 Additionally, there can be situations where even with the above distribution, and limited GPU memory, the overall problem does not fit on the requested GPU devices. You can further reduce the concurrent allocations on available GPUs by providing an integer value to the `batch_obs` keyword. For example, to batch evaluate observables with at most 1 observable allocation per GPU, define the device as:
 
