@@ -751,7 +751,6 @@ class MPIManager {
     template <typename T>
     void GatherV(std::vector<T> &sendBuf, std::vector<T> &recvBuf,
                  std::size_t root, std::vector<int> &displacements) {
-
         MPI_Datatype datatype = getMPIDatatype<T>();
         int rootInt = static_cast<int>(root);
 
