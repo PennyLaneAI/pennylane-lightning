@@ -60,7 +60,7 @@ class LightningKokkosMeasurements(
         super().__init__(kokkos_state)
 
         self._use_mpi = kokkos_state._mpi
-        
+
         if self._use_mpi:
             self._num_local_wires = kokkos_state._qubit_state.getNumLocalWires()
 

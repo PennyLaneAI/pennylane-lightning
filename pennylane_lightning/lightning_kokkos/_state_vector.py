@@ -295,7 +295,6 @@ class LightningKokkosStateVector(LightningBaseStateVector):
         # Skip over identity operations instead of performing
         # matrix multiplication with it.
         for operation in operations:
-            # print(operation)
             if isinstance(operation, qml.Identity):
                 continue
             if isinstance(operation, Adjoint):

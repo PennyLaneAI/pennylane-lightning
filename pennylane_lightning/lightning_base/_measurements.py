@@ -168,7 +168,7 @@ class LightningBaseMeasurements(ABC):
             matrix = measurementprocess.obs.matrix()
             return self._measurement_lightning.expval(matrix, observable_wires)
 
-        if measurementprocess.obs.arithmetic_depth:
+        if measurementprocess.obs.arithmetic_depth or isinstance(measurementprocess.obs.name, List):
             # pylint: disable=protected-access
             ob_serialized = QuantumScriptSerializer(
                 self._qubit_state.device_name, self.dtype == np.complex64, self._use_mpi

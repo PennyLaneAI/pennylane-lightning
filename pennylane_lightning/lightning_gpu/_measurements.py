@@ -83,8 +83,6 @@ class LightningGPUMeasurements(LightningBaseMeasurements):  # pylint: disable=to
         # without MPI
         return MeasurementsC128 if self.dtype == np.complex128 else MeasurementsC64
 
-
-
     def _expval_pauli_sentence(self, measurementprocess: MeasurementProcess):
         """Specialized method for computing the expectation value of a Pauli sentence.
 

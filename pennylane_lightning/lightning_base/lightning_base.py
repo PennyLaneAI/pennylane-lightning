@@ -30,6 +30,7 @@ from numpy.random import BitGenerator, Generator, SeedSequence
 from numpy.typing import ArrayLike
 from pennylane.devices import DefaultExecutionConfig, Device, ExecutionConfig
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
+from pennylane.exceptions import DeviceError
 from pennylane.measurements import MidMeasureMP
 from pennylane.tape import QuantumScript, QuantumTape
 from pennylane.typing import Result, ResultBatch, TensorLike
@@ -91,7 +92,7 @@ class LightningBase(Device):
         self._rng = np.random.default_rng(
             np.random.randint(2**31 - 1) if seed == "global" else seed
         )
-
+        self._mpi = False
         # State-vector is dynamically allocated just before execution
         self._statevector = None
         self._sv_init_kwargs = {}
@@ -224,6 +225,12 @@ class LightningBase(Device):
         """
         if mcmc is None:
             mcmc = {}
+
+        if circuit.shots and (any(isinstance(op, MidMeasureMP) for op in circuit.operations)):
+            if self._mpi:
+                raise DeviceError(
+                    "Lightning Device with MPI does not support Mid-circuit measurements."
+                )
 
         # Simulate with Mid Circuit Measurements
         if any(isinstance(op, MidMeasureMP) for op in circuit.operations):

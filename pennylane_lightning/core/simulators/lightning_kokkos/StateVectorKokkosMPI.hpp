@@ -612,18 +612,20 @@ class StateVectorKokkosMPI final
 
     /**
      * @brief Get the local wires that could be used for global/local swaps.
-     * It will return a set of local wires of the same size as the global wires to be swapped.
-     * The local wires will also not be in wires, i.e. wires used in an operation.
-     * 
+     * It will return a set of local wires of the same size as the global wires
+     * to be swapped. The local wires will also not be in wires, i.e. wires used
+     * in an operation.
+     *
      * @param global_wires Global wires to swap, obtained from findGlobalWires()
      * @param wires Wires used in an operation to be excluded in returned wires
-     *  
+     *
      */
     std::vector<std::size_t>
     localWiresSubsetToSwap(const std::vector<std::size_t> &global_wires,
                            const std::vector<std::size_t> &wires) {
-        PL_ABORT_IF(global_wires.size() > local_wires_.size(),
-                    "global_wires to swap must be have less wires than local_wires.");
+        PL_ABORT_IF(
+            global_wires.size() > local_wires_.size(),
+            "global_wires to swap must be have less wires than local_wires.");
         std::vector<std::size_t> local_wires;
         for (std::size_t i = 0; i < local_wires_.size(); i++) {
             if (local_wires.size() == global_wires.size()) {
@@ -1362,13 +1364,14 @@ class StateVectorKokkosMPI final
      *        Must be used after reorderGlobalLocalWires()
      */
     void reorderLocalWires() {
-        PL_ABORT_IF_NOT(std::all_of(local_wires_.begin(), local_wires_.end(),
-                                    [this](const auto i) {
-                                        return (getNumGlobalWires() <= i) &&
-                                               (i < num_qubits_);
-                                    }),
-                        "local wires must only contain least significant indices. Run "
-                        "reorder_global_wires first.");
+        PL_ABORT_IF_NOT(
+            std::all_of(local_wires_.begin(), local_wires_.end(),
+                        [this](const auto i) {
+                            return (getNumGlobalWires() <= i) &&
+                                   (i < num_qubits_);
+                        }),
+            "local wires must only contain least significant indices. Run "
+            "reorder_global_wires first.");
 
         for (std::size_t i = 0; i < getNumLocalWires(); ++i) {
             std::size_t wire_i = i + getNumGlobalWires();
@@ -1387,14 +1390,15 @@ class StateVectorKokkosMPI final
     void reorderGlobalLocalWires() {
         std::vector<std::size_t> global_wires;
         std::vector<std::size_t> local_wires;
-        
-    std::copy_if(global_wires_.begin(), global_wires_.end(),
-                 std::back_inserter(global_wires),
-                 [&](std::size_t wire) { return wire >= numGlobalQubits_; });
 
-    std::copy_if(local_wires_.begin(), local_wires_.end(),
-                 std::back_inserter(local_wires),
-                 [&](std::size_t wire) { return wire < numGlobalQubits_; });
+        std::copy_if(global_wires_.begin(), global_wires_.end(),
+                     std::back_inserter(global_wires), [&](std::size_t wire) {
+                         return wire >= numGlobalQubits_;
+                     });
+
+        std::copy_if(local_wires_.begin(), local_wires_.end(),
+                     std::back_inserter(local_wires),
+                     [&](std::size_t wire) { return wire < numGlobalQubits_; });
         if (!global_wires.empty()) {
             swapGlobalLocalWires(global_wires, local_wires);
         }

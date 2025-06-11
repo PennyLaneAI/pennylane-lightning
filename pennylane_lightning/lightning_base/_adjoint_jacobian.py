@@ -88,7 +88,9 @@ class LightningBaseAdjointJacobian(ABC):
 
         return "expval"
 
-    def _process_jacobian_tape(self, tape: QuantumTape, split_obs: bool = False, use_mpi: bool = False):
+    def _process_jacobian_tape(
+        self, tape: QuantumTape, split_obs: bool = False, use_mpi: bool = False
+    ):
         """Process a tape, serializing and building a dictionary proper for
         the adjoint Jacobian calculation in the C++ layer.
 
@@ -101,7 +103,7 @@ class LightningBaseAdjointJacobian(ABC):
             dictionary: dictionary providing serialized data for Jacobian calculation.
         """
         use_csingle = self._qubit_state.dtype == np.complex64
-        print("use_mpi:", use_mpi)
+
         obs_serialized, obs_indices = QuantumScriptSerializer(
             self._qubit_state.device_name, use_csingle, use_mpi, split_obs
         ).serialize_observables(tape)
