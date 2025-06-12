@@ -35,7 +35,7 @@
 
 namespace nb = nanobind;
 
-namespace Pennylane::LightningQubit {
+namespace Pennylane::LightningQubit::NanoBindings {
 
 /**
  * @brief Define StateVector backends for lightning.qubit
@@ -44,4 +44,48 @@ using StateVectorBackends =
     Pennylane::Util::TypeList<StateVectorLQubitManaged<float>,
                               StateVectorLQubitManaged<double>, void>;
 
-} // namespace Pennylane::LightningQubit
+/**
+ * @brief Get a controlled matrix and kernel map for a statevector.
+ * @tparam StateVectorT
+ * @tparam PyClass
+ * @param pyclass Pybind11's measurements class to bind methods.
+ */
+template <class StateVectorT, class PyClass>
+void registerBackendClassSpecificBindings(PyClass &pyclass) {}
+
+/**
+ * @brief Register backend specific measurements class functionalities.
+ *
+ * @tparam StateVectorT
+ * @tparam PyClass
+ * @param pyclass Pybind11's measurements class to bind methods.
+ */
+template <class StateVectorT, class PyClass>
+void registerBackendSpecificMeasurements(PyClass &pyclass) {}
+
+/**
+ * @brief Register backend specific observables.
+ *
+ * @tparam StateVectorT
+ * @param m Pybind module
+ */
+template <class StateVectorT>
+void registerBackendSpecificObservables(nb::module_ &m) {}
+
+/**
+ * @brief Register backend specific adjoint Jacobian methods.
+ *
+ * @tparam StateVectorT
+ * @param m Pybind module
+ */
+template <class StateVectorT>
+void registerBackendSpecificAlgorithms(nb::module_ &m) {}
+
+/**
+ * @brief Register bindings for backend-specific info.
+ *
+ * @param m Pybind11 module.
+ */
+void registerBackendSpecificInfo(nb::module_ &m) {}
+
+} // namespace Pennylane::LightningQubit::NanoBindings
