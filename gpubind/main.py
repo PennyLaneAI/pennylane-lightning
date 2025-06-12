@@ -8,7 +8,11 @@ import numpy as np
 def main():
     size = 10
 
-    in_tensor1 = cuda_ext.DeviceTensor(size)
+    # Initialize a DeviceTensor from a NumPy array
+    array = np.array([i for i in range(size)], dtype=np.float32)
+    in_tensor1 = cuda_ext.device_tensor_from_array(array)
+
+    # in_tensor1 = cuda_ext.DeviceTensor(size)
     in_tensor2 = cuda_ext.DeviceTensor(size)
     out_tensor = cuda_ext.DeviceTensor(size)
 

@@ -1,2 +1,3 @@
 _deps/
 CMakeFiles/
+*.egg-info/

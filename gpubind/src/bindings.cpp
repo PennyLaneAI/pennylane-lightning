@@ -1,4 +1,6 @@
 #include "tensor.hpp" // contains custom DeviceTensor class
+
+#include <iostream>
 #include <nanobind/nanobind.h>
 
 namespace nb = nanobind;
@@ -6,6 +8,8 @@ namespace nb = nanobind;
 // Define a view datatype based on the specific ndarray type we want to create.
 using DeviceView =
     nb::ndarray<float, nb::shape<-1>, nb::c_contig, nb::device::cuda>;
+
+using NumpyArray = nb::ndarray<float, nb::shape<-1>, nb::c_contig>;
 
 // Forward-declare the CUDA kernel launcher from kernels.cu
 void launch_add_vectors(float *out, const float *a, const float *b, int n);
@@ -20,6 +24,20 @@ void add_tensors(DeviceTensor &out, const DeviceTensor &a,
 
     // Get the raw device pointers from our wrapper objects
     launch_add_vectors(out.data(), a.data(), b.data(), a.size());
+}
+
+DeviceTensor *device_tensor_from_array(NumpyArray &arr) {
+    std::cout << "Copying array of size " << arr.size() << std::endl;
+
+    float *data = arr.data();
+    std::cout << "Data pointer: " << data << std::endl;
+    data[0] = 42.0f; // Example operation to show we can access data
+
+    DeviceTensor *tens = new DeviceTensor(arr.size());
+
+    cudaMemcpy(tens->data(), data, arr.size() * sizeof(float),
+               cudaMemcpyHostToDevice);
+    return tens;
 }
 
 // Returns a Python view to the on-device tensor object
@@ -61,4 +79,9 @@ NB_MODULE(gpu_binding_example_ext, m) {
     m.def("add_tensors", &add_tensors,
           "Adds two DeviceTensors using a CUDA kernel.", nb::arg("out"),
           nb::arg("a"), nb::arg("b"));
+
+    // Bind factory function to create a DeviceTensor from a NumPy array
+    m.def("device_tensor_from_array", &device_tensor_from_array,
+          "Create a DeviceTensor from an existing NumPy array", nb::arg("arr"),
+          nb::rv_policy::take_ownership);
 }
