@@ -1,5 +1,5 @@
 [build-system]
-requires = ["cmake", "ninja; platform_system!='Windows'", "setuptools>=75.8.1", "tomli", "nanobind>=2.7.0"]
+requires = ["cmake", "ninja; platform_system!='Windows'", "setuptools>=75.8.1", "tomli"]
 build-backend = "setuptools.build_meta"
 
 [project]
