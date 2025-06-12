@@ -106,7 +106,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
                 self._mpi_handler.num_local_wires,
             )
         else:  # without MPI
-            self._qubit_state = self._state_dtype()(self.num_wires)
+            self._qubit_state = self._state_dtype()(num_wires)
 
     def _state_dtype(self):
         """Binding to Lightning Managed state vector C++ class.
