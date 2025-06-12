@@ -34,7 +34,7 @@
 
 namespace nb = nanobind;
 
-namespace Pennylane::LightningGPU {
+namespace Pennylane::LightningGPU::NanoBindings {
 
 /**
  * @brief Define StateVector backends for lightning.gpu
@@ -43,4 +43,48 @@ using StateVectorBackends = Pennylane::Util::TypeList<
     StateVectorCudaManaged<float>,
     Pennylane::Util::TypeList<StateVectorCudaManaged<double>, void>>;
 
-} // namespace Pennylane::LightningGPU
+/**
+ * @brief Get a controlled matrix and kernel map for a statevector.
+ * @tparam StateVectorT
+ * @tparam PyClass
+ * @param pyclass Pybind11's measurements class to bind methods.
+ */
+template <class StateVectorT, class PyClass>
+void registerBackendClassSpecificBindings(PyClass &pyclass) {}
+
+/**
+ * @brief Register backend specific measurements class functionalities.
+ *
+ * @tparam StateVectorT
+ * @tparam PyClass
+ * @param pyclass Pybind11's measurements class to bind methods.
+ */
+template <class StateVectorT, class PyClass>
+void registerBackendSpecificMeasurements(PyClass &pyclass) {}
+
+/**
+ * @brief Register backend specific observables.
+ *
+ * @tparam StateVectorT
+ * @param m Pybind module
+ */
+template <class StateVectorT>
+void registerBackendSpecificObservables(nb::module_ &m) {}
+
+/**
+ * @brief Register backend specific adjoint Jacobian methods.
+ *
+ * @tparam StateVectorT
+ * @param m Pybind module
+ */
+template <class StateVectorT>
+void registerBackendSpecificAlgorithms(nb::module_ &m) {}
+
+/**
+ * @brief Register bindings for backend-specific info.
+ *
+ * @param m Pybind11 module.
+ */
+void registerBackendSpecificInfo(nb::module_ &m) {}
+
+} // namespace Pennylane::LightningGPU::NanoBindings
