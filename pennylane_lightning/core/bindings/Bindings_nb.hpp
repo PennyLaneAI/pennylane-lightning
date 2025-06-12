@@ -60,6 +60,7 @@ using namespace Pennylane::LightningQubit;
 using namespace Pennylane::LightningQubit::Algorithms;
 using namespace Pennylane::LightningQubit::Observables;
 using namespace Pennylane::LightningQubit::Measures;
+using namespace Pennylane::LightningQubit::NanoBindings;
 } // namespace
 
 #elif _ENABLE_PLKOKKOS == 1
@@ -76,6 +77,7 @@ using namespace Pennylane::LightningKokkos;
 using namespace Pennylane::LightningKokkos::Algorithms;
 using namespace Pennylane::LightningKokkos::Observables;
 using namespace Pennylane::LightningKokkos::Measures;
+using namespace Pennylane::LightningKokkos::NanoBindings;
 } // namespace
 
 #elif _ENABLE_PLGPU == 1
@@ -93,6 +95,7 @@ using namespace Pennylane::LightningGPU;
 using namespace Pennylane::LightningGPU::Algorithms;
 using namespace Pennylane::LightningGPU::Observables;
 using namespace Pennylane::LightningGPU::Measures;
+using namespace Pennylane::LightningGPU::NanoBindings;
 } // namespace
 
 #elif _ENABLE_PLTENSOR == 1
@@ -107,6 +110,7 @@ namespace {
 using namespace Pennylane::LightningTensor::TNCuda;
 using namespace Pennylane::LightningTensor::TNCuda::Observables;
 using namespace Pennylane::LightningTensor::TNCuda::Measures;
+using namespace Pennylane::LightningTensor::TNCuda::NanoBindings;
 } // namespace
 
 #else
@@ -269,19 +273,50 @@ nb::dict getRuntimeInfo() {
  * @return Dictionary with compile information.
  */
 nb::dict getCompileInfo() {
+    using namespace nb::literals;
+    using namespace Pennylane::Util;
+    const std::string_view cpu_arch_str = [] {
+        switch (cpu_arch) {
+        case CPUArch::X86_64:
+            return "x86_64";
+        case CPUArch::PPC64:
+            return "PPC64";
+        case CPUArch::ARM:
+            return "ARM";
+        default:
+            return "Unknown";
+        }
+    }();
+
+    const std::string_view compiler_name_str = [] {
+        switch (compiler) {
+        case Compiler::GCC:
+            return "GCC";
+        case Compiler::Clang:
+            return "Clang";
+        case Compiler::MSVC:
+            return "MSVC";
+        case Compiler::NVCC:
+            return "NVCC";
+        case Compiler::NVHPC:
+            return "NVHPC";
+        default:
+            return "Unknown";
+        }
+    }();
+
+    const auto compiler_version_str = getCompilerVersion<compiler>();
+
+    // Create an empty dict first
     nb::dict info;
-#ifdef PENNYLANE_LIGHTNING_VERSION
-    info["version"] = PENNYLANE_LIGHTNING_VERSION;
-#endif
-#ifdef COMPILER_NAME
-    info["compiler_name"] = COMPILER_NAME;
-#endif
-#ifdef COMPILER_VERSION
-    info["compiler_version"] = COMPILER_VERSION;
-#endif
-#ifdef CMAKE_BUILD_TYPE
-    info["build_type"] = CMAKE_BUILD_TYPE;
-#endif
+
+    // Add key-value pairs
+    info["cpu.arch"] = cpu_arch_str;
+    info["compiler.name"] = compiler_name_str;
+    info["compiler.version"] = compiler_version_str;
+    info["AVX2"] = use_avx2;
+    info["AVX512F"] = use_avx512f;
+
     return info;
 }
 
@@ -314,38 +349,6 @@ void registerInfo(nb::module_ &m) {
 
     // Add runtime info
     m.def("runtime_info", &getRuntimeInfo, "Runtime information.");
-}
-
-/**
- * @brief Get backend-specific information.
- *
- * @return Dictionary with backend-specific information.
- */
-nb::dict getBackendInfo() {
-    nb::dict info;
-    info["NAME"] = BACKEND_NAME;
-    return info;
-}
-
-/**
- * @brief Register bindings for backend-specific info.
- *
- * @param m Nanobind module.
- */
-void registerBackendSpecificInfo(nb::module_ &m) {
-    m.def("backend_info", &getBackendInfo, "Backend-specific information.");
-
-#ifdef _ENABLE_PLGPU
-    // Register CUDA utilities for GPU backend
-    m.def("device_reset", &Pennylane::LightningGPU::Util::deviceReset,
-          "Reset all GPU devices and contexts.");
-
-    m.def("is_gpu_supported",
-          &Pennylane::LightningGPU::Util::isCuQuantumSupported,
-          nb::arg("device_number") = 0,
-          "Checks if the given GPU device meets the minimum architecture "
-          "support for the PennyLane-Lightning-GPU device.");
-#endif
 }
 
 /**
@@ -800,7 +803,7 @@ template <class StateVectorT> void lightningClassBindings(nb::module_ &m) {
     nb::module_ obs_submodule =
         m.def_submodule("observables", "Submodule for observables classes.");
     registerBackendAgnosticObservables<StateVectorT>(obs_submodule);
-    // registerBackendSpecificObservables<StateVectorT>(obs_submodule);
+    registerBackendSpecificObservables<StateVectorT>(obs_submodule);
 
     //***********************************************************************//
     //                              Measurements
@@ -813,7 +816,7 @@ template <class StateVectorT> void lightningClassBindings(nb::module_ &m) {
 
     pyclass_measurements.def(nb::init<const StateVectorT &>());
     registerBackendAgnosticMeasurements<StateVectorT>(pyclass_measurements);
-    // registerBackendSpecificMeasurements<StateVectorT>(pyclass_measurements);
+    registerBackendSpecificMeasurements<StateVectorT>(pyclass_measurements);
 
     //***********************************************************************//
     //                              Algorithms
@@ -823,7 +826,7 @@ template <class StateVectorT> void lightningClassBindings(nb::module_ &m) {
     nb::module_ alg_submodule = m.def_submodule(
         "algorithms", "Submodule for the algorithms functionality.");
     registerBackendAgnosticAlgorithms<StateVectorT>(alg_submodule);
-    // registerBackendSpecificAlgorithms<StateVectorT>(alg_submodule);
+    registerBackendSpecificAlgorithms<StateVectorT>(alg_submodule);
 }
 
 /**
