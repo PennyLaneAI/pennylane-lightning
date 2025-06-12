@@ -110,15 +110,17 @@ class TestNanobindBindings:
         ), f"{expected_class} not found in {module_name}"
 
     @pytest.mark.parametrize("module_name", nb_modules)
-    def test_module_has_expected_backend_info(self, module_name):
-        """Test if module has expected backend_info."""
+    def test_module_has_expected_info_dicts(self, module_name):
+        """Test if module has expected info dicts."""
         module_attr = self._skip_if_module_not_importable(module_name)
 
         # Check for backend_info if available
-        if hasattr(module_attr["module"], "backend_info"):
-            assert (
-                "backend_info" in module_attr["functions"]
-            ), f"backend_info not found in {module_name}"
+        assert (
+            "compile_info" in module_attr["functions"]
+        ), f"compile_info not found in {module_name}"
+        assert (
+            "runtime_info" in module_attr["functions"]
+        ), f"runtime_info not found in {module_name}"
 
     @pytest.mark.parametrize("module_name", nb_modules)
     def test_statevector_classes_exists(self, module_name):
