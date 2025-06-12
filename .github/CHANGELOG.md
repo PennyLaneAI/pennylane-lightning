@@ -50,6 +50,9 @@
 
 <h3>Internal changes ⚙️</h3>
   
+- Updates `LightningInterpreter` to adjust to a change in `adjoint_transform_prim` and `ctrl_transform_prim`.
+  [(#1177)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1177)
+
 - Remove flaky tests and add random seed to measurement tests.
   [(#1172)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1172)
 
