@@ -132,7 +132,7 @@ If you are computing a large number of expectation values, or if you are using a
     import pennylane as qml
     dev = qml.device("lightning.gpu", wires=20, batch_obs=True)
 
-With the above, each GPU will see at most `ceil(m/n)` observables to process, reducing the preallocated memory footprint.
+With the above, each GPU will see at most ``ceil(m/n)`` observables to process, reducing the preallocated memory footprint.
 
 Additionally, there can be situations where even with the above distribution, and limited GPU memory, the overall problem does not fit on the requested GPU devices. You can further reduce the concurrent allocations on available GPUs by providing an integer value to the `batch_obs` keyword. For example, to batch evaluate observables with at most 1 observable allocation per GPU, define the device as:
 
