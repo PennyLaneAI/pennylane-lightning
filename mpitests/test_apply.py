@@ -391,6 +391,9 @@ class TestApply:  # pylint: disable=missing-function-docstring,too-many-argument
         assert np.allclose(local_state_vector, local_expected_output_cpu, atol=tol, rtol=0)
 
 
+@pytest.mark.skipif(
+    device_name == "lightning.kokkos", reason="Sparse Hamiltonian not supported on Kokkos MPI"
+)
 class TestSparseHamExpval:  # pylint: disable=too-few-public-methods,missing-function-docstring
     """Tests sparse hamiltonian expectation values."""
 

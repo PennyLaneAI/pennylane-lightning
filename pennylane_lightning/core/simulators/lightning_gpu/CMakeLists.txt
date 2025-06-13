@@ -17,7 +17,7 @@ findCUDATK(lightning_external_libs)
 findCustatevec(lightning_external_libs)
 
 if(ENABLE_MPI)
-    findMPI(lightning_external_libs)
+    findMPI_LG(lightning_external_libs)
 endif()
 
 set(LGPU_FILES  StateVectorCudaManaged.cpp initSV.cu

@@ -446,20 +446,12 @@ void registerBackendAgnosticObservables(py::module_ &m) {
  */
 template <class StateVectorT, class PyClass>
 void registerBackendAgnosticMeasurements(PyClass &pyclass) {
+#ifndef _ENABLE_PLKOKKOS_MPI
     using PrecisionT =
         typename StateVectorT::PrecisionT; // Statevector's precision.
     using ParamT = PrecisionT;             // Parameter's data precision
-
+#endif
     pyclass
-        .def("probs",
-             [](Measurements<StateVectorT> &M,
-                const std::vector<std::size_t> &wires) {
-                 return py::array_t<ParamT>(py::cast(M.probs(wires)));
-             })
-        .def("probs",
-             [](Measurements<StateVectorT> &M) {
-                 return py::array_t<ParamT>(py::cast(M.probs()));
-             })
         .def(
             "expval",
             [](Measurements<StateVectorT> &M,
@@ -474,6 +466,16 @@ void registerBackendAgnosticMeasurements(PyClass &pyclass) {
                 return M.var(*ob);
             },
             "Variance of an observable object.")
+#ifndef _ENABLE_PLKOKKOS_MPI
+        .def("probs",
+             [](Measurements<StateVectorT> &M,
+                const std::vector<std::size_t> &wires) {
+                 return py::array_t<ParamT>(py::cast(M.probs(wires)));
+             })
+        .def("probs",
+             [](Measurements<StateVectorT> &M) {
+                 return py::array_t<ParamT>(py::cast(M.probs()));
+             })
         .def("generate_samples",
              [](Measurements<StateVectorT> &M, std::size_t num_wires,
                 std::size_t num_shots) {
@@ -493,6 +495,7 @@ void registerBackendAgnosticMeasurements(PyClass &pyclass) {
                      strides /* strides for each axis     */
                      ));
              })
+#endif
         .def("set_random_seed", [](Measurements<StateVectorT> &M,
                                    std::size_t seed) { M.setSeed(seed); });
 }
@@ -689,7 +692,7 @@ template <class StateVectorT> void lightningClassBindings(py::module_ &m) {
     auto pyclass_measurements = py::class_<Measurements<StateVectorT>>(
         m, class_name.c_str(), py::module_local());
 
-#ifdef _ENABLE_PLGPU
+#if defined(_ENABLE_PLGPU) || defined(_ENABLE_PLKOKKOS)
     pyclass_measurements.def(py::init<StateVectorT &>());
 #else
     pyclass_measurements.def(py::init<const StateVectorT &>());

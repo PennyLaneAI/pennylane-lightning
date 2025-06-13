@@ -26,6 +26,22 @@ try:
         create_ops_listC64,
         create_ops_listC128,
     )
+
+    try:
+        from pennylane_lightning.lightning_kokkos_ops.algorithmsMPI import (
+            AdjointJacobianMPIC64,
+            AdjointJacobianMPIC128,
+            create_ops_listMPIC64,
+            create_ops_listMPIC128,
+        )
+
+        mpi_error = None
+        MPI_SUPPORT = True
+    except ImportError as ex_mpi:
+        mpi_error = ex_mpi
+        MPI_SUPPORT = False
+
+
 except ImportError as ex:
     warn(str(ex), UserWarning)
 
@@ -45,12 +61,34 @@ class LightningKokkosAdjointJacobian(LightningBaseAdjointJacobian):
     """
 
     # pylint: disable=too-few-public-methods
+    def __init__(
+        self,
+        qubit_state: LightningKokkosStateVector,  # pylint: disable=undefined-variable
+        batch_obs: bool = False,
+    ) -> None:
+
+        self._use_mpi = qubit_state._mpi
+        super().__init__(qubit_state, batch_obs)
 
     def _adjoint_jacobian_dtype(self):
         """Binding to Lightning Kokkos Adjoint Jacobian C++ class.
 
         Returns: A pair of the AdjointJacobian class and the create_ops_list function. Default is None.
         """
+        if self._use_mpi:
+            if not MPI_SUPPORT:
+                warn(str(mpi_error), UserWarning)
+
+            jacobian_lightning = (
+                AdjointJacobianMPIC64() if self.dtype == np.complex64 else AdjointJacobianMPIC128()
+            )
+            create_ops_list_lightning = (
+                create_ops_listMPIC64 if self.dtype == np.complex64 else create_ops_listMPIC128
+            )
+
+            return jacobian_lightning, create_ops_list_lightning
+
+        # without MPI
         jacobian_lightning = (
             AdjointJacobianC64() if self.dtype == np.complex64 else AdjointJacobianC128()
         )
@@ -79,8 +117,7 @@ class LightningKokkosAdjointJacobian(LightningBaseAdjointJacobian):
 
         if empty_array:
             return np.array([], dtype=self.dtype)
-
-        processed_data = self._process_jacobian_tape(tape)
+        processed_data = self._process_jacobian_tape(tape, use_mpi=self._use_mpi)
 
         if not processed_data:  # training_params is empty
             return np.array([], dtype=self.dtype)
