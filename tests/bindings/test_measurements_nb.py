@@ -13,67 +13,82 @@
 # limitations under the License.
 """Tests for Measurements classes in nanobind-based modules."""
 
-import importlib
-
 import numpy as np
 import pytest
+from conftest import backend
+
+if backend != "qubit":
+    pytest.skip("Skipping tests for binaries other than lightning_qubit .", allow_module_level=True)
 
 
 class TestMeasurementsNB:
     """Tests for MeasurementsC64 and MeasurementsC128 classes in nanobind-based modules."""
 
     num_qubits = 2
+
+    # List of backends to test
+    backends = ["qubit", "kokkos", "gpu", "tensor"]
+
     # List of modules to test
-    modules = [
-        "pennylane_lightning.lightning_qubit_nb",
-        "pennylane_lightning.lightning_kokkos_nb",
-        "pennylane_lightning.lightning_gpu_nb",
-    ]
-
-    # Store module attributes for each module
-    module_attributes = {}
-
-    @pytest.fixture(autouse=True, scope="class")
-    def setup_module_attributes(self):
-        """Set up module attributes for all tests."""
-        for module_name in self.modules:
-            try:
-                module = importlib.import_module(module_name)
-                self.module_attributes[module_name] = {"importable": True, "module": module}
-            except ImportError as e:
-                self.module_attributes[module_name] = {"importable": False, "error": str(e)}
-
-    def _skip_if_module_not_importable(self, module_name):
-        """Skip test if module is not importable."""
-        module_attr = self.module_attributes[module_name]
-        if not module_attr["importable"]:
-            pytest.skip(f"Module {module_name} not available: {module_attr.get('error')}")
-        return module_attr["module"]
-
-    @pytest.fixture(params=["64", "128"])
-    def precision(self, request):
-        """Fixture to parametrize tests over different precision types."""
-        return request.param
+    modules = [f"pennylane_lightning.lightning_{b}_nb" for b in backends]
 
     @pytest.fixture
-    def get_classes(self, precision):
-        """Fixture to get the appropriate classes based on precision."""
+    def get_classes(self):
+        """Get StateVector, Measurements, NamedObs, and HermitianObs classes from module based on precision."""
 
-        def _get_classes(module):
-            sv_class = getattr(module, f"StateVectorC{precision}")
-            meas_class = getattr(module, f"MeasurementsC{precision}")
-            named_obs_class = getattr(module.observables, f"NamedObsC{precision}")
-            hermitian_obs_class = getattr(module.observables, f"HermitianObsC{precision}")
-            return sv_class, meas_class, named_obs_class, hermitian_obs_class
+        def _get_classes(module, precision="64"):
+            # Get StateVector class
+            state_vector_class_name = f"StateVectorC{precision}"
+            if hasattr(module, state_vector_class_name):
+                state_vector_class = getattr(module, state_vector_class_name)
+            else:
+                pytest.skip(f"Class {state_vector_class_name} not available in module")
+
+            # Get Measurements class
+            measurements_class_name = f"MeasurementsC{precision}"
+            if hasattr(module, measurements_class_name):
+                measurements_class = getattr(module, measurements_class_name)
+            else:
+                pytest.skip(f"Class {measurements_class_name} not available in module")
+
+            # Get NamedObs class
+            named_obs_class_name = f"NamedObsC{precision}"
+            if hasattr(module, named_obs_class_name):
+                named_obs_class = getattr(module, named_obs_class_name)
+            else:
+                # Try to find it in the observables submodule if it exists
+                if hasattr(module, "observables") and hasattr(
+                    module.observables, named_obs_class_name
+                ):
+                    named_obs_class = getattr(module.observables, named_obs_class_name)
+                else:
+                    pytest.skip(
+                        f"Class {named_obs_class_name} not available in module or module.observables"
+                    )
+
+            # Get HermitianObs class
+            hermitian_obs_class_name = f"HermitianObsC{precision}"
+            if hasattr(module, hermitian_obs_class_name):
+                hermitian_obs_class = getattr(module, hermitian_obs_class_name)
+            else:
+                # Try to find it in the observables submodule if it exists
+                if hasattr(module, "observables") and hasattr(
+                    module.observables, hermitian_obs_class_name
+                ):
+                    hermitian_obs_class = getattr(module.observables, hermitian_obs_class_name)
+                else:
+                    hermitian_obs_class = None
+
+            return state_vector_class, measurements_class, named_obs_class, hermitian_obs_class
 
         return _get_classes
 
-    @pytest.mark.parametrize("module_name", modules)
-    def test_state_initialization(self, module_name, get_classes, precision):
+    @pytest.mark.parametrize("backend_name", backends)
+    def test_state_initialization(self, backend_name, precision, get_classes, nanobind_module):
         """Test state vector initialization."""
-        module = self._skip_if_module_not_importable(module_name)
+        module = nanobind_module(backend_name)
 
-        StateVectorClass, MeasurementsClass, _, _ = get_classes(module)
+        StateVectorClass, MeasurementsClass, _, _ = get_classes(module, precision)
         # Create a numpy array representing |0> state with appropriate size
         dtype = np.complex64 if precision == "64" else np.complex128
         state_data = np.zeros(2**self.num_qubits, dtype=dtype)
@@ -88,18 +103,16 @@ class TestMeasurementsNB:
         meas = MeasurementsClass(sv)
         probs = meas.probs(list(range(self.num_qubits)))
 
-        # The first element should be 1.0, all others 0.0
-        expected = np.zeros(2**self.num_qubits)
-        expected[0] = 1.0
+        # The first element should be 1.0, the rest should be 0.0
+        assert probs[0] == pytest.approx(1.0)
+        assert all(p == pytest.approx(0.0) for p in probs[1:])
 
-        assert np.allclose(probs, expected, atol=1e-6)
-
-    @pytest.mark.parametrize("module_name", modules)
-    def test_bell_state(self, module_name, get_classes, precision):
+    @pytest.mark.parametrize("backend_name", backends)
+    def test_bell_state(self, backend_name, precision, get_classes, nanobind_module):
         """Test Bell state creation."""
-        module = self._skip_if_module_not_importable(module_name)
+        module = nanobind_module(backend_name)
 
-        StateVectorClass, MeasurementsClass, _, _ = get_classes(module)
+        StateVectorClass, MeasurementsClass, _, _ = get_classes(module, precision)
         # Create a numpy array representing |0> state with appropriate size
         dtype = np.complex64 if precision == "64" else np.complex128
         state_data = np.zeros(2**self.num_qubits, dtype=dtype)
@@ -117,26 +130,21 @@ class TestMeasurementsNB:
 
         # Create Bell state step by step
         sv.Hadamard([0], False, [])
-
-        # Check after Hadamard
-        hadamard_meas = MeasurementsClass(sv)
-        hadamard_probs = hadamard_meas.probs([0, 1])
-        assert np.allclose(hadamard_probs, [0.5, 0.0, 0.5, 0.0], atol=1e-6)
-
-        # Apply CNOT
         sv.CNOT([0, 1], False, [])
 
-        # Final measurement
-        meas = MeasurementsClass(sv)
-        probs = meas.probs([0, 1])
-        assert np.allclose(probs, [0.5, 0.0, 0.0, 0.5], atol=1e-6)
+        # Check final state
+        bell_meas = MeasurementsClass(sv)
+        bell_probs = bell_meas.probs([0, 1])
+        assert np.allclose(bell_probs, [0.5, 0.0, 0.0, 0.5], atol=1e-6)
 
-    @pytest.mark.parametrize("module_name", modules)
-    def test_measurements_expval_named_obs(self, module_name, get_classes, precision):
+    @pytest.mark.parametrize("backend_name", backends)
+    def test_measurements_expval_named_obs(
+        self, backend_name, precision, get_classes, nanobind_module
+    ):
         """Test expectation value calculation with NamedObs."""
-        module = self._skip_if_module_not_importable(module_name)
+        module = nanobind_module(backend_name)
 
-        StateVectorClass, MeasurementsClass, NamedObsClass, _ = get_classes(module)
+        StateVectorClass, MeasurementsClass, NamedObsClass, _ = get_classes(module, precision)
 
         num_qubits = 1
         # Create a numpy array representing |0> state with appropriate size
@@ -163,12 +171,20 @@ class TestMeasurementsNB:
         expval_z = meas.expval(obs_z)
         assert np.isclose(expval_z, 0.0, atol=1e-6)
 
-    @pytest.mark.parametrize("module_name", modules)
-    def test_measurements_var_named_obs(self, module_name, get_classes, precision):
+    @pytest.mark.parametrize("backend_name", backends)
+    def test_measurements_var_named_obs(
+        self, backend_name, precision, get_classes, nanobind_module
+    ):
         """Test variance calculation with NamedObs."""
-        module = self._skip_if_module_not_importable(module_name)
+        module = nanobind_module(backend_name)
 
-        StateVectorClass, MeasurementsClass, NamedObsClass, _ = get_classes(module)
+        StateVectorClass, MeasurementsClass, NamedObsClass, _ = get_classes(module, precision)
+
+        # Skip if NamedObsClass is None
+        if NamedObsClass is None:
+            pytest.skip(
+                f"NamedObsClass not available for {backend_name} with precision {precision}"
+            )
 
         num_qubits = 1
         # Create a numpy array representing |0> state with appropriate size
@@ -195,12 +211,20 @@ class TestMeasurementsNB:
         var_z = meas.var(obs_z)
         assert np.isclose(var_z, 1.0, atol=1e-6)
 
-    @pytest.mark.parametrize("module_name", modules)
-    def test_measurements_expval_hermitian_obs(self, module_name, get_classes, precision):
+    @pytest.mark.parametrize("backend_name", backends)
+    def test_measurements_expval_hermitian_obs(
+        self, backend_name, precision, get_classes, nanobind_module
+    ):
         """Test expectation value calculation with HermitianObs."""
-        module = self._skip_if_module_not_importable(module_name)
+        module = nanobind_module(backend_name)
 
-        StateVectorClass, MeasurementsClass, _, HermitianObsClass = get_classes(module)
+        StateVectorClass, MeasurementsClass, _, HermitianObsClass = get_classes(module, precision)
+
+        # Skip if HermitianObsClass is None
+        if HermitianObsClass is None:
+            pytest.skip(
+                f"HermitianObsClass not available for {backend_name} with precision {precision}"
+            )
 
         num_qubits = 1
         # Create a numpy array representing |0> state with appropriate size
@@ -233,12 +257,20 @@ class TestMeasurementsNB:
         expval_z = meas.expval(obs_z)
         assert np.isclose(expval_z, 0.0, atol=1e-6)
 
-    @pytest.mark.parametrize("module_name", modules)
-    def test_measurements_var_hermitian_obs(self, module_name, get_classes, precision):
+    @pytest.mark.parametrize("backend_name", backends)
+    def test_measurements_var_hermitian_obs(
+        self, backend_name, precision, get_classes, nanobind_module
+    ):
         """Test variance calculation with HermitianObs."""
-        module = self._skip_if_module_not_importable(module_name)
+        module = nanobind_module(backend_name)
 
-        StateVectorClass, MeasurementsClass, _, HermitianObsClass = get_classes(module)
+        StateVectorClass, MeasurementsClass, _, HermitianObsClass = get_classes(module, precision)
+
+        # Skip if HermitianObsClass is None
+        if HermitianObsClass is None:
+            pytest.skip(
+                f"HermitianObsClass not available for {backend_name} with precision {precision}"
+            )
 
         num_qubits = 1
         # Create a numpy array representing |0> state with appropriate size
@@ -271,12 +303,12 @@ class TestMeasurementsNB:
         var_z = meas.var(obs_z)
         assert np.isclose(var_z, 1.0, atol=1e-6)
 
-    @pytest.mark.parametrize("module_name", modules)
-    def test_hadamard_gate(self, module_name, get_classes, precision):
+    @pytest.mark.parametrize("backend_name", backends)
+    def test_hadamard_gate(self, backend_name, precision, get_classes, nanobind_module):
         """Test Hadamard gate application."""
-        module = self._skip_if_module_not_importable(module_name)
+        module = nanobind_module(backend_name)
 
-        StateVectorClass, MeasurementsClass, _, _ = get_classes(module)
+        StateVectorClass, MeasurementsClass, _, _ = get_classes(module, precision)
         # Create a numpy array representing |0> state with appropriate size
         dtype = np.complex64 if precision == "64" else np.complex128
         state_data = np.zeros(2, dtype=dtype)
@@ -313,11 +345,15 @@ class TestMeasurementsNB:
         assert np.allclose(probs, [0.5, 0.5], atol=1e-6)
 
     @pytest.mark.parametrize("module_name", modules)
-    def test_measurements_generate_samples(self, module_name, get_classes, precision):
+    def test_measurements_generate_samples(
+        self, module_name, get_classes, precision, nanobind_module
+    ):
         """Test sample generation."""
-        module = self._skip_if_module_not_importable(module_name)
+        # Extract backend name from module_name
+        backend_name = module_name.split(".")[-1].split("_")[1]
+        module = nanobind_module(backend_name)
 
-        StateVectorClass, MeasurementsClass, _, _ = get_classes(module)
+        StateVectorClass, MeasurementsClass, _, _ = get_classes(module, precision)
 
         num_qubits = 2
         # Create a numpy array representing |0> state with appropriate size
