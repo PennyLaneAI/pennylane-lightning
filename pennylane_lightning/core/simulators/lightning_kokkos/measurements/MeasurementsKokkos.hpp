@@ -72,7 +72,12 @@ class Measurements final
     using TeamPolicy = typename StateVectorT::TeamPolicy;
 
   public:
+#if _ENABLE_PLKOKKOS_MPI == 1
     explicit Measurements(StateVectorT &statevector) : BaseType{statevector} {
+#else
+    explicit Measurements(const StateVectorT &statevector)
+        : BaseType{statevector} {
+#endif
         init_expval_funcs_();
     };
 

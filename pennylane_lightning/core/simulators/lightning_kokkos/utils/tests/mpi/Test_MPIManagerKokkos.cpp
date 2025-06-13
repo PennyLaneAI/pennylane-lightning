@@ -58,7 +58,9 @@ TEST_CASE("MPIManagerKokkos::getMPIDatatype", "[MPIManagerKokkos]") {
                             Catch::Matchers::Contains("Type not supported"));
     }
 }
-TEMPLATE_TEST_CASE("MPIManager::Sendrecv", "[MPIManager]", float, double) {
+
+TEMPLATE_TEST_CASE("MPIManagerKokkos::Sendrecv", "[MPIManagerKokkos]", float,
+                   double) {
     using PrecisionT = TestType;
     using cp_t = Kokkos::complex<PrecisionT>;
 
@@ -99,5 +101,70 @@ TEMPLATE_TEST_CASE("MPIManager::Sendrecv", "[MPIManager]", float, double) {
                   static_cast<PrecisionT>((mpi_rank ^ 1U) + i));
             CHECK(recvBuf(i).imag() == static_cast<PrecisionT>(0));
         }
+    }
+}
+
+TEMPLATE_TEST_CASE("MPIManagerKokkos::AllGatherV", "[MPIManagerKokkos]", float,
+                   double) {
+    using PrecisionT = TestType;
+    using cp_t = Kokkos::complex<PrecisionT>;
+
+    MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
+    REQUIRE(mpi_manager.getSize() == 4);
+
+    std::size_t mpi_rank = mpi_manager.getRank();
+    std::size_t mpi_size = mpi_manager.getSize();
+
+    std::size_t message_size = 3;
+
+    Kokkos::View<cp_t *> sendBuf("sendBuf", message_size);
+    Kokkos::View<cp_t *> recvBuf("recvBuf", message_size * mpi_size);
+    for (std::size_t i = 0; i < message_size; ++i) {
+        sendBuf(i) = static_cast<PrecisionT>(mpi_rank + i);
+    }
+
+    std::vector<int> recv_counts(mpi_size, int(message_size));
+    std::vector<int> displacements{0, 3, 6, 9};
+    mpi_manager.AllGatherV(sendBuf, recvBuf, recv_counts, displacements);
+
+    Kokkos::View<cp_t *> expected("expected", message_size * mpi_size);
+    for (std::size_t i = 0; i < mpi_size; ++i) {
+        for (std::size_t j = 0; j < message_size; ++j) {
+            expected(i * message_size + j) = static_cast<PrecisionT>(i + j);
+        }
+    }
+    for (std::size_t i = 0; i < message_size * mpi_size; ++i) {
+        CHECK(recvBuf(i).real() == expected(i).real());
+        CHECK(recvBuf(i).imag() == expected(i).imag());
+    }
+}
+
+TEMPLATE_TEST_CASE("MPIManagerKokkos::Bcast", "[MPIManagerKokkos]", float,
+                   double) {
+    using PrecisionT = TestType;
+    using cp_t = Kokkos::complex<PrecisionT>;
+
+    MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
+    REQUIRE(mpi_manager.getSize() == 4);
+
+    std::size_t mpi_rank = mpi_manager.getRank();
+
+    std::size_t message_size = 3;
+
+    Kokkos::View<cp_t *> sendBuf("sendBuf", message_size);
+    if (mpi_rank == 0) {
+        for (std::size_t i = 0; i < message_size; ++i) {
+            sendBuf(i) = static_cast<PrecisionT>(i);
+        }
+    } else {
+        for (std::size_t i = 0; i < message_size; ++i) {
+            sendBuf(i) = static_cast<PrecisionT>(0);
+        }
+    }
+    mpi_manager.Bcast(sendBuf, 0);
+
+    for (std::size_t i = 0; i < message_size; ++i) {
+        CHECK(sendBuf(i).real() == static_cast<PrecisionT>(i));
+        CHECK(sendBuf(i).imag() == 0.0);
     }
 }

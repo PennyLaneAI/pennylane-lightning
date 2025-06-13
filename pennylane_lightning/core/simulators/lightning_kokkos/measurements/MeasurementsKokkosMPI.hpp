@@ -181,6 +181,7 @@ class MeasurementsMPI final
 
         return expected_value_list;
     }
+
     /**
      * @brief Expected value of a Pauli string (Pauli words with coefficients)
      *
@@ -295,6 +296,21 @@ class MeasurementsMPI final
     }
 
     /**
+     * @brief Expectation value for a Observable with shots
+     *
+     * @param obs An Observable object.
+     * @param num_shots Number of shots.
+     * @param shot_range Vector of shot number to measurement.
+     * @return Floating point expected value of the observable.
+     */
+
+    auto expval(const Observable<StateVectorT> &obs,
+                const std::size_t &num_shots,
+                const std::vector<std::size_t> &shot_range) -> PrecisionT {
+        return BaseType::expval(obs, num_shots, shot_range);
+    }
+
+    /**
      * @brief Variance of an observable.
      *
      * @param sv Observable-state-vector product.
@@ -395,17 +411,34 @@ class MeasurementsMPI final
     }
 
     /**
-     * @brief Probabilities to measure rotated basis states.
+     * @brief Calculate the variance for an observable with the number of shots.
+     *
+     * @param obs An observable object.
+     * @param num_shots Number of shots.
+     *
+     * @return Variance of the given observable.
+     */
+
+    auto var(const Observable<StateVectorT> &obs, const std::size_t &num_shots)
+        -> PrecisionT {
+        return BaseType::var(obs, num_shots);
+    }
+
+    /**
+     * @brief Probabilities.
      *
      * @return Floating point std::vector with probabilities
      * in lexicographic order.
+     *
+     * This will return the probability local to the MPI rank/global index.
+     * To obtain the full probability vector, you need to call
+     * MPI Gather.
      */
     auto probs() -> std::vector<PrecisionT> {
         this->_statevector.reorderAllWires();
         auto local_meas = Measurements(this->_statevector.getLocalSV());
         auto local_probabilities = local_meas.probs();
         return local_probabilities;
-        // FIXME Reduce
     }
 
     /**
@@ -415,6 +448,10 @@ class MeasurementsMPI final
      * of the full system.
      * @return Floating point std::vector with probabilities.
      * The basis columns are rearranged according to wires.
+     *
+     * This will return the probability local to the MPI rank/global index.
+     * To obtain the full probability vector, you need to call
+     * MPI GatherV.
      */
     auto
     probs(const std::vector<std::size_t> &wires,

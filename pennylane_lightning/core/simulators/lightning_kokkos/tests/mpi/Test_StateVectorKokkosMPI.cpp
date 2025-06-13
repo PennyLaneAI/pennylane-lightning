@@ -1125,3 +1125,21 @@ TEMPLATE_TEST_CASE("allReduceSum", "[LKMPI]", double, float) {
 
     CHECK(real(sum) == 10.0); // (0+1+2+3) + 1*4
 }
+
+TEMPLATE_TEST_CASE("Normalize", "[LKMPI]", double, float) {
+    const std::size_t num_qubits = 5;
+    auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
+
+    sv.normalize();
+    sv_ref.normalize();
+
+    auto reference = sv_ref.getDataVector();
+    auto data = sv.getDataVector(0);
+
+    if (sv.getMPIManager().getRank() == 0) {
+        for (std::size_t j = 0; j < data.size(); j++) {
+            CHECK(real(data[j]) == Approx(real(reference[j])));
+            CHECK(imag(data[j]) == Approx(imag(reference[j])));
+        }
+    }
+}

@@ -89,7 +89,7 @@ class MPIManagerKokkos final : public MPIManager {
 
     MPIManagerKokkos(int argc, char **argv) : MPIManager(argc, argv) {}
 
-    using MPIManager::Scatter;
+    using MPIManager::Bcast;
 
     /**
      * @brief MPI_Sendrecv wrapper.

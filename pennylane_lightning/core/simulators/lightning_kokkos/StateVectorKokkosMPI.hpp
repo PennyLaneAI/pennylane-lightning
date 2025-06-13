@@ -506,6 +506,9 @@ class StateVectorKokkosMPI final
         });
     }
 
+    /**
+     * @brief Normalize the state vector.
+     */
     void normalize() {
         auto sv_view = getView();
 

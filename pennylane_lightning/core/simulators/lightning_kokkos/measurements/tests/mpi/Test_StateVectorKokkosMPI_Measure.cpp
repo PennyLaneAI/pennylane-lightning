@@ -298,7 +298,6 @@ TEMPLATE_TEST_CASE("Test expectation value of HamiltonianObs", "[LKMPI_Expval]",
 }
 
 // expval pauli word
-// This test takes a long time
 TEMPLATE_TEST_CASE("Expval - pauli word - 4 wires", "[LKMPI_Expval]", float,
                    double) {
     const TestType EP = std::is_same_v<TestType, float> ? 1e-3 : 1e-6;
@@ -567,7 +566,6 @@ TEMPLATE_TEST_CASE("Var - TensorProdobs", "[LKMPI_Expval]", float, double) {
 }
 
 // probs
-
 TEMPLATE_TEST_CASE("probs - 1 wires", "[LKMPI_Expval]", float, double) {
     const std::size_t num_qubits = 5;
 
@@ -642,6 +640,7 @@ TEMPLATE_TEST_CASE("probs - 2 wires", "[LKMPI_Expval]", float, double) {
         }
     }
 }
+
 TEMPLATE_TEST_CASE("probs - 3 wires", "[LKMPI_Expval]", float, double) {
     const std::size_t num_qubits = 5;
 
@@ -684,6 +683,7 @@ TEMPLATE_TEST_CASE("probs - 3 wires", "[LKMPI_Expval]", float, double) {
         }
     }
 }
+
 TEMPLATE_TEST_CASE("probs - 4 wires", "[LKMPI_Expval]", float, double) {
     const std::size_t num_qubits = 5;
 
@@ -773,6 +773,17 @@ TEMPLATE_TEST_CASE("probs - 5 wires", "[LKMPI_Expval]", float, double) {
             }
         }
     }
+}
+
+TEMPLATE_TEST_CASE("probs - raise wire error", "[LKMPI_Expval]", float,
+                   double) {
+    const std::size_t num_qubits = 5;
+
+    auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
+    auto m = MeasurementsMPI(sv);
+
+    REQUIRE_THROWS_WITH(m.probs({0, 3, 2}),
+                        Catch::Contains("out-of-order wire"));
 }
 
 TEMPLATE_TEST_CASE("probs - all wires", "[LKMPI_Expval]", float, double) {
