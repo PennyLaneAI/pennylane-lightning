@@ -54,6 +54,59 @@ template <class StateVectorT, class PyClass>
 void registerBackendClassSpecificBindings(PyClass &pyclass) {}
 
 /**
+ * @brief Register backend specific state vector methods.
+ *
+ * @tparam StateVectorT
+ * @tparam PyClass
+ * @param pyclass Pybind11's state vector class to bind methods.
+ */
+template <class StateVectorT, class PyClass>
+void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
+    using PrecisionT = typename StateVectorT::PrecisionT;
+    using ComplexT = typename StateVectorT::ComplexT;
+    using ParamT = PrecisionT; // Parameter's data precision
+
+    // Add other methods (resetStateVector, setBasisState, etc.)
+    pyclass.def("resetStateVector", &StateVectorT::resetStateVector,
+                "Reset the state vector to |0...0>.");
+
+    pyclass.def(
+        "setBasisState",
+        [](StateVectorT &sv, const std::vector<std::size_t> &state,
+           const std::vector<std::size_t> &wires) {
+            sv.setBasisState(state, wires);
+        },
+        "Set the state vector to a basis state.", nb::arg("state"),
+        nb::arg("wires"));
+
+    pyclass.def(
+        "setStateVector",
+        [](StateVectorT &sv, const nb::ndarray<ComplexT, nb::numpy> &state,
+           const std::vector<std::size_t> &wires) {
+            // Get data pointer directly from ndarray
+            const ComplexT *data_ptr =
+                static_cast<const ComplexT *>(state.data());
+            sv.setStateVector(data_ptr, wires);
+        },
+        "Set the state vector to the data contained in `state`.",
+        nb::arg("state"), nb::arg("wires"));
+
+    pyclass.def(
+        "getState",
+        [](const StateVectorT &sv, nb::ndarray<ComplexT, nb::numpy> &state) {
+            // Check if array is large enough
+            if (state.shape(0) < sv.getLength()) {
+                throw std::invalid_argument("Output array is too small");
+            }
+
+            // Copy data to numpy array
+            ComplexT *data_ptr = static_cast<ComplexT *>(state.data());
+            std::copy(sv.getData(), sv.getData() + sv.getLength(), data_ptr);
+        },
+        "Copy state vector data to a numpy array.", nb::arg("state"));
+}
+
+/**
  * @brief Register backend specific measurements class functionalities.
  *
  * @tparam StateVectorT
