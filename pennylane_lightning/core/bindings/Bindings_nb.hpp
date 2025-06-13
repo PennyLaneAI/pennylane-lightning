@@ -513,7 +513,6 @@ template <typename T>
 nb::ndarray<T, nb::numpy>
 create2DNumpyArrayFromVector(const std::vector<T> &data, std::size_t rows,
                              std::size_t cols) {
-
     // Create a new array with the right size
     std::size_t shape[2] = {rows, cols};
 

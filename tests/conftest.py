@@ -168,9 +168,13 @@ else:
 
     # Try to import ops module
     ops_module_path = f"pennylane_lightning.lightning_{backend}_ops"
-    lightning_ops = importlib.import_module(ops_module_path)
-    if hasattr(lightning_ops, "LightningException"):
-        LightningException = lightning_ops.LightningException
+    lightning_ops = None
+    LightningException = None
+
+    if hasattr(pennylane_lightning, f"lightning_{backend}_ops"):
+        lightning_ops = importlib.import_module(ops_module_path)
+        if hasattr(lightning_ops, "LightningException"):
+            LightningException = lightning_ops.LightningException
 
 
 # General qubit_device fixture, for any number of wires.
