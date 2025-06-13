@@ -592,9 +592,12 @@ class Measurements final
         // over the probs elements is more efficient.
         constexpr std::size_t MDRANGE_NWIRES_MAX = 20;
         const std::size_t n_wires = wires.size();
+
+#ifndef _ENABLE_MPI
         if (n_wires == 0) {
             return {1.0};
         }
+#endif
         const std::size_t num_qubits = this->_statevector.getNumQubits();
         // is_equal_to_all_wires is True if `wires` includes all wires in order
         // and false otherwise

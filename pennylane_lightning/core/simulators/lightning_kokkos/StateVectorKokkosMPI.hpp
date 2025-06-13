@@ -506,6 +506,31 @@ class StateVectorKokkosMPI final
         });
     }
 
+    void normalize() {
+        auto sv_view = getView();
+
+        PrecisionT squaredLocalNorm = 0.0;
+        Kokkos::parallel_reduce(
+            sv_view.size(),
+            KOKKOS_LAMBDA(std::size_t i, PrecisionT &sum) {
+                const PrecisionT norm = Kokkos::abs(sv_view(i));
+                sum += norm * norm;
+            },
+            squaredLocalNorm);
+
+        PrecisionT squaredNorm = allReduceSum(squaredLocalNorm);
+
+        PL_ABORT_IF(squaredNorm <
+                        std::numeric_limits<PrecisionT>::epsilon() * 1e2,
+                    "vector has norm close to zero and can't be normalized");
+
+        const std::complex<PrecisionT> inv_norm =
+            1. / Kokkos::sqrt(squaredNorm);
+        Kokkos::parallel_for(
+            sv_view.size(),
+            KOKKOS_LAMBDA(std::size_t i) { sv_view(i) *= inv_norm; });
+    }
+
     /**
      * @brief Reset the data back to the \f$\ket{0}\f$ state.
      */

@@ -91,7 +91,7 @@ class MPIManagerKokkos final : public MPIManager {
 
     MPIManagerKokkos(int argc, char **argv) : MPIManager(argc, argv) {}
 
-    // using MPIManager::Sendrecv;
+    using MPIManager::Scatter;
 
     /**
      * @brief MPI_Sendrecv wrapper.
@@ -118,6 +118,42 @@ class MPIManagerKokkos final : public MPIManager {
         PL_MPI_IS_SUCCESS(MPI_Sendrecv(
             sendBuf.data(), sizeInt, datatype, destInt, sendtag, recvBuf.data(),
             sizeInt, datatype, sourceInt, recvtag, this->getComm(), &status));
+    }
+
+    /**
+     * @brief MPI_AllGatherV wrapper.
+     *
+     * @tparam T C++ data type.
+     * @param sendBuf Send buffer vector.
+     * @param recvBuf Receive buffer vector.
+     * @param recvCounts Number of elements received from each rank.
+     * @param displacements Elements shifted from each rank for gather.
+     */
+    template <typename T>
+    void AllGatherV(Kokkos::View<T *> &sendBuf, Kokkos::View<T *> &recvBuf,
+                    std::vector<int> &recvCounts,
+                    std::vector<int> &displacements) {
+        MPI_Datatype datatype = getMPIDatatype<T>();
+
+        PL_MPI_IS_SUCCESS(
+            MPI_Allgatherv(sendBuf.data(), sendBuf.size(), datatype,
+                           recvBuf.data(), recvCounts.data(),
+                           displacements.data(), datatype, this->getComm()));
+    }
+
+    /**
+     * @brief MPI_Bcast wrapper.
+     *
+     * @tparam T C++ data type.
+     * @param sendBuf Send buffer vector.
+     * @param root Rank of broadcast root.
+     */
+    template <typename T>
+    void Bcast(Kokkos::View<T *> &sendBuf, std::size_t root) {
+        MPI_Datatype datatype = getMPIDatatype<T>();
+        int rootInt = static_cast<int>(root);
+        PL_MPI_IS_SUCCESS(MPI_Bcast(sendBuf.data(), sendBuf.size(), datatype,
+                                    rootInt, this->getComm()));
     }
 };
 } // namespace Pennylane::LightningKokkos::Util

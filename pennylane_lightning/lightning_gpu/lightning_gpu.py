@@ -484,7 +484,6 @@ class LightningGPU(LightningBase):
             return True
         return _supports_adjoint(circuit=circuit)
 
-
     @staticmethod
     def get_c_interface():
         """Returns a tuple consisting of the device name, and

@@ -591,7 +591,6 @@ class TestExpval:
         assert np.allclose(cpu_qnode(), mpi_qnode(), atol=tol, rtol=0)
 
 
-@pytest.mark.skipif(device_name == "lightning.kokkos", reason="Sample not supported on Kokkos MPI")
 class TestGenerateSample:
     """Tests that samples are properly calculated."""
 
@@ -765,7 +764,6 @@ class TestGenerateSample:
         assert np.allclose(var, expected, atol=tol)
 
 
-@pytest.mark.skipif(device_name == "lightning.kokkos", reason="Shots not supported on Kokkos MPI")
 class TestTensorVar:
     """Test tensor variance measurements."""
 

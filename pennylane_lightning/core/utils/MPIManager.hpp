@@ -740,11 +740,11 @@ class MPIManager {
     }
 
     /**
-     * @brief MPI_GatherV wrapper.
+     * @brief MPI_GatherV wrapper for uniform receive counts.
      *
      * @tparam T C++ data type.
-     * @param recvBuf Receive buffer vector.
      * @param sendBuf Send buffer vector.
+     * @param recvBuf Receive buffer vector.
      * @param root Rank of destination.
      * @param displacements Elements shifted from each rank for gather.
      */
@@ -758,6 +758,29 @@ class MPIManager {
 
         PL_MPI_IS_SUCCESS(MPI_Gatherv(sendBuf.data(), sendBuf.size(), datatype,
                                       recvBuf.data(), recvcount.data(),
+                                      displacements.data(), datatype, rootInt,
+                                      this->getComm()));
+    }
+
+    /**
+     * @brief MPI_GatherV wrapper.
+     *
+     * @tparam T C++ data type.
+     * @param sendBuf Send buffer vector.
+     * @param recvBuf Receive buffer vector.
+     * @param recvCounts Number of elements received from each rank.
+     * @param root Rank of destination.
+     * @param displacements Elements shifted from each rank for gather.
+     */
+    template <typename T>
+    void GatherV(std::vector<T> &sendBuf, std::vector<T> &recvBuf,
+                 std::vector<int> &recvCounts, std::size_t root,
+                 std::vector<int> &displacements) {
+        MPI_Datatype datatype = getMPIDatatype<T>();
+        int rootInt = static_cast<int>(root);
+
+        PL_MPI_IS_SUCCESS(MPI_Gatherv(sendBuf.data(), sendBuf.size(), datatype,
+                                      recvBuf.data(), recvCounts.data(),
                                       displacements.data(), datatype, rootInt,
                                       this->getComm()));
     }
