@@ -14,6 +14,7 @@
 
 #include <algorithm>
 #include <complex>
+#include <cstdlib>
 #include <limits> // numeric_limits
 #include <random>
 #include <type_traits>
@@ -98,10 +99,10 @@ TEMPLATE_TEST_CASE("Apply Generator - 2 wires", "[LKMPI]", double, float) {
 
             if (sv.getMPIManager().getRank() == 0) {
                 for (std::size_t j = 0; j < data.size(); j++) {
-                    CHECK(real(data[j]) ==
-                          Approx(real(reference[j])).margin(EP));
-                    CHECK(imag(data[j]) ==
-                          Approx(imag(reference[j])).margin(EP));
+                    CHECK(real(reference[j]) ==
+                          Approx(real(data[j])).margin(EP));
+                    CHECK(imag(reference[j]) ==
+                          Approx(imag(data[j])).margin(EP));
                 }
             }
             CHECK(scale == scale_ref);
