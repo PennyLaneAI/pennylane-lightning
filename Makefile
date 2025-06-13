@@ -233,3 +233,19 @@ docker-push-all:
 docker-all:
 	$(MAKE) docker-build-all
 	$(MAKE) docker-push-all
+
+.PHONY: build-nanobind
+build-nanobind:
+	$(MAKE) clean
+	ENABLE_NANOBIND=1 PL_BACKEND=$(PL_BACKEND) python scripts/configure_pyproject_toml.py
+	CMAKE_ARGS="-DENABLE_NANOBIND=ON" python -m pip install -e . --config-settings editable_mode=compat -vv
+
+.PHONY: test-bindings
+test-bindings:
+	$(PYTHON) -m pytest tests/bindings -vv -x -s
+
+.PHONY: build-test-bindings
+build-test-bindings:
+	$(MAKE) build-nanobind
+	$(MAKE) test-bindings
+
