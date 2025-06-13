@@ -88,4 +88,14 @@ void registerBackendSpecificAlgorithms(nb::module_ &m) {}
  */
 void registerBackendSpecificInfo(nb::module_ &m) {}
 
+/**
+ * @brief Register backend specific state vector methods.
+ *
+ * @tparam StateVectorT
+ * @tparam PyClass
+ * @param pyclass Pybind11's state vector class to bind methods.
+ */
+template <class StateVectorT, class PyClass>
+void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {}
+
 } // namespace Pennylane::LightningKokkos::NanoBindings
