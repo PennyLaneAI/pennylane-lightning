@@ -76,9 +76,9 @@ class LightningKokkosStateVector(LightningBaseStateVector):
 
         # Initialize the state vector
         if kokkos_args is None:
-            self._qubit_state = self._state_dtype()(self.num_wires)
+            self._qubit_state = self._state_dtype()(num_wires)
         elif isinstance(kokkos_args, InitializationSettings):
-            self._qubit_state = self._state_dtype()(self.num_wires, kokkos_args)
+            self._qubit_state = self._state_dtype()(num_wires, kokkos_args)
         else:
             raise TypeError(
                 f"Argument kokkos_args must be of type {type(InitializationSettings())} but it is of {type(kokkos_args)}."

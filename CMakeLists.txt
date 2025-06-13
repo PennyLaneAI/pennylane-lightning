@@ -85,8 +85,6 @@ set(CMAKE_POLICY_DEFAULT_CMP0127 NEW) # To suppress pybind11 CMP0127 warning
 # Add pybind11
 include(FetchContent)
 
-# Enable Nanobind support
-option(ENABLE_NANOBIND "Enable Nanobind Python bindings" ON)
 
 if(ENABLE_PYTHON)
     find_package(Python COMPONENTS Interpreter Development)
@@ -96,22 +94,19 @@ if(ENABLE_PYTHON)
     )
     FetchContent_MakeAvailable(pybind11)
 
-    if(ENABLE_NANOBIND)
-        message(STATUS "Enabling Nanobind Python bindings")
-        
-        include(FetchContent)
-        FetchContent_Declare(nanobind
-                        GIT_REPOSITORY https://github.com/wjakob/nanobind.git
-                        GIT_TAG        v2.7.0
-        )
-        FetchContent_MakeAvailable(nanobind)
-        
-        # Print nanobind include directory for debugging
-        message(STATUS "Nanobind include directory: ${nanobind_SOURCE_DIR}/include")
-        
-        # Add compile definitions for nanobind modules
-        add_compile_definitions(_ENABLE_NANOBIND=1)
-    endif()
+    message(STATUS "Enabling Nanobind Python bindings")
+    
+    include(FetchContent)
+    FetchContent_Declare(nanobind
+                    GIT_REPOSITORY https://github.com/wjakob/nanobind.git
+                    GIT_TAG        v2.7.0
+    )
+    FetchContent_MakeAvailable(nanobind)
+    
+    # Print nanobind include directory for debugging
+    message(STATUS "Nanobind include directory: ${nanobind_SOURCE_DIR}/include")
+
+
 endif()
 
 # Print Python site-packages directory for reference
@@ -171,7 +166,7 @@ if(ENABLE_PYTHON)
     pybind11_add_module("${PL_BACKEND}_ops" "pennylane_lightning/core/bindings/Bindings.cpp")
     
     # Add Nanobind module with _nb suffix
-    nanobind_add_module("${PL_BACKEND}_nb" "pennylane_lightning/core/bindings/NanobindBindings.cpp")
+    nanobind_add_module("${PL_BACKEND}_nb" "pennylane_lightning/core/bindings/Bindings_nb.cpp")
     
     # Set properties for both modules
     set(CMAKE_BUILD_RPATH_USE_ORIGIN ON)
@@ -198,11 +193,19 @@ if(ENABLE_PYTHON)
                                                     )
                                                     
     target_link_libraries("${PL_BACKEND}_nb" PRIVATE lightning_compile_options
-                                                   lightning_external_libs
+                                                    lightning_external_libs
+                                                    lightning_observables
+                                                    lightning_utils
+                                                    lightning_algorithms
+                                                    ${PL_BACKEND}
+                                                    "${PL_BACKEND}_observables"
+                                                    "${PL_BACKEND}_bindings"
+                                                    "${PL_BACKEND}_measurements"
                                                    )
     
     if(NOT DEFINED PL_TENSOR)
         target_link_libraries("${PL_BACKEND}_ops" PRIVATE "${PL_BACKEND}_algorithms")
+        target_link_libraries("${PL_BACKEND}_nb" PRIVATE "${PL_BACKEND}_algorithms")
     endif()
     
     set_target_properties("${PL_BACKEND}_ops" PROPERTIES CXX_VISIBILITY_PRESET hidden)
