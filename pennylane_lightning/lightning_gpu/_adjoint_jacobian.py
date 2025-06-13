@@ -47,8 +47,6 @@ except ImportError as ex:
 
 
 import numpy as np
-from pennylane import BasisState, StatePrep
-from pennylane.operation import Operation
 from pennylane.tape import QuantumTape
 from scipy.sparse import csr_matrix
 

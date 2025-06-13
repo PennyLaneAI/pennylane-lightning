@@ -42,7 +42,6 @@ namespace Pennylane::LightningKokkos::Util {
  * operations.
  */
 class MPIManagerKokkos final : public MPIManager {
-
     /**
      * @brief Map of std::string and MPI_Datatype.
      */
@@ -77,7 +76,6 @@ class MPIManagerKokkos final : public MPIManager {
              MPI_C_LONG_DOUBLE_COMPLEX},
             {cppTypeToString<Kokkos::complex<float>>(), MPI_C_FLOAT_COMPLEX},
             {cppTypeToString<Kokkos::complex<double>>(), MPI_C_DOUBLE_COMPLEX},
-
         };
 
     auto get_cpp_mpi_type_map() const
