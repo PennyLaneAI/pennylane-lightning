@@ -50,20 +50,17 @@ class TestNanobindBindings:
         "pennylane_lightning.lightning_qubit_nb",
         "pennylane_lightning.lightning_kokkos_nb",
         "pennylane_lightning.lightning_gpu_nb",
+        "pennylane_lightning.lightning_tensor_nb",
     ]
 
     # List of corresponding pybind modules for comparison
     pb_modules = [
-        "pennylane_lightning.lightning_qubit",
-        "pennylane_lightning.lightning_kokkos",
-        "pennylane_lightning.lightning_gpu",
+        "pennylane_lightning.lightning_qubit_ops",
+        "pennylane_lightning.lightning_kokkos_ops",
+        "pennylane_lightning.lightning_gpu_ops",
+        "pennylane_lightning.lightning_tensor_ops",
     ]
-    # Expected main class for each module
-    expected_classes = {
-        "pennylane_lightning.lightning_qubit_nb": "LightningQubit",
-        "pennylane_lightning.lightning_kokkos_nb": "LightningKokkos",
-        "pennylane_lightning.lightning_gpu_nb": "LightningGPU",
-    }
+
     # Store module attributes for each module
     module_attributes = {}
 
@@ -90,27 +87,14 @@ class TestNanobindBindings:
         return module_attr
 
     @pytest.mark.parametrize("module_name", nb_modules)
-    def test_module_importable(self, module_name):
+    def test_module_importable(self, module_name: str):
         """Test if module can be imported."""
         module_attr = self._skip_if_module_not_importable(module_name)
         assert module_attr["importable"]
         assert len(module_attr["classes"]) > 0 or len(module_attr["functions"]) > 0
 
-    # Expected to fail for now.
-    @pytest.mark.xfail(reason="Expected to fail while we don;t have backend-specific main classes.")
     @pytest.mark.parametrize("module_name", nb_modules)
-    def test_module_has_expected_main_class(self, module_name):
-        """Test if module has expected main class."""
-        module_attr = self._skip_if_module_not_importable(module_name)
-
-        # Check for the main device class
-        expected_class = self.expected_classes.get(module_name)
-        assert (
-            expected_class in module_attr["classes"]
-        ), f"{expected_class} not found in {module_name}"
-
-    @pytest.mark.parametrize("module_name", nb_modules)
-    def test_module_has_expected_info_dicts(self, module_name):
+    def test_module_has_expected_info_dicts(self, module_name: str):
         """Test if module has expected info dicts."""
         module_attr = self._skip_if_module_not_importable(module_name)
 
@@ -123,7 +107,7 @@ class TestNanobindBindings:
         ), f"runtime_info not found in {module_name}"
 
     @pytest.mark.parametrize("module_name", nb_modules)
-    def test_statevector_classes_exists(self, module_name):
+    def test_statevector_classes_exists(self, module_name: str):
         """Test if StateVectorC classes exists in the module."""
         module_attr = self._skip_if_module_not_importable(module_name)
 
@@ -133,7 +117,7 @@ class TestNanobindBindings:
             ), f"StateVectorC{precision} not found in {module_name}"
 
     @pytest.mark.parametrize("module_name", nb_modules)
-    def test_exception_class_exists(self, module_name):
+    def test_exception_class_exists(self, module_name: str):
         """Test if LightningException class exists in the module."""
         module_attr = self._skip_if_module_not_importable(module_name)
 
@@ -141,8 +125,7 @@ class TestNanobindBindings:
             "LightningException" in module_attr["classes"]
         ), f"LightningException not found in {module_name}"
 
-    # Expected to fail for now.
-    @pytest.mark.xfail(reason="Expected to fail while we don;t have backend-specific main classes.")
+    @pytest.mark.xfail(reason="Expected to fail while we don't have backend-specific bindings.")
     @pytest.mark.parametrize("module_name, pybind_module_name", zip(nb_modules, pb_modules))
     def test_api_parity_with_pybind(self, module_name, pybind_module_name):
         """Test that nanobind modules have the same API as pybind modules."""
@@ -163,3 +146,68 @@ class TestNanobindBindings:
             assert (
                 func in nb_attr["functions"]
             ), f"Function {func} exists in {pybind_module_name} but not in {module_name}"
+
+    @pytest.mark.parametrize("module_name", nb_modules)
+    def test_observables_submodule_exists(self, module_name: str, precision: str):
+        """Test that the observables submodule exists and contains expected classes."""
+
+        module_attrs = self._skip_if_module_not_importable(module_name)
+
+        if not module_attrs.get("importable", False):
+            pytest.skip(
+                f"Nanobind module {module_name} not available: {module_attrs.get('error', 'Unknown error')}"
+            )
+
+        module = module_attrs.get("module")
+
+        # Check if observables submodule exists
+        assert hasattr(
+            module, "observables"
+        ), f"Module {module.__name__} does not have observables submodule"
+
+        # Check for NamedObs classes
+        assert (
+            f"NamedObsC{precision}" in module.observables.__dir__()
+        ), f"NamedObsC{precision} not found in {module.__name__}.observables"
+
+        # Check for HermitianObs classes
+        assert (
+            f"HermitianObsC{precision}" in module.observables.__dir__()
+        ), f"HermitianObsC{precision} not found in {module.__name__}.observables"
+
+        # Check for TensorProdObs classes
+        assert (
+            f"TensorProdObsC{precision}" in module.observables.__dir__()
+        ), f"TensorProdObsC{precision} not found in {module.__name__}.observables"
+
+        # Check for Hamiltonian classes
+        assert (
+            f"HamiltonianC{precision}" in module.observables.__dir__()
+        ), f"HamiltonianC{precision} not found in {module.__name__}.observables"
+
+    @pytest.mark.parametrize("module_name", nb_modules)
+    def test_algorithms_submodule_exists(self, module_name: str, precision: str):
+        """Test that the algorithms submodule exists and contains expected classes."""
+
+        module_attrs = self._skip_if_module_not_importable(module_name)
+
+        if not module_attrs.get("importable", False):
+            pytest.skip(
+                f"Nanobind module {module_name} not available: {module_attrs.get('error', 'Unknown error')}"
+            )
+
+        module = module_attrs.get("module")
+
+        # Check if algorithms submodule exists
+        assert hasattr(
+            module, "algorithms"
+        ), f"Module {module.__name__} does not have algorithms submodule"
+
+        # Check for OpsStruct classes
+        assert (
+            f"OpsStructC{precision}" in module.algorithms.__dir__()
+        ), f"OpsStructC{precision} not found in {module.__name__}.algorithms"
+
+        assert (
+            f"create_ops_listC{precision}" in module.algorithms.__dir__()
+        ), f"create_ops_listC{precision} not found in {module.__name__}.algorithms"
