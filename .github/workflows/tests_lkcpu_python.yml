@@ -34,7 +34,7 @@ env:
   TF_VERSION: 2.19.0
   KERAS_VERSION: 3.9.0
   TORCH_VERSION: 2.5.1
-  COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --no-flaky-report -p no:warnings --tb=native"
+  COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing -p no:warnings --tb=native"
   GCC_VERSION: 11
   OMP_NUM_THREADS: "2"
   OMP_PROC_BIND: "false"
@@ -49,14 +49,14 @@ jobs:
     name: "Build and cache Kokkos"
     uses: ./.github/workflows/build_and_cache_Kokkos_linux.yml
     with:
-      os: ubuntu-latest
+      os: ubuntu-24.04
       kokkos_version: "4.5.00"
 
   build_lightning_kokkos_wheels:
     needs: [build_and_cache_Kokkos]
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-24.04]
         pl_backend: ["lightning_kokkos"]
         exec_model: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.exec_model) }}
         kokkos_version: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.kokkos_version) }}
@@ -153,7 +153,7 @@ jobs:
     needs: [build_and_cache_Kokkos, build_lightning_kokkos_wheels]
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-24.04]
         pl_backend: ["lightning_kokkos"]
         group: [1, 2, 3, 4, 5, 6, 7]
         exec_model: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.exec_model) }}
@@ -310,7 +310,7 @@ jobs:
     if: github.event_name == 'pull_request'
     needs: [test_lightning_kokkos_wheels]
     name: Upload python coverage data to codecov
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/setup-python@v5
         name: Install Python

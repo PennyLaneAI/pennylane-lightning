@@ -9,7 +9,7 @@ env:
 
 jobs:
   post_release_tag_latest:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout PennyLane-Lightning

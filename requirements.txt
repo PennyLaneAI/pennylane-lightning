@@ -8,8 +8,9 @@ scipy-openblas32>=0.3.26
 pytest>=7.1.2
 pytest-cov>=3.0.0
 pytest-mock>=3.7.0
+pytest-rng
 pytest-xdist>=2.5.0
-flaky>=3.7.0
+flaky>=3.7.0 # For pl-device-test
 pennylane>=0.41
 
 # Formatting / Linting Dependencies

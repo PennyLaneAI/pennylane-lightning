@@ -162,7 +162,7 @@ jobs:
 
           CIBW_TEST_COMMAND: |
             DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
-            pl-device-test --device=${DEVICENAME} --skip-ops -x --tb=short --no-flaky-report
+            pl-device-test --device=${DEVICENAME} --skip-ops -x --tb=short
 
           CIBW_BUILD_VERBOSITY: 1
 
@@ -201,7 +201,7 @@ jobs:
         arch: [x86_64]
         pl_backend: ["lightning_qubit", "lightning_kokkos"]
         cibw_build: ${{ fromJson(needs.set_wheel_build_matrix.outputs.python_version) }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       id-token: write
     if: |

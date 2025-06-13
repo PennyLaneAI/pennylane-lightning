@@ -36,7 +36,7 @@ jobs:
       (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'ci:build_wheels'))
     timeout-minutes: 30
     name: Set builder matrix
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout PennyLane-Lightning
@@ -110,7 +110,7 @@ jobs:
             fi
           CIBW_TEST_COMMAND: |
             DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
-            pl-device-test --device=${DEVICENAME} --skip-ops -x --tb=short --no-flaky-report
+            pl-device-test --device=${DEVICENAME} --skip-ops -x --tb=short
 
           CIBW_BUILD_VERBOSITY: 3
 
@@ -142,7 +142,7 @@ jobs:
         arch: [arm64]
         pl_backend: ["lightning_qubit", "lightning_kokkos"]
         cibw_build: ${{ fromJson(needs.mac-set-matrix-arm.outputs.python_version) }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       id-token: write
     if: |

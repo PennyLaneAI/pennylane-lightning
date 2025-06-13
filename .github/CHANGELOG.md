@@ -4,6 +4,9 @@
 
 <h3>Improvements 🛠</h3>
 
+- Lightning devices accept a `seed` argument to enable deterministic shots measurements.
+  [(#1171)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1171)
+
 - `MultiControlledX` gates are now natively supported in Lightning-Tensor.
   [(#1169)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1169)
 
@@ -25,11 +28,10 @@
 
 <h3>Documentation 📝</h3>
 
-- Added a header/banner image to the README (`README.rst`), as in the `pennylane` and `catalyst` repositories.
-  Temporarily reverted this change as PyPI forbids the `.. raw::` directive for security reasons in `rst` files.
-  This will be revisited in a future PR.
+- Converted the `README` to markdown (as in the `pennylane` and `catalyst` repositories), and added a header image.
   [(#1139)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1139)
   [(#1141)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1141)
+  [(#1142)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1142)
 
 <h3>Bug fixes 🐛</h3>
 
@@ -43,11 +45,20 @@
   Updating ROCM from 5.7 to 6.2.4. 
   [(#1158)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1158)
 
+- Fix using Torch with `AmplitudeEmbedding` by applying `qml.broadcast_expand` before decomposition in the preprocessing stage. 
+  [(#1175)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1175)
+
 <h3>Internal changes ⚙️</h3>
+  
+- Updates `LightningInterpreter` to adjust to a change in `adjoint_transform_prim` and `ctrl_transform_prim`.
+  [(#1177)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1177)
+
+- Remove flaky tests and add random seed to measurement tests.
+  [(#1172)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1172)
 
 - Use local catalyst repository instead of fetching on Github CI.
   [(#1164)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1164)
-  
+
 - Update the Lightning build dependencies.
   [(#1168)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1168)
 
@@ -95,6 +106,9 @@
 
 - Removed `max_workers` argument for `default.qubit` device in Python tests to reduce CI testing time.
   [(##1174)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1174)
+  
+ - Bump Github action runner to use `Ubuntu-24.04` or `Ubuntu-latest`. Fixing all `ubuntu-latest` action runners to `ubuntu-24.04`.
+  [(#1167)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1167)
 
 <h3>Contributors ✍️</h3>
 

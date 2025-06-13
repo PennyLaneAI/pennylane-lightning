@@ -62,7 +62,8 @@ PYBIND11_MODULE(
 
     registerLightningClassBindings<StateVectorBackends>(m);
 
-#ifdef _ENABLE_PLGPU_MPI
+#ifdef _ENABLE_MPI
+    registerInfoMPI(m);
     registerBackendSpecificInfoMPI(m);
     registerLightningClassBindingsMPI<StateVectorMPIBackends>(m);
 #endif

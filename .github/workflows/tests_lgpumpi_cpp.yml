@@ -27,7 +27,7 @@ on:
       - '!pennylane_lightning/core/simulators/lightning_tensor/**'
 
 env:
-  COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:./coverage.xml --no-flaky-report -p no:warnings --tb=native"
+  COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:./coverage.xml -p no:warnings --tb=native"
   GCC_VERSION: 11
   OMP_NUM_THREADS: "2"
   CI_CUDA_ARCH: 86
@@ -193,7 +193,7 @@ jobs:
   upload-to-codecov-linux-cpp:
     needs: ["cpp_tests"]
     name: Upload coverage data to codecov
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4
