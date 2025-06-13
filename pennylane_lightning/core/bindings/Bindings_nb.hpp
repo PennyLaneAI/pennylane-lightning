@@ -738,6 +738,32 @@ void registerBackendAgnosticAlgorithms(nb::module_ &m) {
 }
 
 /**
+ * @brief Register backend agnostic state vector methods.
+ *
+ * @tparam StateVectorT
+ * @tparam PyClass
+ * @param pyclass Pybind11's state vector class to bind methods.
+ */
+template <class StateVectorT, class PyClass>
+void registerBackendAgnosticStateVectorMethods(PyClass &pyclass) {
+    using PrecisionT = typename StateVectorT::PrecisionT;
+    using ComplexT = typename StateVectorT::ComplexT;
+    using ParamT = PrecisionT;
+
+    // Initialize with number of qubits
+    pyclass.def(nb::init<size_t>());
+
+    // Add updateData method
+    pyclass.def("updateData", &updateStateVectorData<StateVectorT>,
+                "Update the state vector data from a numpy array.",
+                nb::arg("state"));
+
+    pyclass.def("__len__", &StateVectorT::getLength,
+                "Get the size of the statevector.");
+    pyclass.def("size", &StateVectorT::getLength);
+}
+
+/**
  * @brief Templated class to build lightning class bindings.
  *
  * @tparam StateVectorT State vector type
@@ -754,46 +780,14 @@ template <class StateVectorT> void lightningClassBindings(nb::module_ &m) {
     // StateVector class
     std::string class_name = "StateVectorC" + bitsize;
     auto pyclass = nb::class_<StateVectorT>(m, class_name.c_str());
-
-    // Initialize with number of qubits
-    pyclass.def(nb::init<size_t>());
-
-    // Add updateData method
-    pyclass.def("updateData", &updateStateVectorData<StateVectorT>,
-                "Update the state vector data from a numpy array.");
-
-    // Add other methods (resetStateVector, setBasisState, etc.)
-    pyclass.def("resetStateVector", &StateVectorT::resetStateVector,
-                "Reset the state vector to |0...0>.");
-
-    pyclass.def(
-        "setBasisState",
-        [](StateVectorT &sv, const std::vector<std::size_t> &state,
-           const std::vector<std::size_t> &wires) {
-            sv.setBasisState(state, wires);
-        },
-        "Set the state vector to a basis state.");
-
-    pyclass.def(
-        "getState",
-        [](const StateVectorT &sv, nb::ndarray<ComplexT, nb::numpy> &state) {
-            // Check if array is large enough
-            if (state.shape(0) < sv.getLength()) {
-                throw std::invalid_argument("Output array is too small");
-            }
-
-            // Copy data to numpy array
-            ComplexT *data_ptr = static_cast<ComplexT *>(state.data());
-            std::copy(sv.getData(), sv.getData() + sv.getLength(), data_ptr);
-        },
-        "Copy state vector data to a numpy array.");
-
-    pyclass.def("__len__", &StateVectorT::getLength,
-                "Get the size of the statevector.");
-    pyclass.def("size", &StateVectorT::getLength);
+    registerBackendAgnosticStateVectorMethods<StateVectorT>(pyclass);
+    registerBackendSpecificStateVectorMethods<StateVectorT>(pyclass);
 
     // Register gates for StateVector
     registerGatesForStateVector<StateVectorT>(pyclass);
+
+    // Register backend specific bindings
+    registerBackendClassSpecificBindings<StateVectorT>(pyclass);
 
     //***********************************************************************//
     //                              Observables
