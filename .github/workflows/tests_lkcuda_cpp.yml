@@ -27,7 +27,7 @@ on:
 
 env:
   CI_CUDA_ARCH: 86
-  COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:./coverage.xml --no-flaky-report -p no:warnings --tb=native"
+  COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:./coverage.xml -p no:warnings --tb=native"
   GCC_VERSION: 11
 
 concurrency:
@@ -43,7 +43,7 @@ jobs:
     strategy:
       max-parallel: 1
       matrix:
-        os: [ubuntu-22.04]
+        os: [ubuntu-24.04]
         kokkos_version: ["4.5.00"]
         exec_model: ["CUDA"]
         cuda_version_maj: ["12"]
@@ -106,7 +106,7 @@ jobs:
     needs: [builddeps]
     strategy:
       matrix:
-        os: [ubuntu-22.04]
+        os: [ubuntu-24.04]
         pl_backend: ["lightning_kokkos"]
         kokkos_version: ["4.5.00"]
         exec_model: ["CUDA"]
