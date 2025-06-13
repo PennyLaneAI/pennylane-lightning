@@ -321,7 +321,6 @@ TEMPLATE_TEST_CASE(
                               << " Control Value 0 = " << control_value_0
                               << " Control Wire 1 = " << control_wire_1
                               << " Control Value 1 = " << control_value_1) {
-
         if (wires.size() == 3) {
             sv.applyOperation(gate_name, {control_wire_0, control_wire_1},
                               {control_value_0, control_value_1}, {target_wire},
@@ -370,7 +369,6 @@ TEMPLATE_TEST_CASE(
                               << " Control Value 0 = " << control_value_0
                               << " Control Wire 1 = " << control_wire_1
                               << " Control Value 1 = " << control_value_1) {
-
         if (wires.size() == 4) {
             sv.applyOperation(gate_name, {control_wire_0, control_wire_1},
                               {control_value_0, control_value_1},
