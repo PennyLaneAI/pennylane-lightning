@@ -61,6 +61,7 @@ using namespace Pennylane::LightningGPU::Measures;
 #include "AdjointJacobianKokkosMPI.hpp"
 #include "LKokkosBindingsMPI.hpp"
 #include "MeasurementsKokkosMPI.hpp"
+#include "ObservablesKokkosMPI.hpp"
 /// @cond DEV
 namespace {
 using namespace Pennylane::LightningKokkos;
