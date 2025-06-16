@@ -122,6 +122,10 @@ import importlib
 # Extract backend name from device_name
 backend = device_name.split(".")[1]  # qubit, kokkos, gpu, or tensor
 
+# Initialize variables for device classes
+lightning_ops = None
+LightningException = None
+
 # Handle lightning.tensor separately since it has different class structure
 if backend == "tensor":
     from pennylane_lightning.lightning_tensor import LightningTensor as LightningDevice
@@ -168,9 +172,6 @@ else:
 
     # Try to import ops module
     ops_module_path = f"pennylane_lightning.lightning_{backend}_ops"
-    lightning_ops = None
-    LightningException = None
-
     if hasattr(pennylane_lightning, f"lightning_{backend}_ops"):
         lightning_ops = importlib.import_module(ops_module_path)
         if hasattr(lightning_ops, "LightningException"):
