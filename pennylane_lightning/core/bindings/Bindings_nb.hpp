@@ -129,7 +129,7 @@ void registerMatrix(StateVectorT &st,
     // Get data pointer from ndarray
     const ComplexT *data_ptr =
         reinterpret_cast<const ComplexT *>(matrix.data());
-    st.applyMatrix(data_ptr, wires, inverse, matrix.size());
+    st.applyMatrix(data_ptr, wires, inverse);
 }
 
 /**
@@ -189,12 +189,10 @@ auto alignedArray(Util::CPUMemoryModel memory_model, std::size_t size,
     auto capsule =
         nb::capsule(ptr, [](void *p) noexcept { Util::alignedFree(p); });
 
-    // Create shape array
-    size_t ndim = 1;
-    size_t shape[ndim] = {size};
+    std::vector<size_t> shape{size};
 
     // Return ndarray with custom allocated memory
-    return nb::ndarray<T>(ptr, ndim, shape, capsule);
+    return nb::ndarray<T>(ptr, 1, shape.data(), capsule);
 }
 
 /**
@@ -468,8 +466,7 @@ nb::ndarray<T, nb::numpy> createArrayFromVector(const std::vector<T> &data) {
     const std::size_t size = data.size();
 
     // Create a new array with the right size
-    std::size_t ndim = 1;
-    std::size_t shape[ndim] = {size};
+    std::vector<size_t> shape{size};
 
     // Allocate new memory and copy the data
     T *new_data = new T[size];
@@ -480,7 +477,7 @@ nb::ndarray<T, nb::numpy> createArrayFromVector(const std::vector<T> &data) {
         new_data, [](void *p) noexcept { delete[] static_cast<T *>(p); });
 
     // Create and return the ndarray with numpy format
-    return nb::ndarray<T, nb::numpy>(new_data, ndim, shape, capsule);
+    return nb::ndarray<T, nb::numpy>(new_data, 1, shape.data(), capsule);
 }
 
 /**
@@ -497,8 +494,7 @@ nb::ndarray<T, nb::numpy> create2DArrayFromVector(const std::vector<T> &data,
                                                   std::size_t rows,
                                                   std::size_t cols) {
     // Create a new array with the right size
-    std::size_t ndim = 2;
-    std::size_t shape[ndim] = {rows, cols};
+    std::vector<size_t> shape{rows, cols};
 
     // Allocate new memory and copy the data
     T *new_data = new T[rows * cols];
@@ -509,7 +505,7 @@ nb::ndarray<T, nb::numpy> create2DArrayFromVector(const std::vector<T> &data,
         new_data, [](void *p) noexcept { delete[] static_cast<T *>(p); });
 
     // Create and return the ndarray with numpy format
-    return nb::ndarray<T, nb::numpy>(new_data, ndim, shape, capsule);
+    return nb::ndarray<T, nb::numpy>(new_data, 2, shape.data(), capsule);
 }
 
 /**
@@ -562,49 +558,6 @@ generateSamples(Measurements<StateVectorT> &M, std::size_t num_wires,
                 std::size_t num_shots) {
     auto result = M.generate_samples(num_shots);
     return create2DArrayFromVector<std::size_t>(result, num_shots, num_wires);
-}
-
-/**
- * @brief Update state vector data from an array
- *
- * This function accepts any array-like object that follows the buffer protocol,
- * including NumPy arrays and JAX arrays (for example).
- *
- * Example with JAX:
- * ```python
- * import jax.numpy as jnp
- * import pennylane_lightning.lightning_qubit_nb as plq
- *
- * # Create a JAX array
- * jax_data = jnp.zeros(2**3, dtype=jnp.complex64)
- * jax_data = jax_data.at[0].set(1.0)  # Set to |000⟩ state
- *
- * # Create a state vector and update with JAX data
- * sv = plq.StateVectorC64(3)  # 3 qubits
- * sv.updateData(jax_data)     # Works with JAX arrays!
- * ```
- *
- * @tparam StateVectorT State vector type
- * @param sv State vector to update
- * @param data Array with new data
- */
-template <class StateVectorT>
-void updateStateVectorData(
-    StateVectorT &sv,
-    const nb::ndarray<typename StateVectorT::ComplexT> &data) {
-    using ComplexT = typename StateVectorT::ComplexT;
-
-    // Check dimensions
-    if (data.ndim() != 1) {
-        throw std::invalid_argument("Array must be 1-dimensional");
-    }
-
-    // Get data pointer and size
-    const ComplexT *data_ptr = static_cast<const ComplexT *>(data.data());
-    std::size_t size = data.shape(0);
-
-    // Update the state vector data
-    sv.updateData(data_ptr, size);
 }
 
 /**
