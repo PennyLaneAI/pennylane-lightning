@@ -50,7 +50,8 @@ template <class StateVectorT>
 void applyControlledMatrix(
     StateVectorT &st,
     const nb::ndarray<std::complex<typename StateVectorT::PrecisionT>,
-                      nb::c_contig> &matrix, const std::vector<std::size_t> &controlled_wires,
+                      nb::c_contig> &matrix,
+    const std::vector<std::size_t> &controlled_wires,
     const std::vector<bool> &controlled_values,
     const std::vector<std::size_t> &wires, bool inverse = false) {
     using ComplexT = typename StateVectorT::ComplexT;

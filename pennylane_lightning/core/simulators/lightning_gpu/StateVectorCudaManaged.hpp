@@ -303,16 +303,15 @@ class StateVectorCudaManaged
      * @param mat_size The size of the gate matrix
      */
     void applyOperation(const std::string &opName,
-        const std::vector<std::size_t> &wires, bool adjoint,
-        const std::vector<Precision> &params,
-        const ComplexT* matrix,
-    const size_t mat_size) {
-            std::vector<CFP_t> matrix_cu(mat_size);
-            std::transform(matrix, matrix + mat_size, matrix_cu.begin(),
-            [](const std::complex<Precision> &x) {
-                return cuUtil::complexToCu<std::complex<Precision>>(
-                    x);
-                });
+                        const std::vector<std::size_t> &wires, bool adjoint,
+                        const std::vector<Precision> &params,
+                        const ComplexT *matrix, const size_t mat_size) {
+        std::vector<CFP_t> matrix_cu(mat_size);
+        std::transform(matrix, matrix + mat_size, matrix_cu.begin(),
+                       [](const std::complex<Precision> &x) {
+                           return cuUtil::complexToCu<std::complex<Precision>>(
+                               x);
+                       });
         applyOperation(opName, wires, adjoint, params, matrix_cu);
     }
 
