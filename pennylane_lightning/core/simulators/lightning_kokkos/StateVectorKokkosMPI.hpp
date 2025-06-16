@@ -940,6 +940,32 @@ class StateVectorKokkosMPI final
     }
 
     /**
+     * @brief Apply a PauliRot gate to the state-vector.
+     *
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicates whether to use inverse of gate.
+     * @param params Rotation angle.
+     * @param word A Pauli word (e.g. "XYYX").
+     */
+    void applyPauliRot(const std::vector<std::size_t> &wires, bool inverse,
+                       const std::vector<PrecisionT> &params,
+                       const std::string &word) {
+        PL_ABORT_IF_NOT(wires.size() == word.size(),
+                        "wires and word have incompatible dimensions.");
+
+        PL_ABORT_IF(wires.size() > getNumLocalWires(),
+                    "Number of wires must be smaller than or equal to the "
+                    "number of local wires.");
+        if (!isWiresLocal(wires)) {
+            auto global_wires_to_swap = findGlobalWires(wires);
+            auto local_wires_to_swap =
+                localWiresSubsetToSwap(global_wires_to_swap, wires);
+            swapGlobalLocalWires(global_wires_to_swap, local_wires_to_swap);
+        }
+        (*sv_).applyPauliRot(getLocalWireIndices(wires), inverse, params, word);
+    }
+
+    /**
      * @brief Apply a single gate to the state vector.
      *
      * @param opName Name of gate to apply.
@@ -1276,9 +1302,26 @@ class StateVectorKokkosMPI final
      * @param wire Wire to collapse.
      * @param branch Branch 0 or 1.
      */
-    void collapse([[maybe_unused]] std::size_t wire,
-                  [[maybe_unused]] bool branch) {
-        PL_ABORT("Not implemented yet.");
+    void collapse(std::size_t wire, bool branch) {
+        // Swap target wire to all local
+        if (!isWiresLocal({wire})) {
+            auto global_wires_to_swap = findGlobalWires({wire});
+            auto local_wires_to_swap =
+                localWiresSubsetToSwap(global_wires_to_swap, {wire});
+            swapGlobalLocalWires(global_wires_to_swap, local_wires_to_swap);
+            barrier();
+        }
+
+        KokkosVector matrix("gate_matrix", 4);
+        Kokkos::parallel_for(
+            matrix.size(), KOKKOS_LAMBDA(std::size_t k) {
+                matrix(k) = ((k == 0 && branch == 0) || (k == 3 && branch == 1))
+                                ? ComplexT{1.0, 0.0}
+                                : ComplexT{0.0, 0.0};
+            });
+        (*sv_).applyMultiQubitOp(matrix, {getLocalWireIndices({wire})[0]},
+                                 false);
+        normalize();
     }
 
     /**

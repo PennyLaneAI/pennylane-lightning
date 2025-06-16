@@ -111,7 +111,7 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
     registerGatesForStateVector<StateVectorT>(pyclass);
     registerControlledGate<StateVectorT>(pyclass);
     pyclass.def(
-        "applyPauliRot", // TODO: update this support
+        "applyPauliRot",
         [](StateVectorT &sv, const std::vector<std::size_t> &wires,
            const bool inverse, const std::vector<ParamT> &params,
            const std::string &word) {
