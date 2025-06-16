@@ -41,7 +41,7 @@ namespace Pennylane::LightningGPU::NanoBindings {
  */
 using StateVectorBackends = Pennylane::Util::TypeList<
     StateVectorCudaManaged<float>,
-    Pennylane::Util::TypeList<StateVectorCudaManaged<double>, void>>;
+    StateVectorCudaManaged<double>, void>;
 
 /**
  * @brief Get a controlled matrix and kernel map for a statevector.

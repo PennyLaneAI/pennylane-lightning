@@ -82,7 +82,7 @@ using namespace Pennylane::LightningKokkos::NanoBindings;
 
 #elif _ENABLE_PLGPU == 1
 #include "AdjointJacobianGPU.hpp"
-#include "BindingsCudaUtils.hpp"
+#include "BindingsCudaUtils_nb.hpp"
 #include "LGPUBindings_nb.hpp"
 #include "MeasurementsGPU.hpp"
 #include "ObservablesGPU.hpp"
@@ -590,7 +590,7 @@ generateSamples(Measurements<StateVectorT> &M, std::size_t num_wires,
 template <class StateVectorT>
 void updateStateVectorData(
     StateVectorT &sv,
-    const nb::ndarray<typename StateVectorT::ComplexT, nb::numpy> &data) {
+    const nb::ndarray<const typename StateVectorT::ComplexT, nb::numpy> &data) {
     using ComplexT = typename StateVectorT::ComplexT;
 
     // Check dimensions
@@ -599,7 +599,7 @@ void updateStateVectorData(
     }
 
     // Get data pointer and size
-    const ComplexT *data_ptr = static_cast<const ComplexT *>(data.data());
+    const ComplexT *data_ptr = data.data();
     std::size_t size = data.shape(0);
 
     // Update the state vector data
@@ -752,10 +752,12 @@ void registerBackendAgnosticStateVectorMethods(PyClass &pyclass) {
     // Initialize with number of qubits
     pyclass.def(nb::init<size_t>());
 
+#if _ENABLE_PLGPU != 1
     // Add updateData method
     pyclass.def("updateData", &updateStateVectorData<StateVectorT>,
                 "Update the state vector data from a numpy array.",
                 nb::arg("state"));
+#endif
 
     pyclass.def("__len__", &StateVectorT::getLength,
                 "Get the size of the statevector.");
@@ -807,7 +809,13 @@ template <class StateVectorT> void lightningClassBindings(nb::module_ &m) {
     auto pyclass_measurements =
         nb::class_<Measurements<StateVectorT>>(m, class_name.c_str());
 
+#ifdef _ENABLE_PLGPU
+    // TODO: Find if getting `const` to work with GPU state vector is an easy lift
+    pyclass_measurements.def(nb::init<StateVectorT &>());
+#else
     pyclass_measurements.def(nb::init<const StateVectorT &>());
+#endif
+
     registerBackendAgnosticMeasurements<StateVectorT>(pyclass_measurements);
     registerBackendSpecificMeasurements<StateVectorT>(pyclass_measurements);
 
