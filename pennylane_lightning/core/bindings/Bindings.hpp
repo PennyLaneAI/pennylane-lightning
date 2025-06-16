@@ -466,7 +466,6 @@ void registerBackendAgnosticMeasurements(PyClass &pyclass) {
                 return M.var(*ob);
             },
             "Variance of an observable object.")
-#ifndef _ENABLE_PLKOKKOS_MPI
         .def("probs",
              [](Measurements<StateVectorT> &M,
                 const std::vector<std::size_t> &wires) {
@@ -495,7 +494,6 @@ void registerBackendAgnosticMeasurements(PyClass &pyclass) {
                      strides /* strides for each axis     */
                      ));
              })
-#endif
         .def("set_random_seed", [](Measurements<StateVectorT> &M,
                                    std::size_t seed) { M.setSeed(seed); });
 }
