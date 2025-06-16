@@ -195,7 +195,7 @@ TEMPLATE_PRODUCT_TEST_CASE("HamiltonianMPI::ApplyInPlace", "[Observables]",
     auto ham = HamiltonianT::create({PrecisionT{1.0}, h, h}, {zz, x1, x2});
     auto ham0 = Hamiltonian::create({PrecisionT{1.0}, h, h}, {zz0, x10, x20});
 
-    SECTION("Hamiltonian applies correctly to |+->") {
+    SECTION("Hamiltonian applyInPlace") {
         const PrecisionT EP = 1e-5;
         MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
         REQUIRE(mpi_manager.getSize() == 4);
