@@ -45,6 +45,49 @@ using StateVectorBackends =
                               StateVectorLQubitManaged<double>, void>;
 
 /**
+ * @brief Update state vector data from an array
+ *
+ * This function accepts any array-like object that follows the buffer protocol,
+ * including NumPy arrays and JAX arrays (for example).
+ *
+ * Example with JAX:
+ * ```python
+ * import jax.numpy as jnp
+ * import pennylane_lightning.lightning_qubit_nb as plq
+ *
+ * # Create a JAX array
+ * jax_data = jnp.zeros(2**3, dtype=jnp.complex64)
+ * jax_data = jax_data.at[0].set(1.0)  # Set to |000⟩ state
+ *
+ * # Create a state vector and update with JAX data
+ * sv = plq.StateVectorC64(3)  # 3 qubits
+ * sv.updateData(jax_data)     # Works with JAX arrays!
+ * ```
+ *
+ * @tparam StateVectorT State vector type
+ * @param sv State vector to update
+ * @param data Array with new data
+ */
+template <class StateVectorT>
+void updateStateVectorData(
+    StateVectorT &sv,
+    const nb::ndarray<typename StateVectorT::ComplexT> &data) {
+    using ComplexT = typename StateVectorT::ComplexT;
+
+    // Check dimensions
+    if (data.ndim() != 1) {
+        throw std::invalid_argument("Array must be 1-dimensional");
+    }
+
+    // Get data pointer and size
+    const ComplexT *data_ptr = static_cast<const ComplexT *>(data.data());
+    std::size_t size = data.shape(0);
+
+    // Update the state vector data
+    sv.updateData(data_ptr, size);
+}
+
+/**
  * @brief Get a controlled matrix and kernel map for a statevector.
  * @tparam StateVectorT
  * @tparam PyClass
