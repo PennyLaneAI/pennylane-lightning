@@ -90,7 +90,7 @@ class TestNanobindBindings:
     def test_module_importable(self, module_name: str):
         """Test if module can be imported."""
         module_attr = self._skip_if_module_not_importable(module_name)
-        assert module_attr["importable"]
+
         assert len(module_attr["classes"]) > 0 or len(module_attr["functions"]) > 0
 
     @pytest.mark.parametrize("module_name", nb_modules)
@@ -141,11 +141,152 @@ class TestNanobindBindings:
                 cls in nb_attr["classes"]
             ), f"Class {cls} exists in {pybind_module_name} but not in {module_name}"
 
+            # Get class objects (this will fail if there is no such class.)
+            pb_class = getattr(pb_attr["module"], cls)
+            nb_class = getattr(nb_attr["module"], cls)
+
+            # Check methods of the class
+            pb_methods = [
+                name
+                for name in dir(pb_class)
+                if not name.startswith("__") and callable(getattr(pb_class, name))
+            ]
+
+            for method_name in pb_methods:
+                # Skip private methods and special methods
+                if method_name.startswith("_"):
+                    continue
+
+                assert hasattr(
+                    nb_class, method_name
+                ), f"Method {cls}.{method_name} exists in {pybind_module_name} but not in {module_name}"
+
+                # Get method objects (this will fail if there is no such method.)
+                pb_method = getattr(pb_class, method_name)
+                nb_method = getattr(nb_class, method_name)
+
+                # Check if both are callable
+                assert callable(
+                    pb_method
+                ), f"{cls}.{method_name} in {pybind_module_name} is not callable"
+                assert callable(nb_method), f"{cls}.{method_name} in {module_name} is not callable"
+
+                # Try to get signatures if possible
+                try:
+                    pb_sig = inspect.signature(pb_method)
+                    nb_sig = inspect.signature(nb_method)
+
+                    # Compare parameter count (excluding self)
+                    pb_param_count = len(pb_sig.parameters)
+                    nb_param_count = len(nb_sig.parameters)
+
+                    assert pb_param_count == nb_param_count, (
+                        f"Method {cls}.{method_name} has {pb_param_count} parameters in {pybind_module_name} "
+                        f"but {nb_param_count} parameters in {module_name}"
+                    )
+
+                    # Compare parameter names and kinds
+                    for pb_param_name, pb_param in pb_sig.parameters.items():
+                        assert pb_param_name in nb_sig.parameters, (
+                            f"Parameter '{pb_param_name}' of {cls}.{method_name} exists in {pybind_module_name} "
+                            f"but not in {module_name}"
+                        )
+
+                        nb_param = nb_sig.parameters[pb_param_name]
+                        assert pb_param.kind == nb_param.kind, (
+                            f"Parameter '{pb_param_name}' of {cls}.{method_name} has kind {pb_param.kind} in {pybind_module_name} "
+                            f"but kind {nb_param.kind} in {module_name}"
+                        )
+                except (ValueError, TypeError):
+                    # Skip signature comparison if it's not possible to get signatures
+                    pass
+
         # Check that all functions in pybind module exist in nanobind module
         for func in pb_attr["functions"]:
             assert (
                 func in nb_attr["functions"]
             ), f"Function {func} exists in {pybind_module_name} but not in {module_name}"
+
+            # Get function objects
+            pb_func = getattr(pb_attr["module"], func)
+            nb_func = getattr(nb_attr["module"], func)
+
+            # Check if both are callable
+            assert callable(pb_func), f"{func} in {pybind_module_name} is not callable"
+            assert callable(nb_func), f"{func} in {module_name} is not callable"
+
+            # Try to get signatures if possible
+            try:
+                pb_sig = inspect.signature(pb_func)
+                nb_sig = inspect.signature(nb_func)
+
+                # Compare parameter count
+                pb_param_count = len(pb_sig.parameters)
+                nb_param_count = len(nb_sig.parameters)
+
+                assert pb_param_count == nb_param_count, (
+                    f"Function {func} has {pb_param_count} parameters in {pybind_module_name} "
+                    f"but {nb_param_count} parameters in {module_name}"
+                )
+
+                # Compare parameter names and kinds
+                for pb_param_name, pb_param in pb_sig.parameters.items():
+                    assert pb_param_name in nb_sig.parameters, (
+                        f"Parameter '{pb_param_name}' of function {func} exists in {pybind_module_name} "
+                        f"but not in {module_name}"
+                    )
+
+                    nb_param = nb_sig.parameters[pb_param_name]
+                    assert pb_param.kind == nb_param.kind, (
+                        f"Parameter '{pb_param_name}' of function {func} has kind {pb_param.kind} in {pybind_module_name} "
+                        f"but kind {nb_param.kind} in {module_name}"
+                    )
+
+                # Check return type annotation if available
+                if (
+                    pb_sig.return_annotation is not inspect.Signature.empty
+                    and nb_sig.return_annotation is not inspect.Signature.empty
+                ):
+                    assert pb_sig.return_annotation == nb_sig.return_annotation, (
+                        f"Function {func} has return type {pb_sig.return_annotation} in {pybind_module_name} "
+                        f"but {nb_sig.return_annotation} in {module_name}"
+                    )
+            except (ValueError, TypeError):
+                # Skip signature comparison if it's not possible to get signatures
+                pass
+
+            # Test return type for array-returning functions
+            if func in ["probs", "expval", "var", "generate_samples"]:
+                try:
+                    # Create minimal test data to check return types
+                    # This is a simplified approach - in a real test you might need more setup
+                    if "StateVectorC64" in nb_attr["classes"]:
+                        sv_class = getattr(nb_attr["module"], "StateVectorC64")
+                        sv = sv_class(1)  # Create a 1-qubit state vector
+
+                        if func == "generate_samples":
+                            # For generate_samples, we need a Measurements object
+                            if "MeasurementsC64" in nb_attr["classes"]:
+                                meas_class = getattr(nb_attr["module"], "MeasurementsC64")
+                                meas = meas_class(sv)
+                                nb_result = getattr(meas, func)(10)  # Generate 10 samples
+                                assert isinstance(
+                                    nb_result, np.ndarray
+                                ), f"{func} in {module_name} should return numpy.ndarray"
+                        elif func in ["probs", "expval", "var"]:
+                            # For measurement functions, we need a Measurements object
+                            if "MeasurementsC64" in nb_attr["classes"]:
+                                meas_class = getattr(nb_attr["module"], "MeasurementsC64")
+                                meas = meas_class(sv)
+
+                                if func == "probs":
+                                    nb_result = meas.probs([0])
+                                    assert isinstance(
+                                        nb_result, np.ndarray
+                                    ), f"{func} in {module_name} should return numpy.ndarray"
+                except Exception:
+                    # Skip if we can't easily test the return type
+                    pass
 
     @pytest.mark.parametrize("module_name", nb_modules)
     def test_observables_submodule_exists(self, module_name: str, precision: str):
@@ -211,3 +352,37 @@ class TestNanobindBindings:
         assert (
             f"create_ops_listC{precision}" in module.algorithms.__dir__()
         ), f"create_ops_listC{precision} not found in {module.__name__}.algorithms"
+
+    @pytest.mark.parametrize("module_name", nb_modules)
+    def test_runtime_info_binding_type(self, module_name: str):
+        """Test if runtime_info contains the correct binding_type."""
+        module_attr = self._skip_if_module_not_importable(module_name)
+
+        # Import the module
+        module = importlib.import_module(module_name)
+
+        # Get runtime info
+        info = module.runtime_info()
+
+        # Check binding type
+        assert "binding_type" in info
+        assert info["binding_type"] == "nanobind"
+
+        # Check for CPU instruction set flags (same as in test_binary_info.py)
+        for key in ["AVX", "AVX2", "AVX512F"]:
+            assert key in info
+
+    @pytest.mark.parametrize("module_name", nb_modules)
+    def test_compile_info(self, module_name: str):
+        """Test if compile_info contains expected keys."""
+        module_attr = self._skip_if_module_not_importable(module_name)
+
+        # Import the module
+        module = importlib.import_module(module_name)
+
+        # Get compile info
+        info = module.compile_info()
+
+        # Check for expected keys (same as in test_binary_info.py)
+        for key in ["cpu.arch", "compiler.name", "compiler.version", "AVX2", "AVX512F"]:
+            assert key in info

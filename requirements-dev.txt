@@ -2,7 +2,6 @@
 build
 ninja
 pybind11>=2.12.0
-nanobind>=2.7.0
 cmake
 scipy-openblas32>=0.3.26
 custatevec-cu12; sys_platform == "linux"

@@ -209,44 +209,44 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
  *
  * @tparam StateVectorT
  * @tparam PyClass
- * @param pyclass Pybind11's measurements class to bind methods.
+ * @param pyclass Nanobind's measurements class to bind methods.
  */
 template <class StateVectorT, class PyClass>
-void registerBackendSpecificMeasurements(PyClass &pyclass) {}
+void registerBackendSpecificMeasurements(PyClass &) {} // pyclass
 
 /**
  * @brief Register backend specific observables.
  *
  * @tparam StateVectorT
- * @param m Pybind module
+ * @param m Nanobind module
  */
 template <class StateVectorT>
-void registerBackendSpecificObservables(nb::module_ &m) {}
+void registerBackendSpecificObservables(nb::module_ &) {} // m
 
 /**
  * @brief Register backend specific adjoint Jacobian methods.
  *
  * @tparam StateVectorT
- * @param m Pybind module
+ * @param m Nanobind module
  */
 template <class StateVectorT>
-void registerBackendSpecificAlgorithms(nb::module_ &m) {}
+void registerBackendSpecificAlgorithms(nb::module_ &) {} // m
 
 /**
  * @brief Register bindings for backend-specific info.
  *
- * @param m Pybind11 module.
+ * @param m Nanobind module.
  */
-void registerBackendSpecificInfo(nb::module_ &m) {}
+void registerBackendSpecificInfo(nb::module_ &) {} // m
 
 /**
  * @brief Register backend specific state vector methods.
  *
  * @tparam StateVectorT
  * @tparam PyClass
- * @param pyclass Pybind11's state vector class to bind methods.
+ * @param pyclass Nanobind's state vector class to bind methods.
  */
 template <class StateVectorT, class PyClass>
-void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {}
+void registerBackendSpecificStateVectorMethods(PyClass &) {} // pyclass
 
 } // namespace Pennylane::LightningGPU::NanoBindings

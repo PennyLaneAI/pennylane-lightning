@@ -68,30 +68,6 @@ class TestStateVectorNB:
         assert sv.size() == 2**num_qubits
 
     @pytest.mark.parametrize("backend_name", backends)
-    def test_statevector_methods(
-        self, backend_name, precision, nanobind_module, get_statevector_class
-    ):
-        """Test methods of StateVectorC64/128 classes."""
-        module = nanobind_module(backend_name)
-
-        # Get the appropriate StateVector class based on precision
-        StateVectorClass = get_statevector_class(module, precision)
-
-        num_qubits = 2
-        # Create a numpy array representing |0> state with appropriate size
-        dtype = np.complex128 if precision == "128" else np.complex64
-        state_data = np.zeros(2**num_qubits, dtype=dtype)
-        state_data[0] = 1.0
-
-        # Initialize with number of qubits first
-        sv = StateVectorClass(num_qubits)
-        # Then update data
-        sv.updateData(state_data)
-
-        # Test size
-        assert sv.size() == 2**num_qubits
-
-    @pytest.mark.parametrize("backend_name", backends)
     def test_statevector_gate_operations(
         self, backend_name, precision, nanobind_module, get_statevector_class
     ):
@@ -155,10 +131,6 @@ class TestStateVectorNB:
         self, backend_name, precision, nanobind_module, get_statevector_class
     ):
         """Test matrix application on StateVectorC64/128 classes."""
-        # Skip non-qubit backends for this test
-        if backend_name != "qubit":
-            pytest.skip(f"Matrix application test only supported for qubit backend")
-
         module = nanobind_module(backend_name)
 
         StateVectorClass = get_statevector_class(module, precision)
