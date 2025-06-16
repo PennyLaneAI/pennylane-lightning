@@ -348,3 +348,80 @@ TEMPLATE_TEST_CASE("Apply Controlled Operation - param 2 control 2 target wire",
         }
     }
 }
+
+TEMPLATE_TEST_CASE("Apply PauliRot - 1 wire", "[LKMPI]", double, float) {
+    const TestType EP = 1e-4;
+    const std::size_t num_qubits = 5;
+    auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
+
+    const bool inverse = GENERATE(false, true);
+
+    const std::size_t wire = GENERATE(0, 1, 2, 3, 4);
+    const std::string op = GENERATE("X", "Y", "Z");
+    const std::string word = op;
+    const TestType param = 0.12342;
+
+    DYNAMIC_SECTION("word = " << word << " Inverse = " << inverse
+                              << " Wire = " << wire) {
+        sv.applyPauliRot({wire}, inverse, {param}, word);
+        sv_ref.applyPauliRot({wire}, inverse, {param}, word);
+
+        auto reference = sv_ref.getDataVector();
+        auto data = sv.getDataVector(0);
+
+        if (sv.getMPIManager().getRank() == 0) {
+            for (std::size_t j = 0; j < data.size(); j++) {
+                CHECK(real(data[j]) == Approx(real(reference[j])).margin(EP));
+                CHECK(imag(data[j]) == Approx(imag(reference[j])).margin(EP));
+            }
+        }
+    }
+}
+
+TEMPLATE_TEST_CASE("Apply PauliRot - 2 wires", "[LKMPI]", double, float) {
+    const TestType EP = 1e-4;
+    const std::size_t num_qubits = 5;
+    auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
+
+    const bool inverse = GENERATE(false, true);
+
+    const std::size_t wire_0 = GENERATE(0, 2, 4);
+    const std::size_t wire_1 = GENERATE(1, 3);
+    const std::string op_0 = GENERATE("X", "Y", "Z");
+    const std::string op_1 = GENERATE("X", "Y", "Z");
+    const std::string word = op_0 + op_1;
+    const std::vector<TestType> param = {0.12342, 0.23436};
+
+    DYNAMIC_SECTION("word = " << word << " Inverse = " << inverse
+                              << " Wire_0 = " << wire_0
+                              << " Wire_1 = " << wire_1) {
+        if (wire_0 != wire_1) {
+            sv.applyPauliRot({wire_0, wire_1}, inverse, {param}, word);
+            sv_ref.applyPauliRot({wire_0, wire_1}, inverse, {param}, word);
+
+            auto reference = sv_ref.getDataVector();
+            auto data = sv.getDataVector(0);
+
+            if (sv.getMPIManager().getRank() == 0) {
+                for (std::size_t j = 0; j < data.size(); j++) {
+                    CHECK(real(data[j]) ==
+                          Approx(real(reference[j])).margin(EP));
+                    CHECK(imag(data[j]) ==
+                          Approx(imag(reference[j])).margin(EP));
+                }
+            }
+        }
+    }
+}
+
+TEMPLATE_TEST_CASE("Apply PauliRot - error", "[LKMPI]", double, float) {
+    const std::size_t num_qubits = 5;
+    auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
+
+    PL_REQUIRE_THROWS_MATCHES(
+        sv.applyPauliRot({0, 1, 3, 4}, true, {0.1, 0.2, 0.3, 0.4}, "XYXY"),
+        LightningException, "Number of wires must be smaller than");
+    PL_REQUIRE_THROWS_MATCHES(
+        sv.applyPauliRot({0, 1, 3}, true, {0.1, 0.2, 0.3, 0.4}, "XYXY"),
+        LightningException, "wires and word have incompatible dimensions.");
+}

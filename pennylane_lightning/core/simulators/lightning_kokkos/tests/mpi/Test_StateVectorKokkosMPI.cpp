@@ -1143,3 +1143,27 @@ TEMPLATE_TEST_CASE("Normalize", "[LKMPI]", double, float) {
         }
     }
 }
+
+TEMPLATE_TEST_CASE("collapse", "[LKMPI]", double, float) {
+    const std::size_t num_qubits = 5;
+    auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
+    applyNonTrivialOperations(num_qubits, sv, sv_ref);
+
+    std::size_t wire = GENERATE(0, 1, 2, 3, 4);
+    bool branch = GENERATE(true, false);
+
+    DYNAMIC_SECTION("wire " << wire << " branch " << branch) {
+        sv.collapse(wire, branch);
+        sv_ref.collapse(wire, branch);
+
+        auto reference = sv_ref.getDataVector();
+        auto data = sv.getDataVector(0);
+
+        if (sv.getMPIManager().getRank() == 0) {
+            for (std::size_t j = 0; j < data.size(); j++) {
+                CHECK(real(data[j]) == Approx(real(reference[j])).margin(1e-5));
+                CHECK(imag(data[j]) == Approx(imag(reference[j])).margin(1e-5));
+            }
+        }
+    }
+}

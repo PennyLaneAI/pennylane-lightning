@@ -142,6 +142,14 @@ void registerBackendClassSpecificBindingsMPI(PyClass &pyclass) {
                                   conv_matrix);
             },
             "Apply operation via the gate matrix")
+        .def(
+            "applyPauliRot",
+            [](StateVectorT &sv, const std::vector<std::size_t> &wires,
+               const bool inverse, const std::vector<ParamT> &params,
+               const std::string &word) {
+                sv.applyPauliRot(wires, inverse, params, word);
+            },
+            "Apply a Pauli rotation.")
         .def("applyControlledMatrix", &applyControlledMatrix<StateVectorT>,
              "Apply controlled operation")
         .def("collapse", &StateVectorT::collapse,
