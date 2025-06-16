@@ -48,28 +48,31 @@ using StateVectorBackends =
  * @brief Get a controlled matrix and kernel map for a statevector.
  * @tparam StateVectorT
  * @tparam PyClass
- * @param pyclass Pybind11's measurements class to bind methods.
+ * @param pyclass Nanobind's measurements class to bind methods.
  */
 template <class StateVectorT, class PyClass>
-void registerBackendClassSpecificBindings(PyClass &pyclass) {}
+void registerBackendClassSpecificBindings(PyClass &) {} // pyclass
 
 /**
  * @brief Register backend specific state vector methods.
  *
  * @tparam StateVectorT
  * @tparam PyClass
- * @param pyclass Pybind11's state vector class to bind methods.
+ * @param pyclass Nanobind's state vector class to bind methods.
  */
 template <class StateVectorT, class PyClass>
 void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
-    using ParamT = PrecisionT; // Parameter's data precision
+    // using ParamT = PrecisionT; // Parameter's data precision
 
     // Add other methods (resetStateVector, setBasisState, etc.)
     pyclass.def("resetStateVector", &StateVectorT::resetStateVector,
                 "Reset the state vector to |0...0>.");
 
+    pyclass.def("updateData", &updateStateVectorData<StateVectorT>,
+                "Update the state vector data from an array.",
+                nb::arg("state"));
     pyclass.def(
         "setBasisState",
         [](StateVectorT &sv, const std::vector<std::size_t> &state,
@@ -111,34 +114,34 @@ void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
  *
  * @tparam StateVectorT
  * @tparam PyClass
- * @param pyclass Pybind11's measurements class to bind methods.
+ * @param pyclass Nanobind's measurements class to bind methods.
  */
 template <class StateVectorT, class PyClass>
-void registerBackendSpecificMeasurements(PyClass &pyclass) {}
+void registerBackendSpecificMeasurements(PyClass &) {} // pyclass
 
 /**
  * @brief Register backend specific observables.
  *
  * @tparam StateVectorT
- * @param m Pybind module
+ * @param m Nanobind module
  */
 template <class StateVectorT>
-void registerBackendSpecificObservables(nb::module_ &m) {}
+void registerBackendSpecificObservables(nb::module_ &) {} // m
 
 /**
  * @brief Register backend specific adjoint Jacobian methods.
  *
  * @tparam StateVectorT
- * @param m Pybind module
+ * @param m Nanobind module
  */
 template <class StateVectorT>
-void registerBackendSpecificAlgorithms(nb::module_ &m) {}
+void registerBackendSpecificAlgorithms(nb::module_ &) {} // m
 
 /**
  * @brief Register bindings for backend-specific info.
  *
- * @param m Pybind11 module.
+ * @param m Nanobind module.
  */
-void registerBackendSpecificInfo(nb::module_ &m) {}
+void registerBackendSpecificInfo(nb::module_ &) {} // m
 
 } // namespace Pennylane::LightningQubit::NanoBindings
