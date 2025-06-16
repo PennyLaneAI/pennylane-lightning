@@ -810,7 +810,8 @@ template <class StateVectorT> void lightningClassBindings(nb::module_ &m) {
         nb::class_<Measurements<StateVectorT>>(m, class_name.c_str());
 
 #ifdef _ENABLE_PLGPU
-    // TODO: Find if getting `const` to work with GPU state vector is an easy lift
+    // TODO: Find if getting `const` to work with GPU state vector is an easy
+    // lift
     pyclass_measurements.def(nb::init<StateVectorT &>());
 #else
     pyclass_measurements.def(nb::init<const StateVectorT &>());

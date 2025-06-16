@@ -24,12 +24,12 @@
 #include "DevicePool.hpp"
 #include "cuda_helpers.hpp"
 
-
-// TODO: I think this entire section can be removed, neither of these namespaces are used
+// TODO: I think this entire section can be removed, neither of these namespaces
+// are used
 /// @cond DEV
 namespace {
 using namespace Pennylane;
-//using namespace Pennylane::NanoBindings;
+// using namespace Pennylane::NanoBindings;
 } // namespace
 /// @endcond
 
@@ -69,28 +69,29 @@ void registerCudaUtils(nb::module_ &m) {
         .def_static("getDeviceUIDs", &DevicePool<int>::getDeviceUIDs)
         .def_static("setDeviceID", &DevicePool<int>::setDeviceIdx)
         .def("__getstate__",
-            [](const DevicePool<int> &self) { // __getstate__
-                return nb::make_tuple();
-            })
+             [](const DevicePool<int> &self) { // __getstate__
+                 return nb::make_tuple();
+             })
         .def("__setstate__",
-            [](DevicePool<int> &self, nb::tuple &t) { // __setstate__
-                if (t.size() != 0) {
-                    throw std::runtime_error("Invalid state!");
-                }
-                
-                self.refresh();
-            });
+             [](DevicePool<int> &self, nb::tuple &t) { // __setstate__
+                 if (t.size() != 0) {
+                     throw std::runtime_error("Invalid state!");
+                 }
+
+                 self.refresh();
+             });
 
     nb::class_<DevTag<int>>(m, "DevTag")
         .def(nb::init<>())
         .def(nb::init<int>())
-        // .def(nb::init<{int, void*}>([](int device_id, void *stream_id) {
-        //     // Note, streams must be handled externally for now.
-        //     // Binding support provided through void* conversion to cudaStream_t
-        //     return new DevTag<int>(device_id,
-        //                            static_cast<cudaStream_t>(stream_id));
-        // }))
         .def(nb::init<const DevTag<int> &>())
+        .def("__init__",
+             [](int device_id, void *stream_id) {
+                 // The lower level `__init__` needs to be defined directly to
+                 // support type casting
+                 return DevTag<int>(device_id,
+                                    static_cast<cudaStream_t>(stream_id));
+             })
         .def("getDeviceID", &DevTag<int>::getDeviceID)
         .def("getStreamID",
              [](DevTag<int> &dev_tag) {
