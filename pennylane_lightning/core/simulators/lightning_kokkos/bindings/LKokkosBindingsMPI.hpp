@@ -235,11 +235,6 @@ void registerBackendSpecificMeasurementsMPI(PyClass &pyclass) {
                  const std::string &, const std::vector<std::size_t> &)>(
                  &MeasurementsMPI<StateVectorT>::var),
              "Variance of an operation by name.");
-    // LK-MPI currently only support analytical expval, and var.
-    // Features below are not yet supported:
-    // - Sparse Hamiltonian
-    // - Probs
-    // - Shots (Counts, Samples)
 }
 
 /**
