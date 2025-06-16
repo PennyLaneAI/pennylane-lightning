@@ -35,9 +35,12 @@
 
 namespace nb = nanobind;
 
+/// @cond DEV
 namespace {
 using namespace Pennylane::LightningGPU::Measures;
-}
+using namespace Pennylane::LightningGPU::Observables;
+} // namespace
+/// @endcond
 
 namespace Pennylane::LightningGPU::NanoBindings {
 
@@ -59,7 +62,6 @@ void applyControlledMatrix(
     const std::vector<std::size_t> &controlled_wires,
     const std::vector<bool> &controlled_values,
     const std::vector<std::size_t> &wires, bool inverse = false) {
-    using ComplexT = typename StateVectorT::ComplexT;
     st.applyControlledMatrix(matrix.data(), controlled_wires, controlled_values,
                              wires, inverse);
 }
@@ -103,8 +105,6 @@ template <class StateVectorT, class PyClass>
 void registerBackendClassSpecificBindings(PyClass &pyclass) {
     using PrecisionT =
         typename StateVectorT::PrecisionT; // Statevector's precision
-    using CFP_t =
-        typename StateVectorT::CFP_t; // Statevector's complex precision
     using ParamT = PrecisionT;        // Parameter's data precision
     using ArrayT = nb::ndarray<std::complex<ParamT>, nb::c_contig>;
 
@@ -226,13 +226,10 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
     using ParamT = PrecisionT;           // Parameter's data precision
 
     using ArrayT = nb::ndarray<std::complex<ParamT>, nb::c_contig>;
-    using SparseIndexT =
+    using IdxT =
         typename std::conditional<std::is_same<ParamT, float>::value, int32_t,
                                   int64_t>::type;
-    using ArraySparseIndexT =
-        typename std::conditional<std::is_same<ParamT, float>::value,
-                                  nb::ndarray<int32_t, nb::c_contig>,
-                                  nb::ndarray<int64_t, nb::c_contig>>::type;
+    using ArraySparseIndexT = nb::ndarray<IdxT, nb::c_contig>;
 
     pyclass
         .def(
@@ -290,8 +287,8 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
                const ArraySparseIndexT &entries, const ArrayT &values) {
                 return M.var(row_map.data(),
                              static_cast<int64_t>(row_map.size()),
-                             static_cast<SparseIndexT *>(entries.data()),
-                             static_cast<ComplexT *>(values.data()),
+                             entries.data(),
+                             values.data(),
                              static_cast<int64_t>(values.size()));
             },
             "Variance of a sparse Hamiltonian.");
@@ -305,7 +302,52 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
  * @param m Nanobind module
  */
 template <class StateVectorT>
-void registerBackendSpecificObservables(nb::module_ &) {} // m
+void registerBackendSpecificObservables(nb::module_ &m) {
+    using PrecisionT =
+        typename StateVectorT::PrecisionT; // Statevector's precision.
+    using ComplexT =
+        typename StateVectorT::ComplexT; // Statevector's complex type.
+    using ParamT = PrecisionT;           // Parameter's data precision
+
+    const std::string bitsize =
+        std::to_string(sizeof(std::complex<PrecisionT>) * 8);
+
+    using ArrayT = nb::ndarray<std::complex<ParamT>, nb::c_contig>;
+
+    std::string class_name;
+
+    class_name = "SparseHamiltonianC" + bitsize;
+    using IdxT = typename SparseHamiltonian<StateVectorT>::IdxT;
+    using ArraySparseIndexT = nb::ndarray<IdxT, nb::c_contig>;
+
+    nb::class_<SparseHamiltonian<StateVectorT>,
+               Observable<StateVectorT>>(m, class_name.c_str())
+        .def("__init__",
+            [](const ArrayT &data, const ArraySparseIndexT &indices,
+                         const ArraySparseIndexT &offsets,
+                         const std::vector<std::size_t> &wires) {
+            // TODO: We can probably avoid a copy here by not constructing a vector
+            return SparseHamiltonian<StateVectorT>{
+                std::vector<ComplexT>({data.data(), data.data() + data.size()}),
+                std::vector<IdxT>({indices.data(), indices.data() + indices.size()}),
+                std::vector<IdxT>({offsets.data(), offsets.data() + offsets.size()}),
+                wires};
+        })
+        .def("__repr__", &SparseHamiltonian<StateVectorT>::getObsName)
+        .def("get_wires", &SparseHamiltonian<StateVectorT>::getWires,
+             "Get wires of observables")
+        .def(
+            "__eq__",
+            []([[maybe_unused]] const SparseHamiltonian<StateVectorT> &self,
+               nb::handle other) -> bool {
+                if (!nb::isinstance<SparseHamiltonian<StateVectorT>>(other)) {
+                    return false;
+                }
+                auto other_cast = nb::cast<SparseHamiltonian<StateVectorT>>(other);
+                return self == other_cast;
+            },
+            "Compare two observables");
+} // m
 
 /**
  * @brief Register backend specific adjoint Jacobian methods.
@@ -313,15 +355,24 @@ void registerBackendSpecificObservables(nb::module_ &) {} // m
  * @tparam StateVectorT
  * @param m Nanobind module
  */
-template <class StateVectorT>
-void registerBackendSpecificAlgorithms(nb::module_ &) {} // m
+template <class StateVectorT, class PyClass>
+void registerBackendSpecificAlgorithms([[maybe_unused]] nb::module_ &m) {} // m
 
 /**
  * @brief Register bindings for backend-specific info.
  *
  * @param m Nanobind module.
  */
-void registerBackendSpecificInfo(nb::module_ &) {} // m
+void registerBackendSpecificInfo(nb::module_ &m) {
+    m.def("backend_info", [](){
+        nb::dict info;
+    
+        info["NAME"] = "lightning.gpu";
+    
+        return info;
+    }, "Backend-specific information.");
+    registerCudaUtils(m);
+} // m
 
 /**
  * @brief Register backend specific state vector methods.
@@ -331,6 +382,8 @@ void registerBackendSpecificInfo(nb::module_ &) {} // m
  * @param pyclass Nanobind's state vector class to bind methods.
  */
 template <class StateVectorT, class PyClass>
-void registerBackendSpecificStateVectorMethods(PyClass &) {} // pyclass
+void registerBackendSpecificStateVectorMethods(PyClass &) {
+    // TODO: What is meant to go here?
+} // pyclass
 
 } // namespace Pennylane::LightningGPU::NanoBindings

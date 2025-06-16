@@ -69,7 +69,7 @@ void registerCudaUtils(nb::module_ &m) {
         .def_static("getDeviceUIDs", &DevicePool<int>::getDeviceUIDs)
         .def_static("setDeviceID", &DevicePool<int>::setDeviceIdx)
         .def("__getstate__",
-             [](const DevicePool<int> &self) { // __getstate__
+             []([[maybe_unused]] const DevicePool<int> &self) { // __getstate__
                  return nb::make_tuple();
              })
         .def("__setstate__",
