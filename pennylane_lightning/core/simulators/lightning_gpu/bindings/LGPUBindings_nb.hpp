@@ -29,10 +29,15 @@
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/vector.h>
 
+#include "MeasurementsGPU.hpp"
 #include "StateVectorCudaManaged.hpp"
 #include "TypeList.hpp"
 
 namespace nb = nanobind;
+
+namespace {
+using namespace Pennylane::LightningGPU::Measures;
+}
 
 namespace Pennylane::LightningGPU::NanoBindings {
 
@@ -213,7 +218,85 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
  * @param pyclass Nanobind's measurements class to bind methods.
  */
 template <class StateVectorT, class PyClass>
-void registerBackendSpecificMeasurements(PyClass &) {} // pyclass
+void registerBackendSpecificMeasurements(PyClass &pyclass) {
+    using PrecisionT =
+        typename StateVectorT::PrecisionT; // Statevector's precision
+    using ComplexT =
+        typename StateVectorT::ComplexT; // Statevector's complex type
+    using ParamT = PrecisionT;           // Parameter's data precision
+
+    using ArrayT = nb::ndarray<std::complex<ParamT>, nb::c_contig>;
+    using SparseIndexT =
+        typename std::conditional<std::is_same<ParamT, float>::value, int32_t,
+                                  int64_t>::type;
+    using ArraySparseIndexT =
+        typename std::conditional<std::is_same<ParamT, float>::value,
+                                  nb::ndarray<int32_t, nb::c_contig>,
+                                  nb::ndarray<int64_t, nb::c_contig>>::type;
+
+    pyclass
+        .def(
+            "expval",
+            [](Measurements<StateVectorT> &M, const std::string &operation,
+               const std::vector<std::size_t> &wires) {
+                M.expval(operation, wires);
+            },
+            "Expected value of an operation by name.")
+        .def(
+            "expval",
+            [](Measurements<StateVectorT> &M, const ArraySparseIndexT &row_map,
+               const ArraySparseIndexT &entries, const ArrayT &values) {
+                return M.expval(
+                    row_map.data(),
+                    static_cast<int64_t>(
+                        row_map.size()), // int64_t is required by cusparse
+                    entries.data(), values.data(),
+                    static_cast<int64_t>(
+                        values.size())); // int64_t is required by cusparse
+            },
+            "Expected value of a sparse Hamiltonian.")
+        .def(
+            "expval",
+            [](Measurements<StateVectorT> &M,
+               const std::vector<std::string> &pauli_words,
+               const std::vector<std::vector<std::size_t>> &target_wires,
+               const ArrayT &coeffs) {
+                return M.expval(pauli_words, target_wires, coeffs.data());
+            },
+            "Expected value of Hamiltonian represented by Pauli words.")
+        .def(
+            "expval",
+            [](Measurements<StateVectorT> &M, const ArrayT &matrix,
+               const std::vector<std::size_t> &wires) {
+                const std::size_t matrix_size = exp2(2 * wires.size());
+                std::vector<ComplexT> matrix_v{matrix.data(),
+                                               matrix.data() + matrix_size};
+                return M.expval(matrix_v, wires);
+            },
+            "Expected value of a Hermitian observable.")
+        .def("var",
+             [](Measurements<StateVectorT> &M, const std::string &operation,
+                const std::vector<std::size_t> &wires) {
+                 return M.var(operation, wires);
+             })
+        .def("var",
+             static_cast<PrecisionT (Measurements<StateVectorT>::*)(
+                 const std::string &, const std::vector<std::size_t> &)>(
+                 &Measurements<StateVectorT>::var),
+             "Variance of an operation by name.")
+        .def(
+            "var",
+            [](Measurements<StateVectorT> &M, const ArraySparseIndexT &row_map,
+               const ArraySparseIndexT &entries, const ArrayT &values) {
+                return M.var(row_map.data(),
+                             static_cast<int64_t>(row_map.size()),
+                             static_cast<SparseIndexT *>(entries.data()),
+                             static_cast<ComplexT *>(values.data()),
+                             static_cast<int64_t>(values.size()));
+            },
+            "Variance of a sparse Hamiltonian.");
+
+} // pyclass
 
 /**
  * @brief Register backend specific observables.
