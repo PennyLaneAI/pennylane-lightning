@@ -446,11 +446,9 @@ void registerBackendAgnosticObservables(py::module_ &m) {
  */
 template <class StateVectorT, class PyClass>
 void registerBackendAgnosticMeasurements(PyClass &pyclass) {
-#ifndef _ENABLE_PLKOKKOS_MPI
     using PrecisionT =
         typename StateVectorT::PrecisionT; // Statevector's precision.
     using ParamT = PrecisionT;             // Parameter's data precision
-#endif
     pyclass
         .def(
             "expval",
