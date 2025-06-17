@@ -103,12 +103,193 @@ void registerControlledGate(PyClass &pyclass) {
  */
 template <class StateVectorT, class PyClass>
 void registerBackendClassSpecificBindings(PyClass &pyclass) {
+    registerControlledGate<StateVectorT>(pyclass);
+    registerBackendSpecificStateVectorMethods<StateVectorT>(pyclass);
+}
+
+/**
+ * @brief Register backend specific measurements class functionalities.
+ *
+ * @tparam StateVectorT
+ * @tparam PyClass
+ * @param pyclass Nanobind's measurements class to bind methods.
+ */
+template <class StateVectorT, class PyClass>
+void registerBackendSpecificMeasurements(PyClass &pyclass) {
     using PrecisionT =
         typename StateVectorT::PrecisionT; // Statevector's precision
-    using ParamT = PrecisionT;        // Parameter's data precision
+    using ComplexT =
+        typename StateVectorT::ComplexT; // Statevector's complex type
+    using ParamT = PrecisionT;           // Parameter's data precision
+
+    using ArrayT = nb::ndarray<std::complex<ParamT>, nb::c_contig>;
+    using IdxT = typename std::conditional<std::is_same<ParamT, float>::value,
+                                           int32_t, int64_t>::type;
+    using ArraySparseIndexT = nb::ndarray<IdxT, nb::c_contig>;
+
+    pyclass
+        .def(
+            "expval",
+            [](Measurements<StateVectorT> &M, const std::string &operation,
+               const std::vector<std::size_t> &wires) {
+                M.expval(operation, wires);
+            },
+            "Expected value of an operation by name.")
+        .def(
+            "expval",
+            [](Measurements<StateVectorT> &M, const ArraySparseIndexT &row_map,
+               const ArraySparseIndexT &entries, const ArrayT &values) {
+                return M.expval(
+                    row_map.data(),
+                    static_cast<int64_t>(
+                        row_map.size()), // int64_t is required by cusparse
+                    entries.data(), values.data(),
+                    static_cast<int64_t>(
+                        values.size())); // int64_t is required by cusparse
+            },
+            "Expected value of a sparse Hamiltonian.")
+        .def(
+            "expval",
+            [](Measurements<StateVectorT> &M,
+               const std::vector<std::string> &pauli_words,
+               const std::vector<std::vector<std::size_t>> &target_wires,
+               const ArrayT &coeffs) {
+                return M.expval(pauli_words, target_wires, coeffs.data());
+            },
+            "Expected value of Hamiltonian represented by Pauli words.")
+        .def(
+            "expval",
+            [](Measurements<StateVectorT> &M, const ArrayT &matrix,
+               const std::vector<std::size_t> &wires) {
+                const std::size_t matrix_size = exp2(2 * wires.size());
+                std::vector<ComplexT> matrix_v{matrix.data(),
+                                               matrix.data() + matrix_size};
+                return M.expval(matrix_v, wires);
+            },
+            "Expected value of a Hermitian observable.")
+        .def("var",
+             [](Measurements<StateVectorT> &M, const std::string &operation,
+                const std::vector<std::size_t> &wires) {
+                 return M.var(operation, wires);
+             })
+        .def("var",
+             static_cast<PrecisionT (Measurements<StateVectorT>::*)(
+                 const std::string &, const std::vector<std::size_t> &)>(
+                 &Measurements<StateVectorT>::var),
+             "Variance of an operation by name.")
+        .def(
+            "var",
+            [](Measurements<StateVectorT> &M, const ArraySparseIndexT &row_map,
+               const ArraySparseIndexT &entries, const ArrayT &values) {
+                return M.var(row_map.data(),
+                             static_cast<int64_t>(row_map.size()),
+                             entries.data(), values.data(),
+                             static_cast<int64_t>(values.size()));
+            },
+            "Variance of a sparse Hamiltonian.");
+
+} // pyclass
+
+/**
+ * @brief Register backend specific observables.
+ *
+ * @tparam StateVectorT
+ * @param m Nanobind module
+ */
+template <class StateVectorT>
+void registerBackendSpecificObservables(nb::module_ &m) {
+    using PrecisionT =
+        typename StateVectorT::PrecisionT; // Statevector's precision.
+    using ComplexT =
+        typename StateVectorT::ComplexT; // Statevector's complex type.
+    using ParamT = PrecisionT;           // Parameter's data precision
+
+    const std::string bitsize =
+        std::to_string(sizeof(std::complex<PrecisionT>) * 8);
+
     using ArrayT = nb::ndarray<std::complex<ParamT>, nb::c_contig>;
 
-    registerControlledGate<StateVectorT>(pyclass);
+    std::string class_name;
+
+    class_name = "SparseHamiltonianC" + bitsize;
+    using IdxT = typename SparseHamiltonian<StateVectorT>::IdxT;
+    using ArraySparseIndexT = nb::ndarray<IdxT, nb::c_contig>;
+
+    nb::class_<SparseHamiltonian<StateVectorT>, Observable<StateVectorT>>(
+        m, class_name.c_str())
+        .def("__init__",
+             [](const ArrayT &data, const ArraySparseIndexT &indices,
+                const ArraySparseIndexT &offsets,
+                const std::vector<std::size_t> &wires) {
+                 // TODO: We can probably avoid a copy here by not constructing
+                 // a vector
+                 return SparseHamiltonian<StateVectorT>{
+                     std::vector<ComplexT>(
+                         {data.data(), data.data() + data.size()}),
+                     std::vector<IdxT>(
+                         {indices.data(), indices.data() + indices.size()}),
+                     std::vector<IdxT>(
+                         {offsets.data(), offsets.data() + offsets.size()}),
+                     wires};
+             })
+        .def("__repr__", &SparseHamiltonian<StateVectorT>::getObsName)
+        .def("get_wires", &SparseHamiltonian<StateVectorT>::getWires,
+             "Get wires of observables")
+        .def(
+            "__eq__",
+            []([[maybe_unused]] const SparseHamiltonian<StateVectorT> &self,
+               nb::handle other) -> bool {
+                if (!nb::isinstance<SparseHamiltonian<StateVectorT>>(other)) {
+                    return false;
+                }
+                auto other_cast =
+                    nb::cast<SparseHamiltonian<StateVectorT>>(other);
+                return self == other_cast;
+            },
+            "Compare two observables");
+} // m
+
+/**
+ * @brief Register backend specific adjoint Jacobian methods.
+ *
+ * @tparam StateVectorT
+ * @param m Nanobind module
+ */
+template <class StateVectorT>
+void registerBackendSpecificAlgorithms([[maybe_unused]] nb::module_ &m) {} // m
+
+/**
+ * @brief Register bindings for backend-specific info.
+ *
+ * @param m Nanobind module.
+ */
+void registerBackendSpecificInfo(nb::module_ &m) {
+    m.def(
+        "backend_info",
+        []() {
+            nb::dict info;
+
+            info["NAME"] = "lightning.gpu";
+
+            return info;
+        },
+        "Backend-specific information.");
+    registerCudaUtils(m);
+} // m
+
+/**
+ * @brief Register backend specific state vector methods.
+ *
+ * @tparam StateVectorT
+ * @tparam PyClass
+ * @param pyclass Nanobind's state vector class to bind methods.
+ */
+template <class StateVectorT, class PyClass>
+void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
+    using PrecisionT =
+        typename StateVectorT::PrecisionT; // Statevector's precision
+    using ParamT = PrecisionT;             // Parameter's data precision
+    using ArrayT = nb::ndarray<std::complex<ParamT>, nb::c_contig>;
 
     pyclass
         .def(nb::init<std::size_t>())              // qubits, device
@@ -208,182 +389,6 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
                 }
             },
             "Apply operation via the gate matrix");
-}
-
-/**
- * @brief Register backend specific measurements class functionalities.
- *
- * @tparam StateVectorT
- * @tparam PyClass
- * @param pyclass Nanobind's measurements class to bind methods.
- */
-template <class StateVectorT, class PyClass>
-void registerBackendSpecificMeasurements(PyClass &pyclass) {
-    using PrecisionT =
-        typename StateVectorT::PrecisionT; // Statevector's precision
-    using ComplexT =
-        typename StateVectorT::ComplexT; // Statevector's complex type
-    using ParamT = PrecisionT;           // Parameter's data precision
-
-    using ArrayT = nb::ndarray<std::complex<ParamT>, nb::c_contig>;
-    using IdxT =
-        typename std::conditional<std::is_same<ParamT, float>::value, int32_t,
-                                  int64_t>::type;
-    using ArraySparseIndexT = nb::ndarray<IdxT, nb::c_contig>;
-
-    pyclass
-        .def(
-            "expval",
-            [](Measurements<StateVectorT> &M, const std::string &operation,
-               const std::vector<std::size_t> &wires) {
-                M.expval(operation, wires);
-            },
-            "Expected value of an operation by name.")
-        .def(
-            "expval",
-            [](Measurements<StateVectorT> &M, const ArraySparseIndexT &row_map,
-               const ArraySparseIndexT &entries, const ArrayT &values) {
-                return M.expval(
-                    row_map.data(),
-                    static_cast<int64_t>(
-                        row_map.size()), // int64_t is required by cusparse
-                    entries.data(), values.data(),
-                    static_cast<int64_t>(
-                        values.size())); // int64_t is required by cusparse
-            },
-            "Expected value of a sparse Hamiltonian.")
-        .def(
-            "expval",
-            [](Measurements<StateVectorT> &M,
-               const std::vector<std::string> &pauli_words,
-               const std::vector<std::vector<std::size_t>> &target_wires,
-               const ArrayT &coeffs) {
-                return M.expval(pauli_words, target_wires, coeffs.data());
-            },
-            "Expected value of Hamiltonian represented by Pauli words.")
-        .def(
-            "expval",
-            [](Measurements<StateVectorT> &M, const ArrayT &matrix,
-               const std::vector<std::size_t> &wires) {
-                const std::size_t matrix_size = exp2(2 * wires.size());
-                std::vector<ComplexT> matrix_v{matrix.data(),
-                                               matrix.data() + matrix_size};
-                return M.expval(matrix_v, wires);
-            },
-            "Expected value of a Hermitian observable.")
-        .def("var",
-             [](Measurements<StateVectorT> &M, const std::string &operation,
-                const std::vector<std::size_t> &wires) {
-                 return M.var(operation, wires);
-             })
-        .def("var",
-             static_cast<PrecisionT (Measurements<StateVectorT>::*)(
-                 const std::string &, const std::vector<std::size_t> &)>(
-                 &Measurements<StateVectorT>::var),
-             "Variance of an operation by name.")
-        .def(
-            "var",
-            [](Measurements<StateVectorT> &M, const ArraySparseIndexT &row_map,
-               const ArraySparseIndexT &entries, const ArrayT &values) {
-                return M.var(row_map.data(),
-                             static_cast<int64_t>(row_map.size()),
-                             entries.data(),
-                             values.data(),
-                             static_cast<int64_t>(values.size()));
-            },
-            "Variance of a sparse Hamiltonian.");
-
-} // pyclass
-
-/**
- * @brief Register backend specific observables.
- *
- * @tparam StateVectorT
- * @param m Nanobind module
- */
-template <class StateVectorT>
-void registerBackendSpecificObservables(nb::module_ &m) {
-    using PrecisionT =
-        typename StateVectorT::PrecisionT; // Statevector's precision.
-    using ComplexT =
-        typename StateVectorT::ComplexT; // Statevector's complex type.
-    using ParamT = PrecisionT;           // Parameter's data precision
-
-    const std::string bitsize =
-        std::to_string(sizeof(std::complex<PrecisionT>) * 8);
-
-    using ArrayT = nb::ndarray<std::complex<ParamT>, nb::c_contig>;
-
-    std::string class_name;
-
-    class_name = "SparseHamiltonianC" + bitsize;
-    using IdxT = typename SparseHamiltonian<StateVectorT>::IdxT;
-    using ArraySparseIndexT = nb::ndarray<IdxT, nb::c_contig>;
-
-    nb::class_<SparseHamiltonian<StateVectorT>,
-               Observable<StateVectorT>>(m, class_name.c_str())
-        .def("__init__",
-            [](const ArrayT &data, const ArraySparseIndexT &indices,
-                         const ArraySparseIndexT &offsets,
-                         const std::vector<std::size_t> &wires) {
-            // TODO: We can probably avoid a copy here by not constructing a vector
-            return SparseHamiltonian<StateVectorT>{
-                std::vector<ComplexT>({data.data(), data.data() + data.size()}),
-                std::vector<IdxT>({indices.data(), indices.data() + indices.size()}),
-                std::vector<IdxT>({offsets.data(), offsets.data() + offsets.size()}),
-                wires};
-        })
-        .def("__repr__", &SparseHamiltonian<StateVectorT>::getObsName)
-        .def("get_wires", &SparseHamiltonian<StateVectorT>::getWires,
-             "Get wires of observables")
-        .def(
-            "__eq__",
-            []([[maybe_unused]] const SparseHamiltonian<StateVectorT> &self,
-               nb::handle other) -> bool {
-                if (!nb::isinstance<SparseHamiltonian<StateVectorT>>(other)) {
-                    return false;
-                }
-                auto other_cast = nb::cast<SparseHamiltonian<StateVectorT>>(other);
-                return self == other_cast;
-            },
-            "Compare two observables");
-} // m
-
-/**
- * @brief Register backend specific adjoint Jacobian methods.
- *
- * @tparam StateVectorT
- * @param m Nanobind module
- */
-template <class StateVectorT>
-void registerBackendSpecificAlgorithms([[maybe_unused]] nb::module_ &m) {} // m
-
-/**
- * @brief Register bindings for backend-specific info.
- *
- * @param m Nanobind module.
- */
-void registerBackendSpecificInfo(nb::module_ &m) {
-    m.def("backend_info", [](){
-        nb::dict info;
-    
-        info["NAME"] = "lightning.gpu";
-    
-        return info;
-    }, "Backend-specific information.");
-    registerCudaUtils(m);
-} // m
-
-/**
- * @brief Register backend specific state vector methods.
- *
- * @tparam StateVectorT
- * @tparam PyClass
- * @param pyclass Nanobind's state vector class to bind methods.
- */
-template <class StateVectorT, class PyClass>
-void registerBackendSpecificStateVectorMethods(PyClass &) {
-    // TODO: What is meant to go here?
 } // pyclass
 
 } // namespace Pennylane::LightningGPU::NanoBindings

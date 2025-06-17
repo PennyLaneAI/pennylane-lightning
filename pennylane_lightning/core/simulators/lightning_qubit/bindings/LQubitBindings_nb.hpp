@@ -139,7 +139,8 @@ void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
 
     pyclass.def(
         "getState",
-        [](const StateVectorT &sv, nb::ndarray<ComplexT, nb::numpy, nb::c_contig> &state) {
+        [](const StateVectorT &sv,
+           nb::ndarray<ComplexT, nb::numpy, nb::c_contig> &state) {
             // Check if array is large enough
             if (state.shape(0) < sv.getLength()) {
                 throw std::invalid_argument("Output array is too small");
