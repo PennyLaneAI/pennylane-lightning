@@ -20,7 +20,7 @@ import numpy as np
 import pennylane as qml
 import pytest
 from conftest import PHI, THETA, LightningDevice, device_name  # tested device
-from pennylane.devices import ExecutionConfig, DefaultQubit
+from pennylane.devices import DefaultQubit, ExecutionConfig
 
 if device_name == "lightning.tensor":
     pytest.skip("Skipping tests for the LightningTensor class.", allow_module_level=True)
