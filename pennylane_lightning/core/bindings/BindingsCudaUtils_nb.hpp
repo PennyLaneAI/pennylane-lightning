@@ -1,4 +1,4 @@
-// Copyright 2024 Xanadu Quantum Technologies Inc.
+// Copyright 2025 Xanadu Quantum Technologies Inc.
 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
 /**
  * @file BindingsCudaUtils.hpp
  * Defines CUDA device - specific operations to export to Python, other
- * utility functions interfacing with Pybind11 and support to agnostic bindings.
+ * utility functions interfacing with Nanobind and support to agnostic bindings.
  */
 
 #pragma once
@@ -24,14 +24,6 @@
 #include "DevicePool.hpp"
 #include "cuda_helpers.hpp"
 
-// TODO: I think this entire section can be removed, neither of these namespaces
-// are used
-/// @cond DEV
-namespace {
-using namespace Pennylane;
-// using namespace Pennylane::NanoBindings;
-} // namespace
-/// @endcond
 
 namespace nb = nanobind;
 
