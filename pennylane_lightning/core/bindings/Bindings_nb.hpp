@@ -121,14 +121,13 @@ namespace Pennylane::NanoBindings {
  */
 template <class StateVectorT>
 void registerMatrix(StateVectorT &st,
-                    const nb::ndarray<typename StateVectorT::ComplexT> &matrix,
+                    const nb::ndarray<typename StateVectorT::ComplexT, nb::c_contig> &matrix,
                     const std::vector<std::size_t> &wires,
                     bool inverse = false) {
     using ComplexT = typename StateVectorT::ComplexT;
 
-    // Get data pointer from ndarray
-    const ComplexT *data_ptr =
-        reinterpret_cast<const ComplexT *>(matrix.data());
+    // Cast to raw pointer
+    const ComplexT *data_ptr = matrix.data();
     st.applyMatrix(data_ptr, wires, inverse);
 }
 
@@ -177,7 +176,7 @@ void registerGatesForStateVector(PyClass &pyclass) {
  */
 template <typename T>
 auto alignedArray(Util::CPUMemoryModel memory_model, std::size_t size,
-                  bool zeroInit) -> nb::ndarray<T> {
+                  bool zeroInit) -> nb::ndarray<T, nb::c_contig> {
     using Pennylane::Util::alignedAlloc;
     using Pennylane::Util::getAlignment;
 
@@ -192,7 +191,7 @@ auto alignedArray(Util::CPUMemoryModel memory_model, std::size_t size,
     std::vector<size_t> shape{size};
 
     // Return ndarray with custom allocated memory
-    return nb::ndarray<T>(ptr, 1, shape.data(), capsule);
+    return nb::ndarray<T, nb::c_contig>(ptr, 1, shape.data(), capsule);
 }
 
 /**
@@ -397,7 +396,7 @@ void registerBackendAgnosticObservables(nb::module_ &m) {
         .def("__init__",
              [](HermitianObsT *self, const nd_arr_c &matrix,
                 const std::vector<std::size_t> &wires) {
-                 const auto ptr = static_cast<const ComplexT *>(matrix.data());
+                 const auto ptr = matrix.data();
                  new (self) HermitianObsT(
                      std::vector<ComplexT>(ptr, ptr + matrix.size()), wires);
              })
@@ -436,9 +435,9 @@ void registerBackendAgnosticObservables(nb::module_ &m) {
         .def(nb::init<const std::vector<ParamT> &,
                       const std::vector<ObsPtr> &>())
         .def("__init__",
-             [](HamiltonianT *self, const nb::ndarray<ParamT> &coeffs,
+             [](HamiltonianT *self, const nb::ndarray<ParamT, nb::c_contig> &coeffs,
                 const std::vector<ObsPtr> &obs) {
-                 const auto ptr = static_cast<const ParamT *>(coeffs.data());
+                 const auto ptr = coeffs.data();
                  new (self) HamiltonianT(
                      std::vector<ParamT>(ptr, ptr + coeffs.size()), obs);
              })
@@ -459,10 +458,10 @@ void registerBackendAgnosticObservables(nb::module_ &m) {
  *
  * @tparam T Data type of the vector elements
  * @param data Vector containing the data to transfer
- * @return nb::ndarray<T, nb::numpy> Array with copied data in numpy format
+ * @return nb::ndarray<T, nb::numpy, nb::c_contig> Array with copied data in numpy format
  */
 template <typename T>
-nb::ndarray<T, nb::numpy> createArrayFromVector(const std::vector<T> &data) {
+nb::ndarray<T, nb::numpy, nb::c_contig> createArrayFromVector(const std::vector<T> &data) {
     const std::size_t size = data.size();
 
     // Create a new array with the right size
@@ -477,7 +476,7 @@ nb::ndarray<T, nb::numpy> createArrayFromVector(const std::vector<T> &data) {
         new_data, [](void *p) noexcept { delete[] static_cast<T *>(p); });
 
     // Create and return the ndarray with numpy format
-    return nb::ndarray<T, nb::numpy>(new_data, 1, shape.data(), capsule);
+    return nb::ndarray<T, nb::numpy, nb::c_contig>(new_data, 1, shape.data(), capsule);
 }
 
 /**
@@ -487,10 +486,10 @@ nb::ndarray<T, nb::numpy> createArrayFromVector(const std::vector<T> &data) {
  * @param data Vector containing the data to transfer
  * @param rows Number of rows in the resulting 2D array
  * @param cols Number of columns in the resulting 2D array
- * @return nb::ndarray<T, nb::numpy> 2D array with copied data in numpy format
+ * @return nb::ndarray<T, nb::numpy, nb::c_contig> 2D array with copied data in numpy format
  */
 template <typename T>
-nb::ndarray<T, nb::numpy> create2DArrayFromVector(const std::vector<T> &data,
+nb::ndarray<T, nb::numpy, nb::c_contig> create2DArrayFromVector(const std::vector<T> &data,
                                                   std::size_t rows,
                                                   std::size_t cols) {
     // Create a new array with the right size
@@ -505,7 +504,7 @@ nb::ndarray<T, nb::numpy> create2DArrayFromVector(const std::vector<T> &data,
         new_data, [](void *p) noexcept { delete[] static_cast<T *>(p); });
 
     // Create and return the ndarray with numpy format
-    return nb::ndarray<T, nb::numpy>(new_data, 2, shape.data(), capsule);
+    return nb::ndarray<T, nb::numpy, nb::c_contig>(new_data, 2, shape.data(), capsule);
 }
 
 /**
@@ -514,11 +513,11 @@ nb::ndarray<T, nb::numpy> create2DArrayFromVector(const std::vector<T> &data,
  * @tparam StateVectorT State vector type
  * @param M Measurements object
  * @param wires Vector of wire indices
- * @return nb::ndarray<typename StateVectorT::PrecisionT, nb::numpy> Array with
+ * @return nb::ndarray<typename StateVectorT::PrecisionT, nb::numpy, nb::c_contig> Array with
  * probabilities in numpy format
  */
 template <class StateVectorT>
-nb::ndarray<typename StateVectorT::PrecisionT, nb::numpy>
+nb::ndarray<typename StateVectorT::PrecisionT, nb::numpy, nb::c_contig>
 probsForWires(Measurements<StateVectorT> &M,
               const std::vector<std::size_t> &wires) {
     using PrecisionT = typename StateVectorT::PrecisionT;
@@ -531,11 +530,11 @@ probsForWires(Measurements<StateVectorT> &M,
  *
  * @tparam StateVectorT State vector type
  * @param M Measurements object
- * @return nb::ndarray<typename StateVectorT::PrecisionT, nb::numpy> Array with
+ * @return nb::ndarray<typename StateVectorT::PrecisionT, nb::numpy, nb::c_contig> Array with
  * probabilities in numpy format
  */
 template <class StateVectorT>
-nb::ndarray<typename StateVectorT::PrecisionT, nb::numpy>
+nb::ndarray<typename StateVectorT::PrecisionT, nb::numpy, nb::c_contig>
 probsForAllWires(Measurements<StateVectorT> &M) {
     using PrecisionT = typename StateVectorT::PrecisionT;
     auto probs_vec = M.probs();
@@ -549,11 +548,11 @@ probsForAllWires(Measurements<StateVectorT> &M) {
  * @param M Measurements object
  * @param num_wires Number of wires
  * @param num_shots Number of shots
- * @return nb::ndarray<std::size_t, nb::numpy> 2D array with samples in numpy
+ * @return nb::ndarray<std::size_t, nb::numpy, nb::c_contig> 2D array with samples in numpy
  * format
  */
 template <class StateVectorT>
-nb::ndarray<std::size_t, nb::numpy>
+nb::ndarray<std::size_t, nb::numpy, nb::c_contig>
 generateSamples(Measurements<StateVectorT> &M, std::size_t num_wires,
                 std::size_t num_shots) {
     auto result = M.generate_samples(num_shots);
