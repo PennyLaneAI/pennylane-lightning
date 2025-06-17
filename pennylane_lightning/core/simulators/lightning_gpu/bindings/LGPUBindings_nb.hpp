@@ -355,7 +355,7 @@ void registerBackendSpecificObservables(nb::module_ &m) {
  * @tparam StateVectorT
  * @param m Nanobind module
  */
-template <class StateVectorT, class PyClass>
+template <class StateVectorT>
 void registerBackendSpecificAlgorithms([[maybe_unused]] nb::module_ &m) {} // m
 
 /**
