@@ -71,7 +71,7 @@ using StateVectorBackends =
 template <class StateVectorT>
 void updateStateVectorData(
     StateVectorT &sv,
-    const nb::ndarray<typename StateVectorT::ComplexT> &data) {
+    const nb::ndarray<typename StateVectorT::ComplexT, nb::c_contig> &data) {
     using ComplexT = typename StateVectorT::ComplexT;
 
     // Check dimensions
@@ -105,9 +105,9 @@ void registerBackendClassSpecificBindings(PyClass &) {} // pyclass
  */
 template <class StateVectorT, class PyClass>
 void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
-    using PrecisionT = typename StateVectorT::PrecisionT;
+    // using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
-    // using ParamT = PrecisionT; // Parameter's data precision
+    // using ParamT = PrecisionT; // Parameter's data precision - unused for now
 
     // Add other methods (resetStateVector, setBasisState, etc.)
     pyclass.def("resetStateVector", &StateVectorT::resetStateVector,
@@ -127,7 +127,7 @@ void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
 
     pyclass.def(
         "setStateVector",
-        [](StateVectorT &sv, const nb::ndarray<ComplexT, nb::numpy> &state,
+        [](StateVectorT &sv, const nb::ndarray<ComplexT, nb::c_contig> &state,
            const std::vector<std::size_t> &wires) {
             // Get data pointer directly from ndarray
             const ComplexT *data_ptr =
@@ -139,7 +139,7 @@ void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
 
     pyclass.def(
         "getState",
-        [](const StateVectorT &sv, nb::ndarray<ComplexT, nb::numpy> &state) {
+        [](const StateVectorT &sv, nb::ndarray<ComplexT, nb::numpy, nb::c_contig> &state) {
             // Check if array is large enough
             if (state.shape(0) < sv.getLength()) {
                 throw std::invalid_argument("Output array is too small");
