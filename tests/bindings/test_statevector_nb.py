@@ -17,7 +17,7 @@ import numpy as np
 import pytest
 from conftest import backend
 
-if backend != "qubit":
+if backend not in ("qubit", "gpu"):
     pytest.skip("Skipping tests for binaries other than lightning_qubit .", allow_module_level=True)
 
 
@@ -166,9 +166,12 @@ class TestStateVectorNB:
         # Assert the result matches the expected state
         np.testing.assert_allclose(result, expected)
 
-    def test_statevector_update_data(self, precision, nanobind_module, get_statevector_class):
+    @pytest.mark.parametrize("backend_name", backends)
+    def test_statevector_update_data(
+        self, backend_name, precision, nanobind_module, get_statevector_class
+    ):
         """Test updateData method on StateVectorC64/128 classes for lightning.qubit_nb."""
-        module = nanobind_module("qubit")
+        module = nanobind_module(backend_name)
 
         StateVectorClass = get_statevector_class(module, precision)
 
