@@ -256,7 +256,7 @@ void registerBackendSpecificObservables(nb::module_ &m) {
  * @param m Nanobind module
  */
 template <class StateVectorT>
-void registerBackendSpecificAlgorithms([[maybe_unused]] nb::module_ &m) {} // m
+void registerBackendSpecificAlgorithms(nb::module_ &) {}
 
 /**
  * @brief Register bindings for backend-specific info.

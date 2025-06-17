@@ -24,7 +24,6 @@
 #include "DevicePool.hpp"
 #include "cuda_helpers.hpp"
 
-
 namespace nb = nanobind;
 
 namespace Pennylane::LightningGPU::Util {

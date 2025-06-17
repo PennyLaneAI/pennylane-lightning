@@ -280,13 +280,8 @@ class StateVectorCudaManaged
                         const std::vector<std::size_t> &wires, bool adjoint,
                         const std::vector<Precision> &params,
                         const std::vector<ComplexT> &matrix) {
-        std::vector<CFP_t> matrix_cu(matrix.size());
-        std::transform(matrix.begin(), matrix.end(), matrix_cu.begin(),
-                       [](const std::complex<Precision> &x) {
-                           return cuUtil::complexToCu<std::complex<Precision>>(
-                               x);
-                       });
-        applyOperation(opName, wires, adjoint, params, matrix_cu);
+        applyOperation(opName, wires, adjoint, params, matrix.data(),
+                       matrix.size());
     }
 
     /**
