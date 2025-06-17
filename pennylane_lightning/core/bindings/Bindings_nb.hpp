@@ -346,9 +346,9 @@ template <class LightningBackendT>
 void registerBackendAgnosticObservables(nb::module_ &m) {
     using PrecisionT = typename LightningBackendT::PrecisionT;
     using ComplexT = typename LightningBackendT::ComplexT;
-    using ParamT = PrecisionT;
+    using ParamT = PrecisionT; 
 
-    using nd_arr_c = nb::ndarray<std::complex<ParamT>>;
+    using nd_arr_c = nb::ndarray<std::complex<ParamT>, nb::c_contig>; 
 
     const std::string bitsize =
         std::to_string(sizeof(std::complex<PrecisionT>) * 8);
@@ -699,9 +699,9 @@ void registerBackendAgnosticAlgorithms(nb::module_ &m) {
  */
 template <class StateVectorT, class PyClass>
 void registerBackendAgnosticStateVectorMethods(PyClass &pyclass) {
-    using PrecisionT = typename StateVectorT::PrecisionT;
-    using ComplexT = typename StateVectorT::ComplexT;
-    using ParamT = PrecisionT;
+    // using PrecisionT = typename StateVectorT::PrecisionT;
+    // using ComplexT = typename StateVectorT::ComplexT;
+    // using ParamT = PrecisionT;
 
     // Initialize with number of qubits
     pyclass.def(nb::init<size_t>());
@@ -719,8 +719,8 @@ void registerBackendAgnosticStateVectorMethods(PyClass &pyclass) {
  */
 template <class StateVectorT> void lightningClassBindings(nb::module_ &m) {
     using PrecisionT = typename StateVectorT::PrecisionT;
-    using ComplexT = typename StateVectorT::ComplexT;
-    using ParamT = PrecisionT;
+    // using ComplexT = typename StateVectorT::ComplexT;
+    // using ParamT = PrecisionT;
 
     const std::string bitsize =
         std::to_string(sizeof(std::complex<PrecisionT>) * 8);
