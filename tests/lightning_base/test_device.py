@@ -31,7 +31,7 @@ from conftest import (
     LightningStateVector,
     device_name,
 )
-from pennylane.devices import DefaultExecutionConfig, DefaultQubit, ExecutionConfig, MCMConfig
+from pennylane.devices import DefaultQubit, ExecutionConfig, MCMConfig
 from pennylane.devices.default_qubit import adjoint_ops
 from pennylane.exceptions import DeviceError, QuantumFunctionError
 from pennylane.measurements import ProbabilityMP
@@ -543,7 +543,7 @@ class TestExecution:
         "config, expected_config",
         [
             (
-                DefaultExecutionConfig,
+                ExecutionConfig(),
                 ExecutionConfig(
                     grad_on_execution=None,
                     use_device_gradient=False,
@@ -1016,7 +1016,7 @@ class TestDerivatives:
         "config, tape, expected",
         [
             (None, None, True),
-            (DefaultExecutionConfig, None, False),
+            (ExecutionConfig(), None, False),
             (ExecutionConfig(gradient_method="backprop"), None, False),
             (
                 ExecutionConfig(gradient_method="backprop"),
@@ -1395,7 +1395,7 @@ class TestVJP:
         "config, tape, expected",
         [
             (None, None, True),
-            (DefaultExecutionConfig, None, False),
+            (ExecutionConfig(), None, False),
             (ExecutionConfig(gradient_method="backprop"), None, False),
             (
                 ExecutionConfig(gradient_method="backprop"),
