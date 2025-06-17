@@ -309,9 +309,13 @@ void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
         .def(
             "setStateVector",
             [](StateVectorT &sv, const ArrayT &state,
-               const std::vector<std::size_t> &wires, const bool async) {
+               const std::vector<std::size_t> &wires,
+               const bool async = false) {
+                // TODO: Check that adding in a default value for async here is
+                // a reasonable API change
                 sv.setStateVector(state.data(), state.size(), wires, async);
             },
+            nb::arg("state"), nb::arg("wires"), nb::arg("async") = false,
             "Set State Vector on GPU with values for the state vector and "
             "wires on the host memory.")
         .def("applyControlledMatrix", &applyControlledMatrix<StateVectorT>,
