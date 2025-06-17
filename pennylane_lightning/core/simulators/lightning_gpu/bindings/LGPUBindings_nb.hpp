@@ -388,7 +388,13 @@ void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
                                       gate_matrix.data(), gate_matrix.size());
                 }
             },
-            "Apply operation via the gate matrix");
+            "Apply operation via the gate matrix")
+        .def(
+            "getState",
+            [](const StateVectorT &sv, ArrayT &state) {
+                sv.CopyGpuDataToHost(state.data(), state.size());
+            },
+            "Copy state vector data to a numpy array.", nb::arg("state"));
 } // pyclass
 
 } // namespace Pennylane::LightningGPU::NanoBindings
