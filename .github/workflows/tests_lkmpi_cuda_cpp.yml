@@ -140,6 +140,7 @@ jobs:
 
       - name: Build Kokkos core library (Ubuntu)
         run: |
+          source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}
           rm -rf ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
           mkdir -p ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
           cd kokkos_${{ matrix.exec_model }}
@@ -158,7 +159,6 @@ jobs:
 
       - name: Build and run unit tests
         run: |
-          source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}
           export SCIPY_OPENBLAS=$(python -c "import scipy_openblas32; print(scipy_openblas32.get_lib_dir())")
           cmake . -BBuild \
             -DPL_BACKEND=lightning_kokkos \
