@@ -183,7 +183,7 @@ class LightningBase(Device):
     def execute(
         self,
         circuits: QuantumTape_or_Batch,
-        execution_config: ExecutionConfig = None,
+        execution_config: Optional[ExecutionConfig] = None,
     ) -> Result_or_ResultBatch:
         """Execute a circuit or a batch of circuits and turn it into results.
 
