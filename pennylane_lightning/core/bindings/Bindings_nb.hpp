@@ -43,7 +43,7 @@
 #include "Macros.hpp" // CPUArch
 #include "Memory.hpp" // alignedAlloc
 #include "Observables.hpp"
-#include "Util.hpp" // for_each_enum
+#include "Util.hpp" // for_each_enum, PL_reinterpret_cast
 
 // Include backend-specific headers and define macros based on compile flags
 #ifdef _ENABLE_PLQUBIT
@@ -122,12 +122,15 @@ namespace Pennylane::NanoBindings {
 template <class StateVectorT>
 void registerMatrix(
     StateVectorT &st,
-    const nb::ndarray<std::complex<typename StateVectorT::PrecisionT>, nb::c_contig> &matrix,
+    const nb::ndarray<std::complex<typename StateVectorT::PrecisionT>,
+                      nb::c_contig> &matrix,
     const std::vector<std::size_t> &wires, bool inverse = false) {
     using ComplexT = typename StateVectorT::ComplexT;
 
+    using Pennylane::Util::PL_reinterpret_cast;
+
     // Cast to raw pointer
-    const ComplexT *data_ptr = matrix.data();
+    auto *data_ptr = PL_reinterpret_cast<const ComplexT>(matrix.data());
     st.applyMatrix(data_ptr, wires, inverse);
 }
 
@@ -169,20 +172,20 @@ void registerGatesForStateVector(PyClass &pyclass) {
 /**
  * @brief Create an aligned array for a given type, memory model and array size.
  *
- * @tparam T Datatype of array to create
+ * @tparam VectorT Datatype of array to create
  * @param memory_model Memory model to use
  * @param size Size of the array to create
  * @return Nanobind ndarray
  */
-template <typename T>
+template <typename VectorT>
 auto alignedArray(Util::CPUMemoryModel memory_model, std::size_t size,
-                  bool zeroInit) -> nb::ndarray<T, nb::c_contig> {
+                  bool zeroInit) -> nb::ndarray<VectorT, nb::c_contig> {
     using Pennylane::Util::alignedAlloc;
     using Pennylane::Util::getAlignment;
 
     // Allocate aligned memory
-    void *ptr =
-        alignedAlloc(getAlignment<T>(memory_model), sizeof(T) * size, zeroInit);
+    void *ptr = alignedAlloc(getAlignment<VectorT>(memory_model),
+                             sizeof(VectorT) * size, zeroInit);
 
     // Create capsule with custom deleter
     auto capsule =
@@ -191,7 +194,8 @@ auto alignedArray(Util::CPUMemoryModel memory_model, std::size_t size,
     std::vector<size_t> shape{size};
 
     // Return ndarray with custom allocated memory
-    return nb::ndarray<T, nb::c_contig>(ptr, 1, shape.data(), capsule);
+    return nb::ndarray<VectorT, nb::c_contig>(ptr, shape.size(), shape.data(),
+                                              capsule);
 }
 
 /**
@@ -224,18 +228,10 @@ auto allocateAlignedArray(std::size_t size, const std::string &dtype,
 
 /**
  * @brief Register array alignment functionality.
- *
- * @param m Nanobind module
  */
 void registerArrayAlignmentBindings(nb::module_ &m) {
     using Pennylane::Util::bestCPUMemoryModel;
     using Pennylane::Util::CPUMemoryModel;
-
-    // Register CPUMemoryModel enum
-    nb::enum_<CPUMemoryModel>(m, "CPUMemoryModel")
-        .value("Unaligned", CPUMemoryModel::Unaligned)
-        .value("Aligned256", CPUMemoryModel::Aligned256)
-        .value("Aligned512", CPUMemoryModel::Aligned512);
 
     // Register utility functions
     m.def("best_alignment", &bestCPUMemoryModel,
@@ -245,6 +241,15 @@ void registerArrayAlignmentBindings(nb::module_ &m) {
     m.def("allocate_aligned_array", &allocateAlignedArray,
           "Allocate aligned array with specified dtype", nb::arg("size"),
           nb::arg("dtype"), nb::arg("zero_init") = false);
+
+    // Only register the enum once
+    static auto register_enum = [&m]() {
+        nb::enum_<CPUMemoryModel>(m, "CPUMemoryModel")
+            .value("Unaligned", CPUMemoryModel::Unaligned)
+            .value("Aligned256", CPUMemoryModel::Aligned256)
+            .value("Aligned512", CPUMemoryModel::Aligned512);
+        return true;
+    }();
 }
 
 /**
@@ -457,60 +462,60 @@ void registerBackendAgnosticObservables(nb::module_ &m) {
 /**
  * @brief Create an array from a vector of data with proper ownership transfer
  *
- * @tparam T Data type of the vector elements
+ * @tparam VectorT Data type of the vector elements
  * @param data Vector containing the data to transfer
- * @return nb::ndarray<T, nb::numpy, nb::c_contig> Array with copied data in
- * numpy format
+ * @return nb::ndarray<VectorT, nb::numpy, nb::c_contig> Array with copied data
+ * in numpy format
  */
-template <typename T>
-nb::ndarray<T, nb::numpy, nb::c_contig>
-createArrayFromVector(const std::vector<T> &data) {
+template <typename VectorT>
+nb::ndarray<VectorT, nb::numpy, nb::c_contig>
+createArrayFromVector(const std::vector<VectorT> &data) {
     const std::size_t size = data.size();
 
     // Create a new array with the right size
     std::vector<size_t> shape{size};
 
     // Allocate new memory and copy the data
-    T *new_data = new T[size];
-    std::memcpy(new_data, data.data(), size * sizeof(T));
+    VectorT *new_data = new VectorT[size];
+    std::memcpy(new_data, data.data(), size * sizeof(VectorT));
 
     // Create a capsule to manage memory
     auto capsule = nb::capsule(
-        new_data, [](void *p) noexcept { delete[] static_cast<T *>(p); });
+        new_data, [](void *p) noexcept { delete[] static_cast<VectorT *>(p); });
 
     // Create and return the ndarray with numpy format
-    return nb::ndarray<T, nb::numpy, nb::c_contig>(new_data, 1, shape.data(),
-                                                   capsule);
+    return nb::ndarray<VectorT, nb::numpy, nb::c_contig>(new_data, shape.size(),
+                                                         shape.data(), capsule);
 }
 
 /**
  * @brief Create a 2D array from a vector of data with proper ownership transfer
  *
- * @tparam T Data type of the vector elements
+ * @tparam VectorT Data type of the vector elements
  * @param data Vector containing the data to transfer
  * @param rows Number of rows in the resulting 2D array
  * @param cols Number of columns in the resulting 2D array
- * @return nb::ndarray<T, nb::numpy, nb::c_contig> 2D array with copied data in
- * numpy format
+ * @return nb::ndarray<VectorT, nb::numpy, nb::c_contig> 2D array with copied
+ * data in numpy format
  */
-template <typename T>
-nb::ndarray<T, nb::numpy, nb::c_contig>
-create2DArrayFromVector(const std::vector<T> &data, std::size_t rows,
+template <typename VectorT>
+nb::ndarray<VectorT, nb::numpy, nb::c_contig>
+create2DArrayFromVector(const std::vector<VectorT> &data, std::size_t rows,
                         std::size_t cols) {
     // Create a new array with the right size
     std::vector<size_t> shape{rows, cols};
 
     // Allocate new memory and copy the data
-    T *new_data = new T[rows * cols];
-    std::memcpy(new_data, data.data(), data.size() * sizeof(T));
+    VectorT *new_data = new VectorT[rows * cols];
+    std::memcpy(new_data, data.data(), data.size() * sizeof(VectorT));
 
     // Create a capsule to manage memory
     auto capsule = nb::capsule(
-        new_data, [](void *p) noexcept { delete[] static_cast<T *>(p); });
+        new_data, [](void *p) noexcept { delete[] static_cast<VectorT *>(p); });
 
     // Create and return the ndarray with numpy format
-    return nb::ndarray<T, nb::numpy, nb::c_contig>(new_data, 2, shape.data(),
-                                                   capsule);
+    return nb::ndarray<VectorT, nb::numpy, nb::c_contig>(new_data, 2,
+                                                         shape.data(), capsule);
 }
 
 /**
