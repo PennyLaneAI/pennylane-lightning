@@ -583,7 +583,8 @@ std::vector<T1> cast_vector(const std::vector<T0> &vec) {
  * @return bool True if the vectors are disjoint, false otherwise.
  */
 template <typename T = std::size_t>
-bool areVecsDisjoint(const std::vector<T> &v1, const std::vector<T> &v2) {
+inline bool areVecsDisjoint(const std::vector<T> &v1,
+                            const std::vector<T> &v2) {
     std::set<T> s0(v1.begin(), v1.end());
     for (const auto &element : v2) {
         if (s0.find(element) != s0.end()) {
@@ -602,7 +603,7 @@ bool areVecsDisjoint(const std::vector<T> &v1, const std::vector<T> &v2) {
  * @return bool True if the element is in the vector, false otherwise.
  */
 template <typename T>
-bool isElementInVector(const std::vector<T> &vec, const T &element) {
+inline bool isElementInVector(const std::vector<T> &vec, const T &element) {
     return std::any_of(vec.begin(), vec.end(), [&](const T &current_element) {
         return current_element == element;
     });
@@ -618,7 +619,7 @@ bool isElementInVector(const std::vector<T> &vec, const T &element) {
  * vec.end() if the element is not found.
  */
 template <typename T>
-auto findElementInVector(const std::vector<T> &vec, const T &element) {
+inline auto findElementInVector(const std::vector<T> &vec, const T &element) {
     return std::find(vec.begin(), vec.end(), element);
 }
 
@@ -632,8 +633,8 @@ auto findElementInVector(const std::vector<T> &vec, const T &element) {
  * @throws Error if the element is not found in the vector.
  */
 template <typename T>
-std::size_t getElementIndexInVector(const std::vector<T> &vec,
-                                    const T &element) {
+inline std::size_t getElementIndexInVector(const std::vector<T> &vec,
+                                           const T &element) {
     auto it = findElementInVector(vec, element);
     if (it != vec.end()) {
         return std::distance(vec.begin(), it);

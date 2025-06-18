@@ -226,7 +226,7 @@ class LightningBase(Device):
         if mcmc is None:
             mcmc = {}
 
-        if circuit.shots and (any(isinstance(op, MidMeasureMP) for op in circuit.operations)):
+        if any(isinstance(op, MidMeasureMP) for op in circuit.operations):
             if self._mpi:
                 raise DeviceError(
                     "Lightning Device with MPI does not support Mid-circuit measurements."

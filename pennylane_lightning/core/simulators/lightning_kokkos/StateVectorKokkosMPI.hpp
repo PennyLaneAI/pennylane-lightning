@@ -590,6 +590,8 @@ class StateVectorKokkosMPI final
      */
     void setStateVector(const ComplexT *state,
                         const std::vector<std::size_t> &wires) {
+        // This implementation can be improved for most/least significant bits
+        // setStateVector, similar to LGPU
         const auto num_qubits = this->getNumQubits();
         PL_ABORT_IF_NOT(
             std::find_if(wires.begin(), wires.end(),
@@ -1394,7 +1396,7 @@ class StateVectorKokkosMPI final
     [[nodiscard]] auto getView() -> KokkosVector & { return (*sv_).getView(); }
 
     /**
-     * @brief Get the vector-converted Kokkos view
+     * @brief Get the local vector-converted Kokkos view
      *
      * @return std::vector<ComplexT>
      */
@@ -1404,6 +1406,33 @@ class StateVectorKokkosMPI final
 
     [[nodiscard]] auto getDataVector() const -> const std::vector<ComplexT> {
         return view2vector(getView());
+    }
+
+    /**
+     * @brief Get combined data vector to root rank
+     */
+    [[nodiscard]] auto getDataVector(const std::size_t root = 0)
+        -> std::vector<ComplexT> {
+        reorderGlobalLocalWires();
+        reorderLocalWires();
+        std::vector<ComplexT> data_(
+            (mpi_manager_.getRank() == root) ? this->getLength() : 0);
+        std::vector<ComplexT> local_((*sv_).getLength());
+        (*sv_).DeviceToHost(local_.data(), local_.size());
+        std::vector<int> displacements(mpi_manager_.getSize(), 0);
+        for (std::size_t rank = 0; rank < mpi_manager_.getSize(); rank++) {
+            for (std::size_t i = 0; i < getNumGlobalWires(); i++) {
+                std::size_t temp =
+                    ((getGlobalIndexFromMPIRank(rank) >>
+                      (getNumGlobalWires() - 1 - i)) &
+                     1)
+                    << (getNumGlobalWires() - 1 - global_wires_[i]);
+                displacements[rank] += temp;
+            }
+            displacements[rank] *= local_.size();
+        }
+        mpi_manager_.GatherV(local_, data_, root, displacements);
+        return data_;
     }
 
     /**
@@ -1488,33 +1517,6 @@ class StateVectorKokkosMPI final
         matchGlobalWiresAndIndex(global_wires_target,
                                  mpi_rank_to_global_index_map_target);
         reorderLocalWires();
-    }
-
-    /**
-     * @brief Get underlying data vector at root rank
-     */
-    [[nodiscard]] auto getDataVector(const std::size_t root = 0)
-        -> std::vector<ComplexT> {
-        reorderGlobalLocalWires();
-        reorderLocalWires();
-        std::vector<ComplexT> data_(
-            (mpi_manager_.getRank() == root) ? this->getLength() : 0);
-        std::vector<ComplexT> local_((*sv_).getLength());
-        (*sv_).DeviceToHost(local_.data(), local_.size());
-        std::vector<int> displacements(mpi_manager_.getSize(), 0);
-        for (std::size_t rank = 0; rank < mpi_manager_.getSize(); rank++) {
-            for (std::size_t i = 0; i < getNumGlobalWires(); i++) {
-                std::size_t temp =
-                    ((getGlobalIndexFromMPIRank(rank) >>
-                      (getNumGlobalWires() - 1 - i)) &
-                     1)
-                    << (getNumGlobalWires() - 1 - global_wires_[i]);
-                displacements[rank] += temp;
-            }
-            displacements[rank] *= local_.size();
-        }
-        mpi_manager_.GatherV(local_, data_, root, displacements);
-        return data_;
     }
 };
 }; // namespace Pennylane::LightningKokkos

@@ -160,6 +160,10 @@ void registerBackendClassSpecificBindingsMPI(PyClass &pyclass) {
             [](StateVectorT &sv) { return sv.getNumLocalWires(); },
             "Get number of local wires.")
         .def(
+            "getNumGlobalWires",
+            [](StateVectorT &sv) { return sv.getNumGlobalWires(); },
+            "Get number of global wires.")
+        .def(
             "swapGlobalLocalWires",
             [](StateVectorT &sv,
                const std::vector<std::size_t> &global_wires_to_swap,
@@ -167,17 +171,20 @@ void registerBackendClassSpecificBindingsMPI(PyClass &pyclass) {
                 sv.swapGlobalLocalWires(global_wires_to_swap,
                                         local_wires_to_swap);
             },
-            "Swap global and local wires.")
+            "Swap global and local wires - global_wire_to_swap must be in "
+            "global_wires_ and local_wires_to_swap must be in local_wires_")
         .def(
             "getLocalBlockSize",
             [](StateVectorT &sv) { return sv.getLocalBlockSize(); },
-            "Get Local Block Size.")
+            "Get Local Block Size, i.e. size of SV on a single rank.")
         .def(
             "resetIndices", [](StateVectorT &sv) { sv.resetIndices(); },
-            "Reset wire indices.")
+            "Reset indices including global_wires, local_wires_, and "
+            "mpi_rank_to_global_index_map_.")
         .def(
             "reorderAllWires", [](StateVectorT &sv) { sv.reorderAllWires(); },
-            "Reorder all wires.");
+            "Reorder all wires so that global_wires_ = {0, 1, ...} and "
+            "local_wires_ = {..., num_qubit-1}.");
 }
 
 /**
