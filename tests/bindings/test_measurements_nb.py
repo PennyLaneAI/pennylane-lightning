@@ -323,5 +323,5 @@ class TestMeasurementsNB:
         count_11_all = np.sum(np.all(all_samples == [1, 1], axis=1))
 
         # The counts should be similar to the previous test
-        assert abs(count_00 - count_00_all) < 0.1 * num_samples
-        assert abs(count_11 - count_11_all) < 0.1 * num_samples
+        assert 0.4 * num_samples <= count_00_all <= 0.6 * num_samples
+        assert 0.4 * num_samples <= count_11_all <= 0.6 * num_samples
