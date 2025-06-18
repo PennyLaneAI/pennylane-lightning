@@ -35,7 +35,7 @@
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/vector.h>
 
-#include "CPUMemoryModel.hpp" // CPUMemoryModel, getMemoryModel, bestCPUMemoryModel, getAlignment
+#include "CPUMemoryModel.hpp" // CPUMemoryModel, bestCPUMemoryModel
 #include "Constant.hpp"
 #include "ConstantUtil.hpp" // lookup
 #include "GateOperation.hpp"
@@ -43,7 +43,7 @@
 #include "Macros.hpp" // CPUArch
 #include "Memory.hpp" // alignedAlloc
 #include "Observables.hpp"
-#include "Util.hpp" // for_each_enum
+#include "Util.hpp" // for_each_enum, PL_reinterpret_cast
 
 // Include backend-specific headers and define macros based on compile flags
 #ifdef _ENABLE_PLQUBIT
@@ -52,7 +52,6 @@
 #include "MeasurementsLQubit.hpp"
 #include "ObservablesLQubit.hpp"
 
-#define BACKEND_NAME "lightning.qubit"
 #define LIGHTNING_MODULE_NAME lightning_qubit_nb
 
 namespace {
@@ -69,7 +68,6 @@ using namespace Pennylane::LightningQubit::NanoBindings;
 #include "MeasurementsKokkos.hpp"
 #include "ObservablesKokkos.hpp"
 
-#define BACKEND_NAME "lightning.kokkos"
 #define LIGHTNING_MODULE_NAME lightning_kokkos_nb
 
 namespace {
@@ -87,7 +85,6 @@ using namespace Pennylane::LightningKokkos::NanoBindings;
 #include "MeasurementsGPU.hpp"
 #include "ObservablesGPU.hpp"
 
-#define BACKEND_NAME "lightning.gpu"
 #define LIGHTNING_MODULE_NAME lightning_gpu_nb
 
 namespace {
@@ -103,7 +100,6 @@ using namespace Pennylane::LightningGPU::NanoBindings;
 #include "MeasurementsTNCuda.hpp"
 #include "ObservablesTNCuda.hpp"
 
-#define BACKEND_NAME "lightning.tensor"
 #define LIGHTNING_TENSOR_MODULE_NAME lightning_tensor_nb
 
 namespace {
@@ -117,6 +113,13 @@ using namespace Pennylane::LightningTensor::TNCuda::NanoBindings;
 static_assert(false, "Backend not found.");
 #endif
 
+/// @cond DEV
+namespace {
+using Pennylane::Util::bestCPUMemoryModel;
+using Pennylane::Util::CPUMemoryModel;
+} // namespace
+/// @endcond
+
 namespace nb = nanobind;
 namespace Pennylane::NanoBindings {
 
@@ -126,13 +129,14 @@ namespace Pennylane::NanoBindings {
 template <class StateVectorT>
 void registerMatrix(
     StateVectorT &st,
-    const nb::ndarray<typename StateVectorT::ComplexT, nb::numpy> &matrix,
+    const nb::ndarray<const std::complex<typename StateVectorT::PrecisionT>,
+                      nb::c_contig> &matrix,
     const std::vector<std::size_t> &wires, bool inverse = false) {
     using ComplexT = typename StateVectorT::ComplexT;
+    using Pennylane::Util::PL_reinterpret_cast;
 
-    // Get data pointer from ndarray
-    const ComplexT *data_ptr =
-        reinterpret_cast<const ComplexT *>(matrix.data());
+    // Cast to raw pointer
+    auto *data_ptr = PL_reinterpret_cast<const ComplexT>(matrix.data());
     st.applyMatrix(data_ptr, wires, inverse);
 }
 
@@ -172,33 +176,32 @@ void registerGatesForStateVector(PyClass &pyclass) {
 }
 
 /**
- * @brief Create an aligned numpy array for a given type, memory model and array
- * size.
+ * @brief Create an aligned array for a given type, memory model and array size.
  *
- * @tparam T Datatype of numpy array to create
+ * @tparam VectorT Datatype of array to create
  * @param memory_model Memory model to use
  * @param size Size of the array to create
  * @return Nanobind ndarray
  */
-template <typename T>
-auto alignedNumpyArray(Util::CPUMemoryModel memory_model, std::size_t size,
-                       bool zeroInit) -> nb::ndarray<T, nb::numpy> {
+template <typename VectorT>
+auto alignedArray(CPUMemoryModel memory_model, std::size_t size, bool zeroInit)
+    -> nb::ndarray<VectorT, nb::numpy, nb::c_contig> {
     using Pennylane::Util::alignedAlloc;
     using Pennylane::Util::getAlignment;
 
     // Allocate aligned memory
-    void *ptr =
-        alignedAlloc(getAlignment<T>(memory_model), sizeof(T) * size, zeroInit);
+    void *ptr = alignedAlloc(getAlignment<VectorT>(memory_model),
+                             sizeof(VectorT) * size, zeroInit);
 
     // Create capsule with custom deleter
     auto capsule =
         nb::capsule(ptr, [](void *p) noexcept { Util::alignedFree(p); });
 
-    // Create shape array
-    size_t shape[1] = {size};
+    std::vector<size_t> shape{size};
 
     // Return ndarray with custom allocated memory
-    return nb::ndarray<T, nb::numpy>(ptr, 1, shape, capsule);
+    return nb::ndarray<VectorT, nb::numpy, nb::c_contig>(ptr, shape.size(),
+                                                         shape.data(), capsule);
 }
 
 /**
@@ -212,19 +215,18 @@ auto alignedNumpyArray(Util::CPUMemoryModel memory_model, std::size_t size,
  */
 auto allocateAlignedArray(std::size_t size, const std::string &dtype,
                           bool zeroInit) -> nb::object {
-    auto memory_model = Pennylane::Util::bestCPUMemoryModel();
+    auto memory_model = bestCPUMemoryModel();
 
     if (dtype == "complex64") {
-        return nb::cast(alignedNumpyArray<std::complex<float>>(memory_model,
-                                                               size, zeroInit));
-    } else if (dtype == "complex128") {
-        return nb::cast(alignedNumpyArray<std::complex<double>>(
-            memory_model, size, zeroInit));
-    } else if (dtype == "float32") {
-        return nb::cast(alignedNumpyArray<float>(memory_model, size, zeroInit));
-    } else if (dtype == "float64") {
         return nb::cast(
-            alignedNumpyArray<double>(memory_model, size, zeroInit));
+            alignedArray<std::complex<float>>(memory_model, size, zeroInit));
+    } else if (dtype == "complex128") {
+        return nb::cast(
+            alignedArray<std::complex<double>>(memory_model, size, zeroInit));
+    } else if (dtype == "float32") {
+        return nb::cast(alignedArray<float>(memory_model, size, zeroInit));
+    } else if (dtype == "float64") {
+        return nb::cast(alignedArray<double>(memory_model, size, zeroInit));
     }
 
     throw std::runtime_error("Unsupported dtype: " + dtype);
@@ -232,23 +234,8 @@ auto allocateAlignedArray(std::size_t size, const std::string &dtype,
 
 /**
  * @brief Register array alignment functionality.
- *
- * @param m Nanobind module
  */
 void registerArrayAlignmentBindings(nb::module_ &m) {
-    using Pennylane::Util::bestCPUMemoryModel;
-    using Pennylane::Util::CPUMemoryModel;
-
-    // Register CPUMemoryModel enum
-    nb::enum_<CPUMemoryModel>(m, "CPUMemoryModel")
-        .value("Unaligned", CPUMemoryModel::Unaligned)
-        .value("Aligned256", CPUMemoryModel::Aligned256)
-        .value("Aligned512", CPUMemoryModel::Aligned512);
-
-    // Register utility functions
-    m.def("best_alignment", &bestCPUMemoryModel,
-          "Best memory alignment for the simulator.");
-
     // Add allocate_aligned_array function
     m.def("allocate_aligned_array", &allocateAlignedArray,
           "Allocate aligned array with specified dtype", nb::arg("size"),
@@ -256,14 +243,17 @@ void registerArrayAlignmentBindings(nb::module_ &m) {
 }
 
 /**
- * @brief Get runtime information as a dictionary.
- *
- * @return Dictionary with runtime information.
+ * @brief Return basic information of runtime environment.
  */
 nb::dict getRuntimeInfo() {
+    using Pennylane::Util::RuntimeInfo;
+
     nb::dict info;
     info["binding_type"] = "nanobind";
-    info["backend"] = BACKEND_NAME;
+    info["AVX"] = RuntimeInfo::AVX();
+    info["AVX2"] = RuntimeInfo::AVX2();
+    info["AVX512F"] = RuntimeInfo::AVX512F();
+
     return info;
 }
 
@@ -273,44 +263,51 @@ nb::dict getRuntimeInfo() {
  * @return Dictionary with compile information.
  */
 nb::dict getCompileInfo() {
-    using namespace nb::literals;
     using namespace Pennylane::Util;
-    const std::string_view cpu_arch_str = [] {
-        switch (cpu_arch) {
-        case CPUArch::X86_64:
-            return "x86_64";
-        case CPUArch::PPC64:
-            return "PPC64";
-        case CPUArch::ARM:
-            return "ARM";
-        default:
-            return "Unknown";
-        }
-    }();
 
-    const std::string_view compiler_name_str = [] {
-        switch (compiler) {
-        case Compiler::GCC:
-            return "GCC";
-        case Compiler::Clang:
-            return "Clang";
-        case Compiler::MSVC:
-            return "MSVC";
-        case Compiler::NVCC:
-            return "NVCC";
-        case Compiler::NVHPC:
-            return "NVHPC";
-        default:
-            return "Unknown";
-        }
-    }();
+    // Convert string_view to std::string
+    std::string cpu_arch_str;
+    switch (cpu_arch) {
+    case CPUArch::X86_64:
+        cpu_arch_str = "x86_64";
+        break;
+    case CPUArch::PPC64:
+        cpu_arch_str = "PPC64";
+        break;
+    case CPUArch::ARM:
+        cpu_arch_str = "ARM";
+        break;
+    default:
+        cpu_arch_str = "Unknown";
+        break;
+    }
 
-    const auto compiler_version_str = getCompilerVersion<compiler>();
+    std::string compiler_name_str;
+    switch (compiler) {
+    case Compiler::GCC:
+        compiler_name_str = "GCC";
+        break;
+    case Compiler::Clang:
+        compiler_name_str = "Clang";
+        break;
+    case Compiler::MSVC:
+        compiler_name_str = "MSVC";
+        break;
+    case Compiler::NVCC:
+        compiler_name_str = "NVCC";
+        break;
+    case Compiler::NVHPC:
+        compiler_name_str = "NVHPC";
+        break;
+    default:
+        compiler_name_str = "Unknown";
+        break;
+    }
 
-    // Create an empty dict first
+    std::string compiler_version_str =
+        std::string(getCompilerVersion<compiler>());
+
     nb::dict info;
-
-    // Add key-value pairs
     info["cpu.arch"] = cpu_arch_str;
     info["compiler.name"] = compiler_name_str;
     info["compiler.version"] = compiler_version_str;
@@ -318,24 +315,6 @@ nb::dict getCompileInfo() {
     info["AVX512F"] = use_avx512f;
 
     return info;
-}
-
-template <class StateVectorT>
-auto createStateVectorFromNanobindData(
-    const nb::ndarray<typename StateVectorT::ComplexT, nb::numpy> &ndarray)
-    -> StateVectorT {
-    using ComplexT = typename StateVectorT::ComplexT;
-    // Check dimensions
-    if (ndarray.ndim() != 1) {
-        throw std::invalid_argument("Ndarray must be a 1-dimensional array");
-    }
-
-    // Get data pointer and size
-    auto *data_ptr = static_cast<ComplexT *>(ndarray.data());
-    std::size_t size = ndarray.shape(0);
-
-    // Return StateVector constructed with data pointer and size
-    return StateVectorT({data_ptr, size});
 }
 
 /**
@@ -362,6 +341,8 @@ void registerBackendAgnosticObservables(nb::module_ &m) {
     using PrecisionT = typename LightningBackendT::PrecisionT;
     using ComplexT = typename LightningBackendT::ComplexT;
     using ParamT = PrecisionT;
+
+    using nd_arr_c = nb::ndarray<const std::complex<ParamT>, nb::c_contig>;
 
     const std::string bitsize =
         std::to_string(sizeof(std::complex<PrecisionT>) * 8);
@@ -407,13 +388,10 @@ void registerBackendAgnosticObservables(nb::module_ &m) {
     auto hermitian_obs =
         nb::class_<HermitianObsT, ObservableT>(m, class_name.c_str());
     hermitian_obs
-        .def(nb::init<const std::vector<ComplexT> &,
-                      const std::vector<std::size_t> &>())
         .def("__init__",
-             [](HermitianObsT *self,
-                const nb::ndarray<ComplexT, nb::numpy> &matrix,
+             [](HermitianObsT *self, const nd_arr_c &matrix,
                 const std::vector<std::size_t> &wires) {
-                 const auto ptr = static_cast<const ComplexT *>(matrix.data());
+                 const auto ptr = matrix.data();
                  new (self) HermitianObsT(
                      std::vector<ComplexT>(ptr, ptr + matrix.size()), wires);
              })
@@ -453,9 +431,9 @@ void registerBackendAgnosticObservables(nb::module_ &m) {
                       const std::vector<ObsPtr> &>())
         .def("__init__",
              [](HamiltonianT *self,
-                const nb::ndarray<ParamT, nb::numpy> &coeffs,
+                const nb::ndarray<ParamT, nb::c_contig> &coeffs,
                 const std::vector<ObsPtr> &obs) {
-                 const auto ptr = static_cast<const ParamT *>(coeffs.data());
+                 const auto ptr = coeffs.data();
                  new (self) HamiltonianT(
                      std::vector<ParamT>(ptr, ptr + coeffs.size()), obs);
              })
@@ -472,61 +450,62 @@ void registerBackendAgnosticObservables(nb::module_ &m) {
 }
 
 /**
- * @brief Create a NumPy array from a vector of data with proper ownership
- * transfer
+ * @brief Create an array from a vector of data with proper ownership transfer
  *
- * @tparam T Data type of the vector elements
+ * @tparam VectorT Data type of the vector elements
  * @param data Vector containing the data to transfer
- * @return nb::ndarray<T, nb::numpy> NumPy array with copied data
+ * @return nb::ndarray<VectorT, nb::numpy, nb::c_contig> Array with copied data
+ * in numpy format
  */
-template <typename T>
-nb::ndarray<T, nb::numpy>
-createNumpyArrayFromVector(const std::vector<T> &data) {
+template <typename VectorT>
+nb::ndarray<VectorT, nb::numpy, nb::c_contig>
+createArrayFromVector(const std::vector<VectorT> &data) {
     const std::size_t size = data.size();
 
     // Create a new array with the right size
-    std::size_t shape[1] = {size};
+    std::vector<size_t> shape{size};
 
     // Allocate new memory and copy the data
-    T *new_data = new T[size];
-    std::memcpy(new_data, data.data(), size * sizeof(T));
+    VectorT *new_data = new VectorT[size];
+    std::memcpy(new_data, data.data(), size * sizeof(VectorT));
 
     // Create a capsule to manage memory
     auto capsule = nb::capsule(
-        new_data, [](void *p) noexcept { delete[] static_cast<T *>(p); });
+        new_data, [](void *p) noexcept { delete[] static_cast<VectorT *>(p); });
 
-    // Create and return the ndarray
-    return nb::ndarray<T, nb::numpy>(new_data, 1, shape, capsule);
+    // Create and return the ndarray with numpy format
+    return nb::ndarray<VectorT, nb::numpy, nb::c_contig>(new_data, shape.size(),
+                                                         shape.data(), capsule);
 }
 
 /**
- * @brief Create a 2D NumPy array from a vector of data with proper ownership
- * transfer
+ * @brief Create a 2D array from a vector of data with proper ownership transfer
  *
- * @tparam T Data type of the vector elements
+ * @tparam VectorT Data type of the vector elements
  * @param data Vector containing the data to transfer
  * @param rows Number of rows in the resulting 2D array
  * @param cols Number of columns in the resulting 2D array
- * @return nb::ndarray<T, nb::numpy> 2D NumPy array with copied data
+ * @return nb::ndarray<VectorT, nb::numpy, nb::c_contig> 2D array with copied
+ * data in numpy format
  */
-template <typename T>
-nb::ndarray<T, nb::numpy>
-create2DNumpyArrayFromVector(const std::vector<T> &data, std::size_t rows,
-                             std::size_t cols) {
-
+template <typename VectorT>
+nb::ndarray<VectorT, nb::numpy, nb::c_contig>
+create2DArrayFromVector(const std::vector<VectorT> &data, std::size_t rows,
+                        std::size_t cols) {
     // Create a new array with the right size
-    std::size_t shape[2] = {rows, cols};
+    std::vector<size_t> shape{rows, cols};
 
     // Allocate new memory and copy the data
-    T *new_data = new T[rows * cols];
-    std::memcpy(new_data, data.data(), data.size() * sizeof(T));
+    VectorT *new_data = new VectorT[rows * cols];
+    std::memcpy(new_data, data.data(), data.size() * sizeof(VectorT));
 
     // Create a capsule to manage memory
     auto capsule = nb::capsule(
-        new_data, [](void *p) noexcept { delete[] static_cast<T *>(p); });
+        new_data, [](void *p) noexcept { delete[] static_cast<VectorT *>(p); });
 
-    // Create and return the ndarray
-    return nb::ndarray<T, nb::numpy>(new_data, 2, shape, capsule);
+    // Create and return the ndarray with numpy format
+    return nb::ndarray<VectorT, nb::numpy, nb::c_contig>(new_data, 2,
+                                                         shape.data(), capsule);
 }
 
 /**
@@ -535,16 +514,16 @@ create2DNumpyArrayFromVector(const std::vector<T> &data, std::size_t rows,
  * @tparam StateVectorT State vector type
  * @param M Measurements object
  * @param wires Vector of wire indices
- * @return nb::ndarray<typename StateVectorT::PrecisionT, nb::numpy> NumPy array
- * with probabilities
+ * @return nb::ndarray<typename StateVectorT::PrecisionT, nb::numpy,
+ * nb::c_contig> Array with probabilities in numpy format
  */
 template <class StateVectorT>
-nb::ndarray<typename StateVectorT::PrecisionT, nb::numpy>
+nb::ndarray<typename StateVectorT::PrecisionT, nb::numpy, nb::c_contig>
 probsForWires(Measurements<StateVectorT> &M,
               const std::vector<std::size_t> &wires) {
     using PrecisionT = typename StateVectorT::PrecisionT;
     auto probs_vec = M.probs(wires);
-    return createNumpyArrayFromVector<PrecisionT>(probs_vec);
+    return createArrayFromVector<PrecisionT>(probs_vec);
 }
 
 /**
@@ -552,15 +531,15 @@ probsForWires(Measurements<StateVectorT> &M,
  *
  * @tparam StateVectorT State vector type
  * @param M Measurements object
- * @return nb::ndarray<typename StateVectorT::PrecisionT, nb::numpy> NumPy array
- * with probabilities
+ * @return nb::ndarray<typename StateVectorT::PrecisionT, nb::numpy,
+ * nb::c_contig> Array with probabilities in numpy format
  */
 template <class StateVectorT>
-nb::ndarray<typename StateVectorT::PrecisionT, nb::numpy>
+nb::ndarray<typename StateVectorT::PrecisionT, nb::numpy, nb::c_contig>
 probsForAllWires(Measurements<StateVectorT> &M) {
     using PrecisionT = typename StateVectorT::PrecisionT;
     auto probs_vec = M.probs();
-    return createNumpyArrayFromVector<PrecisionT>(probs_vec);
+    return createArrayFromVector<PrecisionT>(probs_vec);
 }
 
 /**
@@ -570,41 +549,15 @@ probsForAllWires(Measurements<StateVectorT> &M) {
  * @param M Measurements object
  * @param num_wires Number of wires
  * @param num_shots Number of shots
- * @return nb::ndarray<std::size_t, nb::numpy> 2D NumPy array with samples
+ * @return nb::ndarray<std::size_t, nb::numpy, nb::c_contig> 2D array with
+ * samples in numpy format
  */
 template <class StateVectorT>
-nb::ndarray<std::size_t, nb::numpy>
+nb::ndarray<std::size_t, nb::numpy, nb::c_contig>
 generateSamples(Measurements<StateVectorT> &M, std::size_t num_wires,
                 std::size_t num_shots) {
     auto result = M.generate_samples(num_shots);
-    return create2DNumpyArrayFromVector<std::size_t>(result, num_shots,
-                                                     num_wires);
-}
-
-/**
- * @brief Update state vector data from a numpy array
- *
- * @tparam StateVectorT State vector type
- * @param sv State vector to update
- * @param data NumPy array with new data
- */
-template <class StateVectorT>
-void updateStateVectorData(
-    StateVectorT &sv,
-    const nb::ndarray<typename StateVectorT::ComplexT, nb::numpy> &data) {
-    using ComplexT = typename StateVectorT::ComplexT;
-
-    // Check dimensions
-    if (data.ndim() != 1) {
-        throw std::invalid_argument("Array must be 1-dimensional");
-    }
-
-    // Get data pointer and size
-    const ComplexT *data_ptr = static_cast<const ComplexT *>(data.data());
-    std::size_t size = data.shape(0);
-
-    // Update the state vector data
-    sv.updateData(data_ptr, size);
+    return create2DArrayFromVector<std::size_t>(result, num_shots, num_wires);
 }
 
 /**
@@ -642,6 +595,10 @@ void registerBackendAgnosticMeasurements(PyClass &pyclass) {
     // Add generate_samples method
     pyclass.def("generate_samples", &generateSamples<StateVectorT>,
                 "Generate samples for all wires.");
+
+    // Set random seed
+    pyclass.def("set_random_seed", [](Measurements<StateVectorT> &M,
+                                      std::size_t seed) { M.setSeed(seed); });
 }
 
 /**
@@ -658,7 +615,7 @@ void registerBackendAgnosticAlgorithms(nb::module_ &m) {
         typename StateVectorT::ComplexT; // Statevector's complex type
     using ParamT = PrecisionT;           // Parameter's data precision
 
-    using np_arr_c = nb::ndarray<nb::numpy, std::complex<ParamT>, nb::c_contig>;
+    using arr_c = nb::ndarray<const std::complex<ParamT>, nb::c_contig>;
 
     const std::string bitsize =
         std::to_string(sizeof(std::complex<PrecisionT>) * 8);
@@ -713,7 +670,7 @@ void registerBackendAgnosticAlgorithms(nb::module_ &m) {
            const std::vector<std::vector<PrecisionT>> &ops_params,
            const std::vector<std::vector<std::size_t>> &ops_wires,
            const std::vector<bool> &ops_inverses,
-           const std::vector<np_arr_c> &ops_matrices,
+           const std::vector<arr_c> &ops_matrices,
            const std::vector<std::vector<std::size_t>> &ops_controlled_wires,
            const std::vector<std::vector<bool>> &ops_controlled_values) {
             std::vector<std::vector<ComplexT>> conv_matrices(
@@ -738,6 +695,27 @@ void registerBackendAgnosticAlgorithms(nb::module_ &m) {
 }
 
 /**
+ * @brief Register backend agnostic state vector methods.
+ *
+ * @tparam StateVectorT
+ * @tparam PyClass
+ * @param pyclass Nanobind's state vector class to bind methods.
+ */
+template <class StateVectorT, class PyClass>
+void registerBackendAgnosticStateVectorMethods(PyClass &pyclass) {
+    // using PrecisionT = typename StateVectorT::PrecisionT;
+    // using ComplexT = typename StateVectorT::ComplexT;
+    // using ParamT = PrecisionT;
+
+    // Initialize with number of qubits
+    pyclass.def(nb::init<size_t>());
+
+    pyclass.def("__len__", &StateVectorT::getLength,
+                "Get the size of the statevector.");
+    pyclass.def("size", &StateVectorT::getLength);
+}
+
+/**
  * @brief Templated class to build lightning class bindings.
  *
  * @tparam StateVectorT State vector type
@@ -745,8 +723,8 @@ void registerBackendAgnosticAlgorithms(nb::module_ &m) {
  */
 template <class StateVectorT> void lightningClassBindings(nb::module_ &m) {
     using PrecisionT = typename StateVectorT::PrecisionT;
-    using ComplexT = typename StateVectorT::ComplexT;
-    using ParamT = PrecisionT;
+    // using ComplexT = typename StateVectorT::ComplexT;
+    // using ParamT = PrecisionT;
 
     const std::string bitsize =
         std::to_string(sizeof(std::complex<PrecisionT>) * 8);
@@ -754,46 +732,14 @@ template <class StateVectorT> void lightningClassBindings(nb::module_ &m) {
     // StateVector class
     std::string class_name = "StateVectorC" + bitsize;
     auto pyclass = nb::class_<StateVectorT>(m, class_name.c_str());
-
-    // Initialize with number of qubits
-    pyclass.def(nb::init<size_t>());
-
-    // Add updateData method
-    pyclass.def("updateData", &updateStateVectorData<StateVectorT>,
-                "Update the state vector data from a numpy array.");
-
-    // Add other methods (resetStateVector, setBasisState, etc.)
-    pyclass.def("resetStateVector", &StateVectorT::resetStateVector,
-                "Reset the state vector to |0...0>.");
-
-    pyclass.def(
-        "setBasisState",
-        [](StateVectorT &sv, const std::vector<std::size_t> &state,
-           const std::vector<std::size_t> &wires) {
-            sv.setBasisState(state, wires);
-        },
-        "Set the state vector to a basis state.");
-
-    pyclass.def(
-        "getState",
-        [](const StateVectorT &sv, nb::ndarray<ComplexT, nb::numpy> &state) {
-            // Check if array is large enough
-            if (state.shape(0) < sv.getLength()) {
-                throw std::invalid_argument("Output array is too small");
-            }
-
-            // Copy data to numpy array
-            ComplexT *data_ptr = static_cast<ComplexT *>(state.data());
-            std::copy(sv.getData(), sv.getData() + sv.getLength(), data_ptr);
-        },
-        "Copy state vector data to a numpy array.");
-
-    pyclass.def("__len__", &StateVectorT::getLength,
-                "Get the size of the statevector.");
-    pyclass.def("size", &StateVectorT::getLength);
+    registerBackendAgnosticStateVectorMethods<StateVectorT>(pyclass);
+    registerBackendSpecificStateVectorMethods<StateVectorT>(pyclass);
 
     // Register gates for StateVector
     registerGatesForStateVector<StateVectorT>(pyclass);
+
+    // Register backend specific bindings
+    registerBackendClassSpecificBindings<StateVectorT>(pyclass);
 
     //***********************************************************************//
     //                              Observables
