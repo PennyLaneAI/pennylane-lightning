@@ -140,9 +140,7 @@ class TestStateVectorNB:
         # Assert the result matches the expected state
         np.testing.assert_allclose(result, expected)
 
-    def test_statevector_reset(
-        self, current_nanobind_module, precision, get_statevector_class
-    ):
+    def test_statevector_reset(self, current_nanobind_module, precision, get_statevector_class):
         """Test resetStateVector method on StateVectorC64/128 classes."""
         module = current_nanobind_module
 

@@ -20,6 +20,7 @@ import numpy as np
 import pytest
 from conftest import backend
 
+
 def get_module_attributes(module):
     """Get classes and functions from a module."""
     classes = []

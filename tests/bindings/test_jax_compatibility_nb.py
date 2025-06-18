@@ -44,7 +44,7 @@ class TestJAXCompatibility:
         state_vector_class_name = f"StateVectorC{precision}"
         if not hasattr(module, state_vector_class_name):
             pytest.skip(f"Class {state_vector_class_name} not available in module")
-            
+
         # Get the StateVector class and check if it has updateData method
         StateVectorClass = getattr(module, state_vector_class_name)
         if not hasattr(StateVectorClass, "updateData"):
@@ -83,7 +83,7 @@ class TestJAXCompatibility:
         state_vector_class_name = f"StateVectorC{precision}"
         if not hasattr(module, state_vector_class_name):
             pytest.skip(f"Class {state_vector_class_name} not available in module")
-            
+
         # Get the StateVector class and check if it has updateData method
         StateVectorClass = getattr(module, state_vector_class_name)
         if not hasattr(StateVectorClass, "updateData"):
@@ -128,7 +128,7 @@ class TestJAXCompatibility:
         state_vector_class_name = f"StateVectorC{precision}"
         if not hasattr(module, state_vector_class_name):
             pytest.skip(f"Class {state_vector_class_name} not available in module")
-            
+
         # Get the StateVector class and check if it has updateData method
         StateVectorClass = getattr(module, state_vector_class_name)
         if not hasattr(StateVectorClass, "updateData"):
@@ -189,7 +189,7 @@ class TestJAXCompatibility:
         state_vector_class_name = f"StateVectorC{precision}"
         if not hasattr(module, state_vector_class_name):
             pytest.skip(f"Class {state_vector_class_name} not available in module")
-            
+
         # Get the StateVector class and check if it has updateData method
         StateVectorClass = getattr(module, state_vector_class_name)
         if not hasattr(StateVectorClass, "updateData"):
