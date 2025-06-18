@@ -122,7 +122,7 @@ namespace Pennylane::NanoBindings {
 template <class StateVectorT>
 void registerMatrix(
     StateVectorT &st,
-    const nb::ndarray<typename StateVectorT::ComplexT, nb::c_contig> &matrix,
+    const nb::ndarray<std::complex<typename StateVectorT::PrecisionT>, nb::c_contig> &matrix,
     const std::vector<std::size_t> &wires, bool inverse = false) {
     using ComplexT = typename StateVectorT::ComplexT;
 
