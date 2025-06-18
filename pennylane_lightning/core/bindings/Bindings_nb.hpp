@@ -35,7 +35,7 @@
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/vector.h>
 
-#include "CPUMemoryModel.hpp" // CPUMemoryModel, getMemoryModel, bestCPUMemoryModel, getAlignment
+#include "CPUMemoryModel.hpp" // CPUMemoryModel, bestCPUMemoryModel
 #include "Constant.hpp"
 #include "ConstantUtil.hpp" // lookup
 #include "GateOperation.hpp"
@@ -113,6 +113,13 @@ using namespace Pennylane::LightningTensor::TNCuda::NanoBindings;
 static_assert(false, "Backend not found.");
 #endif
 
+/// @cond DEV
+namespace {
+using Pennylane::Util::bestCPUMemoryModel;
+using Pennylane::Util::CPUMemoryModel;
+} // namespace
+/// @endcond
+
 namespace nb = nanobind;
 namespace Pennylane::NanoBindings {
 
@@ -122,11 +129,10 @@ namespace Pennylane::NanoBindings {
 template <class StateVectorT>
 void registerMatrix(
     StateVectorT &st,
-    const nb::ndarray<std::complex<typename StateVectorT::PrecisionT>,
+    const nb::ndarray<const std::complex<typename StateVectorT::PrecisionT>,
                       nb::c_contig> &matrix,
     const std::vector<std::size_t> &wires, bool inverse = false) {
     using ComplexT = typename StateVectorT::ComplexT;
-
     using Pennylane::Util::PL_reinterpret_cast;
 
     // Cast to raw pointer
@@ -178,8 +184,8 @@ void registerGatesForStateVector(PyClass &pyclass) {
  * @return Nanobind ndarray
  */
 template <typename VectorT>
-auto alignedArray(Util::CPUMemoryModel memory_model, std::size_t size,
-                  bool zeroInit) -> nb::ndarray<VectorT, nb::c_contig> {
+auto alignedArray(CPUMemoryModel memory_model, std::size_t size, bool zeroInit)
+    -> nb::ndarray<VectorT, nb::numpy, nb::c_contig> {
     using Pennylane::Util::alignedAlloc;
     using Pennylane::Util::getAlignment;
 
@@ -194,8 +200,8 @@ auto alignedArray(Util::CPUMemoryModel memory_model, std::size_t size,
     std::vector<size_t> shape{size};
 
     // Return ndarray with custom allocated memory
-    return nb::ndarray<VectorT, nb::c_contig>(ptr, shape.size(), shape.data(),
-                                              capsule);
+    return nb::ndarray<VectorT, nb::numpy, nb::c_contig>(ptr, shape.size(),
+                                                         shape.data(), capsule);
 }
 
 /**
@@ -209,7 +215,7 @@ auto alignedArray(Util::CPUMemoryModel memory_model, std::size_t size,
  */
 auto allocateAlignedArray(std::size_t size, const std::string &dtype,
                           bool zeroInit) -> nb::object {
-    auto memory_model = Pennylane::Util::bestCPUMemoryModel();
+    auto memory_model = bestCPUMemoryModel();
 
     if (dtype == "complex64") {
         return nb::cast(
@@ -230,26 +236,10 @@ auto allocateAlignedArray(std::size_t size, const std::string &dtype,
  * @brief Register array alignment functionality.
  */
 void registerArrayAlignmentBindings(nb::module_ &m) {
-    using Pennylane::Util::bestCPUMemoryModel;
-    using Pennylane::Util::CPUMemoryModel;
-
-    // Register utility functions
-    m.def("best_alignment", &bestCPUMemoryModel,
-          "Best memory alignment for the simulator.");
-
     // Add allocate_aligned_array function
     m.def("allocate_aligned_array", &allocateAlignedArray,
           "Allocate aligned array with specified dtype", nb::arg("size"),
           nb::arg("dtype"), nb::arg("zero_init") = false);
-
-    // Only register the enum once
-    static auto register_enum = [&m]() {
-        nb::enum_<CPUMemoryModel>(m, "CPUMemoryModel")
-            .value("Unaligned", CPUMemoryModel::Unaligned)
-            .value("Aligned256", CPUMemoryModel::Aligned256)
-            .value("Aligned512", CPUMemoryModel::Aligned512);
-        return true;
-    }();
 }
 
 /**
@@ -352,7 +342,7 @@ void registerBackendAgnosticObservables(nb::module_ &m) {
     using ComplexT = typename LightningBackendT::ComplexT;
     using ParamT = PrecisionT;
 
-    using nd_arr_c = nb::ndarray<std::complex<ParamT>, nb::c_contig>;
+    using nd_arr_c = nb::ndarray<const std::complex<ParamT>, nb::c_contig>;
 
     const std::string bitsize =
         std::to_string(sizeof(std::complex<PrecisionT>) * 8);
@@ -605,6 +595,10 @@ void registerBackendAgnosticMeasurements(PyClass &pyclass) {
     // Add generate_samples method
     pyclass.def("generate_samples", &generateSamples<StateVectorT>,
                 "Generate samples for all wires.");
+
+    // Set random seed
+    pyclass.def("set_random_seed", [](Measurements<StateVectorT> &M,
+                                      std::size_t seed) { M.setSeed(seed); });
 }
 
 /**
@@ -621,7 +615,7 @@ void registerBackendAgnosticAlgorithms(nb::module_ &m) {
         typename StateVectorT::ComplexT; // Statevector's complex type
     using ParamT = PrecisionT;           // Parameter's data precision
 
-    using arr_c = nb::ndarray<std::complex<ParamT>, nb::c_contig>;
+    using arr_c = nb::ndarray<const std::complex<ParamT>, nb::c_contig>;
 
     const std::string bitsize =
         std::to_string(sizeof(std::complex<PrecisionT>) * 8);
