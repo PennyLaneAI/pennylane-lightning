@@ -49,6 +49,9 @@
   [(#1175)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1175)
 
 <h3>Internal changes ⚙️</h3>
+
+- Replace `DefaultExecutionConfig` with `ExecutionConfig()`.
+  [(#1185)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1185)
   
 - Updates `LightningInterpreter` to adjust to a change in `adjoint_transform_prim` and `ctrl_transform_prim`.
   [(#1177)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1177)
