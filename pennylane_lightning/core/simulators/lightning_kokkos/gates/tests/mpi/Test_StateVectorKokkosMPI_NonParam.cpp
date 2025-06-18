@@ -425,8 +425,10 @@ TEMPLATE_TEST_CASE("Match wires after apply PauliX", "[LKMPI]", double, float) {
     };
     sv_1.matchWires(sv);
 
+    auto local_sv_1_data = sv_1.getLocalSV().getDataVector();
+
     for (std::size_t j = 0; j < init_subsv.size(); j++) {
-        CHECK(real(sv_1.getData()[j]) ==
+        CHECK(real(local_sv_1_data[j]) ==
               Approx(real(reference[mpi_manager.getRank() * 4 + j])));
     }
 
@@ -441,8 +443,9 @@ TEMPLATE_TEST_CASE("Match wires after apply PauliX", "[LKMPI]", double, float) {
     StateVectorKokkosMPI<TestType> sv_new(mpi_manager, num_qubits);
     sv.matchWires(sv_new);
 
+    auto local_sv_data = sv.getLocalSV().getDataVector();
     for (std::size_t j = 0; j < init_subsv.size(); j++) {
-        CHECK(real(sv.getData()[j]) ==
+        CHECK(real(local_sv_data[j]) ==
               Approx(real(reference[mpi_manager.getRank() * 4 + j])));
     }
 
