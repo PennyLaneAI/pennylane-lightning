@@ -159,7 +159,7 @@ class LightningBase(Device):
         return circuit
 
     @abstractmethod
-    def preprocess(self, execution_config: ExecutionConfig = None):
+    def preprocess(self, execution_config: Optional[ExecutionConfig] = None):
         """This function defines the device transform program to be applied and an updated device configuration.
 
         Args:
