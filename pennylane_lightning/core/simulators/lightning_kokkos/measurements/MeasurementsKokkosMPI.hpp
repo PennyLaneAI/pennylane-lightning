@@ -607,8 +607,10 @@ class MeasurementsMPI final
         }
         mpi_manager_.Barrier();
         mpi_manager_.Bcast(global_samples_bin, 0);
+        std::vector<std::size_t> h_global_samples_bin(N);
+        h_global_samples_bin = view2vector(global_samples_bin);
 
-        std::size_t local_num_samples = global_samples_bin(mpi_rank);
+        std::size_t local_num_samples = h_global_samples_bin[mpi_rank];
         Kokkos::View<std::size_t *> local_samples(
             "local_num_samples",
             local_num_samples * (num_local_qubits + num_global_qubits));
@@ -637,8 +639,7 @@ class MeasurementsMPI final
 
             // Generate local samples using local distribution
             Kokkos::parallel_for(
-                Kokkos::RangePolicy<KokkosExecSpace>(
-                    0, global_samples_bin(mpi_manager_.getRank())),
+                Kokkos::RangePolicy<KokkosExecSpace>(0, local_num_samples),
                 Local_Sampler<PrecisionT, Kokkos::Random_XorShift64_Pool>(
                     local_samples, local_normalized_probability, rand_pool,
                     num_local_qubits, num_global_qubits, global_index,
@@ -651,7 +652,7 @@ class MeasurementsMPI final
         std::vector<int> recv_counts(N);
         std::vector<int> displacements(N);
         for (std::size_t i = 0; i < recv_counts.size(); i++) {
-            recv_counts[i] = global_samples_bin(i) * num_total_qubits;
+            recv_counts[i] = h_global_samples_bin[i] * num_total_qubits;
         }
         displacements[0] = 0;
         for (std::size_t i = 1; i < recv_counts.size(); i++) {
