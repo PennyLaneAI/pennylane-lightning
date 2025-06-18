@@ -71,7 +71,8 @@ using StateVectorBackends =
 template <class StateVectorT>
 void updateStateVectorData(
     StateVectorT &sv,
-    const nb::ndarray<typename StateVectorT::ComplexT, nb::c_contig> &data) {
+    const nb::ndarray<const typename StateVectorT::ComplexT, nb::c_contig>
+        &data) {
     using ComplexT = typename StateVectorT::ComplexT;
 
     // Check dimensions
@@ -80,7 +81,7 @@ void updateStateVectorData(
     }
 
     // Get data pointer and size
-    const ComplexT *data_ptr = static_cast<const ComplexT *>(data.data());
+    const ComplexT *data_ptr = data.data();
     std::size_t size = data.shape(0);
 
     // Update the state vector data
@@ -139,8 +140,7 @@ void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
 
     pyclass.def(
         "getState",
-        [](const StateVectorT &sv,
-           nb::ndarray<ComplexT, nb::c_contig> &state) {
+        [](const StateVectorT &sv, nb::ndarray<ComplexT, nb::c_contig> &state) {
             // Check if array is large enough
             if (state.shape(0) < sv.getLength()) {
                 throw std::invalid_argument("Output array is too small");
