@@ -186,7 +186,7 @@ jobs:
           fi
           lcov --directory . -b ../pennylane_lightning/core --capture --output-file coverage.info
           lcov --remove coverage.info '/usr/*' --output-file coverage.info
-          mv coverage.info coverage-${{ github.job }}-lightning_gpu_${{ matrix.mpilib }}.info
+          mv coverage.info coverage-${{ github.job }}-lightning_kokkos_mpi_cuda_${{ matrix.mpilib }}.info
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
