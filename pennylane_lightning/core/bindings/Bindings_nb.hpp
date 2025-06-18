@@ -120,10 +120,10 @@ namespace Pennylane::NanoBindings {
  * @brief Register applyMatrix.
  */
 template <class StateVectorT>
-void registerMatrix(StateVectorT &st,
-                    const nb::ndarray<typename StateVectorT::ComplexT, nb::c_contig> &matrix,
-                    const std::vector<std::size_t> &wires,
-                    bool inverse = false) {
+void registerMatrix(
+    StateVectorT &st,
+    const nb::ndarray<typename StateVectorT::ComplexT, nb::c_contig> &matrix,
+    const std::vector<std::size_t> &wires, bool inverse = false) {
     using ComplexT = typename StateVectorT::ComplexT;
 
     // Cast to raw pointer
@@ -345,9 +345,9 @@ template <class LightningBackendT>
 void registerBackendAgnosticObservables(nb::module_ &m) {
     using PrecisionT = typename LightningBackendT::PrecisionT;
     using ComplexT = typename LightningBackendT::ComplexT;
-    using ParamT = PrecisionT; 
+    using ParamT = PrecisionT;
 
-    using nd_arr_c = nb::ndarray<std::complex<ParamT>, nb::c_contig>; 
+    using nd_arr_c = nb::ndarray<std::complex<ParamT>, nb::c_contig>;
 
     const std::string bitsize =
         std::to_string(sizeof(std::complex<PrecisionT>) * 8);
@@ -435,7 +435,8 @@ void registerBackendAgnosticObservables(nb::module_ &m) {
         .def(nb::init<const std::vector<ParamT> &,
                       const std::vector<ObsPtr> &>())
         .def("__init__",
-             [](HamiltonianT *self, const nb::ndarray<ParamT, nb::c_contig> &coeffs,
+             [](HamiltonianT *self,
+                const nb::ndarray<ParamT, nb::c_contig> &coeffs,
                 const std::vector<ObsPtr> &obs) {
                  const auto ptr = coeffs.data();
                  new (self) HamiltonianT(
@@ -458,10 +459,12 @@ void registerBackendAgnosticObservables(nb::module_ &m) {
  *
  * @tparam T Data type of the vector elements
  * @param data Vector containing the data to transfer
- * @return nb::ndarray<T, nb::numpy, nb::c_contig> Array with copied data in numpy format
+ * @return nb::ndarray<T, nb::numpy, nb::c_contig> Array with copied data in
+ * numpy format
  */
 template <typename T>
-nb::ndarray<T, nb::numpy, nb::c_contig> createArrayFromVector(const std::vector<T> &data) {
+nb::ndarray<T, nb::numpy, nb::c_contig>
+createArrayFromVector(const std::vector<T> &data) {
     const std::size_t size = data.size();
 
     // Create a new array with the right size
@@ -476,7 +479,8 @@ nb::ndarray<T, nb::numpy, nb::c_contig> createArrayFromVector(const std::vector<
         new_data, [](void *p) noexcept { delete[] static_cast<T *>(p); });
 
     // Create and return the ndarray with numpy format
-    return nb::ndarray<T, nb::numpy, nb::c_contig>(new_data, 1, shape.data(), capsule);
+    return nb::ndarray<T, nb::numpy, nb::c_contig>(new_data, 1, shape.data(),
+                                                   capsule);
 }
 
 /**
@@ -486,12 +490,13 @@ nb::ndarray<T, nb::numpy, nb::c_contig> createArrayFromVector(const std::vector<
  * @param data Vector containing the data to transfer
  * @param rows Number of rows in the resulting 2D array
  * @param cols Number of columns in the resulting 2D array
- * @return nb::ndarray<T, nb::numpy, nb::c_contig> 2D array with copied data in numpy format
+ * @return nb::ndarray<T, nb::numpy, nb::c_contig> 2D array with copied data in
+ * numpy format
  */
 template <typename T>
-nb::ndarray<T, nb::numpy, nb::c_contig> create2DArrayFromVector(const std::vector<T> &data,
-                                                  std::size_t rows,
-                                                  std::size_t cols) {
+nb::ndarray<T, nb::numpy, nb::c_contig>
+create2DArrayFromVector(const std::vector<T> &data, std::size_t rows,
+                        std::size_t cols) {
     // Create a new array with the right size
     std::vector<size_t> shape{rows, cols};
 
@@ -504,7 +509,8 @@ nb::ndarray<T, nb::numpy, nb::c_contig> create2DArrayFromVector(const std::vecto
         new_data, [](void *p) noexcept { delete[] static_cast<T *>(p); });
 
     // Create and return the ndarray with numpy format
-    return nb::ndarray<T, nb::numpy, nb::c_contig>(new_data, 2, shape.data(), capsule);
+    return nb::ndarray<T, nb::numpy, nb::c_contig>(new_data, 2, shape.data(),
+                                                   capsule);
 }
 
 /**
@@ -513,8 +519,8 @@ nb::ndarray<T, nb::numpy, nb::c_contig> create2DArrayFromVector(const std::vecto
  * @tparam StateVectorT State vector type
  * @param M Measurements object
  * @param wires Vector of wire indices
- * @return nb::ndarray<typename StateVectorT::PrecisionT, nb::numpy, nb::c_contig> Array with
- * probabilities in numpy format
+ * @return nb::ndarray<typename StateVectorT::PrecisionT, nb::numpy,
+ * nb::c_contig> Array with probabilities in numpy format
  */
 template <class StateVectorT>
 nb::ndarray<typename StateVectorT::PrecisionT, nb::numpy, nb::c_contig>
@@ -530,8 +536,8 @@ probsForWires(Measurements<StateVectorT> &M,
  *
  * @tparam StateVectorT State vector type
  * @param M Measurements object
- * @return nb::ndarray<typename StateVectorT::PrecisionT, nb::numpy, nb::c_contig> Array with
- * probabilities in numpy format
+ * @return nb::ndarray<typename StateVectorT::PrecisionT, nb::numpy,
+ * nb::c_contig> Array with probabilities in numpy format
  */
 template <class StateVectorT>
 nb::ndarray<typename StateVectorT::PrecisionT, nb::numpy, nb::c_contig>
@@ -548,8 +554,8 @@ probsForAllWires(Measurements<StateVectorT> &M) {
  * @param M Measurements object
  * @param num_wires Number of wires
  * @param num_shots Number of shots
- * @return nb::ndarray<std::size_t, nb::numpy, nb::c_contig> 2D array with samples in numpy
- * format
+ * @return nb::ndarray<std::size_t, nb::numpy, nb::c_contig> 2D array with
+ * samples in numpy format
  */
 template <class StateVectorT>
 nb::ndarray<std::size_t, nb::numpy, nb::c_contig>
