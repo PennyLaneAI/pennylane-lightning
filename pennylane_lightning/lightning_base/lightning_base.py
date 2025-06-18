@@ -403,7 +403,7 @@ class LightningBase(Device):
     def compute_derivatives(
         self,
         circuits: QuantumTape_or_Batch,
-        execution_config: ExecutionConfig = None,
+        execution_config: Optional[ExecutionConfig] = None,
     ) -> Tuple:
         """Calculate the jacobian of either a single or a batch of circuits on the device.
 
@@ -432,7 +432,7 @@ class LightningBase(Device):
     def execute_and_compute_derivatives(
         self,
         circuits: QuantumTape_or_Batch,
-        execution_config: ExecutionConfig = None,
+        execution_config: Optional[ExecutionConfig] = None,
     ) -> Tuple:
         """Compute the results and jacobians of circuits at the same time.
 
@@ -477,7 +477,7 @@ class LightningBase(Device):
         self,
         circuits: QuantumTape_or_Batch,
         cotangents: Tuple[Number],
-        execution_config: ExecutionConfig = None,
+        execution_config: Optional[ExecutionConfig] = None,
     ) -> Tuple:
         r"""The vector jacobian product used in reverse-mode differentiation. ``Lightning[Device]`` uses the
         adjoint differentiation method to compute the VJP.
@@ -524,7 +524,7 @@ class LightningBase(Device):
         self,
         circuits: QuantumTape_or_Batch,
         cotangents: Tuple[Number],
-        execution_config: ExecutionConfig = None,
+        execution_config: Optional[ExecutionConfig] = None,
     ) -> Tuple:
         """Calculate both the results and the vector jacobian product used in reverse-mode differentiation.
         Args:

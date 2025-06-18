@@ -435,7 +435,7 @@ class LightningTensor(Device):
 
     def preprocess(
         self,
-        execution_config: ExecutionConfig = None,
+        execution_config: Optional[ExecutionConfig] = None,
     ):
         """This function defines the device transform program to be applied and an updated device configuration.
 
@@ -476,7 +476,7 @@ class LightningTensor(Device):
     def execute(
         self,
         circuits: QuantumTape_or_Batch,
-        execution_config: ExecutionConfig = None,
+        execution_config: Optional[ExecutionConfig] = None,
     ) -> Result_or_ResultBatch:
         """Execute a circuit or a batch of circuits and turn it into results.
 
@@ -525,7 +525,7 @@ class LightningTensor(Device):
     def compute_derivatives(
         self,
         circuits: QuantumTape_or_Batch,
-        execution_config: ExecutionConfig = None,
+        execution_config: Optional[ExecutionConfig] = None,
     ):
         """Calculate the Jacobian of either a single or a batch of circuits on the device.
 
@@ -543,7 +543,7 @@ class LightningTensor(Device):
     def execute_and_compute_derivatives(
         self,
         circuits: QuantumTape_or_Batch,
-        execution_config: ExecutionConfig = None,
+        execution_config: Optional[ExecutionConfig] = None,
     ):
         """Compute the results and Jacobians of circuits at the same time.
 
@@ -579,7 +579,7 @@ class LightningTensor(Device):
         self,
         circuits: QuantumTape_or_Batch,
         cotangents: Tuple[Number],
-        execution_config: ExecutionConfig = None,
+        execution_config: Optional[ExecutionConfig] = None,
     ):
         r"""The vector-Jacobian product used in reverse-mode differentiation.
 
@@ -601,7 +601,7 @@ class LightningTensor(Device):
         self,
         circuits: QuantumTape_or_Batch,
         cotangents: Tuple[Number],
-        execution_config: ExecutionConfig = None,
+        execution_config: Optional[ExecutionConfig] = None,
     ):
         """Calculate both the results and the vector-Jacobian product used in reverse-mode differentiation.
 

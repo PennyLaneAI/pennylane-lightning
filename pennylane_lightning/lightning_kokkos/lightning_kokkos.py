@@ -328,7 +328,7 @@ class LightningKokkos(LightningBase):
 
         return replace(config, **updated_values, device_options=new_device_options)
 
-    def preprocess(self, execution_config: ExecutionConfig = None):
+    def preprocess(self, execution_config: Optional[ExecutionConfig] = None):
         """This function defines the device transform program to be applied and an updated device configuration.
 
         Args:
@@ -384,7 +384,7 @@ class LightningKokkos(LightningBase):
     def execute(
         self,
         circuits: QuantumTape_or_Batch,
-        execution_config: ExecutionConfig = None,
+        execution_config: Optional[ExecutionConfig] = None,
     ) -> Result_or_ResultBatch:
         """Execute a circuit or a batch of circuits and turn it into results.
 
