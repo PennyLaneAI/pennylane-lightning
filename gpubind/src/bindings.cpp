@@ -2,6 +2,12 @@
 
 #include <iostream>
 #include <nanobind/nanobind.h>
+#include <nanobind/ndarray.h>
+#include <nanobind/stl/complex.h>
+#include <nanobind/stl/string.h>
+#include <nanobind/stl/vector.h>
+#include <vector>
+#include <numeric> // For std::iota
 
 namespace nb = nanobind;
 
@@ -9,7 +15,7 @@ namespace nb = nanobind;
 using DeviceView =
     nb::ndarray<float, nb::shape<-1>, nb::c_contig, nb::device::cuda>;
 
-using NumpyArray = nb::ndarray<float, nb::shape<-1>, nb::c_contig>;
+using NumpyArray = nb::ndarray<float, nb::numpy, nb::shape<-1>, nb::c_contig>;
 
 // Forward-declare the CUDA kernel launcher from kernels.cu
 void launch_add_vectors(float *out, const float *a, const float *b, int n);
@@ -56,6 +62,12 @@ DeviceView device_tensor_gpu_view(nb::object self) {
     return DeviceView(t->data(), ndim, shape, self);
 }
 
+std::vector<float> generate_sequential_data(size_t count) {
+    std::vector<float> data(count);
+    std::iota(data.begin(), data.end(), 0.0f); // Fill with 0, 1, 2, ...
+    return data; // Return by value
+}
+
 // The module name must match what's in CMakeLists.txt and setup.py
 NB_MODULE(gpu_binding_example_ext, m) {
     m.doc() = "A GPU tensor management example with nanobind";
@@ -84,4 +96,26 @@ NB_MODULE(gpu_binding_example_ext, m) {
     m.def("device_tensor_from_array", &device_tensor_from_array,
           "Create a DeviceTensor from an existing NumPy array", nb::arg("arr"),
           nb::rv_policy::take_ownership);
+
+    m.def("generate_sequential_data", [](size_t count) {
+            std::vector<float> v = generate_sequential_data(count);
+
+            std::vector<float> *v2 = new std::vector<float>(std::move(v));
+            float* data_ptr = v2->data();
+
+            // float* v2 = new float[count];
+            // float* data_ptr = v2;
+
+            size_t shape[] = {count};
+
+            auto capsule = nb::capsule(
+                v2, [](void *ptr) noexcept {
+                    delete static_cast<std::vector<float> *>(ptr); 
+                    // delete[] static_cast<float *>(ptr); 
+                });
+
+            return NumpyArray(
+                data_ptr, 1, shape, capsule);
+        },
+          "Generates sequential float data and returns it as a NumPy array (zero-copy).");
 }
