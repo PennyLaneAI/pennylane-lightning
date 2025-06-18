@@ -168,11 +168,10 @@ class MPIManager {
     }
 
     /**
-     * @brief Check if the MPI configuration meets the cuQuantum.
+     * @brief Check if the MPI configuration is valid.
      */
     void check_mpi_config() {
         // check if number of processes is power of two.
-        // This is required by custatevec
         PL_ABORT_IF(std::has_single_bit(
                         static_cast<unsigned int>(this->getSize())) != true,
                     "Processes number is not power of two.");

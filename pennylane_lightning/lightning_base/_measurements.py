@@ -69,7 +69,7 @@ class LightningBaseMeasurements(ABC):
         # TODO: implement this for other Lightning devices.
         self._subsamples = False
 
-        # Declare if the device will use the MPI support. Currently, 
+        # Declare if the device will use the MPI support. Currently,
         # only Lightning-GPU and Lightning-Kokkos supports this feature.
         self._use_mpi = False
 
@@ -141,7 +141,7 @@ class LightningBaseMeasurements(ABC):
                     raise NotImplementedError(
                         "Sparse Hamiltonian is not supported on the lightning.kokkos device with MPI."
                     )
-                
+
                 # Identity for CSR_SparseHamiltonian to pass to processes with rank != 0 to reduce
                 # host(cpu) memory requirements
                 CSR_SparseHamiltonian = qml.Identity(0).sparse_matrix()
@@ -228,7 +228,7 @@ class LightningBaseMeasurements(ABC):
                 raise NotImplementedError(
                     "Sparse Hamiltonian is not supported on the lightning.kokkos device with MPI."
                 )
-            
+
             # Ensuring CSR sparse representation.
             CSR_SparseHamiltonian = measurementprocess.obs.sparse_matrix(
                 wire_order=list(range(self._qubit_state.num_wires))

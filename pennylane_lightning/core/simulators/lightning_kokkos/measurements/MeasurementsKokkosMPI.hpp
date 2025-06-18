@@ -135,7 +135,6 @@ class MeasurementsMPI final
             operation, this->_statevector.getLocalWireIndices(wires));
         PrecisionT global_expval =
             this->_statevector.allReduceSum(local_expval);
-        this->_statevector.barrier();
         return global_expval;
     };
 
@@ -207,22 +206,28 @@ class MeasurementsMPI final
             for (std::size_t i = 0; i < target_wires[word].size(); i++) {
                 if (pauli_words[word][i] == 'X') {
                     X_wires.push_back(target_wires[word][i]);
+
                     this->_statevector.isWiresLocal({target_wires[word][i]})
                         ? local_wires_cannot_be_swapped.push_back(
                               target_wires[word][i])
                         : global_wires_need_to_swap.push_back(
                               target_wires[word][i]);
+
                     local_pauli_word += 'X';
                     local_target_wires.push_back(target_wires[word][i]);
+
                 } else if (pauli_words[word][i] == 'Y') {
                     Y_wires.push_back(target_wires[word][i]);
+
                     this->_statevector.isWiresLocal({target_wires[word][i]})
                         ? local_wires_cannot_be_swapped.push_back(
                               target_wires[word][i])
                         : global_wires_need_to_swap.push_back(
                               target_wires[word][i]);
+
                     local_pauli_word += 'Y';
                     local_target_wires.push_back(target_wires[word][i]);
+
                 } else if (pauli_words[word][i] == 'Z') {
                     Z_wires.push_back(target_wires[word][i]);
                 }
@@ -267,6 +272,7 @@ class MeasurementsMPI final
                 {this->_statevector.getLocalWireIndices(local_target_wires)},
                 {1.0});
 
+            // apply global expval
             std::size_t global_z_mask = 0;
             std::size_t global_index =
                 this->_statevector.getGlobalIndexFromMPIRank(
@@ -288,7 +294,6 @@ class MeasurementsMPI final
             // combine
             PrecisionT global_expval = 0.0;
             global_expval = this->_statevector.allReduceSum(local_expval);
-            this->_statevector.barrier();
             result += global_expval * coeffs[word];
         }
 
