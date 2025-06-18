@@ -386,6 +386,10 @@ class QuantumScriptSerializer:
                 raise NotImplementedError(
                     "SparseHamiltonian is not supported on the lightning.tensor device."
                 )
+            if self._use_mpi and self.device_name == "lightning.kokkos":
+                raise NotImplementedError(
+                    "SparseHamiltonian is not supported on the lightning.kokkos device with MPI."
+                )
             return self._sparse_hamiltonian(observable, wires_map)
         return self._hermitian_ob(observable, wires_map)
 
