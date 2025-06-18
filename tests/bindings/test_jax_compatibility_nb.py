@@ -206,12 +206,14 @@ class TestJAXCompatibility:
 
         MeasurementsClass = getattr(module, measurements_class_name)
 
-        # Check if the module has NamedObs class
+        # Check if the module has an observables submodule with NamedObs class
         named_obs_class_name = f"NamedObsC{precision}"
-        if not hasattr(module, named_obs_class_name):
-            pytest.skip(f"Class {named_obs_class_name} not available in module")
+        if not hasattr(module, "observables") or not hasattr(
+            module.observables, named_obs_class_name
+        ):
+            pytest.skip(f"Class {named_obs_class_name} not available in module.observables")
 
-        NamedObsClass = getattr(module, named_obs_class_name)
+        NamedObsClass = getattr(module.observables, named_obs_class_name)
 
         num_qubits = 1
         dim = 2**num_qubits
