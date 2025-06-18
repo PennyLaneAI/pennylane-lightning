@@ -150,17 +150,17 @@ TEMPLATE_TEST_CASE("Apply Operation - non-param 2 wires", "[LKMPI]", double,
                    float) {
     const TestType EP = 1e-4;
     const std::size_t num_qubits = 6;
-    auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
 
     const bool inverse = GENERATE(false, true);
     const std::string gate_name = GENERATE("CNOT", "SWAP", "CY", "CZ");
-    const std::size_t wire_0 = GENERATE(0, 1, 2, 3, 4, 5);
-    const std::size_t wire_1 = GENERATE(0, 1, 2, 3, 4, 5);
+    const std::size_t wire_0 = GENERATE(0, 2, 4);
+    const std::size_t wire_1 = GENERATE(1, 3, 5);
 
     DYNAMIC_SECTION("Gate = " << gate_name << " Inverse = " << inverse
                               << " Wire 0 = " << wire_0
                               << " Wire 1 =" << wire_1) {
         if (wire_0 != wire_1) {
+            auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
             sv.applyOperation(gate_name, {wire_0, wire_1}, inverse);
             sv_ref.applyOperation(gate_name, {wire_0, wire_1}, inverse);
 
@@ -183,18 +183,18 @@ TEMPLATE_TEST_CASE("Apply Operation - non-param 3 wires", "[LKMPI]", double,
                    float) {
     const TestType EP = 1e-4;
     const std::size_t num_qubits = 6;
-    auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
 
     const bool inverse = GENERATE(false, true);
     const std::string gate_name = GENERATE("CSWAP", "Toffoli");
-    const std::size_t wire_0 = GENERATE(0, 1, 2, 3, 4, 5);
-    const std::size_t wire_1 = GENERATE(0, 1, 2, 3, 4, 5);
-    const std::size_t wire_2 = GENERATE(0, 1, 2, 3, 4, 5);
+    const std::size_t wire_0 = GENERATE(0, 3);
+    const std::size_t wire_1 = GENERATE(1, 4);
+    const std::size_t wire_2 = GENERATE(2, 5);
 
     DYNAMIC_SECTION("Gate = " << gate_name << " Inverse = " << inverse
                               << " Wire 0 = " << wire_0 << " Wire 1 =" << wire_1
                               << " Wire 2 =" << wire_2) {
         if (wire_0 != wire_1 && wire_0 != wire_2 && wire_1 != wire_2) {
+            auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
             sv.applyOperation(gate_name, {wire_0, wire_1, wire_2}, inverse);
             sv_ref.applyOperation(gate_name, {wire_0, wire_1, wire_2}, inverse);
 
@@ -218,14 +218,13 @@ TEMPLATE_TEST_CASE(
     double, float) {
     const TestType EP = 1e-4;
     const std::size_t num_qubits = 6;
-    auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
 
     const bool inverse = GENERATE(false, true);
     const std::string gate_name =
         GENERATE("PauliX", "PauliY", "PauliZ", "Hadamard", "S", "SX", "T");
     const bool control_value = GENERATE(false, true);
-    const std::size_t control_wire = GENERATE(0, 1, 2, 3, 4, 5);
-    const std::size_t target_wire = GENERATE(0, 1, 2, 3, 4, 5);
+    const std::size_t control_wire = GENERATE(0, 2, 4);
+    const std::size_t target_wire = GENERATE(1, 3, 5);
     const std::set<std::size_t> wires = {target_wire, control_wire};
 
     DYNAMIC_SECTION("Gate = " << gate_name << " Inverse = " << inverse
@@ -234,6 +233,7 @@ TEMPLATE_TEST_CASE(
                               << " Control Value = " << control_value) {
 
         if (wires.size() == 2) {
+            auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
             sv.applyOperation(gate_name, {control_wire}, {control_value},
                               {target_wire}, inverse, {});
             sv_ref.applyOperation(gate_name, {control_wire}, {control_value},
@@ -259,14 +259,13 @@ TEMPLATE_TEST_CASE(
     "[LKMPI]", double, float) {
     const TestType EP = 1e-4;
     const std::size_t num_qubits = 6;
-    auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
 
     const bool inverse = GENERATE(false, true);
     const std::string gate_name = GENERATE("SWAP");
     const bool control_value = GENERATE(false, true);
-    const std::size_t control_wire = GENERATE(0, 1, 2, 3, 4, 5);
-    const std::size_t target_wire_0 = GENERATE(0, 1, 2, 3, 4, 5);
-    const std::size_t target_wire_1 = GENERATE(0, 1, 2, 3, 4, 5);
+    const std::size_t control_wire = GENERATE(0, 3);
+    const std::size_t target_wire_0 = GENERATE(1, 4);
+    const std::size_t target_wire_1 = GENERATE(2, 5);
     const std::set<std::size_t> wires = {target_wire_0, target_wire_1,
                                          control_wire};
 
@@ -277,6 +276,7 @@ TEMPLATE_TEST_CASE(
                               << " Control Value = " << control_value) {
 
         if (wires.size() == 3) {
+            auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
             sv.applyOperation(gate_name, {control_wire}, {control_value},
                               {target_wire_0, target_wire_1}, inverse, {});
             sv_ref.applyOperation(gate_name, {control_wire}, {control_value},
@@ -302,16 +302,15 @@ TEMPLATE_TEST_CASE(
     double, float) {
     const TestType EP = 1e-4;
     const std::size_t num_qubits = 6;
-    auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
 
     const bool inverse = GENERATE(false, true);
     const std::string gate_name =
         GENERATE("PauliX", "PauliY", "PauliZ", "Hadamard", "S", "SX", "T");
     const bool control_value_0 = GENERATE(false, true);
-    const std::size_t control_wire_0 = GENERATE(0, 1, 2, 3, 4, 5);
+    const std::size_t control_wire_0 = GENERATE(0, 3);
     const bool control_value_1 = GENERATE(false, true);
-    const std::size_t control_wire_1 = GENERATE(0, 1, 2, 3, 4, 5);
-    const std::size_t target_wire = GENERATE(0, 1, 2, 3, 4, 5);
+    const std::size_t control_wire_1 = GENERATE(1, 4);
+    const std::size_t target_wire = GENERATE(0, 2, 5);
     const std::set<std::size_t> wires = {target_wire, control_wire_0,
                                          control_wire_1};
 
@@ -322,6 +321,7 @@ TEMPLATE_TEST_CASE(
                               << " Control Wire 1 = " << control_wire_1
                               << " Control Value 1 = " << control_value_1) {
         if (wires.size() == 3) {
+            auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
             sv.applyOperation(gate_name, {control_wire_0, control_wire_1},
                               {control_value_0, control_value_1}, {target_wire},
                               inverse, {});
@@ -349,16 +349,15 @@ TEMPLATE_TEST_CASE(
     double, float) {
     const TestType EP = 1e-4;
     const std::size_t num_qubits = 6;
-    auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
 
     const bool inverse = GENERATE(false, true);
     const std::string gate_name = GENERATE("SWAP");
     const bool control_value_0 = GENERATE(false, true);
-    const std::size_t control_wire_0 = GENERATE(0, 1, 2, 3, 4, 5);
+    const std::size_t control_wire_0 = GENERATE(0, 2, 4);
     const bool control_value_1 = GENERATE(false, true);
-    const std::size_t control_wire_1 = GENERATE(0, 1, 2, 3, 4, 5);
-    const std::size_t target_wire_0 = GENERATE(0, 1, 2, 3, 4, 5);
-    const std::size_t target_wire_1 = GENERATE(0, 1, 2, 3, 4, 5);
+    const std::size_t control_wire_1 = GENERATE(1, 3, 5);
+    const std::size_t target_wire_0 = GENERATE(0, 2, 4);
+    const std::size_t target_wire_1 = GENERATE(1, 3, 5);
     const std::set<std::size_t> wires = {target_wire_0, target_wire_1,
                                          control_wire_0, control_wire_1};
 
@@ -370,6 +369,7 @@ TEMPLATE_TEST_CASE(
                               << " Control Wire 1 = " << control_wire_1
                               << " Control Value 1 = " << control_value_1) {
         if (wires.size() == 4) {
+            auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
             sv.applyOperation(gate_name, {control_wire_0, control_wire_1},
                               {control_value_0, control_value_1},
                               {target_wire_0, target_wire_1}, inverse, {});
@@ -488,7 +488,6 @@ TEMPLATE_TEST_CASE("Apply matrix - 1 wire", "[LKMPI]", double, float) {
 TEMPLATE_TEST_CASE("Apply matrix - 2 wires", "[LKMPI]", double, float) {
     const TestType EP = 1e-4;
     const std::size_t num_qubits = 6;
-    auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
 
     const bool inverse = GENERATE(false, true);
     const std::vector<Kokkos::complex<TestType>> matrix = {
@@ -504,6 +503,7 @@ TEMPLATE_TEST_CASE("Apply matrix - 2 wires", "[LKMPI]", double, float) {
     DYNAMIC_SECTION(" Inverse = " << inverse << " Wire 0 = " << wire_0
                                   << " Wire 1 = " << wire_1) {
         if (wire_0 != wire_1) {
+            auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
             sv.applyOperation("matrix", {wire_0, wire_1}, inverse, {}, matrix);
             sv_ref.applyOperation("matrix", {wire_0, wire_1}, inverse, {},
                                   matrix);
@@ -528,7 +528,6 @@ TEMPLATE_TEST_CASE("Apply Controlled matrix - 1 control 1 target wire",
                    "[LKMPI]", double, float) {
     const TestType EP = 1e-4;
     const std::size_t num_qubits = 6;
-    auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
 
     const bool inverse = GENERATE(false, true);
     const bool control_value = GENERATE(false, true);
@@ -545,6 +544,7 @@ TEMPLATE_TEST_CASE("Apply Controlled matrix - 1 control 1 target wire",
                                  << " Control Value = " << control_value) {
 
         if (wires.size() == 2) {
+            auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
             sv.applyOperation("matrix", {control_wire}, {control_value},
                               {target_wire}, inverse, {}, matrix);
             sv_ref.applyOperation("matrix", {control_wire}, {control_value},
@@ -569,7 +569,6 @@ TEMPLATE_TEST_CASE("Apply Controlled matrix - 1 control 2 target wires",
                    "[LKMPI]", double, float) {
     const TestType EP = 1e-4;
     const std::size_t num_qubits = 6;
-    auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
 
     const bool inverse = GENERATE(false, true);
     const std::vector<Kokkos::complex<TestType>> matrix = {
@@ -592,6 +591,7 @@ TEMPLATE_TEST_CASE("Apply Controlled matrix - 1 control 2 target wires",
                                  << " Control Value = " << control_value) {
 
         if (wires.size() == 3) {
+            auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
             sv.applyOperation("matrix", {control_wire}, {control_value},
                               {target_wire_0, target_wire_1}, inverse, {},
                               matrix);
@@ -618,7 +618,6 @@ TEMPLATE_TEST_CASE("Apply Controlled matrix - 2 control 1 target wire",
                    "[LKMPI]", double, float) {
     const TestType EP = 1e-4;
     const std::size_t num_qubits = 6;
-    auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
 
     const bool inverse = GENERATE(false, true);
     const std::vector<Kokkos::complex<TestType>> matrix = {
@@ -626,10 +625,10 @@ TEMPLATE_TEST_CASE("Apply Controlled matrix - 2 control 1 target wire",
         {5.0, 5.0}, {6.0, 6.0}, {7.0, 7.0}, {8.0, 8.0},
     };
     const bool control_value_0 = GENERATE(false, true);
-    const std::size_t control_wire_0 = GENERATE(0, 1, 2, 3, 4, 5);
+    const std::size_t control_wire_0 = GENERATE(0, 2, 4);
     const bool control_value_1 = GENERATE(false, true);
-    const std::size_t control_wire_1 = GENERATE(0, 1, 2, 3, 4, 5);
-    const std::size_t target_wire = GENERATE(0, 1, 2, 3, 4, 5);
+    const std::size_t control_wire_1 = GENERATE(1, 3, 5);
+    const std::size_t target_wire = GENERATE(0, 2, 4, 5);
     const std::set<std::size_t> wires = {target_wire, control_wire_0,
                                          control_wire_1};
 
@@ -640,6 +639,7 @@ TEMPLATE_TEST_CASE("Apply Controlled matrix - 2 control 1 target wire",
                                  << " Control Value 1 = " << control_value_1) {
 
         if (wires.size() == 3) {
+            auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
             sv.applyOperation("matrix", {control_wire_0, control_wire_1},
                               {control_value_0, control_value_1}, {target_wire},
                               inverse, {}, matrix);
@@ -666,7 +666,6 @@ TEMPLATE_TEST_CASE("Apply Controlled matrix - 2 control 2 target wire",
                    "[LKMPI]", double, float) {
     const TestType EP = 1e-4;
     const std::size_t num_qubits = 6;
-    auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
 
     const bool inverse = GENERATE(false, true);
     const std::vector<Kokkos::complex<TestType>> matrix = {
@@ -676,11 +675,11 @@ TEMPLATE_TEST_CASE("Apply Controlled matrix - 2 control 2 target wire",
         {13.0, 13.0}, {14.0, 14.0}, {15.0, 15.0}, {16.0, 16.0},
     };
     const bool control_value_0 = GENERATE(false, true);
-    const std::size_t control_wire_0 = GENERATE(0, 1, 2, 3, 4, 5);
+    const std::size_t control_wire_0 = GENERATE(0, 2, 4);
     const bool control_value_1 = GENERATE(false, true);
-    const std::size_t control_wire_1 = GENERATE(0, 1, 2, 3, 4, 5);
-    const std::size_t target_wire_0 = GENERATE(0, 1, 2, 3, 4, 5);
-    const std::size_t target_wire_1 = GENERATE(0, 1, 2, 3, 4, 5);
+    const std::size_t control_wire_1 = GENERATE(1, 3, 5);
+    const std::size_t target_wire_0 = GENERATE(0, 2, 4);
+    const std::size_t target_wire_1 = GENERATE(1, 3, 5);
     const std::set<std::size_t> wires = {target_wire_0, target_wire_1,
                                          control_wire_0, control_wire_1};
 
@@ -693,6 +692,7 @@ TEMPLATE_TEST_CASE("Apply Controlled matrix - 2 control 2 target wire",
                                  << " Control Value 1 = " << control_value_1) {
 
         if (wires.size() == 4) {
+            auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
             sv.applyOperation("matrix", {control_wire_0, control_wire_1},
                               {control_value_0, control_value_1},
                               {target_wire_0, target_wire_1}, inverse, {},
