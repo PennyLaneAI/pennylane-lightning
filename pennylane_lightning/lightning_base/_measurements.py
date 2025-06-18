@@ -224,7 +224,7 @@ class LightningBaseMeasurements(ABC):
         """
 
         if self._observable_is_sparse(measurementprocess.obs):
-            if self._qubit_state.device_name == "lightning.kokkos":
+            if self._qubit_state.device_name == "lightning.kokkos" and self._use_mpi:
                 raise NotImplementedError(
                     "Sparse Hamiltonian is not supported on the lightning.kokkos device with MPI."
                 )
