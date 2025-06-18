@@ -277,5 +277,23 @@ class TestStateVectorNB:
     ):
         """Test updateData method with non-trivial state vectors."""
         module = current_nanobind_module
+        # Skip if updateData is not available
+        if not hasattr(module, "StateVectorC" + precision):
+            pytest.skip(f"Class StateVectorC{precision} not available in module")
 
-        # Skip
+        StateVectorClass = get_statevector_class(module, precision)
+
+        num_qubits = 2
+        # Initialize with number of qubits
+        sv = StateVectorClass(num_qubits)
+
+        # Create a non-trivial state vector
+        dtype = np.complex128 if precision == "128" else np.complex64
+        state_data = np.array([1, 2, 3, 4], dtype=dtype) / np.sqrt(30)
+        sv.updateData(state_data)
+
+        # Get the result
+        result = np.zeros(2**num_qubits, dtype=dtype)
+        sv.getState(result)
+
+        assert np.allclose(result, state_data)
