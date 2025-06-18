@@ -148,7 +148,7 @@ jobs:
                           -DKokkos_ENABLE_SERIAL=ON \
                           -DKokkos_ENABLE_${{ matrix.exec_model }}=ON \
                           -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
-                          -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)" \
+                          -DCMAKE_CXX_COMPILER=mpicxx \
                           -DCMAKE_CXX_STANDARD=20 \
                           -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
                           -G Ninja
@@ -159,7 +159,6 @@ jobs:
       - name: Build and run unit tests
         run: |
           source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}
-          export CUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum')")
           export SCIPY_OPENBLAS=$(python -c "import scipy_openblas32; print(scipy_openblas32.get_lib_dir())")
           cmake . -BBuild \
             -DPL_BACKEND=lightning_kokkos \
@@ -170,8 +169,6 @@ jobs:
             -DENABLE_COVERAGE=ON \
             -DBUILD_TESTS=ON \
             -DCMAKE_CXX_COMPILER=mpicxx \
-            -DCMAKE_CUDA_COMPILER=$(which nvcc) \
-            -DCMAKE_CUDA_ARCHITECTURES="86" \
             -DSCIPY_OPENBLAS=${SCIPY_OPENBLAS} \
             -DPython_EXECUTABLE:FILE="${{ steps.python_path.outputs.python }}" \
             -G Ninja \
@@ -181,7 +178,8 @@ jobs:
           mkdir -p ./tests/results
           test_status=0
           for file in *runner ; do ./$file  --reporter junit --out ./tests/results/report_$file.xml && echo "Test $file Success!" || { cat ./tests/results/report_$file.xml; test_status=1; } done;
-          for file in *runner_mpi ; do mpirun -np 2 ./$file --reporter junit --out ./tests/results/report_$file.xml && echo "Test $file Success!" || { cat ./tests/results/report_$file.xml; test_status=1; } done;
+          for file in lightning_kokkos*runner_mpi ; do mpirun -np 4 ./$file --reporter junit --out ./tests/results/report_$file.xml && echo "Test $file Success!" || { cat ./tests/results/report_$file.xml; test_status=1; } done;
+          for file in utils_*runner_mpi ; do mpirun -np 2 ./$file --reporter junit --out ./tests/results/report_$file.xml && echo "Test $file Success!" || { cat ./tests/results/report_$file.xml; test_status=1; } done;
           if [ $test_status -ne 0 ]; then
             echo "Tests failed. Exiting with error code."
             exit 1
@@ -204,7 +202,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ubuntu-codecov-results-cpp-${{ matrix.mpilib }}
-          path: ./Build/coverage-${{ github.job }}-lightning_gpu_${{ matrix.mpilib }}.info
+          path: ./Build/coverage-${{ github.job }}-lightning_kokkos_mpi_cuda_${{ matrix.mpilib }}.info
           retention-days: 1
           if-no-files-found: error
           include-hidden-files: true
@@ -213,6 +211,8 @@ jobs:
         if: always()
         run: |
           rm -rf ${{ steps.setup_venv.outputs.venv_name }}
+          rm -rf ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
+          rm -rf kokkos_${{ matrix.exec_model }}
           rm -rf * .git .gitignore .github
           pip cache purge
 

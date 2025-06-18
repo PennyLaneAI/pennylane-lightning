@@ -1,4 +1,4 @@
-name: Testing::x86_64::LGPU-MPI::Python
+name: Testing::x86_64::LK-MPI-MPI::Python
 on:
   workflow_call:
     inputs:
@@ -21,11 +21,11 @@ on:
       - ready_for_review
     paths-ignore:
       - .github/**
-      - '!.github/workflows/tests_lgpumpi_python.yml'
+      - '!.github/workflows/tests_lkmpi_cuda_python.yml'
       - pennylane_lightning/core/_version.py
-      - pennylane_lightning/core/simulators/lightning_kokkos/**
+      - pennylane_lightning/core/simulators/lightning_gpu/**
       - pennylane_lightning/core/simulators/lightning_qubit/**
-      - pennylane_lightning/lightning_kokkos/**
+      - pennylane_lightning/lightning_gpu/**
       - pennylane_lightning/lightning_qubit/**
 env:
   COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:./coverage.xml -p no:warnings --tb=native"
@@ -34,7 +34,7 @@ env:
   CI_CUDA_ARCH: 86
 
 concurrency:
-  group: tests_lgpumpi_python-${{ github.ref }}-${{ github.event_name }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
+  group: tests_lkmpi_cuda_python-${{ github.ref }}-${{ github.event_name }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
   cancel-in-progress: true
 
 jobs:
@@ -48,6 +48,8 @@ jobs:
       max-parallel: 1
       matrix:
         mpilib: ["mpich", "openmpi"]
+        kokkos_version: ["4.5.00"]
+        exec_model: ["CUDA"]
         cuda_version_maj: ["12"]
         cuda_version_min: ["2"]
     timeout-minutes: 30
@@ -135,6 +137,30 @@ jobs:
           # FIXME: remove after v0.42 release
           python -m pip install "jax[cpu]==0.4.28"
 
+      - name: Clone Kokkos repository
+        run: |
+          rm -rf kokkos_${{ matrix.exec_model }}
+          git clone --branch ${{ matrix.kokkos_version }} https://github.com/kokkos/kokkos.git kokkos_${{ matrix.exec_model }}
+          pushd . &> /dev/null
+
+      - name: Build Kokkos core library (Ubuntu)
+        run: |
+          rm -rf ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
+          mkdir -p ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
+          cd kokkos_${{ matrix.exec_model }}
+          cmake -BBuild . -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }} \
+                          -DKokkos_ENABLE_COMPLEX_ALIGN=OFF \
+                          -DKokkos_ENABLE_SERIAL=ON \
+                          -DKokkos_ENABLE_${{ matrix.exec_model }}=ON \
+                          -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
+                          -DCMAKE_CXX_COMPILER=mpicxx \
+                          -DCMAKE_CXX_STANDARD=20 \
+                          -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+                          -G Ninja
+          cmake --build ./Build --verbose
+          cmake --install ./Build
+          cd -
+
       - name: Checkout PennyLane for release or latest build
         if: inputs.pennylane-version == 'release' || inputs.pennylane-version == 'latest'
         uses: actions/checkout@v4
@@ -160,28 +186,28 @@ jobs:
       - name: Build and install package
         env:
           CUQUANTUM_SDK: $(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum')")
-          PL_BACKEND: lightning_gpu
+          PL_BACKEND: lightning_kokkos
         run: |
           source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}
           python scripts/configure_pyproject_toml.py || true
-          CMAKE_ARGS="-DCMAKE_C_COMPILER=mpicc -DCMAKE_CXX_COMPILER=mpicxx -DENABLE_MPI=ON -DCMAKE_CUDA_COMPILER=$(which nvcc) -DCMAKE_CUDA_ARCHITECTURES=${{ env.CI_CUDA_ARCH }} -DPython_EXECUTABLE=${{ steps.python_path.outputs.python }} -DLIGHTNING_CATALYST_SRC_PATH=${{ github.workspace }}/catalyst" \
+          CMAKE_ARGS="-DCMAKE_C_COMPILER=mpicc -DCMAKE_CXX_COMPILER=mpicxx -DENABLE_MPI=ON -DPython_EXECUTABLE=${{ steps.python_path.outputs.python }} -DLIGHTNING_CATALYST_SRC_PATH=${{ github.workspace }}/catalyst -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}" \
           python -m pip install . -vv
 
       # There are issues running py-cov with MPI. A solution is to use coverage as reported
       # [here](https://github.com/pytest-dev/pytest-cov/issues/237#issuecomment-544824228)
-      - name: Run unit tests for MPI-enabled lightning.gpu device
+      - name: Run unit tests for MPI-enabled lightning.kokkos device
         run: |
           source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}
-          PL_DEVICE=lightning.gpu mpirun -np 2 \
+          PL_DEVICE=lightning.kokkos mpirun -np 2 \
           coverage run --rcfile=.coveragerc --source=pennylane_lightning -p -m mpi4py -m pytest ./mpitests --tb=native
           coverage combine
-          coverage xml -o coverage-${{ github.job }}-lightning_gpu_${{ matrix.mpilib }}_cu${{ matrix.cuda_version_maj }}-main.xml
+          coverage xml -o coverage-${{ github.job }}-lightning_kokkos_mpi_cuda_${{ matrix.mpilib }}_cu${{ matrix.cuda_version_maj }}-main.xml
 
       - name: Upload code coverage results
         uses: actions/upload-artifact@v4
         with:
           name: ubuntu-codecov-results-python-${{ matrix.mpilib }}
-          path: coverage-${{ github.job }}-lightning_gpu_${{ matrix.mpilib }}_cu${{ matrix.cuda_version_maj }}-*.xml
+          path: coverage-${{ github.job }}-lightning_kokkos_mpi_cuda_${{ matrix.mpilib }}_cu${{ matrix.cuda_version_maj }}-*.xml
           retention-days: 1
           if-no-files-found: error
           include-hidden-files: true
@@ -190,6 +216,8 @@ jobs:
         if: always()
         run: |
           rm -rf ${{ steps.setup_venv.outputs.venv_name }}
+          rm -rf ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
+          rm -rf kokkos_${{ matrix.exec_model }}
           rm -rf * .git .gitignore .github
           pip cache purge
 
