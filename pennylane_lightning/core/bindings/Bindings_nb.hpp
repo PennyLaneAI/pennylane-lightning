@@ -122,7 +122,8 @@ namespace Pennylane::NanoBindings {
 template <class StateVectorT>
 void registerMatrix(
     StateVectorT &st,
-    const nb::ndarray<std::complex<typename StateVectorT::PrecisionT>, nb::c_contig> &matrix,
+    const nb::ndarray<std::complex<typename StateVectorT::PrecisionT>,
+                      nb::c_contig> &matrix,
     const std::vector<std::size_t> &wires, bool inverse = false) {
     using ComplexT = typename StateVectorT::ComplexT;
 
@@ -464,23 +465,19 @@ void registerBackendAgnosticObservables(nb::module_ &m) {
  */
 template <typename T>
 nb::ndarray<T, nb::numpy, nb::c_contig>
-createArrayFromVector(const std::vector<T> &data) {
-    const std::size_t size = data.size();
+createArrayFromVector(std::vector<T> &&data) {
+    const std::vector<size_t> shape{data.size()};
 
-    // Create a new array with the right size
-    std::vector<size_t> shape{size};
-
-    // Allocate new memory and copy the data
-    T *new_data = new T[size];
-    std::memcpy(new_data, data.data(), size * sizeof(T));
+    std::vector<T> *new_data = new std::vector<T>(std::move(data));
 
     // Create a capsule to manage memory
-    auto capsule = nb::capsule(
-        new_data, [](void *p) noexcept { delete[] static_cast<T *>(p); });
+    auto capsule = nb::capsule(new_data, [](void *p) noexcept {
+        delete static_cast<std::vector<T> *>(p);
+    });
 
     // Create and return the ndarray with numpy format
-    return nb::ndarray<T, nb::numpy, nb::c_contig>(new_data, 1, shape.data(),
-                                                   capsule);
+    return nb::ndarray<T, nb::numpy, nb::c_contig>(
+        new_data->data(), shape.size(), shape.data(), capsule);
 }
 
 /**
@@ -495,22 +492,20 @@ createArrayFromVector(const std::vector<T> &data) {
  */
 template <typename T>
 nb::ndarray<T, nb::numpy, nb::c_contig>
-create2DArrayFromVector(const std::vector<T> &data, std::size_t rows,
-                        std::size_t cols) {
-    // Create a new array with the right size
-    std::vector<size_t> shape{rows, cols};
+create2DArrayFromVector(std::vector<T> &&data, const size_t rows,
+                        const size_t cols) {
+    const std::vector<size_t> shape{rows, cols};
 
-    // Allocate new memory and copy the data
-    T *new_data = new T[rows * cols];
-    std::memcpy(new_data, data.data(), data.size() * sizeof(T));
+    std::vector<T> *new_data = new std::vector<T>(std::move(data));
 
     // Create a capsule to manage memory
-    auto capsule = nb::capsule(
-        new_data, [](void *p) noexcept { delete[] static_cast<T *>(p); });
+    auto capsule = nb::capsule(new_data, [](void *p) noexcept {
+        delete static_cast<std::vector<T> *>(p);
+    });
 
     // Create and return the ndarray with numpy format
-    return nb::ndarray<T, nb::numpy, nb::c_contig>(new_data, 2, shape.data(),
-                                                   capsule);
+    return nb::ndarray<T, nb::numpy, nb::c_contig>(
+        new_data->data(), shape.size(), shape.data(), capsule);
 }
 
 /**
@@ -527,8 +522,7 @@ nb::ndarray<typename StateVectorT::PrecisionT, nb::numpy, nb::c_contig>
 probsForWires(Measurements<StateVectorT> &M,
               const std::vector<std::size_t> &wires) {
     using PrecisionT = typename StateVectorT::PrecisionT;
-    auto probs_vec = M.probs(wires);
-    return createArrayFromVector<PrecisionT>(probs_vec);
+    return createArrayFromVector<PrecisionT>(M.probs(wires));
 }
 
 /**
@@ -543,8 +537,7 @@ template <class StateVectorT>
 nb::ndarray<typename StateVectorT::PrecisionT, nb::numpy, nb::c_contig>
 probsForAllWires(Measurements<StateVectorT> &M) {
     using PrecisionT = typename StateVectorT::PrecisionT;
-    auto probs_vec = M.probs();
-    return createArrayFromVector<PrecisionT>(probs_vec);
+    return createArrayFromVector<PrecisionT>(M.probs());
 }
 
 /**
@@ -561,8 +554,8 @@ template <class StateVectorT>
 nb::ndarray<std::size_t, nb::numpy, nb::c_contig>
 generateSamples(Measurements<StateVectorT> &M, std::size_t num_wires,
                 std::size_t num_shots) {
-    auto result = M.generate_samples(num_shots);
-    return create2DArrayFromVector<std::size_t>(result, num_shots, num_wires);
+    return create2DArrayFromVector<std::size_t>(M.generate_samples(num_shots),
+                                                num_shots, num_wires);
 }
 
 /**
