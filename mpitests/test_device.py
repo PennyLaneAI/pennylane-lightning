@@ -97,7 +97,8 @@ def test_dynamic_wires_from_circuit_fixed_wires(circuit_in, n_wires, wires_list)
     elif device_name == "lightning.kokkos":
         assert dev._statevector._mpi
         assert (
-            dev._statevector._qubit_state.getNumLocalWires() + dev._statevector._qubit_state.getNumGlobalWires()
+            dev._statevector._qubit_state.getNumLocalWires()
+            + dev._statevector._qubit_state.getNumGlobalWires()
         ) == n_wires
 
 
