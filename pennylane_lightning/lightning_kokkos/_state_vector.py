@@ -64,13 +64,13 @@ class LightningKokkosStateVector(LightningBaseStateVector):
     Interfaces with C++ python binding methods for state-vector manipulation.
 
     Args:
-        num_wires(int): the number of wires to initialize the device with
+        num_wires (int): the number of wires to initialize the device with
         dtype: Datatypes for state-vector representation. Must be one of
             ``np.complex64`` or ``np.complex128``. Default is ``np.complex128``
         rng (Generator): random number generator to use for seeding sampling measurement.
-        kokkos_args(InitializationSettings): binding for Kokkos::InitializationSettings
+        kokkos_args (InitializationSettings): binding for Kokkos::InitializationSettings
             (threading parameters).
-        sync(bool): immediately sync with host-sv after applying operations
+        mpi (bool): Use MPI for distributed state vector.
 
     """
 
@@ -80,7 +80,7 @@ class LightningKokkosStateVector(LightningBaseStateVector):
         dtype: Union[np.complex128, np.complex64] = np.complex128,
         rng: Generator = None,
         kokkos_args=None,
-        mpi=None,
+        mpi: bool = None,
     ):
 
         super().__init__(num_wires, dtype, rng)
@@ -90,23 +90,22 @@ class LightningKokkosStateVector(LightningBaseStateVector):
         self._kokkos_config = {}
 
         self._mpi = mpi
-        if mpi:
-            self._mpi_manager = MPIManagerKokkos()
 
         # Initialize the state vector
 
-        args = [self.num_wires]
+        sv_init_args = [self.num_wires]
         if mpi:
-            args.insert(0, self._mpi_manager)
+            self._mpi_manager = MPIManagerKokkos()
+            sv_init_args.insert(0, self._mpi_manager)
 
         if kokkos_args is not None:
             if not isinstance(kokkos_args, InitializationSettings):
                 raise TypeError(
                     f"Argument kokkos_args must be of type {type(InitializationSettings())} but it is of {type(kokkos_args)}."
                 )
-            args.append(kokkos_args)
+            sv_init_args.append(kokkos_args)
 
-        self._qubit_state = self._state_dtype()(*args)
+        self._qubit_state = self._state_dtype()(*sv_init_args)
 
         if not self._kokkos_config:
             self._kokkos_config = self._kokkos_configuration()
