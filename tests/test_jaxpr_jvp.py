@@ -52,8 +52,7 @@ class TestErrors:
         args = (0.5,)
         jaxpr = jax.make_jaxpr(circuit)(*args)
 
-        execution_config = None
-        execution_config.gradient_method = "backprop"
+        execution_config = qml.devices.ExecutionConfig(gradient_method="backprop")
 
         with pytest.raises(
             NotImplementedError, match="LightningQubit does not support gradient_method"
