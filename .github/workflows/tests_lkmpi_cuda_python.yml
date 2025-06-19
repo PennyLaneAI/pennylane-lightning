@@ -189,6 +189,7 @@ jobs:
           CUQUANTUM_SDK: $(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum')")
           PL_BACKEND: lightning_kokkos
         run: |
+          source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}
           python scripts/configure_pyproject_toml.py || true
           CMAKE_ARGS="-DCMAKE_C_COMPILER=mpicc -DCMAKE_CXX_COMPILER=mpicxx -DENABLE_MPI=ON -DPython_EXECUTABLE=${{ steps.python_path.outputs.python }} -DLIGHTNING_CATALYST_SRC_PATH=${{ github.workspace }}/catalyst -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}" \
           python -m pip install . -vv
