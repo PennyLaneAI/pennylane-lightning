@@ -53,6 +53,9 @@
 
 <h3>Internal changes ⚙️</h3>
   
+- Update docker build CI for stable version to use v0.41.1.
+  [(#1188)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1188)
+  
 - Updates `LightningInterpreter` to adjust to a change in `adjoint_transform_prim` and `ctrl_transform_prim`.
   [(#1177)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1177)
 
