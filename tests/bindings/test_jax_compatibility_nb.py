@@ -23,7 +23,7 @@ class TestJAXCompatibility:
 
     @pytest.fixture
     def get_statevector_class(self):
-        """Get StateVectorC64/128 class from module based on precision."""
+        """Get the StateVector class from a module."""
 
         def _get_class(module, precision="64"):
             class_name = f"StateVectorC{precision}"
@@ -32,6 +32,137 @@ class TestJAXCompatibility:
             pytest.skip(f"Class {class_name} not available in module")
 
         return _get_class
+
+    @pytest.mark.parametrize("precision", ["64", "128"])
+    def test_adjoint_jacobian_jax(self, current_nanobind_module, precision, get_statevector_class):
+        """Test adjoint Jacobian with JAX parameters."""
+        # Skip if JAX doesn't support the precision
+        if precision == "128" and not jax.config.read("jax_enable_x64"):
+            pytest.skip("JAX x64 precision not enabled")
+
+        module = current_nanobind_module
+        StateVectorClass = get_statevector_class(module, precision)
+
+        # Check if the module has AdjointJacobian class
+        adjoint_jacobian_class_name = f"AdjointJacobianC{precision}"
+        if not hasattr(module.algorithms, adjoint_jacobian_class_name):
+            pytest.skip(f"Class {adjoint_jacobian_class_name} not available in module")
+        AdjointJacobianClass = getattr(module.algorithms, adjoint_jacobian_class_name)
+
+        # Check if the module has NamedObs class
+        named_obs_class_name = f"NamedObsC{precision}"
+        if not hasattr(module.observables, named_obs_class_name):
+            pytest.skip(f"Class {named_obs_class_name} not available in module")
+        NamedObsClass = getattr(module.observables, named_obs_class_name)
+
+        # Check if the module has OpsStruct class
+        ops_struct_class_name = f"OpsStructC{precision}"
+        if not hasattr(module.algorithms, ops_struct_class_name):
+            pytest.skip(f"Class {ops_struct_class_name} not available in module")
+        OpsStructClass = getattr(module.algorithms, ops_struct_class_name)
+
+        # Create a simple state vector
+        num_qubits = 2
+        sv = StateVectorClass(num_qubits)
+
+        # Create a simple observable
+        obs = NamedObsClass("PauliZ", [0])
+
+        # Create a simple operation with JAX parameter
+        param_value = jnp.array(0.5)
+        ops_name = ["RX"]
+        ops_params = [[param_value]]
+        ops_wires = [[0]]
+        ops_inverses = [False]
+        ops_matrices = [[]]
+        ops_controlled_wires = [[]]
+        ops_controlled_values = [[]]
+
+        # Create the operations structure
+        ops = OpsStructClass(
+            ops_name,
+            ops_params,
+            ops_wires,
+            ops_inverses,
+            ops_matrices,
+            ops_controlled_wires,
+            ops_controlled_values,
+        )
+
+        # Create the adjoint Jacobian
+        adj = AdjointJacobianClass()
+
+        # Calculate the Jacobian with the correct parameter order
+        trainable_params = [0]
+        result = adj(sv, [obs], ops, trainable_params)
+
+        # The result should be a numpy array with shape (1,)
+        assert isinstance(result, np.ndarray)
+        assert result.shape == (1,)
+        assert np.isclose(result[0], -np.sin(param_value))
+
+    @pytest.mark.parametrize("precision", ["64", "128"])
+    def test_adjoint_jacobian_multiple_params_jax(
+        self, current_nanobind_module, precision, get_statevector_class
+    ):
+        """Test adjoint Jacobian with multiple JAX parameters."""
+        # Skip if JAX doesn't support the precision
+        if precision == "128" and not jax.config.read("jax_enable_x64"):
+            pytest.skip("JAX x64 precision not enabled")
+
+        # Set the appropriate dtype for the precision
+        dtype = jnp.complex128 if precision == "128" else jnp.complex64
+
+        module = current_nanobind_module
+        StateVectorClass = get_statevector_class(module, precision)
+
+        # Get necessary classes
+        AdjointJacobianClass = getattr(module.algorithms, f"AdjointJacobianC{precision}")
+        NamedObsClass = getattr(module.observables, f"NamedObsC{precision}")
+        OpsStructClass = getattr(module.algorithms, f"OpsStructC{precision}")
+
+        # Create a simple state vector
+        num_qubits = 2
+        sv = StateVectorClass(num_qubits)
+
+        # Create a simple observable
+        obs = NamedObsClass("PauliZ", [0])
+
+        # Create operations with JAX parameters
+        params = jnp.array([0.1, 0.2], dtype=dtype)
+        ops_name = ["RX", "RY"]
+        ops_params = [[params[0]], [params[1]]]
+        ops_wires = [[0], [0]]
+        ops_inverses = [False, False]
+        ops_matrices = [[], []]
+        ops_controlled_wires = [[], []]
+        ops_controlled_values = [[], []]
+
+        # Create the operations structure
+        ops = OpsStructClass(
+            ops_name,
+            ops_params,
+            ops_wires,
+            ops_inverses,
+            ops_matrices,
+            ops_controlled_wires,
+            ops_controlled_values,
+        )
+
+        # Create the adjoint Jacobian
+        adj = AdjointJacobianClass()
+
+        # Calculate the Jacobian with the correct parameter order
+        trainable_params = [0, 1]
+        jacobian = adj(sv, [obs], ops, trainable_params)
+
+        # Verify the shape of the Jacobian
+        assert jacobian.shape == (1, 2)  # 1 expectation value, 2 parameters
+
+        # Verify the correctness of the Jacobian
+        # The expected Jacobian can be computed analytically
+        expected_jacobian = np.array([[-np.sin(params[0]), 0]])
+        assert np.allclose(jacobian, expected_jacobian, atol=1e-5)
 
     @pytest.mark.parametrize("precision", ["64", "128"])
     def test_jax_array_initialization(
@@ -58,8 +189,7 @@ class TestJAXCompatibility:
         dim = 2**num_qubits
 
         # Create JAX array for |0> state
-        dtype = jnp.complex128 if precision == "128" else jnp.complex64
-        jax_data = jnp.zeros(dim, dtype=dtype)
+        jax_data = jnp.zeros(dim, dtype=jnp.complex128 if precision == "128" else jnp.complex64)
         jax_data = jax_data.at[0].set(1.0)  # Set to |000⟩ state
 
         # Create state vector and update with JAX data
