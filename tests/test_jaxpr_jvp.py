@@ -52,7 +52,7 @@ class TestErrors:
         args = (0.5,)
         jaxpr = jax.make_jaxpr(circuit)(*args)
 
-        execution_config = ExecutionConfig()
+        execution_config = None
         execution_config.gradient_method = "backprop"
 
         with pytest.raises(
