@@ -26,6 +26,8 @@ from typing import Callable, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 import pennylane as qml
+from numpy.random import BitGenerator, Generator, SeedSequence
+from numpy.typing import ArrayLike
 from pennylane.devices import DefaultExecutionConfig, Device, ExecutionConfig
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
 from pennylane.measurements import MidMeasureMP
@@ -34,6 +36,9 @@ from pennylane.typing import Result, ResultBatch, TensorLike
 
 from pennylane_lightning.core import __version__
 from pennylane_lightning.lightning_base._measurements import LightningBaseMeasurements
+from pennylane_lightning.lightning_base._mid_circuit_measure_tree_traversal import (
+    mcm_tree_traversal,
+)
 
 Result_or_ResultBatch = Union[Result, ResultBatch]
 QuantumTapeBatch = Sequence[QuantumTape]
@@ -57,6 +62,11 @@ class LightningBase(Device):
             stochastic return values. Defaults to ``None`` if not specified. Setting
             to ``None`` results in computing statistics like expectation values and
             variances analytically.
+        seed (Union[str, None, int, array_like[int], SeedSequence, BitGenerator, Generator]): A
+            seed-like parameter matching that of ``seed`` for ``numpy.random.default_rng``, or
+            a request to seed from numpy's global random number generator.
+            The default, ``seed="global"`` pulls a seed from NumPy's global generator. ``seed=None``
+            will pull a seed from the OS entropy.
         batch_obs (bool): Determine whether we process observables in parallel when
             computing the jacobian.
     """
@@ -71,12 +81,16 @@ class LightningBase(Device):
         *,
         c_dtype: Union[np.complex64, np.complex128],
         shots: Union[int, List],
+        seed: Union[str, None, int, ArrayLike, SeedSequence, BitGenerator, Generator],
         batch_obs: bool,
     ):
         super().__init__(wires=wires, shots=shots)
 
         self._c_dtype = c_dtype
         self._batch_obs = batch_obs
+        self._rng = np.random.default_rng(
+            np.random.randint(2**31 - 1) if seed == "global" else seed
+        )
 
         # State-vector is dynamically allocated just before execution
         self._statevector = None
@@ -137,7 +151,7 @@ class LightningBase(Device):
 
         if (self._statevector is None) or (self._statevector.num_wires != num_wires):
             self._statevector = self.LightningStateVector(
-                num_wires=num_wires, dtype=self._c_dtype, **self._sv_init_kwargs
+                num_wires=num_wires, dtype=self._c_dtype, rng=self._rng, **self._sv_init_kwargs
             )
         else:
             self._statevector.reset_state()
@@ -181,13 +195,14 @@ class LightningBase(Device):
             TensorLike, tuple[TensorLike], tuple[tuple[TensorLike]]: A numeric result of the computation.
         """
 
-    def simulate(
+    def simulate(  # pylint: disable=too-many-arguments
         self,
         circuit: QuantumScript,
         state,  # Lightning [Device] StateVector
         *,
         postselect_mode: str = None,
         mcmc: dict = None,
+        mcm_method: str = None,
     ) -> Result:
         """Simulate a single quantum script.
 
@@ -200,6 +215,7 @@ class LightningBase(Device):
             mcmc (dict): Dictionary containing the Markov Chain Monte Carlo
                 parameters: mcmc, kernel_name, num_burnin. Currently only supported for
                 ``lightning.qubit``, more detail can be found in :class:`~.LightningQubit`.
+            mcm_method (str): The method to use for mid-circuit measurements. Default is ``"one-shot"`` if ``circuit.shots`` is set, otherwise it defaults to ``"deferred"``.
 
         Returns:
             Tuple[TensorLike]: The results of the simulation
@@ -208,26 +224,40 @@ class LightningBase(Device):
         """
         if mcmc is None:
             mcmc = {}
-        if circuit.shots and (any(isinstance(op, MidMeasureMP) for op in circuit.operations)):
-            results = []
-            aux_circ = qml.tape.QuantumScript(
-                circuit.operations,
-                circuit.measurements,
-                shots=[1],
-                trainable_params=circuit.trainable_params,
-            )
-            for _ in range(circuit.shots.total_shots):
-                state.reset_state()
-                mid_measurements = {}
-                final_state = state.get_final_state(
-                    aux_circ, mid_measurements=mid_measurements, postselect_mode=postselect_mode
+
+        # Simulate with Mid Circuit Measurements
+        if any(isinstance(op, MidMeasureMP) for op in circuit.operations):
+
+            # If mcm_method is not specified and the circuit does not have shots, default to "deferred".
+            # It is not listed here because all mid-circuit measurements are replaced with additional wires.
+
+            if mcm_method == "tree-traversal":
+                # Using the tree traversal MCM method.
+                return mcm_tree_traversal(
+                    circuit, state, self.LightningMeasurements, postselect_mode
                 )
-                results.append(
-                    self.LightningMeasurements(final_state, **mcmc).measure_final_state(
-                        aux_circ, mid_measurements=mid_measurements
+
+            if mcm_method == "one-shot" or (mcm_method is None and circuit.shots):
+                # Using the one-shot MCM method.
+                results = []
+                aux_circ = qml.tape.QuantumScript(
+                    circuit.operations,
+                    circuit.measurements,
+                    shots=[1],
+                    trainable_params=circuit.trainable_params,
+                )
+                for _ in range(circuit.shots.total_shots):
+                    state.reset_state()
+                    mid_measurements = {}
+                    final_state = state.get_final_state(
+                        aux_circ, mid_measurements=mid_measurements, postselect_mode=postselect_mode
                     )
-                )
-            return tuple(results)
+                    results.append(
+                        self.LightningMeasurements(final_state, **mcmc).measure_final_state(
+                            aux_circ, mid_measurements=mid_measurements
+                        )
+                    )
+                return tuple(results)
 
         final_state = state.get_final_state(circuit)
         return self.LightningMeasurements(final_state, **mcmc).measure_final_state(circuit)
@@ -574,7 +604,7 @@ class LightningBase(Device):
             raise NotImplementedError("Wires must be specified for integration with plxpr capture.")
 
         self._statevector = self.LightningStateVector(
-            num_wires=len(self.wires), dtype=self._c_dtype
+            num_wires=len(self.wires), dtype=self._c_dtype, rng=self._rng
         )
 
         interpreter = LightningInterpreter(
@@ -654,7 +684,7 @@ class LightningBase(Device):
         tangents = validate_args_tangents(args, tangents)
 
         self._statevector = self.LightningStateVector(
-            num_wires=len(self.wires), dtype=self._c_dtype
+            num_wires=len(self.wires), dtype=self._c_dtype, rng=self._rng
         )
 
         def wrapper(*args):

@@ -22,7 +22,7 @@ on:
 
 env:
   CI_CUDA_ARCH: 86
-  COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:./coverage.xml --no-flaky-report -p no:warnings --tb=native"
+  COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:./coverage.xml -p no:warnings --tb=native"
   GCC_VERSION: 11
 
 concurrency:
@@ -90,6 +90,13 @@ jobs:
         run: |
           git fetch --tags --force
           git checkout latest_release
+
+      - name: Checkout Catalyst
+        uses: actions/checkout@v4
+        with:
+          repository: PennyLaneAI/catalyst
+          path: ${{ github.workspace}}/catalyst
+          ref: ${{ (inputs.pennylane-version == 'stable' && 'v0.11.0') || 'main' }} # FIXME: remove after v0.42 release
 
       - uses: actions/setup-python@v5
         id: setup_python
@@ -193,7 +200,7 @@ jobs:
 
           rm -rf build
           PL_BACKEND=${{ matrix.pl_backend }} python scripts/configure_pyproject_toml.py || true
-          PL_BACKEND=${{ matrix.pl_backend }} python -m pip install . -vv
+          CMAKE_ARGS="-DLIGHTNING_CATALYST_SRC_PATH=${{ github.workspace }}/catalyst" PL_BACKEND=${{ matrix.pl_backend }} python -m pip install . -vv
 
       - name: Run PennyLane unit tests
         env:
@@ -243,7 +250,7 @@ jobs:
   upload-to-codecov-linux-python:
     needs: [pythontestswithGPU]
     name: Upload coverage data to codecov
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4

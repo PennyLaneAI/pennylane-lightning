@@ -23,6 +23,8 @@ from warnings import warn
 
 import numpy as np
 import pennylane as qml
+from numpy.random import BitGenerator, Generator, SeedSequence
+from numpy.typing import ArrayLike
 from pennylane.devices import DefaultExecutionConfig, ExecutionConfig
 from pennylane.devices.capabilities import OperatorProperties
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
@@ -85,6 +87,13 @@ def stopping_condition(op: Operator) -> bool:
         return reduce(lambda x, y: x + (y != "I"), word, 0) > 2
     if op.name in ("C(SProd)", "C(Exp)"):
         return True
+
+    if (isinstance(op, Conditional) and stopping_condition(op.base)) or isinstance(
+        op, MidMeasureMP
+    ):
+        # Conditional and MidMeasureMP should not be decomposed
+        return True
+
     return _supports_operation(op.name)
 
 
@@ -156,6 +165,7 @@ def _add_adjoint_transforms(program: TransformProgram) -> None:
 
     name = "adjoint + lightning.qubit"
     program.add_transform(no_sampling, name=name)
+    program.add_transform(qml.transforms.broadcast_expand)
     program.add_transform(
         decompose,
         stopping_condition=_adjoint_ops,
@@ -167,7 +177,6 @@ def _add_adjoint_transforms(program: TransformProgram) -> None:
     program.add_transform(
         validate_measurements, analytic_measurements=adjoint_measurements, name=name
     )
-    program.add_transform(qml.transforms.broadcast_expand)
     program.add_transform(validate_adjoint_trainable_params)
 
 
@@ -189,11 +198,6 @@ class LightningQubit(LightningBase):
             the expectation values. Defaults to ``None`` if not specified. Setting
             to ``None`` results in computing statistics like expectation values and
             variances analytically.
-        seed (Union[str, None, int, array_like[int], SeedSequence, BitGenerator, Generator]): A
-            seed-like parameter matching that of ``seed`` for ``numpy.random.default_rng``, or
-            a request to seed from numpy's global random number generator.
-            The default, ``seed="global"`` pulls a seed from NumPy's global generator. ``seed=None``
-            will pull a seed from the OS entropy.
         mcmc (bool): Determine whether to use the approximate Markov Chain Monte Carlo
             sampling method when generating samples.
         kernel_name (str): name of transition MCMC kernel. The current version supports
@@ -207,6 +211,11 @@ class LightningQubit(LightningBase):
         batch_obs (bool): Determine whether we process observables in parallel when
             computing the jacobian. This value is only relevant when the lightning
             qubit is built with OpenMP.
+        seed (Union[str, None, int, array_like[int], SeedSequence, BitGenerator, Generator]): A
+            seed-like parameter matching that of ``seed`` for ``numpy.random.default_rng``, or
+            a request to seed from numpy's global random number generator.
+            The default, ``seed="global"`` pulls a seed from NumPy's global generator. ``seed=None``
+            will pull a seed from the OS entropy.
     """
 
     # pylint: disable=too-many-instance-attributes
@@ -232,8 +241,8 @@ class LightningQubit(LightningBase):
         c_dtype: Union[np.complex128, np.complex64] = np.complex128,
         shots: Union[int, List] = None,
         batch_obs: bool = False,
+        seed: Union[str, None, int, ArrayLike, SeedSequence, BitGenerator, Generator] = "global",
         # Markov Chain Monte Carlo (MCMC) sampling method arguments
-        seed: Union[str, int] = "global",
         mcmc: bool = False,
         kernel_name: str = "Local",
         num_burnin: int = 100,
@@ -249,6 +258,7 @@ class LightningQubit(LightningBase):
             wires=wires,
             c_dtype=c_dtype,
             shots=shots,
+            seed=seed,
             batch_obs=batch_obs,
         )
 
@@ -256,10 +266,6 @@ class LightningQubit(LightningBase):
         self._set_lightning_classes()
 
         # Markov Chain Monte Carlo (MCMC) sampling method specific options
-        # TODO: Investigate usefulness of creating numpy random generator
-        seed = np.random.randint(0, high=10000000) if seed == "global" else seed
-        self._rng = np.random.default_rng(seed)
-
         self._mcmc = mcmc
         if self._mcmc:
             if kernel_name not in [
@@ -329,18 +335,20 @@ class LightningQubit(LightningBase):
             if option not in new_device_options:
                 new_device_options[option] = getattr(self, f"_{option}", None)
 
+        mcm_supported_methods = (
+            ("deferred", "tree-traversal", "one-shot", None)
+            if not qml.capture.enabled()
+            else ("deferred", "single-branch-statistics", None)
+        )
+
+        mcm_config = config.mcm_config
+
+        if (mcm_method := mcm_config.mcm_method) not in mcm_supported_methods:
+            raise DeviceError(f"mcm_method='{mcm_method}' is not supported with lightning.qubit")
+
         if qml.capture.enabled():
-            mcm_config = config.mcm_config
+
             mcm_updated_values = {}
-            if (mcm_method := mcm_config.mcm_method) not in (
-                "deferred",
-                "single-branch-statistics",
-                None,
-            ):
-                raise DeviceError(
-                    f"mcm_method='{mcm_method}' is not supported with lightning.qubit "
-                    "when program capture is enabled."
-                )
 
             if mcm_method == "single-branch-statistics" and mcm_config.postselect_mode is not None:
                 warn(
@@ -349,8 +357,9 @@ class LightningQubit(LightningBase):
                     UserWarning,
                 )
                 mcm_updated_values["postselect_mode"] = None
-            if mcm_method is None:
+            elif mcm_method is None:
                 mcm_updated_values["mcm_method"] = "deferred"
+
             updated_values["mcm_config"] = replace(mcm_config, **mcm_updated_values)
 
         return replace(config, **updated_values, device_options=new_device_options)
@@ -436,6 +445,7 @@ class LightningQubit(LightningBase):
                     self._statevector,
                     mcmc=mcmc,
                     postselect_mode=execution_config.mcm_config.postselect_mode,
+                    mcm_method=execution_config.mcm_config.mcm_method,
                 )
             )
 

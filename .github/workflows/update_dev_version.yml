@@ -12,7 +12,7 @@ concurrency:
 jobs:
   update-dev-version:
     name: Update version for development branches
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
 
       - name: Checkout PennyLane-Lightning master

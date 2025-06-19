@@ -36,7 +36,7 @@ env:
   TF_VERSION: 2.19.0
   KERAS_VERSION: 3.9.0
   TORCH_VERSION: 2.5.1
-  COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:./coverage.xml --no-flaky-report -p no:warnings --tb=native"
+  COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:./coverage.xml -p no:warnings --tb=native"
 
 concurrency:
   group: tests_lkcuda_python-${{ github.ref }}-${{ github.event_name }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
@@ -51,7 +51,7 @@ jobs:
     strategy:
       max-parallel: 1
       matrix:
-        os: [ubuntu-22.04]
+        os: [ubuntu-24.04]
         kokkos_version: ["4.5.00"]
         exec_model: ["CUDA"]
         cuda_version_maj: ["12"]
@@ -114,7 +114,7 @@ jobs:
     needs: [builddeps]
     strategy:
       matrix:
-        os: [ubuntu-22.04]
+        os: [ubuntu-24.04]
         pl_backend: ["lightning_kokkos", "all"]
         kokkos_version: ["4.5.00"]
         exec_model: ["CUDA"]
@@ -248,6 +248,13 @@ jobs:
           cd main
           python -m pip uninstall -y pennylane && python -m pip install -U pennylane
 
+      - name: Checkout Catalyst
+        uses: actions/checkout@v4
+        with:
+          repository: PennyLaneAI/catalyst
+          path: ${{ github.workspace}}/catalyst
+          ref: ${{ (inputs.pennylane-version == 'stable' && 'v0.11.0') || 'main' }} # FIXME: remove after v0.42 release
+
       - name: Install ML libraries for interfaces
         run: |
           python -m pip install --upgrade torch==$TORCH_VERSION --index-url https://download.pytorch.org/whl/cpu
@@ -263,7 +270,7 @@ jobs:
           PL_BACKEND=lightning_qubit SKIP_COMPILATION=True python -m pip install . -vv
 
           PL_BACKEND=${{ matrix.pl_backend }} python scripts/configure_pyproject_toml.py || true
-          PL_BACKEND=${{ matrix.pl_backend }} CMAKE_ARGS="-DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos" \
+          PL_BACKEND=${{ matrix.pl_backend }} CMAKE_ARGS="-DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DLIGHTNING_CATALYST_SRC_PATH=${{ github.workspace }}/catalyst" \
           python -m pip install . -vv
 
       - name: Run PennyLane-Lightning integration tests

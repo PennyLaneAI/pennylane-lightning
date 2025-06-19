@@ -23,6 +23,8 @@ from warnings import warn
 
 import numpy as np
 import pennylane as qml
+from numpy.random import BitGenerator, Generator, SeedSequence
+from numpy.typing import ArrayLike
 from pennylane.devices import DefaultExecutionConfig, ExecutionConfig
 from pennylane.devices.capabilities import OperatorProperties
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
@@ -81,6 +83,13 @@ def stopping_condition(op: Operator) -> bool:
         return reduce(lambda x, y: x + (y != "I"), word, 0) > 2
     if op.name in ("C(SProd)", "C(Exp)"):
         return True
+
+    if (isinstance(op, Conditional) and stopping_condition(op.base)) or isinstance(
+        op, MidMeasureMP
+    ):
+        # Conditional and MidMeasureMP should not be decomposed
+        return True
+
     return _supports_operation(op.name)
 
 
@@ -152,6 +161,7 @@ def _add_adjoint_transforms(program: TransformProgram) -> None:
 
     name = "adjoint + lightning.kokkos"
     program.add_transform(no_sampling, name=name)
+    program.add_transform(qml.transforms.broadcast_expand)
     program.add_transform(
         decompose,
         stopping_condition=_adjoint_ops,
@@ -163,7 +173,6 @@ def _add_adjoint_transforms(program: TransformProgram) -> None:
     program.add_transform(
         validate_measurements, analytic_measurements=adjoint_measurements, name=name
     )
-    program.add_transform(qml.transforms.broadcast_expand)
     program.add_transform(validate_adjoint_trainable_params)
 
 
@@ -185,6 +194,11 @@ class LightningKokkos(LightningBase):
             the expectation values. Defaults to ``None`` if not specified. Setting
             to ``None`` results in computing statistics like expectation values and
             variances analytically.
+        seed (Union[str, None, int, array_like[int], SeedSequence, BitGenerator, Generator]): A
+            seed-like parameter matching that of ``seed`` for ``numpy.random.default_rng``, or
+            a request to seed from numpy's global random number generator.
+            The default, ``seed="global"`` pulls a seed from NumPy's global generator. ``seed=None``
+            will pull a seed from the OS entropy.
         sync (bool): immediately sync with host-sv after applying operations
         kokkos_args (InitializationSettings): binding for Kokkos::InitializationSettings
             (threading parameters).
@@ -213,6 +227,7 @@ class LightningKokkos(LightningBase):
         c_dtype: Union[np.complex128, np.complex64] = np.complex128,
         shots: Union[int, List] = None,
         batch_obs: bool = False,
+        seed: Union[str, None, int, ArrayLike, SeedSequence, BitGenerator, Generator] = "global",
         # Kokkos arguments
         kokkos_args=None,
     ):
@@ -227,6 +242,7 @@ class LightningKokkos(LightningBase):
             wires=wires,
             c_dtype=c_dtype,
             shots=shots,
+            seed=seed,
             batch_obs=batch_obs,
         )
 
@@ -283,18 +299,20 @@ class LightningKokkos(LightningBase):
 
         new_device_options.update(mcmc_default)
 
+        mcm_supported_methods = (
+            ("deferred", "tree-traversal", "one-shot", None)
+            if not qml.capture.enabled()
+            else ("deferred", "single-branch-statistics", None)
+        )
+
+        mcm_config = config.mcm_config
+
+        if (mcm_method := mcm_config.mcm_method) not in mcm_supported_methods:
+            raise DeviceError(f"mcm_method='{mcm_method}' is not supported with lightning.kokkos.")
+
         if qml.capture.enabled():
-            mcm_config = config.mcm_config
+
             mcm_updated_values = {}
-            if (mcm_method := mcm_config.mcm_method) not in (
-                "deferred",
-                "single-branch-statistics",
-                None,
-            ):
-                raise DeviceError(
-                    f"mcm_method='{mcm_method}' is not supported with lightning.qubit "
-                    "when program capture is enabled."
-                )
 
             if mcm_method == "single-branch-statistics" and mcm_config.postselect_mode is not None:
                 warn(
@@ -303,8 +321,9 @@ class LightningKokkos(LightningBase):
                     UserWarning,
                 )
                 mcm_updated_values["postselect_mode"] = None
-            if mcm_method is None:
+            elif mcm_method is None:
                 mcm_updated_values["mcm_method"] = "deferred"
+
             updated_values["mcm_config"] = replace(mcm_config, **mcm_updated_values)
 
         return replace(config, **updated_values, device_options=new_device_options)
@@ -383,6 +402,7 @@ class LightningKokkos(LightningBase):
                     self.dynamic_wires_from_circuit(circuit),
                     self._statevector,
                     postselect_mode=execution_config.mcm_config.postselect_mode,
+                    mcm_method=execution_config.mcm_config.mcm_method,
                 )
             )
 
