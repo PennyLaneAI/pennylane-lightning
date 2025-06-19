@@ -1411,7 +1411,7 @@ class StateVectorKokkosMPI final
     /**
      * @brief Get combined data vector to root rank
      */
-    [[nodiscard]] auto getDataVector(const std::size_t root = 0)
+    [[nodiscard]] auto getFullDataVector(const std::size_t root = 0)
         -> std::vector<ComplexT> {
         reorderGlobalLocalWires();
         reorderLocalWires();

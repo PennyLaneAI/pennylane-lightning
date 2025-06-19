@@ -59,7 +59,7 @@ TEMPLATE_TEST_CASE("Apply Generator - 1 wire", "[LKMPI]", double, float) {
         auto scale_ref = sv_ref.applyGenerator(gate_name, {wire}, inverse);
 
         auto reference = sv_ref.getDataVector();
-        auto data = sv.getDataVector(0);
+        auto data = sv.getFullDataVector(0);
 
         if (sv.getMPIManager().getRank() == 0) {
             for (std::size_t j = 0; j < data.size(); j++) {
@@ -96,7 +96,7 @@ TEMPLATE_TEST_CASE("Apply Generator - 2 wires", "[LKMPI]", double, float) {
                 sv_ref.applyGenerator(gate_name, {wire_0, wire_1}, inverse);
 
             auto reference = sv_ref.getDataVector();
-            auto data = sv.getDataVector(0);
+            auto data = sv.getFullDataVector(0);
 
             if (sv.getMPIManager().getRank() == 0) {
                 for (std::size_t j = 0; j < data.size(); j++) {
@@ -137,7 +137,7 @@ TEMPLATE_TEST_CASE("Apply Generator - 4 wires", "[LKMPI]", double, float) {
                 gate_name, {wire_0, wire_1, wire_2, wire_3}, inverse);
 
             auto reference = sv_ref.getDataVector();
-            auto data = sv.getDataVector(0);
+            auto data = sv.getFullDataVector(0);
 
             if (sv.getMPIManager().getRank() == 0) {
                 for (std::size_t j = 0; j < data.size(); j++) {
@@ -182,7 +182,7 @@ TEMPLATE_TEST_CASE("Apply Controlled Generator - 1 control 1 target wire",
                 inverse);
 
             auto reference = sv_ref.getDataVector();
-            auto data = sv.getDataVector(0);
+            auto data = sv.getFullDataVector(0);
 
             if (sv.getMPIManager().getRank() == 0) {
                 for (std::size_t j = 0; j < data.size(); j++) {
@@ -229,7 +229,7 @@ TEMPLATE_TEST_CASE("Apply Controlled Generator - 1 control 2 target wires",
                 {target_wire_0, target_wire_1}, inverse);
 
             auto reference = sv_ref.getDataVector();
-            auto data = sv.getDataVector(0);
+            auto data = sv.getFullDataVector(0);
 
             if (sv.getMPIManager().getRank() == 0) {
                 for (std::size_t j = 0; j < data.size(); j++) {
