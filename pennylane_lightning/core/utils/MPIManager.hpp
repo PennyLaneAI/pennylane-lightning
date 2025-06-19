@@ -168,11 +168,10 @@ class MPIManager {
     }
 
     /**
-     * @brief Check if the MPI configuration meets the cuQuantum.
+     * @brief Check if the MPI configuration is valid.
      */
     void check_mpi_config() {
         // check if number of processes is power of two.
-        // This is required by custatevec
         PL_ABORT_IF(std::has_single_bit(
                         static_cast<unsigned int>(this->getSize())) != true,
                     "Processes number is not power of two.");
@@ -269,7 +268,7 @@ class MPIManager {
      *
      * @tparam T C++ data type.
      */
-    template <typename T> auto getMPIDatatype() -> MPI_Datatype {
+    template <typename T> auto getMPIDatatype() const -> MPI_Datatype {
         const auto cpp_mpi_type_map = get_cpp_mpi_type_map();
         auto it = cpp_mpi_type_map.find(cppTypeToString<T>());
         if (it != cpp_mpi_type_map.end()) {
@@ -298,12 +297,12 @@ class MPIManager {
     /**
      * @brief Get the communicator.
      */
-    MPI_Comm getComm() { return communicator_; }
+    MPI_Comm getComm() const { return communicator_; }
 
     /**
      * @brief Get an elapsed time.
      */
-    double getTime() { return MPI_Wtime(); }
+    double getTime() const { return MPI_Wtime(); }
 
     /**
      * @brief Get the MPI vendor.
@@ -327,7 +326,7 @@ class MPIManager {
      *
      * @param op_str std::string of MPI_Op name.
      */
-    auto getMPIOpType(const std::string &op_str) -> MPI_Op {
+    auto getMPIOpType(const std::string &op_str) const -> MPI_Op {
         auto it = cpp_mpi_op_map.find(op_str);
         if (it != cpp_mpi_op_map.end()) {
             return it->second;
@@ -432,7 +431,7 @@ class MPIManager {
      * @return recvBuf Receive buffer.
      */
     template <typename T>
-    auto allreduce(T &sendBuf, const std::string &op_str) -> T {
+    auto allreduce(const T &sendBuf, const std::string &op_str) const -> T {
         MPI_Datatype datatype = getMPIDatatype<T>();
         MPI_Op op = getMPIOpType(op_str);
         T recvBuf;
@@ -690,21 +689,22 @@ class MPIManager {
     }
 
     /**
-     * @brief MPI_Sendrecv wrapper.
+     * @brief MPI_Sendrecv wrapper for a single element.
      *
      * @tparam T C++ data type.
      * @param sendBuf Send buffer.
      * @param dest Rank of destination.
      * @param recvBuf Receive buffer.
      * @param source Rank of source.
+     * @param tag Tag for MPI message.
      */
     template <typename T>
-    void Sendrecv(T &sendBuf, std::size_t dest, T &recvBuf,
-                  std::size_t source) {
+    void Sendrecv(T &sendBuf, std::size_t dest, T &recvBuf, std::size_t source,
+                  std::size_t tag = 0) {
         MPI_Datatype datatype = getMPIDatatype<T>();
         MPI_Status status;
-        int sendtag = 0;
-        int recvtag = 0;
+        int sendtag = static_cast<int>(tag);
+        int recvtag = sendtag;
         int destInt = static_cast<int>(dest);
         int sourceInt = static_cast<int>(source);
         PL_MPI_IS_SUCCESS(MPI_Sendrecv(&sendBuf, 1, datatype, destInt, sendtag,
@@ -720,20 +720,68 @@ class MPIManager {
      * @param dest Rank of destination.
      * @param recvBuf Receive buffer vector.
      * @param source Rank of source.
+     * @param tag Tag for MPI message.
      */
     template <typename T>
     void Sendrecv(std::vector<T> &sendBuf, std::size_t dest,
-                  std::vector<T> &recvBuf, std::size_t source) {
+                  std::vector<T> &recvBuf, std::size_t source,
+                  std::size_t tag = 0) {
         MPI_Datatype datatype = getMPIDatatype<T>();
         MPI_Status status;
-        int sendtag = 0;
-        int recvtag = 0;
+        int sendtag = static_cast<int>(tag);
+        int recvtag = sendtag;
         int destInt = static_cast<int>(dest);
         int sourceInt = static_cast<int>(source);
         PL_MPI_IS_SUCCESS(MPI_Sendrecv(sendBuf.data(), sendBuf.size(), datatype,
                                        destInt, sendtag, recvBuf.data(),
                                        recvBuf.size(), datatype, sourceInt,
                                        recvtag, this->getComm(), &status));
+    }
+
+    /**
+     * @brief MPI_GatherV wrapper for uniform receive counts.
+     *
+     * @tparam T C++ data type.
+     * @param sendBuf Send buffer vector.
+     * @param recvBuf Receive buffer vector.
+     * @param root Rank of destination.
+     * @param displacements Elements shifted from each rank for gather.
+     */
+    template <typename T>
+    void GatherV(std::vector<T> &sendBuf, std::vector<T> &recvBuf,
+                 std::size_t root, std::vector<int> &displacements) {
+        MPI_Datatype datatype = getMPIDatatype<T>();
+        int rootInt = static_cast<int>(root);
+
+        std::vector<int> recvcount(getSize(), sendBuf.size());
+
+        PL_MPI_IS_SUCCESS(MPI_Gatherv(sendBuf.data(), sendBuf.size(), datatype,
+                                      recvBuf.data(), recvcount.data(),
+                                      displacements.data(), datatype, rootInt,
+                                      this->getComm()));
+    }
+
+    /**
+     * @brief MPI_GatherV wrapper.
+     *
+     * @tparam T C++ data type.
+     * @param sendBuf Send buffer vector.
+     * @param recvBuf Receive buffer vector.
+     * @param recvCounts Number of elements received from each rank.
+     * @param root Rank of destination.
+     * @param displacements Elements shifted from each rank for gather.
+     */
+    template <typename T>
+    void GatherV(std::vector<T> &sendBuf, std::vector<T> &recvBuf,
+                 std::vector<int> &recvCounts, std::size_t root,
+                 std::vector<int> &displacements) {
+        MPI_Datatype datatype = getMPIDatatype<T>();
+        int rootInt = static_cast<int>(root);
+
+        PL_MPI_IS_SUCCESS(MPI_Gatherv(sendBuf.data(), sendBuf.size(), datatype,
+                                      recvBuf.data(), recvCounts.data(),
+                                      displacements.data(), datatype, rootInt,
+                                      this->getComm()));
     }
 
     template <typename T>
