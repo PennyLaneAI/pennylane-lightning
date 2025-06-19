@@ -113,7 +113,7 @@ If required, extra linker flags for MPI (e.g. for GPU Transport Layer) can be ad
 
     export MPI_EXTRA_LINKER_FLAGS="-lxpmem -L/opt/cray/pe/mpich/8.1.31/gtl/lib -lmpi_gtl_hsa"
 
-Test Lightning-GPU with MPI
+Test Lightning-Kokkos with MPI
 ===========================
 
 You can test the Python layer of the MPI enabled plugin as follows:
