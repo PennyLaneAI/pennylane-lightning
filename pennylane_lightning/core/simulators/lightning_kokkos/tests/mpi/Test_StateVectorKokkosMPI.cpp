@@ -1107,19 +1107,22 @@ TEMPLATE_TEST_CASE("sendrecvBuffers", "[LKMPI]", double, float) {
 
     StateVectorKokkosMPI<TestType> sv(mpi_manager, num_qubits);
 
-    auto sendbuf = sv.getSendBuffer();
-    auto recvbuf = sv.getRecvBuffer();
+    auto sendbuf = *(sv.getSendBuffer());
+    auto recvbuf = *(sv.getRecvBuffer());
 
     std::size_t mpi_rank = mpi_manager.getRank();
     std::size_t dest_rank = mpi_rank ^ 1U;
     std::size_t message_size = 4;
-    for (std::size_t i = 0; i < message_size; i++) {
-        (*sendbuf)(i) = static_cast<TestType>(mpi_rank + i);
-    }
+    Kokkos::parallel_for(
+        "InitSendBuffer", message_size, KOKKOS_LAMBDA(const std::size_t i) {
+            sendbuf(i) = static_cast<TestType>(mpi_rank + i);
+        });
     sv.sendrecvBuffers(dest_rank, dest_rank, message_size, 1);
 
+    auto h_recvbuf = view2vector(recvbuf);
+
     for (std::size_t i = 0; i < message_size; i++) {
-        CHECK(real((*recvbuf)(i)) == ((mpi_rank ^ 1U) + i));
+        CHECK(real(h_recvbuf[i]) == ((mpi_rank ^ 1U) + i));
     }
 }
 
