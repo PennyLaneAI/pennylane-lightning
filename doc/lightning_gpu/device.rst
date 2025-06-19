@@ -146,13 +146,10 @@ Each problem is unique, so it can often be best to choose the default behaviour 
 **Multi-GPU/multi-node support:**
 
 The ``lightning.gpu`` device allows users to leverage the computational power of many GPUs distributed across multiple nodes for running large-scale simulations. 
-Provided that NVIDIA ``cuQuantum`` libraries, a ``CUDA-aware MPI`` library and ``mpi4py`` are properly installed and the path to the ``libmpi.so`` is 
-added to the ``LD_LIBRARY_PATH`` environment variable, the following requirements should be met to enable multi-node and multi-GPU simulations:
 
-1. The ``mpi`` keyword argument should be set as ``True`` when initializing a ``lightning.gpu`` device.
-2. Both the total number of MPI processes and MPI processes per node must be powers of 2. For example, 2, 4, 8, 16, etc.. Each MPI process is responsible for managing one GPU. 
+To utilize distributed simulation, ``lightning.gpu`` must be compiled with MPI support. Check out the :doc:`/lightning_gpu/installation` guide for more information.
 
-The workflow for the multi-node/GPUs feature is as follows:
+With ``lightning.gpu`` installed with MPI support, this can be enabled in Pennylane by seting the `mpi` keyword argument to `True` when creating the device. For example:
 
 .. code-block:: python
 
@@ -164,6 +161,9 @@ The workflow for the multi-node/GPUs feature is as follows:
         qml.PauliX(wires=[0])
         return qml.state()
     local_state_vector = circuit_mpi()
+
+.. note::
+    The total number of MPI processes and MPI processes per node must be powers of 2. For example, 2, 4, 8, 16, etc.. Each MPI process is responsible for managing one GPU. 
 
 Currently, a ``lightning.gpu`` device with the MPI multi-GPU backend supports all the ``gate operations`` and ``observables`` that a ``lightning.gpu`` device with a single GPU/node backend supports.
 

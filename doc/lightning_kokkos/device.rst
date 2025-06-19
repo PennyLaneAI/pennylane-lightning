@@ -115,3 +115,87 @@ Supported operations and observables
 .. raw:: html
 
     </div>
+
+**Distributed simulation with MPI:**
+
+The ``lightning.kokkos`` device supports distributed simulation using the Message Passing Interface (MPI). This enables the simulation of larger quantum circuits by distributing the workload across multiple CPU or GPU compute nodes.
+
+To utilize distributed simulation, ``lightning.kokkos`` must be compiled with MPI support. Check out the :doc:`/lightning_kokkos/installation` guide for more information.
+
+With ``lightning.kokkos`` installed with MPI support, this can be enabled in Pennylane by seting the `mpi` keyword argument to `True` when creating the device. For example:
+
+.. code-block:: python
+
+    from mpi4py import MPI
+    import pennylane as qml
+    dev = qml.device('lightning.kokkos', wires=8, mpi=True)
+    @qml.qnode(dev)
+    def circuit_mpi():
+        qml.PauliX(wires=[0])
+        return qml.state()
+    local_state_vector = circuit_mpi()
+
+.. note::
+    The total number of MPI processes and MPI processes per node must be powers of 2. For example, 2, 4, 8, 16, etc.. If using Kokkos with GPUs, each MPI process is responsible for managing one GPU. 
+
+Currently, a ``lightning.kokkos`` device with MPI supports all the ``gate operations`` and ``observables`` that a single process ``lightning.kokkos`` device supports except for Sparse Hamiltonian.
+
+By default, each MPI process will return the overall simulation results, except for the ``qml.state()`` and ``qml.prob()`` methods for which each MPI process only returns the local simulation
+results for the ``qml.state()`` and ``qml.prob()`` methods to avoid buffer overflow. It is the user's responsibility to ensure correct data collection for those two methods. Here are examples of collecting
+the local simulation results for ``qml.state()`` and ``qml.prob()`` methods:
+
+The workflow for collecting local state vector (using the ``qml.state()`` method) to ``rank 0`` is as follows:
+
+.. code-block:: python
+
+    from mpi4py import MPI
+    import pennylane as qml
+    comm = MPI.COMM_WORLD
+    rank = comm.Get_rank() 
+    dev = qml.device('lightning.kokkos', wires=8, mpi=True)
+    @qml.qnode(dev)
+    def circuit_mpi():
+        qml.PauliX(wires=[0])
+        return qml.state()
+    local_state_vector = circuit_mpi()
+    #rank 0 will collect the local state vector
+    state_vector = comm.gather(local_state_vector, root=0)
+    if rank == 0:
+        print(state_vector)
+    
+The workflow for collecting local probability (using the ``qml.prob()`` method) to ``rank 0`` is as follows:
+
+.. code-block:: python
+    
+    from mpi4py import MPI
+    import pennylane as qml
+    import numpy as np
+
+    comm = MPI.COMM_WORLD
+    rank = comm.Get_rank()
+    dev = qml.device('lightning.kokkos', wires=8, mpi=True)
+    prob_wires = [0, 1]
+
+    @qml.qnode(dev)
+    def mpi_circuit():
+        qml.Hadamard(wires=1)
+        return qml.probs(wires=prob_wires)
+
+    local_probs = mpi_circuit()
+ 
+    #For data collection across MPI processes.
+    recv_counts = comm.gather(len(local_probs),root=0)
+    if rank == 0:
+        probs = np.zeros(2**len(prob_wires))
+    else:
+        probs = None
+
+    comm.Gatherv(local_probs,[probs,recv_counts],root=0)
+    if rank == 0:
+        print(probs)
+
+Then the python script can be executed with the following command:
+
+.. code-block:: console
+    
+    $ mpirun -np 4 python yourscript.py

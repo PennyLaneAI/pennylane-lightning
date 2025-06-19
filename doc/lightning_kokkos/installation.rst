@@ -88,3 +88,47 @@ For ``HIP`` and ``CUDA``, the appropriate software stacks are required to enable
 Similarly, the CMake option ``-DKokkos_ARCH_{...}=ON`` must also be specified to target a given architecture.
 A list of the architectures is found on the `Kokkos wiki <https://kokkos.org/kokkos-core-wiki/API/core/Macros.html#architectures>`_.
 Note that ``THREADS`` backend is not recommended since `Kokkos does not guarantee its safety <https://github.com/kokkos/kokkos-core-wiki/blob/17f08a6483937c26e14ec3c93a2aa40e4ce081ce/docs/source/ProgrammingGuide/Initialization.md?plain=1#L67>`_.
+
+Install Lightning-Kokkos with MPI
+=================================
+
+.. note::
+
+    Building Lightning-Kokos with MPI requires a MPI library and ``mpi4py``. 
+
+To install Lightning-Kokkos with MPI support, we recommend first installing Kokkos for your specific architecture (CPU, Nvidia/AMD GPU etc.), and exporting the install location to ``CMAKE_PREFIX_PATH`` as described above.
+
+
+
+.. code-block:: bash
+
+    git clone https://github.com/PennyLaneAI/pennylane-lightning.git
+    cd pennylane-lightning
+    PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
+    SKIP_COMPILATION=True pip install -e . --config-settings editable_mode=compat
+    PL_BACKEND="lightning_kokkos" python scripts/configure_pyproject_toml.py
+    CMAKE_ARGS="-DENABLE_MPI=ON" python -m pip install -e . --config-settings editable_mode=compat -vv
+
+If required, extra linker flags for MPI (e.g. for GPU Transport Layer) can added using the ``MPI_EXTRA_LINKER_FLAGS`` environment variable, for example:
+.. code-block:: bash
+
+    export MPI_EXTRA_LINKER_FLAGS="-lxpmem -L/opt/cray/pe/mpich/8.1.31/gtl/lib -lmpi_gtl_hsa"
+
+Building Lightning-Kokkos with MPI on Frontier
+==============================================
+
+
+Test Lightning-GPU with MPI
+===========================
+
+You can test the Python layer of the MPI enabled plugin as follows:
+
+.. code-block:: bash
+
+    mpirun -np 2 python -m pytest mpitests --tb=short
+
+The C++ code can be tested with:
+
+.. code-block:: bash
+
+    PL_BACKEND="lightning_kokkos" make test-cpp-mpi
