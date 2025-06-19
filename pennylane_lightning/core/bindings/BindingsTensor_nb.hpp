@@ -46,61 +46,22 @@
 #include "Util.hpp" // for_each_enum, PL_reinterpret_cast
 
 // Include backend-specific headers and define macros based on compile flags
-#ifdef _ENABLE_PLQUBIT
-#include "AdjointJacobianLQubit.hpp"
-#include "LQubitBindings_nb.hpp"
-#include "MeasurementsLQubit.hpp"
-#include "ObservablesLQubit.hpp"
+#if _ENABLE_PLTENSOR == 1
+#include "LTensorTNCudaBindings_nb.hpp"
+#include "MeasurementsTNCuda.hpp"
+#include "ObservablesTNCuda.hpp"
 
-#define LIGHTNING_MODULE_NAME lightning_qubit_nb
-
-namespace {
-using namespace Pennylane::LightningQubit;
-using namespace Pennylane::LightningQubit::Algorithms;
-using namespace Pennylane::LightningQubit::Observables;
-using namespace Pennylane::LightningQubit::Measures;
-using namespace Pennylane::LightningQubit::NanoBindings;
-} // namespace
-
-#elif _ENABLE_PLKOKKOS == 1
-#include "AdjointJacobianKokkos.hpp"
-#include "LKokkosBindings_nb.hpp"
-#include "MeasurementsKokkos.hpp"
-#include "ObservablesKokkos.hpp"
-
-#define LIGHTNING_MODULE_NAME lightning_kokkos_nb
+#define LIGHTNING_TENSOR_MODULE_NAME lightning_tensor_nb
 
 namespace {
-using namespace Pennylane::LightningKokkos;
-using namespace Pennylane::LightningKokkos::Algorithms;
-using namespace Pennylane::LightningKokkos::Observables;
-using namespace Pennylane::LightningKokkos::Measures;
-using namespace Pennylane::LightningKokkos::NanoBindings;
+using namespace Pennylane::LightningTensor::TNCuda;
+using namespace Pennylane::LightningTensor::TNCuda::Observables;
+using namespace Pennylane::LightningTensor::TNCuda::Measures;
+using namespace Pennylane::LightningTensor::TNCuda::NanoBindings;
 } // namespace
-
-#elif _ENABLE_PLGPU == 1
-#include "AdjointJacobianGPU.hpp"
-#include "BindingsCudaUtils.hpp"
-#include "LGPUBindings_nb.hpp"
-#include "MeasurementsGPU.hpp"
-#include "ObservablesGPU.hpp"
-
-#define LIGHTNING_MODULE_NAME lightning_gpu_nb
-
-namespace {
-using namespace Pennylane::LightningGPU;
-using namespace Pennylane::LightningGPU::Algorithms;
-using namespace Pennylane::LightningGPU::Observables;
-using namespace Pennylane::LightningGPU::Measures;
-using namespace Pennylane::LightningGPU::NanoBindings;
-} // namespace
-
-#elif _ENABLE_PLTENSOR == 1
-static_assert(false,
-              "LightningTensor bindings are not supported in this file.");
 
 #else
-static_assert(false, "Backend not found.");
+static_assert(false, "Backend not supported for LTensor bindings.");
 #endif
 
 /// @cond DEV
@@ -163,73 +124,6 @@ void registerGates(PyClass &pyclass) {
             };
         pyclass.def(gate_name.c_str(), func, doc.c_str());
     });
-}
-
-/**
- * @brief Create an aligned array for a given type, memory model and array size.
- *
- * @tparam VectorT Datatype of array to create
- * @param memory_model Memory model to use
- * @param size Size of the array to create
- * @return Nanobind ndarray
- */
-template <typename VectorT>
-auto alignedArray(CPUMemoryModel memory_model, std::size_t size, bool zeroInit)
-    -> nb::ndarray<VectorT, nb::numpy, nb::c_contig> {
-    using Pennylane::Util::alignedAlloc;
-    using Pennylane::Util::getAlignment;
-
-    // Allocate aligned memory
-    void *ptr = alignedAlloc(getAlignment<VectorT>(memory_model),
-                             sizeof(VectorT) * size, zeroInit);
-
-    // Create capsule with custom deleter
-    auto capsule =
-        nb::capsule(ptr, [](void *p) noexcept { Util::alignedFree(p); });
-
-    std::vector<size_t> shape{size};
-
-    // Return ndarray with custom allocated memory
-    return nb::ndarray<VectorT, nb::numpy, nb::c_contig>(ptr, shape.size(),
-                                                         shape.data(), capsule);
-}
-
-/**
- * @brief Allocate aligned array with specified dtype.
- *
- * @param size Size of the array to create
- * @param dtype Data type as string ("complex64", "complex128", "float32",
- * "float64")
- * @param zeroInit Whether to initialize the array with zeros
- * @return Nanobind ndarray
- */
-auto allocateAlignedArray(std::size_t size, const std::string &dtype,
-                          bool zeroInit) -> nb::object {
-    auto memory_model = bestCPUMemoryModel();
-
-    if (dtype == "complex64") {
-        return nb::cast(
-            alignedArray<std::complex<float>>(memory_model, size, zeroInit));
-    } else if (dtype == "complex128") {
-        return nb::cast(
-            alignedArray<std::complex<double>>(memory_model, size, zeroInit));
-    } else if (dtype == "float32") {
-        return nb::cast(alignedArray<float>(memory_model, size, zeroInit));
-    } else if (dtype == "float64") {
-        return nb::cast(alignedArray<double>(memory_model, size, zeroInit));
-    }
-
-    throw std::runtime_error("Unsupported dtype: " + dtype);
-}
-
-/**
- * @brief Register array alignment functionality.
- */
-void registerArrayAlignmentBindings(nb::module_ &m) {
-    // Add allocate_aligned_array function
-    m.def("allocate_aligned_array", &allocateAlignedArray,
-          "Allocate aligned array with specified dtype", nb::arg("size"),
-          nb::arg("dtype"), nb::arg("zero_init") = false);
 }
 
 /**
@@ -337,11 +231,19 @@ void registerBackendAgnosticObservables(nb::module_ &m) {
     const std::string bitsize =
         std::to_string(sizeof(std::complex<PrecisionT>) * 8);
 
+#ifdef _ENABLE_PLTENSOR
+    using ObservableT = ObservableTNCuda<LightningBackendT>;
+    using NamedObsT = NamedObsTNCuda<LightningBackendT>;
+    using HermitianObsT = HermitianObsTNCuda<LightningBackendT>;
+    using TensorProdObsT = TensorProdObsTNCuda<LightningBackendT>;
+    using HamiltonianT = HamiltonianTNCuda<LightningBackendT>;
+#else
     using ObservableT = Observable<LightningBackendT>;
     using NamedObsT = NamedObs<LightningBackendT>;
     using HermitianObsT = HermitianObs<LightningBackendT>;
     using TensorProdObsT = TensorProdObs<LightningBackendT>;
     using HamiltonianT = Hamiltonian<LightningBackendT>;
+#endif
 
     std::string class_name;
 
@@ -718,7 +620,7 @@ template <class StateVectorT> void lightningClassBindings(nb::module_ &m) {
     registerBackendSpecificStateVectorMethods<StateVectorT>(pyclass);
 
     // Register gates for StateVector
-    registerGates<StateVectorT>(pyclass);
+    registerGatesForStateVector<StateVectorT>(pyclass);
 
     // Register backend specific bindings
     registerBackendClassSpecificBindings<StateVectorT>(pyclass);
@@ -769,6 +671,77 @@ void registerLightningClassBindings(nb::module_ &m) {
         using StateVectorT = typename TypeList::Type;
         lightningClassBindings<StateVectorT>(m);
         registerLightningClassBindings<typename TypeList::Next>(m);
+    }
+}
+
+/**
+ * @brief Templated class to build lightning tensor class bindings.
+ *
+ * @tparam TensorT Tensor type
+ * @param m Nanobind module.
+ */
+template <class TensorT> void lightningTensorClassBindings(nb::module_ &m) {
+    using PrecisionT = typename TensorT::PrecisionT;
+    // using ComplexT = typename TensorT::ComplexT;
+    // using ParamT = PrecisionT;
+
+    const std::string bitsize =
+        std::to_string(sizeof(std::complex<PrecisionT>) * 8);
+
+    // StateVector class
+    std::string class_name = "TensorNetC" + bitsize;
+    auto pyclass = nb::class_<TensorT>(m, class_name.c_str());
+    registerBackendSpecificStateVectorMethods<TensorT>(pyclass);
+
+    // Register gates for StateVector
+    registerGates<TensorT>(pyclass);
+
+    // Register backend specific bindings
+    registerBackendClassSpecificBindings<TensorT>(pyclass);
+
+    //***********************************************************************//
+    //                              Observables
+    //***********************************************************************//
+
+    /* Observables submodule */
+    nb::module_ obs_submodule =
+        m.def_submodule("observables", "Submodule for observables classes.");
+    registerBackendSpecificObservables<TensorT>(obs_submodule);
+
+    //***********************************************************************//
+    //                              Measurements
+    //***********************************************************************//
+
+    /* Measurements class */
+    class_name = "MeasurementsC" + bitsize;
+    auto pyclass_measurements =
+        nb::class_<Measurements<TensorT>>(m, class_name.c_str());
+
+    pyclass_measurements.def(nb::init<const TensorT &>());
+    registerBackendSpecificMeasurements<TensorT>(pyclass_measurements);
+
+    //***********************************************************************//
+    //                              Algorithms
+    //***********************************************************************//
+
+    /* Algorithms submodule */
+    nb::module_ alg_submodule = m.def_submodule(
+        "algorithms", "Submodule for the algorithms functionality.");
+    registerBackendSpecificAlgorithms<TensorT>(alg_submodule);
+}
+
+/**
+ * @brief Register lightning class bindings for lightning tensor
+ *
+ * @tparam TypeList List of backend types
+ * @param m Nanobind module
+ */
+template <typename TypeList>
+void registerLightningTensorClassBindings(nb::module_ &m) {
+    if constexpr (!std::is_same_v<TypeList, void>) {
+        using TensorT = typename TypeList::Type;
+        lightningTensorClassBindings<TensorT>(m);
+        registerLightningTensorClassBindings<typename TypeList::Next>(m);
     }
 }
 

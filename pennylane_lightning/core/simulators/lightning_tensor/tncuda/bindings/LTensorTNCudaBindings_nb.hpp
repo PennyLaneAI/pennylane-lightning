@@ -30,8 +30,14 @@
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/vector.h>
 
-#include "StateVectorTNCuda.hpp"
+#include "DevTag.hpp"
+#include "Error.hpp"
+#include "ExactTNCuda.cpp"
+#include "MPSTNCuda.hpp"
 #include "TypeList.hpp"
+#include "Util.hpp"
+#include "cuda_helpers.hpp"
+#include "tncuda_helpers.hpp"
 
 namespace nb = nanobind;
 
@@ -40,9 +46,62 @@ namespace Pennylane::LightningTensor::TNCuda::NanoBindings {
 /**
  * @brief Define StateVector backends for lightning.tensor
  */
-using StateVectorBackends =
-    Pennylane::Util::TypeList<StateVectorTNCuda<float>,
-                              StateVectorTNCuda<double>, void>;
+using TensorNetworkBackends =
+    Pennylane::Util::TypeList<MPSTNCuda<float>, MPSTNCuda<double>,
+                              ExactTNCuda<float>, ExactTNCuda<double>, void>;
+
+/**
+ * @brief Register controlled matrix kernel.
+ */
+template <class TensorNet>
+void applyControlledMatrix(
+    TensorNet &tensor_network,
+    const nb::ndarray<std::complex<typename TensorNet::PrecisionT>,
+                      nb::c_contig> &matrix,
+    const std::vector<std::size_t> &controlled_wires,
+    const std::vector<bool> &controlled_values,
+    const std::vector<std::size_t> &target_wires, bool inverse = false) {
+    using ComplexT = typename TensorNet::ComplexT;
+    const auto m_buffer = matrix.request();
+    std::vector<ComplexT> conv_matrix;
+    if (m_buffer.size) {
+        const auto m_ptr = static_cast<const ComplexT *>(m_buffer.ptr);
+        conv_matrix = std::vector<ComplexT>{m_ptr, m_ptr + m_buffer.size};
+    }
+
+    tensor_network.applyControlledOperation(
+        "applyControlledMatrix", controlled_wires, controlled_values,
+        target_wires, inverse, {}, conv_matrix);
+}
+
+template <class TensorNet, class PyClass>
+void registerControlledGate(PyClass &pyclass) {
+    using PrecisionT = typename TensorNet::PrecisionT; // TensorNet's precision
+    using ParamT = PrecisionT; // Parameter's data precision
+
+    using Pennylane::Gates::ControlledGateOperation;
+    using Pennylane::Util::for_each_enum;
+    namespace Constant = Pennylane::Gates::Constant;
+
+    for_each_enum<ControlledGateOperation>(
+        [&pyclass](ControlledGateOperation gate_op) {
+            using Pennylane::Util::lookup;
+            const auto gate_name =
+                std::string(lookup(Constant::controlled_gate_names, gate_op));
+            const std::string doc = "Apply the " + gate_name + " gate.";
+            auto func = [gate_name = gate_name](
+                            TensorNet &tensor_network,
+                            const std::vector<std::size_t> &controlled_wires,
+                            const std::vector<bool> &controlled_values,
+                            const std::vector<std::size_t> &target_wires,
+                            bool inverse, const std::vector<ParamT> &params) {
+                tensor_network.applyControlledOperation(
+                    gate_name, controlled_wires, controlled_values,
+                    target_wires, inverse, params);
+            };
+            pyclass.def(gate_name.c_str(), func, doc.c_str());
+        });
+}
 
 /**
  * @brief Get a gate kernel map for a tensor network using MPS.
@@ -123,7 +182,6 @@ void registerBackendClassSpecificBindingsMPS(PyClass &pyclass) {
     pyclass.def("reset", &TensorNet::reset, "Reset the statevector.");
 }
 
-// TODO: Currently working on this fxn
 /**
  * @brief Get a gate kernel map for a tensor network using ExactTN.
  *
@@ -135,39 +193,30 @@ template <class TensorNet, class PyClass>
 void registerBackendClassSpecificBindingsExactTNCuda(PyClass &pyclass) {
     using PrecisionT = typename TensorNet::PrecisionT; // TensorNet's precision
     using ParamT = PrecisionT; // Parameter's data precision
-    using np_arr_c = py::array_t<std::complex<ParamT>,
-                                 py::array::c_style | py::array::forcecast>;
+    using ArrayT = nb::ndarray<std::complex<ParamT>, nb::c_contig>;
 
+    pyclass.def(nb::init<std::size_t>());              // num_qubits
+    pyclass.def(nb::init<std::size_t, DevTag<int>>()); // num_qubits, dev-tag
+    pyclass.def(
+        "getState",
+        [](TensorNet &tensor_network, ArrayT &state) {
+            tensor_network.getData(state.data(), state.size());
+        },
+        "Copy StateVector data into a Numpy array.");
+    pyclass.def("applyControlledMatrix", &applyControlledMatrix<TensorNet>,
+                "Apply controlled operation");
+    pyclass.def(
+        "setBasisState",
+        [](TensorNet &tensor_network, std::vector<std::size_t> &basisState) {
+            tensor_network.setBasisState(basisState);
+        },
+        "Create Basis State on GPU.");
     pyclass
-        .def(py::init<std::size_t>())              // num_qubits
-        .def(py::init<std::size_t, DevTag<int>>()) // num_qubits, dev-tag
-        .def(
-            "getState",
-            [](TensorNet &tensor_network, np_arr_c &state) {
-                py::buffer_info numpyArrayInfo = state.request();
-                auto *data_ptr =
-                    static_cast<std::complex<PrecisionT> *>(numpyArrayInfo.ptr);
-
-                tensor_network.getData(data_ptr, state.size());
-            },
-            "Copy StateVector data into a Numpy array.")
-        .def("applyControlledMatrix", &applyControlledMatrix<TensorNet>,
-             "Apply controlled operation")
-        .def(
-            "setBasisState",
-            [](TensorNet &tensor_network,
-               std::vector<std::size_t> &basisState) {
-                tensor_network.setBasisState(basisState);
-            },
-            "Create Basis State on GPU.")
         .def(
             "updateMPSSitesData",
-            [](TensorNet &tensor_network, std::vector<np_arr_c> &tensors) {
+            [](TensorNet &tensor_network, std::vector<ArrayT> &tensors) {
                 for (std::size_t idx = 0; idx < tensors.size(); idx++) {
-                    py::buffer_info numpyArrayInfo = tensors[idx].request();
-                    auto *data_ptr = static_cast<std::complex<PrecisionT> *>(
-                        numpyArrayInfo.ptr);
-                    tensor_network.updateSiteData(idx, data_ptr,
+                    tensor_network.updateSiteData(idx, tensors[idx].data(),
                                                   tensors[idx].size());
                 }
             },
@@ -177,12 +226,12 @@ void registerBackendClassSpecificBindingsExactTNCuda(PyClass &pyclass) {
 
 /**
  * @brief Get a controlled matrix and kernel map for a statevector.
- * @tparam StateVectorT
+ * @tparam TensorNet
  * @tparam PyClass
  * @param pyclass Nanobind's measurements class to bind methods.
  */
-template <class StateVectorT, class PyClass>
-void registerBackendClassSpecificBindings(PyClass &) {
+template <class TensorNet, class PyClass>
+void registerBackendClassSpecificBindings(PyClass &pyclass) {
     registerGatesForTensorNet<TensorNet>(pyclass);
     registerControlledGate<TensorNet, PyClass>(pyclass);
 

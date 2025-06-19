@@ -432,6 +432,24 @@ class TNCuda : public TNCudaBase<PrecisionT, Derived> {
     }
 
     /**
+     * @brief Append a single gate tensor specified as a matrix to the compute
+     * graph. NOTE: This function does not update the quantum state but only
+     * appends gate tensor operator to the graph.
+     * @param matrix The gate matrix for custom gates. This should be a region
+     * of memory with a size equal to 2^(wires.size()*2)
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicates whether to use adjoint of gate.
+     */
+    inline void applyMatrix(const ComplexT *matrix,
+                            const std::vector<std::size_t> &wires,
+                            bool inverse = false) {
+        std::size_t size = Pennylane::Util::exp2(wires.size() * 2);
+        std::vector<ComplexT> gate_matrix(matrix, matrix + size);
+
+        this->applyOperation("applyMatrix", wires, inverse, {}, gate_matrix);
+    }
+
+    /**
      * @brief Get the state vector representation of a tensor network.
      *
      * @param host_data Pointer to the host memory for state tensor data.
