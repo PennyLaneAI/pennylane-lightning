@@ -22,6 +22,7 @@
 #include <catch2/catch.hpp>
 
 #include "MPIManagerKokkos.hpp"
+#include "UtilKokkos.hpp"
 
 using namespace Pennylane;
 using namespace Pennylane::LightningKokkos::Util;
@@ -75,31 +76,38 @@ TEMPLATE_TEST_CASE("MPIManagerKokkos::Sendrecv", "[MPIManagerKokkos]", float,
     SECTION("Sendrecv cyclic") {
         std::size_t dest = (mpi_rank + 1) % mpi_size;
         std::size_t source = (mpi_rank - 1 + mpi_size) % mpi_size;
-        Kokkos::View<cp_t *> sendBuf("sendBuf", message_size);
-        Kokkos::View<cp_t *> recvBuf("recvBuf", message_size);
+
+        std::vector<cp_t> h_sendBuf(message_size);
         for (std::size_t i = 0; i < message_size; ++i) {
-            sendBuf(i) = static_cast<PrecisionT>(mpi_rank + i);
+            h_sendBuf[i] = static_cast<PrecisionT>(mpi_rank + i);
         }
+        Kokkos::View<cp_t *> sendBuf = vector2view(h_sendBuf);
+        Kokkos::View<cp_t *> recvBuf("recvBuf", message_size);
         mpi_manager.Sendrecv(sendBuf, dest, recvBuf, source, message_size);
+        auto h_recvBuf = view2vector(recvBuf);
+
         for (std::size_t i = 0; i < message_size; ++i) {
-            CHECK(recvBuf(i).real() == static_cast<PrecisionT>(source + i));
-            CHECK(recvBuf(i).imag() == static_cast<PrecisionT>(0));
+            CHECK(h_recvBuf[i].real() == static_cast<PrecisionT>(source + i));
+            CHECK(h_recvBuf[i].imag() == static_cast<PrecisionT>(0));
         }
     }
 
     SECTION("Sendrecv 0-1 2-3") {
         std::size_t dest = mpi_rank ^ 1U;
         std::size_t source = dest;
-        Kokkos::View<cp_t *> sendBuf("sendBuf", message_size);
-        Kokkos::View<cp_t *> recvBuf("recvBuf", message_size);
+
+        std::vector<cp_t> h_sendBuf(message_size);
         for (std::size_t i = 0; i < message_size; ++i) {
-            sendBuf(i) = static_cast<PrecisionT>(mpi_rank + i);
+            h_sendBuf[i] = static_cast<PrecisionT>(mpi_rank + i);
         }
+        Kokkos::View<cp_t *> sendBuf = vector2view(h_sendBuf);
+        Kokkos::View<cp_t *> recvBuf("recvBuf", message_size);
         mpi_manager.Sendrecv(sendBuf, dest, recvBuf, source, message_size);
+        auto h_recvBuf = view2vector(recvBuf);
+
         for (std::size_t i = 0; i < message_size; ++i) {
-            CHECK(recvBuf(i).real() ==
-                  static_cast<PrecisionT>((mpi_rank ^ 1U) + i));
-            CHECK(recvBuf(i).imag() == static_cast<PrecisionT>(0));
+            CHECK(h_recvBuf[i].real() == static_cast<PrecisionT>(source + i));
+            CHECK(h_recvBuf[i].imag() == static_cast<PrecisionT>(0));
         }
     }
 }
@@ -117,15 +125,17 @@ TEMPLATE_TEST_CASE("MPIManagerKokkos::AllGatherV", "[MPIManagerKokkos]", float,
 
     std::size_t message_size = 3;
 
-    Kokkos::View<cp_t *> sendBuf("sendBuf", message_size);
-    Kokkos::View<cp_t *> recvBuf("recvBuf", message_size * mpi_size);
+    std::vector<cp_t> h_sendBuf(message_size);
     for (std::size_t i = 0; i < message_size; ++i) {
-        sendBuf(i) = static_cast<PrecisionT>(mpi_rank + i);
+        h_sendBuf[i] = static_cast<PrecisionT>(mpi_rank + i);
     }
+    Kokkos::View<cp_t *> sendBuf = vector2view(h_sendBuf);
+    Kokkos::View<cp_t *> recvBuf("recvBuf", message_size * mpi_size);
 
     std::vector<int> recv_counts(mpi_size, int(message_size));
     std::vector<int> displacements{0, 3, 6, 9};
     mpi_manager.AllGatherV(sendBuf, recvBuf, recv_counts, displacements);
+    auto h_recvBuf = view2vector(recvBuf);
 
     Kokkos::View<cp_t *> expected("expected", message_size * mpi_size);
     for (std::size_t i = 0; i < mpi_size; ++i) {
@@ -134,8 +144,8 @@ TEMPLATE_TEST_CASE("MPIManagerKokkos::AllGatherV", "[MPIManagerKokkos]", float,
         }
     }
     for (std::size_t i = 0; i < message_size * mpi_size; ++i) {
-        CHECK(recvBuf(i).real() == expected(i).real());
-        CHECK(recvBuf(i).imag() == expected(i).imag());
+        CHECK(h_recvBuf[i].real() == expected(i).real());
+        CHECK(h_recvBuf[i].imag() == expected(i).imag());
     }
 }
 
@@ -151,20 +161,22 @@ TEMPLATE_TEST_CASE("MPIManagerKokkos::Bcast", "[MPIManagerKokkos]", float,
 
     std::size_t message_size = 3;
 
-    Kokkos::View<cp_t *> sendBuf("sendBuf", message_size);
+    std::vector<cp_t> h_sendBuf(message_size);
     if (mpi_rank == 0) {
         for (std::size_t i = 0; i < message_size; ++i) {
-            sendBuf(i) = static_cast<PrecisionT>(i);
+            h_sendBuf[i] = static_cast<PrecisionT>(i);
         }
     } else {
         for (std::size_t i = 0; i < message_size; ++i) {
-            sendBuf(i) = static_cast<PrecisionT>(0);
+            h_sendBuf[i] = static_cast<PrecisionT>(0);
         }
     }
+    Kokkos::View<cp_t *> sendBuf = vector2view(h_sendBuf);
     mpi_manager.Bcast(sendBuf, 0);
+    h_sendBuf = view2vector(sendBuf);
 
     for (std::size_t i = 0; i < message_size; ++i) {
-        CHECK(sendBuf(i).real() == static_cast<PrecisionT>(i));
-        CHECK(sendBuf(i).imag() == 0.0);
+        CHECK(h_sendBuf[i].real() == static_cast<PrecisionT>(i));
+        CHECK(h_sendBuf[i].imag() == 0.0);
     }
 }
