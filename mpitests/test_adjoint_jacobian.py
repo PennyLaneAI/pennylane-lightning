@@ -17,12 +17,12 @@ Unit tests for adjoint Jacobian on :mod:`pennylane_lightning` MPI-enabled device
 # pylint: disable=protected-access,cell-var-from-loop,c-extension-no-member
 import itertools
 import math
+from functools import partial
 
 import pennylane as qml
 import pytest
 from conftest import LightningDevice as ld
 from conftest import LightningException, device_name
-from functools import partial
 from mpi4py import MPI
 from pennylane import QNode
 from pennylane import numpy as np

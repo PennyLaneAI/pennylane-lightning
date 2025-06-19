@@ -16,12 +16,12 @@ Unit tests for apply on :mod:`pennylane_lightning` MPI-enabled devices.
 """
 # pylint: disable=protected-access,cell-var-from-loop,c-extension-no-member
 import itertools
+from functools import partial
 
 import numpy as np
 import pennylane as qml
 import pytest
 from conftest import TOL_STOCHASTIC, device_name, fixture_params
-from functools import partial
 from mpi4py import MPI
 
 numQubits = 8

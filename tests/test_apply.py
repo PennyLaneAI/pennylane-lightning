@@ -15,6 +15,7 @@
 Unit tests for Lightning devices.
 """
 import math
+from functools import partial
 
 import numpy as np
 import pennylane as qml
@@ -22,7 +23,6 @@ import pytest
 from conftest import PHI, THETA
 from conftest import LightningDevice as ld
 from conftest import device_name
-from functools import partial
 from pennylane.exceptions import DeviceError
 from pennylane.operation import Operation
 from pennylane.wires import Wires
