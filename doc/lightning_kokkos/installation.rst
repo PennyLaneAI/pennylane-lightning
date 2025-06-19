@@ -96,7 +96,7 @@ Install Lightning-Kokkos with MPI
 
     Building Lightning-Kokos with MPI requires a MPI library and ``mpi4py``. 
 
-To install Lightning-Kokkos with MPI support, we recommend first installing Kokkos for your specific architecture (CPU, Nvidia/AMD GPU etc.), and exporting the install location to ``CMAKE_PREFIX_PATH`` as described above. Then Lightning-Kokkos with MPI support can be installed in the *editable* mode by adding the `ENABLE_MPI=ON` option to the CMake arguments:
+To install Lightning-Kokkos with MPI support, we recommend first installing Kokkos for your specific architecture (CPU, Nvidia/AMD GPU etc.) and exporting the install location to ``CMAKE_PREFIX_PATH`` as described above. Then Lightning-Kokkos with MPI support can be installed in the *editable* mode by adding the `ENABLE_MPI=ON` option to the CMake arguments:
 
 .. code-block:: bash
 
@@ -107,15 +107,11 @@ To install Lightning-Kokkos with MPI support, we recommend first installing Kokk
     PL_BACKEND="lightning_kokkos" python scripts/configure_pyproject_toml.py
     CMAKE_ARGS="-DENABLE_MPI=ON" python -m pip install -e . --config-settings editable_mode=compat -vv
 
-If required, extra linker flags for MPI (e.g. for GPU Transport Layer) can added using the ``MPI_EXTRA_LINKER_FLAGS`` environment variable, for example:
+If required, extra linker flags for MPI (e.g. for GPU Transport Layer) can be added using the ``MPI_EXTRA_LINKER_FLAGS`` environment variable, for example:
 
 .. code-block:: bash
 
     export MPI_EXTRA_LINKER_FLAGS="-lxpmem -L/opt/cray/pe/mpich/8.1.31/gtl/lib -lmpi_gtl_hsa"
-
-Building Lightning-Kokkos with MPI on Frontier
-==============================================
-
 
 Test Lightning-GPU with MPI
 ===========================
@@ -131,3 +127,66 @@ The C++ code can be tested with:
 .. code-block:: bash
 
     PL_BACKEND="lightning_kokkos" make test-cpp-mpi
+
+Building and Running Lightning-Kokkos with MPI on Frontier
+==============================================
+
+To build Lightning-Kokkos with MPI on Frontier for AMD GPUs, the following commands can be used:
+
+.. code-block:: bash
+
+    # Load the required Python and compiler modules
+    module load cray-python
+    module load PrgEnv-amd
+
+    # Install Lightning-Qubit
+    git clone https://github.com/PennyLaneAI/pennylane-lightning.git
+    cd pennylane-lightning
+    PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
+    CMAKE_ARGS="-DCMAKE_CXX_COMPILER=CC" pip install .
+
+    # Install Kokkos:
+    cmake -S . -B build -G Ninja \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INSTALL_PREFIX=<install-path> \
+        -DCMAKE_CXX_STANDARD=20 \
+        -DCMAKE_CXX_COMPILER=hipcc \
+        -DBUILD_SHARED_LIBS:BOOL=ON \
+        -DBUILD_TESTING:BOOL=ON \
+        -DKokkos_ENABLE_SERIAL:BOOL=ON \
+        -DKokkos_ENABLE_HIP:BOOL=ON \
+        -DKokkos_ARCH_AMD_GFX90A:BOOL=ON \
+        -DKokkos_ENABLE_EXAMPLES:BOOL=OFF \
+        -DKokkos_ENABLE_TESTS:BOOL=OFF \
+        -DKokkos_ENABLE_LIBDL:BOOL=OFF
+    cmake --build build && cmake --install build
+    export CMAKE_PREFIX_PATH=<install-path>
+
+    # Install Lightning-Kokkos with MPI support
+    export MPI_EXTRA_LINKER_FLAGS="${CRAY_XPMEM_POST_LINK_OPTS} -lxpmem ${PE_MPICH_GTL_DIR_amd_gfx90a} ${PE_MPICH_GTL_LIBS_amd_gfx90a}"
+
+    export CMAKE_ARGS="-DENABLE_MPI=ON -DCMAKE_CXX_COMPILER=hipcc"
+    export CMAKE_ARGS="${CMAKE_ARGS} -DCMAKE_CXX_FLAGS='--gcc-install-dir=/opt/cray/pe/gcc/11.2.0/snos/lib/gcc/x86_64-suse-linux/11.2.0/'"
+    export CMAKE_ARGS="${CMAKE_ARGS} -DCMAKE_CXX_COMPILER_CLANG_SCAN_DEPS:FILEPATH=/opt/rocm-6.2.4/lib/llvm/bin/clang-scan-deps" 
+
+    PL_BACKEND="lightning_kokkos" python scripts/configure_pyproject_toml.py
+    python -m pip install .
+
+To submit a job, for example on 2 nodes, the following slurm script can be used:
+
+.. code-block:: bash
+
+    #!/bin/sh
+    #SBATCH -J pennylane
+    #SBATCH -t 00:10:00
+    #SBATCH -N 2
+
+    module load cray-python
+    module load PrgEnv-amd
+    module load rocm
+    module load cray-pmi
+    export MPICH_GPU_SUPPORT_ENABLED=1
+    export HSA_ENABLE_PEER_SDMA=0
+
+    srun --ntasks=16 --cpus-per-task=7 --gpus-per-task=1 --gpu-bind=closest python python_script.py
+    
