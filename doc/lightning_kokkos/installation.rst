@@ -96,9 +96,7 @@ Install Lightning-Kokkos with MPI
 
     Building Lightning-Kokos with MPI requires a MPI library and ``mpi4py``. 
 
-To install Lightning-Kokkos with MPI support, we recommend first installing Kokkos for your specific architecture (CPU, Nvidia/AMD GPU etc.), and exporting the install location to ``CMAKE_PREFIX_PATH`` as described above.
-
-
+To install Lightning-Kokkos with MPI support, we recommend first installing Kokkos for your specific architecture (CPU, Nvidia/AMD GPU etc.), and exporting the install location to ``CMAKE_PREFIX_PATH`` as described above. Then Lightning-Kokkos with MPI support can be installed in the *editable* mode by adding the `ENABLE_MPI=ON` option to the CMake arguments:
 
 .. code-block:: bash
 
@@ -110,6 +108,7 @@ To install Lightning-Kokkos with MPI support, we recommend first installing Kokk
     CMAKE_ARGS="-DENABLE_MPI=ON" python -m pip install -e . --config-settings editable_mode=compat -vv
 
 If required, extra linker flags for MPI (e.g. for GPU Transport Layer) can added using the ``MPI_EXTRA_LINKER_FLAGS`` environment variable, for example:
+
 .. code-block:: bash
 
     export MPI_EXTRA_LINKER_FLAGS="-lxpmem -L/opt/cray/pe/mpich/8.1.31/gtl/lib -lmpi_gtl_hsa"
