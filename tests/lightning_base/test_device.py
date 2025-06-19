@@ -1016,7 +1016,7 @@ class TestDerivatives:
         "config, tape, expected",
         [
             (None, None, True),
-            (ExecutionConfig(), None, False),
+            (None, None, False),
             (ExecutionConfig(gradient_method="backprop"), None, False),
             (
                 ExecutionConfig(gradient_method="backprop"),
@@ -1395,7 +1395,7 @@ class TestVJP:
         "config, tape, expected",
         [
             (None, None, True),
-            (ExecutionConfig(), None, False),
+            (None, None, False),
             (ExecutionConfig(gradient_method="backprop"), None, False),
             (
                 ExecutionConfig(gradient_method="backprop"),
