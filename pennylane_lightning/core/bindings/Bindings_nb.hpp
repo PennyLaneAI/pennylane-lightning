@@ -333,13 +333,13 @@ void registerInfo(nb::module_ &m) {
 /**
  * @brief Register backend-agnostic observables.
  *
- * @tparam LightningBackendT
+ * @tparam StateVectorT
  * @param m Nanobind module
  */
-template <class LightningBackendT>
+template <class StateVectorT>
 void registerBackendAgnosticObservables(nb::module_ &m) {
-    using PrecisionT = typename LightningBackendT::PrecisionT;
-    using ComplexT = typename LightningBackendT::ComplexT;
+    using PrecisionT = typename StateVectorT::PrecisionT;
+    using ComplexT = typename StateVectorT::ComplexT;
     using ParamT = PrecisionT;
 
     using nd_arr_c = nb::ndarray<const std::complex<ParamT>, nb::c_contig>;
@@ -348,105 +348,111 @@ void registerBackendAgnosticObservables(nb::module_ &m) {
         std::to_string(sizeof(std::complex<PrecisionT>) * 8);
 
 #ifdef _ENABLE_PLTENSOR
-    using ObservableT = ObservableTNCuda<LightningBackendT>;
-    using NamedObsT = NamedObsTNCuda<LightningBackendT>;
-    using HermitianObsT = HermitianObsTNCuda<LightningBackendT>;
-    using TensorProdObsT = TensorProdObsTNCuda<LightningBackendT>;
-    using HamiltonianT = HamiltonianTNCuda<LightningBackendT>;
+    using ObservableT = ObservableTNCuda<StateVectorT>;
+    using NamedObsT = NamedObsTNCuda<StateVectorT>;
+    using HermitianObsT = HermitianObsTNCuda<StateVectorT>;
+    using TensorProdObsT = TensorProdObsTNCuda<StateVectorT>;
+    using HamiltonianT = HamiltonianTNCuda<StateVectorT>;
 #else
-    using ObservableT = Observable<LightningBackendT>;
-    using NamedObsT = NamedObs<LightningBackendT>;
-    using HermitianObsT = HermitianObs<LightningBackendT>;
-    using TensorProdObsT = TensorProdObs<LightningBackendT>;
-    using HamiltonianT = Hamiltonian<LightningBackendT>;
+    using ObservableT = Observable<StateVectorT>;
+    using NamedObsT = NamedObs<StateVectorT>;
+    using HermitianObsT = HermitianObs<StateVectorT>;
+    using TensorProdObsT = TensorProdObs<StateVectorT>;
+    using HamiltonianT = Hamiltonian<StateVectorT>;
 #endif
 
     std::string class_name;
 
-    // Register Observable base class
+    // Register Observable base class - only as an interface, no constructors
     class_name = "ObservableC" + bitsize;
     auto observable = nb::class_<ObservableT>(m, class_name.c_str());
-    observable.def("get_wires", &ObservableT::getWires,
-                   "Get wires the observable acts on.");
 
     // Register NamedObs class
     class_name = "NamedObsC" + bitsize;
-    auto named_obs = nb::class_<NamedObsT, ObservableT>(m, class_name.c_str());
-    named_obs
-        .def(nb::init<const std::string &, const std::vector<std::size_t> &>())
-        .def("__repr__", &NamedObsT::getObsName)
-        .def("get_wires", &NamedObsT::getWires, "Get wires of observables")
-        .def(
-            "__eq__",
-            [](const NamedObsT &self, const NamedObsT &other) -> bool {
-                return self == other;
-            },
-            "Compare two observables");
+    auto named_obs =
+        nb::class_<NamedObsT, ObservableT>(m, class_name.c_str())
+            .def(nb::init<const std::string &,
+                          const std::vector<std::size_t> &>())
+            .def("__repr__", &NamedObsT::getObsName)
+            .def("get_wires", &NamedObsT::getWires, "Get wires of observables")
+            .def(
+                "__eq__",
+                [](const NamedObsT &self, const NamedObsT &other) -> bool {
+                    return self == other;
+                },
+                "Compare two observables");
 
     // Register HermitianObs class
     class_name = "HermitianObsC" + bitsize;
     auto hermitian_obs =
-        nb::class_<HermitianObsT, ObservableT>(m, class_name.c_str());
-    hermitian_obs
-        .def("__init__",
-             [](HermitianObsT *self, const nd_arr_c &matrix,
-                const std::vector<std::size_t> &wires) {
-                 const auto ptr = matrix.data();
-                 new (self) HermitianObsT(
-                     std::vector<ComplexT>(ptr, ptr + matrix.size()), wires);
-             })
-        .def("__repr__", &HermitianObsT::getObsName)
-        .def("get_wires", &HermitianObsT::getWires, "Get wires of observables")
-        .def("get_matrix", &HermitianObsT::getMatrix,
-             "Get matrix representation of Hermitian operator")
-        .def(
-            "__eq__",
-            [](const HermitianObsT &self, const HermitianObsT &other) -> bool {
-                return self == other;
-            },
-            "Compare two observables");
+        nb::class_<HermitianObsT, ObservableT>(m, class_name.c_str())
+            .def("__init__",
+                 [](HermitianObsT *self, const nd_arr_c &matrix,
+                    const std::vector<std::size_t> &wires) {
+                     const auto ptr = matrix.data();
+                     const auto size = matrix.size();
+                     std::vector<ComplexT> matrix_vec(ptr, ptr + size);
+                     new (self) HermitianObsT(std::move(matrix_vec), wires);
+                 })
+            .def("__repr__", &HermitianObsT::getObsName)
+            .def("get_wires", &HermitianObsT::getWires,
+                 "Get wires of observables")
+            .def("get_matrix", &HermitianObsT::getMatrix,
+                 "Get matrix representation of Hermitian operator")
+            .def(
+                "__eq__",
+                [](const HermitianObsT &self, const HermitianObsT &other)
+                    -> bool { return self == other; },
+                "Compare two observables");
 
     // Register TensorProdObs class
     class_name = "TensorProdObsC" + bitsize;
     auto tensor_prod_obs =
-        nb::class_<TensorProdObsT, ObservableT>(m, class_name.c_str());
-    tensor_prod_obs
-        .def(nb::init<const std::vector<std::shared_ptr<ObservableT>> &>())
-        .def("__repr__", &TensorProdObsT::getObsName)
-        .def("get_wires", &TensorProdObsT::getWires, "Get wires of observables")
-        .def("get_ops", &TensorProdObsT::getObs, "Get operations list")
-        .def(
-            "__eq__",
-            [](const TensorProdObsT &self,
-               const TensorProdObsT &other) -> bool { return self == other; },
-            "Compare two observables");
+        nb::class_<TensorProdObsT, ObservableT>(m, class_name.c_str())
+            .def("__init__",
+                 [](TensorProdObsT *self,
+                    const std::vector<std::shared_ptr<ObservableT>> &obs) {
+                     new (self) TensorProdObsT(obs);
+                 })
+            .def("__repr__", &TensorProdObsT::getObsName)
+            .def("get_wires", &TensorProdObsT::getWires,
+                 "Get wires of observables")
+            .def("get_ops", &TensorProdObsT::getObs, "Get operations list")
+            .def(
+                "__eq__",
+                [](const TensorProdObsT &self, const TensorProdObsT &other)
+                    -> bool { return self == other; },
+                "Compare two observables");
 
     // Register Hamiltonian class
     class_name = "HamiltonianC" + bitsize;
     using ObsPtr = std::shared_ptr<ObservableT>;
     auto hamiltonian =
-        nb::class_<HamiltonianT, ObservableT>(m, class_name.c_str());
-    hamiltonian
-        .def(nb::init<const std::vector<ParamT> &,
-                      const std::vector<ObsPtr> &>())
-        .def("__init__",
-             [](HamiltonianT *self,
-                const nb::ndarray<ParamT, nb::c_contig> &coeffs,
-                const std::vector<ObsPtr> &obs) {
-                 const auto ptr = coeffs.data();
-                 new (self) HamiltonianT(
-                     std::vector<ParamT>(ptr, ptr + coeffs.size()), obs);
-             })
-        .def("__repr__", &HamiltonianT::getObsName)
-        .def("get_wires", &HamiltonianT::getWires, "Get wires of observables")
-        .def("get_coeffs", &HamiltonianT::getCoeffs, "Get coefficients")
-        .def("get_ops", &HamiltonianT::getObs, "Get operations list")
-        .def(
-            "__eq__",
-            [](const HamiltonianT &self, const HamiltonianT &other) -> bool {
-                return self == other;
-            },
-            "Compare two observables");
+        nb::class_<HamiltonianT, ObservableT>(m, class_name.c_str())
+            .def("__init__",
+                 [](HamiltonianT *self, const std::vector<ParamT> &coeffs,
+                    const std::vector<ObsPtr> &obs) {
+                     new (self) HamiltonianT(coeffs, obs);
+                 })
+            .def("__init__",
+                 [](HamiltonianT *self,
+                    const nb::ndarray<ParamT, nb::c_contig> &coeffs,
+                    const std::vector<ObsPtr> &obs) {
+                     const auto ptr = coeffs.data();
+                     const auto size = coeffs.size();
+                     std::vector<ParamT> coeffs_vec(ptr, ptr + size);
+                     new (self) HamiltonianT(std::move(coeffs_vec), obs);
+                 })
+            .def("__repr__", &HamiltonianT::getObsName)
+            .def("get_wires", &HamiltonianT::getWires,
+                 "Get wires of observables")
+            .def("get_coeffs", &HamiltonianT::getCoeffs, "Get coefficients")
+            .def("get_ops", &HamiltonianT::getObs, "Get operations list")
+            .def(
+                "__eq__",
+                [](const HamiltonianT &self,
+                   const HamiltonianT &other) -> bool { return self == other; },
+                "Compare two observables");
 }
 
 /**
@@ -602,6 +608,29 @@ void registerBackendAgnosticMeasurements(PyClass &pyclass) {
 }
 
 /**
+ * @brief Register the adjoint Jacobian method.
+ */
+template <class StateVectorT>
+auto registerAdjointJacobian(
+    AdjointJacobian<StateVectorT> &adjoint_jacobian, const StateVectorT &sv,
+    const std::vector<std::shared_ptr<Observable<StateVectorT>>> &observables,
+    const OpsData<StateVectorT> &operations,
+    const std::vector<std::size_t> &trainableParams)
+    -> nb::ndarray<typename StateVectorT::PrecisionT, nb::numpy, nb::c_contig> {
+    using PrecisionT = typename StateVectorT::PrecisionT;
+    std::vector<PrecisionT> jac(observables.size() * trainableParams.size(),
+                                PrecisionT{0.0});
+    const JacobianData<StateVectorT> jd{operations.getTotalNumParams(),
+                                        sv.getLength(),
+                                        sv.getData(),
+                                        observables,
+                                        operations,
+                                        trainableParams};
+    adjoint_jacobian.adjointJacobian(std::span{jac}, jd, sv);
+    return createArrayFromVector<PrecisionT>(jac);
+}
+
+/**
  * @brief Register agnostic algorithms.
  *
  * @tparam StateVectorT
@@ -692,6 +721,33 @@ void registerBackendAgnosticAlgorithms(nb::module_ &m) {
                                          ops_controlled_values};
         },
         "Create a list of operations from data.");
+
+    //***********************************************************************//
+    //                            Adjoint Jacobian
+    //***********************************************************************//
+    class_name = "AdjointJacobianC" + bitsize;
+    nb::class_<AdjointJacobian<StateVectorT>>(m, class_name.c_str())
+        .def(nb::init<>())
+        .def("__call__",
+             [](AdjointJacobian<StateVectorT> &self, StateVectorT &sv,
+                const std::vector<std::shared_ptr<Observable<StateVectorT>>>
+                    &observables,
+                const OpsData<StateVectorT> &operations,
+                const std::vector<std::size_t> &trainableParams) {
+                 using PrecisionT = typename StateVectorT::PrecisionT;
+                 std::vector<PrecisionT> jac(observables.size() *
+                                                 trainableParams.size(),
+                                             PrecisionT{0.0});
+                 const JacobianData<StateVectorT> jd{
+                     operations.getTotalNumParams(),
+                     sv.getLength(),
+                     sv.getData(),
+                     observables,
+                     operations,
+                     trainableParams};
+                 self.adjointJacobian(std::span{jac}, jd, sv);
+                 return createArrayFromVector<PrecisionT>(jac);
+             });
 }
 
 /**
