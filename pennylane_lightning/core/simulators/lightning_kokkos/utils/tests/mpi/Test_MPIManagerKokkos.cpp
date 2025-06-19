@@ -137,15 +137,14 @@ TEMPLATE_TEST_CASE("MPIManagerKokkos::AllGatherV", "[MPIManagerKokkos]", float,
     mpi_manager.AllGatherV(sendBuf, recvBuf, recv_counts, displacements);
     auto h_recvBuf = view2vector(recvBuf);
 
-    Kokkos::View<cp_t *> expected("expected", message_size * mpi_size);
+    std::vector<PrecisionT> expected(message_size * mpi_size);
     for (std::size_t i = 0; i < mpi_size; ++i) {
         for (std::size_t j = 0; j < message_size; ++j) {
-            expected(i * message_size + j) = static_cast<PrecisionT>(i + j);
+            expected[i * message_size + j] = static_cast<PrecisionT>(i + j);
         }
     }
     for (std::size_t i = 0; i < message_size * mpi_size; ++i) {
-        CHECK(h_recvBuf[i].real() == expected(i).real());
-        CHECK(h_recvBuf[i].imag() == expected(i).imag());
+        CHECK(h_recvBuf[i].real() == expected[i]);
     }
 }
 
