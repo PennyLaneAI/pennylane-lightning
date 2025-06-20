@@ -106,9 +106,8 @@ def test_simple_execution(use_jit, x64):
 def test_capture_remains_enabled_if_measurement_error():
     """Test that capture remains enabled if there is a measurement error."""
 
-    dev = qml.device(device_name, wires=1)
+    dev = qml.device(device_name, wires=1, shots=1)
 
-    @partial(qml.set_shots, shots=1)
     def g():
         return qml.state()
 
@@ -163,12 +162,11 @@ class TestSampling:
         try:
             jax.config.update("jax_enable_x64", x64)
 
-            @partial(qml.set_shots, shots=10)
             def sampler():
                 qml.X(0)
                 return qml.sample(wires=(0, 1))
 
-            dev = qml.device(device_name, wires=2)
+            dev = qml.device(device_name, wires=2, shots=10)
             jaxpr = jax.make_jaxpr(sampler)()
 
             if use_jit:
@@ -198,14 +196,13 @@ class TestSampling:
         try:
             jax.config.update("jax_enable_x64", x64)
 
-            @partial(qml.set_shots, shots=10)
             def sampler():
                 qml.Hadamard(0)
                 return qml.sample(wires=0)
 
-            dev1 = qml.device(device_name, wires=2, seed=123)
-            dev2 = qml.device(device_name, wires=2, seed=123)
-            dev3 = qml.device(device_name, wires=2, seed=321)
+            dev1 = qml.device(device_name, wires=2, shots=10, seed=123)
+            dev2 = qml.device(device_name, wires=2, shots=10, seed=123)
+            dev3 = qml.device(device_name, wires=2, shots=10, seed=321)
             jaxpr = jax.make_jaxpr(sampler)()
 
             if use_jit:
@@ -258,14 +255,13 @@ class TestSampling:
     def test_mcm_measurements_not_yet_implemented(self, mp_type):
         """Test that measurements of mcms are not yet implemented"""
 
-        @partial(qml.set_shots, shots=2)
         def f():
             m0 = qml.measure(0)
             if mp_type == qml.probs:
                 return mp_type(op=m0)
             return mp_type(m0)
 
-        dev = qml.device(device_name, wires=1)
+        dev = qml.device(device_name, wires=1, shots=2)
         jaxpr = jax.make_jaxpr(f)()
 
         with pytest.raises(jax.errors.JaxRuntimeError):
@@ -820,9 +816,8 @@ class TestDeferMeasurements:
     def test_shots(self):
         """Tests that defer measurements executes correctly with shots."""
 
-        dev = qml.device(device_name, wires=5)
+        dev = qml.device(device_name, wires=5, shots=100)
 
-        @partial(qml.set_shots, shots=100)
         @DeferMeasurementsInterpreter(num_wires=5)
         def f(x):
 
