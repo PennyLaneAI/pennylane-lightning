@@ -430,7 +430,8 @@ class MeasurementsMPI final
     }
 
     /**
-     * @brief Probabilities.
+     * @brief Probabilities for local state vector. Needs MPI Gather to collect
+     * probabilities for the full state vector.
      *
      * @return Floating point std::vector with probabilities
      * in lexicographic order.
@@ -451,6 +452,7 @@ class MeasurementsMPI final
      *
      * @param wires Wires will restrict probabilities to a subset
      * of the full system.
+     * @param device_wires Wires on the device.
      * @return Floating point std::vector with probabilities.
      * The basis columns are rearranged according to wires.
      *
@@ -558,7 +560,7 @@ class MeasurementsMPI final
         std::size_t num_global_qubits = this->_statevector.getNumGlobalWires();
         std::size_t num_local_qubits = this->_statevector.getNumLocalWires();
         std::size_t num_total_qubits = num_global_qubits + num_local_qubits;
-        std::size_t N = exp2(num_global_qubits);
+        std::size_t twoN_global_qubits = exp2(num_global_qubits);
         std::size_t mpi_rank = mpi_manager_.getRank();
         std::size_t global_index =
             this->_statevector.getGlobalIndexFromMPIRank(mpi_rank);
@@ -586,12 +588,13 @@ class MeasurementsMPI final
 
         // Decide how many samples to generate for each rank using total norm of
         // subSV
-        Kokkos::View<std::size_t *> global_samples_bin("global_samples", N);
+        Kokkos::View<std::size_t *> global_samples_bin("global_samples",
+                                                       twoN_global_qubits);
         if (mpi_manager_.getRank() == 0) {
             auto d_local_squared_norm = vector2view(local_norms);
 
             Kokkos::parallel_scan(
-                Kokkos::RangePolicy<KokkosExecSpace>(0, N),
+                Kokkos::RangePolicy<KokkosExecSpace>(0, twoN_global_qubits),
                 KOKKOS_LAMBDA(const std::size_t k, PrecisionT &update_value,
                               const bool is_final) {
                     const PrecisionT val_k = d_local_squared_norm(k);
@@ -603,11 +606,11 @@ class MeasurementsMPI final
                 Kokkos::RangePolicy<KokkosExecSpace>(0, num_samples),
                 Global_Bin_Sampler<PrecisionT, Kokkos::Random_XorShift64_Pool>(
                     global_samples_bin, d_local_squared_norm, rand_pool,
-                    num_global_qubits, N));
+                    num_global_qubits, twoN_global_qubits));
         }
         mpi_manager_.Barrier();
         mpi_manager_.Bcast(global_samples_bin, 0);
-        std::vector<std::size_t> h_global_samples_bin(N);
+        std::vector<std::size_t> h_global_samples_bin(twoN_global_qubits);
         h_global_samples_bin = view2vector(global_samples_bin);
 
         std::size_t local_num_samples = h_global_samples_bin[mpi_rank];
@@ -649,8 +652,8 @@ class MeasurementsMPI final
         Kokkos::View<std::size_t *> samples("num_samples",
                                             num_samples * num_total_qubits);
 
-        std::vector<int> recv_counts(N);
-        std::vector<int> displacements(N);
+        std::vector<int> recv_counts(twoN_global_qubits);
+        std::vector<int> displacements(twoN_global_qubits);
         for (std::size_t i = 0; i < recv_counts.size(); i++) {
             recv_counts[i] = h_global_samples_bin[i] * num_total_qubits;
         }
