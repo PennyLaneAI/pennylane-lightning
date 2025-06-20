@@ -126,6 +126,9 @@ backend = device_name.split(".")[1]  # qubit, kokkos, gpu, or tensor
 lightning_ops = None
 LightningException = None
 
+# Define nanobind module name based on current backend
+nanobind_module_name = f"pennylane_lightning.lightning_{backend}_nb"
+
 # Handle lightning.tensor separately since it has different class structure
 if backend == "tensor":
     from pennylane_lightning.lightning_tensor import LightningTensor as LightningDevice
@@ -342,7 +345,7 @@ def pytest_report_header():
 
 @pytest.fixture(params=["64", "128"])
 def precision(request):
-    """Fixture to parametrize tests over different precision types."""
+    """Return the precision for the test."""
     return request.param
 
 
@@ -359,34 +362,10 @@ def get_precision_class(nanobind_module, precision):
     return _get_class
 
 
-@pytest.fixture(scope="class")
-def nanobind_module(request):
-    """Return the nanobind module for the specified backend.
-
-    Usage:
-    @pytest.mark.parametrize("nanobind_module", ["qubit", "kokkos", "gpu", "tensor"], indirect=True)
-    def test_something(nanobind_module):
-        # Use nanobind_module directly
-
-    Or with a specific module name:
-    def test_something(self, nanobind_module):
-        module = nanobind_module("lightning_qubit_nb")
-    """
-
-    def _get_module(backend_name=None):
-        if backend_name is None:
-            # If no backend is specified, use the parameter if provided, otherwise use the current backend
-            backend_name = getattr(request, "param", backend)
-
-        # Handle both formats: "backend_name" and "lightning_backend_name_nb"
-        if not backend_name.startswith("lightning_"):
-            module_name = f"pennylane_lightning.lightning_{backend_name}_nb"
-        else:
-            module_name = f"pennylane_lightning.{backend_name}"
-
-        try:
-            return importlib.import_module(module_name)
-        except ImportError as e:
-            pytest.skip(f"Nanobind module {module_name} not available: {str(e)}")
-
-    return _get_module
+@pytest.fixture(scope="session")
+def current_nanobind_module():
+    """Return the nanobind module for the current backend."""
+    try:
+        return importlib.import_module(nanobind_module_name)
+    except ImportError as e:
+        pytest.skip(f"Nanobind module {nanobind_module_name} not available: {str(e)}")

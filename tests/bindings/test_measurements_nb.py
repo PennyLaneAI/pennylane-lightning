@@ -26,12 +26,6 @@ class TestMeasurementsNB:
 
     num_qubits = 2
 
-    # List of backends to test
-    backends = ["qubit", "kokkos", "gpu", "tensor"]
-
-    # List of modules to test
-    modules = [f"pennylane_lightning.lightning_{b}_nb" for b in backends]
-
     @pytest.fixture
     def get_classes(self):
         """Get StateVector, Measurements, NamedObs, and HermitianObs classes from module based on precision."""
@@ -83,21 +77,14 @@ class TestMeasurementsNB:
 
         return _get_classes
 
-    @pytest.mark.parametrize("backend_name", backends)
-    def test_state_initialization(self, backend_name, precision, get_classes, nanobind_module):
+    def test_state_initialization(self, current_nanobind_module, precision, get_classes):
         """Test state vector initialization."""
-        module = nanobind_module(backend_name)
+        module = current_nanobind_module
 
         StateVectorClass, MeasurementsClass, _, _ = get_classes(module, precision)
-        # Create a numpy array representing |0> state with appropriate size
-        dtype = np.complex64 if precision == "64" else np.complex128
-        state_data = np.zeros(2**self.num_qubits, dtype=dtype)
-        state_data[0] = 1.0
 
-        # Initialize with number of qubits first
+        # Initialize with number of qubits - already in |0⟩ state
         sv = StateVectorClass(self.num_qubits)
-        # Then update data
-        sv.updateData(state_data)
 
         # Check initial state probabilities
         meas = MeasurementsClass(sv)
@@ -107,21 +94,14 @@ class TestMeasurementsNB:
         assert probs[0] == pytest.approx(1.0)
         assert all(p == pytest.approx(0.0) for p in probs[1:])
 
-    @pytest.mark.parametrize("backend_name", backends)
-    def test_bell_state(self, backend_name, precision, get_classes, nanobind_module):
+    def test_bell_state(self, current_nanobind_module, precision, get_classes):
         """Test Bell state creation."""
-        module = nanobind_module(backend_name)
+        module = current_nanobind_module
 
         StateVectorClass, MeasurementsClass, _, _ = get_classes(module, precision)
-        # Create a numpy array representing |0> state with appropriate size
-        dtype = np.complex64 if precision == "64" else np.complex128
-        state_data = np.zeros(2**self.num_qubits, dtype=dtype)
-        state_data[0] = 1.0
 
-        # Initialize with number of qubits first
+        # Initialize with number of qubits - already in |00⟩ state
         sv = StateVectorClass(self.num_qubits)
-        # Then update data
-        sv.updateData(state_data)
 
         # Check initial state
         initial_meas = MeasurementsClass(sv)
@@ -137,25 +117,16 @@ class TestMeasurementsNB:
         bell_probs = bell_meas.probs([0, 1])
         assert np.allclose(bell_probs, [0.5, 0.0, 0.0, 0.5], atol=1e-6)
 
-    @pytest.mark.parametrize("backend_name", backends)
-    def test_measurements_expval_named_obs(
-        self, backend_name, precision, get_classes, nanobind_module
-    ):
+    def test_measurements_expval_named_obs(self, current_nanobind_module, precision, get_classes):
         """Test expectation value calculation with NamedObs."""
-        module = nanobind_module(backend_name)
+        module = current_nanobind_module
 
         StateVectorClass, MeasurementsClass, NamedObsClass, _ = get_classes(module, precision)
 
         num_qubits = 1
-        # Create a numpy array representing |0> state with appropriate size
-        dtype = np.complex64 if precision == "64" else np.complex128
-        state_data = np.zeros(2**num_qubits, dtype=dtype)
-        state_data[0] = 1.0
 
-        # Initialize with number of qubits first
+        # Initialize with number of qubits - already in |0⟩ state
         sv = StateVectorClass(num_qubits)
-        # Then update data
-        sv.updateData(state_data)
 
         sv.Hadamard([0], False, [])  # Put in |+⟩ state
 
@@ -171,31 +142,20 @@ class TestMeasurementsNB:
         expval_z = meas.expval(obs_z)
         assert np.isclose(expval_z, 0.0, atol=1e-6)
 
-    @pytest.mark.parametrize("backend_name", backends)
-    def test_measurements_var_named_obs(
-        self, backend_name, precision, get_classes, nanobind_module
-    ):
+    def test_measurements_var_named_obs(self, current_nanobind_module, precision, get_classes):
         """Test variance calculation with NamedObs."""
-        module = nanobind_module(backend_name)
+        module = current_nanobind_module
 
         StateVectorClass, MeasurementsClass, NamedObsClass, _ = get_classes(module, precision)
 
         # Skip if NamedObsClass is None
         if NamedObsClass is None:
-            pytest.skip(
-                f"NamedObsClass not available for {backend_name} with precision {precision}"
-            )
+            pytest.skip(f"NamedObsClass not available for {backend} with precision {precision}")
 
         num_qubits = 1
-        # Create a numpy array representing |0> state with appropriate size
-        dtype = np.complex64 if precision == "64" else np.complex128
-        state_data = np.zeros(2**num_qubits, dtype=dtype)
-        state_data[0] = 1.0
 
         # Initialize with number of qubits first
         sv = StateVectorClass(num_qubits)
-        # Then update data
-        sv.updateData(state_data)
 
         sv.Hadamard([0], False, [])  # Put in |+⟩ state
 
@@ -211,31 +171,22 @@ class TestMeasurementsNB:
         var_z = meas.var(obs_z)
         assert np.isclose(var_z, 1.0, atol=1e-6)
 
-    @pytest.mark.parametrize("backend_name", backends)
     def test_measurements_expval_hermitian_obs(
-        self, backend_name, precision, get_classes, nanobind_module
+        self, current_nanobind_module, precision, get_classes
     ):
         """Test expectation value calculation with HermitianObs."""
-        module = nanobind_module(backend_name)
+        module = current_nanobind_module
 
         StateVectorClass, MeasurementsClass, _, HermitianObsClass = get_classes(module, precision)
 
         # Skip if HermitianObsClass is None
         if HermitianObsClass is None:
-            pytest.skip(
-                f"HermitianObsClass not available for {backend_name} with precision {precision}"
-            )
+            pytest.skip(f"HermitianObsClass not available for {backend} with precision {precision}")
 
         num_qubits = 1
-        # Create a numpy array representing |0> state with appropriate size
-        dtype = np.complex64 if precision == "64" else np.complex128
-        state_data = np.zeros(2**num_qubits, dtype=dtype)
-        state_data[0] = 1.0
 
         # Initialize with number of qubits first
         sv = StateVectorClass(num_qubits)
-        # Then update data
-        sv.updateData(state_data)
 
         sv.Hadamard([0], False, [])  # Put in |+⟩ state
 
@@ -257,31 +208,20 @@ class TestMeasurementsNB:
         expval_z = meas.expval(obs_z)
         assert np.isclose(expval_z, 0.0, atol=1e-6)
 
-    @pytest.mark.parametrize("backend_name", backends)
-    def test_measurements_var_hermitian_obs(
-        self, backend_name, precision, get_classes, nanobind_module
-    ):
+    def test_measurements_var_hermitian_obs(self, current_nanobind_module, precision, get_classes):
         """Test variance calculation with HermitianObs."""
-        module = nanobind_module(backend_name)
+        module = current_nanobind_module
 
         StateVectorClass, MeasurementsClass, _, HermitianObsClass = get_classes(module, precision)
 
         # Skip if HermitianObsClass is None
         if HermitianObsClass is None:
-            pytest.skip(
-                f"HermitianObsClass not available for {backend_name} with precision {precision}"
-            )
+            pytest.skip(f"HermitianObsClass not available for {backend} with precision {precision}")
 
         num_qubits = 1
-        # Create a numpy array representing |0> state with appropriate size
-        dtype = np.complex64 if precision == "64" else np.complex128
-        state_data = np.zeros(2**num_qubits, dtype=dtype)
-        state_data[0] = 1.0
 
         # Initialize with number of qubits first
         sv = StateVectorClass(num_qubits)
-        # Then update data
-        sv.updateData(state_data)
 
         sv.Hadamard([0], False, [])  # Put in |+⟩ state
 
@@ -303,24 +243,19 @@ class TestMeasurementsNB:
         var_z = meas.var(obs_z)
         assert np.isclose(var_z, 1.0, atol=1e-6)
 
-    @pytest.mark.parametrize("backend_name", backends)
-    def test_hadamard_gate(self, backend_name, precision, get_classes, nanobind_module):
+    def test_hadamard_gate(self, current_nanobind_module, precision, get_classes):
         """Test Hadamard gate application."""
-        module = nanobind_module(backend_name)
+        module = current_nanobind_module
 
         StateVectorClass, MeasurementsClass, _, _ = get_classes(module, precision)
-        # Create a numpy array representing |0> state with appropriate size
         dtype = np.complex64 if precision == "64" else np.complex128
-        state_data = np.zeros(2, dtype=dtype)
-        state_data[0] = 1.0
 
+        num_qubits = 1
         # Initialize with number of qubits first
-        sv = StateVectorClass(1)  # Single qubit
-        # Then update data
-        sv.updateData(state_data)
+        sv = StateVectorClass(num_qubits)  # Single qubit
 
         # Get the state
-        result = np.zeros(2, dtype=dtype)
+        result = np.zeros(2**num_qubits, dtype=dtype)
         sv.getState(result)
 
         # Check initial probabilities
@@ -334,7 +269,7 @@ class TestMeasurementsNB:
         sv.Hadamard([0], False, [])
 
         # Get the state
-        result = np.zeros(2, dtype=dtype)
+        result = np.zeros(2**num_qubits, dtype=dtype)
         sv.getState(result)
 
         # Check probabilities
@@ -344,27 +279,16 @@ class TestMeasurementsNB:
         # Should be [0.5, 0.5]
         assert np.allclose(probs, [0.5, 0.5], atol=1e-6)
 
-    @pytest.mark.parametrize("module_name", modules)
-    def test_measurements_generate_samples(
-        self, module_name, get_classes, precision, nanobind_module
-    ):
+    def test_measurements_generate_samples(self, get_classes, precision, current_nanobind_module):
         """Test sample generation."""
-        # Extract backend name from module_name
-        backend_name = module_name.split(".")[-1].split("_")[1]
-        module = nanobind_module(backend_name)
+        module = current_nanobind_module
 
         StateVectorClass, MeasurementsClass, _, _ = get_classes(module, precision)
 
         num_qubits = 2
-        # Create a numpy array representing |0> state with appropriate size
-        dtype = np.complex64 if precision == "64" else np.complex128
-        state_data = np.zeros(2**num_qubits, dtype=dtype)
-        state_data[0] = 1.0
 
-        # Initialize with number of qubits first
+        # Initialize with number of qubits - already in |00⟩ state
         sv = StateVectorClass(num_qubits)
-        # Then update data
-        sv.updateData(state_data)
 
         # Create Bell state
         sv.Hadamard([0], False, [])
@@ -399,5 +323,132 @@ class TestMeasurementsNB:
         count_11_all = np.sum(np.all(all_samples == [1, 1], axis=1))
 
         # The counts should be similar to the previous test
-        assert abs(count_00 - count_00_all) < 0.1 * num_samples
-        assert abs(count_11 - count_11_all) < 0.1 * num_samples
+        assert 0.4 * num_samples <= count_00_all <= 0.6 * num_samples
+        assert 0.4 * num_samples <= count_11_all <= 0.6 * num_samples
+
+    def test_measurements_with_controlled_gates(
+        self, current_nanobind_module, precision, get_classes
+    ):
+        """Test measurements with controlled gates."""
+        module = current_nanobind_module
+
+        StateVectorClass, MeasurementsClass, NamedObsClass, _ = get_classes(module, precision)
+
+        num_qubits = 3
+
+        # Initialize with number of qubits
+        sv = StateVectorClass(num_qubits)
+
+        # Create a GHZ state using Hadamard and CNOT
+        sv.Hadamard([0], False, [])
+        sv.CNOT([0, 1], False, [])
+        sv.CNOT([1, 2], False, [])
+
+        # Create measurements object
+        meas = MeasurementsClass(sv)
+
+        # Check probabilities - should be 50% |000⟩ and 50% |111⟩
+        probs = meas.probs(list(range(num_qubits)))
+        assert np.isclose(probs[0], 0.5, atol=1e-6)  # |000⟩
+        assert np.isclose(probs[7], 0.5, atol=1e-6)  # |111⟩
+        assert np.sum(probs) == pytest.approx(1.0)
+
+        # Test controlled operations
+        sv.resetStateVector()
+
+        # Create |+⟩ state on qubit 0
+        sv.Hadamard([0], False, [])
+
+        # Apply CNOT with control=0, target=1
+        sv.CNOT([0, 1], False, [])
+
+        # Create measurements object
+        meas = MeasurementsClass(sv)
+
+        # Create PauliX observable on qubit 1
+        obs_x = NamedObsClass("PauliX", [1])
+
+        # For the state (|00⟩ + |11⟩)/√2, the expectation value of X₁ is 0
+        # because X₁|00⟩ = |01⟩ and X₁|11⟩ = |10⟩, which are orthogonal to the original state
+        expval_x = meas.expval(obs_x)
+        assert np.isclose(expval_x, 0.0, atol=1e-6)
+
+        # Create PauliZ observable on qubit 1
+        obs_z = NamedObsClass("PauliZ", [1])
+
+        # For the state (|00⟩ + |11⟩)/√2, the expectation value of Z₁ is 0
+        # because Z₁|00⟩ = |00⟩ and Z₁|11⟩ = -|11⟩
+        expval_z = meas.expval(obs_z)
+        assert np.isclose(expval_z, 0.0, atol=1e-6)
+
+        # Create a correlation observable Z₀⊗Z₁
+        obs_z0 = NamedObsClass("PauliZ", [0])
+        obs_z1 = NamedObsClass("PauliZ", [1])
+
+        # For the Bell state, ⟨Z₀⊗Z₁⟩ = 1
+        expval_z0 = meas.expval(obs_z0)
+        expval_z1 = meas.expval(obs_z1)
+
+        # Individual Z measurements should be 0
+        assert np.isclose(expval_z0, 0.0, atol=1e-6)
+        assert np.isclose(expval_z1, 0.0, atol=1e-6)
+
+        # But their correlation should be 1
+        # We can verify this by measuring in the computational basis
+        probs = meas.probs([0, 1])
+        assert np.isclose(probs[0], 0.5, atol=1e-6)  # |00⟩
+        assert np.isclose(probs[3], 0.5, atol=1e-6)  # |11⟩
+        assert np.isclose(probs[1], 0.0, atol=1e-6)  # |01⟩
+        assert np.isclose(probs[2], 0.0, atol=1e-6)  # |10⟩
+
+    def test_measurements_with_multi_controlled_gates(
+        self, current_nanobind_module, precision, get_classes
+    ):
+        """Test measurements with multi-controlled gates."""
+        module = current_nanobind_module
+        StateVectorClass, MeasurementsClass, NamedObsClass, _ = get_classes(module, precision)
+
+        sv = StateVectorClass(3)
+
+        # Test 1: Toffoli gate - multi-controlled operation
+        # Start with |110⟩ state to activate the Toffoli
+        sv.PauliX([0], False, [])  # |100⟩
+        sv.PauliX([1], False, [])  # |110⟩
+
+        # Apply Toffoli: should flip target qubit 2 since both controls are |1⟩
+        sv.Toffoli([0, 1, 2], False, [])  # |110⟩ → |111⟩
+
+        meas = MeasurementsClass(sv)
+        probs = meas.probs([0, 1, 2])
+
+        # Should be in |111⟩ state
+        assert np.isclose(probs[7], 1.0, atol=1e-6)  # |111⟩ = index 7
+
+        # Test 2: Multi-controlled phase gate behavior
+        sv.resetStateVector()
+
+        # Create entangled state: (|000⟩ + |111⟩)/√2
+        sv.Hadamard([0], False, [])
+        sv.CNOT([0, 1], False, [])
+        sv.CNOT([1, 2], False, [])
+
+        # Apply controlled-Z between qubits 0 and 2
+        sv.CZ([0, 2], False, [])
+
+        meas = MeasurementsClass(sv)
+
+        # CZ only adds phase to |11⟩ component, doesn't change probabilities
+        probs = meas.probs([0, 1, 2])
+        assert np.isclose(probs[0], 0.5, atol=1e-6)  # |000⟩
+        assert np.isclose(probs[7], 0.5, atol=1e-6)  # |111⟩
+
+        # Test expectation values
+        obs_z0 = NamedObsClass("PauliZ", [0])
+        obs_z2 = NamedObsClass("PauliZ", [2])
+
+        # Individual measurements are zero due to superposition
+        assert np.isclose(meas.expval(obs_z0), 0.0, atol=1e-6)
+        assert np.isclose(meas.expval(obs_z2), 0.0, atol=1e-6)
+
+        # Variance should be 1 for maximally mixed single-qubit states
+        assert np.isclose(meas.var(obs_z0), 1.0, atol=1e-6)
