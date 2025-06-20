@@ -32,9 +32,11 @@
 #include <nanobind/nanobind.h>
 #include <nanobind/ndarray.h>
 #include <nanobind/stl/complex.h>
+#include <nanobind/stl/shared_ptr.h>
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/vector.h>
 
+#include "BindingsUtils_nb.hpp"
 #include "CPUMemoryModel.hpp" // CPUMemoryModel, bestCPUMemoryModel
 #include "Constant.hpp"
 #include "ConstantUtil.hpp" // lookup
@@ -54,6 +56,7 @@
 
 #define LIGHTNING_MODULE_NAME lightning_qubit_nb
 
+/// @cond DEV
 namespace {
 using namespace Pennylane::LightningQubit;
 using namespace Pennylane::LightningQubit::Algorithms;
@@ -61,6 +64,7 @@ using namespace Pennylane::LightningQubit::Observables;
 using namespace Pennylane::LightningQubit::Measures;
 using namespace Pennylane::LightningQubit::NanoBindings;
 } // namespace
+/// @endcond
 
 #elif _ENABLE_PLKOKKOS == 1
 #include "AdjointJacobianKokkos.hpp"
@@ -70,6 +74,7 @@ using namespace Pennylane::LightningQubit::NanoBindings;
 
 #define LIGHTNING_MODULE_NAME lightning_kokkos_nb
 
+/// @cond DEV
 namespace {
 using namespace Pennylane::LightningKokkos;
 using namespace Pennylane::LightningKokkos::Algorithms;
@@ -77,6 +82,7 @@ using namespace Pennylane::LightningKokkos::Observables;
 using namespace Pennylane::LightningKokkos::Measures;
 using namespace Pennylane::LightningKokkos::NanoBindings;
 } // namespace
+/// @endcond
 
 #elif _ENABLE_PLGPU == 1
 #include "AdjointJacobianGPU.hpp"
@@ -87,6 +93,7 @@ using namespace Pennylane::LightningKokkos::NanoBindings;
 
 #define LIGHTNING_MODULE_NAME lightning_gpu_nb
 
+/// @cond DEV
 namespace {
 using namespace Pennylane::LightningGPU;
 using namespace Pennylane::LightningGPU::Algorithms;
@@ -94,6 +101,7 @@ using namespace Pennylane::LightningGPU::Observables;
 using namespace Pennylane::LightningGPU::Measures;
 using namespace Pennylane::LightningGPU::NanoBindings;
 } // namespace
+/// @endcond
 
 #elif _ENABLE_PLTENSOR == 1
 #include "LTensorTNCudaBindings_nb.hpp"
@@ -102,12 +110,14 @@ using namespace Pennylane::LightningGPU::NanoBindings;
 
 #define LIGHTNING_TENSOR_MODULE_NAME lightning_tensor_nb
 
+/// @cond DEV
 namespace {
 using namespace Pennylane::LightningTensor::TNCuda;
 using namespace Pennylane::LightningTensor::TNCuda::Observables;
 using namespace Pennylane::LightningTensor::TNCuda::Measures;
 using namespace Pennylane::LightningTensor::TNCuda::NanoBindings;
 } // namespace
+/// @endcond
 
 template <typename T> using Measurements = MeasurementsTNCuda<T>;
 // template<typename T>
@@ -119,6 +129,7 @@ static_assert(false, "Backend not found.");
 
 /// @cond DEV
 namespace {
+using Pennylane::NanoBindings::Utils::createNumpyArrayFromVector;
 using Pennylane::Util::bestCPUMemoryModel;
 using Pennylane::Util::CPUMemoryModel;
 } // namespace
@@ -138,6 +149,8 @@ void registerMatrix(
     const std::vector<std::size_t> &wires, bool inverse = false) {
     using ComplexT = typename StateReprT::ComplexT;
     using Pennylane::Util::PL_reinterpret_cast;
+
+    PL_ASSERT(matrix.size() == Util::exp2(2 * wires.size()));
 
     // Cast to raw pointer
     auto *data_ptr = PL_reinterpret_cast<const ComplexT>(matrix.data());
@@ -454,65 +467,6 @@ void registerBackendAgnosticObservables(nb::module_ &m) {
 }
 
 /**
- * @brief Create an array from a vector of data with proper ownership transfer
- *
- * @tparam VectorT Data type of the vector elements
- * @param data Vector containing the data to transfer
- * @return nb::ndarray<VectorT, nb::numpy, nb::c_contig> Array with copied data
- * in numpy format
- */
-template <typename VectorT>
-nb::ndarray<VectorT, nb::numpy, nb::c_contig>
-createArrayFromVector(const std::vector<VectorT> &data) {
-    const std::size_t size = data.size();
-
-    // Create a new array with the right size
-    std::vector<size_t> shape{size};
-
-    // Allocate new memory and copy the data
-    VectorT *new_data = new VectorT[size];
-    std::memcpy(new_data, data.data(), size * sizeof(VectorT));
-
-    // Create a capsule to manage memory
-    auto capsule = nb::capsule(
-        new_data, [](void *p) noexcept { delete[] static_cast<VectorT *>(p); });
-
-    // Create and return the ndarray with numpy format
-    return nb::ndarray<VectorT, nb::numpy, nb::c_contig>(new_data, shape.size(),
-                                                         shape.data(), capsule);
-}
-
-/**
- * @brief Create a 2D array from a vector of data with proper ownership transfer
- *
- * @tparam VectorT Data type of the vector elements
- * @param data Vector containing the data to transfer
- * @param rows Number of rows in the resulting 2D array
- * @param cols Number of columns in the resulting 2D array
- * @return nb::ndarray<VectorT, nb::numpy, nb::c_contig> 2D array with copied
- * data in numpy format
- */
-template <typename VectorT>
-nb::ndarray<VectorT, nb::numpy, nb::c_contig>
-create2DArrayFromVector(const std::vector<VectorT> &data, std::size_t rows,
-                        std::size_t cols) {
-    // Create a new array with the right size
-    std::vector<size_t> shape{rows, cols};
-
-    // Allocate new memory and copy the data
-    VectorT *new_data = new VectorT[rows * cols];
-    std::memcpy(new_data, data.data(), data.size() * sizeof(VectorT));
-
-    // Create a capsule to manage memory
-    auto capsule = nb::capsule(
-        new_data, [](void *p) noexcept { delete[] static_cast<VectorT *>(p); });
-
-    // Create and return the ndarray with numpy format
-    return nb::ndarray<VectorT, nb::numpy, nb::c_contig>(new_data, 2,
-                                                         shape.data(), capsule);
-}
-
-/**
  * @brief Register probs method for specific wires with proper data ownership
  *
  * @tparam StateReprT State representation type (e.g., a StateVector, TensorNet)
@@ -527,7 +481,7 @@ probsForWires(Measurements<StateReprT> &M,
               const std::vector<std::size_t> &wires) {
     using PrecisionT = typename StateReprT::PrecisionT;
     auto probs_vec = M.probs(wires);
-    return createArrayFromVector<PrecisionT>(probs_vec);
+    return createNumpyArrayFromVector<PrecisionT>(probs_vec);
 }
 
 /**
@@ -543,7 +497,7 @@ nb::ndarray<typename StateReprT::PrecisionT, nb::numpy, nb::c_contig>
 probsForAllWires(Measurements<StateReprT> &M) {
     using PrecisionT = typename StateReprT::PrecisionT;
     auto probs_vec = M.probs();
-    return createArrayFromVector<PrecisionT>(probs_vec);
+    return createNumpyArrayFromVector<PrecisionT>(probs_vec);
 }
 
 /**
@@ -561,7 +515,8 @@ nb::ndarray<std::size_t, nb::numpy, nb::c_contig>
 generateSamples(Measurements<StateReprT> &M, std::size_t num_wires,
                 std::size_t num_shots) {
     auto result = M.generate_samples(num_shots);
-    return create2DArrayFromVector<std::size_t>(result, num_shots, num_wires);
+    return createNumpyArrayFromVector<std::size_t>(result, num_shots,
+                                                   num_wires);
 }
 
 /**
@@ -607,6 +562,48 @@ void registerBackendAgnosticMeasurements(PyClass &pyclass) {
 }
 
 /**
+ * @brief Create operations list from data
+ *
+ * @tparam StateVectorT State vector type
+ * @param ops_name Operation names
+ * @param ops_params Operation parameters
+ * @param ops_wires Operation wires
+ * @param ops_inverses Operation inverse flags
+ * @param ops_matrices Operation matrices
+ * @param ops_controlled_wires Operation controlled wires
+ * @param ops_controlled_values Operation controlled values
+ * @return OpsData<StateVectorT> Operations data
+ */
+template <class StateVectorT>
+OpsData<StateVectorT> createOpsList(
+    const std::vector<std::string> &ops_name,
+    const std::vector<std::vector<typename StateVectorT::PrecisionT>>
+        &ops_params,
+    const std::vector<std::vector<std::size_t>> &ops_wires,
+    const std::vector<bool> &ops_inverses,
+    const std::vector<nb::ndarray<
+        const std::complex<typename StateVectorT::PrecisionT>, nb::c_contig>>
+        &ops_matrices,
+    const std::vector<std::vector<std::size_t>> &ops_controlled_wires,
+    const std::vector<std::vector<bool>> &ops_controlled_values) {
+
+    using ComplexT = typename StateVectorT::ComplexT;
+    using ParamT = typename StateVectorT::PrecisionT;
+
+    auto conv_matrices =
+        Pennylane::NanoBindings::Utils::convertMatrices<ComplexT, ParamT>(
+            ops_matrices);
+
+    return OpsData<StateVectorT>{ops_name,
+                                 ops_params,
+                                 ops_wires,
+                                 ops_inverses,
+                                 conv_matrices,
+                                 ops_controlled_wires,
+                                 ops_controlled_values};
+}
+
+/**
  * @brief Register agnostic algorithms for statevector simulators.
  *
  * @tparam StateVectorT
@@ -632,71 +629,32 @@ void registerBackendAgnosticAlgorithms(nb::module_ &m) {
     //***********************************************************************//
 
     class_name = "OpsStructC" + bitsize;
-    nb::class_<OpsData<StateVectorT>>(m, class_name.c_str())
-        .def(nb::init<const std::vector<std::string> &,
-                      const std::vector<std::vector<ParamT>> &,
-                      const std::vector<std::vector<std::size_t>> &,
-                      const std::vector<bool> &,
-                      const std::vector<std::vector<ComplexT>> &>())
-        .def(nb::init<const std::vector<std::string> &,
-                      const std::vector<std::vector<ParamT>> &,
-                      const std::vector<std::vector<std::size_t>> &,
-                      const std::vector<bool> &,
-                      const std::vector<std::vector<ComplexT>> &,
-                      const std::vector<std::vector<std::size_t>> &,
-                      const std::vector<std::vector<bool>> &>())
-        .def("__repr__", [](const OpsData<StateVectorT> &ops) {
-            using namespace Pennylane::Util;
-            std::ostringstream ops_stream;
-            for (std::size_t op = 0; op < ops.getSize(); op++) {
-                ops_stream << "{'name': " << ops.getOpsName()[op];
-                ops_stream << ", 'params': " << ops.getOpsParams()[op];
-                ops_stream << ", 'inv': " << ops.getOpsInverses()[op];
-                ops_stream << ", 'controlled_wires': "
-                           << ops.getOpsControlledWires()[op];
-                ops_stream << ", 'controlled_values': "
-                           << ops.getOpsControlledValues()[op];
-                ops_stream << ", 'wires': " << ops.getOpsWires()[op];
-                ops_stream << "}";
-                if (op < ops.getSize() - 1) {
-                    ops_stream << ",";
-                }
-            }
-            return "Operations: [" + ops_stream.str() + "]";
-        });
+    auto ops_class = nb::class_<OpsData<StateVectorT>>(m, class_name.c_str());
+
+    ops_class.def(nb::init<const std::vector<std::string> &,
+                           const std::vector<std::vector<ParamT>> &,
+                           const std::vector<std::vector<std::size_t>> &,
+                           const std::vector<bool> &,
+                           const std::vector<std::vector<ComplexT>> &>());
+
+    ops_class.def(nb::init<const std::vector<std::string> &,
+                           const std::vector<std::vector<ParamT>> &,
+                           const std::vector<std::vector<std::size_t>> &,
+                           const std::vector<bool> &,
+                           const std::vector<std::vector<ComplexT>> &,
+                           const std::vector<std::vector<std::size_t>> &,
+                           const std::vector<std::vector<bool>> &>());
+
+    ops_class.def("__repr__", [](const OpsData<StateVectorT> &ops) {
+        return Pennylane::NanoBindings::Utils::opsDataToString(ops, true);
+    });
 
     /**
      * Create operation list.
      */
     std::string function_name = "create_ops_listC" + bitsize;
-    m.def(
-        function_name.c_str(),
-        [](const std::vector<std::string> &ops_name,
-           const std::vector<std::vector<PrecisionT>> &ops_params,
-           const std::vector<std::vector<std::size_t>> &ops_wires,
-           const std::vector<bool> &ops_inverses,
-           const std::vector<arr_c> &ops_matrices,
-           const std::vector<std::vector<std::size_t>> &ops_controlled_wires,
-           const std::vector<std::vector<bool>> &ops_controlled_values) {
-            std::vector<std::vector<ComplexT>> conv_matrices(
-                ops_matrices.size());
-            for (std::size_t op = 0; op < ops_name.size(); op++) {
-                if (ops_matrices[op].size() > 0) {
-                    const auto *m_ptr = ops_matrices[op].data();
-                    const auto m_size = ops_matrices[op].size();
-                    conv_matrices[op] =
-                        std::vector<ComplexT>(m_ptr, m_ptr + m_size);
-                }
-            }
-            return OpsData<StateVectorT>{ops_name,
-                                         ops_params,
-                                         ops_wires,
-                                         ops_inverses,
-                                         conv_matrices,
-                                         ops_controlled_wires,
-                                         ops_controlled_values};
-        },
-        "Create a list of operations from data.");
+    m.def(function_name.c_str(), &createOpsList<StateVectorT>,
+          "Create a list of operations from data.");
 }
 
 /**
@@ -718,6 +676,45 @@ void registerBackendAgnosticStateVectorMethods(PyClass &pyclass) {
     pyclass.def("__len__", &StateVectorT::getLength,
                 "Get the size of the statevector.");
     pyclass.def("size", &StateVectorT::getLength);
+}
+
+/**
+ * @brief Register controlled gate operations for a statevector.
+ *
+ * @tparam StateVectorT State vector type
+ * @tparam PyClass Nanobind class type
+ * @param pyclass Nanobind class to bind methods to
+ */
+template <class StateVectorT, class PyClass>
+void registerControlledGates(PyClass &pyclass) {
+    using PrecisionT = typename StateVectorT::PrecisionT;
+    using ParamT = PrecisionT;
+
+    using Pennylane::Gates::ControlledGateOperation;
+    using Pennylane::Util::for_each_enum;
+    namespace Constant = Pennylane::Gates::Constant;
+
+    for_each_enum<ControlledGateOperation>(
+        [&pyclass](ControlledGateOperation gate_op) {
+            using Pennylane::Util::lookup;
+            const auto gate_name =
+                std::string(lookup(Constant::controlled_gate_names, gate_op));
+            const std::string doc = "Apply the " + gate_name + " gate.";
+            auto func = [gate_name = gate_name](
+                            StateVectorT &sv,
+                            const std::vector<std::size_t> &controlled_wires,
+                            const std::vector<bool> &controlled_values,
+                            const std::vector<std::size_t> &wires, bool inverse,
+                            const std::vector<ParamT> &params) {
+                sv.applyOperation(gate_name, controlled_wires,
+                                  controlled_values, wires, inverse, params);
+            };
+            pyclass.def(gate_name.c_str(), func, doc.c_str(),
+                        nb::arg("controlled_wires"),
+                        nb::arg("controlled_values"), nb::arg("wires"),
+                        nb::arg("inverse") = false,
+                        nb::arg("params") = std::vector<ParamT>{});
+        });
 }
 
 /**
@@ -747,6 +744,7 @@ template <class StateReprT> void lightningClassBindings(nb::module_ &m) {
 
     // Register gates
     registerGates<StateReprT>(pyclass);
+    registerControlledGates<StateReprT>(pyclass);
 
     // Register backend specific bindings
     registerBackendClassSpecificBindings<StateReprT>(pyclass);
