@@ -96,8 +96,20 @@ using namespace Pennylane::LightningGPU::NanoBindings;
 } // namespace
 
 #elif _ENABLE_PLTENSOR == 1
-static_assert(false,
-              "LightningTensor bindings are not supported in this file.");
+#include "LTensorTNCudaBindings_nb.hpp"
+#include "MeasurementsTNCuda.hpp"
+#include "ObservablesTNCuda.hpp"
+
+#define LIGHTNING_TENSOR_MODULE_NAME lightning_tensor_nb
+
+namespace {
+using namespace Pennylane::LightningTensor::TNCuda;
+using namespace Pennylane::LightningTensor::TNCuda::Observables;
+using namespace Pennylane::LightningTensor::TNCuda::Measures;
+using namespace Pennylane::LightningTensor::TNCuda::NanoBindings;
+} // namespace
+// TODO: remove
+static_assert(false, "Backend not supported for LTensor bindings.");
 
 #else
 static_assert(false, "Backend not found.");
@@ -337,11 +349,19 @@ void registerBackendAgnosticObservables(nb::module_ &m) {
     const std::string bitsize =
         std::to_string(sizeof(std::complex<PrecisionT>) * 8);
 
+#ifdef _ENABLE_PLTENSOR
+    using ObservableT = ObservableTNCuda<LightningBackendT>;
+    using NamedObsT = NamedObsTNCuda<LightningBackendT>;
+    using HermitianObsT = HermitianObsTNCuda<LightningBackendT>;
+    using TensorProdObsT = TensorProdObsTNCuda<LightningBackendT>;
+    using HamiltonianT = HamiltonianTNCuda<LightningBackendT>;
+#else
     using ObservableT = Observable<LightningBackendT>;
     using NamedObsT = NamedObs<LightningBackendT>;
     using HermitianObsT = HermitianObs<LightningBackendT>;
     using TensorProdObsT = TensorProdObs<LightningBackendT>;
     using HamiltonianT = Hamiltonian<LightningBackendT>;
+#endif
 
     std::string class_name;
 
@@ -493,17 +513,17 @@ create2DArrayFromVector(const std::vector<VectorT> &data, std::size_t rows,
 /**
  * @brief Register probs method for specific wires with proper data ownership
  *
- * @tparam StateVectorT State vector type
+ * @tparam StateReprT State representation type (e.g., a StateVector, TensorNet)
  * @param M Measurements object
  * @param wires Vector of wire indices
- * @return nb::ndarray<typename StateVectorT::PrecisionT, nb::numpy,
+ * @return nb::ndarray<typename StateReprT::PrecisionT, nb::numpy,
  * nb::c_contig> Array with probabilities in numpy format
  */
-template <class StateVectorT>
-nb::ndarray<typename StateVectorT::PrecisionT, nb::numpy, nb::c_contig>
-probsForWires(Measurements<StateVectorT> &M,
+template <class StateReprT>
+nb::ndarray<typename StateReprT::PrecisionT, nb::numpy, nb::c_contig>
+probsForWires(Measurements<StateReprT> &M,
               const std::vector<std::size_t> &wires) {
-    using PrecisionT = typename StateVectorT::PrecisionT;
+    using PrecisionT = typename StateReprT::PrecisionT;
     auto probs_vec = M.probs(wires);
     return createArrayFromVector<PrecisionT>(probs_vec);
 }
@@ -511,15 +531,15 @@ probsForWires(Measurements<StateVectorT> &M,
 /**
  * @brief Register probs method for all wires with proper data ownership
  *
- * @tparam StateVectorT State vector type
+ * @tparam StateReprT State representation type (e.g., a StateVector, TensorNet)
  * @param M Measurements object
- * @return nb::ndarray<typename StateVectorT::PrecisionT, nb::numpy,
+ * @return nb::ndarray<typename StateReprT::PrecisionT, nb::numpy,
  * nb::c_contig> Array with probabilities in numpy format
  */
-template <class StateVectorT>
-nb::ndarray<typename StateVectorT::PrecisionT, nb::numpy, nb::c_contig>
-probsForAllWires(Measurements<StateVectorT> &M) {
-    using PrecisionT = typename StateVectorT::PrecisionT;
+template <class StateReprT>
+nb::ndarray<typename StateReprT::PrecisionT, nb::numpy, nb::c_contig>
+probsForAllWires(Measurements<StateReprT> &M) {
+    using PrecisionT = typename StateReprT::PrecisionT;
     auto probs_vec = M.probs();
     return createArrayFromVector<PrecisionT>(probs_vec);
 }
@@ -527,23 +547,24 @@ probsForAllWires(Measurements<StateVectorT> &M) {
 /**
  * @brief Generate samples with proper data ownership
  *
- * @tparam StateVectorT State vector type
+ * @tparam StateReprT State representation type (e.g., a StateVector, TensorNet)
  * @param M Measurements object
  * @param num_wires Number of wires
  * @param num_shots Number of shots
  * @return nb::ndarray<std::size_t, nb::numpy, nb::c_contig> 2D array with
  * samples in numpy format
  */
-template <class StateVectorT>
+template <class StateReprT>
 nb::ndarray<std::size_t, nb::numpy, nb::c_contig>
-generateSamples(Measurements<StateVectorT> &M, std::size_t num_wires,
+generateSamples(Measurements<StateReprT> &M, std::size_t num_wires,
                 std::size_t num_shots) {
     auto result = M.generate_samples(num_shots);
     return create2DArrayFromVector<std::size_t>(result, num_shots, num_wires);
 }
 
 /**
- * @brief Register backend-agnostic measurement class functionalities.
+ * @brief Register backend-agnostic measurement class functionalities for
+ * statevector simulators.
  *
  * @tparam StateVectorT
  * @param pyclass Nanobind's class object to bind measurements
@@ -584,7 +605,7 @@ void registerBackendAgnosticMeasurements(PyClass &pyclass) {
 }
 
 /**
- * @brief Register agnostic algorithms.
+ * @brief Register agnostic algorithms for statevector simulators.
  *
  * @tparam StateVectorT
  * @param m Nanobind module
@@ -700,28 +721,33 @@ void registerBackendAgnosticStateVectorMethods(PyClass &pyclass) {
 /**
  * @brief Templated class to build lightning class bindings.
  *
- * @tparam StateVectorT State vector type
+ * @tparam StateReprT State representation type (e.g., a StateVector, TensorNet)
  * @param m Nanobind module.
  */
-template <class StateVectorT> void lightningClassBindings(nb::module_ &m) {
-    using PrecisionT = typename StateVectorT::PrecisionT;
-    // using ComplexT = typename StateVectorT::ComplexT;
+template <class StateReprT> void lightningClassBindings(nb::module_ &m) {
+    using PrecisionT = typename StateReprT::PrecisionT;
+    // using ComplexT = typename StateReprT::ComplexT;
     // using ParamT = PrecisionT;
 
     const std::string bitsize =
         std::to_string(sizeof(std::complex<PrecisionT>) * 8);
 
+#ifdef _ENABLE_PLTENSOR
+    std::string class_name = "TensorNetC" + bitsize;
+    auto pyclass = nb::class_<StateReprT>(m, class_name.c_str());
+#else
     // StateVector class
     std::string class_name = "StateVectorC" + bitsize;
-    auto pyclass = nb::class_<StateVectorT>(m, class_name.c_str());
-    registerBackendAgnosticStateVectorMethods<StateVectorT>(pyclass);
-    registerBackendSpecificStateVectorMethods<StateVectorT>(pyclass);
+    auto pyclass = nb::class_<StateReprT>(m, class_name.c_str());
+    registerBackendAgnosticStateVectorMethods<StateReprT>(pyclass);
+    registerBackendSpecificStateVectorMethods<StateReprT>(pyclass);
+#endif
 
-    // Register gates for StateVector
-    registerGates<StateVectorT>(pyclass);
+    // Register gates
+    registerGates<StateReprT>(pyclass);
 
     // Register backend specific bindings
-    registerBackendClassSpecificBindings<StateVectorT>(pyclass);
+    registerBackendClassSpecificBindings<StateReprT>(pyclass);
 
     //***********************************************************************//
     //                              Observables
@@ -730,8 +756,11 @@ template <class StateVectorT> void lightningClassBindings(nb::module_ &m) {
     /* Observables submodule */
     nb::module_ obs_submodule =
         m.def_submodule("observables", "Submodule for observables classes.");
-    registerBackendAgnosticObservables<StateVectorT>(obs_submodule);
-    registerBackendSpecificObservables<StateVectorT>(obs_submodule);
+
+#ifndef _ENABLE_PLTENSOR
+    registerBackendAgnosticObservables<StateReprT>(obs_submodule);
+#endif
+    registerBackendSpecificObservables<StateReprT>(obs_submodule);
 
     //***********************************************************************//
     //                              Measurements
@@ -740,11 +769,13 @@ template <class StateVectorT> void lightningClassBindings(nb::module_ &m) {
     /* Measurements class */
     class_name = "MeasurementsC" + bitsize;
     auto pyclass_measurements =
-        nb::class_<Measurements<StateVectorT>>(m, class_name.c_str());
+        nb::class_<Measurements<StateReprT>>(m, class_name.c_str());
 
-    pyclass_measurements.def(nb::init<const StateVectorT &>());
-    registerBackendAgnosticMeasurements<StateVectorT>(pyclass_measurements);
-    registerBackendSpecificMeasurements<StateVectorT>(pyclass_measurements);
+    pyclass_measurements.def(nb::init<const StateReprT &>());
+#ifndef _ENABLE_PLTENSOR
+    registerBackendAgnosticMeasurements<StateReprT>(pyclass_measurements);
+#endif
+    registerBackendSpecificMeasurements<StateReprT>(pyclass_measurements);
 
     //***********************************************************************//
     //                              Algorithms
@@ -753,12 +784,14 @@ template <class StateVectorT> void lightningClassBindings(nb::module_ &m) {
     /* Algorithms submodule */
     nb::module_ alg_submodule = m.def_submodule(
         "algorithms", "Submodule for the algorithms functionality.");
-    registerBackendAgnosticAlgorithms<StateVectorT>(alg_submodule);
-    registerBackendSpecificAlgorithms<StateVectorT>(alg_submodule);
+#ifndef _ENABLE_PLTENSOR
+    registerBackendAgnosticAlgorithms<StateReprT>(alg_submodule);
+#endif
+    registerBackendSpecificAlgorithms<StateReprT>(alg_submodule);
 }
 
 /**
- * @brief Register lightning class bindings for all (statevector) backends.
+ * @brief Register lightning class bindings for all backends.
  *
  * @tparam TypeList List of backend types
  * @param m Nanobind module
@@ -766,8 +799,8 @@ template <class StateVectorT> void lightningClassBindings(nb::module_ &m) {
 template <typename TypeList>
 void registerLightningClassBindings(nb::module_ &m) {
     if constexpr (!std::is_same_v<TypeList, void>) {
-        using StateVectorT = typename TypeList::Type;
-        lightningClassBindings<StateVectorT>(m);
+        using StateReprT = typename TypeList::Type;
+        lightningClassBindings<StateReprT>(m);
         registerLightningClassBindings<typename TypeList::Next>(m);
     }
 }

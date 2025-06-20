@@ -62,11 +62,10 @@ void applyControlledMatrix(
     const std::vector<bool> &controlled_values,
     const std::vector<std::size_t> &target_wires, bool inverse = false) {
     using ComplexT = typename TensorNet::ComplexT;
-    const auto m_buffer = matrix.request();
     std::vector<ComplexT> conv_matrix;
-    if (m_buffer.size) {
-        const auto m_ptr = static_cast<const ComplexT *>(m_buffer.ptr);
-        conv_matrix = std::vector<ComplexT>{m_ptr, m_ptr + m_buffer.size};
+    if (matrix.size()) {
+        conv_matrix =
+            std::vector<ComplexT>{matrix.data(), matrix.data() + matrix.size()};
     }
 
     tensor_network.applyControlledOperation(
@@ -232,7 +231,6 @@ void registerBackendClassSpecificBindingsExactTNCuda(PyClass &pyclass) {
  */
 template <class TensorNet, class PyClass>
 void registerBackendClassSpecificBindings(PyClass &pyclass) {
-    registerGatesForTensorNet<TensorNet>(pyclass);
     registerControlledGate<TensorNet, PyClass>(pyclass);
 
     if constexpr (std::is_same_v<TensorNet, MPSTNCuda<double>> ||

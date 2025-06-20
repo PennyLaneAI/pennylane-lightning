@@ -17,13 +17,13 @@
  * Implements device-agnostic operations to export to Python using Nanobind.
  */
 
+#include "BindingsTensor_nb.hpp"
 #include "CPUMemoryModel.hpp"
 #include "Memory.hpp"
 
 namespace Pennylane::NanoBindings {
 
 #if defined(LIGHTNING_MODULE_NAME)
-#include "Bindings_nb.hpp"
 
 /**
  * @brief Add Lightning State-vector C++ classes, methods and functions to
@@ -50,8 +50,6 @@ NB_MODULE(LIGHTNING_MODULE_NAME, m) {
 #endif
 
 #if defined(LIGHTNING_TENSOR_MODULE_NAME)
-#include "BindingsTensor_nb.hpp"
-
 /**
  * @brief Add LightningTensor C++ classes, methods and functions to Python
  * module.
@@ -60,7 +58,7 @@ NB_MODULE(LIGHTNING_TENSOR_MODULE_NAME, m) {
     // Register bindings for backend-specific info:
     registerBackendSpecificInfo(m);
 
-    registerLightningTensorClassBindings<TensorNetworkBackends>(m);
+    registerLightningClassBindings<TensorNetworkBackends>(m);
 }
 #endif
 } // namespace Pennylane::NanoBindings
