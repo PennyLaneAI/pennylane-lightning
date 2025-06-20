@@ -476,8 +476,7 @@ nb::ndarray<typename StateVectorT::PrecisionT, nb::numpy, nb::c_contig>
 probsForWires(Measurements<StateVectorT> &M,
               const std::vector<std::size_t> &wires) {
     using PrecisionT = typename StateVectorT::PrecisionT;
-    auto probs_vec = M.probs(wires);
-    return createNumpyArrayFromVector<PrecisionT>(probs_vec);
+    return createNumpyArrayFromVector<PrecisionT>(M.probs(wires));
 }
 
 /**
@@ -492,8 +491,7 @@ template <class StateVectorT>
 nb::ndarray<typename StateVectorT::PrecisionT, nb::numpy, nb::c_contig>
 probsForAllWires(Measurements<StateVectorT> &M) {
     using PrecisionT = typename StateVectorT::PrecisionT;
-    auto probs_vec = M.probs();
-    return createNumpyArrayFromVector<PrecisionT>(probs_vec);
+    return createNumpyArrayFromVector<PrecisionT>(M.probs());
 }
 
 /**
@@ -510,9 +508,8 @@ template <class StateVectorT>
 nb::ndarray<std::size_t, nb::numpy, nb::c_contig>
 generateSamples(Measurements<StateVectorT> &M, std::size_t num_wires,
                 std::size_t num_shots) {
-    auto result = M.generate_samples(num_shots);
-    return createNumpyArrayFromVector<std::size_t>(result, num_shots,
-                                                   num_wires);
+    return createNumpyArrayFromVector<std::size_t>(
+        M.generate_samples(num_shots), num_shots, num_wires);
 }
 
 /**
