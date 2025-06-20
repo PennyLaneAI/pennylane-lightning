@@ -1,4 +1,4 @@
-name: Testing::x86_64::LK-MPI-MPI::Python
+name: Testing::x86_64::LK-MPI-CUDA::Python
 on:
   workflow_call:
     inputs:
