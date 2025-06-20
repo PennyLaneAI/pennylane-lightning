@@ -113,10 +113,6 @@ void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
     // Add other methods (resetStateVector, setBasisState, etc.)
     pyclass.def("resetStateVector", &StateVectorT::resetStateVector,
                 "Reset the state vector to |0...0>.");
-
-    pyclass.def("updateData", &updateStateVectorData<StateVectorT>,
-                "Update the state vector data from an array.",
-                nb::arg("state"));
     pyclass.def(
         "setBasisState",
         [](StateVectorT &sv, const std::vector<std::size_t> &state,
