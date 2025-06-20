@@ -146,6 +146,8 @@ void registerMatrix(
     using ComplexT = typename StateVectorT::ComplexT;
     using Pennylane::Util::PL_reinterpret_cast;
 
+    PL_ASSERT(matrix.size() == Util::exp2(2 * wires.size()));
+
     // Cast to raw pointer
     auto *data_ptr = PL_reinterpret_cast<const ComplexT>(matrix.data());
     st.applyMatrix(data_ptr, wires, inverse);
@@ -534,7 +536,7 @@ probsForWires(Measurements<StateVectorT> &M,
               const std::vector<std::size_t> &wires) {
     using PrecisionT = typename StateVectorT::PrecisionT;
     auto probs_vec = M.probs(wires);
-    return createArrayFromVector<PrecisionT>(probs_vec);
+    return createNumpyArrayFromVector<PrecisionT>(probs_vec);
 }
 
 /**
@@ -550,7 +552,7 @@ nb::ndarray<typename StateVectorT::PrecisionT, nb::numpy, nb::c_contig>
 probsForAllWires(Measurements<StateVectorT> &M) {
     using PrecisionT = typename StateVectorT::PrecisionT;
     auto probs_vec = M.probs();
-    return createArrayFromVector<PrecisionT>(probs_vec);
+    return createNumpyArrayFromVector<PrecisionT>(probs_vec);
 }
 
 /**
@@ -568,7 +570,7 @@ nb::ndarray<std::size_t, nb::numpy, nb::c_contig>
 generateSamples(Measurements<StateVectorT> &M, std::size_t num_wires,
                 std::size_t num_shots) {
     auto result = M.generate_samples(num_shots);
-    return create2DArrayFromVector<std::size_t>(result, num_shots, num_wires);
+    return createNumpyArrayFromVector<std::size_t>(result, num_shots, num_wires);
 }
 
 /**
