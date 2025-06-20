@@ -122,7 +122,7 @@ The ``lightning.kokkos`` device supports distributed simulation using the Messag
 
 To utilize distributed simulation, ``lightning.kokkos`` must be compiled with MPI support. Check out the :doc:`/lightning_kokkos/installation` guide for more information.
 
-With ``lightning.kokkos`` installed with MPI support, this can be enabled in Pennylane by setting the `mpi` keyword argument to `True` when creating the device. For example:
+With ``lightning.kokkos`` installed with MPI support, this can be enabled in Pennylane by setting the ``mpi`` keyword argument to ``True`` when creating the device. For example:
 
 .. code-block:: python
 
