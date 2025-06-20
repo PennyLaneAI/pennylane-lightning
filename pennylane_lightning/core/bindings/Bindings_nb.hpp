@@ -36,8 +36,8 @@
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/vector.h>
 
-#include "CPUMemoryModel.hpp" // CPUMemoryModel, bestCPUMemoryModel
 #include "BindingsUtils_nb.hpp"
+#include "CPUMemoryModel.hpp" // CPUMemoryModel, bestCPUMemoryModel
 #include "Constant.hpp"
 #include "ConstantUtil.hpp" // lookup
 #include "GateOperation.hpp"
@@ -125,9 +125,9 @@ static_assert(false, "Backend not found.");
 
 /// @cond DEV
 namespace {
+using Pennylane::NanoBindings::Utils::createNumpyArrayFromVector;
 using Pennylane::Util::bestCPUMemoryModel;
 using Pennylane::Util::CPUMemoryModel;
-using Pennylane::NanoBindings::Utils::createNumpyArrayFromVector;
 } // namespace
 /// @endcond
 
