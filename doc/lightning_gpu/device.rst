@@ -167,7 +167,7 @@ With ``lightning.gpu`` installed with MPI support, this can be enabled in Pennyl
 
 Currently, a ``lightning.gpu`` device with the MPI multi-GPU backend supports all the ``gate operations`` and ``observables`` that a ``lightning.gpu`` device with a single GPU/node backend supports.
 
-By default, each MPI process will return the overall simulation results, except for the ``qml.state()`` and ``qml.prob()`` methods for which each MPI process only returns the local simulation
+By default, each MPI process will return the overall simulation results, except for the ``qml.state()`` and ``qml.probs()`` methods for which each MPI process only returns the local simulation
 results for the ``qml.state()`` and ``qml.prob()`` methods to avoid buffer overflow. It is the user's responsibility to ensure correct data collection for those two methods. Here are examples of collecting
 the local simulation results for ``qml.state()`` and ``qml.prob()`` methods:
 
