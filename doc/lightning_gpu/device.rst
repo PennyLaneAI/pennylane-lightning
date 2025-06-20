@@ -149,7 +149,7 @@ The ``lightning.gpu`` device allows users to leverage the computational power of
 
 To utilize distributed simulation, ``lightning.gpu`` must be compiled with MPI support. Check out the :doc:`/lightning_gpu/installation` guide for more information.
 
-With ``lightning.gpu`` installed with MPI support, this can be enabled in Pennylane by setting the `mpi` keyword argument to `True` when creating the device. For example:
+With ``lightning.gpu`` installed with MPI support, this can be enabled in Pennylane by setting the ``mpi`` keyword argument to ``True`` when creating the device. For example:
 
 .. code-block:: python
 
