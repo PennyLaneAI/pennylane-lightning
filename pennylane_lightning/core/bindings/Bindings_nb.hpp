@@ -511,7 +511,8 @@ nb::ndarray<std::size_t, nb::numpy, nb::c_contig>
 generateSamples(Measurements<StateVectorT> &M, std::size_t num_wires,
                 std::size_t num_shots) {
     auto result = M.generate_samples(num_shots);
-    return createNumpyArrayFromVector<std::size_t>(result, num_shots, num_wires);
+    return createNumpyArrayFromVector<std::size_t>(result, num_shots,
+                                                   num_wires);
 }
 
 /**
@@ -649,7 +650,6 @@ void registerBackendAgnosticAlgorithms(nb::module_ &m) {
     std::string function_name = "create_ops_listC" + bitsize;
     m.def(function_name.c_str(), &createOpsList<StateVectorT>,
           "Create a list of operations from data.");
-
 }
 
 /**
