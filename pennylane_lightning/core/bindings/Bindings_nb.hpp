@@ -463,65 +463,6 @@ void registerBackendAgnosticObservables(nb::module_ &m) {
 }
 
 /**
- * @brief Create an array from a vector of data with proper ownership transfer
- *
- * @tparam VectorT Data type of the vector elements
- * @param data Vector containing the data to transfer
- * @return nb::ndarray<VectorT, nb::numpy, nb::c_contig> Array with copied data
- * in numpy format
- */
-template <typename VectorT>
-nb::ndarray<VectorT, nb::numpy, nb::c_contig>
-createArrayFromVector(const std::vector<VectorT> &data) {
-    const std::size_t size = data.size();
-
-    // Create a new array with the right size
-    std::vector<size_t> shape{size};
-
-    // Allocate new memory and copy the data
-    VectorT *new_data = new VectorT[size];
-    std::memcpy(new_data, data.data(), size * sizeof(VectorT));
-
-    // Create a capsule to manage memory
-    auto capsule = nb::capsule(
-        new_data, [](void *p) noexcept { delete[] static_cast<VectorT *>(p); });
-
-    // Create and return the ndarray with numpy format
-    return nb::ndarray<VectorT, nb::numpy, nb::c_contig>(new_data, shape.size(),
-                                                         shape.data(), capsule);
-}
-
-/**
- * @brief Create a 2D array from a vector of data with proper ownership transfer
- *
- * @tparam VectorT Data type of the vector elements
- * @param data Vector containing the data to transfer
- * @param rows Number of rows in the resulting 2D array
- * @param cols Number of columns in the resulting 2D array
- * @return nb::ndarray<VectorT, nb::numpy, nb::c_contig> 2D array with copied
- * data in numpy format
- */
-template <typename VectorT>
-nb::ndarray<VectorT, nb::numpy, nb::c_contig>
-create2DArrayFromVector(const std::vector<VectorT> &data, std::size_t rows,
-                        std::size_t cols) {
-    // Create a new array with the right size
-    std::vector<size_t> shape{rows, cols};
-
-    // Allocate new memory and copy the data
-    VectorT *new_data = new VectorT[rows * cols];
-    std::memcpy(new_data, data.data(), data.size() * sizeof(VectorT));
-
-    // Create a capsule to manage memory
-    auto capsule = nb::capsule(
-        new_data, [](void *p) noexcept { delete[] static_cast<VectorT *>(p); });
-
-    // Create and return the ndarray with numpy format
-    return nb::ndarray<VectorT, nb::numpy, nb::c_contig>(new_data, 2,
-                                                         shape.data(), capsule);
-}
-
-/**
  * @brief Register probs method for specific wires with proper data ownership
  *
  * @tparam StateVectorT State vector type
