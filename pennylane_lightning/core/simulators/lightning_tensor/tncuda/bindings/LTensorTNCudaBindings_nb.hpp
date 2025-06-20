@@ -27,6 +27,7 @@
 #include <nanobind/nanobind.h>
 #include <nanobind/ndarray.h>
 #include <nanobind/stl/complex.h>
+// #include <nanobind/stl/shared_ptr.h>
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/vector.h>
 
@@ -73,41 +74,12 @@ void applyControlledMatrix(
         target_wires, inverse, {}, conv_matrix);
 }
 
-template <class TensorNet, class PyClass>
-void registerControlledGate(PyClass &pyclass) {
-    using PrecisionT = typename TensorNet::PrecisionT; // TensorNet's precision
-    using ParamT = PrecisionT; // Parameter's data precision
-
-    using Pennylane::Gates::ControlledGateOperation;
-    using Pennylane::Util::for_each_enum;
-    namespace Constant = Pennylane::Gates::Constant;
-
-    for_each_enum<ControlledGateOperation>(
-        [&pyclass](ControlledGateOperation gate_op) {
-            using Pennylane::Util::lookup;
-            const auto gate_name =
-                std::string(lookup(Constant::controlled_gate_names, gate_op));
-            const std::string doc = "Apply the " + gate_name + " gate.";
-            auto func = [gate_name = gate_name](
-                            TensorNet &tensor_network,
-                            const std::vector<std::size_t> &controlled_wires,
-                            const std::vector<bool> &controlled_values,
-                            const std::vector<std::size_t> &target_wires,
-                            bool inverse, const std::vector<ParamT> &params) {
-                tensor_network.applyControlledOperation(
-                    gate_name, controlled_wires, controlled_values,
-                    target_wires, inverse, params);
-            };
-            pyclass.def(gate_name.c_str(), func, doc.c_str());
-        });
-}
-
 /**
  * @brief Get a gate kernel map for a tensor network using MPS.
  *
  * @tparam TensorNetT
  * @tparam PyClass
- * @param pyclass Nanobind's measurements class to bind methods.
+ * @param pyclass Nanobind's tensornet class to bind methods.
  */
 template <class TensorNet, class PyClass>
 void registerBackendClassSpecificBindingsMPS(PyClass &pyclass) {
@@ -186,7 +158,7 @@ void registerBackendClassSpecificBindingsMPS(PyClass &pyclass) {
  *
  * @tparam TensorNetT
  * @tparam PyClass
- * @param pyclass Nanobind's measurements class to bind methods.
+ * @param pyclass Nanobind's tensornet class to bind methods.
  */
 template <class TensorNet, class PyClass>
 void registerBackendClassSpecificBindingsExactTNCuda(PyClass &pyclass) {
@@ -227,12 +199,10 @@ void registerBackendClassSpecificBindingsExactTNCuda(PyClass &pyclass) {
  * @brief Get a controlled matrix and kernel map for a statevector.
  * @tparam TensorNet
  * @tparam PyClass
- * @param pyclass Nanobind's measurements class to bind methods.
+ * @param pyclass Nanobind's tensornet class to bind methods.
  */
 template <class TensorNet, class PyClass>
 void registerBackendClassSpecificBindings(PyClass &pyclass) {
-    registerControlledGate<TensorNet, PyClass>(pyclass);
-
     if constexpr (std::is_same_v<TensorNet, MPSTNCuda<double>> ||
                   std::is_same_v<TensorNet, MPSTNCuda<float>>) {
         registerBackendClassSpecificBindingsMPS<TensorNet>(pyclass);
@@ -251,7 +221,49 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
  * @param pyclass Nanobind's measurements class to bind methods.
  */
 template <class StateVectorT, class PyClass>
-void registerBackendSpecificMeasurements(PyClass &) {} // pyclass
+void registerBackendSpecificMeasurements(PyClass &pyclass) {
+    // using MeasurementsT = MeasurementsTNCuda<TensorNetT>;
+    // using ObservableT = ObservableTNCuda<TensorNetT>;
+    // pyclass.def(
+    //         "expval",
+    //         [](MeasurementsT &M, const std::shared_ptr<ObservableT> &ob) {
+    //             return M.expval(*ob);
+    //         },
+    //         "Expected value of an observable object.");
+    // pyclass.def(
+    //         "probs",
+    //         [](MeasurementsT &M, const std::vector<std::size_t> &wires) {
+    //             return py::array_t<typename TensorNetT::PrecisionT>(
+    //                 py::cast(M.probs(wires)));
+    //         },
+    //         "Probabilities of a set of wires.")
+    // pyclass.def(
+    //         "var",
+    //         [](MeasurementsT &M, const std::shared_ptr<ObservableT> &ob) {
+    //             return M.var(*ob);
+    //         },
+    //         "Variance of an observable object.");
+    // pyclass.def("generate_samples", [](MeasurementsT &M,
+    //                                 const std::vector<std::size_t> &wires,
+    //                                 std::size_t num_shots) {
+    //         constexpr auto sz = sizeof(std::size_t);
+    //         const std::size_t num_wires = wires.size();
+    //         const std::size_t ndim = 2;
+    //         const std::vector<std::size_t> shape{num_shots, num_wires};
+    //         auto &&result = M.generate_samples(wires, num_shots);
+
+    //         const std::vector<std::size_t> strides{sz * num_wires, sz};
+    //         // return 2-D NumPy array
+    //         return py::array(py::buffer_info(
+    //             result.data(), /* data as contiguous array  */
+    //             sz,            /* size of one scalar        */
+    //             py::format_descriptor<std::size_t>::format(), /* data type */
+    //             ndim,   /* number of dimensions      */
+    //             shape,  /* shape of the matrix       */
+    //             strides /* strides for each axis     */
+    //             ));
+    //     });
+} // pyclass
 
 /**
  * @brief Register backend specific observables.

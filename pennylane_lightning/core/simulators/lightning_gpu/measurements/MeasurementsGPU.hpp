@@ -64,15 +64,15 @@ template <class StateVectorT>
 class Measurements final
     : public MeasurementsBase<StateVectorT, Measurements<StateVectorT>> {
   private:
-    using PrecisionT = typename StateVectorT::PrecisionT;
-    using ComplexT = typename StateVectorT::ComplexT;
-    using BaseType = MeasurementsBase<StateVectorT, Measurements<StateVectorT>>;
-    using CFP_t = decltype(cuUtil::getCudaType(PrecisionT{}));
     cudaDataType_t data_type_;
 
     GateCache<PrecisionT> gate_cache_;
 
   public:
+    using PrecisionT = typename StateVectorT::PrecisionT;
+    using ComplexT = typename StateVectorT::ComplexT;
+    using BaseType = MeasurementsBase<StateVectorT, Measurements<StateVectorT>>;
+    using CFP_t = decltype(cuUtil::getCudaType(PrecisionT{}));
     explicit Measurements(StateVectorT &statevector)
         : BaseType{statevector},
           gate_cache_(true, statevector.getDataBuffer().getDevTag()) {

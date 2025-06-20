@@ -73,11 +73,10 @@ template <class StateVectorT>
 class Measurements final
     : public MeasurementsBase<StateVectorT, Measurements<StateVectorT>> {
   private:
+  public:
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
     using BaseType = MeasurementsBase<StateVectorT, Measurements<StateVectorT>>;
-
-  public:
     explicit Measurements(const StateVectorT &statevector)
         : BaseType{statevector} {};
 

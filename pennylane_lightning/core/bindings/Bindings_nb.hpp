@@ -119,10 +119,6 @@ using namespace Pennylane::LightningTensor::TNCuda::NanoBindings;
 } // namespace
 /// @endcond
 
-template <typename T> using Measurements = MeasurementsTNCuda<T>;
-// template<typename T>
-// using Observable = ObservableTNCuda<T>;
-
 #else
 static_assert(false, "Backend not found.");
 #endif
@@ -470,101 +466,6 @@ void registerBackendAgnosticObservables(nb::module_ &m) {
 }
 
 /**
- * @brief Register probs method for specific wires with proper data ownership
- *
- * @tparam StateReprT State representation type (e.g., a StateVector, TensorNet)
- * @param M Measurements object
- * @param wires Vector of wire indices
- * @return nb::ndarray<typename StateReprT::PrecisionT, nb::numpy,
- * nb::c_contig> Array with probabilities in numpy format
- */
-template <class StateReprT>
-nb::ndarray<typename StateReprT::PrecisionT, nb::numpy, nb::c_contig>
-probsForWires(Measurements<StateReprT> &M,
-              const std::vector<std::size_t> &wires) {
-    using PrecisionT = typename StateReprT::PrecisionT;
-    auto probs_vec = M.probs(wires);
-    return createNumpyArrayFromVector<PrecisionT>(probs_vec);
-}
-
-/**
- * @brief Register probs method for all wires with proper data ownership
- *
- * @tparam StateReprT State representation type (e.g., a StateVector, TensorNet)
- * @param M Measurements object
- * @return nb::ndarray<typename StateReprT::PrecisionT, nb::numpy,
- * nb::c_contig> Array with probabilities in numpy format
- */
-template <class StateReprT>
-nb::ndarray<typename StateReprT::PrecisionT, nb::numpy, nb::c_contig>
-probsForAllWires(Measurements<StateReprT> &M) {
-    using PrecisionT = typename StateReprT::PrecisionT;
-    auto probs_vec = M.probs();
-    return createNumpyArrayFromVector<PrecisionT>(probs_vec);
-}
-
-/**
- * @brief Generate samples with proper data ownership
- *
- * @tparam StateReprT State representation type (e.g., a StateVector, TensorNet)
- * @param M Measurements object
- * @param num_wires Number of wires
- * @param num_shots Number of shots
- * @return nb::ndarray<std::size_t, nb::numpy, nb::c_contig> 2D array with
- * samples in numpy format
- */
-template <class StateReprT>
-nb::ndarray<std::size_t, nb::numpy, nb::c_contig>
-generateSamples(Measurements<StateReprT> &M, std::size_t num_wires,
-                std::size_t num_shots) {
-    auto result = M.generate_samples(num_shots);
-    return createNumpyArrayFromVector<std::size_t>(result, num_shots,
-                                                   num_wires);
-}
-
-/**
- * @brief Register backend-agnostic measurement class functionalities for
- * statevector simulators.
- *
- * @tparam StateVectorT
- * @param pyclass Nanobind's class object to bind measurements
- */
-template <class StateVectorT, class PyClass>
-void registerBackendAgnosticMeasurements(PyClass &pyclass) {
-    // Add probs method for specific wires
-    pyclass.def("probs", &probsForWires<StateVectorT>,
-                "Calculate probabilities for specific wires.");
-
-    // Add probs method for all wires
-    pyclass.def("probs", &probsForAllWires<StateVectorT>,
-                "Calculate probabilities for all wires.");
-
-    // Add expval method for observable
-    pyclass.def(
-        "expval",
-        [](Measurements<StateVectorT> &M, const Observable<StateVectorT> &obs) {
-            return M.expval(obs);
-        },
-        "Calculate expectation value for an observable.");
-
-    // Add var method for observable
-    pyclass.def(
-        "var",
-        [](Measurements<StateVectorT> &M, const Observable<StateVectorT> &obs) {
-            return M.var(obs);
-        },
-        "Calculate variance for an observable.");
-
-    // Add generate_samples method
-    pyclass.def("generate_samples", &generateSamples<StateVectorT>,
-                "Generate samples for all wires.");
-
-    // Set random seed
-    pyclass.def("set_random_seed", [](Measurements<StateVectorT> &M,
-                                      std::size_t seed) { M.setSeed(seed); });
-}
-
-/**
  * @brief Create operations list from data
  *
  * @tparam StateVectorT State vector type
@@ -683,6 +584,105 @@ void registerBackendAgnosticStateVectorMethods(PyClass &pyclass) {
 #endif
 
 /**
+ * @brief Register probs method for specific wires with proper data ownership
+ *
+ * @tparam StateReprT State representation type (e.g., a StateVector, TensorNet)
+ * @param M Measurements object
+ * @param wires Vector of wire indices
+ * @return nb::ndarray<typename StateReprT::PrecisionT, nb::numpy,
+ * nb::c_contig> Array with probabilities in numpy format
+ */
+template <class MeasurementsT>
+nb::ndarray<typename MeasurementsT::PrecisionT, nb::numpy, nb::c_contig>
+probsForWires(MeasurementsT &M, const std::vector<std::size_t> &wires) {
+    using PrecisionT = typename MeasurementsT::PrecisionT;
+    auto probs_vec = M.probs(wires);
+    return createNumpyArrayFromVector<PrecisionT>(probs_vec);
+}
+
+/**
+ * @brief Register probs method for all wires with proper data ownership
+ *
+ * @tparam StateReprT State representation type (e.g., a StateVector, TensorNet)
+ * @param M Measurements object
+ * @return nb::ndarray<typename StateReprT::PrecisionT, nb::numpy,
+ * nb::c_contig> Array with probabilities in numpy format
+ */
+template <class MeasurementsT>
+nb::ndarray<typename MeasurementsT::PrecisionT, nb::numpy, nb::c_contig>
+probsForAllWires(MeasurementsT &M) {
+    using PrecisionT = typename MeasurementsT::PrecisionT;
+    auto probs_vec = M.probs();
+    return createNumpyArrayFromVector<PrecisionT>(probs_vec);
+}
+
+/**
+ * @brief Generate samples with proper data ownership
+ *
+ * @tparam StateReprT State representation type (e.g., a StateVector, TensorNet)
+ * @param M Measurements object
+ * @param num_wires Number of wires
+ * @param num_shots Number of shots
+ * @return nb::ndarray<std::size_t, nb::numpy, nb::c_contig> 2D array with
+ * samples in numpy format
+ */
+template <class MeasurementsT>
+nb::ndarray<std::size_t, nb::numpy, nb::c_contig>
+generateSamples(MeasurementsT &M, std::size_t num_wires,
+                std::size_t num_shots) {
+    auto result = M.generate_samples(num_shots);
+    return createNumpyArrayFromVector<std::size_t>(result, num_shots,
+                                                   num_wires);
+}
+
+/**
+ * @brief Register backend-agnostic measurement class functionalities for
+ * statevector simulators.
+ *
+ * @tparam StateVectorT
+ * @param pyclass Nanobind's class object to bind measurements
+ */
+template <class MeasurementsT, class ObservableT, class PyClass>
+void registerBackendAgnosticMeasurements(PyClass &pyclass) {
+    // These functions are common to all *statevector* simulators
+#ifndef _ENABLE_PLTENSOR
+    // Set random seed
+    pyclass.def("set_random_seed",
+                [](MeasurementsT &M, std::size_t seed) { M.setSeed(seed); });
+
+    // Add probs method for all wires
+    pyclass.def("probs", &probsForAllWires<MeasurementsT>,
+                "Calculate probabilities for all wires.");
+
+    // Add generate_samples method
+    pyclass.def("generate_samples", &generateSamples<MeasurementsT>,
+                "Generate samples for all wires.");
+#endif
+
+    // Add probs method for specific wires
+    pyclass.def("probs", &probsForWires<MeasurementsT>,
+                "Calculate probabilities for specific wires.");
+
+    // Add expval method for observable
+    pyclass.def(
+        "expval",
+        [](MeasurementsT &M, const std::shared_ptr<ObservableT> &ob) {
+            return M.expval(*ob);
+        },
+        "Expected value of an observable object.");
+
+    // Add var method for observable
+    pyclass.def(
+        "var",
+        [](MeasurementsT &M, const std::shared_ptr<ObservableT> &ob) {
+            return M.var(*ob);
+        },
+        "Calculate variance for an observable.");
+
+    // TODO: generate_samples method for specific wires for ltensor
+}
+
+/**
  * @brief Register controlled gate operations.
  *
  * @tparam StateReprT State representation type
@@ -771,15 +771,22 @@ template <class StateReprT> void lightningClassBindings(nb::module_ &m) {
     //                              Measurements
     //***********************************************************************//
 
+#ifdef _ENABLE_PLTENSOR
+    using MeasurementsT = MeasurementsTNCuda<StateReprT>;
+    using ObservableT = ObservableTNCuda<StateReprT>;
+#else
+    using MeasurementsT = Measurements<StateReprT>;
+    using ObservableT = Observable<StateReprT>;
+#endif
+
     /* Measurements class */
     class_name = "MeasurementsC" + bitsize;
     auto pyclass_measurements =
-        nb::class_<Measurements<StateReprT>>(m, class_name.c_str());
+        nb::class_<MeasurementsT>(m, class_name.c_str());
 
     pyclass_measurements.def(nb::init<const StateReprT &>());
-#ifndef _ENABLE_PLTENSOR
-    registerBackendAgnosticMeasurements<StateReprT>(pyclass_measurements);
-#endif
+    registerBackendAgnosticMeasurements<MeasurementsT, ObservableT>(
+        pyclass_measurements);
     registerBackendSpecificMeasurements<StateReprT>(pyclass_measurements);
 
     //***********************************************************************//

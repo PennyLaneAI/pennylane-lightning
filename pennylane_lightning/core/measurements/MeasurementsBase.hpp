@@ -47,10 +47,6 @@ namespace Pennylane::Measures {
  * @tparam Derived
  */
 template <class StateVectorT, class Derived> class MeasurementsBase {
-  private:
-    using PrecisionT = typename StateVectorT::PrecisionT;
-    using ComplexT = typename StateVectorT::ComplexT;
-
   protected:
 #ifdef _ENABLE_PLGPU
     StateVectorT &_statevector;
@@ -62,6 +58,9 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
     std::mt19937 _rng;
 
   public:
+    using PrecisionT = typename StateVectorT::PrecisionT;
+    using ComplexT = typename StateVectorT::ComplexT;
+
 #ifdef _ENABLE_PLGPU
     explicit MeasurementsBase(StateVectorT &statevector)
         : _statevector{statevector} {};
