@@ -557,7 +557,7 @@ void registerBackendAgnosticMeasurements(PyClass &pyclass) {
 
 /**
  * @brief Create operations list from data
- * 
+ *
  * @tparam StateVectorT State vector type
  * @param ops_name Operation names
  * @param ops_params Operation parameters
@@ -571,25 +571,30 @@ void registerBackendAgnosticMeasurements(PyClass &pyclass) {
 template <class StateVectorT>
 OpsData<StateVectorT> createOpsList(
     const std::vector<std::string> &ops_name,
-    const std::vector<std::vector<typename StateVectorT::PrecisionT>> &ops_params,
+    const std::vector<std::vector<typename StateVectorT::PrecisionT>>
+        &ops_params,
     const std::vector<std::vector<std::size_t>> &ops_wires,
     const std::vector<bool> &ops_inverses,
-    const std::vector<nb::ndarray<const std::complex<typename StateVectorT::PrecisionT>, nb::c_contig>> &ops_matrices,
+    const std::vector<nb::ndarray<
+        const std::complex<typename StateVectorT::PrecisionT>, nb::c_contig>>
+        &ops_matrices,
     const std::vector<std::vector<std::size_t>> &ops_controlled_wires,
     const std::vector<std::vector<bool>> &ops_controlled_values) {
-    
+
     using ComplexT = typename StateVectorT::ComplexT;
     using ParamT = typename StateVectorT::PrecisionT;
-    
-    auto conv_matrices = Pennylane::NanoBindings::Utils::convertMatrices<ComplexT, ParamT>(ops_matrices);
-    
+
+    auto conv_matrices =
+        Pennylane::NanoBindings::Utils::convertMatrices<ComplexT, ParamT>(
+            ops_matrices);
+
     return OpsData<StateVectorT>{ops_name,
-                                ops_params,
-                                ops_wires,
-                                ops_inverses,
-                                conv_matrices,
-                                ops_controlled_wires,
-                                ops_controlled_values};
+                                 ops_params,
+                                 ops_wires,
+                                 ops_inverses,
+                                 conv_matrices,
+                                 ops_controlled_wires,
+                                 ops_controlled_values};
 }
 
 /**
@@ -619,21 +624,21 @@ void registerBackendAgnosticAlgorithms(nb::module_ &m) {
 
     class_name = "OpsStructC" + bitsize;
     auto ops_class = nb::class_<OpsData<StateVectorT>>(m, class_name.c_str());
-    
+
     ops_class.def(nb::init<const std::vector<std::string> &,
-                  const std::vector<std::vector<ParamT>> &,
-                  const std::vector<std::vector<std::size_t>> &,
-                  const std::vector<bool> &,
-                  const std::vector<std::vector<ComplexT>> &>());
-    
+                           const std::vector<std::vector<ParamT>> &,
+                           const std::vector<std::vector<std::size_t>> &,
+                           const std::vector<bool> &,
+                           const std::vector<std::vector<ComplexT>> &>());
+
     ops_class.def(nb::init<const std::vector<std::string> &,
-                  const std::vector<std::vector<ParamT>> &,
-                  const std::vector<std::vector<std::size_t>> &,
-                  const std::vector<bool> &,
-                  const std::vector<std::vector<ComplexT>> &,
-                  const std::vector<std::vector<std::size_t>> &,
-                  const std::vector<std::vector<bool>> &>());
-    
+                           const std::vector<std::vector<ParamT>> &,
+                           const std::vector<std::vector<std::size_t>> &,
+                           const std::vector<bool> &,
+                           const std::vector<std::vector<ComplexT>> &,
+                           const std::vector<std::vector<std::size_t>> &,
+                           const std::vector<std::vector<bool>> &>());
+
     ops_class.def("__repr__", [](const OpsData<StateVectorT> &ops) {
         return Pennylane::NanoBindings::Utils::opsDataToString(ops, true);
     });
@@ -670,7 +675,7 @@ void registerBackendAgnosticStateVectorMethods(PyClass &pyclass) {
 
 /**
  * @brief Register controlled gate operations for a statevector.
- * 
+ *
  * @tparam StateVectorT State vector type
  * @tparam PyClass Nanobind class type
  * @param pyclass Nanobind class to bind methods to
@@ -700,8 +705,9 @@ void registerControlledGates(PyClass &pyclass) {
                                   controlled_values, wires, inverse, params);
             };
             pyclass.def(gate_name.c_str(), func, doc.c_str(),
-                        nb::arg("controlled_wires"), nb::arg("controlled_values"),
-                        nb::arg("wires"), nb::arg("inverse") = false,
+                        nb::arg("controlled_wires"),
+                        nb::arg("controlled_values"), nb::arg("wires"),
+                        nb::arg("inverse") = false,
                         nb::arg("params") = std::vector<ParamT>{});
         });
 }
