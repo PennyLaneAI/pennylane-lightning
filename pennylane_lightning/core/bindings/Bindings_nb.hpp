@@ -32,10 +32,12 @@
 #include <nanobind/nanobind.h>
 #include <nanobind/ndarray.h>
 #include <nanobind/stl/complex.h>
+#include <nanobind/stl/shared_ptr.h>
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/vector.h>
 
 #include "CPUMemoryModel.hpp" // CPUMemoryModel, bestCPUMemoryModel
+#include "BindingsUtils_nb.hpp"
 #include "Constant.hpp"
 #include "ConstantUtil.hpp" // lookup
 #include "GateOperation.hpp"
@@ -54,6 +56,7 @@
 
 #define LIGHTNING_MODULE_NAME lightning_qubit_nb
 
+/// @cond DEV
 namespace {
 using namespace Pennylane::LightningQubit;
 using namespace Pennylane::LightningQubit::Algorithms;
@@ -61,6 +64,7 @@ using namespace Pennylane::LightningQubit::Observables;
 using namespace Pennylane::LightningQubit::Measures;
 using namespace Pennylane::LightningQubit::NanoBindings;
 } // namespace
+/// @endcond
 
 #elif _ENABLE_PLKOKKOS == 1
 #include "AdjointJacobianKokkos.hpp"
@@ -70,6 +74,7 @@ using namespace Pennylane::LightningQubit::NanoBindings;
 
 #define LIGHTNING_MODULE_NAME lightning_kokkos_nb
 
+/// @cond DEV
 namespace {
 using namespace Pennylane::LightningKokkos;
 using namespace Pennylane::LightningKokkos::Algorithms;
@@ -77,6 +82,7 @@ using namespace Pennylane::LightningKokkos::Observables;
 using namespace Pennylane::LightningKokkos::Measures;
 using namespace Pennylane::LightningKokkos::NanoBindings;
 } // namespace
+/// @endcond
 
 #elif _ENABLE_PLGPU == 1
 #include "AdjointJacobianGPU.hpp"
@@ -87,6 +93,7 @@ using namespace Pennylane::LightningKokkos::NanoBindings;
 
 #define LIGHTNING_MODULE_NAME lightning_gpu_nb
 
+/// @cond DEV
 namespace {
 using namespace Pennylane::LightningGPU;
 using namespace Pennylane::LightningGPU::Algorithms;
@@ -94,6 +101,7 @@ using namespace Pennylane::LightningGPU::Observables;
 using namespace Pennylane::LightningGPU::Measures;
 using namespace Pennylane::LightningGPU::NanoBindings;
 } // namespace
+/// @endcond
 
 #elif _ENABLE_PLTENSOR == 1
 #include "AdjointJacobianTNCuda.hpp"
@@ -102,12 +110,14 @@ using namespace Pennylane::LightningGPU::NanoBindings;
 
 #define LIGHTNING_TENSOR_MODULE_NAME lightning_tensor_nb
 
+/// @cond DEV
 namespace {
 using namespace Pennylane::LightningTensor::TNCuda;
 using namespace Pennylane::LightningTensor::TNCuda::Observables;
 using namespace Pennylane::LightningTensor::TNCuda::Measures;
 using namespace Pennylane::LightningTensor::TNCuda::NanoBindings;
 } // namespace
+/// @endcond
 
 #else
 static_assert(false, "Backend not found.");
@@ -117,6 +127,7 @@ static_assert(false, "Backend not found.");
 namespace {
 using Pennylane::Util::bestCPUMemoryModel;
 using Pennylane::Util::CPUMemoryModel;
+using Pennylane::NanoBindings::Utils::createNumpyArrayFromVector;
 } // namespace
 /// @endcond
 
