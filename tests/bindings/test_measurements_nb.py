@@ -325,3 +325,130 @@ class TestMeasurementsNB:
         # The counts should be similar to the previous test
         assert 0.4 * num_samples <= count_00_all <= 0.6 * num_samples
         assert 0.4 * num_samples <= count_11_all <= 0.6 * num_samples
+
+    def test_measurements_with_controlled_gates(
+        self, current_nanobind_module, precision, get_classes
+    ):
+        """Test measurements with controlled gates."""
+        module = current_nanobind_module
+
+        StateVectorClass, MeasurementsClass, NamedObsClass, _ = get_classes(module, precision)
+
+        num_qubits = 3
+
+        # Initialize with number of qubits
+        sv = StateVectorClass(num_qubits)
+
+        # Create a GHZ state using Hadamard and CNOT
+        sv.Hadamard([0], False, [])
+        sv.CNOT([0, 1], False, [])
+        sv.CNOT([1, 2], False, [])
+
+        # Create measurements object
+        meas = MeasurementsClass(sv)
+
+        # Check probabilities - should be 50% |000⟩ and 50% |111⟩
+        probs = meas.probs(list(range(num_qubits)))
+        assert np.isclose(probs[0], 0.5, atol=1e-6)  # |000⟩
+        assert np.isclose(probs[7], 0.5, atol=1e-6)  # |111⟩
+        assert np.sum(probs) == pytest.approx(1.0)
+
+        # Test controlled operations
+        sv.resetStateVector()
+
+        # Create |+⟩ state on qubit 0
+        sv.Hadamard([0], False, [])
+
+        # Apply CNOT with control=0, target=1
+        sv.CNOT([0, 1], False, [])
+
+        # Create measurements object
+        meas = MeasurementsClass(sv)
+
+        # Create PauliX observable on qubit 1
+        obs_x = NamedObsClass("PauliX", [1])
+
+        # For the state (|00⟩ + |11⟩)/√2, the expectation value of X₁ is 0
+        # because X₁|00⟩ = |01⟩ and X₁|11⟩ = |10⟩, which are orthogonal to the original state
+        expval_x = meas.expval(obs_x)
+        assert np.isclose(expval_x, 0.0, atol=1e-6)
+
+        # Create PauliZ observable on qubit 1
+        obs_z = NamedObsClass("PauliZ", [1])
+
+        # For the state (|00⟩ + |11⟩)/√2, the expectation value of Z₁ is 0
+        # because Z₁|00⟩ = |00⟩ and Z₁|11⟩ = -|11⟩
+        expval_z = meas.expval(obs_z)
+        assert np.isclose(expval_z, 0.0, atol=1e-6)
+
+        # Create a correlation observable Z₀⊗Z₁
+        obs_z0 = NamedObsClass("PauliZ", [0])
+        obs_z1 = NamedObsClass("PauliZ", [1])
+
+        # For the Bell state, ⟨Z₀⊗Z₁⟩ = 1
+        expval_z0 = meas.expval(obs_z0)
+        expval_z1 = meas.expval(obs_z1)
+
+        # Individual Z measurements should be 0
+        assert np.isclose(expval_z0, 0.0, atol=1e-6)
+        assert np.isclose(expval_z1, 0.0, atol=1e-6)
+
+        # But their correlation should be 1
+        # We can verify this by measuring in the computational basis
+        probs = meas.probs([0, 1])
+        assert np.isclose(probs[0], 0.5, atol=1e-6)  # |00⟩
+        assert np.isclose(probs[3], 0.5, atol=1e-6)  # |11⟩
+        assert np.isclose(probs[1], 0.0, atol=1e-6)  # |01⟩
+        assert np.isclose(probs[2], 0.0, atol=1e-6)  # |10⟩
+
+    def test_measurements_with_multi_controlled_gates(
+        self, current_nanobind_module, precision, get_classes
+    ):
+        """Test measurements with multi-controlled gates."""
+        module = current_nanobind_module
+        StateVectorClass, MeasurementsClass, NamedObsClass, _ = get_classes(module, precision)
+
+        sv = StateVectorClass(3)
+
+        # Test 1: Toffoli gate - multi-controlled operation
+        # Start with |110⟩ state to activate the Toffoli
+        sv.PauliX([0], False, [])  # |100⟩
+        sv.PauliX([1], False, [])  # |110⟩
+
+        # Apply Toffoli: should flip target qubit 2 since both controls are |1⟩
+        sv.Toffoli([0, 1, 2], False, [])  # |110⟩ → |111⟩
+
+        meas = MeasurementsClass(sv)
+        probs = meas.probs([0, 1, 2])
+
+        # Should be in |111⟩ state
+        assert np.isclose(probs[7], 1.0, atol=1e-6)  # |111⟩ = index 7
+
+        # Test 2: Multi-controlled phase gate behavior
+        sv.resetStateVector()
+
+        # Create entangled state: (|000⟩ + |111⟩)/√2
+        sv.Hadamard([0], False, [])
+        sv.CNOT([0, 1], False, [])
+        sv.CNOT([1, 2], False, [])
+
+        # Apply controlled-Z between qubits 0 and 2
+        sv.CZ([0, 2], False, [])
+
+        meas = MeasurementsClass(sv)
+
+        # CZ only adds phase to |11⟩ component, doesn't change probabilities
+        probs = meas.probs([0, 1, 2])
+        assert np.isclose(probs[0], 0.5, atol=1e-6)  # |000⟩
+        assert np.isclose(probs[7], 0.5, atol=1e-6)  # |111⟩
+
+        # Test expectation values
+        obs_z0 = NamedObsClass("PauliZ", [0])
+        obs_z2 = NamedObsClass("PauliZ", [2])
+
+        # Individual measurements are zero due to superposition
+        assert np.isclose(meas.expval(obs_z0), 0.0, atol=1e-6)
+        assert np.isclose(meas.expval(obs_z2), 0.0, atol=1e-6)
+
+        # Variance should be 1 for maximally mixed single-qubit states
+        assert np.isclose(meas.var(obs_z0), 1.0, atol=1e-6)
