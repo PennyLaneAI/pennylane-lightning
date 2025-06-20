@@ -25,7 +25,7 @@ import numpy as np
 import pennylane as qml
 from numpy.random import BitGenerator, Generator, SeedSequence
 from numpy.typing import ArrayLike
-from pennylane.devices import DefaultExecutionConfig, ExecutionConfig
+from pennylane.devices import ExecutionConfig
 from pennylane.devices.capabilities import OperatorProperties
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
 from pennylane.devices.preprocess import (
@@ -328,7 +328,7 @@ class LightningKokkos(LightningBase):
 
         return replace(config, **updated_values, device_options=new_device_options)
 
-    def preprocess(self, execution_config: ExecutionConfig = DefaultExecutionConfig):
+    def preprocess(self, execution_config: Optional[ExecutionConfig] = None):
         """This function defines the device transform program to be applied and an updated device configuration.
 
         Args:
@@ -347,6 +347,8 @@ class LightningKokkos(LightningBase):
         * Currently does not intrinsically support parameter broadcasting
 
         """
+        if execution_config is None:
+            execution_config = ExecutionConfig()
         exec_config = self._setup_execution_config(execution_config)
         program = TransformProgram()
 
@@ -382,7 +384,7 @@ class LightningKokkos(LightningBase):
     def execute(
         self,
         circuits: QuantumTape_or_Batch,
-        execution_config: ExecutionConfig = DefaultExecutionConfig,
+        execution_config: Optional[ExecutionConfig] = None,
     ) -> Result_or_ResultBatch:
         """Execute a circuit or a batch of circuits and turn it into results.
 
@@ -393,6 +395,8 @@ class LightningKokkos(LightningBase):
         Returns:
             TensorLike, tuple[TensorLike], tuple[tuple[TensorLike]]: A numeric result of the computation.
         """
+        if execution_config is None:
+            execution_config = ExecutionConfig()
         results = []
         for circuit in circuits:
             if self._wire_map is not None:
@@ -425,13 +429,15 @@ class LightningKokkos(LightningBase):
             Bool: Whether or not a derivative can be calculated provided the given information
 
         """
-        if execution_config is None and circuit is None:
+        if execution_config is None:
             return True
-        if execution_config.gradient_method not in {"adjoint", "best"}:
-            return False
-        if circuit is None:
-            return True
-        return _supports_adjoint(circuit=circuit)
+
+        if execution_config.gradient_method in {"adjoint", "best"}:
+            if circuit is None:
+                return True
+            return _supports_adjoint(circuit=circuit)
+
+        return False
 
     @staticmethod
     def get_c_interface():
