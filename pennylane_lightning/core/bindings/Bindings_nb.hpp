@@ -670,6 +670,44 @@ void registerBackendAgnosticStateVectorMethods(PyClass &pyclass) {
 }
 
 /**
+ * @brief Register controlled gate operations for a statevector.
+ * 
+ * @tparam StateVectorT State vector type
+ * @tparam PyClass Nanobind class type
+ * @param pyclass Nanobind class to bind methods to
+ */
+template <class StateVectorT, class PyClass>
+void registerControlledGates(PyClass &pyclass) {
+    using PrecisionT = typename StateVectorT::PrecisionT;
+    using ParamT = PrecisionT;
+
+    using Pennylane::Gates::ControlledGateOperation;
+    using Pennylane::Util::for_each_enum;
+    namespace Constant = Pennylane::Gates::Constant;
+
+    for_each_enum<ControlledGateOperation>(
+        [&pyclass](ControlledGateOperation gate_op) {
+            using Pennylane::Util::lookup;
+            const auto gate_name =
+                std::string(lookup(Constant::controlled_gate_names, gate_op));
+            const std::string doc = "Apply the " + gate_name + " gate.";
+            auto func = [gate_name = gate_name](
+                            StateVectorT &sv,
+                            const std::vector<std::size_t> &controlled_wires,
+                            const std::vector<bool> &controlled_values,
+                            const std::vector<std::size_t> &wires, bool inverse,
+                            const std::vector<ParamT> &params) {
+                sv.applyOperation(gate_name, controlled_wires,
+                                  controlled_values, wires, inverse, params);
+            };
+            pyclass.def(gate_name.c_str(), func, doc.c_str(),
+                        nb::arg("controlled_wires"), nb::arg("controlled_values"),
+                        nb::arg("wires"), nb::arg("inverse") = false,
+                        nb::arg("params") = std::vector<ParamT>{});
+        });
+}
+
+/**
  * @brief Templated class to build lightning class bindings.
  *
  * @tparam StateVectorT State vector type
@@ -691,6 +729,7 @@ template <class StateVectorT> void lightningClassBindings(nb::module_ &m) {
 
     // Register gates for StateVector
     registerGatesForStateVector<StateVectorT>(pyclass);
+    registerControlledGates<StateVectorT>(pyclass);
 
     // Register backend specific bindings
     registerBackendClassSpecificBindings<StateVectorT>(pyclass);
