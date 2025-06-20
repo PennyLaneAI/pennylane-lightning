@@ -138,7 +138,7 @@ With ``lightning.kokkos`` installed with MPI support, this can be enabled in Pen
 .. note::
     The total number of MPI processes and MPI processes per node must be powers of 2. For example, 2, 4, 8, 16, etc.. If using Kokkos with GPUs, each MPI process is responsible for managing one GPU. 
 
-Currently, a ``lightning.kokkos`` device with MPI supports all the ``gate operations`` and ``observables`` that a single process ``lightning.kokkos`` device supports except for Sparse Hamiltonian.
+Currently, a ``lightning.kokkos`` device with MPI supports all the ``gate operations`` and ``observables`` that a single process ``lightning.kokkos`` device supports, excluding Sparse Hamiltonian.
 
 By default, each MPI process will return the overall simulation results, except for the ``qml.state()`` and ``qml.prob()`` methods for which each MPI process only returns the local simulation
 results for the ``qml.state()`` and ``qml.prob()`` methods to avoid buffer overflow. It is the user's responsibility to ensure correct data collection for those two methods. Here are examples of collecting
