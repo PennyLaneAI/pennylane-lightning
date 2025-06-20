@@ -1,0 +1,11 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel", "nanobind"]
+build-backend = "setuptools.build_meta"
+
+[project]
+# --- CHANGED HERE ---
+name = "gpu_binding_example"
+version = "0.0.1"
+description = "A C++-managed GPU binding example for Python using nanobind"
+readme = "README.md"
+license = { text = "MIT" }
