@@ -32,9 +32,11 @@
 #include <nanobind/nanobind.h>
 #include <nanobind/ndarray.h>
 #include <nanobind/stl/complex.h>
+#include <nanobind/stl/shared_ptr.h>
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/vector.h>
 
+#include "BindingsUtils_nb.hpp"
 #include "CPUMemoryModel.hpp" // CPUMemoryModel, bestCPUMemoryModel
 #include "Constant.hpp"
 #include "ConstantUtil.hpp" // lookup
@@ -54,6 +56,7 @@
 
 #define LIGHTNING_MODULE_NAME lightning_qubit_nb
 
+/// @cond DEV
 namespace {
 using namespace Pennylane::LightningQubit;
 using namespace Pennylane::LightningQubit::Algorithms;
@@ -61,6 +64,7 @@ using namespace Pennylane::LightningQubit::Observables;
 using namespace Pennylane::LightningQubit::Measures;
 using namespace Pennylane::LightningQubit::NanoBindings;
 } // namespace
+/// @endcond
 
 #elif _ENABLE_PLKOKKOS == 1
 #include "AdjointJacobianKokkos.hpp"
@@ -70,6 +74,7 @@ using namespace Pennylane::LightningQubit::NanoBindings;
 
 #define LIGHTNING_MODULE_NAME lightning_kokkos_nb
 
+/// @cond DEV
 namespace {
 using namespace Pennylane::LightningKokkos;
 using namespace Pennylane::LightningKokkos::Algorithms;
@@ -77,6 +82,7 @@ using namespace Pennylane::LightningKokkos::Observables;
 using namespace Pennylane::LightningKokkos::Measures;
 using namespace Pennylane::LightningKokkos::NanoBindings;
 } // namespace
+/// @endcond
 
 #elif _ENABLE_PLGPU == 1
 #include "AdjointJacobianGPU.hpp"
@@ -87,6 +93,7 @@ using namespace Pennylane::LightningKokkos::NanoBindings;
 
 #define LIGHTNING_MODULE_NAME lightning_gpu_nb
 
+/// @cond DEV
 namespace {
 using namespace Pennylane::LightningGPU;
 using namespace Pennylane::LightningGPU::Algorithms;
@@ -94,6 +101,7 @@ using namespace Pennylane::LightningGPU::Observables;
 using namespace Pennylane::LightningGPU::Measures;
 using namespace Pennylane::LightningGPU::NanoBindings;
 } // namespace
+/// @endcond
 
 #elif _ENABLE_PLTENSOR == 1
 #include "AdjointJacobianTNCuda.hpp"
@@ -102,12 +110,14 @@ using namespace Pennylane::LightningGPU::NanoBindings;
 
 #define LIGHTNING_TENSOR_MODULE_NAME lightning_tensor_nb
 
+/// @cond DEV
 namespace {
 using namespace Pennylane::LightningTensor::TNCuda;
 using namespace Pennylane::LightningTensor::TNCuda::Observables;
 using namespace Pennylane::LightningTensor::TNCuda::Measures;
 using namespace Pennylane::LightningTensor::TNCuda::NanoBindings;
 } // namespace
+/// @endcond
 
 #else
 static_assert(false, "Backend not found.");
@@ -115,6 +125,7 @@ static_assert(false, "Backend not found.");
 
 /// @cond DEV
 namespace {
+using Pennylane::NanoBindings::Utils::createNumpyArrayFromVector;
 using Pennylane::Util::bestCPUMemoryModel;
 using Pennylane::Util::CPUMemoryModel;
 } // namespace
@@ -134,6 +145,8 @@ void registerMatrix(
     const std::vector<std::size_t> &wires, bool inverse = false) {
     using ComplexT = typename StateVectorT::ComplexT;
     using Pennylane::Util::PL_reinterpret_cast;
+
+    PL_ASSERT(matrix.size() == Util::exp2(2 * wires.size()));
 
     // Cast to raw pointer
     auto *data_ptr = PL_reinterpret_cast<const ComplexT>(matrix.data());
@@ -333,13 +346,13 @@ void registerInfo(nb::module_ &m) {
 /**
  * @brief Register backend-agnostic observables.
  *
- * @tparam StateVectorT
+ * @tparam LightningBackendT
  * @param m Nanobind module
  */
-template <class StateVectorT>
+template <class LightningBackendT>
 void registerBackendAgnosticObservables(nb::module_ &m) {
-    using PrecisionT = typename StateVectorT::PrecisionT;
-    using ComplexT = typename StateVectorT::ComplexT;
+    using PrecisionT = typename LightningBackendT::PrecisionT;
+    using ComplexT = typename LightningBackendT::ComplexT;
     using ParamT = PrecisionT;
 
     using nd_arr_c = nb::ndarray<const std::complex<ParamT>, nb::c_contig>;
@@ -348,170 +361,105 @@ void registerBackendAgnosticObservables(nb::module_ &m) {
         std::to_string(sizeof(std::complex<PrecisionT>) * 8);
 
 #ifdef _ENABLE_PLTENSOR
-    using ObservableT = ObservableTNCuda<StateVectorT>;
-    using NamedObsT = NamedObsTNCuda<StateVectorT>;
-    using HermitianObsT = HermitianObsTNCuda<StateVectorT>;
-    using TensorProdObsT = TensorProdObsTNCuda<StateVectorT>;
-    using HamiltonianT = HamiltonianTNCuda<StateVectorT>;
+    using ObservableT = ObservableTNCuda<LightningBackendT>;
+    using NamedObsT = NamedObsTNCuda<LightningBackendT>;
+    using HermitianObsT = HermitianObsTNCuda<LightningBackendT>;
+    using TensorProdObsT = TensorProdObsTNCuda<LightningBackendT>;
+    using HamiltonianT = HamiltonianTNCuda<LightningBackendT>;
 #else
-    using ObservableT = Observable<StateVectorT>;
-    using NamedObsT = NamedObs<StateVectorT>;
-    using HermitianObsT = HermitianObs<StateVectorT>;
-    using TensorProdObsT = TensorProdObs<StateVectorT>;
-    using HamiltonianT = Hamiltonian<StateVectorT>;
+    using ObservableT = Observable<LightningBackendT>;
+    using NamedObsT = NamedObs<LightningBackendT>;
+    using HermitianObsT = HermitianObs<LightningBackendT>;
+    using TensorProdObsT = TensorProdObs<LightningBackendT>;
+    using HamiltonianT = Hamiltonian<LightningBackendT>;
 #endif
 
     std::string class_name;
 
-    // Register Observable base class - only as an interface, no constructors
+    // Register Observable base class
     class_name = "ObservableC" + bitsize;
     auto observable = nb::class_<ObservableT>(m, class_name.c_str());
+    observable.def("get_wires", &ObservableT::getWires,
+                   "Get wires the observable acts on.");
 
     // Register NamedObs class
     class_name = "NamedObsC" + bitsize;
-    auto named_obs =
-        nb::class_<NamedObsT, ObservableT>(m, class_name.c_str())
-            .def(nb::init<const std::string &,
-                          const std::vector<std::size_t> &>())
-            .def("__repr__", &NamedObsT::getObsName)
-            .def("get_wires", &NamedObsT::getWires, "Get wires of observables")
-            .def(
-                "__eq__",
-                [](const NamedObsT &self, const NamedObsT &other) -> bool {
-                    return self == other;
-                },
-                "Compare two observables");
+    auto named_obs = nb::class_<NamedObsT, ObservableT>(m, class_name.c_str());
+    named_obs
+        .def(nb::init<const std::string &, const std::vector<std::size_t> &>())
+        .def("__repr__", &NamedObsT::getObsName)
+        .def("get_wires", &NamedObsT::getWires, "Get wires of observables")
+        .def(
+            "__eq__",
+            [](const NamedObsT &self, const NamedObsT &other) -> bool {
+                return self == other;
+            },
+            "Compare two observables");
 
     // Register HermitianObs class
     class_name = "HermitianObsC" + bitsize;
     auto hermitian_obs =
-        nb::class_<HermitianObsT, ObservableT>(m, class_name.c_str())
-            .def("__init__",
-                 [](HermitianObsT *self, const nd_arr_c &matrix,
-                    const std::vector<std::size_t> &wires) {
-                     const auto ptr = matrix.data();
-                     const auto size = matrix.size();
-                     std::vector<ComplexT> matrix_vec(ptr, ptr + size);
-                     new (self) HermitianObsT(std::move(matrix_vec), wires);
-                 })
-            .def("__repr__", &HermitianObsT::getObsName)
-            .def("get_wires", &HermitianObsT::getWires,
-                 "Get wires of observables")
-            .def("get_matrix", &HermitianObsT::getMatrix,
-                 "Get matrix representation of Hermitian operator")
-            .def(
-                "__eq__",
-                [](const HermitianObsT &self, const HermitianObsT &other)
-                    -> bool { return self == other; },
-                "Compare two observables");
+        nb::class_<HermitianObsT, ObservableT>(m, class_name.c_str());
+    hermitian_obs
+        .def("__init__",
+             [](HermitianObsT *self, const nd_arr_c &matrix,
+                const std::vector<std::size_t> &wires) {
+                 const auto ptr = matrix.data();
+                 new (self) HermitianObsT(
+                     std::vector<ComplexT>(ptr, ptr + matrix.size()), wires);
+             })
+        .def("__repr__", &HermitianObsT::getObsName)
+        .def("get_wires", &HermitianObsT::getWires, "Get wires of observables")
+        .def("get_matrix", &HermitianObsT::getMatrix,
+             "Get matrix representation of Hermitian operator")
+        .def(
+            "__eq__",
+            [](const HermitianObsT &self, const HermitianObsT &other) -> bool {
+                return self == other;
+            },
+            "Compare two observables");
 
     // Register TensorProdObs class
     class_name = "TensorProdObsC" + bitsize;
     auto tensor_prod_obs =
-        nb::class_<TensorProdObsT, ObservableT>(m, class_name.c_str())
-            .def("__init__",
-                 [](TensorProdObsT *self,
-                    const std::vector<std::shared_ptr<ObservableT>> &obs) {
-                     new (self) TensorProdObsT(obs);
-                 })
-            .def("__repr__", &TensorProdObsT::getObsName)
-            .def("get_wires", &TensorProdObsT::getWires,
-                 "Get wires of observables")
-            .def("get_ops", &TensorProdObsT::getObs, "Get operations list")
-            .def(
-                "__eq__",
-                [](const TensorProdObsT &self, const TensorProdObsT &other)
-                    -> bool { return self == other; },
-                "Compare two observables");
+        nb::class_<TensorProdObsT, ObservableT>(m, class_name.c_str());
+    tensor_prod_obs
+        .def(nb::init<const std::vector<std::shared_ptr<ObservableT>> &>())
+        .def("__repr__", &TensorProdObsT::getObsName)
+        .def("get_wires", &TensorProdObsT::getWires, "Get wires of observables")
+        .def("get_ops", &TensorProdObsT::getObs, "Get operations list")
+        .def(
+            "__eq__",
+            [](const TensorProdObsT &self,
+               const TensorProdObsT &other) -> bool { return self == other; },
+            "Compare two observables");
 
     // Register Hamiltonian class
     class_name = "HamiltonianC" + bitsize;
     using ObsPtr = std::shared_ptr<ObservableT>;
     auto hamiltonian =
-        nb::class_<HamiltonianT, ObservableT>(m, class_name.c_str())
-            .def("__init__",
-                 [](HamiltonianT *self, const std::vector<ParamT> &coeffs,
-                    const std::vector<ObsPtr> &obs) {
-                     new (self) HamiltonianT(coeffs, obs);
-                 })
-            .def("__init__",
-                 [](HamiltonianT *self,
-                    const nb::ndarray<ParamT, nb::c_contig> &coeffs,
-                    const std::vector<ObsPtr> &obs) {
-                     const auto ptr = coeffs.data();
-                     const auto size = coeffs.size();
-                     std::vector<ParamT> coeffs_vec(ptr, ptr + size);
-                     new (self) HamiltonianT(std::move(coeffs_vec), obs);
-                 })
-            .def("__repr__", &HamiltonianT::getObsName)
-            .def("get_wires", &HamiltonianT::getWires,
-                 "Get wires of observables")
-            .def("get_coeffs", &HamiltonianT::getCoeffs, "Get coefficients")
-            .def("get_ops", &HamiltonianT::getObs, "Get operations list")
-            .def(
-                "__eq__",
-                [](const HamiltonianT &self,
-                   const HamiltonianT &other) -> bool { return self == other; },
-                "Compare two observables");
-}
-
-/**
- * @brief Create an array from a vector of data with proper ownership transfer
- *
- * @tparam VectorT Data type of the vector elements
- * @param data Vector containing the data to transfer
- * @return nb::ndarray<VectorT, nb::numpy, nb::c_contig> Array with copied data
- * in numpy format
- */
-template <typename VectorT>
-nb::ndarray<VectorT, nb::numpy, nb::c_contig>
-createArrayFromVector(const std::vector<VectorT> &data) {
-    const std::size_t size = data.size();
-
-    // Create a new array with the right size
-    std::vector<size_t> shape{size};
-
-    // Allocate new memory and copy the data
-    VectorT *new_data = new VectorT[size];
-    std::memcpy(new_data, data.data(), size * sizeof(VectorT));
-
-    // Create a capsule to manage memory
-    auto capsule = nb::capsule(
-        new_data, [](void *p) noexcept { delete[] static_cast<VectorT *>(p); });
-
-    // Create and return the ndarray with numpy format
-    return nb::ndarray<VectorT, nb::numpy, nb::c_contig>(new_data, shape.size(),
-                                                         shape.data(), capsule);
-}
-
-/**
- * @brief Create a 2D array from a vector of data with proper ownership transfer
- *
- * @tparam VectorT Data type of the vector elements
- * @param data Vector containing the data to transfer
- * @param rows Number of rows in the resulting 2D array
- * @param cols Number of columns in the resulting 2D array
- * @return nb::ndarray<VectorT, nb::numpy, nb::c_contig> 2D array with copied
- * data in numpy format
- */
-template <typename VectorT>
-nb::ndarray<VectorT, nb::numpy, nb::c_contig>
-create2DArrayFromVector(const std::vector<VectorT> &data, std::size_t rows,
-                        std::size_t cols) {
-    // Create a new array with the right size
-    std::vector<size_t> shape{rows, cols};
-
-    // Allocate new memory and copy the data
-    VectorT *new_data = new VectorT[rows * cols];
-    std::memcpy(new_data, data.data(), data.size() * sizeof(VectorT));
-
-    // Create a capsule to manage memory
-    auto capsule = nb::capsule(
-        new_data, [](void *p) noexcept { delete[] static_cast<VectorT *>(p); });
-
-    // Create and return the ndarray with numpy format
-    return nb::ndarray<VectorT, nb::numpy, nb::c_contig>(new_data, 2,
-                                                         shape.data(), capsule);
+        nb::class_<HamiltonianT, ObservableT>(m, class_name.c_str());
+    hamiltonian
+        .def(nb::init<const std::vector<ParamT> &,
+                      const std::vector<ObsPtr> &>())
+        .def("__init__",
+             [](HamiltonianT *self,
+                const nb::ndarray<ParamT, nb::c_contig> &coeffs,
+                const std::vector<ObsPtr> &obs) {
+                 const auto ptr = coeffs.data();
+                 new (self) HamiltonianT(
+                     std::vector<ParamT>(ptr, ptr + coeffs.size()), obs);
+             })
+        .def("__repr__", &HamiltonianT::getObsName)
+        .def("get_wires", &HamiltonianT::getWires, "Get wires of observables")
+        .def("get_coeffs", &HamiltonianT::getCoeffs, "Get coefficients")
+        .def("get_ops", &HamiltonianT::getObs, "Get operations list")
+        .def(
+            "__eq__",
+            [](const HamiltonianT &self, const HamiltonianT &other) -> bool {
+                return self == other;
+            },
+            "Compare two observables");
 }
 
 /**
@@ -529,7 +477,7 @@ probsForWires(Measurements<StateVectorT> &M,
               const std::vector<std::size_t> &wires) {
     using PrecisionT = typename StateVectorT::PrecisionT;
     auto probs_vec = M.probs(wires);
-    return createArrayFromVector<PrecisionT>(probs_vec);
+    return createNumpyArrayFromVector<PrecisionT>(probs_vec);
 }
 
 /**
@@ -545,7 +493,7 @@ nb::ndarray<typename StateVectorT::PrecisionT, nb::numpy, nb::c_contig>
 probsForAllWires(Measurements<StateVectorT> &M) {
     using PrecisionT = typename StateVectorT::PrecisionT;
     auto probs_vec = M.probs();
-    return createArrayFromVector<PrecisionT>(probs_vec);
+    return createNumpyArrayFromVector<PrecisionT>(probs_vec);
 }
 
 /**
@@ -563,7 +511,8 @@ nb::ndarray<std::size_t, nb::numpy, nb::c_contig>
 generateSamples(Measurements<StateVectorT> &M, std::size_t num_wires,
                 std::size_t num_shots) {
     auto result = M.generate_samples(num_shots);
-    return create2DArrayFromVector<std::size_t>(result, num_shots, num_wires);
+    return createNumpyArrayFromVector<std::size_t>(result, num_shots,
+                                                   num_wires);
 }
 
 /**
@@ -608,26 +557,45 @@ void registerBackendAgnosticMeasurements(PyClass &pyclass) {
 }
 
 /**
- * @brief Register the adjoint Jacobian method.
+ * @brief Create operations list from data
+ *
+ * @tparam StateVectorT State vector type
+ * @param ops_name Operation names
+ * @param ops_params Operation parameters
+ * @param ops_wires Operation wires
+ * @param ops_inverses Operation inverse flags
+ * @param ops_matrices Operation matrices
+ * @param ops_controlled_wires Operation controlled wires
+ * @param ops_controlled_values Operation controlled values
+ * @return OpsData<StateVectorT> Operations data
  */
 template <class StateVectorT>
-auto registerAdjointJacobian(
-    AdjointJacobian<StateVectorT> &adjoint_jacobian, const StateVectorT &sv,
-    const std::vector<std::shared_ptr<Observable<StateVectorT>>> &observables,
-    const OpsData<StateVectorT> &operations,
-    const std::vector<std::size_t> &trainableParams)
-    -> nb::ndarray<typename StateVectorT::PrecisionT, nb::numpy, nb::c_contig> {
-    using PrecisionT = typename StateVectorT::PrecisionT;
-    std::vector<PrecisionT> jac(observables.size() * trainableParams.size(),
-                                PrecisionT{0.0});
-    const JacobianData<StateVectorT> jd{operations.getTotalNumParams(),
-                                        sv.getLength(),
-                                        sv.getData(),
-                                        observables,
-                                        operations,
-                                        trainableParams};
-    adjoint_jacobian.adjointJacobian(std::span{jac}, jd, sv);
-    return createArrayFromVector<PrecisionT>(jac);
+OpsData<StateVectorT> createOpsList(
+    const std::vector<std::string> &ops_name,
+    const std::vector<std::vector<typename StateVectorT::PrecisionT>>
+        &ops_params,
+    const std::vector<std::vector<std::size_t>> &ops_wires,
+    const std::vector<bool> &ops_inverses,
+    const std::vector<nb::ndarray<
+        const std::complex<typename StateVectorT::PrecisionT>, nb::c_contig>>
+        &ops_matrices,
+    const std::vector<std::vector<std::size_t>> &ops_controlled_wires,
+    const std::vector<std::vector<bool>> &ops_controlled_values) {
+
+    using ComplexT = typename StateVectorT::ComplexT;
+    using ParamT = typename StateVectorT::PrecisionT;
+
+    auto conv_matrices =
+        Pennylane::NanoBindings::Utils::convertMatrices<ComplexT, ParamT>(
+            ops_matrices);
+
+    return OpsData<StateVectorT>{ops_name,
+                                 ops_params,
+                                 ops_wires,
+                                 ops_inverses,
+                                 conv_matrices,
+                                 ops_controlled_wires,
+                                 ops_controlled_values};
 }
 
 /**
@@ -656,98 +624,32 @@ void registerBackendAgnosticAlgorithms(nb::module_ &m) {
     //***********************************************************************//
 
     class_name = "OpsStructC" + bitsize;
-    nb::class_<OpsData<StateVectorT>>(m, class_name.c_str())
-        .def(nb::init<const std::vector<std::string> &,
-                      const std::vector<std::vector<ParamT>> &,
-                      const std::vector<std::vector<std::size_t>> &,
-                      const std::vector<bool> &,
-                      const std::vector<std::vector<ComplexT>> &>())
-        .def(nb::init<const std::vector<std::string> &,
-                      const std::vector<std::vector<ParamT>> &,
-                      const std::vector<std::vector<std::size_t>> &,
-                      const std::vector<bool> &,
-                      const std::vector<std::vector<ComplexT>> &,
-                      const std::vector<std::vector<std::size_t>> &,
-                      const std::vector<std::vector<bool>> &>())
-        .def("__repr__", [](const OpsData<StateVectorT> &ops) {
-            using namespace Pennylane::Util;
-            std::ostringstream ops_stream;
-            for (std::size_t op = 0; op < ops.getSize(); op++) {
-                ops_stream << "{'name': " << ops.getOpsName()[op];
-                ops_stream << ", 'params': " << ops.getOpsParams()[op];
-                ops_stream << ", 'inv': " << ops.getOpsInverses()[op];
-                ops_stream << ", 'controlled_wires': "
-                           << ops.getOpsControlledWires()[op];
-                ops_stream << ", 'controlled_values': "
-                           << ops.getOpsControlledValues()[op];
-                ops_stream << ", 'wires': " << ops.getOpsWires()[op];
-                ops_stream << "}";
-                if (op < ops.getSize() - 1) {
-                    ops_stream << ",";
-                }
-            }
-            return "Operations: [" + ops_stream.str() + "]";
-        });
+    auto ops_class = nb::class_<OpsData<StateVectorT>>(m, class_name.c_str());
+
+    ops_class.def(nb::init<const std::vector<std::string> &,
+                           const std::vector<std::vector<ParamT>> &,
+                           const std::vector<std::vector<std::size_t>> &,
+                           const std::vector<bool> &,
+                           const std::vector<std::vector<ComplexT>> &>());
+
+    ops_class.def(nb::init<const std::vector<std::string> &,
+                           const std::vector<std::vector<ParamT>> &,
+                           const std::vector<std::vector<std::size_t>> &,
+                           const std::vector<bool> &,
+                           const std::vector<std::vector<ComplexT>> &,
+                           const std::vector<std::vector<std::size_t>> &,
+                           const std::vector<std::vector<bool>> &>());
+
+    ops_class.def("__repr__", [](const OpsData<StateVectorT> &ops) {
+        return Pennylane::NanoBindings::Utils::opsDataToString(ops, true);
+    });
 
     /**
      * Create operation list.
      */
     std::string function_name = "create_ops_listC" + bitsize;
-    m.def(
-        function_name.c_str(),
-        [](const std::vector<std::string> &ops_name,
-           const std::vector<std::vector<PrecisionT>> &ops_params,
-           const std::vector<std::vector<std::size_t>> &ops_wires,
-           const std::vector<bool> &ops_inverses,
-           const std::vector<arr_c> &ops_matrices,
-           const std::vector<std::vector<std::size_t>> &ops_controlled_wires,
-           const std::vector<std::vector<bool>> &ops_controlled_values) {
-            std::vector<std::vector<ComplexT>> conv_matrices(
-                ops_matrices.size());
-            for (std::size_t op = 0; op < ops_name.size(); op++) {
-                if (ops_matrices[op].size() > 0) {
-                    const auto *m_ptr = ops_matrices[op].data();
-                    const auto m_size = ops_matrices[op].size();
-                    conv_matrices[op] =
-                        std::vector<ComplexT>(m_ptr, m_ptr + m_size);
-                }
-            }
-            return OpsData<StateVectorT>{ops_name,
-                                         ops_params,
-                                         ops_wires,
-                                         ops_inverses,
-                                         conv_matrices,
-                                         ops_controlled_wires,
-                                         ops_controlled_values};
-        },
-        "Create a list of operations from data.");
-
-    //***********************************************************************//
-    //                            Adjoint Jacobian
-    //***********************************************************************//
-    class_name = "AdjointJacobianC" + bitsize;
-    nb::class_<AdjointJacobian<StateVectorT>>(m, class_name.c_str())
-        .def(nb::init<>())
-        .def("__call__",
-             [](AdjointJacobian<StateVectorT> &self, StateVectorT &sv,
-                const std::vector<std::shared_ptr<Observable<StateVectorT>>>
-                    &observables,
-                const OpsData<StateVectorT> &operations,
-                const std::vector<std::size_t> &trainableParams) {
-                 using PrecisionT = typename StateVectorT::PrecisionT;
-                 std::vector<PrecisionT> jac(observables.size() *
-                                                 trainableParams.size(),
-                                             PrecisionT{0.0});
-                 const JacobianData<StateVectorT> jd{
-                     operations.getTotalNumParams(),
-                     sv.getLength(),
-                     sv.getData(),
-                     observables,
-                     operations,
-                     trainableParams};
-                 self.adjointJacobian(std::span{jac}, jd, sv);
-                 return createArrayFromVector<PrecisionT>(jac);
-             });
+    m.def(function_name.c_str(), &createOpsList<StateVectorT>,
+          "Create a list of operations from data.");
 }
 
 /**
@@ -772,6 +674,45 @@ void registerBackendAgnosticStateVectorMethods(PyClass &pyclass) {
 }
 
 /**
+ * @brief Register controlled gate operations for a statevector.
+ *
+ * @tparam StateVectorT State vector type
+ * @tparam PyClass Nanobind class type
+ * @param pyclass Nanobind class to bind methods to
+ */
+template <class StateVectorT, class PyClass>
+void registerControlledGates(PyClass &pyclass) {
+    using PrecisionT = typename StateVectorT::PrecisionT;
+    using ParamT = PrecisionT;
+
+    using Pennylane::Gates::ControlledGateOperation;
+    using Pennylane::Util::for_each_enum;
+    namespace Constant = Pennylane::Gates::Constant;
+
+    for_each_enum<ControlledGateOperation>(
+        [&pyclass](ControlledGateOperation gate_op) {
+            using Pennylane::Util::lookup;
+            const auto gate_name =
+                std::string(lookup(Constant::controlled_gate_names, gate_op));
+            const std::string doc = "Apply the " + gate_name + " gate.";
+            auto func = [gate_name = gate_name](
+                            StateVectorT &sv,
+                            const std::vector<std::size_t> &controlled_wires,
+                            const std::vector<bool> &controlled_values,
+                            const std::vector<std::size_t> &wires, bool inverse,
+                            const std::vector<ParamT> &params) {
+                sv.applyOperation(gate_name, controlled_wires,
+                                  controlled_values, wires, inverse, params);
+            };
+            pyclass.def(gate_name.c_str(), func, doc.c_str(),
+                        nb::arg("controlled_wires"),
+                        nb::arg("controlled_values"), nb::arg("wires"),
+                        nb::arg("inverse") = false,
+                        nb::arg("params") = std::vector<ParamT>{});
+        });
+}
+
+/**
  * @brief Templated class to build lightning class bindings.
  *
  * @tparam StateVectorT State vector type
@@ -793,6 +734,7 @@ template <class StateVectorT> void lightningClassBindings(nb::module_ &m) {
 
     // Register gates for StateVector
     registerGatesForStateVector<StateVectorT>(pyclass);
+    registerControlledGates<StateVectorT>(pyclass);
 
     // Register backend specific bindings
     registerBackendClassSpecificBindings<StateVectorT>(pyclass);
