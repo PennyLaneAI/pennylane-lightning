@@ -1,0 +1,559 @@
+// Copyright 2025 Xanadu Quantum Technologies Inc.
+
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+
+//     http://www.apache.org/licenses/LICENSE-2.0
+
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+/**
+ * @file BindingsMPI_nb.hpp
+ * Defines device-agnostic operations to export to Python and other utility
+ * functions interfacing with Nanobind.
+ */
+
+#pragma once
+#include <complex>
+#include <span>
+#include <string>
+#include <vector>
+
+#include <nanobind/nanobind.h>
+#include <nanobind/ndarray.h>
+#include <nanobind/stl/complex.h>
+#include <nanobind/stl/pair.h>
+#include <nanobind/stl/string.h>
+#include <nanobind/stl/vector.h>
+
+#include "JacobianData.hpp"
+
+#ifdef _ENABLE_PLGPU
+#include "AdjointJacobianGPUMPI.hpp"
+#include "JacobianDataMPI.hpp"
+#include "LGPUBindingsMPI.hpp"
+#include "MeasurementsGPUMPI.hpp"
+#include "ObservablesGPUMPI.hpp"
+
+/// @cond DEV
+namespace {
+using namespace Pennylane::LightningGPU;
+using namespace Pennylane::LightningGPU::Algorithms;
+using namespace Pennylane::LightningGPU::Observables;
+using namespace Pennylane::LightningGPU::Measures;
+} // namespace
+/// @endcond
+
+#else
+
+static_assert(false, "Backend not found.");
+
+#endif
+
+namespace nb = nanobind;
+
+namespace Pennylane::NanoBindings {
+
+/**
+ * @brief Register observable classes for MPI.
+ *
+ * @tparam StateVectorT
+ * @param m Nanobind module
+ */
+template <class StateVectorT> void registerObservablesMPI(nb::module_ &m) {
+    using PrecisionT =
+        typename StateVectorT::PrecisionT; // Statevector's precision.
+    using ComplexT =
+        typename StateVectorT::ComplexT; // Statevector's complex type.
+    using ParamT = PrecisionT;           // Parameter's data precision
+
+    const std::string bitsize =
+        std::to_string(sizeof(std::complex<PrecisionT>) * 8);
+
+    using arr_c = nb::ndarray<std::complex<ParamT>, nb::c_contig>;
+    using arr_r = nb::ndarray<ParamT, nb::c_contig>;
+    using SpIDX = typename std::conditional<std::is_same<ParamT, float>::value,
+                                            int32_t, int64_t>::type;
+
+    std::string class_name;
+
+    // Register Observable base class
+    class_name = "ObservableMPIC" + bitsize;
+    nb::class_<Observable<StateVectorT>,
+               std::shared_ptr<Observable<StateVectorT>>>(m,
+                                                          class_name.c_str());
+
+    // Register NamedObsMPI class
+    class_name = "NamedObsMPIC" + bitsize;
+    nb::class_<NamedObsMPI<StateVectorT>,
+               std::shared_ptr<NamedObsMPI<StateVectorT>>,
+               Observable<StateVectorT>>(m, class_name.c_str())
+        .def(nb::init<const std::string &, const std::vector<std::size_t> &>())
+        .def("__repr__", &NamedObsMPI<StateVectorT>::getObsName)
+        .def("get_wires", &NamedObsMPI<StateVectorT>::getWires,
+             "Get wires of observables")
+        .def(
+            "__eq__",
+            [](const NamedObsMPI<StateVectorT> &self,
+               nb::handle other) -> bool {
+                if (!nb::isinstance<NamedObsMPI<StateVectorT>>(other)) {
+                    return false;
+                }
+                auto other_cast = nb::cast<NamedObsMPI<StateVectorT>>(other);
+                return self == other_cast;
+            },
+            "Compare two observables");
+
+    // Register HermitianObsMPI class
+    class_name = "HermitianObsMPIC" + bitsize;
+    nb::class_<HermitianObsMPI<StateVectorT>,
+               std::shared_ptr<HermitianObsMPI<StateVectorT>>,
+               Observable<StateVectorT>>(m, class_name.c_str())
+        .def(nb::init<const std::vector<ComplexT> &,
+                      const std::vector<std::size_t> &>())
+        .def("__repr__", &HermitianObsMPI<StateVectorT>::getObsName)
+        .def("get_wires", &HermitianObsMPI<StateVectorT>::getWires,
+             "Get wires of observables")
+        .def(
+            "__eq__",
+            [](const HermitianObsMPI<StateVectorT> &self,
+               nb::handle other) -> bool {
+                if (!nb::isinstance<HermitianObsMPI<StateVectorT>>(other)) {
+                    return false;
+                }
+                auto other_cast =
+                    nb::cast<HermitianObsMPI<StateVectorT>>(other);
+                return self == other_cast;
+            },
+            "Compare two observables");
+
+    // Register TensorProdObsMPI class
+    class_name = "TensorProdObsMPIC" + bitsize;
+    nb::class_<TensorProdObsMPI<StateVectorT>,
+               std::shared_ptr<TensorProdObsMPI<StateVectorT>>,
+               Observable<StateVectorT>>(m, class_name.c_str())
+        .def(nb::init<
+             const std::vector<std::shared_ptr<Observable<StateVectorT>>> &>())
+        .def("__repr__", &TensorProdObsMPI<StateVectorT>::getObsName)
+        .def("get_wires", &TensorProdObsMPI<StateVectorT>::getWires,
+             "Get wires of observables")
+        .def(
+            "__eq__",
+            [](const TensorProdObsMPI<StateVectorT> &self,
+               nb::handle other) -> bool {
+                if (!nb::isinstance<TensorProdObsMPI<StateVectorT>>(other)) {
+                    return false;
+                }
+                auto other_cast =
+                    nb::cast<TensorProdObsMPI<StateVectorT>>(other);
+                return self == other_cast;
+            },
+            "Compare two observables");
+
+    // Register HamiltonianMPI class
+    class_name = "HamiltonianMPIC" + bitsize;
+    using ObsPtr = std::shared_ptr<Observable<StateVectorT>>;
+    nb::class_<HamiltonianMPI<StateVectorT>,
+               std::shared_ptr<HamiltonianMPI<StateVectorT>>,
+               Observable<StateVectorT>>(m, class_name.c_str())
+        .def(nb::init<const std::vector<ParamT> &,
+                      const std::vector<ObsPtr> &>())
+        .def("__repr__", &HamiltonianMPI<StateVectorT>::getObsName)
+        .def("get_wires", &HamiltonianMPI<StateVectorT>::getWires,
+             "Get wires of observables")
+        .def(
+            "__eq__",
+            [](const HamiltonianMPI<StateVectorT> &self,
+               nb::handle other) -> bool {
+                if (!nb::isinstance<HamiltonianMPI<StateVectorT>>(other)) {
+                    return false;
+                }
+                auto other_cast = nb::cast<HamiltonianMPI<StateVectorT>>(other);
+                return self == other_cast;
+            },
+            "Compare two observables");
+
+#ifdef _ENABLE_PLGPU
+    // Register SparseHamiltonianMPI class
+    class_name = "SparseHamiltonianMPIC" + bitsize;
+    nb::class_<SparseHamiltonianMPI<StateVectorT>,
+               std::shared_ptr<SparseHamiltonianMPI<StateVectorT>>,
+               Observable<StateVectorT>>(m, class_name.c_str())
+        .def(nb::init<const std::vector<ComplexT> &, const std::vector<SpIDX> &,
+                      const std::vector<SpIDX> &,
+                      const std::vector<std::size_t> &>())
+        .def("__repr__", &SparseHamiltonianMPI<StateVectorT>::getObsName)
+        .def("get_wires", &SparseHamiltonianMPI<StateVectorT>::getWires,
+             "Get wires of observables")
+        .def(
+            "__eq__",
+            [](const SparseHamiltonianMPI<StateVectorT> &self,
+               nb::handle other) -> bool {
+                if (!nb::isinstance<SparseHamiltonianMPI<StateVectorT>>(
+                        other)) {
+                    return false;
+                }
+                auto other_cast =
+                    nb::cast<SparseHamiltonianMPI<StateVectorT>>(other);
+                return self == other_cast;
+            },
+            "Compare two observables");
+#endif
+}
+
+/**
+ * @brief Register agnostic measurements class functionalities for MPI.
+ *
+ * @tparam StateVectorT
+ * @tparam PyClass
+ * @param pyclass Nanobind's measurements class to bind methods.
+ */
+template <class StateVectorT, class PyClass>
+void registerBackendAgnosticMeasurementsMPI(PyClass &pyclass) {
+    using PrecisionT = typename StateVectorT::PrecisionT;
+    using ParamT = PrecisionT;
+
+    pyclass
+        .def("probs",
+             [](MeasurementsMPI<StateVectorT> &M,
+                const std::vector<std::size_t> &wires) {
+                 auto probs = M.probs(wires);
+
+                 // Create a new array with the right size
+                 std::size_t size = probs.size();
+                 std::vector<std::size_t> shape{size};
+
+                 // Allocate new memory and copy the data
+                 ParamT *new_data = new ParamT[size];
+                 std::memcpy(new_data, probs.data(), size * sizeof(ParamT));
+
+                 // Create a capsule to manage memory
+                 auto capsule = nb::capsule(new_data, [](void *p) noexcept {
+                     delete[] static_cast<ParamT *>(p);
+                 });
+
+                 // Create and return the ndarray with numpy format
+                 return nb::ndarray<ParamT, nb::numpy, nb::c_contig>(
+                     new_data, shape.size(), shape.data(), capsule);
+             })
+        .def("probs",
+             [](MeasurementsMPI<StateVectorT> &M) {
+                 auto probs = M.probs();
+
+                 // Create a new array with the right size
+                 std::size_t size = probs.size();
+                 std::vector<std::size_t> shape{size};
+
+                 // Allocate new memory and copy the data
+                 ParamT *new_data = new ParamT[size];
+                 std::memcpy(new_data, probs.data(), size * sizeof(ParamT));
+
+                 // Create a capsule to manage memory
+                 auto capsule = nb::capsule(new_data, [](void *p) noexcept {
+                     delete[] static_cast<ParamT *>(p);
+                 });
+
+                 // Create and return the ndarray with numpy format
+                 return nb::ndarray<ParamT, nb::numpy, nb::c_contig>(
+                     new_data, shape.size(), shape.data(), capsule);
+             })
+        .def(
+            "expval",
+            [](MeasurementsMPI<StateVectorT> &M,
+               const std::shared_ptr<Observable<StateVectorT>> &ob) {
+                return M.expval(*ob);
+            },
+            "Expected value of an observable object.")
+        .def(
+            "var",
+            [](MeasurementsMPI<StateVectorT> &M,
+               const std::shared_ptr<Observable<StateVectorT>> &ob) {
+                return M.var(*ob);
+            },
+            "Variance of an observable object.")
+        .def("generate_samples", [](MeasurementsMPI<StateVectorT> &M,
+                                    std::size_t num_wires,
+                                    std::size_t num_shots) {
+            auto result = M.generate_samples(num_shots);
+
+            // Create a 2D array with shape (num_shots, num_wires)
+            std::vector<std::size_t> shape = {num_shots, num_wires};
+
+            // Allocate new memory and copy the data
+            std::size_t total_size = num_shots * num_wires;
+            std::size_t *new_data = new std::size_t[total_size];
+            std::memcpy(new_data, result.data(),
+                        total_size * sizeof(std::size_t));
+
+            // Create a capsule to manage memory
+            auto capsule = nb::capsule(new_data, [](void *p) noexcept {
+                delete[] static_cast<std::size_t *>(p);
+            });
+
+            // Create and return the ndarray with numpy format
+            return nb::ndarray<std::size_t, nb::numpy>(new_data, shape.size(),
+                                                       shape.data(), capsule);
+        });
+}
+
+/**
+ * @brief Register the adjoint Jacobian method.
+ */
+template <class StateVectorT>
+auto registerAdjointJacobianMPI(
+    AdjointJacobianMPI<StateVectorT> &adjoint_jacobian, const StateVectorT &sv,
+    const std::vector<std::shared_ptr<Observable<StateVectorT>>> &observables,
+    const OpsData<StateVectorT> &operations,
+    const std::vector<std::size_t> &trainableParams)
+    -> nb::ndarray<typename StateVectorT::PrecisionT, nb::numpy, nb::c_contig> {
+    using PrecisionT = typename StateVectorT::PrecisionT;
+    std::vector<PrecisionT> jac(observables.size() * trainableParams.size(),
+                                PrecisionT{0.0});
+    const JacobianDataMPI<StateVectorT> jd{operations.getTotalNumParams(), sv,
+                                           observables, operations,
+                                           trainableParams};
+    adjoint_jacobian.adjointJacobian(std::span{jac}, jd, sv);
+
+    // Create a new array with the right size
+    std::size_t size = jac.size();
+    std::vector<std::size_t> shape{size};
+
+    // Allocate new memory and copy the data
+    PrecisionT *new_data = new PrecisionT[size];
+    std::memcpy(new_data, jac.data(), size * sizeof(PrecisionT));
+
+    // Create a capsule to manage memory
+    auto capsule = nb::capsule(new_data, [](void *p) noexcept {
+        delete[] static_cast<PrecisionT *>(p);
+    });
+
+    // Create and return the ndarray with numpy format
+    return nb::ndarray<PrecisionT, nb::numpy, nb::c_contig>(
+        new_data, shape.size(), shape.data(), capsule);
+}
+
+/**
+ * @brief Register agnostic algorithms.
+ *
+ * @tparam StateVectorT
+ * @param m Nanobind module
+ */
+template <class StateVectorT>
+void registerBackendAgnosticAlgorithmsMPI(nb::module_ &m) {
+    using PrecisionT =
+        typename StateVectorT::PrecisionT; // Statevector's precision
+    using ComplexT =
+        typename StateVectorT::ComplexT; // Statevector's complex type
+    using ParamT = PrecisionT;           // Parameter's data precision
+
+    using arr_c = nb::ndarray<std::complex<ParamT>, nb::c_contig>;
+
+    const std::string bitsize =
+        std::to_string(sizeof(std::complex<PrecisionT>) * 8);
+
+    std::string class_name;
+
+    //***********************************************************************//
+    //                              Operations
+    //***********************************************************************//
+
+    class_name = "OpsStructMPIC" + bitsize;
+    nb::class_<OpsData<StateVectorT>>(m, class_name.c_str())
+        .def(nb::init<const std::vector<std::string> &,
+                      const std::vector<std::vector<ParamT>> &,
+                      const std::vector<std::vector<std::size_t>> &,
+                      const std::vector<bool> &,
+                      const std::vector<std::vector<ComplexT>> &>())
+        .def("__repr__", [](const OpsData<StateVectorT> &ops) {
+            using namespace Pennylane::Util;
+            std::ostringstream ops_stream;
+            for (std::size_t op = 0; op < ops.getSize(); op++) {
+                ops_stream << "{'name': " << ops.getOpsName()[op];
+                ops_stream << ", 'params': " << ops.getOpsParams()[op];
+                ops_stream << ", 'inv': " << ops.getOpsInverses()[op];
+                ops_stream << "}";
+                if (op < ops.getSize() - 1) {
+                    ops_stream << ",";
+                }
+            }
+            return "Operations: [" + ops_stream.str() + "]";
+        });
+
+    /**
+     * Create operation list.
+     */
+    std::string function_name = "create_ops_listMPIC" + bitsize;
+    m.def(
+        function_name.c_str(),
+        [](const std::vector<std::string> &ops_name,
+           const std::vector<std::vector<PrecisionT>> &ops_params,
+           const std::vector<std::vector<std::size_t>> &ops_wires,
+           const std::vector<bool> &ops_inverses,
+           const std::vector<arr_c> &ops_matrices,
+           const std::vector<std::vector<std::size_t>> &ops_controlled_wires,
+           const std::vector<std::vector<bool>> &ops_controlled_values) {
+            std::vector<std::vector<ComplexT>> conv_matrices(
+                ops_matrices.size());
+            for (std::size_t op = 0; op < ops_name.size(); op++) {
+                if (ops_matrices[op].size() > 0) {
+                    const auto m_ptr = ops_matrices[op].data();
+                    conv_matrices[op] = std::vector<ComplexT>{
+                        m_ptr, m_ptr + ops_matrices[op].size()};
+                }
+            }
+            return OpsData<StateVectorT>{ops_name,
+                                         ops_params,
+                                         ops_wires,
+                                         ops_inverses,
+                                         conv_matrices,
+                                         ops_controlled_wires,
+                                         ops_controlled_values};
+        },
+        "Create a list of operations from data.");
+
+    //***********************************************************************//
+    //                            Adjoint Jacobian MPI
+    //***********************************************************************//
+    class_name = "AdjointJacobianMPIC" + bitsize;
+    nb::class_<AdjointJacobianMPI<StateVectorT>>(m, class_name.c_str())
+        .def(nb::init<>())
+        .def("__call__", &registerAdjointJacobianMPI<StateVectorT>,
+             "Adjoint Jacobian method.")
+        .def(
+            "batched",
+            [](AdjointJacobianMPI<StateVectorT> &self, StateVectorT &sv,
+               const std::vector<std::shared_ptr<Observable<StateVectorT>>>
+                   &observables,
+               const OpsData<StateVectorT> &operations,
+               const std::vector<std::size_t> &trainableParams) {
+                using PrecisionT = typename StateVectorT::PrecisionT;
+                std::vector<PrecisionT> jac(observables.size() *
+                                                trainableParams.size(),
+                                            PrecisionT{0.0});
+                const JacobianDataMPI<StateVectorT> jd{
+                    operations.getTotalNumParams(), sv, observables, operations,
+                    trainableParams};
+                self.adjointJacobian_serial(std::span{jac}, jd);
+
+                // Create a new array with the right size
+                std::size_t size = jac.size();
+                std::vector<std::size_t> shape{size};
+
+                // Allocate new memory and copy the data
+                PrecisionT *new_data = new PrecisionT[size];
+                std::memcpy(new_data, jac.data(), size * sizeof(PrecisionT));
+
+                // Create a capsule to manage memory
+                auto capsule = nb::capsule(new_data, [](void *p) noexcept {
+                    delete[] static_cast<PrecisionT *>(p);
+                });
+
+                // Create and return the ndarray with numpy format
+                return nb::ndarray<PrecisionT, nb::numpy, nb::c_contig>(
+                    new_data, shape.size(), shape.data(), capsule);
+            },
+            "Batch Adjoint Jacobian method.");
+}
+
+/**
+ * @brief Register backend agnostic MPI.
+ *
+ * @param m Nanobind module
+ */
+inline void registerInfoMPI(nb::module_ &m) {
+    nb::class_<MPIManager>(m, "MPIManager")
+        .def(nb::init<>())
+        .def(nb::init<MPIManager &>())
+        .def("Barrier", &MPIManager::Barrier)
+        .def("getRank", &MPIManager::getRank)
+        .def("getSize", &MPIManager::getSize)
+        .def("getSizeNode", &MPIManager::getSizeNode)
+        .def("getTime", &MPIManager::getTime)
+        .def("getVendor", &MPIManager::getVendor)
+        .def("getVersion", &MPIManager::getVersion)
+        // Template version with explicit type constraints
+        .def(
+            "Scatter",
+            []<typename T>(MPIManager &mpi_manager,
+                           nb::ndarray<std::complex<T>, nb::c_contig> &sendBuf,
+                           nb::ndarray<std::complex<T>, nb::c_contig> &recvBuf,
+                           int root) {
+                auto send_ptr = sendBuf.data();
+                auto recv_ptr = recvBuf.data();
+                mpi_manager.template Scatter<std::complex<T>>(
+                    send_ptr, recv_ptr, recvBuf.size(), root);
+            },
+            "MPI Scatter for complex arrays.");
+}
+
+/**
+ * @brief Templated class to build lightning MPI class bindings.
+ *
+ * @tparam StateVectorT State vector type
+ * @param m Nanobind module.
+ */
+template <class StateVectorT> void lightningClassBindingsMPI(nb::module_ &m) {
+    using PrecisionT =
+        typename StateVectorT::PrecisionT; // Statevector's precision.
+    // Enable module name to be based on size of complex datatype
+    const std::string bitsize =
+        std::to_string(sizeof(std::complex<PrecisionT>) * 8);
+
+    //***********************************************************************//
+    //                              StateVector
+    //***********************************************************************//
+    std::string class_name = "StateVectorMPIC" + bitsize;
+    auto pyclass = nb::class_<StateVectorT>(m, class_name.c_str());
+    registerBackendAgnosticStateVectorMethods<StateVectorT>(pyclass);
+    registerBackendSpecificStateVectorMethods<StateVectorT>(pyclass);
+
+    // Register backend specific bindings
+    registerBackendClassSpecificBindingsMPI<StateVectorT>(pyclass);
+
+    //***********************************************************************//
+    //                              Observables
+    //***********************************************************************//
+
+    nb::module_ obs_submodule =
+        m.def_submodule("observablesMPI", "Submodule for observables classes.");
+    registerObservablesMPI<StateVectorT>(obs_submodule);
+
+    //***********************************************************************//
+    //                              Measurements
+    //***********************************************************************//
+
+    class_name = "MeasurementsMPIC" + bitsize;
+    auto pyclass_measurements =
+        nb::class_<MeasurementsMPI<StateVectorT>>(m, class_name.c_str());
+
+    pyclass_measurements.def(nb::init<const StateVectorT &>());
+    registerBackendAgnosticMeasurementsMPI<StateVectorT>(pyclass_measurements);
+    registerBackendSpecificMeasurementsMPI<StateVectorT>(pyclass_measurements);
+
+    //***********************************************************************//
+    //                              Algorithms
+    //***********************************************************************//
+
+    nb::module_ alg_submodule = m.def_submodule(
+        "algorithmsMPI", "Submodule for the algorithms functionality.");
+    registerBackendAgnosticAlgorithmsMPI<StateVectorT>(alg_submodule);
+    registerBackendSpecificAlgorithmsMPI<StateVectorT>(alg_submodule);
+}
+
+template <typename TypeList>
+void registerLightningClassBindingsMPI(nb::module_ &m) {
+    if constexpr (!std::is_same_v<TypeList, void>) {
+        using StateVectorT = typename TypeList::Type;
+        lightningClassBindingsMPI<StateVectorT>(m);
+        registerLightningClassBindingsMPI<typename TypeList::Next>(m);
+        nb::exception<Pennylane::Util::LightningException>(
+            m, "LightningExceptionMPI");
+    }
+}
+
+} // namespace Pennylane::NanoBindings

@@ -557,6 +557,29 @@ void registerBackendAgnosticMeasurements(PyClass &pyclass) {
 }
 
 /**
+ * @brief Register the adjoint Jacobian method.
+ */
+template <class StateVectorT>
+auto registerAdjointJacobian(
+    AdjointJacobian<StateVectorT> &adjoint_jacobian, const StateVectorT &sv,
+    const std::vector<std::shared_ptr<Observable<StateVectorT>>> &observables,
+    const OpsData<StateVectorT> &operations,
+    const std::vector<std::size_t> &trainableParams)
+    -> nb::ndarray<typename StateVectorT::PrecisionT, nb::numpy, nb::c_contig> {
+    using PrecisionT = typename StateVectorT::PrecisionT;
+    std::vector<PrecisionT> jac(observables.size() * trainableParams.size(),
+                                PrecisionT{0.0});
+    const JacobianData<StateVectorT> jd{operations.getTotalNumParams(),
+                                        sv.getLength(),
+                                        sv.getData(),
+                                        observables,
+                                        operations,
+                                        trainableParams};
+    adjoint_jacobian.adjointJacobian(std::span{jac}, jd, sv);
+    return createNumpyArrayFromVector<PrecisionT>(jac);
+}
+
+/**
  * @brief Create operations list from data
  *
  * @tparam StateVectorT State vector type
@@ -650,6 +673,16 @@ void registerBackendAgnosticAlgorithms(nb::module_ &m) {
     std::string function_name = "create_ops_listC" + bitsize;
     m.def(function_name.c_str(), &createOpsList<StateVectorT>,
           "Create a list of operations from data.");
+    //***********************************************************************//
+    //                            Adjoint Jacobian
+    //***********************************************************************//
+    class_name = "AdjointJacobianC" + bitsize;
+    auto adjoint_class =
+        nb::class_<AdjointJacobian<StateVectorT>>(m, class_name.c_str());
+
+    adjoint_class.def(nb::init<>());
+    adjoint_class.def("__call__", &registerAdjointJacobian<StateVectorT>,
+                      "Adjoint Jacobian method.");
 }
 
 /**
