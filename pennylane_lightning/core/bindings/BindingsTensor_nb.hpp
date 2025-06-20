@@ -272,6 +272,9 @@ nb::dict getCompileInfo() {
     return info;
 }
 
+#ifndef _ENABLE_PLTENSOR
+// These functions are used solely by the statevector simulators
+
 /**
  * @brief Register bindings for general info.
  *
@@ -558,6 +561,99 @@ void registerBackendAgnosticMeasurements(PyClass &pyclass) {
 }
 
 /**
+ * @brief Register agnostic algorithms for statevector simulators.
+ *
+ * @tparam StateVectorT
+ * @param m Nanobind module
+ */
+template <class StateVectorT>
+void registerBackendAgnosticAlgorithms(nb::module_ &m) {
+    using PrecisionT =
+        typename StateVectorT::PrecisionT; // Statevector's precision
+    using ComplexT =
+        typename StateVectorT::ComplexT; // Statevector's complex type
+    using ParamT = PrecisionT;           // Parameter's data precision
+
+    using arr_c = nb::ndarray<const std::complex<ParamT>, nb::c_contig>;
+
+    const std::string bitsize =
+        std::to_string(sizeof(std::complex<PrecisionT>) * 8);
+
+    std::string class_name;
+
+    //***********************************************************************//
+    //                              Operations
+    //***********************************************************************//
+
+    class_name = "OpsStructC" + bitsize;
+    nb::class_<OpsData<StateVectorT>>(m, class_name.c_str())
+        .def(nb::init<const std::vector<std::string> &,
+                      const std::vector<std::vector<ParamT>> &,
+                      const std::vector<std::vector<std::size_t>> &,
+                      const std::vector<bool> &,
+                      const std::vector<std::vector<ComplexT>> &>())
+        .def(nb::init<const std::vector<std::string> &,
+                      const std::vector<std::vector<ParamT>> &,
+                      const std::vector<std::vector<std::size_t>> &,
+                      const std::vector<bool> &,
+                      const std::vector<std::vector<ComplexT>> &,
+                      const std::vector<std::vector<std::size_t>> &,
+                      const std::vector<std::vector<bool>> &>())
+        .def("__repr__", [](const OpsData<StateVectorT> &ops) {
+            using namespace Pennylane::Util;
+            std::ostringstream ops_stream;
+            for (std::size_t op = 0; op < ops.getSize(); op++) {
+                ops_stream << "{'name': " << ops.getOpsName()[op];
+                ops_stream << ", 'params': " << ops.getOpsParams()[op];
+                ops_stream << ", 'inv': " << ops.getOpsInverses()[op];
+                ops_stream << ", 'controlled_wires': "
+                           << ops.getOpsControlledWires()[op];
+                ops_stream << ", 'controlled_values': "
+                           << ops.getOpsControlledValues()[op];
+                ops_stream << ", 'wires': " << ops.getOpsWires()[op];
+                ops_stream << "}";
+                if (op < ops.getSize() - 1) {
+                    ops_stream << ",";
+                }
+            }
+            return "Operations: [" + ops_stream.str() + "]";
+        });
+
+    /**
+     * Create operation list.
+     */
+    std::string function_name = "create_ops_listC" + bitsize;
+    m.def(
+        function_name.c_str(),
+        [](const std::vector<std::string> &ops_name,
+           const std::vector<std::vector<PrecisionT>> &ops_params,
+           const std::vector<std::vector<std::size_t>> &ops_wires,
+           const std::vector<bool> &ops_inverses,
+           const std::vector<arr_c> &ops_matrices,
+           const std::vector<std::vector<std::size_t>> &ops_controlled_wires,
+           const std::vector<std::vector<bool>> &ops_controlled_values) {
+            std::vector<std::vector<ComplexT>> conv_matrices(
+                ops_matrices.size());
+            for (std::size_t op = 0; op < ops_name.size(); op++) {
+                if (ops_matrices[op].size() > 0) {
+                    const auto *m_ptr = ops_matrices[op].data();
+                    const auto m_size = ops_matrices[op].size();
+                    conv_matrices[op] =
+                        std::vector<ComplexT>(m_ptr, m_ptr + m_size);
+                }
+            }
+            return OpsData<StateVectorT>{ops_name,
+                                         ops_params,
+                                         ops_wires,
+                                         ops_inverses,
+                                         conv_matrices,
+                                         ops_controlled_wires,
+                                         ops_controlled_values};
+        },
+        "Create a list of operations from data.");
+}
+
+/**
  * @brief Register backend agnostic state vector methods.
  *
  * @tparam StateVectorT
@@ -577,6 +673,7 @@ void registerBackendAgnosticStateVectorMethods(PyClass &pyclass) {
                 "Get the size of the statevector.");
     pyclass.def("size", &StateVectorT::getLength);
 }
+#endif
 
 /**
  * @brief Templated class to build lightning class bindings.

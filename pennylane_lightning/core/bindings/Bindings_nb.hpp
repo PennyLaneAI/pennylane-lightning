@@ -108,8 +108,10 @@ using namespace Pennylane::LightningTensor::TNCuda::Observables;
 using namespace Pennylane::LightningTensor::TNCuda::Measures;
 using namespace Pennylane::LightningTensor::TNCuda::NanoBindings;
 } // namespace
-// TODO: remove
-static_assert(false, "Backend not supported for LTensor bindings.");
+
+template <typename T> using Measurements = MeasurementsTNCuda<T>;
+// template<typename T>
+// using Observable = ObservableTNCuda<T>;
 
 #else
 static_assert(false, "Backend not found.");
