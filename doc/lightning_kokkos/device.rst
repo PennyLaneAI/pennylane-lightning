@@ -140,9 +140,9 @@ With ``lightning.kokkos`` installed with MPI support, this can be enabled in Pen
 
 Currently, a ``lightning.kokkos`` device with MPI supports all the ``gate operations`` and ``observables`` that a single process ``lightning.kokkos`` device supports, excluding Sparse Hamiltonian.
 
-By default, each MPI process will return the overall simulation results, except for the ``qml.state()`` and ``qml.prob()`` methods for which each MPI process only returns the local simulation
-results for the ``qml.state()`` and ``qml.prob()`` methods to avoid buffer overflow. It is the user's responsibility to ensure correct data collection for those two methods. Here are examples of collecting
-the local simulation results for ``qml.state()`` and ``qml.prob()`` methods:
+By default, each MPI process will return the overall simulation results, except for the ``qml.state()`` and ``qml.probs()`` methods for which each MPI process only returns the local simulation
+results for the ``qml.state()`` and ``qml.probs()`` methods to avoid buffer overflow. It is the user's responsibility to ensure correct data collection for those two methods. Here are examples of collecting
+the local simulation results for ``qml.state()`` and ``qml.probs()`` methods:
 
 The workflow for collecting local state vector (using the ``qml.state()`` method) to ``rank 0`` is as follows:
 
