@@ -193,73 +193,6 @@ void registerGates(PyClass &pyclass) {
 }
 
 /**
- * @brief Create an aligned array for a given type, memory model and array size.
- *
- * @tparam VectorT Datatype of array to create
- * @param memory_model Memory model to use
- * @param size Size of the array to create
- * @return Nanobind ndarray
- */
-template <typename VectorT>
-auto alignedArray(CPUMemoryModel memory_model, std::size_t size, bool zeroInit)
-    -> nb::ndarray<VectorT, nb::numpy, nb::c_contig> {
-    using Pennylane::Util::alignedAlloc;
-    using Pennylane::Util::getAlignment;
-
-    // Allocate aligned memory
-    void *ptr = alignedAlloc(getAlignment<VectorT>(memory_model),
-                             sizeof(VectorT) * size, zeroInit);
-
-    // Create capsule with custom deleter
-    auto capsule =
-        nb::capsule(ptr, [](void *p) noexcept { Util::alignedFree(p); });
-
-    std::vector<size_t> shape{size};
-
-    // Return ndarray with custom allocated memory
-    return nb::ndarray<VectorT, nb::numpy, nb::c_contig>(ptr, shape.size(),
-                                                         shape.data(), capsule);
-}
-
-/**
- * @brief Allocate aligned array with specified dtype.
- *
- * @param size Size of the array to create
- * @param dtype Data type as string ("complex64", "complex128", "float32",
- * "float64")
- * @param zeroInit Whether to initialize the array with zeros
- * @return Nanobind ndarray
- */
-auto allocateAlignedArray(std::size_t size, const std::string &dtype,
-                          bool zeroInit) -> nb::object {
-    auto memory_model = bestCPUMemoryModel();
-
-    if (dtype == "complex64") {
-        return nb::cast(
-            alignedArray<std::complex<float>>(memory_model, size, zeroInit));
-    } else if (dtype == "complex128") {
-        return nb::cast(
-            alignedArray<std::complex<double>>(memory_model, size, zeroInit));
-    } else if (dtype == "float32") {
-        return nb::cast(alignedArray<float>(memory_model, size, zeroInit));
-    } else if (dtype == "float64") {
-        return nb::cast(alignedArray<double>(memory_model, size, zeroInit));
-    }
-
-    throw std::runtime_error("Unsupported dtype: " + dtype);
-}
-
-/**
- * @brief Register array alignment functionality.
- */
-void registerArrayAlignmentBindings(nb::module_ &m) {
-    // Add allocate_aligned_array function
-    m.def("allocate_aligned_array", &allocateAlignedArray,
-          "Allocate aligned array with specified dtype", nb::arg("size"),
-          nb::arg("dtype"), nb::arg("zero_init") = false);
-}
-
-/**
  * @brief Return basic information of runtime environment.
  */
 nb::dict getRuntimeInfo() {
@@ -332,6 +265,76 @@ nb::dict getCompileInfo() {
     info["AVX512F"] = use_avx512f;
 
     return info;
+}
+
+#ifndef _ENABLE_PLTENSOR
+// These functions are used solely by the statevector simulators
+
+/**
+ * @brief Create an aligned array for a given type, memory model and array size.
+ *
+ * @tparam VectorT Datatype of array to create
+ * @param memory_model Memory model to use
+ * @param size Size of the array to create
+ * @return Nanobind ndarray
+ */
+template <typename VectorT>
+auto alignedArray(CPUMemoryModel memory_model, std::size_t size, bool zeroInit)
+    -> nb::ndarray<VectorT, nb::numpy, nb::c_contig> {
+    using Pennylane::Util::alignedAlloc;
+    using Pennylane::Util::getAlignment;
+
+    // Allocate aligned memory
+    void *ptr = alignedAlloc(getAlignment<VectorT>(memory_model),
+                             sizeof(VectorT) * size, zeroInit);
+
+    // Create capsule with custom deleter
+    auto capsule =
+        nb::capsule(ptr, [](void *p) noexcept { Util::alignedFree(p); });
+
+    std::vector<size_t> shape{size};
+
+    // Return ndarray with custom allocated memory
+    return nb::ndarray<VectorT, nb::numpy, nb::c_contig>(ptr, shape.size(),
+                                                         shape.data(), capsule);
+}
+
+/**
+ * @brief Allocate aligned array with specified dtype.
+ *
+ * @param size Size of the array to create
+ * @param dtype Data type as string ("complex64", "complex128", "float32",
+ * "float64")
+ * @param zeroInit Whether to initialize the array with zeros
+ * @return Nanobind ndarray
+ */
+auto allocateAlignedArray(std::size_t size, const std::string &dtype,
+                          bool zeroInit) -> nb::object {
+    auto memory_model = bestCPUMemoryModel();
+
+    if (dtype == "complex64") {
+        return nb::cast(
+            alignedArray<std::complex<float>>(memory_model, size, zeroInit));
+    } else if (dtype == "complex128") {
+        return nb::cast(
+            alignedArray<std::complex<double>>(memory_model, size, zeroInit));
+    } else if (dtype == "float32") {
+        return nb::cast(alignedArray<float>(memory_model, size, zeroInit));
+    } else if (dtype == "float64") {
+        return nb::cast(alignedArray<double>(memory_model, size, zeroInit));
+    }
+
+    throw std::runtime_error("Unsupported dtype: " + dtype);
+}
+
+/**
+ * @brief Register array alignment functionality.
+ */
+void registerArrayAlignmentBindings(nb::module_ &m) {
+    // Add allocate_aligned_array function
+    m.def("allocate_aligned_array", &allocateAlignedArray,
+          "Allocate aligned array with specified dtype", nb::arg("size"),
+          nb::arg("dtype"), nb::arg("zero_init") = false);
 }
 
 /**
@@ -677,18 +680,20 @@ void registerBackendAgnosticStateVectorMethods(PyClass &pyclass) {
                 "Get the size of the statevector.");
     pyclass.def("size", &StateVectorT::getLength);
 }
+#endif
 
 /**
- * @brief Register controlled gate operations for a statevector.
+ * @brief Register controlled gate operations.
  *
- * @tparam StateVectorT State vector type
+ * @tparam StateReprT State representation type
  * @tparam PyClass Nanobind class type
  * @param pyclass Nanobind class to bind methods to
  */
-template <class StateVectorT, class PyClass>
+template <class StateReprT, class PyClass>
 void registerControlledGates(PyClass &pyclass) {
-    using PrecisionT = typename StateVectorT::PrecisionT;
-    using ParamT = PrecisionT;
+    using PrecisionT =
+        typename StateReprT::PrecisionT; // StateReprT's precision
+    using ParamT = PrecisionT;           // Parameter's data precision
 
     using Pennylane::Gates::ControlledGateOperation;
     using Pennylane::Util::for_each_enum;
@@ -701,7 +706,7 @@ void registerControlledGates(PyClass &pyclass) {
                 std::string(lookup(Constant::controlled_gate_names, gate_op));
             const std::string doc = "Apply the " + gate_name + " gate.";
             auto func = [gate_name = gate_name](
-                            StateVectorT &sv,
+                            StateReprT &sv,
                             const std::vector<std::size_t> &controlled_wires,
                             const std::vector<bool> &controlled_values,
                             const std::vector<std::size_t> &wires, bool inverse,

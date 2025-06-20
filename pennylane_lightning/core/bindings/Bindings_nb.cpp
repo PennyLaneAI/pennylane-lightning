@@ -17,7 +17,7 @@
  * Implements device-agnostic operations to export to Python using Nanobind.
  */
 
-#include "BindingsTensor_nb.hpp"
+#include "Bindings_nb.hpp"
 #include "CPUMemoryModel.hpp"
 #include "Memory.hpp"
 
