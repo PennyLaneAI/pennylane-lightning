@@ -163,7 +163,7 @@ The workflow for collecting local state vector (using the ``qml.state()`` method
     if rank == 0:
         print(state_vector)
     
-The workflow for collecting local probability (using the ``qml.prob()`` method) to ``rank 0`` is as follows:
+The workflow for collecting local probability (using the ``qml.probs()`` method) to ``rank 0`` is as follows:
 
 .. code-block:: python
     
