@@ -31,16 +31,28 @@
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/vector.h>
 
+#include "BindingsUtils_nb.hpp"
 #include "DevTag.hpp"
 #include "Error.hpp"
 #include "ExactTNCuda.cpp"
 #include "MPSTNCuda.hpp"
+#include "MeasurementsTNCuda.hpp"
+#include "ObservablesTNCuda.hpp"
 #include "TypeList.hpp"
 #include "Util.hpp"
 #include "cuda_helpers.hpp"
 #include "tncuda_helpers.hpp"
 
 namespace nb = nanobind;
+
+/// @cond DEV
+namespace {
+using namespace Pennylane::LightningTensor::TNCuda;
+using namespace Pennylane::LightningTensor::TNCuda::Observables;
+using namespace Pennylane::LightningTensor::TNCuda::Measures;
+using Pennylane::NanoBindings::Utils::createNumpyArrayFromVector;
+} // namespace
+/// @endcond
 
 namespace Pennylane::LightningTensor::TNCuda::NanoBindings {
 
@@ -220,49 +232,22 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
  * @tparam PyClass
  * @param pyclass Nanobind's measurements class to bind methods.
  */
-template <class StateVectorT, class PyClass>
+template <class TensorNetT, class PyClass>
 void registerBackendSpecificMeasurements(PyClass &pyclass) {
-    // using MeasurementsT = MeasurementsTNCuda<TensorNetT>;
-    // using ObservableT = ObservableTNCuda<TensorNetT>;
-    // pyclass.def(
-    //         "expval",
-    //         [](MeasurementsT &M, const std::shared_ptr<ObservableT> &ob) {
-    //             return M.expval(*ob);
-    //         },
-    //         "Expected value of an observable object.");
-    // pyclass.def(
-    //         "probs",
-    //         [](MeasurementsT &M, const std::vector<std::size_t> &wires) {
-    //             return py::array_t<typename TensorNetT::PrecisionT>(
-    //                 py::cast(M.probs(wires)));
-    //         },
-    //         "Probabilities of a set of wires.")
-    // pyclass.def(
-    //         "var",
-    //         [](MeasurementsT &M, const std::shared_ptr<ObservableT> &ob) {
-    //             return M.var(*ob);
-    //         },
-    //         "Variance of an observable object.");
-    // pyclass.def("generate_samples", [](MeasurementsT &M,
-    //                                 const std::vector<std::size_t> &wires,
-    //                                 std::size_t num_shots) {
-    //         constexpr auto sz = sizeof(std::size_t);
-    //         const std::size_t num_wires = wires.size();
-    //         const std::size_t ndim = 2;
-    //         const std::vector<std::size_t> shape{num_shots, num_wires};
-    //         auto &&result = M.generate_samples(wires, num_shots);
+    using MeasurementsT = MeasurementsTNCuda<TensorNetT>;
+    using ObservableT = ObservableTNCuda<TensorNetT>;
+    pyclass.def("generate_samples", [](MeasurementsT &M,
+                                       const std::vector<std::size_t> &wires,
+                                       std::size_t num_shots) {
+        constexpr auto sz = sizeof(std::size_t);
+        const std::size_t num_wires = wires.size();
+        const std::size_t ndim = 2;
+        const std::vector<std::size_t> shape{num_shots, num_wires};
+        auto &&result = M.generate_samples(wires, num_shots);
 
-    //         const std::vector<std::size_t> strides{sz * num_wires, sz};
-    //         // return 2-D NumPy array
-    //         return py::array(py::buffer_info(
-    //             result.data(), /* data as contiguous array  */
-    //             sz,            /* size of one scalar        */
-    //             py::format_descriptor<std::size_t>::format(), /* data type */
-    //             ndim,   /* number of dimensions      */
-    //             shape,  /* shape of the matrix       */
-    //             strides /* strides for each axis     */
-    //             ));
-    //     });
+        return createNumpyArrayFromVector<std::size_t>(result, num_shots,
+                                                       num_wires);
+    });
 } // pyclass
 
 /**
