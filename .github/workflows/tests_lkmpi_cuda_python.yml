@@ -12,7 +12,7 @@ on:
         description: The version of PennyLane to use. Valid values are either 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
   push:
     branches:
-      - main
+      - master
   pull_request:
     types:
       - opened
@@ -186,7 +186,6 @@ jobs:
 
       - name: Build and install package
         env:
-          CUQUANTUM_SDK: $(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum')")
           PL_BACKEND: lightning_kokkos
         run: |
           source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}
