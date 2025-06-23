@@ -467,7 +467,7 @@ auto probs_bitshift_generic(
 };
 
 /**
- *@brief Sampling using Random_XorShift64_Pool
+ * @brief Sampling using Random_XorShift64_Pool
  *
  * @param samples_ Kokkos::View of the generated samples.
  * @param cdf_  Kokkos::View of cumulative probability distribution.
@@ -530,7 +530,8 @@ struct Sampler {
 };
 
 /**
- *@brief Sampling local wires with global index padding
+ * @brief Sampling local wires with global index padding for distributed LK with
+ * MPI
  *
  * @param samples_ Kokkos::View of the generated samples.
  * @param cdf_  Kokkos::View of cumulative probability distribution.
@@ -608,7 +609,7 @@ struct Local_Sampler {
 };
 
 /**
- *@brief Sampling into global wires bin
+ * @brief Sampling into global wires bin for distributed LK with MPI
  *
  * @param samples_bin_ Kokkos::View of the sample bins.
  * @param cdf_  Kokkos::View of cumulative probability distribution.

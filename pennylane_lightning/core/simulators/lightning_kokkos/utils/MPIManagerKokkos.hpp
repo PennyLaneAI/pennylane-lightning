@@ -92,12 +92,12 @@ class MPIManagerKokkos final : public MPIManager {
     using MPIManager::Bcast;
 
     /**
-     * @brief MPI_Sendrecv wrapper.
+     * @brief MPI_Sendrecv wrapper for Kokkos::Views.
      *
      * @tparam T C++ data type.
-     * @param sendBuf Send buffer vector.
+     * @param sendBuf Send buffer Kokkos::View.
      * @param dest Rank of destination.
-     * @param recvBuf Receive buffer vector.
+     * @param recvBuf Receive buffer Kokkos::View.
      * @param source Rank of source.
      * @param size Number of elements of the data to send/receive.
      * @param tag Tag for the MPI message.
@@ -119,11 +119,11 @@ class MPIManagerKokkos final : public MPIManager {
     }
 
     /**
-     * @brief MPI_AllGatherV wrapper.
+     * @brief MPI_AllGatherV wrapper for Kokkos::Views.
      *
      * @tparam T C++ data type.
-     * @param sendBuf Send buffer vector.
-     * @param recvBuf Receive buffer vector.
+     * @param sendBuf Send buffer Kokkos::View.
+     * @param recvBuf Receive buffer Kokkos::View.
      * @param recvCounts Number of elements received from each rank.
      * @param displacements Elements shifted from each rank for gather.
      */
@@ -140,10 +140,10 @@ class MPIManagerKokkos final : public MPIManager {
     }
 
     /**
-     * @brief MPI_Bcast wrapper.
+     * @brief MPI_Bcast wrapper for Kokkos::Views.
      *
      * @tparam T C++ data type.
-     * @param sendBuf Send buffer vector.
+     * @param sendBuf Send buffer Kokkos::View.
      * @param root Rank of broadcast root.
      */
     template <typename T>
