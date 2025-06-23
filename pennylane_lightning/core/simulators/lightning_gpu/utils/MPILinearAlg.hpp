@@ -55,7 +55,6 @@ inline void SparseMV_cuSparseMPI(
             csrOffsets_ptr, columns_ptr, values_ptr);
     }
     mpi_manager.Barrier();
-
     std::vector<CSRMatrix<Precision, IndexT>> localCSRMatVector;
     for (std::size_t i = 0; i < mpi_manager.getSize(); i++) {
         auto localCSRMat = scatterCSRMatrix<Precision, IndexT>(
