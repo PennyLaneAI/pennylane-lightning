@@ -242,7 +242,7 @@ build-nanobind:
 
 .PHONY: test-bindings
 test-bindings:
-	$(PYTHON) -m pytest tests/bindings -vv -x -s
+	$(PYTHON) -m pytest tests/bindings -vv -s
 
 .PHONY: build-test-bindings
 build-test-bindings:
