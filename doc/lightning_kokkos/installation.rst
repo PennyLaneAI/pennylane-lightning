@@ -115,6 +115,8 @@ If required, extra linker flags for MPI (e.g. for GPU Transport Layer) can be ad
 
     export MPI_EXTRA_LINKER_FLAGS="-lxpmem -L/opt/cray/pe/mpich/8.1.31/gtl/lib -lmpi_gtl_hsa"
 
+For an example of how to install Lightning-Kokkos with MPI on an HPC system, check out the :doc:`/lightning_kokkos/installation_hpc` page
+
 Test Lightning-Kokkos with MPI
 ===========================
 
