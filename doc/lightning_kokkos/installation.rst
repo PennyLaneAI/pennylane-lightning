@@ -94,7 +94,7 @@ Install Lightning-Kokkos with MPI
 
 .. note::
 
-    Building Lightning-Kokos with MPI requires a MPI library and ``mpi4py``. 
+    Building Lightning-Kokkos with MPI requires a MPI library and ``mpi4py``. 
 
 To install Lightning-Kokkos with MPI support, we recommend first installing Kokkos for your specific architecture (CPU, Nvidia/AMD GPU etc.),
 and exporting the install location to ``CMAKE_PREFIX_PATH`` as described above.
@@ -118,13 +118,13 @@ If required, extra linker flags for MPI (e.g. for GPU Transport Layer) can be ad
 Test Lightning-Kokkos with MPI
 ===========================
 
-You can test the Python layer of the MPI enabled plugin as follows:
+After install Lightning-Kokkos with MPI, you can test the Python layer of the MPI enabled plugin as follows:
 
 .. code-block:: bash
 
-    mpirun -np 2 python -m pytest mpitests --tb=short
+    PL_DEVICE="lightning_kokkos" mpirun -np 2 python -m pytest mpitests --tb=short
 
-The C++ code can be tested with:
+The C++ code can be copmiled and tested with:
 
 .. code-block:: bash
 

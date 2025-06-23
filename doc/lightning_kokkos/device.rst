@@ -120,7 +120,7 @@ Supported operations and observables
 
 The ``lightning.kokkos`` device supports distributed simulation using the Message Passing Interface (MPI). This enables the simulation of larger quantum circuits by distributing the workload across multiple CPU or GPU compute nodes.
 
-To utilize distributed simulation, ``lightning.kokkos`` must be compiled with MPI support. Check out the :doc:`/lightning_kokkos/installation` guide for more information.
+To utilize distributed simulation, ``lightning.kokkos`` must be compiled with MPI support. Check out the :ref:`Install Lightning-Kokkos with MPI <install-lightning-kokkos-with-mpi>` section of the :doc:`/lightning_kokkos/installation` guide for more information.
 
 With ``lightning.kokkos`` installed with MPI support, this can be enabled in Pennylane by setting the ``mpi`` keyword argument to ``True`` when creating the device. For example:
 
@@ -136,9 +136,9 @@ With ``lightning.kokkos`` installed with MPI support, this can be enabled in Pen
     local_state_vector = circuit_mpi()
 
 .. note::
-    The total number of MPI processes and MPI processes per node must be powers of 2. For example, 2, 4, 8, 16, etc.. If using Kokkos with GPUs, each MPI process is responsible for managing one GPU. 
+    The total number of MPI processes must be powers of 2. For example, 2, 4, 8, 16, etc.. If using Kokkos with GPUs, we recommend using one GPU per MPI process.
 
-Currently, a ``lightning.kokkos`` device with MPI supports all the ``gate operations`` and ``observables`` that a single process ``lightning.kokkos`` device supports, excluding Sparse Hamiltonian.
+Currently, a ``lightning.kokkos`` device with MPI supports all the ``gate operations`` and ``observables`` that a single process ``lightning.kokkos`` device supports, excluding ``SparseHamiltonian``.
 
 By default, each MPI process will return the overall simulation results, except for the ``qml.state()`` and ``qml.probs()`` methods for which each MPI process only returns the local simulation
 results for the ``qml.state()`` and ``qml.probs()`` methods to avoid buffer overflow. It is the user's responsibility to ensure correct data collection for those two methods. Here are examples of collecting
