@@ -150,7 +150,7 @@ void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
             ComplexT *data_ptr = static_cast<ComplexT *>(state.data());
             std::copy(sv.getData(), sv.getData() + sv.getLength(), data_ptr);
         },
-        "Copy state vector data to a numpy array.", nb::arg("state"));
+        "Copy StateVector data into a Numpy array.", nb::arg("state"));
 }
 
 /**
