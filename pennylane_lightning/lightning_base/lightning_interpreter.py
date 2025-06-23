@@ -132,9 +132,11 @@ def _(self, *invals, reset, postselect):
 
 
 @LightningInterpreter.register_primitive(adjoint_transform_prim)
-def _(self, *invals, jaxpr, lazy=True):
+def _(self, *invals, jaxpr, n_consts, lazy=True):
+    consts = invals[:n_consts]
+    args = invals[n_consts:]
     recorder = CollectOpsandMeas()
-    recorder.eval(jaxpr, [], *invals)
+    recorder.eval(jaxpr, consts, *args)
     ops = recorder.state["ops"]
     with pause():
         adjoint_ops = [qml.adjoint(op, lazy=lazy) for op in reversed(ops)]
@@ -144,11 +146,12 @@ def _(self, *invals, jaxpr, lazy=True):
 
 # pylint: disable=too-many-arguments
 @LightningInterpreter.register_primitive(ctrl_transform_prim)
-def _(self, *invals, n_control, jaxpr, control_values, work_wires):
+def _(self, *invals, n_control, jaxpr, control_values, n_consts, work_wires):
+    consts = invals[:n_consts]
     control_wires = invals[-n_control:]
-    args = invals[:-n_control]
+    args = invals[n_consts:-n_control]
     recorder = CollectOpsandMeas()
-    recorder.eval(jaxpr, [], *args)
+    recorder.eval(jaxpr, consts, *args)
     ops = recorder.state["ops"]
     with pause():
         ctrl_ops = [
