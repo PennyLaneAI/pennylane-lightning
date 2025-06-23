@@ -120,7 +120,7 @@ For an example of how to install Lightning-Kokkos with MPI on an HPC system, che
 Test Lightning-Kokkos with MPI
 ===========================
 
-After install Lightning-Kokkos with MPI, you can test the Python layer of the MPI enabled plugin as follows:
+After install Lightning-Kokkos with MPI, you can test the Python layer of the MPI enabled plugin as follows (Lightning-Qubit must be installed as well):
 
 .. code-block:: bash
 

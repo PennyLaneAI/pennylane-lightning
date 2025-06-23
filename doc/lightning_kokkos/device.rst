@@ -120,7 +120,7 @@ Supported operations and observables
 
 The ``lightning.kokkos`` device supports distributed simulation using the Message Passing Interface (MPI). This enables the simulation of larger quantum circuits by distributing the workload across multiple CPU or GPU compute nodes.
 
-To utilize distributed simulation, ``lightning.kokkos`` must be compiled with MPI support. Check out the :ref:`Install Lightning-Kokkos with MPI <install-lightning-kokkos-with-mpi>` section of the :doc:`/lightning_kokkos/installation` guide for more information.
+To utilize distributed simulation, ``lightning.kokkos`` must be compiled with MPI support. Check out the :doc:`/lightning_kokkos/installation#install-lightning-kokkos-with-mpi` guide for more information.
 
 With ``lightning.kokkos`` installed with MPI support, this can be enabled in Pennylane by setting the ``mpi`` keyword argument to ``True`` when creating the device. For example:
 
