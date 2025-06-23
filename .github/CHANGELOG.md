@@ -53,8 +53,8 @@
 
 <h3>Internal changes ⚙️</h3>
   
-- Introduce Nanobind as a new framework for Python bindings, and enhance modularity and performance. 
-  It also include significant improvements to the build system and a first round of codebase simplification. 
+- Introduce Nanobind as a new framework for Python bindings, and enhance modularity and performance of binding code. 
+  This includes significant improvements to the build system and a first round of codebase simplification. 
   Legacy PyBind11 code remains accessible for compatibility and will be incrementally phased out.
   [(#1176)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1176)
 
