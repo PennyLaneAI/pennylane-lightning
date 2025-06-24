@@ -39,17 +39,16 @@ createNumpyArrayFromVector(const std::vector<VectorT> &data,
             "Data size does not match the specified shape");
     }
 
-    // Allocate new memory and copy the data
-    VectorT *new_data = new VectorT[total_size];
-    std::memcpy(new_data, data.data(), total_size * sizeof(VectorT));
+    std::vector<VectorT> *new_data = new std::vector<VectorT>(std::move(data));
 
     // Create a capsule to manage memory
-    auto capsule = nb::capsule(
-        new_data, [](void *p) noexcept { delete[] static_cast<VectorT *>(p); });
+    auto capsule = nb::capsule(new_data, [](void *p) noexcept {
+        delete static_cast<std::vector<VectorT> *>(p);
+    });
 
     // Create and return the ndarray with numpy format
-    return nb::ndarray<VectorT, nb::numpy, nb::c_contig>(new_data, shape.size(),
-                                                         shape.data(), capsule);
+    return nb::ndarray<VectorT, nb::numpy, nb::c_contig>(
+        new_data->data(), shape.size(), shape.data(), capsule);
 }
 
 /**
