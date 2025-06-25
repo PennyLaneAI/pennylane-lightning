@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Tests for default qubit preprocessing."""
-from functools import reduce
+from functools import reduce, partial
 from typing import Sequence
 
 import numpy as np
@@ -315,9 +315,10 @@ class TestSupportedConfigurationsMCM:
             pytest.skip(reason="Deferred does not support postselection")
 
         shots = 100
-        device = qml.device(device_name, wires=3, shots=shots)
+        device = qml.device(device_name, wires=3)
         postselect = 1
 
+        @partial(qml.set_shots, shots=shots)
         @qml.qnode(device, postselect_mode=postselect_mode, mcm_method=mcm_method)
         def f(x):
             qml.RX(x, 0)
@@ -541,9 +542,10 @@ class TestExecutionMCM:
         wires = 2 if mcm_method != "deferred" else 3
 
         dq = qml.device("default.qubit", shots=shots, seed=seed)
-        dev = get_device(wires=wires, shots=shots, seed=seed)
+        dev = get_device(wires=wires, seed=seed)
         param = np.pi / 3
 
+        @partial(qml.set_shots, shots=shots)
         @qml.qnode(dev)
         def func(x):
             qml.RX(x, 0)
@@ -581,9 +583,10 @@ class TestExecutionMCM:
         wires = 3 if mcm_method == "deferred" else 2
 
         dq = qml.device("default.qubit", shots=shots)
-        dev = get_device(wires=wires, shots=shots)
+        dev = get_device(wires=wires)
         param = np.pi / 3
 
+        @partial(qml.set_shots, shots=shots)
         @qml.qnode(dev)
         def func(x):
             qml.RX(x, 0)
