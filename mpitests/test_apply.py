@@ -652,7 +652,7 @@ class TestGenerateSample:
         """
         num_wires = numQubits
 
-        dev_mpi = qml.device(device_name, wires=num_wires, mpi=True, shots=1000, c_dtype=c_dtype)
+        dev_mpi = qml.device(device_name, wires=num_wires, mpi=True, shots=2000, c_dtype=c_dtype)
         dev_mpi._statevector.reset_state()
 
         @qml.qnode(dev_mpi)
@@ -671,7 +671,7 @@ class TestGenerateSample:
         """
         num_wires = 3
 
-        dev_mpi = qml.device(device_name, wires=num_wires, mpi=True, shots=1000, c_dtype=c_dtype)
+        dev_mpi = qml.device(device_name, wires=num_wires, mpi=True, shots=2000, c_dtype=c_dtype)
 
         @qml.qnode(dev_mpi)
         def circuit():
@@ -688,7 +688,9 @@ class TestGenerateSample:
         """Test that a tensor product involving PauliX and PauliY works correctly"""
         num_wires = 3
 
-        dev_mpi = qml.device(device_name, wires=num_wires, mpi=True, shots=1000, c_dtype=c_dtype)
+        dev_mpi = qml.device(
+            device_name, wires=num_wires, mpi=True, shots=2000, c_dtype=c_dtype, seed=42
+        )
 
         theta = 0.432
         phi = 0.123
@@ -728,7 +730,9 @@ class TestGenerateSample:
         """Test that a tensor product involving PauliZ and PauliY and hadamard works correctly"""
         num_wires = 3
 
-        dev_mpi = qml.device(device_name, wires=num_wires, mpi=True, shots=1000, c_dtype=c_dtype)
+        dev_mpi = qml.device(
+            device_name, wires=num_wires, mpi=True, shots=5000, c_dtype=c_dtype, seed=42
+        )
 
         theta = 0.432
         phi = 0.123
@@ -772,7 +776,9 @@ class TestTensorVar:
         """Test that a tensor product involving PauliX and PauliY works correctly"""
         num_wires = 3
 
-        dev_mpi = qml.device(device_name, wires=num_wires, mpi=True, shots=1000, c_dtype=c_dtype)
+        dev_mpi = qml.device(
+            device_name, wires=num_wires, mpi=True, shots=2000, c_dtype=c_dtype, seed=42
+        )
 
         theta = 0.432
         phi = 0.123
@@ -803,7 +809,9 @@ class TestTensorVar:
     def test_pauliz_hadamard(self, c_dtype, tol=TOL_STOCHASTIC):
         """Test that a tensor product involving PauliZ and PauliY and hadamard works correctly"""
         num_wires = 3
-        dev_mpi = qml.device(device_name, wires=num_wires, mpi=True, shots=1000, c_dtype=c_dtype)
+        dev_mpi = qml.device(
+            device_name, wires=num_wires, mpi=True, shots=2000, c_dtype=c_dtype, seed=42
+        )
 
         theta = 0.432
         phi = 0.123

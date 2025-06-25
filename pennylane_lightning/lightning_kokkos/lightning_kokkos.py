@@ -255,7 +255,11 @@ class LightningKokkos(LightningBase):
             if wires is None:
                 raise DeviceError("Lightning-Kokkos-MPI does not support dynamic wires allocation.")
             self._statevector = self.LightningStateVector(
-                num_wires=len(self.wires), dtype=self.c_dtype, kokkos_args=kokkos_args, mpi=True
+                num_wires=len(self.wires),
+                dtype=self.c_dtype,
+                kokkos_args=kokkos_args,
+                mpi=True,
+                rng=self._rng,
             )
         else:
             self._statevector = None
