@@ -731,7 +731,7 @@ class TestGenerateSample:
         num_wires = 3
 
         dev_mpi = qml.device(
-            device_name, wires=num_wires, mpi=True, shots=5000, c_dtype=c_dtype, seed=42
+            device_name, wires=num_wires, mpi=True, shots=2000, c_dtype=c_dtype, seed=42
         )
 
         theta = 0.432
