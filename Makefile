@@ -233,3 +233,19 @@ docker-push-all:
 docker-all:
 	$(MAKE) docker-build-all
 	$(MAKE) docker-push-all
+
+.PHONY: build-nanobind
+build-nanobind:
+	$(MAKE) clean
+	PL_BACKEND=$(PL_BACKEND) python scripts/configure_pyproject_toml.py
+	python -m pip install -e . --config-settings editable_mode=compat -vv
+
+.PHONY: test-bindings
+test-bindings:
+	$(PYTHON) -m pytest tests/bindings -vv -s
+
+.PHONY: build-test-bindings
+build-test-bindings:
+	$(MAKE) build-nanobind
+	$(MAKE) test-bindings
+

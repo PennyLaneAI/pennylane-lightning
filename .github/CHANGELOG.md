@@ -53,6 +53,11 @@
 
 <h3>Internal changes ⚙️</h3>
   
+- Introduce Nanobind as a new framework for Python bindings, and enhance modularity and performance of binding code. 
+  This includes significant improvements to the build system and a first round of codebase simplification. 
+  Legacy PyBind11 code remains accessible for compatibility and will be incrementally phased out.
+  [(#1176)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1176)
+
 - Update docker build CI for stable version to use v0.41.1.
   [(#1188)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1188)
 
@@ -119,6 +124,7 @@ This release contains contributions from (in alphabetical order):
 
 Runor Agbaire,
 Ali Asadi,
+Amintor Dusko
 David Ittah,
 Christina Lee,
 Joseph Lee,
@@ -128,7 +134,8 @@ Luis Alfredo Nuñez Meneses,
 Mudit Pandey,
 Andrija Paurevic,
 Shuli Shu,
-Marc Vandelle
+Marc Vandelle,
+Jake Zaia
 
 ---
 

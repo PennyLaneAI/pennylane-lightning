@@ -593,4 +593,22 @@ bool areVecsDisjoint(const std::vector<T> &v1, const std::vector<T> &v2) {
     return true;
 }
 
+/**
+ * @brief Helper function to safely reinterpret data pointers
+ *
+ * This function assumes that DestType and SrcType have compatible memory
+ * layouts
+ *
+ * @tparam DestType Destination type
+ * @tparam SrcType Source type
+ * @param src_ptr Pointer to source data
+ * @return const DestType* Reinterpreted pointer to the same data
+ */
+template <typename DestType, typename SrcType>
+inline auto PL_reinterpret_cast(const SrcType *src_ptr) -> const DestType * {
+    static_assert(sizeof(DestType) == sizeof(SrcType),
+                  "Types must have the same size for reinterpretation");
+    return reinterpret_cast<const DestType *>(src_ptr);
+}
+
 } // namespace Pennylane::Util

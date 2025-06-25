@@ -91,72 +91,46 @@ def n_subsystems(request):
 # Looking for the device for testing.
 default_device = "lightning.qubit"
 supported_devices = {"lightning.kokkos", "lightning.qubit", "lightning.gpu", "lightning.tensor"}
-supported_devices.update({sb.replace(".", "_") for sb in supported_devices})
 
 
 def get_device():
     """Return the pennylane lightning device.
 
     The device is ``lightning.qubit`` by default. Allowed values are:
-    "lightning.kokkos", and "lightning.qubit". An
-    underscore can also be used instead of a dot. If the environment
-    variable ``PL_DEVICE`` is defined, its value is used. Underscores
-    are replaced by dots upon exiting.
+    "lightning.kokkos", "lightning.qubit", "lightning.gpu", and "lightning.tensor".
+    If the environment variable ``PL_DEVICE`` is defined, its value is used.
     """
-    device = None
-    if "PL_DEVICE" in os.environ:
-        device = os.environ.get("PL_DEVICE", default_device)
-        device = device.replace("_", ".")
-    if device is None:
-        device = default_device
+    device = os.environ.get("PL_DEVICE", default_device)
+    device = device.replace("_", ".")
+
     if device not in supported_devices:
-        raise ValueError(f"Invalid backend {device}.")
+        raise ValueError(f"Invalid backend {device}. Supported: {', '.join(supported_devices)}")
+
+    if device not in qml.plugin_devices:
+        raise DeviceError(
+            f"Device {device} does not exist. Make sure the required plugin is installed."
+        )
+
     return device
 
 
 device_name = get_device()
 
-if device_name not in qml.plugin_devices:
-    raise DeviceError(
-        f"Device {device_name} does not exist. Make sure the required plugin is installed."
-    )
-
 # Device specification
-import pennylane_lightning.lightning_qubit as lightning_ops  # Any definition of lightning_ops will do
+import importlib
 
+# Extract backend name from device_name
+backend = device_name.split(".")[1]  # qubit, kokkos, gpu, or tensor
+
+# Initialize variables for device classes
+lightning_ops = None
 LightningException = None
 
-if device_name == "lightning.kokkos":
-    from pennylane_lightning.lightning_kokkos import LightningKokkos as LightningDevice
-    from pennylane_lightning.lightning_kokkos._adjoint_jacobian import (
-        LightningKokkosAdjointJacobian as LightningAdjointJacobian,
-    )
-    from pennylane_lightning.lightning_kokkos._measurements import (
-        LightningKokkosMeasurements as LightningMeasurements,
-    )
-    from pennylane_lightning.lightning_kokkos._state_vector import (
-        LightningKokkosStateVector as LightningStateVector,
-    )
+# Define nanobind module name based on current backend
+nanobind_module_name = f"pennylane_lightning.lightning_{backend}_nb"
 
-    if hasattr(pennylane_lightning, "lightning_kokkos_ops"):
-        import pennylane_lightning.lightning_kokkos_ops as lightning_ops
-        from pennylane_lightning.lightning_kokkos_ops import LightningException
-elif device_name == "lightning.gpu":
-    from pennylane_lightning.lightning_gpu import LightningGPU as LightningDevice
-    from pennylane_lightning.lightning_gpu._adjoint_jacobian import (
-        LightningGPUAdjointJacobian as LightningAdjointJacobian,
-    )
-    from pennylane_lightning.lightning_gpu._measurements import (
-        LightningGPUMeasurements as LightningMeasurements,
-    )
-    from pennylane_lightning.lightning_gpu._state_vector import (
-        LightningGPUStateVector as LightningStateVector,
-    )
-
-    if hasattr(pennylane_lightning, "lightning_gpu_ops"):
-        import pennylane_lightning.lightning_gpu_ops as lightning_ops
-        from pennylane_lightning.lightning_gpu_ops import LightningException
-elif device_name == "lightning.tensor":
+# Handle lightning.tensor separately since it has different class structure
+if backend == "tensor":
     from pennylane_lightning.lightning_tensor import LightningTensor as LightningDevice
     from pennylane_lightning.lightning_tensor._measurements import (
         LightningTensorMeasurements as LightningMeasurements,
@@ -171,14 +145,40 @@ elif device_name == "lightning.tensor":
         import pennylane_lightning.lightning_tensor_ops as lightning_ops
         from pennylane_lightning.lightning_tensor_ops import LightningException
 else:
-    from pennylane_lightning.lightning_qubit import LightningQubit as LightningDevice
-    from pennylane_lightning.lightning_qubit._adjoint_jacobian import LightningAdjointJacobian
-    from pennylane_lightning.lightning_qubit._measurements import LightningMeasurements
-    from pennylane_lightning.lightning_qubit._state_vector import LightningStateVector
+    # General case for lightning.qubit, lightning.kokkos, and lightning.gpu
+    # Capitalize backend name for class names
+    backend_cap = backend.capitalize()
+    if backend == "gpu":
+        backend_cap = "GPU"  # Special case for GPU (uppercase)
+    if backend == "qubit":
+        backend_cap = ""  # Special case for LightningQubit (default)
 
-    if hasattr(pennylane_lightning, "lightning_qubit_ops"):
-        import pennylane_lightning.lightning_qubit_ops as lightning_ops
-        from pennylane_lightning.lightning_qubit_ops import LightningException
+    # Import main device class
+    module_path = f"pennylane_lightning.lightning_{backend}"
+    device_class = (
+        f"LightningQubit" if backend == "qubit" else f"Lightning{backend_cap}"
+    )  # Special case for LightningQubit (default)
+    module = importlib.import_module(module_path)
+    LightningDevice = getattr(module, device_class)
+
+    # Import adjoint jacobian class
+    adjoint_module = importlib.import_module(f"{module_path}._adjoint_jacobian")
+    LightningAdjointJacobian = getattr(adjoint_module, f"Lightning{backend_cap}AdjointJacobian")
+
+    # Import measurements class
+    measurements_module = importlib.import_module(f"{module_path}._measurements")
+    LightningMeasurements = getattr(measurements_module, f"Lightning{backend_cap}Measurements")
+
+    # Import state vector class
+    state_vector_module = importlib.import_module(f"{module_path}._state_vector")
+    LightningStateVector = getattr(state_vector_module, f"Lightning{backend_cap}StateVector")
+
+    # Try to import ops module
+    ops_module_path = f"pennylane_lightning.lightning_{backend}_ops"
+    if hasattr(pennylane_lightning, f"lightning_{backend}_ops"):
+        lightning_ops = importlib.import_module(ops_module_path)
+        if hasattr(lightning_ops, "LightningException"):
+            LightningException = lightning_ops.LightningException
 
 
 # General qubit_device fixture, for any number of wires.
@@ -341,3 +341,31 @@ def pytest_report_header():
         "PennyLane-Lightning Test Suite",
         f"::: Device: {device_name:<17} :::",
     ]
+
+
+@pytest.fixture(params=["64", "128"])
+def precision(request):
+    """Return the precision for the test."""
+    return request.param
+
+
+@pytest.fixture
+def get_precision_class(nanobind_module, precision):
+    """Get class of specified precision from nanobind module."""
+
+    def _get_class(class_prefix):
+        class_name = f"{class_prefix}C{precision}"
+        if hasattr(nanobind_module, class_name):
+            return getattr(nanobind_module, class_name)
+        pytest.skip(f"Class {class_name} not available in module")
+
+    return _get_class
+
+
+@pytest.fixture(scope="session")
+def current_nanobind_module():
+    """Return the nanobind module for the current backend."""
+    try:
+        return importlib.import_module(nanobind_module_name)
+    except ImportError as e:
+        pytest.skip(f"Nanobind module {nanobind_module_name} not available: {str(e)}")
