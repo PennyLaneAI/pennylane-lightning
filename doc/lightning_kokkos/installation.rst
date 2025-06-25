@@ -89,6 +89,8 @@ Similarly, the CMake option ``-DKokkos_ARCH_{...}=ON`` must also be specified to
 A list of the architectures is found on the `Kokkos wiki <https://kokkos.org/kokkos-core-wiki/API/core/Macros.html#architectures>`_.
 Note that ``THREADS`` backend is not recommended since `Kokkos does not guarantee its safety <https://github.com/kokkos/kokkos-core-wiki/blob/17f08a6483937c26e14ec3c93a2aa40e4ce081ce/docs/source/ProgrammingGuide/Initialization.md?plain=1#L67>`_.
 
+.. _install-lightning-kokkos-with-mpi:
+
 Install Lightning-Kokkos with MPI
 =================================
 
