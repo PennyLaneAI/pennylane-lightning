@@ -113,7 +113,7 @@ jobs:
       - name: Install required packages
         run: |
           python -m pip install -r requirements-tests.txt
-          python -m pip install cmake custatevec-cu12 scipy
+          python -m pip install cmake scipy
 
       - name: Validate GPU version and installed compiler and modules
         run: |
