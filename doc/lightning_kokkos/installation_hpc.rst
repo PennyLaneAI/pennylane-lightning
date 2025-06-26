@@ -55,7 +55,7 @@ To build Lightning-Kokkos with MPI on `Frontier <https://www.olcf.ornl.gov/front
 
 .. note::
 
-    Different compilers and optimization flags can yield significantly different performance results. We observed significant performance degradation when compiled with ``amdclang++`` and ``CMAKE_BUILD_TYPE`` set to ``RelWithDebugInfo``. We recommend using ``hipcc``, or ``amdclang++`` with ``CMAKE_BUILD_TYPE`` set to ``Release``.
+    Different compilers and optimization flags dramatically affect performance. We observed significant performance degradation when compiling with ``amdclang++`` and ``CMAKE_BUILD_TYPE`` set to ``RelWithDebugInfo``. For optimal results, we recommend using either ``hipcc`` or ``amdclang++`` with ``CMAKE_BUILD_TYPE`` set to ``Release``.
 
 To submit a job, for example on 2 nodes, the following SLURM script can be used:
 
