@@ -122,12 +122,13 @@ The ``lightning.kokkos`` device supports distributed simulation using the Messag
 
 To utilize distributed simulation, ``lightning.kokkos`` must be compiled with MPI support. Check out the :ref:`Lightning Kokkos installation guide<install-lightning-kokkos-with-mpi>` for more information.
 
-With ``lightning.kokkos`` installed with MPI support, this can be enabled in Pennylane by setting the ``mpi`` keyword argument to ``True`` when creating the device. For example:
+With ``lightning.kokkos`` installed with MPI support, distributed simulation can be enabled in Pennylane by setting the ``mpi`` keyword argument to ``True`` when creating the device. For example:
 
 .. code-block:: python
 
     from mpi4py import MPI
     import pennylane as qml
+
     dev = qml.device('lightning.kokkos', wires=8, mpi=True)
     @qml.qnode(dev)
     def circuit_mpi():
@@ -136,12 +137,12 @@ With ``lightning.kokkos`` installed with MPI support, this can be enabled in Pen
     local_state_vector = circuit_mpi()
 
 .. note::
-    The total number of MPI processes must be powers of 2. For example, 2, 4, 8, 16, etc.. If using Kokkos with GPUs, we recommend using one GPU per MPI process.
+    The total number of MPI processes must be powers of 2. For example, 2, 4, 8, 16, etc. If using Kokkos with GPUs, we recommend using one GPU per MPI process.
 
-Currently, a ``lightning.kokkos`` device with MPI supports all the ``gate operations`` and ``observables`` that a single process ``lightning.kokkos`` device supports, excluding ``SparseHamiltonian``.
+Currently, the ``lightning.kokkos`` device with MPI supports all the ``gate operations`` and ``observables`` that a single process ``lightning.kokkos`` device supports, excluding ``SparseHamiltonian``.
 
 By default, each MPI process will return the overall simulation results, except for the ``qml.state()`` and ``qml.probs()`` methods for which each MPI process only returns the local simulation
-results for the ``qml.state()`` and ``qml.probs()`` methods to avoid buffer overflow. It is the user's responsibility to ensure correct data collection for those two methods. Here are examples of collecting
+results for the ``qml.state()`` and ``qml.probs()`` methods to avoid buffer overflow. It is the user's responsibility to ensure correct data collection for those two methods (e.g. using MPI Gather). Here are examples of collecting
 the local simulation results for ``qml.state()`` and ``qml.probs()`` methods:
 
 The workflow for collecting local state vector (using the ``qml.state()`` method) to ``rank 0`` is as follows:
@@ -152,12 +153,15 @@ The workflow for collecting local state vector (using the ``qml.state()`` method
     import pennylane as qml
     comm = MPI.COMM_WORLD
     rank = comm.Get_rank() 
+
     dev = qml.device('lightning.kokkos', wires=8, mpi=True)
     @qml.qnode(dev)
     def circuit_mpi():
         qml.PauliX(wires=[0])
         return qml.state()
+
     local_state_vector = circuit_mpi()
+
     #rank 0 will collect the local state vector
     state_vector = comm.gather(local_state_vector, root=0)
     if rank == 0:
@@ -194,8 +198,8 @@ The workflow for collecting local probability (using the ``qml.probs()`` method)
     if rank == 0:
         print(probs)
 
-Then the python script can be executed with the following command:
+Then the python script can be executed with the following command (for example on 4 MPI processes):
 
 .. code-block:: console
     
-    $ mpirun -np 4 python yourscript.py
+    $ mpirun -np 4 python pennylane_quantum_script.py

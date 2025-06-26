@@ -163,7 +163,7 @@ With ``lightning.gpu`` installed with MPI support, this can be enabled in Pennyl
     local_state_vector = circuit_mpi()
 
 .. note::
-    The total number of MPI processes and MPI processes per node must be powers of 2. For example, 2, 4, 8, 16, etc.. Each MPI process is responsible for managing one GPU. 
+    The total number of MPI processes and MPI processes per node must be powers of 2. For example, 2, 4, 8, 16, etc. Each MPI process is responsible for managing one GPU. 
 
 Currently, a ``lightning.gpu`` device with the MPI multi-GPU backend supports all the ``gate operations`` and ``observables`` that a ``lightning.gpu`` device with a single GPU/node backend supports.
 
