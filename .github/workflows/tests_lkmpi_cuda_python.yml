@@ -126,7 +126,6 @@ jobs:
         run: |
           source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}
           python -m pip install -r requirements-tests.txt
-          python -m pip install custatevec-cu12 # required for CUQUANTUM_SDK path
           python -m pip install mpi4py openfermionpyscf
           python scripts/configure_pyproject_toml.py || true
           python -m pip install . -vv
