@@ -47,6 +47,11 @@ option(ENABLE_WARNINGS "Enable warnings" ON)
 option(ENABLE_NATIVE "Enable native CPU build tuning" OFF)
 option(ENABLE_PYTHON "Enable compilation of the Python module" ON)
 
+include_directories(perfetto/sdk)
+add_library(perfetto STATIC perfetto/sdk/perfetto.cc)
+set_property(TARGET perfetto PROPERTY POSITION_INDEPENDENT_CODE ON)
+
+
 # OpenMP
 find_package(OpenMP)
 if (OpenMP_CXX_FOUND)
@@ -147,6 +152,7 @@ target_include_directories(pennylane_lightning  INTERFACE "$<INSTALL_INTERFACE:$
 #####################################################
 if(ENABLE_PYTHON)
     message(STATUS "ENABLE_PYTHON is ON.")
+
     pybind11_add_module("${PL_BACKEND}_ops" "pennylane_lightning/core/bindings/Bindings.cpp")
 
     set(CMAKE_BUILD_RPATH_USE_ORIGIN ON)
@@ -160,6 +166,7 @@ if(ENABLE_PYTHON)
 
     target_link_libraries("${PL_BACKEND}_ops" PRIVATE   lightning_compile_options
                                                         lightning_external_libs
+                                                        perfetto
                                                         )
 
     target_link_libraries("${PL_BACKEND}_ops" PRIVATE   lightning_observables
