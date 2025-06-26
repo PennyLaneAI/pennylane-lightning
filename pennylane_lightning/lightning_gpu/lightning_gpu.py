@@ -295,6 +295,7 @@ class LightningGPU(LightningBase):
                 dtype=c_dtype,
                 mpi_handler=self._mpi_handler,
                 use_async=use_async,
+                rng=self._rng,
             )
         else:
             self._statevector = None
