@@ -4,6 +4,10 @@ project(lightning_base LANGUAGES CXX)
 
 add_library(lightning_base INTERFACE)
 
+if(ENABLE_INSTRUMENTATION)
+    target_compile_options(lightning_base INTERFACE -finstrument-functions)
+endif()
+
 target_include_directories(lightning_base INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(lightning_base INTERFACE  lightning_compile_options
                                                 lightning_external_libs

@@ -46,6 +46,7 @@ option(ENABLE_COVERAGE "Enable code coverage" OFF)
 option(ENABLE_WARNINGS "Enable warnings" ON)
 option(ENABLE_NATIVE "Enable native CPU build tuning" OFF)
 option(ENABLE_PYTHON "Enable compilation of the Python module" ON)
+option(ENABLE_INSTRUMENTATION "Enable function instrumentation with -finstrument-functions" ON)
 
 # OpenMP
 find_package(OpenMP)
@@ -128,6 +129,11 @@ add_subdirectory(pennylane_lightning/core)
 #####################################################
 add_library(pennylane_lightning INTERFACE)
 
+# Instrumentation
+if(ENABLE_INSTRUMENTATION)
+    target_compile_options(pennylane_lightning INTERFACE -finstrument-functions)
+endif()
+
 target_link_libraries(pennylane_lightning INTERFACE lightning_observables
                                                     lightning_utils
                                                     lightning_algorithms
@@ -147,7 +153,7 @@ target_include_directories(pennylane_lightning  INTERFACE "$<INSTALL_INTERFACE:$
 #####################################################
 if(ENABLE_PYTHON)
     message(STATUS "ENABLE_PYTHON is ON.")
-    pybind11_add_module("${PL_BACKEND}_ops" "pennylane_lightning/core/bindings/Bindings.cpp")
+    pybind11_add_module("${PL_BACKEND}_ops" "pennylane_lightning/core/bindings/Bindings.cpp" "profile/hook.cpp")
 
     set(CMAKE_BUILD_RPATH_USE_ORIGIN ON)
     if("${PL_BACKEND}" STREQUAL "lightning_gpu" OR "${PL_BACKEND}" STREQUAL "lightning_tensor")
