@@ -6,7 +6,7 @@ The Lightning-Kokkos simulator is well suited for various parallel HPC platforms
 Building and Running Lightning-Kokkos with MPI on Frontier
 ==========================================================
 
-To build Lightning-Kokkos with MPI on `Frontier <https://www.olcf.ornl.gov/frontier/>` for AMD GPUs, the following commands can be used:
+To build Lightning-Kokkos with MPI on `Frontier <https://www.olcf.ornl.gov/frontier/>`_ for AMD GPUs, the following commands can be used:
 
 .. code-block:: bash
 
