@@ -1117,6 +1117,7 @@ TEMPLATE_TEST_CASE("sendrecvBuffers", "[LKMPI]", double, float) {
         "InitSendBuffer", message_size, KOKKOS_LAMBDA(const std::size_t i) {
             sendbuf(i) = static_cast<TestType>(mpi_rank + i);
         });
+    Kokkos::fence();
     sv.sendrecvBuffers(dest_rank, dest_rank, message_size, 1);
 
     auto h_recvbuf = view2vector(recvbuf);
