@@ -582,6 +582,7 @@ class MeasurementsMPI final
                 sum += norm * norm;
             },
             local_squared_norm);
+        Kokkos::fence();
         std::vector<PrecisionT> local_norms(mpi_manager_.getSize());
 
         mpi_manager_.Gather(local_squared_norm, local_norms, 0);
@@ -607,6 +608,7 @@ class MeasurementsMPI final
                 Global_Bin_Sampler<PrecisionT, Kokkos::Random_XorShift64_Pool>(
                     global_samples_bin, d_local_squared_norm, rand_pool,
                     num_global_qubits, twoN_global_qubits));
+            Kokkos::fence();
         }
         mpi_manager_.Barrier();
         mpi_manager_.Bcast(global_samples_bin, 0);
@@ -647,6 +649,8 @@ class MeasurementsMPI final
                     local_samples, local_normalized_probability, rand_pool,
                     num_local_qubits, num_global_qubits, global_index,
                     exp2(num_local_qubits)));
+
+            Kokkos::fence();
         }
 
         Kokkos::View<std::size_t *> samples("num_samples",

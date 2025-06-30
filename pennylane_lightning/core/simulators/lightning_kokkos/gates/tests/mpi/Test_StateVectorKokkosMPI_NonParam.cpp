@@ -108,7 +108,7 @@ TEMPLATE_TEST_CASE("Apply non-trivial op", "[LKMPI]", double, float) {
     sv_ref.applyOperation("Hadamard", {3});
 
     auto reference = sv_ref.getDataVector();
-    auto data = sv.getFullDataVector(0);
+    auto data = getFullDataVector(sv, 0);
 
     if (sv.getMPIManager().getRank() == 0) {
         for (std::size_t j = 0; j < data.size(); j++) {
@@ -135,7 +135,7 @@ TEMPLATE_TEST_CASE("Apply Operation - non-param 1 wire", "[LKMPI]", double,
         sv_ref.applyOperation(gate_name, {wire}, inverse);
 
         auto reference = sv_ref.getDataVector();
-        auto data = sv.getFullDataVector(0);
+        auto data = getFullDataVector(sv, 0);
 
         if (sv.getMPIManager().getRank() == 0) {
             for (std::size_t j = 0; j < data.size(); j++) {
@@ -165,7 +165,7 @@ TEMPLATE_TEST_CASE("Apply Operation - non-param 2 wires", "[LKMPI]", double,
             sv_ref.applyOperation(gate_name, {wire_0, wire_1}, inverse);
 
             auto reference = sv_ref.getDataVector();
-            auto data = sv.getFullDataVector(0);
+            auto data = getFullDataVector(sv, 0);
 
             if (sv.getMPIManager().getRank() == 0) {
                 for (std::size_t j = 0; j < data.size(); j++) {
@@ -199,7 +199,7 @@ TEMPLATE_TEST_CASE("Apply Operation - non-param 3 wires", "[LKMPI]", double,
             sv_ref.applyOperation(gate_name, {wire_0, wire_1, wire_2}, inverse);
 
             auto reference = sv_ref.getDataVector();
-            auto data = sv.getFullDataVector(0);
+            auto data = getFullDataVector(sv, 0);
 
             if (sv.getMPIManager().getRank() == 0) {
                 for (std::size_t j = 0; j < data.size(); j++) {
@@ -240,7 +240,7 @@ TEMPLATE_TEST_CASE(
                                   {target_wire}, inverse, {});
 
             auto reference = sv_ref.getDataVector();
-            auto data = sv.getFullDataVector(0);
+            auto data = getFullDataVector(sv, 0);
 
             if (sv.getMPIManager().getRank() == 0) {
                 for (std::size_t j = 0; j < data.size(); j++) {
@@ -283,7 +283,7 @@ TEMPLATE_TEST_CASE(
                                   {target_wire_0, target_wire_1}, inverse, {});
 
             auto reference = sv_ref.getDataVector();
-            auto data = sv.getFullDataVector(0);
+            auto data = getFullDataVector(sv, 0);
 
             if (sv.getMPIManager().getRank() == 0) {
                 for (std::size_t j = 0; j < data.size(); j++) {
@@ -330,7 +330,7 @@ TEMPLATE_TEST_CASE(
                                   {target_wire}, inverse, {});
 
             auto reference = sv_ref.getDataVector();
-            auto data = sv.getFullDataVector(0);
+            auto data = getFullDataVector(sv, 0);
 
             if (sv.getMPIManager().getRank() == 0) {
                 for (std::size_t j = 0; j < data.size(); j++) {
@@ -378,7 +378,7 @@ TEMPLATE_TEST_CASE(
                                   {target_wire_0, target_wire_1}, inverse, {});
 
             auto reference = sv_ref.getDataVector();
-            auto data = sv.getFullDataVector(0);
+            auto data = getFullDataVector(sv, 0);
 
             if (sv.getMPIManager().getRank() == 0) {
                 for (std::size_t j = 0; j < data.size(); j++) {
@@ -432,7 +432,7 @@ TEMPLATE_TEST_CASE("Match wires after apply PauliX", "[LKMPI]", double, float) {
               Approx(real(reference[mpi_manager.getRank() * 4 + j])));
     }
 
-    auto data = sv_1.getFullDataVector(0);
+    auto data = getFullDataVector(sv_1, 0);
     if (mpi_manager.getRank() == 0) {
         for (std::size_t j = 0; j < init_sv.size(); j++) {
             CHECK(real(data[j]) == Approx(real(init_sv[j])));
@@ -449,7 +449,7 @@ TEMPLATE_TEST_CASE("Match wires after apply PauliX", "[LKMPI]", double, float) {
               Approx(real(reference[mpi_manager.getRank() * 4 + j])));
     }
 
-    data = sv.getFullDataVector(0);
+    data = getFullDataVector(sv, 0);
     if (mpi_manager.getRank() == 0) {
         for (std::size_t j = 0; j < init_sv.size(); j++) {
             CHECK(real(data[j]) == Approx(real(reference[j])));
@@ -477,7 +477,7 @@ TEMPLATE_TEST_CASE("Apply matrix - 1 wire", "[LKMPI]", double, float) {
         sv_ref.applyOperation("matrix", {wire}, inverse, {}, matrix);
 
         auto reference = sv_ref.getDataVector();
-        auto data = sv.getFullDataVector(0);
+        auto data = getFullDataVector(sv, 0);
 
         if (sv.getMPIManager().getRank() == 0) {
             for (std::size_t j = 0; j < data.size(); j++) {
@@ -512,7 +512,7 @@ TEMPLATE_TEST_CASE("Apply matrix - 2 wires", "[LKMPI]", double, float) {
                                   matrix);
 
             auto reference = sv_ref.getDataVector();
-            auto data = sv.getFullDataVector(0);
+            auto data = getFullDataVector(sv, 0);
 
             if (sv.getMPIManager().getRank() == 0) {
                 for (std::size_t j = 0; j < data.size(); j++) {
@@ -554,7 +554,7 @@ TEMPLATE_TEST_CASE("Apply Controlled matrix - 1 control 1 target wire",
                                   {target_wire}, inverse, {}, matrix);
 
             auto reference = sv_ref.getDataVector();
-            auto data = sv.getFullDataVector(0);
+            auto data = getFullDataVector(sv, 0);
 
             if (sv.getMPIManager().getRank() == 0) {
                 for (std::size_t j = 0; j < data.size(); j++) {
@@ -603,7 +603,7 @@ TEMPLATE_TEST_CASE("Apply Controlled matrix - 1 control 2 target wires",
                                   matrix);
 
             auto reference = sv_ref.getDataVector();
-            auto data = sv.getFullDataVector(0);
+            auto data = getFullDataVector(sv, 0);
 
             if (sv.getMPIManager().getRank() == 0) {
                 for (std::size_t j = 0; j < data.size(); j++) {
@@ -651,7 +651,7 @@ TEMPLATE_TEST_CASE("Apply Controlled matrix - 2 control 1 target wire",
                                   {target_wire}, inverse, {}, matrix);
 
             auto reference = sv_ref.getDataVector();
-            auto data = sv.getFullDataVector(0);
+            auto data = getFullDataVector(sv, 0);
 
             if (sv.getMPIManager().getRank() == 0) {
                 for (std::size_t j = 0; j < data.size(); j++) {
@@ -706,7 +706,7 @@ TEMPLATE_TEST_CASE("Apply Controlled matrix - 2 control 2 target wire",
                                   matrix);
 
             auto reference = sv_ref.getDataVector();
-            auto data = sv.getFullDataVector(0);
+            auto data = getFullDataVector(sv, 0);
 
             if (sv.getMPIManager().getRank() == 0) {
                 for (std::size_t j = 0; j < data.size(); j++) {

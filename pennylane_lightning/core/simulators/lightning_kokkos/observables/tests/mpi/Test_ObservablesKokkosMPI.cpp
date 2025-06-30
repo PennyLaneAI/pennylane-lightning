@@ -205,7 +205,7 @@ TEMPLATE_PRODUCT_TEST_CASE("HamiltonianMPI::ApplyInPlace", "[Observables]",
         ham->applyInPlace(sv);
         ham0->applyInPlace(sv_ref);
 
-        auto data = sv.getFullDataVector(0);
+        auto data = getFullDataVector(sv, 0);
         auto reference = sv_ref.getDataVector();
 
         if (sv.getMPIManager().getRank() == 0) {

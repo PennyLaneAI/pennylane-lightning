@@ -1409,33 +1409,6 @@ class StateVectorKokkosMPI final
     }
 
     /**
-     * @brief Get combined data vector to root rank
-     */
-    [[nodiscard]] auto getFullDataVector(const std::size_t root = 0)
-        -> std::vector<ComplexT> {
-        reorderGlobalLocalWires();
-        reorderLocalWires();
-        std::vector<ComplexT> data_(
-            (mpi_manager_.getRank() == root) ? this->getLength() : 0);
-        std::vector<ComplexT> local_((*sv_).getLength());
-        (*sv_).DeviceToHost(local_.data(), local_.size());
-        std::vector<int> displacements(mpi_manager_.getSize(), 0);
-        for (std::size_t rank = 0; rank < mpi_manager_.getSize(); rank++) {
-            for (std::size_t i = 0; i < getNumGlobalWires(); i++) {
-                std::size_t temp =
-                    ((getGlobalIndexFromMPIRank(rank) >>
-                      (getNumGlobalWires() - 1 - i)) &
-                     1)
-                    << (getNumGlobalWires() - 1 - global_wires_[i]);
-                displacements[rank] += temp;
-            }
-            displacements[rank] *= local_.size();
-        }
-        mpi_manager_.GatherV(local_, data_, root, displacements);
-        return data_;
-    }
-
-    /**
      * @brief Copy data from the host space to the device space.
      *
      */
