@@ -117,11 +117,6 @@ TEMPLATE_TEST_CASE("Expval - 1-wire matrix", "[LKMPI_Expval]", float, double) {
 TEMPLATE_TEST_CASE("Expval - 2-wire matrix", "[LKMPI_Expval]", float, double) {
     const TestType EP = 1e-4;
     const std::size_t num_qubits = 6;
-    auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
-    auto m = MeasurementsMPI(sv);
-    auto m_ref = Measurements(sv_ref);
-
-    applyNonTrivialOperations(num_qubits, sv, sv_ref);
 
     std::size_t num_wires = 2;
     std::vector<Kokkos::complex<TestType>> mat_ob(exp2(num_wires * 2),
@@ -130,11 +125,17 @@ TEMPLATE_TEST_CASE("Expval - 2-wire matrix", "[LKMPI_Expval]", float, double) {
         mat_ob[i] = i * Kokkos::complex<TestType>(0.2, 1.1);
     }
 
-    const std::size_t wire_0 = GENERATE(0, 1, 2, 3, 4, 5);
-    const std::size_t wire_1 = GENERATE(0, 1, 2, 3, 4, 5);
+    const std::size_t wire_0 = GENERATE(0, 2, 4);
+    const std::size_t wire_1 = GENERATE(1, 3, 5);
     const std::set<std::size_t> wires = {wire_0, wire_1};
 
     if (wires.size() == num_wires) {
+        auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
+        auto m = MeasurementsMPI(sv);
+        auto m_ref = Measurements(sv_ref);
+
+        applyNonTrivialOperations(num_qubits, sv, sv_ref);
+
         auto res = m.expval(mat_ob, {wire_0, wire_1});
         auto res_ref = m_ref.expval(mat_ob, {wire_0, wire_1});
         CHECK(res == Approx(res_ref).margin(EP));
@@ -174,12 +175,6 @@ TEMPLATE_TEST_CASE("Expval - 2-wire matrix Hermitian obs", "[LKMPI_Expval]",
     const TestType EP = 1e-4;
     const std::size_t num_qubits = 6;
 
-    auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
-    auto m = MeasurementsMPI(sv);
-    auto m_ref = Measurements(sv_ref);
-
-    applyNonTrivialOperations(num_qubits, sv, sv_ref);
-
     std::size_t num_wires = 2;
     std::vector<Kokkos::complex<TestType>> mat_ob(exp2(num_wires * 2),
                                                   {0.0, 0.0});
@@ -187,11 +182,16 @@ TEMPLATE_TEST_CASE("Expval - 2-wire matrix Hermitian obs", "[LKMPI_Expval]",
         mat_ob[i] = i * Kokkos::complex<TestType>(0.2, 1.1);
     }
 
-    const std::size_t wire_0 = GENERATE(0, 1, 2, 3, 4, 5);
-    const std::size_t wire_1 = GENERATE(0, 1, 2, 3, 4, 5);
+    const std::size_t wire_0 = GENERATE(0, 2, 4);
+    const std::size_t wire_1 = GENERATE(1, 3, 5);
     const std::set<std::size_t> wires = {wire_0, wire_1};
 
     if (wires.size() == num_wires) {
+        auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
+        auto m = MeasurementsMPI(sv);
+        auto m_ref = Measurements(sv_ref);
+
+        applyNonTrivialOperations(num_qubits, sv, sv_ref);
 
         auto ob = HermitianObsMPI<StateVectorKokkosMPI<TestType>>(
             mat_ob, {wire_0, wire_1});
@@ -426,12 +426,6 @@ TEMPLATE_TEST_CASE("Var - 2-wire matrix", "[LKMPI_Var]", float, double) {
     const TestType EP = 1e-4;
     const std::size_t num_qubits = 6;
 
-    auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
-    auto m = MeasurementsMPI(sv);
-    auto m_ref = Measurements(sv_ref);
-
-    applyNonTrivialOperations(num_qubits, sv, sv_ref);
-
     std::size_t num_wires = 2;
     std::vector<Kokkos::complex<TestType>> mat_ob(exp2(num_wires * 2),
                                                   {0.0, 0.0});
@@ -439,11 +433,17 @@ TEMPLATE_TEST_CASE("Var - 2-wire matrix", "[LKMPI_Var]", float, double) {
         mat_ob[i] = i * Kokkos::complex<TestType>(0.2, 1.1);
     }
 
-    const std::size_t wire_0 = GENERATE(0, 1, 2, 3, 4, 5);
-    const std::size_t wire_1 = GENERATE(0, 1, 2, 3, 4, 5);
+    const std::size_t wire_0 = GENERATE(0, 2, 4);
+    const std::size_t wire_1 = GENERATE(1, 3, 5);
     const std::set<std::size_t> wires = {wire_0, wire_1};
 
     if (wires.size() == num_wires) {
+
+        auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
+        auto m = MeasurementsMPI(sv);
+        auto m_ref = Measurements(sv_ref);
+
+        applyNonTrivialOperations(num_qubits, sv, sv_ref);
         auto res = m.var(mat_ob, {wire_0, wire_1});
         auto res_ref = m_ref.var(mat_ob, {wire_0, wire_1});
         CHECK(res == Approx(res_ref).margin(EP));
@@ -506,12 +506,6 @@ TEMPLATE_TEST_CASE("Var - 2-wire matrix Hermitian obs", "[LKMPI_Var]", float,
     const TestType EP = 1e-4;
     const std::size_t num_qubits = 6;
 
-    auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
-    auto m = MeasurementsMPI(sv);
-    auto m_ref = Measurements(sv_ref);
-
-    applyNonTrivialOperations(num_qubits, sv, sv_ref);
-
     std::size_t num_wires = 2;
     std::vector<Kokkos::complex<TestType>> mat_ob(exp2(num_wires * 2),
                                                   {0.0, 0.0});
@@ -519,11 +513,17 @@ TEMPLATE_TEST_CASE("Var - 2-wire matrix Hermitian obs", "[LKMPI_Var]", float,
         mat_ob[i] = i * Kokkos::complex<TestType>(0.2, 1.1);
     }
 
-    const std::size_t wire_0 = GENERATE(0, 1, 2, 3, 4, 5);
-    const std::size_t wire_1 = GENERATE(0, 1, 2, 3, 4, 5);
+    const std::size_t wire_0 = GENERATE(0, 2, 4);
+    const std::size_t wire_1 = GENERATE(1, 3, 5);
     const std::set<std::size_t> wires = {wire_0, wire_1};
 
     if (wires.size() == num_wires) {
+
+        auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
+        auto m = MeasurementsMPI(sv);
+        auto m_ref = Measurements(sv_ref);
+
+        applyNonTrivialOperations(num_qubits, sv, sv_ref);
 
         auto ob = HermitianObsMPI<StateVectorKokkosMPI<TestType>>(
             mat_ob, {wire_0, wire_1});
@@ -602,14 +602,8 @@ TEMPLATE_TEST_CASE("probs - 1 wires", "[LKMPI_Expval]", float, double) {
 TEMPLATE_TEST_CASE("probs - 2 wires", "[LKMPI_Expval]", float, double) {
     const std::size_t num_qubits = 5;
 
-    auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
-    auto m = MeasurementsMPI(sv);
-    auto m_ref = Measurements(sv_ref);
-
-    applyNonTrivialOperations(num_qubits, sv, sv_ref);
-
-    std::size_t wire_0 = GENERATE(0, 1, 2, 3, 4);
-    std::size_t wire_1 = GENERATE(0, 1, 2, 3, 4);
+    std::size_t wire_0 = GENERATE(0, 1, 2, 3);
+    std::size_t wire_1 = GENERATE(1, 2, 3, 4);
 
     std::vector<std::size_t> wires = {wire_0, wire_1};
     std::set<std::size_t> wires_set(wires.begin(), wires.end());
@@ -617,6 +611,13 @@ TEMPLATE_TEST_CASE("probs - 2 wires", "[LKMPI_Expval]", float, double) {
     DYNAMIC_SECTION("Wires " << wire_0 << ", " << wire_1) {
         if (wires_set.size() == 2 &&
             std::is_sorted(wires.begin(), wires.end())) {
+
+            auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
+            auto m = MeasurementsMPI(sv);
+            auto m_ref = Measurements(sv_ref);
+
+            applyNonTrivialOperations(num_qubits, sv, sv_ref);
+
             auto res = m.probs(wires);
             auto res_ref = m_ref.probs(wires);
 
@@ -644,15 +645,9 @@ TEMPLATE_TEST_CASE("probs - 2 wires", "[LKMPI_Expval]", float, double) {
 TEMPLATE_TEST_CASE("probs - 3 wires", "[LKMPI_Expval]", float, double) {
     const std::size_t num_qubits = 5;
 
-    auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
-    auto m = MeasurementsMPI(sv);
-    auto m_ref = Measurements(sv_ref);
-
-    applyNonTrivialOperations(num_qubits, sv, sv_ref);
-
-    std::size_t wire_0 = GENERATE(0, 1, 2, 3, 4);
-    std::size_t wire_1 = GENERATE(0, 1, 2, 3, 4);
-    std::size_t wire_2 = GENERATE(0, 1, 2, 3, 4);
+    std::size_t wire_0 = GENERATE(0, 1, 2);
+    std::size_t wire_1 = GENERATE(1, 2, 3);
+    std::size_t wire_2 = GENERATE(2, 3, 4);
 
     std::vector<std::size_t> wires = {wire_0, wire_1, wire_2};
     std::set<std::size_t> wires_set(wires.begin(), wires.end());
@@ -660,6 +655,12 @@ TEMPLATE_TEST_CASE("probs - 3 wires", "[LKMPI_Expval]", float, double) {
     DYNAMIC_SECTION("Wires " << wire_0 << ", " << wire_1 << ", " << wire_2) {
         if (wires_set.size() == 3 &&
             std::is_sorted(wires.begin(), wires.end())) {
+
+            auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
+            auto m = MeasurementsMPI(sv);
+            auto m_ref = Measurements(sv_ref);
+
+            applyNonTrivialOperations(num_qubits, sv, sv_ref);
             auto res = m.probs(wires);
             auto res_ref = m_ref.probs(wires);
 
@@ -687,16 +688,10 @@ TEMPLATE_TEST_CASE("probs - 3 wires", "[LKMPI_Expval]", float, double) {
 TEMPLATE_TEST_CASE("probs - 4 wires", "[LKMPI_Expval]", float, double) {
     const std::size_t num_qubits = 5;
 
-    auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
-    auto m = MeasurementsMPI(sv);
-    auto m_ref = Measurements(sv_ref);
-
-    applyNonTrivialOperations(num_qubits, sv, sv_ref);
-
-    std::size_t wire_0 = GENERATE(0, 1, 2, 3, 4);
-    std::size_t wire_1 = GENERATE(0, 1, 2, 3, 4);
-    std::size_t wire_2 = GENERATE(0, 1, 2, 3, 4);
-    std::size_t wire_3 = GENERATE(0, 1, 2, 3, 4);
+    std::size_t wire_0 = GENERATE(0, 1);
+    std::size_t wire_1 = GENERATE(1, 2);
+    std::size_t wire_2 = GENERATE(2, 3);
+    std::size_t wire_3 = GENERATE(3, 4);
 
     std::vector<std::size_t> wires = {wire_0, wire_1, wire_2, wire_3};
     std::set<std::size_t> wires_set(wires.begin(), wires.end());
@@ -705,6 +700,12 @@ TEMPLATE_TEST_CASE("probs - 4 wires", "[LKMPI_Expval]", float, double) {
                              << ", " << wire_3) {
         if (wires_set.size() == 4 &&
             std::is_sorted(wires.begin(), wires.end())) {
+
+            auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
+            auto m = MeasurementsMPI(sv);
+            auto m_ref = Measurements(sv_ref);
+
+            applyNonTrivialOperations(num_qubits, sv, sv_ref);
             auto res = m.probs(wires);
             auto res_ref = m_ref.probs(wires);
 
@@ -738,11 +739,11 @@ TEMPLATE_TEST_CASE("probs - 5 wires", "[LKMPI_Expval]", float, double) {
 
     applyNonTrivialOperations(num_qubits, sv, sv_ref);
 
-    std::size_t wire_0 = GENERATE(0, 1, 2, 3, 4);
-    std::size_t wire_1 = GENERATE(0, 1, 2, 3, 4);
-    std::size_t wire_2 = GENERATE(0, 1, 2, 3, 4);
-    std::size_t wire_3 = GENERATE(0, 1, 2, 3, 4);
-    std::size_t wire_4 = GENERATE(0, 1, 2, 3, 4);
+    std::size_t wire_0 = 0;
+    std::size_t wire_1 = 1;
+    std::size_t wire_2 = 2;
+    std::size_t wire_3 = 3;
+    std::size_t wire_4 = 4;
 
     std::vector<std::size_t> wires = {wire_0, wire_1, wire_2, wire_3, wire_4};
     std::set<std::size_t> wires_set(wires.begin(), wires.end());

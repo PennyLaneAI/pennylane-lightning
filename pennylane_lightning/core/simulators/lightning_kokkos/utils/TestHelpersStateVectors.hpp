@@ -95,6 +95,41 @@ void applyNonTrivialOperations(const std::size_t num_qubits,
     sv.applyOperation("CNOT", {1, 3});
     sv_ref.applyOperation("CNOT", {1, 3});
 }
+
+/**
+ * @brief Get combined in-order data vector to root rank
+ */
+template <typename TestType>
+auto getFullDataVector(StateVectorKokkosMPI<TestType> &sv,
+                       const std::size_t root = 0)
+    -> std::vector<Kokkos::complex<TestType>> {
+    sv.reorderGlobalLocalWires();
+    sv.reorderLocalWires();
+    auto mpi_manager = sv.getMPIManager();
+    std::vector<Kokkos::complex<TestType>> data(
+        (mpi_manager.getRank() == root) ? sv.getLength() : 0);
+
+    std::vector<Kokkos::complex<TestType>> local(sv.getLocalBlockSize());
+    sv.DeviceToHost(local.data(), local.size());
+
+    auto global_wires = sv.getGlobalWires();
+
+    std::vector<int> displacements(mpi_manager.getSize(), 0);
+    for (std::size_t rank = 0; rank < mpi_manager.getSize(); rank++) {
+        for (std::size_t i = 0; i < sv.getNumGlobalWires(); i++) {
+            std::size_t temp =
+                ((sv.getGlobalIndexFromMPIRank(rank) >>
+                  (sv.getNumGlobalWires() - 1 - i)) &
+                 1)
+                << (sv.getNumGlobalWires() - 1 - global_wires[i]);
+            displacements[rank] += temp;
+        }
+        displacements[rank] *= local.size();
+    }
+    mpi_manager.GatherV(local, data, root, displacements);
+    return data;
+}
+
 #endif
 
 } // namespace Pennylane::LightningKokkos::Util
