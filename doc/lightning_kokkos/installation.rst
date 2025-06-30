@@ -96,7 +96,7 @@ Install Lightning-Kokkos with MPI
 
 .. note::
 
-    Building Lightning-Kokkos with MPI requires a MPI library and ``mpi4py``. 
+    Building Lightning-Kokkos with MPI requires an MPI library and ``mpi4py``. 
 
 To install Lightning-Kokkos with MPI support, we recommend first installing Kokkos for your specific architecture such as CPU (``SERIAL``, ``OPENMP``),  Nvidia GPU (``CUDA``), or AMD GPU (``HIP``)
 and exporting the install location to ``CMAKE_PREFIX_PATH`` as described above.
@@ -106,8 +106,12 @@ Then Lightning-Kokkos with MPI support can be installed in the *editable* mode b
 
     git clone https://github.com/PennyLaneAI/pennylane-lightning.git
     cd pennylane-lightning
+
+    # Lightning-Qubit needs to be 'installed' by pip before Lightning-Kokkos (compilation is not necessary)
     PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
     SKIP_COMPILATION=True pip install -e . --config-settings editable_mode=compat
+
+    # Install Lightning-Kokkos with MPI support
     PL_BACKEND="lightning_kokkos" python scripts/configure_pyproject_toml.py
     CMAKE_ARGS="-DENABLE_MPI=ON" python -m pip install -e . --config-settings editable_mode=compat -vv
 

@@ -163,12 +163,13 @@ With ``lightning.gpu`` installed with MPI support, this can be enabled in Pennyl
     local_state_vector = circuit_mpi()
 
 .. note::
-    The total number of MPI processes and MPI processes per node must be powers of 2. For example, 2, 4, 8, 16, etc. Each MPI process is responsible for managing one GPU. 
+
+    The total number of MPI processes must be powers of 2, where each MPI process is responsible for managing one GPU. 
 
 Currently, a ``lightning.gpu`` device with the MPI multi-GPU backend supports all the ``gate operations`` and ``observables`` that a ``lightning.gpu`` device with a single GPU/node backend supports.
 
 By default, each MPI process will return the overall simulation results, except for the ``qml.state()`` and ``qml.probs()`` methods for which each MPI process only returns the local simulation
-results for the ``qml.state()`` and ``qml.prob()`` methods to avoid buffer overflow. It is the user's responsibility to ensure correct data collection for those two methods. Here are examples of collecting
+results for the ``qml.state()`` and ``qml.probs()`` methods to avoid buffer overflow. It is the user's responsibility to ensure correct data collection for those two methods. Here are examples of collecting  
 the local simulation results for ``qml.state()`` and ``qml.prob()`` methods:
 
 The workflow for collecting local state vector (using the ``qml.state()`` method) to ``rank 0`` is as follows:

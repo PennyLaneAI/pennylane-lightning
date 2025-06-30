@@ -137,7 +137,7 @@ With ``lightning.kokkos`` installed with MPI support, distributed simulation can
     local_state_vector = circuit_mpi()
 
 .. note::
-    The total number of MPI processes must be powers of 2. For example, 2, 4, 8, 16, etc. If using Kokkos with GPUs, we recommend using one GPU per MPI process.
+    The total number of MPI processes must be powers of 2. If using Kokkos with GPUs, we recommend using one GPU per MPI process.
 
 Currently, the ``lightning.kokkos`` device with MPI supports all the ``gate operations`` and ``observables`` that a single process ``lightning.kokkos`` device supports, excluding ``SparseHamiltonian``.
 
@@ -177,7 +177,7 @@ The workflow for collecting local probability (using the ``qml.probs()`` method)
 
     comm = MPI.COMM_WORLD
     rank = comm.Get_rank()
-    dev = qml.device('lightning.kokkos', wires=8, mpi=True)
+    dev = qml.device('lightning.kokkos', wires=30, mpi=True)
     prob_wires = [0, 1]
 
     @qml.qnode(dev)
