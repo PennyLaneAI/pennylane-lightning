@@ -237,7 +237,7 @@ TEMPLATE_TEST_CASE("getDataVector", "[LKMPI]", double, float) {
                                                           {0.0, 0.0});
     reference_data[0] = 1.0;
 
-    auto data = sv.getDataVector(0);
+    auto data = getFullDataVector(sv, 0);
     if (mpi_manager.getRank() == 0) {
         for (std::size_t j = 0; j < reference_data.size(); j++) {
             CHECK(real(data[j]) == Approx(real(reference_data[j])));
@@ -256,7 +256,7 @@ TEMPLATE_TEST_CASE("setBasisState", "[LKMPI]", double, float) {
         std::vector<Kokkos::complex<TestType>> reference_data(32, {0.0, 0.0});
         reference_data[i] = 1.0;
         sv.setBasisState(i);
-        auto data = sv.getDataVector(0);
+        auto data = getFullDataVector(sv, 0);
         if (mpi_manager.getRank() == 0) {
             for (std::size_t j = 0; j < reference_data.size(); j++) {
                 CHECK(real(data[j]) == Approx(real(reference_data[j])));
@@ -292,14 +292,15 @@ TEMPLATE_TEST_CASE("updateData/getData/getDataVector", "[LKMPI]", double,
     // Update the state vector with the initial data with updateData()
     sv.updateData(init_subsv);
 
-    // Check getData()
+    // Check getDataVector()
+    const auto local_sv_data = sv.getDataVector();
     for (std::size_t j = 0; j < init_subsv.size(); j++) {
-        CHECK(real(sv.getData()[j]) == Approx(real(init_subsv[j])));
-        CHECK(imag(sv.getData()[j]) == Approx(imag(init_subsv[j])));
+        CHECK(real(local_sv_data[j]) == Approx(real(init_subsv[j])));
+        CHECK(imag(local_sv_data[j]) == Approx(imag(init_subsv[j])));
     }
 
     // Check getDataVector()
-    auto data = sv.getDataVector(0);
+    auto data = getFullDataVector(sv, 0);
     if (mpi_manager.getRank() == 0) {
         for (std::size_t j = 0; j < init_sv.size(); j++) {
             CHECK(real(data[j]) == Approx(real(init_sv[j])));
@@ -319,10 +320,11 @@ TEMPLATE_TEST_CASE("resetIndices/initZeros", "[LKMPI]", double, float) {
     CHECK(sv.getMPIRankToGlobalIndexMap() ==
           std::vector<std::size_t>{0, 1, 2, 3});
 
+    const auto local_sv_data = sv.getDataVector();
     Kokkos::complex<TestType> zero{0.0, 0.0};
     for (std::size_t j = 0; j < sv.getLocalBlockSize(); j++) {
-        CHECK(real(sv.getData()[j]) == Approx(real(zero)));
-        CHECK(imag(sv.getData()[j]) == Approx(imag(zero)));
+        CHECK(real(local_sv_data[j]) == Approx(real(zero)));
+        CHECK(imag(local_sv_data[j]) == Approx(imag(zero)));
     }
 }
 
@@ -349,7 +351,7 @@ TEMPLATE_TEST_CASE("setBasisState - explicit state", "[LKMPI]", double, float) {
                                                               {0.0, 0.0});
         reference_data[reference_location[i]] = 1.0;
         sv.setBasisState(state, wires[i]);
-        auto data = sv.getDataVector(0);
+        auto data = getFullDataVector(sv, 0);
         if (mpi_manager.getRank() == 0) {
             for (std::size_t j = 0; j < reference_data.size(); j++) {
                 CHECK(real(data[j]) == Approx(real(reference_data[j])));
@@ -374,7 +376,7 @@ TEMPLATE_TEST_CASE("resetStateVector", "[LKMPI]", double, float) {
     std::vector<Kokkos::complex<TestType>> reference_data(exp2(num_qubits),
                                                           {0.0, 0.0});
     reference_data[0] = 1.0;
-    auto data = sv.getDataVector(0);
+    auto data = getFullDataVector(sv, 0);
     if (mpi_manager.getRank() == 0) {
         for (std::size_t j = 0; j < reference_data.size(); j++) {
             CHECK(real(data[j]) == Approx(real(reference_data[j])));
@@ -401,7 +403,7 @@ TEMPLATE_TEST_CASE("setStateVector - 1 wire", "[LKMPI]", double, float) {
         sv_ref.setStateVector(state, indices);
 
         auto reference = sv_ref.getDataVector();
-        auto data = sv.getDataVector(0);
+        auto data = getFullDataVector(sv, 0);
 
         if (sv.getMPIManager().getRank() == 0) {
             for (std::size_t j = 0; j < data.size(); j++) {
@@ -433,7 +435,7 @@ TEMPLATE_TEST_CASE("setStateVector - 2 wires", "[LKMPI]", double, float) {
             sv_ref.setStateVector(state, indices);
 
             auto reference = sv_ref.getDataVector();
-            auto data = sv.getDataVector(0);
+            auto data = getFullDataVector(sv, 0);
 
             if (sv.getMPIManager().getRank() == 0) {
                 for (std::size_t j = 0; j < data.size(); j++) {
@@ -469,7 +471,7 @@ TEMPLATE_TEST_CASE("setStateVector - 3 wires", "[LKMPI]", double, float) {
             sv_ref.setStateVector(state, indices);
 
             auto reference = sv_ref.getDataVector();
-            auto data = sv.getDataVector(0);
+            auto data = getFullDataVector(sv, 0);
 
             if (sv.getMPIManager().getRank() == 0) {
                 for (std::size_t j = 0; j < data.size(); j++) {
@@ -507,7 +509,7 @@ TEMPLATE_TEST_CASE("setStateVector - 4 wires", "[LKMPI]", double, float) {
             sv_ref.setStateVector(state, indices);
 
             auto reference = sv_ref.getDataVector();
-            auto data = sv.getDataVector(0);
+            auto data = getFullDataVector(sv, 0);
 
             if (sv.getMPIManager().getRank() == 0) {
                 for (std::size_t j = 0; j < data.size(); j++) {
@@ -547,7 +549,7 @@ TEMPLATE_TEST_CASE("setStateVector - 5 wires", "[LKMPI]", double, float) {
             sv_ref.setStateVector(state, indices);
 
             auto reference = sv_ref.getDataVector();
-            auto data = sv.getDataVector(0);
+            auto data = getFullDataVector(sv, 0);
 
             if (sv.getMPIManager().getRank() == 0) {
                 for (std::size_t j = 0; j < data.size(); j++) {
@@ -792,17 +794,19 @@ TEMPLATE_TEST_CASE("Swap global local wires", "[LKMPI]", double, float) {
         // Swap Global Local wires
         sv.swapGlobalLocalWires(global_wires_to_swap[i],
                                 local_wires_to_swap[i]);
-        // Check getData()
+
+        // Check getDataVector()
+        const auto local_sv_data = sv.getDataVector();
         for (std::size_t j = 0; j < init_subsv.size(); j++) {
-            CHECK(real(sv.getData()[j]) ==
+            CHECK(real(local_sv_data[j]) ==
                   Approx(real(
                       swapped_sv[i][mpi_manager.getRank() * block_size + j])));
-            CHECK(imag(sv.getData()[j]) ==
+            CHECK(imag(local_sv_data[j]) ==
                   Approx(imag(
                       swapped_sv[i][mpi_manager.getRank() * block_size + j])));
         }
         // Check getDataVector()
-        auto data = sv.getDataVector(0);
+        auto data = getFullDataVector(sv, 0);
         if (mpi_manager.getRank() == 0) {
             for (std::size_t j = 0; j < init_sv.size(); j++) {
                 CHECK(real(data[j]) == Approx(real(init_sv[j])));
@@ -828,7 +832,7 @@ TEMPLATE_TEST_CASE("reorderLocalWires", "[LKMPI]", double, float) {
         reference[i] = static_cast<TestType>(i);
     }
 
-    auto data = sv.getDataVector(0);
+    auto data = getFullDataVector(sv, 0);
     if (sv.getMPIManager().getRank() == 0) {
         for (std::size_t j = 0; j < data.size(); j++) {
             CHECK(real(data[j]) == Approx(real(reference[j])));
@@ -921,13 +925,15 @@ TEMPLATE_TEST_CASE("Match local wires", "[LKMPI]", double, float) {
         {30.0, 0.0}, {31.0, 0.0},
     };
 
+    const auto local_sv_data = sv.getDataVector();
+    const auto local_sv1_data = sv_1.getDataVector();
     for (std::size_t j = 0; j < block_size; j++) {
-        CHECK(real(sv.getData()[j]) ==
+        CHECK(real(local_sv_data[j]) ==
               Approx(real(swapped_sv[mpi_manager.getRank() * block_size + j])));
-        CHECK(real(sv.getData()[j]) == Approx(real(sv_1.getData()[j])));
-        CHECK(imag(sv.getData()[j]) ==
+        CHECK(real(local_sv_data[j]) == Approx(real(local_sv1_data[j])));
+        CHECK(imag(local_sv_data[j]) ==
               Approx(imag(swapped_sv[mpi_manager.getRank() * block_size + j])));
-        CHECK(imag(sv.getData()[j]) == Approx(imag(sv_1.getData()[j])));
+        CHECK(imag(local_sv_data[j]) == Approx(imag(local_sv1_data[j])));
     }
 }
 
@@ -964,10 +970,11 @@ TEMPLATE_TEST_CASE("reorderAllWires", "[LKMPI]", double, float) {
     // Match global wires and index
     sv.reorderAllWires();
 
+    const auto local_sv_data = sv.getDataVector();
     for (std::size_t j = 0; j < block_size; j++) {
-        CHECK(real(sv.getData()[j]) ==
+        CHECK(real(local_sv_data[j]) ==
               Approx(real(init_sv[mpi_manager.getRank() * block_size + j])));
-        CHECK(imag(sv.getData()[j]) ==
+        CHECK(imag(local_sv_data[j]) ==
               Approx(imag(init_sv[mpi_manager.getRank() * block_size + j])));
     }
 }
@@ -1021,13 +1028,15 @@ TEMPLATE_TEST_CASE("Match global wires", "[LKMPI]", double, float) {
         {30.0, 0.0}, {31.0, 0.0},
     };
 
+    const auto local_sv_data = sv.getDataVector();
+    const auto local_sv1_data = sv_1.getDataVector();
     for (std::size_t j = 0; j < init_subsv.size(); j++) {
-        CHECK(real(sv.getData()[j]) ==
+        CHECK(real(local_sv_data[j]) ==
               Approx(real(swapped_sv[mpi_manager.getRank() * block_size + j])));
-        CHECK(real(sv.getData()[j]) == Approx(real(sv_1.getData()[j])));
-        CHECK(imag(sv.getData()[j]) ==
+        CHECK(real(local_sv_data[j]) == Approx(real(local_sv1_data[j])));
+        CHECK(imag(local_sv_data[j]) ==
               Approx(imag(swapped_sv[mpi_manager.getRank() * block_size + j])));
-        CHECK(imag(sv.getData()[j]) == Approx(imag(sv_1.getData()[j])));
+        CHECK(imag(local_sv_data[j]) == Approx(imag(local_sv1_data[j])));
     }
 }
 
@@ -1077,13 +1086,15 @@ TEMPLATE_TEST_CASE("Match wires", "[LKMPI]", double, float) {
         {30.0, 0.0}, {31.0, 0.0},
     };
 
+    const auto local_sv_data = sv.getDataVector();
+    const auto local_sv1_data = sv_1.getDataVector();
     for (std::size_t j = 0; j < init_subsv.size(); j++) {
-        CHECK(real(sv.getData()[j]) ==
+        CHECK(real(local_sv_data[j]) ==
               Approx(real(swapped_sv[mpi_manager.getRank() * block_size + j])));
-        CHECK(real(sv.getData()[j]) == Approx(real(sv_1.getData()[j])));
-        CHECK(imag(sv.getData()[j]) ==
+        CHECK(real(local_sv_data[j]) == Approx(real(local_sv1_data[j])));
+        CHECK(imag(local_sv_data[j]) ==
               Approx(imag(swapped_sv[mpi_manager.getRank() * block_size + j])));
-        CHECK(imag(sv.getData()[j]) == Approx(imag(sv_1.getData()[j])));
+        CHECK(imag(local_sv_data[j]) == Approx(imag(local_sv1_data[j])));
     }
 }
 
@@ -1096,19 +1107,23 @@ TEMPLATE_TEST_CASE("sendrecvBuffers", "[LKMPI]", double, float) {
 
     StateVectorKokkosMPI<TestType> sv(mpi_manager, num_qubits);
 
-    auto sendbuf = sv.getSendBuffer();
-    auto recvbuf = sv.getRecvBuffer();
+    auto sendbuf = *(sv.getSendBuffer());
+    auto recvbuf = *(sv.getRecvBuffer());
 
     std::size_t mpi_rank = mpi_manager.getRank();
     std::size_t dest_rank = mpi_rank ^ 1U;
     std::size_t message_size = 4;
-    for (std::size_t i = 0; i < message_size; i++) {
-        (*sendbuf)(i) = static_cast<TestType>(mpi_rank + i);
-    }
+    Kokkos::parallel_for(
+        "InitSendBuffer", message_size, KOKKOS_LAMBDA(const std::size_t i) {
+            sendbuf(i) = static_cast<TestType>(mpi_rank + i);
+        });
+    Kokkos::fence();
     sv.sendrecvBuffers(dest_rank, dest_rank, message_size, 1);
 
+    auto h_recvbuf = view2vector(recvbuf);
+
     for (std::size_t i = 0; i < message_size; i++) {
-        CHECK(real((*recvbuf)(i)) == ((mpi_rank ^ 1U) + i));
+        CHECK(real(h_recvbuf[i]) == ((mpi_rank ^ 1U) + i));
     }
 }
 
@@ -1134,7 +1149,7 @@ TEMPLATE_TEST_CASE("Normalize", "[LKMPI]", double, float) {
     sv_ref.normalize();
 
     auto reference = sv_ref.getDataVector();
-    auto data = sv.getDataVector(0);
+    auto data = getFullDataVector(sv, 0);
 
     if (sv.getMPIManager().getRank() == 0) {
         for (std::size_t j = 0; j < data.size(); j++) {
@@ -1157,7 +1172,7 @@ TEMPLATE_TEST_CASE("collapse", "[LKMPI]", double, float) {
         sv_ref.collapse(wire, branch);
 
         auto reference = sv_ref.getDataVector();
-        auto data = sv.getDataVector(0);
+        auto data = getFullDataVector(sv, 0);
 
         if (sv.getMPIManager().getRank() == 0) {
             for (std::size_t j = 0; j < data.size(); j++) {

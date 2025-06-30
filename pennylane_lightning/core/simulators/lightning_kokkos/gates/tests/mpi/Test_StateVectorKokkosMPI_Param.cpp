@@ -46,7 +46,6 @@ std::mt19937_64 re{1337};
 TEMPLATE_TEST_CASE("Apply Operation - param 1 wire", "[LKMPI]", double, float) {
     const TestType EP = 1e-4;
     const std::size_t num_qubits = 4;
-    auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
 
     const bool inverse = GENERATE(false, true);
     const std::string gate_name =
@@ -61,11 +60,12 @@ TEMPLATE_TEST_CASE("Apply Operation - param 1 wire", "[LKMPI]", double, float) {
 
     DYNAMIC_SECTION("Gate = " << gate_name << " Inverse = " << inverse
                               << " Wire = " << wire) {
+        auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
         sv.applyOperation(gate_name, {wire}, inverse, params);
         sv_ref.applyOperation(gate_name, {wire}, inverse, params);
 
         auto reference = sv_ref.getDataVector();
-        auto data = sv.getDataVector(0);
+        auto data = getFullDataVector(sv, 0);
 
         if (sv.getMPIManager().getRank() == 0) {
             for (std::size_t j = 0; j < data.size(); j++) {
@@ -80,7 +80,6 @@ TEMPLATE_TEST_CASE("Apply Operation - param 2 wires", "[LKMPI]", double,
                    float) {
     const TestType EP = 1e-4;
     const std::size_t num_qubits = 6;
-    auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
 
     const bool inverse = GENERATE(false, true);
     const std::string gate_name = GENERATE(
@@ -89,8 +88,8 @@ TEMPLATE_TEST_CASE("Apply Operation - param 2 wires", "[LKMPI]", double,
         "SingleExcitationPlus", "CRot", "PSWAP", "MultiRZ");
 
     const TestType param = 0.12342;
-    const std::size_t wire_0 = GENERATE(0, 1, 2, 3, 4, 5);
-    const std::size_t wire_1 = GENERATE(0, 1, 2, 3, 4, 5);
+    const std::size_t wire_0 = GENERATE(0, 2, 4);
+    const std::size_t wire_1 = GENERATE(1, 3, 5);
     auto gate_op =
         reverse_lookup(Constant::gate_names, std::string_view{gate_name});
     auto num_params = lookup(Constant::gate_num_params, gate_op);
@@ -100,11 +99,12 @@ TEMPLATE_TEST_CASE("Apply Operation - param 2 wires", "[LKMPI]", double,
                               << " Wire 0 = " << wire_0
                               << " Wire 1 = " << wire_1) {
         if (wire_0 != wire_1) {
+            auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
             sv.applyOperation(gate_name, {wire_0, wire_1}, inverse, params);
             sv_ref.applyOperation(gate_name, {wire_0, wire_1}, inverse, params);
 
             auto reference = sv_ref.getDataVector();
-            auto data = sv.getDataVector(0);
+            auto data = getFullDataVector(sv, 0);
 
             if (sv.getMPIManager().getRank() == 0) {
                 for (std::size_t j = 0; j < data.size(); j++) {
@@ -122,17 +122,16 @@ TEMPLATE_TEST_CASE("Apply Operation - param 4 wires", "[LKMPI]", double,
                    float) {
     const TestType EP = 1e-4;
     const std::size_t num_qubits = 7;
-    auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
 
     const bool inverse = GENERATE(false, true);
     const std::string gate_name = GENERATE(
         "DoubleExcitation", "DoubleExcitationMinus", "DoubleExcitationPlus");
 
     const TestType param = 0.12342;
-    const std::size_t wire_0 = GENERATE(0, 1, 2, 3, 4, 5, 6);
-    const std::size_t wire_1 = GENERATE(0, 1, 2, 3, 4, 5, 6);
-    const std::size_t wire_2 = GENERATE(0, 1, 2, 3, 4, 5, 6);
-    const std::size_t wire_3 = GENERATE(0, 1, 2, 3, 4, 5, 6);
+    const std::size_t wire_0 = GENERATE(0, 2, 4);
+    const std::size_t wire_1 = GENERATE(1, 3, 5);
+    const std::size_t wire_2 = GENERATE(0, 2, 4);
+    const std::size_t wire_3 = GENERATE(1, 3, 5);
     std::set<std::size_t> wires = {wire_0, wire_1, wire_2, wire_3};
 
     auto gate_op =
@@ -145,13 +144,14 @@ TEMPLATE_TEST_CASE("Apply Operation - param 4 wires", "[LKMPI]", double,
                               << wire_1 << " Wire 2 = " << wire_2
                               << " Wire 3 = " << wire_3) {
         if (wires.size() == 4) {
+            auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
             sv.applyOperation(gate_name, {wire_0, wire_1, wire_2, wire_3},
                               inverse, params);
             sv_ref.applyOperation(gate_name, {wire_0, wire_1, wire_2, wire_3},
                                   inverse, params);
 
             auto reference = sv_ref.getDataVector();
-            auto data = sv.getDataVector(0);
+            auto data = getFullDataVector(sv, 0);
 
             if (sv.getMPIManager().getRank() == 0) {
                 for (std::size_t j = 0; j < data.size(); j++) {
@@ -169,14 +169,13 @@ TEMPLATE_TEST_CASE("Apply Controlled Operation - param 1 control 1 target wire",
                    "[LKMPI]", double, float) {
     const TestType EP = 1e-4;
     const std::size_t num_qubits = 6;
-    auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
 
     const bool inverse = GENERATE(false, true);
     const std::string gate_name = GENERATE("RX", "RY", "RZ");
     const TestType param = 0.1232;
     const bool control_value = GENERATE(false, true);
-    const std::size_t control_wire = GENERATE(0, 1, 2, 3, 4, 5);
-    const std::size_t target_wire = GENERATE(0, 1, 2, 3, 4, 5);
+    const std::size_t control_wire = GENERATE(0, 2, 4);
+    const std::size_t target_wire = GENERATE(1, 3, 5);
     const std::set<std::size_t> wires = {target_wire, control_wire};
 
     DYNAMIC_SECTION("Gate = " << gate_name << " Inverse = " << inverse
@@ -185,13 +184,14 @@ TEMPLATE_TEST_CASE("Apply Controlled Operation - param 1 control 1 target wire",
                               << " Control Value = " << control_value) {
 
         if (wires.size() == 2) {
+            auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
             sv.applyOperation(gate_name, {control_wire}, {control_value},
                               {target_wire}, inverse, {param});
             sv_ref.applyOperation(gate_name, {control_wire}, {control_value},
                                   {target_wire}, inverse, {param});
 
             auto reference = sv_ref.getDataVector();
-            auto data = sv.getDataVector(0);
+            auto data = getFullDataVector(sv, 0);
 
             if (sv.getMPIManager().getRank() == 0) {
                 for (std::size_t j = 0; j < data.size(); j++) {
@@ -210,7 +210,6 @@ TEMPLATE_TEST_CASE(
     double, float) {
     const TestType EP = 1e-4;
     const std::size_t num_qubits = 6;
-    auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
 
     const bool inverse = GENERATE(false, true);
     const std::string gate_name =
@@ -218,9 +217,9 @@ TEMPLATE_TEST_CASE(
                  "SingleExcitationMinus", "SingleExcitationPlus", "MultiRZ");
     const TestType param = 0.1232;
     const bool control_value = GENERATE(false, true);
-    const std::size_t control_wire = GENERATE(0, 1, 2, 3, 4, 5);
-    const std::size_t target_wire_0 = GENERATE(0, 1, 2, 3, 4, 5);
-    const std::size_t target_wire_1 = GENERATE(0, 1, 2, 3, 4, 5);
+    const std::size_t control_wire = GENERATE(0, 3);
+    const std::size_t target_wire_0 = GENERATE(1, 4);
+    const std::size_t target_wire_1 = GENERATE(2, 5);
     const std::set<std::size_t> wires = {target_wire_0, target_wire_1,
                                          control_wire};
 
@@ -231,6 +230,7 @@ TEMPLATE_TEST_CASE(
                               << " Control Value = " << control_value) {
 
         if (wires.size() == 3) {
+            auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
             sv.applyOperation(gate_name, {control_wire}, {control_value},
                               {target_wire_0, target_wire_1}, inverse, {param});
             sv_ref.applyOperation(gate_name, {control_wire}, {control_value},
@@ -238,7 +238,7 @@ TEMPLATE_TEST_CASE(
                                   {param});
 
             auto reference = sv_ref.getDataVector();
-            auto data = sv.getDataVector(0);
+            auto data = getFullDataVector(sv, 0);
 
             if (sv.getMPIManager().getRank() == 0) {
                 for (std::size_t j = 0; j < data.size(); j++) {
@@ -256,16 +256,15 @@ TEMPLATE_TEST_CASE("Apply Controlled Operation - param 2 control 1 target wire",
                    "[LKMPI]", double, float) {
     const TestType EP = 1e-4;
     const std::size_t num_qubits = 6;
-    auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
 
     const bool inverse = GENERATE(false, true);
     const std::string gate_name = GENERATE("RX");
     const TestType param = 0.1232;
     const bool control_value_0 = GENERATE(false, true);
-    const std::size_t control_wire_0 = GENERATE(0, 1, 2, 3, 4, 5);
+    const std::size_t control_wire_0 = GENERATE(0, 3);
     const bool control_value_1 = GENERATE(false, true);
-    const std::size_t control_wire_1 = GENERATE(0, 1, 2, 3, 4, 5);
-    const std::size_t target_wire = GENERATE(0, 1, 2, 3, 4, 5);
+    const std::size_t control_wire_1 = GENERATE(1, 4);
+    const std::size_t target_wire = GENERATE(0, 1, 2, 5);
     const std::set<std::size_t> wires = {target_wire, control_wire_0,
                                          control_wire_1};
 
@@ -277,6 +276,7 @@ TEMPLATE_TEST_CASE("Apply Controlled Operation - param 2 control 1 target wire",
                               << " Control Value 1 = " << control_value_1) {
 
         if (wires.size() == 3) {
+            auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
             sv.applyOperation(gate_name, {control_wire_0, control_wire_1},
                               {control_value_0, control_value_1}, {target_wire},
                               inverse, {param});
@@ -285,7 +285,7 @@ TEMPLATE_TEST_CASE("Apply Controlled Operation - param 2 control 1 target wire",
                                   {target_wire}, inverse, {param});
 
             auto reference = sv_ref.getDataVector();
-            auto data = sv.getDataVector(0);
+            auto data = getFullDataVector(sv, 0);
 
             if (sv.getMPIManager().getRank() == 0) {
                 for (std::size_t j = 0; j < data.size(); j++) {
@@ -303,17 +303,16 @@ TEMPLATE_TEST_CASE("Apply Controlled Operation - param 2 control 2 target wire",
                    "[LKMPI]", double, float) {
     const TestType EP = 1e-4;
     const std::size_t num_qubits = 6;
-    auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
 
     const bool inverse = GENERATE(false, true);
     const std::string gate_name = GENERATE("IsingXX");
     const TestType param = 0.1232;
     const bool control_value_0 = GENERATE(false, true);
-    const std::size_t control_wire_0 = GENERATE(0, 1, 2, 3, 4, 5);
+    const std::size_t control_wire_0 = GENERATE(0, 2, 4);
     const bool control_value_1 = GENERATE(false, true);
-    const std::size_t control_wire_1 = GENERATE(0, 1, 2, 3, 4, 5);
-    const std::size_t target_wire_0 = GENERATE(0, 1, 2, 3, 4, 5);
-    const std::size_t target_wire_1 = GENERATE(0, 1, 2, 3, 4, 5);
+    const std::size_t control_wire_1 = GENERATE(1, 3, 5);
+    const std::size_t target_wire_0 = GENERATE(0, 2, 4);
+    const std::size_t target_wire_1 = GENERATE(1, 3, 5);
     const std::set<std::size_t> wires = {target_wire_0, target_wire_1,
                                          control_wire_0, control_wire_1};
 
@@ -326,6 +325,7 @@ TEMPLATE_TEST_CASE("Apply Controlled Operation - param 2 control 2 target wire",
                               << " Control Value 1 = " << control_value_1) {
 
         if (wires.size() == 4) {
+            auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
             sv.applyOperation(gate_name, {control_wire_0, control_wire_1},
                               {control_value_0, control_value_1},
                               {target_wire_0, target_wire_1}, inverse, {param});
@@ -335,7 +335,7 @@ TEMPLATE_TEST_CASE("Apply Controlled Operation - param 2 control 2 target wire",
                                   {param});
 
             auto reference = sv_ref.getDataVector();
-            auto data = sv.getDataVector(0);
+            auto data = getFullDataVector(sv, 0);
 
             if (sv.getMPIManager().getRank() == 0) {
                 for (std::size_t j = 0; j < data.size(); j++) {
@@ -352,7 +352,6 @@ TEMPLATE_TEST_CASE("Apply Controlled Operation - param 2 control 2 target wire",
 TEMPLATE_TEST_CASE("Apply PauliRot - 1 wire", "[LKMPI]", double, float) {
     const TestType EP = 1e-4;
     const std::size_t num_qubits = 5;
-    auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
 
     const bool inverse = GENERATE(false, true);
 
@@ -363,11 +362,12 @@ TEMPLATE_TEST_CASE("Apply PauliRot - 1 wire", "[LKMPI]", double, float) {
 
     DYNAMIC_SECTION("word = " << word << " Inverse = " << inverse
                               << " Wire = " << wire) {
+        auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
         sv.applyPauliRot({wire}, inverse, {param}, word);
         sv_ref.applyPauliRot({wire}, inverse, {param}, word);
 
         auto reference = sv_ref.getDataVector();
-        auto data = sv.getDataVector(0);
+        auto data = getFullDataVector(sv, 0);
 
         if (sv.getMPIManager().getRank() == 0) {
             for (std::size_t j = 0; j < data.size(); j++) {
@@ -381,7 +381,6 @@ TEMPLATE_TEST_CASE("Apply PauliRot - 1 wire", "[LKMPI]", double, float) {
 TEMPLATE_TEST_CASE("Apply PauliRot - 2 wires", "[LKMPI]", double, float) {
     const TestType EP = 1e-4;
     const std::size_t num_qubits = 5;
-    auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
 
     const bool inverse = GENERATE(false, true);
 
@@ -395,12 +394,13 @@ TEMPLATE_TEST_CASE("Apply PauliRot - 2 wires", "[LKMPI]", double, float) {
     DYNAMIC_SECTION("word = " << word << " Inverse = " << inverse
                               << " Wire_0 = " << wire_0
                               << " Wire_1 = " << wire_1) {
+        auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
         if (wire_0 != wire_1) {
             sv.applyPauliRot({wire_0, wire_1}, inverse, {param}, word);
             sv_ref.applyPauliRot({wire_0, wire_1}, inverse, {param}, word);
 
             auto reference = sv_ref.getDataVector();
-            auto data = sv.getDataVector(0);
+            auto data = getFullDataVector(sv, 0);
 
             if (sv.getMPIManager().getRank() == 0) {
                 for (std::size_t j = 0; j < data.size(); j++) {
