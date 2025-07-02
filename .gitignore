@@ -27,8 +27,8 @@ dist/
 doc/_build/
 doc/code/api/
 kokkos/
-PennyLane_Lightning_Kokkos.egg-info/
-PennyLane_Lightning.egg-info/
+pennylane_lightning_kokkos.egg-info/
+pennylane_lightning.egg-info/
 prototypes/
 pyproject.toml
 tests/__pycache__/
