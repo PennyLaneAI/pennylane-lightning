@@ -486,7 +486,8 @@ class LightningBase(Device):
             cotangents (Tuple[Number, Tuple[Number]]): Gradient-output vector. Must have shape matching the output shape of the
                 corresponding circuit. If the circuit has a single output, ``cotangents`` may be a single number, not an iterable
                 of numbers.
-            execution_config (ExecutionConfig): a datastructure with all additional information required for execution
+            execution_config (ExecutionConfig): a datastructure with all additional information required for execution.
+                Default is ``None``, which sets the execution config to the default setup.
         Returns:
             tensor-like: A numeric result of computing the vector jacobian product
         **Definition of vjp:**
