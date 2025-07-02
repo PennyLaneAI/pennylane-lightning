@@ -438,7 +438,7 @@ class LightningBase(Device):
 
         Args:
             circuits (Union[QuantumTape, Sequence[QuantumTape]]): the circuits or batch of circuits
-            execution_config (ExecutionConfig): a data structure with all additional information required for execution. Default is ``None``.
+            execution_config (ExecutionConfig): a data structure with all additional information required for execution. Default is ``None``, which sets the execution config to the default setup.
 
         Returns:
             Tuple: A numeric result of the computation and the gradient.
