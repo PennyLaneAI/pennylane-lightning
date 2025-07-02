@@ -1098,6 +1098,9 @@ def test_integration_H2_Hamiltonian(
     assert np.allclose(jacs, jacs_comp)
 
 
+@pytest.mark.skipif(
+    device_name == "lightning.kokkos", reason="Kokkos MPI does not support SparseHamiltonian"
+)
 @pytest.mark.parametrize(
     "returns",
     [
@@ -1159,6 +1162,9 @@ def test_adjoint_SparseHamiltonian_custom_wires(returns):
     assert np.allclose(j_cpu, j_gpu)
 
 
+@pytest.mark.skipif(
+    device_name == "lightning.kokkos", reason="Kokkos MPI does not support SparseHamiltonian"
+)
 @pytest.mark.parametrize(
     "returns",
     [

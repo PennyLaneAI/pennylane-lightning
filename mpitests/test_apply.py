@@ -392,6 +392,9 @@ class TestApply:  # pylint: disable=missing-function-docstring,too-many-argument
         assert np.allclose(local_state_vector, local_expected_output_cpu, atol=tol, rtol=0)
 
 
+@pytest.mark.skipif(
+    device_name == "lightning.kokkos", reason="Sparse Hamiltonian not supported on Kokkos MPI"
+)
 class TestSparseHamExpval:  # pylint: disable=too-few-public-methods,missing-function-docstring
     """Tests sparse hamiltonian expectation values."""
 
@@ -653,7 +656,7 @@ class TestGenerateSample:
         dev_mpi = qml.device(device_name, wires=num_wires, mpi=True, c_dtype=c_dtype)
         dev_mpi._statevector.reset_state()
 
-        @partial(qml.set_shots, shots=1000)
+        @partial(qml.set_shots, shots=2000)
         @qml.qnode(dev_mpi)
         def circuit():
             qml.RX(1.5708, wires=0)
@@ -672,7 +675,7 @@ class TestGenerateSample:
 
         dev_mpi = qml.device(device_name, wires=num_wires, mpi=True, c_dtype=c_dtype)
 
-        @partial(qml.set_shots, shots=1000)
+        @partial(qml.set_shots, shots=2000)
         @qml.qnode(dev_mpi)
         def circuit():
             qml.Hadamard(0)
@@ -694,7 +697,7 @@ class TestGenerateSample:
         phi = 0.123
         varphi = -0.543
 
-        @partial(qml.set_shots, shots=1000)
+        @partial(qml.set_shots, shots=2000)
         @qml.qnode(dev_mpi)
         def circuit():
             qml.RX(theta, wires=[0])
@@ -735,7 +738,7 @@ class TestGenerateSample:
         phi = 0.123
         varphi = -0.543
 
-        @partial(qml.set_shots, shots=1000)
+        @partial(qml.set_shots, shots=2000)
         @qml.qnode(dev_mpi)
         def circuit():
             qml.RX(theta, wires=[0])
@@ -780,7 +783,7 @@ class TestTensorVar:
         phi = 0.123
         varphi = -0.543
 
-        @partial(qml.set_shots, shots=1000)
+        @partial(qml.set_shots, shots=2000)
         @qml.qnode(dev_mpi)
         def circuit():
             qml.RX(theta, wires=[0])
@@ -812,7 +815,7 @@ class TestTensorVar:
         phi = 0.123
         varphi = -0.543
 
-        @partial(qml.set_shots, shots=1000)
+        @partial(qml.set_shots, shots=2000)
         @qml.qnode(dev_mpi)
         def circuit():
             qml.RX(theta, wires=[0])
