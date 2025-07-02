@@ -28,7 +28,7 @@ import numpy as np
 import pennylane as qml
 from numpy.random import BitGenerator, Generator, SeedSequence
 from numpy.typing import ArrayLike
-from pennylane.devices import DefaultExecutionConfig, Device, ExecutionConfig
+from pennylane.devices import Device, ExecutionConfig
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
 from pennylane.exceptions import DeviceError
 from pennylane.measurements import MidMeasureMP
@@ -160,7 +160,7 @@ class LightningBase(Device):
         return circuit
 
     @abstractmethod
-    def preprocess(self, execution_config: ExecutionConfig = DefaultExecutionConfig):
+    def preprocess(self, execution_config: Optional[ExecutionConfig] = None):
         """This function defines the device transform program to be applied and an updated device configuration.
 
         Args:
@@ -184,7 +184,7 @@ class LightningBase(Device):
     def execute(
         self,
         circuits: QuantumTape_or_Batch,
-        execution_config: ExecutionConfig = DefaultExecutionConfig,
+        execution_config: Optional[ExecutionConfig] = None,
     ) -> Result_or_ResultBatch:
         """Execute a circuit or a batch of circuits and turn it into results.
 
@@ -410,17 +410,20 @@ class LightningBase(Device):
     def compute_derivatives(
         self,
         circuits: QuantumTape_or_Batch,
-        execution_config: ExecutionConfig = DefaultExecutionConfig,
+        execution_config: Optional[ExecutionConfig] = None,
     ) -> Tuple:
         """Calculate the jacobian of either a single or a batch of circuits on the device.
 
         Args:
             circuits (Union[QuantumTape, Sequence[QuantumTape]]): the circuits to calculate derivatives for
-            execution_config (ExecutionConfig): a data structure with all additional information required for execution. Default is ``DefaultExecutionConfig``.
+            execution_config (ExecutionConfig): a data structure with all additional information required for execution. Default is ``None``, which sets the execution config to the default setup.
 
         Returns:
             Tuple: The jacobian for each trainable parameter
         """
+        if execution_config is None:
+            execution_config = ExecutionConfig()
+
         batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
 
         return tuple(
@@ -436,17 +439,20 @@ class LightningBase(Device):
     def execute_and_compute_derivatives(
         self,
         circuits: QuantumTape_or_Batch,
-        execution_config: ExecutionConfig = DefaultExecutionConfig,
+        execution_config: Optional[ExecutionConfig] = None,
     ) -> Tuple:
         """Compute the results and jacobians of circuits at the same time.
 
         Args:
             circuits (Union[QuantumTape, Sequence[QuantumTape]]): the circuits or batch of circuits
-            execution_config (ExecutionConfig): a data structure with all additional information required for execution. Default is ``DefaultExecutionConfig``.
+            execution_config (ExecutionConfig): a data structure with all additional information required for execution. Default is ``None``, which sets the execution config to the default setup.
 
         Returns:
             Tuple: A numeric result of the computation and the gradient.
         """
+        if execution_config is None:
+            execution_config = ExecutionConfig()
+
         batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
         results = tuple(
             self.simulate_and_jacobian(
@@ -478,7 +484,7 @@ class LightningBase(Device):
         self,
         circuits: QuantumTape_or_Batch,
         cotangents: Tuple[Number],
-        execution_config: ExecutionConfig = DefaultExecutionConfig,
+        execution_config: Optional[ExecutionConfig] = None,
     ) -> Tuple:
         r"""The vector jacobian product used in reverse-mode differentiation. ``Lightning[Device]`` uses the
         adjoint differentiation method to compute the VJP.
@@ -487,7 +493,8 @@ class LightningBase(Device):
             cotangents (Tuple[Number, Tuple[Number]]): Gradient-output vector. Must have shape matching the output shape of the
                 corresponding circuit. If the circuit has a single output, ``cotangents`` may be a single number, not an iterable
                 of numbers.
-            execution_config (ExecutionConfig): a datastructure with all additional information required for execution
+            execution_config (ExecutionConfig): a datastructure with all additional information required for execution.
+                Default is ``None``, which sets the execution config to the default setup.
         Returns:
             tensor-like: A numeric result of computing the vector jacobian product
         **Definition of vjp:**
@@ -506,6 +513,9 @@ class LightningBase(Device):
         * For ``n`` expectation values, the cotangents must have shape ``(n, batch_size)``. If ``n = 1``,
           then the shape must be ``(batch_size,)``.
         """
+        if execution_config is None:
+            execution_config = ExecutionConfig()
+
         batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
         return tuple(
             self.vjp(
@@ -522,7 +532,7 @@ class LightningBase(Device):
         self,
         circuits: QuantumTape_or_Batch,
         cotangents: Tuple[Number],
-        execution_config: ExecutionConfig = DefaultExecutionConfig,
+        execution_config: Optional[ExecutionConfig] = None,
     ) -> Tuple:
         """Calculate both the results and the vector jacobian product used in reverse-mode differentiation.
         Args:
@@ -534,6 +544,9 @@ class LightningBase(Device):
         Returns:
             Tuple, Tuple: the result of executing the scripts and the numeric result of computing the vector jacobian product
         """
+        if execution_config is None:
+            execution_config = ExecutionConfig()
+
         batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
         results = tuple(
             self.simulate_and_vjp(

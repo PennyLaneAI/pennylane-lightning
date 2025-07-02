@@ -52,6 +52,9 @@
   [(#1175)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1175)
 
 <h3>Internal changes ⚙️</h3>
+
+- Replace `DefaultExecutionConfig` with `ExecutionConfig()` across the Lightning Python device APIs.
+  [(#1185)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1185)
   
 - Update docker build CI for stable version to use v0.41.1.
   [(#1188)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1188)
