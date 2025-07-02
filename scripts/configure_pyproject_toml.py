@@ -105,11 +105,11 @@ if __name__ == "__main__":
     # Configure Project.
     # ------------------------
     suffix = backend.replace("lightning_", "")
-    suffix = suffix.lower()
+    suffix = suffix.upper() if suffix == "gpu" else suffix.title()
 
-    plugin = "pennylane_lightning." + backend + ":Lightning" + suffix.title() 
+    plugin = "pennylane_lightning." + backend + ":Lightning" + suffix
 
-    pkg_suffix = "" if suffix == "qubit" else "_" + suffix
+    pkg_suffix = "" if suffix == "Qubit" else "_" + suffix.lower()
 
     # Specifying the project name.
     pyproject["project"]["name"] = f"pennylane_lightning{pkg_suffix}"
