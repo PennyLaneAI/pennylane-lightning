@@ -107,7 +107,7 @@ if __name__ == "__main__":
     suffix = backend.replace("lightning_", "")
     suffix = suffix.lower()
 
-    plugin = "pennylane_lightning." + backend + ":Lightning" + suffix.title() 
+    plugin = "pennylane_lightning." + backend + ":Lightning" + suffix.title()
 
     pkg_suffix = "" if suffix == "qubit" else "_" + suffix
 
