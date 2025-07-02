@@ -8,7 +8,7 @@ Building and Running Lightning-Kokkos with MPI on Frontier
 
 To build Lightning-Kokkos with MPI on `Frontier <https://www.olcf.ornl.gov/frontier/>`_ for AMD GPUs, the following commands can be used:
 
-.. code-block:: bash
+.. code-block:: console
 
     # Load the required Python and compiler modules
     module load cray-python
