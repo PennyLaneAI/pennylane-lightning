@@ -378,7 +378,6 @@ void applyNCSX(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                const std::vector<bool> &controlled_values,
                const std::vector<std::size_t> &wires, bool inverse = false,
                [[maybe_unused]] const std::vector<PrecisionT> &params = {}) {
-
     constexpr PrecisionT half = 0.5;
     const Kokkos::complex<PrecisionT> z0{half, (inverse) ? -half : half};
     const Kokkos::complex<PrecisionT> z1 = Kokkos::conj(z0);
@@ -743,7 +742,6 @@ class applyNC2Functor<PrecisionT, FuncT, true> {
 
 template <class PrecisionT, class FuncT>
 class applyNC2Functor<PrecisionT, FuncT, false> {
-
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
 
     const FuncT core_function;
@@ -1048,7 +1046,6 @@ void applyNCIsingXY(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                     const std::vector<bool> &controlled_values,
                     const std::vector<std::size_t> &wires, bool inverse = false,
                     const std::vector<PrecisionT> &params = {}) {
-
     const PrecisionT angle = params[0];
     const PrecisionT cr = std::cos(angle / 2);
     const PrecisionT sj =

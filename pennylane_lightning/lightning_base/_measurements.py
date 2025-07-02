@@ -69,8 +69,8 @@ class LightningBaseMeasurements(ABC):
         # TODO: implement this for other Lightning devices.
         self._subsamples = False
 
-        # Declare if the device will use the MPI support.
-        # Currently, only Lightning-GPU supports this feature.
+        # Declare if the device will use the MPI support. Currently,
+        # only Lightning-GPU and Lightning-Kokkos supports this feature.
         self._use_mpi = False
 
         # Dummy for the C++ bindings
@@ -132,11 +132,27 @@ class LightningBaseMeasurements(ABC):
         Returns:
             Expectation value of the observable
         """
+
         if self._observable_is_sparse(measurementprocess.obs):
             # We first ensure the CSR sparse representation.
-            CSR_SparseHamiltonian = measurementprocess.obs.sparse_matrix(
-                wire_order=list(range(self._qubit_state.num_wires))
-            ).tocsr(copy=False)
+
+            if self._use_mpi:
+                if self._qubit_state.device_name == "lightning.kokkos":
+                    raise NotImplementedError(
+                        "Sparse Hamiltonian is not supported on the lightning.kokkos device with MPI."
+                    )
+
+                # Identity for CSR_SparseHamiltonian to pass to processes with rank != 0 to reduce
+                # host(cpu) memory requirements
+                CSR_SparseHamiltonian = qml.Identity(0).sparse_matrix()
+                # CSR_SparseHamiltonian for rank == 0
+                if self._mpi_handler.mpi_manager.getRank() == 0:
+                    CSR_SparseHamiltonian = measurementprocess.obs.sparse_matrix().tocsr()
+            else:
+                CSR_SparseHamiltonian = measurementprocess.obs.sparse_matrix(
+                    wire_order=list(range(self._qubit_state.num_wires))
+                ).tocsr(copy=False)
+
             return self._measurement_lightning.expval(
                 CSR_SparseHamiltonian.indptr,
                 CSR_SparseHamiltonian.indices,
@@ -147,14 +163,17 @@ class LightningBaseMeasurements(ABC):
         if measurementprocess.obs.pauli_rep is not None and hasattr(self, "_expval_pauli_sentence"):
             return self._expval_pauli_sentence(measurementprocess)
 
+        # use specialized functors to compute expval(Hermitian)
         if isinstance(measurementprocess.obs, qml.Hermitian):
             observable_wires = measurementprocess.obs.wires
+            if self._use_mpi and len(observable_wires) > self._num_local_wires:
+                raise RuntimeError(
+                    "MPI backend does not support Hermitian with number of target wires larger than local wire number."
+                )
             matrix = measurementprocess.obs.matrix()
             return self._measurement_lightning.expval(matrix, observable_wires)
 
-        if (measurementprocess.obs.arithmetic_depth > 0) or isinstance(
-            measurementprocess.obs.name, List
-        ):
+        if measurementprocess.obs.arithmetic_depth or isinstance(measurementprocess.obs.name, List):
             # pylint: disable=protected-access
             ob_serialized = QuantumScriptSerializer(
                 self._qubit_state.device_name, self.dtype == np.complex64, self._use_mpi
@@ -205,6 +224,11 @@ class LightningBaseMeasurements(ABC):
         """
 
         if self._observable_is_sparse(measurementprocess.obs):
+            if self._qubit_state.device_name == "lightning.kokkos" and self._use_mpi:
+                raise NotImplementedError(
+                    "Sparse Hamiltonian is not supported on the lightning.kokkos device with MPI."
+                )
+
             # Ensuring CSR sparse representation.
             CSR_SparseHamiltonian = measurementprocess.obs.sparse_matrix(
                 wire_order=list(range(self._qubit_state.num_wires))
