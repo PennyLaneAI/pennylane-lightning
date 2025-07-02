@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Tests for default qubit preprocessing."""
-from functools import reduce, partial
+from functools import partial, reduce
 from typing import Sequence
 
 import numpy as np
