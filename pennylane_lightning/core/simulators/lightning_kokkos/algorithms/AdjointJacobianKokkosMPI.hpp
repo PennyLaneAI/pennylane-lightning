@@ -54,7 +54,6 @@ class AdjointJacobianMPI final
     inline void updateJacobian(StateVectorT &sv1, StateVectorT &sv2,
                                std::span<PrecisionT> &jac,
                                PrecisionT scaling_coeff, std::size_t idx) {
-
         sv1.matchWires(sv2);
         auto element = -2 * scaling_coeff *
                        getImagOfComplexInnerProduct<PrecisionT>(sv1.getView(),

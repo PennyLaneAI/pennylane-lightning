@@ -346,7 +346,6 @@ class MeasurementsMPI final
      */
     PrecisionT var(const std::vector<ComplexT> &matrix,
                    const std::vector<std::size_t> &wires) {
-
         PrecisionT squared_mean = std::pow(expval(matrix, wires), 2);
         StateVectorT ob_sv{this->_statevector};
         ob_sv.applyOperation("Matrix", wires, false, {}, matrix);
@@ -366,7 +365,6 @@ class MeasurementsMPI final
      */
     PrecisionT var(const std::string &operation,
                    const std::vector<size_t> &wires) {
-
         PrecisionT squared_mean = std::pow(expval(operation, wires), 2);
         StateVectorT ob_sv{this->_statevector};
         ob_sv.applyOperation(operation, wires, false, {});

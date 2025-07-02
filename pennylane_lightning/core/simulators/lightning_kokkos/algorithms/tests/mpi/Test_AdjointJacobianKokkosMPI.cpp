@@ -47,7 +47,6 @@ std::mt19937_64 re{1337};
 // expval
 TEMPLATE_PRODUCT_TEST_CASE("Adjoint", "[LKMPI_Adjoint]", (StateVectorKokkosMPI),
                            (float, double)) {
-
     using StateVectorT = TestType;
     using PrecisionT = typename StateVectorT::PrecisionT;
     AdjointJacobianMPI<StateVectorT> adj;

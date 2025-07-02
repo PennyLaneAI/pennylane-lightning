@@ -171,7 +171,6 @@ TEMPLATE_TEST_CASE("Apply Controlled Generator - 1 control 1 target wire",
                               << " Target Wire = " << target_wire
                               << " Control Wire = " << control_wire
                               << " Control Value = " << control_value) {
-
         if (wires.size() == 2) {
             auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
             auto scale = sv.applyControlledGenerator(gate_name, {control_wire},
@@ -218,7 +217,6 @@ TEMPLATE_TEST_CASE("Apply Controlled Generator - 1 control 2 target wires",
                               << " Target Wire 1 = " << target_wire_1
                               << " Control Wire = " << control_wire
                               << " Control Value = " << control_value) {
-
         if (wires.size() == 3) {
             auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
             auto scale = sv.applyControlledGenerator(

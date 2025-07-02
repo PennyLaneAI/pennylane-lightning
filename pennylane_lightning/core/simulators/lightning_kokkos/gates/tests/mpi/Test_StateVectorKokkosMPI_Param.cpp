@@ -274,7 +274,6 @@ TEMPLATE_TEST_CASE("Apply Controlled Operation - param 2 control 1 target wire",
                               << " Control Value 0 = " << control_value_0
                               << " Control Wire 1 = " << control_wire_1
                               << " Control Value 1 = " << control_value_1) {
-
         if (wires.size() == 3) {
             auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
             sv.applyOperation(gate_name, {control_wire_0, control_wire_1},
@@ -323,7 +322,6 @@ TEMPLATE_TEST_CASE("Apply Controlled Operation - param 2 control 2 target wire",
                               << " Control Value 0 = " << control_value_0
                               << " Control Wire 1 = " << control_wire_1
                               << " Control Value 1 = " << control_value_1) {
-
         if (wires.size() == 4) {
             auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
             sv.applyOperation(gate_name, {control_wire_0, control_wire_1},

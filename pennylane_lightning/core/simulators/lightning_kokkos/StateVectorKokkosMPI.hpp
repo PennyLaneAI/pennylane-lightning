@@ -125,7 +125,6 @@ class StateVectorKokkosMPI final
           num_qubits_(num_global_qubits + num_local_qubits),
           numGlobalQubits_(num_global_qubits),
           numLocalQubits_(num_local_qubits) {
-
         Kokkos::InitializationSettings settings = kokkos_args;
 
         global_wires_.resize(numGlobalQubits_); // set to constructor line
@@ -992,7 +991,6 @@ class StateVectorKokkosMPI final
         }
 
         if (isWiresGlobal(wires)) {
-
             if (opName == "PauliX") {
                 std::size_t rev_distance = getRevGlobalWireIndex(wires[0]);
                 for (auto &global_index : mpi_rank_to_global_index_map_) {
@@ -1021,7 +1019,6 @@ class StateVectorKokkosMPI final
                 }
                 return;
             } else if (opName == "CNOT") {
-
                 std::size_t rev_distance_0 = getRevGlobalWireIndex(wires[0]);
                 std::size_t rev_distance_1 = getRevGlobalWireIndex(wires[1]);
                 for (auto &global_index : mpi_rank_to_global_index_map_) {
@@ -1224,7 +1221,6 @@ class StateVectorKokkosMPI final
     auto applyGenerator(const std::string &opName,
                         const std::vector<std::size_t> &wires,
                         bool inverse = false) -> PrecisionT {
-
         if (!isWiresLocal(wires)) {
             auto global_wires = findGlobalWires(wires);
             auto local_wires = localWiresSubsetToSwap(global_wires, wires);
@@ -1252,7 +1248,6 @@ class StateVectorKokkosMPI final
                              const std::vector<bool> &controlled_values,
                              const std::vector<std::size_t> &wires,
                              bool inverse = false) -> PrecisionT {
-
         std::vector<std::size_t> all_wires = controlled_wires;
         all_wires.insert(all_wires.end(), wires.begin(), wires.end());
         if (!isWiresLocal(all_wires)) {

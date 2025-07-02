@@ -230,11 +230,11 @@ class LightningKokkosStateVector(LightningBaseStateVector):
                 local_state = state[myrank * local_size : (myrank + 1) * local_size]
                 self.sync_h2d(local_state)
                 return
-            else:
-                output_shape = (2,) * self._num_wires
-                state = np.reshape(state, output_shape).ravel(order="C")
-                self.sync_h2d(np.reshape(state, output_shape))
-                return
+
+            output_shape = (2,) * self._num_wires
+            state = np.reshape(state, output_shape).ravel(order="C")
+            self.sync_h2d(np.reshape(state, output_shape))
+            return
 
         # This operate on device
         self._qubit_state.setStateVector(state, list(device_wires))

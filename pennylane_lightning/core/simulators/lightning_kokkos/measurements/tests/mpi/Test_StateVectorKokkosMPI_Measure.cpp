@@ -611,7 +611,6 @@ TEMPLATE_TEST_CASE("probs - 2 wires", "[LKMPI_Expval]", float, double) {
     DYNAMIC_SECTION("Wires " << wire_0 << ", " << wire_1) {
         if (wires_set.size() == 2 &&
             std::is_sorted(wires.begin(), wires.end())) {
-
             auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
             auto m = MeasurementsMPI(sv);
             auto m_ref = Measurements(sv_ref);
@@ -655,7 +654,6 @@ TEMPLATE_TEST_CASE("probs - 3 wires", "[LKMPI_Expval]", float, double) {
     DYNAMIC_SECTION("Wires " << wire_0 << ", " << wire_1 << ", " << wire_2) {
         if (wires_set.size() == 3 &&
             std::is_sorted(wires.begin(), wires.end())) {
-
             auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
             auto m = MeasurementsMPI(sv);
             auto m_ref = Measurements(sv_ref);
@@ -700,7 +698,6 @@ TEMPLATE_TEST_CASE("probs - 4 wires", "[LKMPI_Expval]", float, double) {
                              << ", " << wire_3) {
         if (wires_set.size() == 4 &&
             std::is_sorted(wires.begin(), wires.end())) {
-
             auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
             auto m = MeasurementsMPI(sv);
             auto m_ref = Measurements(sv_ref);
