@@ -433,8 +433,8 @@ class TestExecutionMCM:
             pytest.skip("Skip test for one-shot with None shots")
 
         wires = 4 if mcm_method == "deferred" else 2
-        dq = qml.device("default.qubit", shots=shots, seed=seed)
-        dev = get_device(wires=wires, shots=shots, seed=seed)
+        dq = qml.device("default.qubit", seed=seed)
+        dev = get_device(wires=wires, seed=seed)
         params = [np.pi / 2.5, np.pi / 3, -np.pi / 3.5]
 
         def func(x, y, z):
@@ -448,8 +448,8 @@ class TestExecutionMCM:
             measurement_value = mid_measure if isinstance(measure_obj, str) else measure_obj
             return measure_f(**{measurement_key: measurement_value})
 
-        results1 = qml.QNode(func, dev, mcm_method=mcm_method)(*params)
-        results2 = qml.QNode(func, dq, mcm_method="deferred")(*params)
+        results1 = qml.set_shots(qml.QNode(func, dev, mcm_method=mcm_method), shots=shots)(*params)
+        results2 = qml.set_shots(qml.QNode(func, dq, mcm_method="deferred"), shots=shots)(*params)
 
         validate_measurements(measure_f, shots, results1, results2, atol=0.04)
 
@@ -472,8 +472,8 @@ class TestExecutionMCM:
         shots = shots
         wires = 4 if mcm_method == "deferred" else 2
 
-        dq = qml.device("default.qubit", shots=shots, seed=seed)
-        dev = get_device(wires=wires, shots=shots, seed=seed)
+        dq = qml.device("default.qubit", seed=seed)
+        dev = get_device(wires=wires, seed=seed)
 
         params = [np.pi / 2.5, np.pi / 3, -np.pi / 3.5]
         obs = qml.PauliY(1)
@@ -496,8 +496,8 @@ class TestExecutionMCM:
                     qml.var(op=obs),
                 )
 
-        results1 = qml.QNode(func, dev, mcm_method=mcm_method)(*params)
-        results2 = qml.QNode(func, dq, mcm_method="deferred")(*params)
+        results1 = qml.set_shots(qml.QNode(func, dev, mcm_method=mcm_method), shots=shots)(*params)
+        results2 = qml.set_shots(qml.QNode(func, dq, mcm_method="deferred"), shots=shots)(*params)
 
         measurements = (
             [qml.counts, qml.expval, qml.probs, qml.sample, qml.var]
@@ -541,7 +541,7 @@ class TestExecutionMCM:
         shots = 3000
         wires = 2 if mcm_method != "deferred" else 3
 
-        dq = qml.device("default.qubit", shots=shots, seed=seed)
+        dq = qml.device("default.qubit", seed=seed)
         dev = get_device(wires=wires, seed=seed)
         param = np.pi / 3
 
@@ -582,7 +582,7 @@ class TestExecutionMCM:
 
         wires = 3 if mcm_method == "deferred" else 2
 
-        dq = qml.device("default.qubit", shots=shots)
+        dq = qml.device("default.qubit")
         dev = get_device(wires=wires)
         param = np.pi / 3
 
