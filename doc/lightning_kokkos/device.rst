@@ -129,7 +129,7 @@ With ``lightning.kokkos`` installed with MPI support, distributed simulation can
     from mpi4py import MPI
     import pennylane as qml
 
-    dev = qml.device('lightning.kokkos', wires=8, mpi=True)
+    dev = qml.device('lightning.kokkos', wires=30, mpi=True)
     @qml.qnode(dev)
     def circuit_mpi():
         qml.PauliX(wires=[0])
@@ -154,7 +154,7 @@ The workflow for collecting local state vector (using the ``qml.state()`` method
     comm = MPI.COMM_WORLD
     rank = comm.Get_rank() 
 
-    dev = qml.device('lightning.kokkos', wires=8, mpi=True)
+    dev = qml.device('lightning.kokkos', wires=30, mpi=True)
     @qml.qnode(dev)
     def circuit_mpi():
         qml.PauliX(wires=[0])
