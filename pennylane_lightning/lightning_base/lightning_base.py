@@ -409,7 +409,7 @@ class LightningBase(Device):
 
         Args:
             circuits (Union[QuantumTape, Sequence[QuantumTape]]): the circuits to calculate derivatives for
-            execution_config (ExecutionConfig): a data structure with all additional information required for execution. Default is ``None``.
+            execution_config (ExecutionConfig): a data structure with all additional information required for execution. Default is ``None``, which sets the execution config to the default setup.
 
         Returns:
             Tuple: The jacobian for each trainable parameter
