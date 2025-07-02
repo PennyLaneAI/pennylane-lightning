@@ -110,8 +110,11 @@
 - Removed `max_workers` argument for `default.qubit` device in Python tests to reduce CI testing time.
   [(##1174)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1174)
   
- - Bump Github action runner to use `Ubuntu-24.04` or `Ubuntu-latest`. Fixing all `ubuntu-latest` action runners to `ubuntu-24.04`.
+- Bump Github action runner to use `Ubuntu-24.04` or `Ubuntu-latest`. Fixing all `ubuntu-latest` action runners to `ubuntu-24.04`.
   [(#1167)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1167)
+
+- Adhere to PyPA binary distribution format for built wheels.
+  [(#1193)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1193)
 
 <h3>Contributors ✍️</h3>
 
