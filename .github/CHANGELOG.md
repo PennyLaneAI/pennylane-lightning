@@ -53,6 +53,9 @@
 
 <h3>Internal changes ⚙️</h3>
   
+- Fix `applyMultiRZ` for `lightning.kokkos` device to use Kokkos function instead of lambda.
+  [(#XXXX)](https://github.com/PennyLaneAI/pennylane-lightning/pull/XXXX)
+  
 - Update docker build CI for stable version to use v0.41.1.
   [(#1188)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1188)
 
