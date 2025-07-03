@@ -15,6 +15,7 @@
 Unit tests for Lightning devices.
 """
 import math
+from functools import partial
 
 import numpy as np
 import pennylane as qml
@@ -83,8 +84,9 @@ class TestExpval:
     )
     def test_expval_estimate(self):
         """Test that the expectation value is not analytically calculated"""
-        dev = qml.device(device_name, wires=1, shots=3)
+        dev = qml.device(device_name, wires=1)
 
+        @partial(qml.set_shots, shots=3)
         @qml.qnode(dev)
         def circuit():
             return qml.expval(qml.PauliX(0))
@@ -142,8 +144,9 @@ class TestVar:
     def test_var_estimate(self):
         """Test that the variance is not analytically calculated"""
 
-        dev = qml.device(device_name, wires=1, shots=3)
+        dev = qml.device(device_name, wires=1)
 
+        @partial(qml.set_shots, shots=3)
         @qml.qnode(dev)
         def circuit():
             return qml.var(qml.PauliX(0))
@@ -304,10 +307,11 @@ class TestLightningDeviceIntegration:
         """Test that the default qubit plugin provides correct result for high shot number"""
 
         shots = 10**4
-        dev = qml.device(device_name, wires=1, shots=shots)
+        dev = qml.device(device_name, wires=1)
 
         p = 0.543
 
+        @partial(qml.set_shots, shots=shots)
         @qml.qnode(dev)
         def circuit(x):
             """Test quantum function"""
@@ -681,8 +685,9 @@ class TestLightningDeviceIntegration:
         """Tests if the samples returned by the sample function have
         the correct dimensions
         """
-        dev = qubit_device(wires=2, shots=1000)
+        dev = qubit_device(wires=2)
 
+        @partial(qml.set_shots, shots=1000)
         @qml.qnode(dev)
         def circuit():
             qml.Hadamard(0)
@@ -702,8 +707,9 @@ class TestLightningDeviceIntegration:
         the correct dimensions
         """
 
-        dev = qml.device(device_name, wires=num_wires, shots=1000)
+        dev = qml.device(device_name, wires=num_wires)
 
+        @partial(qml.set_shots, shots=1000)
         @qml.qnode(dev)
         def circuit():
             qml.Hadamard(0)
@@ -733,8 +739,9 @@ class TestLightningDeviceIntegration:
 
     def test_snapshot_is_ignored_with_shots(self):
         """Tests if the Snapshot operator is ignored correctly"""
-        dev = qml.device(device_name, wires=4, shots=1000)
+        dev = qml.device(device_name, wires=4)
 
+        @partial(qml.set_shots, shots=1000)
         @qml.qnode(dev)
         def circuit():
             qml.Hadamard(0)
