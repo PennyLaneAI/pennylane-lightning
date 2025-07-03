@@ -26,7 +26,6 @@
 #include <string>
 #include <tuple>
 #include <unordered_map>
-#include <variant>
 #include <vector>
 
 #include <nanobind/nanobind.h>
@@ -123,6 +122,8 @@ using namespace Pennylane::LightningTensor::TNCuda::NanoBindings;
 static_assert(false, "Backend not found.");
 #endif
 
+namespace nb = nanobind;
+
 /// @cond DEV
 namespace {
 using Pennylane::NanoBindings::Utils::createNumpyArrayFromVector;
@@ -131,11 +132,9 @@ using Pennylane::Util::CPUMemoryModel;
 } // namespace
 /// @endcond
 
-namespace nb = nanobind;
 namespace Pennylane::NanoBindings {
-
 /**
- * @brief Register applyMatrix.
+ * @brief Register applyMatrix
  */
 template <class StateVectorT>
 void registerMatrix(
@@ -154,7 +153,7 @@ void registerMatrix(
 }
 
 /**
- * @brief Register StateVector class.
+ * @brief Register StateVector class
  *
  * @tparam StateVectorT Statevector type to register
  * @tparam PyClass Nanobind's class object type
@@ -189,7 +188,7 @@ void registerGatesForStateVector(PyClass &pyclass) {
 }
 
 /**
- * @brief Register controlled gate operations for a statevector.
+ * @brief Register controlled gate operations for a statevector
  *
  * @tparam StateVectorT State vector type
  * @tparam PyClass Nanobind class type
@@ -227,12 +226,12 @@ void registerControlledGates(PyClass &pyclass) {
         });
 }
 /**
- * @brief Create an aligned array for a given type, memory model and array size.
+ * @brief Create an aligned array for a given type, memory model and array size
  *
  * @tparam VectorT Datatype of array to create
  * @param memory_model Memory model to use
  * @param size Size of the array to create
- * @return Nanobind ndarray
+ * @return nb::ndarray<VectorT, nb::numpy, nb::c_contig>
  */
 template <typename VectorT>
 auto alignedArray(CPUMemoryModel memory_model, std::size_t size, bool zeroInit)
@@ -256,35 +255,37 @@ auto alignedArray(CPUMemoryModel memory_model, std::size_t size, bool zeroInit)
 }
 
 /**
- * @brief Allocate aligned array with specified dtype.
+ * @brief Allocate aligned array with specified dtype
  *
  * @param size Size of the array to create
- * @param dtype Data type as string ("complex64", "complex128", "float32",
- * "float64")
+ * @param dtype Python dtype object to create the array with
  * @param zeroInit Whether to initialize the array with zeros
- * @return Nanobind ndarray
+ * @return nb::object A NumPy array with the specified dtype
  */
-auto allocateAlignedArray(std::size_t size, const std::string &dtype,
-                          bool zeroInit) -> nb::object {
+auto allocateAlignedArray(std::size_t size, const nb::object &dtype,
+                          bool zeroInit = false) -> nb::object {
     auto memory_model = bestCPUMemoryModel();
 
-    if (dtype == "complex64") {
-        return nb::cast(
-            alignedArray<std::complex<float>>(memory_model, size, zeroInit));
-    } else if (dtype == "complex128") {
-        return nb::cast(
-            alignedArray<std::complex<double>>(memory_model, size, zeroInit));
-    } else if (dtype == "float32") {
+    // Convert dtype to string representation
+    std::string dtype_str = nb::cast<std::string>(dtype.attr("name"));
+
+    if (dtype_str == "complex64") {
+        return nb::cast(alignedArray<std::complex<float>>(memory_model, size, zeroInit));
+    } else if (dtype_str == "complex128") {
+        return nb::cast(alignedArray<std::complex<double>>(memory_model, size, zeroInit));
+    } else if (dtype_str == "float32") {
         return nb::cast(alignedArray<float>(memory_model, size, zeroInit));
-    } else if (dtype == "float64") {
+    } else if (dtype_str == "float64") {
         return nb::cast(alignedArray<double>(memory_model, size, zeroInit));
     }
 
-    throw std::runtime_error("Unsupported dtype: " + dtype);
+    throw std::runtime_error("Unsupported dtype: " + dtype_str);
 }
 
 /**
- * @brief Register array alignment functionality.
+ * @brief Register array alignment functionality
+ *
+ * @param m Nanobind module
  */
 void registerArrayAlignmentBindings(nb::module_ &m) {
     // Add allocate_aligned_array function
@@ -294,7 +295,7 @@ void registerArrayAlignmentBindings(nb::module_ &m) {
 }
 
 /**
- * @brief Return basic information of runtime environment.
+ * @brief Return basic information of runtime environment
  */
 nb::dict getRuntimeInfo() {
     using Pennylane::Util::RuntimeInfo;
@@ -309,9 +310,9 @@ nb::dict getRuntimeInfo() {
 }
 
 /**
- * @brief Get compile information as a dictionary.
+ * @brief Get compile information as a dictionary
  *
- * @return Dictionary with compile information.
+ * @return Dictionary with compile information
  */
 nb::dict getCompileInfo() {
     using namespace Pennylane::Util;
@@ -369,9 +370,9 @@ nb::dict getCompileInfo() {
 }
 
 /**
- * @brief Register bindings for general info.
+ * @brief Register bindings for general info
  *
- * @param m Nanobind module.
+ * @param m Nanobind module
  */
 void registerInfo(nb::module_ &m) {
     // Add compile info
@@ -382,7 +383,7 @@ void registerInfo(nb::module_ &m) {
 }
 
 /**
- * @brief Register backend-agnostic observables.
+ * @brief Register backend-agnostic observables
  *
  * @tparam LightningBackendT
  * @param m Nanobind module
@@ -506,8 +507,8 @@ void registerBackendAgnosticObservables(nb::module_ &m) {
  * @tparam StateVectorT State vector type
  * @param M Measurements object
  * @param wires Vector of wire indices
- * @return nb::ndarray<typename StateVectorT::PrecisionT, nb::numpy,
- * nb::c_contig> Array with probabilities in numpy format
+ * @return nb::ndarray<PrecisionT, nb::numpy, nb::c_contig> NumPy array with
+ * probabilities
  */
 template <class StateVectorT>
 nb::ndarray<typename StateVectorT::PrecisionT, nb::numpy, nb::c_contig>
@@ -523,8 +524,8 @@ probsForWires(Measurements<StateVectorT> &M,
  *
  * @tparam StateVectorT State vector type
  * @param M Measurements object
- * @return nb::ndarray<typename StateVectorT::PrecisionT, nb::numpy,
- * nb::c_contig> Array with probabilities in numpy format
+ * @return nb::ndarray<PrecisionT, nb::numpy, nb::c_contig> NumPy array with
+ * probabilities
  */
 template <class StateVectorT>
 nb::ndarray<typename StateVectorT::PrecisionT, nb::numpy, nb::c_contig>
@@ -541,8 +542,8 @@ probsForAllWires(Measurements<StateVectorT> &M) {
  * @param M Measurements object
  * @param num_wires Number of wires
  * @param num_shots Number of shots
- * @return nb::ndarray<std::size_t, nb::numpy, nb::c_contig> 2D array with
- * samples in numpy format
+ * @return nb::ndarray<std::size_t, nb::numpy, nb::c_contig> NumPy 2D array with
+ * samples
  */
 template <class StateVectorT>
 nb::ndarray<std::size_t, nb::numpy, nb::c_contig>
@@ -595,26 +596,44 @@ void registerBackendAgnosticMeasurements(PyClass &pyclass) {
 }
 
 /**
- * @brief Register the adjoint Jacobian method.
+ * @brief Register AdjointJacobian class.
+ *
+ * @tparam StateVectorT State vector class.
+ * @param m Nanobind module.
  */
-template <class StateVectorT>
-auto registerAdjointJacobian(
-    AdjointJacobian<StateVectorT> &adjoint_jacobian, const StateVectorT &sv,
-    const std::vector<std::shared_ptr<Observable<StateVectorT>>> &observables,
-    const OpsData<StateVectorT> &operations,
-    const std::vector<std::size_t> &trainableParams)
-    -> nb::ndarray<typename StateVectorT::PrecisionT, nb::numpy, nb::c_contig> {
+template <class StateVectorT> void registerAdjointJacobian(nb::module_ &m) {
     using PrecisionT = typename StateVectorT::PrecisionT;
-    std::vector<PrecisionT> jac(observables.size() * trainableParams.size(),
-                                PrecisionT{0.0});
-    const JacobianData<StateVectorT> jd{operations.getTotalNumParams(),
-                                        sv.getLength(),
-                                        sv.getData(),
-                                        observables,
-                                        operations,
-                                        trainableParams};
-    adjoint_jacobian.adjointJacobian(std::span{jac}, jd, sv);
-    return createNumpyArrayFromVector<PrecisionT>(jac);
+    using ComplexT = typename StateVectorT::ComplexT;
+
+    const std::string bitsize =
+        std::to_string(sizeof(std::complex<PrecisionT>) * 8);
+
+    std::string class_name = "AdjointJacobianC" + bitsize;
+    auto adjoint_jacobian_class =
+        nb::class_<AdjointJacobian<StateVectorT>>(m, class_name.c_str());
+    adjoint_jacobian_class.def(nb::init<>());
+
+    // Add the __call__ method with proper binding to match pybind11 behavior
+    adjoint_jacobian_class.def(
+        "__call__",
+        [](AdjointJacobian<StateVectorT> &adj, const StateVectorT &sv,
+           const std::vector<std::shared_ptr<Observable<StateVectorT>>>
+               &observables,
+           const OpsData<StateVectorT> &operations,
+           const std::vector<size_t> &trainableParams) {
+            using PrecisionT = typename StateVectorT::PrecisionT;
+            std::vector<PrecisionT> jac(
+                observables.size() * trainableParams.size(), PrecisionT{0.0});
+            const JacobianData<StateVectorT> jd{operations.getTotalNumParams(),
+                                                sv.getLength(),
+                                                sv.getData(),
+                                                observables,
+                                                operations,
+                                                trainableParams};
+            adj.adjointJacobian(std::span{jac}, jd, sv);
+            return createNumpyArrayFromVector<PrecisionT>(jac);
+        },
+        "Calculate the Jacobian using the adjoint method.");
 }
 
 /**
@@ -637,18 +656,14 @@ OpsData<StateVectorT> createOpsList(
         &ops_params,
     const std::vector<std::vector<std::size_t>> &ops_wires,
     const std::vector<bool> &ops_inverses,
-    const std::vector<nb::ndarray<
-        const std::complex<typename StateVectorT::PrecisionT>, nb::c_contig>>
-        &ops_matrices,
+    const std::vector<nb::ndarray<const typename StateVectorT::ComplexT,
+                                  nb::c_contig>> &ops_matrices,
     const std::vector<std::vector<std::size_t>> &ops_controlled_wires,
     const std::vector<std::vector<bool>> &ops_controlled_values) {
 
     using ComplexT = typename StateVectorT::ComplexT;
-    using ParamT = typename StateVectorT::PrecisionT;
-
     auto conv_matrices =
-        Pennylane::NanoBindings::Utils::convertMatrices<ComplexT, ParamT>(
-            ops_matrices);
+        Pennylane::NanoBindings::Utils::convertMatrices<ComplexT>(ops_matrices);
 
     return OpsData<StateVectorT>{ops_name,
                                  ops_params,
@@ -709,16 +724,12 @@ void registerBackendAgnosticAlgorithms(nb::module_ &m) {
     std::string function_name = "create_ops_listC" + bitsize;
     m.def(function_name.c_str(), &createOpsList<StateVectorT>,
           "Create a list of operations from data.");
+
     //***********************************************************************//
     //                            Adjoint Jacobian
     //***********************************************************************//
-    class_name = "AdjointJacobianC" + bitsize;
-    auto adjoint_class =
-        nb::class_<AdjointJacobian<StateVectorT>>(m, class_name.c_str());
-
-    adjoint_class.def(nb::init<>());
-    adjoint_class.def("__call__", &registerAdjointJacobian<StateVectorT>,
-                      "Adjoint Jacobian method.");
+    // Register the AdjointJacobian class using the dedicated function
+    registerAdjointJacobian<StateVectorT>(m);
 }
 
 /**
