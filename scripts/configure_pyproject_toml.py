@@ -105,14 +105,16 @@ if __name__ == "__main__":
     # Configure Project.
     # ------------------------
     suffix = backend.replace("lightning_", "")
-    suffix = suffix.upper() if suffix == "gpu" else suffix.title()
-
-    plugin = "pennylane_lightning." + backend + ":Lightning" + suffix
-
-    pkg_suffix = "" if suffix == "Qubit" else "_" + suffix.lower()
 
     # Specifying the project name.
+    pkg_suffix = "" if suffix == "qubit" else "_" + suffix
+
     pyproject["project"]["name"] = f"pennylane_lightning{pkg_suffix}"
+
+    # Specifying the plugin name.
+    plugin_suffix = suffix.upper() if suffix == "gpu" else suffix.title()
+
+    plugin = "pennylane_lightning." + backend + ":Lightning" + plugin_suffix
 
     # Project entry point.
     pyproject["project"]["entry-points"]["pennylane.plugins"] = {device_name: plugin}
@@ -141,6 +143,19 @@ if __name__ == "__main__":
 
     # Package requirements.
     pyproject["project"]["dependencies"] = dependencies
+
+    # Edit Classifiers based on the backend.
+    windows_classifiers = "Operating System :: Microsoft :: Windows"
+
+    if backend != "lightning_qubit":
+        pyproject["project"]["classifiers"].remove(windows_classifiers)
+
+    if (
+        backend == "lightning_qubit"
+        and windows_classifiers not in pyproject["project"]["classifiers"]
+    ):
+        os_order = pyproject["project"]["classifiers"].index("Operating System :: MacOS :: MacOS X")
+        pyproject["project"]["classifiers"].insert(os_order + 1, windows_classifiers)
 
     with open(pyproject_path, "w", encoding="utf-8") as file:
         toml.dump(pyproject, file)
