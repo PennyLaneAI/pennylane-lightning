@@ -60,7 +60,7 @@ elif device_name == "lightning.tensor":
         allow_module_level=True,
     )
 else:
-    from pennylane_lightning.lightning_qubit_ops.observables import (
+    from pennylane_lightning.lightning_qubit_nb.observables import (
         HamiltonianC64,
         HamiltonianC128,
         HermitianObsC64,
