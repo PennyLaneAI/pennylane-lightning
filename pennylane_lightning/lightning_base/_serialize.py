@@ -72,7 +72,7 @@ class QuantumScriptSerializer:
         self.split_obs = split_obs
         if device_name == "lightning.qubit":
             try:
-                import pennylane_lightning.lightning_qubit_ops as lightning_ops
+                import pennylane_lightning.lightning_qubit_nb as lightning_ops
             except ImportError as exception:
                 raise ImportError(
                     f"Pre-compiled binaries for {device_name} are not available."
@@ -531,7 +531,7 @@ class QuantumScriptSerializer:
                 else:
                     if hasattr(self.sv_type, name):
                         params.append(single_op_base.parameters)
-                        mats.append([])
+                        mats.append(np.array([]))
                     else:
                         params.append([])
                         mats.append(matrix(single_op_base))
