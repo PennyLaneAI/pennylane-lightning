@@ -145,17 +145,16 @@ if __name__ == "__main__":
     pyproject["project"]["dependencies"] = dependencies
 
     # Edit Classifiers based on the backend.
-    windows_classifiers = "Operating System :: Microsoft :: Windows"
+    windows_classifier = "Operating System :: Microsoft :: Windows"
+    classifiers = pyproject["project"]["classifiers"]
 
     if backend != "lightning_qubit":
-        pyproject["project"]["classifiers"].remove(windows_classifiers)
-
-    if (
-        backend == "lightning_qubit"
-        and windows_classifiers not in pyproject["project"]["classifiers"]
-    ):
-        os_order = pyproject["project"]["classifiers"].index("Operating System :: MacOS :: MacOS X")
-        pyproject["project"]["classifiers"].insert(os_order + 1, windows_classifiers)
+        if windows_classifier in classifiers:
+            classifiers.remove(windows_classifier)
+    else:
+        if windows_classifier not in classifiers:
+            idx = classifiers.index("Operating System :: MacOS :: MacOS X")
+            classifiers.insert(idx + 1, windows_classifier)
 
     with open(pyproject_path, "w", encoding="utf-8") as file:
         toml.dump(pyproject, file)
