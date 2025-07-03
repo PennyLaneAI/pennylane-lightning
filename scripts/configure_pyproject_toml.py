@@ -111,13 +111,13 @@ if __name__ == "__main__":
 
     pyproject["project"]["name"] = f"pennylane_lightning{pkg_suffix}"
 
-    # Specifying the plugin name.
-    plugin_suffix = suffix.upper() if suffix == "gpu" else suffix.title()
+    # Specifying the Lightning module name.
+    module_suffix = suffix.upper() if suffix == "gpu" else suffix.title()
 
-    plugin = "pennylane_lightning." + backend + ":Lightning" + plugin_suffix
+    module_name = "pennylane_lightning." + backend + ":Lightning" + module_suffix
 
     # Project entry point.
-    pyproject["project"]["entry-points"]["pennylane.plugins"] = {device_name: plugin}
+    pyproject["project"]["entry-points"]["pennylane.plugins"] = {device_name: module_name}
 
     dependencies = [
         "pennylane>=0.41",
