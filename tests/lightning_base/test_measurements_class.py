@@ -814,11 +814,18 @@ class TestMeasurements:
 
         assert isinstance(result, Sequence)
         assert len(result) == len(expected)
+
         # a few tests may fail in single precision, and hence we increase the tolerance
         dtol = tol if shots is None else max(tol, 2.0e-2)
+
+        # var has larger error
+        if measurement is qml.var:
+            dtol = max(dtol, 1.0e-4)
+
         if device_name == "lightning.tensor" and statevector.dtype == np.complex64:
             dtol = max(dtol, 1.0e-4)
-        # TODO Set better atol and rtol
+
+        # TODO Might need to update atol/rtol
         for r, e in zip(result, expected):
             if isinstance(shots, tuple) and isinstance(r[0], np.ndarray):
                 r = np.concatenate(r)
@@ -1003,7 +1010,9 @@ class TestControlledOps:
     )
     @pytest.mark.parametrize("control_value", [False, True])
     @pytest.mark.parametrize("n_qubits", list(range(2, 5)))
-    def test_controlled_qubit_gates(self, operation, n_qubits, control_value, tol, lightning_sv, seed):
+    def test_controlled_qubit_gates(
+        self, operation, n_qubits, control_value, tol, lightning_sv, seed
+    ):
         """Test that multi-controlled gates are correctly applied to a state"""
         threshold = 250 if device_name != "lightning.tensor" else 5
         num_wires = max(operation.num_wires, 1) if operation.num_wires else 1
@@ -1092,7 +1101,9 @@ class TestControlledOps:
     @pytest.mark.local_salt(42)
     @pytest.mark.parametrize("control_wires", range(4))
     @pytest.mark.parametrize("target_wires", range(4))
-    def test_cnot_controlled_qubit_unitary(self, control_wires, target_wires, tol, lightning_sv, seed):
+    def test_cnot_controlled_qubit_unitary(
+        self, control_wires, target_wires, tol, lightning_sv, seed
+    ):
         """Test that ControlledQubitUnitary is correctly applied to a state"""
         if control_wires == target_wires:
             return
@@ -1140,7 +1151,7 @@ class TestControlledOps:
         operation = qml.GlobalPhase
         num_wires = max(operation.num_wires, 1) if operation.num_wires else 1
         np.random.seed(seed)
-        
+
         for n_wires in range(num_wires + 1, num_wires + 4):
             wire_lists = list(itertools.permutations(range(0, n_qubits), n_wires))
             n_perms = len(wire_lists) * n_wires

@@ -30,14 +30,17 @@ from pennylane.wires import Wires
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
+
 def get_random_state(n):
     np.random.seed(42)
     return np.random.rand(n) + 1j * np.random.rand(n)
+
 
 def get_unitary_matrix(n):
     np.random.seed(42)
     U = np.random.rand(n, n) + 1.0j * np.random.rand(n, n)
     return U
+
 
 class TestExpval:
     """Tests that expectation values are properly calculated or that the proper errors are raised."""
@@ -890,9 +893,9 @@ def test_circuit_with_stateprep(op, theta, phi, tol):
     dev_def = qml.device("default.qubit", wires=n_qubits)
     dev = qml.device(device_name, wires=n_qubits)
     m = 2**n_wires
-    U = get_unitary_matrix(m, m)
+    U = get_unitary_matrix(m)
     U, _ = np.linalg.qr(U)
-    init_state = get_random_state
+    init_state = get_random_state(2**n_qubits)
     init_state /= np.linalg.norm(init_state)
 
     def circuit():

@@ -26,14 +26,17 @@ from conftest import device_name
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
+
 def get_random_state(n):
     np.random.seed(42)
     return np.random.rand(n) + 1j * np.random.rand(n)
+
 
 def get_unitary_matrix(n):
     np.random.seed(42)
     U = np.random.rand(n, n) + 1.0j * np.random.rand(n, n)
     return U
+
 
 @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
 class TestExpval:

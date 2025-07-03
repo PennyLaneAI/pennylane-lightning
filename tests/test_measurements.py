@@ -30,6 +30,7 @@ from pennylane.wires import Wires
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
+
 def test_no_measure():
     """Test that failing to specify a measurement
     raises an exception"""

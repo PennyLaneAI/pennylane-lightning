@@ -24,9 +24,11 @@ from conftest import device_name
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
+
 def get_random_state(n):
     np.random.seed(42)
     return np.random.rand(n) + 1j * np.random.rand(n)
+
 
 @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
 class TestVar:

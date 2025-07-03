@@ -37,15 +37,17 @@ else:
 if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-access
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
+
 def get_hermitian_matrix(n):
     np.random.seed(42)
     H = np.random.rand(n, n) + 1.0j * np.random.rand(n, n)
     return H + np.conj(H).T
 
+
 def get_random_state(n):
     np.random.seed(42)
     return np.random.rand(n) + 1j * np.random.rand(n)
-    
+
 
 @pytest.mark.parametrize("tn_backend", ["mps", "tn"])
 @pytest.mark.parametrize("num_wires", range(1, 4))
@@ -100,6 +102,7 @@ def test_errors_basis_state(tn_backend):
         tensornet = LightningTensorNet(3, max_bond_dim=5, method=tn_backend)
         tensornet.apply_operations([qml.BasisState(np.array([0, 1]), wires=[0])])
 
+
 def test_dense_decompose():
     """Test the dense decomposition function."""
     n_wires = 3
@@ -132,6 +135,7 @@ def test_dense_decompose():
     unitary = np.reshape(unitary, (2**n_wires, 2**n_wires))
 
     assert np.allclose(unitary, original_gate, atol=1e-6)
+
 
 def test_gate_matrix_decompose():
     """Test the gate matrix decomposition function."""

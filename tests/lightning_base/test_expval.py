@@ -189,7 +189,9 @@ class TestExpval:
         ],
     )
     @pytest.mark.parametrize("dtype", [np.complex64, np.complex128])
-    def test_hermitian_arbitrary_size_expectation(self, dtype, theta, phi, n_op_wires, wires, tol, seed):
+    def test_hermitian_arbitrary_size_expectation(
+        self, dtype, theta, phi, n_op_wires, wires, tol, seed
+    ):
         """Tests the expectation value of an arbitrary size Hermitian matrix."""
         if device_name == "lightning.tensor" and n_op_wires > 1:
             pytest.skip(
@@ -197,7 +199,7 @@ class TestExpval:
             )
         n_qubits = 8
         dev = LightningDevice(wires=n_qubits, c_dtype=dtype)
-        
+
         np.random.seed(seed)
         mat = np.random.rand(2**n_op_wires, 2**n_op_wires) + 1j * np.random.rand(
             2**n_op_wires, 2**n_op_wires
@@ -219,7 +221,7 @@ class TestExpval:
         )
         calculated_val = process_and_execute(dev, tape)
         reference_val = calculate_reference(tape)
-        
+
         assert np.allclose(calculated_val, reference_val, tol if dtype == np.complex128 else 1e-5)
 
     def test_hamiltonian_expectation(self, theta, phi, tol, dev):

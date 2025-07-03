@@ -86,6 +86,7 @@ class TestGrover:
         else:
             assert tape.operations == [qml.GroverOperator(wires=list(range(wires)))]
 
+
 @pytest.mark.local_salt(42)
 class TestAngleEmbedding:
     """Test the AngleEmbedding algorithm."""
@@ -129,7 +130,7 @@ class TestAmplitudeEmbedding:
                 qml.Hadamard(0)
             qml.AmplitudeEmbedding(features=f, wires=range(n_qubits))
             return qml.state()
-        
+
         np.random.seed(seed)
         X = np.random.rand(2**n_qubits)
         X /= np.linalg.norm(X)
@@ -270,8 +271,8 @@ class TestStronglyEntanglingLayers:
 
     @pytest.mark.local_salt(42)
     @pytest.mark.parametrize("n_qubits", range(2, 20, 2))
-    def test_stronglyentanglinglayers(self, n_qubits):
-        lightning_tensor_check(n_qubits, seed)
+    def test_stronglyentanglinglayers(self, n_qubits, seed):
+        lightning_tensor_check(n_qubits)
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")
 

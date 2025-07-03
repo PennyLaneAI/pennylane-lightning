@@ -52,14 +52,17 @@ fixture_params = list(
     )
 )
 
+
 def get_random_state(n):
     np.random.seed(42)
     return np.random.rand(n) + 1j * np.random.rand(n)
+
 
 def get_unitary_matrix(n):
     np.random.seed(42)
     U = np.random.rand(n, n) + 1.0j * np.random.rand(n, n)
     return U
+
 
 def Rx(theta):
     r"""One-qubit rotation about the x axis.
