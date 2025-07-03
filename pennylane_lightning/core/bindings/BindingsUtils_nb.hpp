@@ -87,14 +87,12 @@ createNumpyArrayFromVector(const std::vector<VectorT> &data, std::size_t rows,
  * @brief Convert complex matrices from nanobind ndarray to std::vector
  *
  * @tparam ComplexT Complex type to convert to
- * @tparam ParamT Precision type of the complex numbers
  * @param matrices Vector of ndarrays containing matrices
  * @return std::vector<std::vector<ComplexT>> Converted matrices
  */
-template <typename ComplexT, typename ParamT>
+template <typename ComplexT>
 std::vector<std::vector<ComplexT>> convertMatrices(
-    const std::vector<nb::ndarray<const std::complex<ParamT>, nb::c_contig>>
-        &matrices) {
+    const std::vector<nb::ndarray<const ComplexT, nb::c_contig>> &matrices) {
     std::vector<std::vector<ComplexT>> conv_matrices(matrices.size());
 
     for (std::size_t i = 0; i < matrices.size(); i++) {
