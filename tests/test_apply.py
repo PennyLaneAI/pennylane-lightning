@@ -20,7 +20,7 @@ from functools import partial
 import numpy as np
 import pennylane as qml
 import pytest
-from conftest import PHI, THETA
+from conftest import GLOBAL_SEED, PHI, THETA
 from conftest import LightningDevice as ld
 from conftest import device_name
 from pennylane.exceptions import DeviceError
@@ -32,12 +32,12 @@ if not ld._CPP_BINARY_AVAILABLE:
 
 
 def get_random_state(n):
-    np.random.seed(42)
+    np.random.seed(GLOBAL_SEED)
     return np.random.rand(n) + 1j * np.random.rand(n)
 
 
 def get_unitary_matrix(n):
-    np.random.seed(42)
+    np.random.seed(GLOBAL_SEED)
     U = np.random.rand(n, n) + 1.0j * np.random.rand(n, n)
     return U
 

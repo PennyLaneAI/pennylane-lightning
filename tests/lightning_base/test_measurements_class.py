@@ -20,6 +20,7 @@ import numpy as np
 import pennylane as qml
 import pytest
 from conftest import (  # tested device
+    GLOBAL_SEED,
     PHI,
     THETA,
     LightningDevice,
@@ -39,7 +40,7 @@ if not LightningDevice._CPP_BINARY_AVAILABLE:
 
 
 def get_hermitian_matrix(n):
-    np.random.seed(42)
+    np.random.seed(GLOBAL_SEED)
     H = np.random.rand(n, n) + 1.0j * np.random.rand(n, n)
     return H + np.conj(H).T
 

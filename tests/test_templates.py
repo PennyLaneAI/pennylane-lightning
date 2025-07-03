@@ -38,9 +38,10 @@ def lightning_tensor_check(n_qubits):
 class TestGrover:
     """Test Grover's algorithm (multi-controlled gates, decomposition, etc.)"""
 
+    @pytest.mark.local_salt(42)
     @pytest.mark.parametrize("n_qubits", range(4, 8))
-    def test_grover(self, n_qubits):
-        np.random.seed(42)
+    def test_grover(self, n_qubits, seed):
+        np.random.seed(seed)
         omega = np.random.rand(n_qubits) > 0.5
         dev = qml.device(device_name, wires=n_qubits)
         wires = list(range(n_qubits))

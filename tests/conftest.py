@@ -28,6 +28,7 @@ import pennylane_lightning
 # defaults
 TOL = 1e-6
 TOL_STOCHASTIC = 0.05
+GLOBAL_SEED = 42
 
 U = np.array(
     [

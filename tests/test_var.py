@@ -17,7 +17,7 @@ Unit tests for the var method of the :mod:`pennylane_lightning.LightningQubit` d
 import numpy as np
 import pennylane as qml
 import pytest
-from conftest import PHI, THETA, VARPHI
+from conftest import GLOBAL_SEED, PHI, THETA, VARPHI
 from conftest import LightningDevice as ld
 from conftest import device_name
 
@@ -26,7 +26,7 @@ if not ld._CPP_BINARY_AVAILABLE:
 
 
 def get_random_state(n):
-    np.random.seed(42)
+    np.random.seed(GLOBAL_SEED)
     return np.random.rand(n) + 1j * np.random.rand(n)
 
 

@@ -18,7 +18,7 @@ import numpy as np
 import pennylane as qml
 import pytest
 import scipy
-from conftest import LightningDevice, device_name  # tested device
+from conftest import GLOBAL_SEED, LightningDevice, device_name  # tested device
 from pennylane.exceptions import DeviceError
 
 if device_name != "lightning.tensor":
@@ -39,13 +39,13 @@ if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-acces
 
 
 def get_hermitian_matrix(n):
-    np.random.seed(42)
+    np.random.seed(GLOBAL_SEED)
     H = np.random.rand(n, n) + 1.0j * np.random.rand(n, n)
     return H + np.conj(H).T
 
 
 def get_random_state(n):
-    np.random.seed(42)
+    np.random.seed(GLOBAL_SEED)
     return np.random.rand(n) + 1j * np.random.rand(n)
 
 
