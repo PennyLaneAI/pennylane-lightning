@@ -28,6 +28,14 @@ from scipy.sparse import csr_matrix
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
+def get_random_state(n):
+    np.random.seed(42)
+    return np.random.rand(n) + 1j * np.random.rand(n)
+
+def get_unitary_matrix(n):
+    np.random.seed(42)
+    U = np.random.rand(n, n) + 1.0j * np.random.rand(n, n)
+    return U
 
 def _get_ld_operations():
     """Gets a set of supported operations by LightningDevice."""
@@ -407,7 +415,7 @@ def test_qubit_RY(theta, phi, tol):
     n_qubits = 4
     dev_def = qml.device("default.qubit", wires=n_qubits)
     dev = qml.device(device_name, wires=n_qubits)
-    init_state = np.random.rand(2**n_qubits) + 1j * np.random.rand(2**n_qubits)
+    init_state = get_random_state(2**n_qubits)
     init_state /= np.linalg.norm(init_state)
 
     def circuit():
@@ -431,9 +439,9 @@ def test_qubit_unitary(n_wires, theta, phi, tol):
     dev_def = qml.device("default.qubit", wires=n_qubits)
     dev = qml.device(device_name, wires=n_qubits)
     m = 2**n_wires
-    U = np.random.rand(m, m) + 1j * np.random.rand(m, m)
+    U = get_unitary_matrix(m)
     U, _ = np.linalg.qr(U)
-    init_state = np.random.rand(2**n_qubits) + 1j * np.random.rand(2**n_qubits)
+    init_state = get_random_state(2**n_qubits)
     init_state /= np.linalg.norm(init_state)
     wires = list(range((n_qubits - n_wires), (n_qubits - n_wires) + n_wires))
     perms = list(itertools.permutations(wires))
@@ -472,7 +480,7 @@ def test_state_prep(n_targets, tol):
     n_wires = 7
     dq = qml.device("default.qubit", wires=n_wires)
     dev = qml.device(device_name, wires=n_wires)
-    init_state = np.random.rand(2**n_targets) + 1.0j * np.random.rand(2**n_targets)
+    init_state = get_random_state(2**n_targets)
     init_state /= np.linalg.norm(init_state)
     for i in range(10):
         if i == 0:
@@ -505,9 +513,9 @@ def test_controlled_qubit_unitary(n_qubits, control_value, tol):
                 control_wires = all_wires[0:i]
                 target_wires = all_wires[i:]
                 m = 2 ** len(target_wires)
-                U = np.random.rand(m, m) + 1.0j * np.random.rand(m, m)
+                U = get_unitary_matrix(m)
                 U, _ = np.linalg.qr(U)
-                init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
+                init_state = get_random_state(2**n_qubits)
                 init_state /= np.linalg.norm(init_state)
 
                 def circuit():
@@ -547,9 +555,9 @@ def test_controlled_sparse_qubit_unitary(n_wires, n_qubits, control_value, tol):
             control_wires = all_wires[0:i]
             target_wires = all_wires[i:]
             m = 2 ** len(target_wires)
-            U = np.random.rand(m, m) + 1.0j * np.random.rand(m, m)
+            U = get_unitary_matrix(m)
             U, _ = np.linalg.qr(U)
-            init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
+            init_state = get_random_state(2**n_qubits)
             init_state /= np.linalg.norm(init_state)
 
             wires = control_wires + target_wires
@@ -636,7 +644,7 @@ def test_controlled_qubit_gates(operation, n_qubits, control_value, adjoint, tol
         for all_wires in wire_lists:
             target_wires = all_wires[0:num_wires]
             control_wires = all_wires[num_wires:]
-            init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
+            init_state = get_random_state(2**n_qubits)
             init_state /= np.linalg.norm(init_state)
 
             if operation.num_params == 0:
@@ -686,14 +694,14 @@ def test_controlled_qubit_unitary_from_op(tol):
     par = 0.1234
     assert np.allclose(circ(par), circ_def(par), tol)
 
-
+@pytest.mark.local_salt(42)
 @pytest.mark.skipif(
     device_name not in ("lightning.qubit", "lightning.kokkos"),
     reason="PauliRot operations only implemented in lightning.qubit and lightning.kokkos.",
 )
 @pytest.mark.parametrize("n_wires", [1, 2, 3, 4, 5, 10, 15])
 @pytest.mark.parametrize("n_targets", [1, 2, 3, 4, 5, 10, 15])
-def test_paulirot(n_wires, n_targets, tol):
+def test_paulirot(n_wires, n_targets, tol, seed):
     """Test that PauliRot is correctly applied to a state."""
     pws = dict((k, v) for k, v in enumerate(("X", "Y", "Z")))
 
@@ -701,10 +709,11 @@ def test_paulirot(n_wires, n_targets, tol):
         pytest.skip("The number of targets cannot exceed the number of wires.")
     dev = qml.device(device_name, wires=n_wires)
 
-    init_state = np.random.rand(2**n_wires) + 1.0j * np.random.rand(2**n_wires)
+    init_state = get_random_state(2**n_wires)
     init_state /= np.linalg.norm(init_state)
     theta = 0.3
 
+    np.random.seed(seed)
     for i in range(10):
         word = (
             "Z" * n_targets
@@ -739,7 +748,7 @@ def test_cnot_controlled_qubit_unitary(control_wires, target_wires, tol):
     dev = qml.device(device_name, wires=n_qubits)
     wires = control_wires + target_wires
     U = qml.matrix(qml.PauliX(target_wires))
-    init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
+    init_state = get_random_state(2**n_qubits)
     init_state /= np.linalg.norm(init_state)
 
     def circuit():
@@ -774,7 +783,7 @@ def test_controlled_globalphase(n_qubits, control_value, tol):
         for all_wires in wire_lists:
             target_wires = all_wires[0:num_wires]
             control_wires = all_wires[num_wires:]
-            init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
+            init_state = get_random_state(2**n_qubits)
             init_state /= np.linalg.norm(init_state)
 
             def circuit():
@@ -843,7 +852,7 @@ def test_adjoint_controlled_qubit_gates(operation, n_qubits, control_value, tol,
         for all_wires in wire_lists:
             target_wires = all_wires[0:num_wires]
             control_wires = all_wires[num_wires:]
-            init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
+            init_state = get_random_state(2**n_qubits)
             init_state /= np.linalg.norm(init_state)
 
             def circuit():
@@ -885,9 +894,9 @@ def test_adjoint_controlled_qubit_unitary(n_qubits, control_value, tol):
                 control_wires = all_wires[0:i]
                 target_wires = all_wires[i:]
                 m = 2 ** len(target_wires)
-                U = np.random.rand(m, m) + 1.0j * np.random.rand(m, m)
+                U = get_unitary_matrix(m)
                 U, _ = np.linalg.qr(U)
-                init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
+                init_state = get_random_state(2**n_qubits)
                 init_state /= np.linalg.norm(init_state)
 
                 def circuit():
@@ -925,9 +934,9 @@ def test_controlled_adjoint_qubit_unitary(n_qubits, control_value, tol):
                 control_wires = all_wires[0:i]
                 target_wires = all_wires[i:]
                 m = 2 ** len(target_wires)
-                U = np.random.rand(m, m) + 1.0j * np.random.rand(m, m)
+                U = get_unitary_matrix(m)
                 U, _ = np.linalg.qr(U)
-                init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
+                init_state = get_random_state(2**n_qubits)
                 init_state /= np.linalg.norm(init_state)
 
                 def circuit():

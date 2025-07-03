@@ -133,10 +133,11 @@ class TestMeasurementFunction:
             with pytest.raises(TypeError):
                 m.measure_tensor_network(tape)
 
+    @pytest.mark.local_salt(42)
     @pytest.mark.parametrize("method", [{"method": "mps", "max_bond_dim": 128}, {"method": "tn"}])
     @pytest.mark.parametrize("n_qubits", range(4, 14, 2))
     @pytest.mark.parametrize("n_targets", list(range(1, 4)) + list(range(4, 14, 2)))
-    def test_probs_many_wires(self, method, n_qubits, n_targets, tol):
+    def test_probs_many_wires(self, method, n_qubits, n_targets, tol, seed):
         """Test probs measuring many wires of a random quantum state."""
         if n_targets >= n_qubits:
             pytest.skip("Number of targets cannot exceed the number of wires.")
@@ -144,6 +145,7 @@ class TestMeasurementFunction:
         dev = qml.device(device_name, wires=n_qubits, **method)
         dq = qml.device("default.qubit", wires=n_qubits)
 
+        np.random.seed(seed)
         init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
         init_state /= np.linalg.norm(init_state)
 
@@ -161,10 +163,11 @@ class TestMeasurementFunction:
             res = dev.execute(tape)
             assert np.allclose(res, ref, atol=tol, rtol=0)
 
+    @pytest.mark.local_salt(42)
     @pytest.mark.parametrize("method", [{"method": "mps", "max_bond_dim": 128}, {"method": "tn"}])
     @pytest.mark.parametrize("n_qubits", range(4, 14, 2))
     @pytest.mark.parametrize("n_targets", list(range(1, 4)) + list(range(4, 14, 2)))
-    def test_state_many_wires(self, method, n_qubits, n_targets, tol):
+    def test_state_many_wires(self, method, n_qubits, n_targets, tol, seed):
         """Test probs measuring many wires of a random quantum state."""
         if n_targets >= n_qubits:
             pytest.skip("Number of targets cannot exceed the number of wires.")
@@ -172,6 +175,7 @@ class TestMeasurementFunction:
         dev = qml.device(device_name, wires=n_qubits, **method)
         dq = qml.device("default.qubit", wires=n_qubits)
 
+        np.random.seed(seed)
         init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
         init_state /= np.linalg.norm(init_state)
 

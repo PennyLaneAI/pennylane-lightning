@@ -37,6 +37,15 @@ else:
 if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-access
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
+def get_hermitian_matrix(n):
+    np.random.seed(42)
+    H = np.random.rand(n, n) + 1.0j * np.random.rand(n, n)
+    return H + np.conj(H).T
+
+def get_random_state(n):
+    np.random.seed(42)
+    return np.random.rand(n) + 1j * np.random.rand(n)
+    
 
 @pytest.mark.parametrize("tn_backend", ["mps", "tn"])
 @pytest.mark.parametrize("num_wires", range(1, 4))
@@ -91,15 +100,13 @@ def test_errors_basis_state(tn_backend):
         tensornet = LightningTensorNet(3, max_bond_dim=5, method=tn_backend)
         tensornet.apply_operations([qml.BasisState(np.array([0, 1]), wires=[0])])
 
-
 def test_dense_decompose():
     """Test the dense decomposition function."""
     n_wires = 3
     site_shape = [2, 2]
     max_mpo_bond_dim = 128
 
-    hermitian = np.random.rand(2**n_wires, 2**n_wires) + 1j * np.random.rand(2**n_wires, 2**n_wires)
-    hermitian = hermitian @ hermitian.conj().T
+    hermitian = get_hermitian_matrix(2**n_wires)
 
     gate = scipy.linalg.expm(1j * hermitian)
     original_gate = gate.copy()  # for later to double check
@@ -126,11 +133,10 @@ def test_dense_decompose():
 
     assert np.allclose(unitary, original_gate, atol=1e-6)
 
-
 def test_gate_matrix_decompose():
     """Test the gate matrix decomposition function."""
     wires = [0, 1, 2]
-    hermitian = np.random.rand(2 ** len(wires), 2 ** len(wires))
+    hermitian = get_hermitian_matrix(2 ** len(wires))
     hermitian = hermitian @ hermitian.conj().T
 
     gate = scipy.linalg.expm(1j * hermitian)
@@ -157,7 +163,7 @@ def test_gate_matrix_decompose():
 def test_gate_matrix_decompose_out_of_order():
     """Test the gate matrix decomposition function when the wires are not sorted."""
     wires = [1, 2, 0]
-    hermitian = np.random.rand(2 ** len(wires), 2 ** len(wires))
+    hermitian = get_hermitian_matrix(2 ** len(wires))
     hermitian = hermitian @ hermitian.conj().T
 
     gate = scipy.linalg.expm(1j * hermitian)
@@ -190,7 +196,7 @@ def test_mps_canonical_form():
     site_shape = [2]
     max_mpo_bond_dim = 128
 
-    random_state = np.random.rand(2**n_wires) + 1j * np.random.rand(2**n_wires)
+    random_state = get_random_state(2**n_wires)
     random_state = random_state / np.linalg.norm(random_state)
 
     # decompose the gate into MPOs with left canonical form
@@ -227,7 +233,7 @@ def test_expand_mps_first_site():
     site_shape = [2]
     max_bond_dim = 128
 
-    random_state = np.random.rand(2**n_wires) + 1j * np.random.rand(2**n_wires)
+    random_state = get_random_state(2**n_wires)
     random_state = random_state / np.linalg.norm(random_state)
 
     # decompose the gate into MPOs with right canonical form
@@ -256,7 +262,7 @@ def test_expand_mps_top_max_bond_dim():
     site_shape = [2]
     max_bond_dim = 4
 
-    random_state = np.random.rand(2**n_wires) + 1j * np.random.rand(2**n_wires)
+    random_state = get_random_state(2**n_wires)
     random_state = random_state / np.linalg.norm(random_state)
 
     # decompse the gate into mps with left canonical form
@@ -284,7 +290,7 @@ def test_restore_left_canonical_form():
     site_shape = [2]
     max_bond_dim = 128
 
-    random_state = np.random.rand(2**n_wires) + 1j * np.random.rand(2**n_wires)
+    random_state = get_random_state(2**n_wires)
     random_state = random_state / np.linalg.norm(random_state)
 
     # decompose the gate into mps with right canonical form
@@ -317,7 +323,7 @@ def test_restore_right_canonical_form():
     site_shape = [2]
     max_bond_dim = 128
 
-    random_state = np.random.rand(2**n_wires) + 1j * np.random.rand(2**n_wires)
+    random_state = get_random_state(2**n_wires)
     random_state = random_state / np.linalg.norm(random_state)
 
     # decompose the gate into MPS with false canonical form

@@ -39,6 +39,7 @@ if not LightningDevice._CPP_BINARY_AVAILABLE:
 
 
 def get_hermitian_matrix(n):
+    np.random.seed(42)
     H = np.random.rand(n, n) + 1.0j * np.random.rand(n, n)
     return H + np.conj(H).T
 
@@ -517,17 +518,18 @@ class TestSparseMeasurements:
         m = LightningMeasurements(statevector)
         return measure_final_state(m, tape)
 
+    @pytest.mark.local_salt(42)
     @pytest.mark.parametrize("measurement", [qml.expval, qml.var])
     @pytest.mark.parametrize(
         "observable",
         sparse_observables,
     )
-    def test_single_return_value(self, measurement, observable, lightning_sv, tol):
+    def test_single_return_value(self, measurement, observable, lightning_sv, tol, seed):
         n_qubits = 4
         observable = observable(get_sparse_hermitian_matrix(2**n_qubits), wires=range(n_qubits))
 
         n_layers = 1
-        np.random.seed(0)
+        np.random.seed(seed)
         weights = np.random.rand(n_layers, n_qubits, 3)
         ops = [qml.Hadamard(i) for i in range(n_qubits)] + [
             qml.StronglyEntanglingLayers(weights, wires=range(n_qubits))
@@ -554,6 +556,7 @@ class TestSparseMeasurements:
             1e-6 if statevector.dtype == np.complex64 else 1e-8,
         )
 
+    @pytest.mark.local_salt(42)
     @pytest.mark.parametrize("measurement", [qml.expval, qml.var])
     @pytest.mark.parametrize(
         "obs0_",
@@ -563,13 +566,13 @@ class TestSparseMeasurements:
         "obs1_",
         sparse_observables,
     )
-    def test_double_return_value(self, measurement, obs0_, obs1_, lightning_sv, tol):
+    def test_double_return_value(self, measurement, obs0_, obs1_, lightning_sv, tol, seed):
         n_qubits = 4
         obs0_ = obs0_(get_sparse_hermitian_matrix(2**4), wires=range(n_qubits))
         obs1_ = obs1_(get_sparse_hermitian_matrix(2**4), wires=range(n_qubits))
 
         n_layers = 1
-        np.random.seed(0)
+        np.random.seed(seed)
         weights = np.random.rand(n_layers, n_qubits, 3)
         ops = [qml.Hadamard(i) for i in range(n_qubits)] + [
             qml.StronglyEntanglingLayers(weights, wires=range(n_qubits))
@@ -874,6 +877,7 @@ class TestMeasurements:
         assert statevector1._rng.bit_generator.state == statevector2._rng.bit_generator.state
         assert statevector1._rng.bit_generator.state != statevector3._rng.bit_generator.state
 
+    @pytest.mark.local_salt(42)
     @pytest.mark.skipif(
         device_name in ("lightning.tensor"),
         reason=f"{device_name} does not support seeding device.",
@@ -904,7 +908,7 @@ class TestMeasurements:
             ),
         ),
     )
-    def test_seeded_shots_measurement(self, dtype, shots, measurement, observable, tol):
+    def test_seeded_shots_measurement(self, dtype, shots, measurement, observable, tol, seed):
         """Test that seeded measurements with shots return same results with same seed."""
         if measurement is qml.probs and isinstance(
             observable,
@@ -922,7 +926,7 @@ class TestMeasurements:
             pytest.skip("qml.expval, qml.var do not take wire arguments.")
         n_qubits = 4
         n_layers = 1
-        np.random.seed(0)
+        np.random.seed(seed)
         weights = np.random.rand(n_layers, n_qubits, 3)
         ops = [qml.Hadamard(i) for i in range(n_qubits)]
         ops += [qml.StronglyEntanglingLayers(weights, wires=range(n_qubits))]
@@ -966,6 +970,7 @@ class TestControlledOps:
         results = dev.execute(tapes)
         return transf_fn(results)
 
+    @pytest.mark.local_salt(42)
     @pytest.mark.parametrize(
         "operation",
         [
@@ -998,11 +1003,11 @@ class TestControlledOps:
     )
     @pytest.mark.parametrize("control_value", [False, True])
     @pytest.mark.parametrize("n_qubits", list(range(2, 5)))
-    def test_controlled_qubit_gates(self, operation, n_qubits, control_value, tol, lightning_sv):
+    def test_controlled_qubit_gates(self, operation, n_qubits, control_value, tol, lightning_sv, seed):
         """Test that multi-controlled gates are correctly applied to a state"""
         threshold = 250 if device_name != "lightning.tensor" else 5
         num_wires = max(operation.num_wires, 1) if operation.num_wires else 1
-        np.random.seed(0)
+        np.random.seed(seed)
 
         if device_name not in ["lightning.qubit", "lightning.gpu"] and operation == qml.PCPhase:
             pytest.skip("PCPhase only supported on lightning.qubit and lightning.gpu.")
@@ -1084,9 +1089,10 @@ class TestControlledOps:
 
         assert np.allclose(result, expected, tol)
 
+    @pytest.mark.local_salt(42)
     @pytest.mark.parametrize("control_wires", range(4))
     @pytest.mark.parametrize("target_wires", range(4))
-    def test_cnot_controlled_qubit_unitary(self, control_wires, target_wires, tol, lightning_sv):
+    def test_cnot_controlled_qubit_unitary(self, control_wires, target_wires, tol, lightning_sv, seed):
         """Test that ControlledQubitUnitary is correctly applied to a state"""
         if control_wires == target_wires:
             return
@@ -1095,7 +1101,7 @@ class TestControlledOps:
         target_wires = [target_wires]
         wires = control_wires + target_wires
         U = qml.matrix(qml.PauliX(target_wires))
-        np.random.seed(0)
+        np.random.seed(seed)
         init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
         init_state /= np.linalg.norm(init_state)
 
@@ -1125,13 +1131,16 @@ class TestControlledOps:
         else:
             assert np.allclose(result, expected, tol)
 
+    @pytest.mark.local_salt(42)
     @pytest.mark.parametrize("control_value", [False, True])
     @pytest.mark.parametrize("n_qubits", list(range(2, 8)))
-    def test_controlled_globalphase(self, n_qubits, control_value, tol, lightning_sv):
+    def test_controlled_globalphase(self, n_qubits, control_value, tol, lightning_sv, seed):
         """Test that multi-controlled gates are correctly applied to a state"""
         threshold = 250 if device_name != "lightning.tensor" else 5
         operation = qml.GlobalPhase
         num_wires = max(operation.num_wires, 1) if operation.num_wires else 1
+        np.random.seed(seed)
+        
         for n_wires in range(num_wires + 1, num_wires + 4):
             wire_lists = list(itertools.permutations(range(0, n_qubits), n_wires))
             n_perms = len(wire_lists) * n_wires

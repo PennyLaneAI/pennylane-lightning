@@ -86,12 +86,12 @@ class TestGrover:
         else:
             assert tape.operations == [qml.GroverOperator(wires=list(range(wires)))]
 
-
+@pytest.mark.local_salt(42)
 class TestAngleEmbedding:
     """Test the AngleEmbedding algorithm."""
 
     @pytest.mark.parametrize("n_qubits", range(2, 20, 2))
-    def test_angleembedding(self, n_qubits):
+    def test_angleembedding(self, n_qubits, seed):
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")
 
@@ -99,6 +99,7 @@ class TestAngleEmbedding:
             qml.AngleEmbedding(features=feature_vector, wires=range(n_qubits), rotation="Z")
             return qml.state()
 
+        np.random.seed(seed)
         X = np.random.rand(n_qubits)
 
         res = qml.QNode(circuit, dev, diff_method=None)(X)
@@ -110,9 +111,10 @@ class TestAngleEmbedding:
 class TestAmplitudeEmbedding:
     """Test the AmplitudeEmbedding algorithm."""
 
+    @pytest.mark.local_salt(42)
     @pytest.mark.parametrize("first_op", [False, True])
     @pytest.mark.parametrize("n_qubits", range(2, 10, 2))
-    def test_amplitudeembedding(self, first_op, n_qubits):
+    def test_amplitudeembedding(self, first_op, n_qubits, seed):
         if not first_op:
             if device_name != "lightning.qubit":
                 pytest.xfail(
@@ -127,7 +129,8 @@ class TestAmplitudeEmbedding:
                 qml.Hadamard(0)
             qml.AmplitudeEmbedding(features=f, wires=range(n_qubits))
             return qml.state()
-
+        
+        np.random.seed(seed)
         X = np.random.rand(2**n_qubits)
         X /= np.linalg.norm(X)
         res = qml.QNode(circuit, dev, diff_method=None)(f=X)
@@ -199,8 +202,9 @@ class TestIQPEmbedding:
 class TestQAOAEmbedding:
     """Test the QAOAEmbedding algorithm."""
 
+    @pytest.mark.local_salt(42)
     @pytest.mark.parametrize("n_qubits", range(2, 20, 2))
-    def test_qaoaembedding(self, n_qubits):
+    def test_qaoaembedding(self, n_qubits, seed):
         lightning_tensor_check(n_qubits)
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")
@@ -210,6 +214,7 @@ class TestQAOAEmbedding:
             qml.QAOAEmbedding(features=feature_vector, weights=weights, wires=range(n_qubits))
             return qml.state()
 
+        np.random.seed(seed)
         X = np.random.rand(n_qubits)
         weights = np.random.rand(2, 3 if n_qubits == 2 else 2 * n_qubits)
 
@@ -222,7 +227,8 @@ class TestQAOAEmbedding:
 class TestCVNeuralNetLayers:
     """Test the CVNeuralNetLayers algorithm."""
 
-    def test_cvneuralnetlayers(self):
+    @pytest.mark.local_salt(42)
+    def test_cvneuralnetlayers(self, seed):
         n_qubits = 2
         dev = qml.device(device_name, wires=n_qubits)
 
@@ -230,6 +236,7 @@ class TestCVNeuralNetLayers:
             qml.CVNeuralNetLayers(*weights, wires=[0, 1])
             return qml.state()
 
+        np.random.seed(seed)
         shapes = qml.CVNeuralNetLayers.shape(n_layers=2, n_wires=n_qubits)
         weights = [np.random.random(shape) for shape in shapes]
 
@@ -261,9 +268,10 @@ class TestRandomLayers:
 class TestStronglyEntanglingLayers:
     """Test the StronglyEntanglingLayers algorithm."""
 
+    @pytest.mark.local_salt(42)
     @pytest.mark.parametrize("n_qubits", range(2, 20, 2))
     def test_stronglyentanglinglayers(self, n_qubits):
-        lightning_tensor_check(n_qubits)
+        lightning_tensor_check(n_qubits, seed)
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")
 
@@ -271,6 +279,7 @@ class TestStronglyEntanglingLayers:
             qml.StronglyEntanglingLayers(weights=weights, wires=range(n_qubits))
             return qml.state()
 
+        np.random.seed(seed)
         shape = qml.StronglyEntanglingLayers.shape(n_layers=2, n_wires=n_qubits)
         weights = np.random.random(size=shape)
 
@@ -283,8 +292,9 @@ class TestStronglyEntanglingLayers:
 class TestSimplifiedTwoDesign:
     """Test the SimplifiedTwoDesign algorithm."""
 
+    @pytest.mark.local_salt(42)
     @pytest.mark.parametrize("n_qubits", range(2, 20, 2))
-    def test_simplifiedtwodesign(self, n_qubits):
+    def test_simplifiedtwodesign(self, n_qubits, seed):
         lightning_tensor_check(n_qubits)
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")
@@ -295,6 +305,7 @@ class TestSimplifiedTwoDesign:
             )
             return [qml.expval(qml.Z(i)) for i in range(n_qubits)]
 
+        np.random.seed(seed)
         init_weights = np.random.rand(n_qubits)
         weights = np.random.rand(2, n_qubits - 1, 2)
 
@@ -307,8 +318,9 @@ class TestSimplifiedTwoDesign:
 class TestBasicEntanglerLayers:
     """Test the BasicEntanglerLayers algorithm."""
 
+    @pytest.mark.local_salt(42)
     @pytest.mark.parametrize("n_qubits", range(2, 20, 2))
-    def test_basicentanglerlayers(self, n_qubits):
+    def test_basicentanglerlayers(self, n_qubits, seed):
         lightning_tensor_check(n_qubits)
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")
@@ -317,6 +329,7 @@ class TestBasicEntanglerLayers:
             qml.BasicEntanglerLayers(weights=weights, wires=range(n_qubits))
             return [qml.expval(qml.Z(i)) for i in range(n_qubits)]
 
+        np.random.seed(seed)
         weights = np.random.rand(1, n_qubits)
 
         res = qml.QNode(circuit, dev, diff_method=None)(weights)
@@ -328,8 +341,9 @@ class TestBasicEntanglerLayers:
 class TestMottonenStatePreparation:
     """Test the MottonenStatePreparation algorithm."""
 
+    @pytest.mark.local_salt(42)
     @pytest.mark.parametrize("n_qubits", range(2, 6, 2))
-    def test_mottonenstatepreparation(self, n_qubits):
+    def test_mottonenstatepreparation(self, n_qubits, seed):
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")
 
@@ -337,6 +351,7 @@ class TestMottonenStatePreparation:
             qml.MottonenStatePreparation(state_vector=state, wires=range(n_qubits))
             return qml.state()
 
+        np.random.seed(seed)
         state = np.random.rand(2**n_qubits) + 1j * np.random.rand(2**n_qubits)
         state = state / np.linalg.norm(state)
 
@@ -349,8 +364,9 @@ class TestMottonenStatePreparation:
 class TestArbitraryStatePreparation:
     """Test the ArbitraryStatePreparation algorithm."""
 
+    @pytest.mark.local_salt(42)
     @pytest.mark.parametrize("n_qubits", range(2, 6, 2))
-    def test_arbitrarystatepreparation(self, n_qubits):
+    def test_arbitrarystatepreparation(self, n_qubits, seed):
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")
 
@@ -358,6 +374,7 @@ class TestArbitraryStatePreparation:
             qml.ArbitraryStatePreparation(weights, wires=range(n_qubits))
             return qml.state()
 
+        np.random.seed(seed)
         weights = np.random.rand(2 ** (n_qubits + 1) - 2)
 
         res = qml.QNode(circuit, dev, diff_method=None)(weights)
@@ -444,7 +461,8 @@ class TestBasisRotation:
 class TestGateFabric:
     """Test the GateFabric algorithm."""
 
-    def test_gatefabric(self):
+    @pytest.mark.local_salt(42)
+    def test_gatefabric(self, seed):
         # Build the electronic Hamiltonian
         symbols = ["H", "H"]
         coordinates = np.array([0.0, 0.0, -0.6614, 0.0, 0.0, 0.6614])
@@ -461,6 +479,7 @@ class TestGateFabric:
             return qml.state()
 
         layers = 2
+        np.random.seed(seed)
         shape = qml.GateFabric.shape(n_layers=layers, n_wires=n_qubits)
         weights = np.random.random(size=shape)
 
@@ -473,7 +492,8 @@ class TestGateFabric:
 class TestUCCSD:
     """Test the UCCSD algorithm."""
 
-    def test_uccsd(self):
+    @pytest.mark.local_salt(42)
+    def test_uccsd(self, seed):
         # Define the molecule
         symbols = ["H", "H", "H"]
         geometry = np.array(
@@ -505,6 +525,7 @@ class TestUCCSD:
             qml.UCCSD(weights, range(n_qubits), s_wires, d_wires, hf_state)
             return qml.state()
 
+        np.random.seed(seed)
         weights = np.random.random(len(singles) + len(doubles))
 
         res = qml.QNode(circuit, dev, diff_method=None)(weights)
@@ -516,7 +537,8 @@ class TestUCCSD:
 class TestkUpCCGSD:
     """Test the kUpCCGSD algorithm."""
 
-    def test_kupccgsd(self):
+    @pytest.mark.local_salt(42)
+    def test_kupccgsd(self, seed):
         # Define the molecule
         symbols = ["H", "H", "H"]
         geometry = np.array(
@@ -546,6 +568,7 @@ class TestkUpCCGSD:
 
         # Get the shape of the weights for this template
         layers = 1
+        np.random.seed(seed)
         shape = qml.kUpCCGSD.shape(k=layers, n_wires=n_qubits, delta_sz=0)
         weights = np.random.random(size=shape)
 
@@ -558,7 +581,8 @@ class TestkUpCCGSD:
 class TestParticleConservingU1:
     """Test the ParticleConservingU1 algorithm."""
 
-    def test_particleconservingu1(self):
+    @pytest.mark.local_salt(42)
+    def test_particleconservingu1(self, seed):
         # Build the electronic Hamiltonian
         symbols, coordinates = (["H", "H"], np.array([0.0, 0.0, -0.66140414, 0.0, 0.0, 0.66140414]))
         _, n_qubits = qml.qchem.molecular_hamiltonian(symbols, coordinates)
@@ -579,6 +603,7 @@ class TestParticleConservingU1:
             return qml.state()
 
         layers = 2
+        np.random.seed(seed)
         shape = qml.ParticleConservingU1.shape(layers, n_qubits)
         weights = np.random.random(shape)
 
@@ -591,7 +616,8 @@ class TestParticleConservingU1:
 class TestParticleConservingU2:
     """Test the ParticleConservingU2 algorithm."""
 
-    def test_particleconservingu2(self):
+    @pytest.mark.local_salt(42)
+    def test_particleconservingu2(self, seed):
         # Build the electronic Hamiltonian
         symbols, coordinates = (["H", "H"], np.array([0.0, 0.0, -0.66140414, 0.0, 0.0, 0.66140414]))
         _, n_qubits = qml.qchem.molecular_hamiltonian(symbols, coordinates)
@@ -612,6 +638,7 @@ class TestParticleConservingU2:
             return qml.state()
 
         layers = 2
+        np.random.seed(seed)
         shape = qml.ParticleConservingU2.shape(layers, n_qubits)
         weights = np.random.random(shape)
 

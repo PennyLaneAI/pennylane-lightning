@@ -24,8 +24,9 @@ from conftest import device_name
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
-np.random.seed(42)
-
+def get_random_state(n):
+    np.random.seed(42)
+    return np.random.rand(n) + 1j * np.random.rand(n)
 
 @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
 class TestVar:
@@ -58,7 +59,7 @@ class TestVar:
         dev_def = qml.device("default.qubit", wires=n_qubits)
         dev = qubit_device(wires=n_qubits)
 
-        init_state = np.random.rand(2**n_qubits) + 1j * np.random.rand(2**n_qubits)
+        init_state = get_random_state(2**n_qubits)
         init_state /= np.linalg.norm(init_state)
         obs = qml.Projector(np.array([0, 1, 0, 0]) / np.sqrt(2), wires=[0, 1])
 
