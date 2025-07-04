@@ -108,6 +108,9 @@
 - Adhere to PyPA binary distribution format for built wheels.
   [(#1193)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1193)
 
+- Edit and prepare `CHANGELOG.md` for the release `v0.42.0`.
+  [(#11xx)](https://github.com/PennyLaneAI/pennylane-lightning/pull/11xx)
+
 - Merge the `v0.41.0-rc` branch to the `master` and bump version.
   [(#1132)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1132)
 
