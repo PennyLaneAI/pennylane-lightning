@@ -127,6 +127,7 @@ namespace nb = nanobind;
 /// @cond DEV
 namespace {
 using Pennylane::NanoBindings::Utils::createNumpyArrayFromVector;
+using Pennylane::NanoBindings::Utils::PL_reinterpret_cast;
 using Pennylane::Util::bestCPUMemoryModel;
 using Pennylane::Util::CPUMemoryModel;
 } // namespace
@@ -143,7 +144,6 @@ void applyMatrix(
                       nb::c_contig> &matrix,
     const std::vector<std::size_t> &wires, bool inverse = false) {
     using ComplexT = typename StateVectorT::ComplexT;
-    using Pennylane::Util::PL_reinterpret_cast;
 
     PL_ASSERT(matrix.size() == Util::exp2(2 * wires.size()));
 
@@ -164,7 +164,7 @@ void applyControlledMatrix(
     const std::vector<bool> &controlled_values,
     const std::vector<std::size_t> &wires, bool inverse = false) {
     using ComplexT = typename StateVectorT::ComplexT;
-    st.applyControlledMatrix(static_cast<const ComplexT *>(matrix.data()),
+    st.applyControlledMatrix(PL_reinterpret_cast<const ComplexT>(matrix.data()),
                              controlled_wires, controlled_values, wires,
                              inverse);
 }
@@ -676,14 +676,24 @@ OpsData<StateVectorT> createOpsList(
         &ops_params,
     const std::vector<std::vector<std::size_t>> &ops_wires,
     const std::vector<bool> &ops_inverses,
-    const std::vector<nb::ndarray<const typename StateVectorT::ComplexT,
-                                  nb::c_contig>> &ops_matrices,
+    const std::vector<nb::ndarray<
+        const std::complex<typename StateVectorT::PrecisionT>, nb::c_contig>>
+        &ops_matrices,
     const std::vector<std::vector<std::size_t>> &ops_controlled_wires,
     const std::vector<std::vector<bool>> &ops_controlled_values) {
-
     using ComplexT = typename StateVectorT::ComplexT;
-    auto conv_matrices =
-        Pennylane::NanoBindings::Utils::convertMatrices<ComplexT>(ops_matrices);
+
+    // Convert ops_matrices to std::vector<std::vector<ComplexT>>
+    std::vector<std::vector<ComplexT>> conv_matrices(ops_matrices.size());
+
+    for (std::size_t i = 0; i < ops_matrices.size(); i++) {
+        if (ops_matrices[i].size() > 0) {
+            const auto *m_ptr =
+                PL_reinterpret_cast<const ComplexT>(ops_matrices[i].data());
+            const auto m_size = ops_matrices[i].size();
+            conv_matrices[i] = std::vector<ComplexT>(m_ptr, m_ptr + m_size);
+        }
+    }
 
     return OpsData<StateVectorT>{ops_name,
                                  ops_params,
@@ -761,6 +771,7 @@ void registerBackendAgnosticAlgorithms(nb::module_ &m) {
  */
 template <class StateVectorT, class PyClass>
 void registerBackendAgnosticStateVectorMethods(PyClass &pyclass) {
+    using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
 
     // Initialize with number of qubits
@@ -793,9 +804,11 @@ void registerBackendAgnosticStateVectorMethods(PyClass &pyclass) {
     pyclass.def(
         "setStateVector",
         [](StateVectorT &sv,
-           const nb::ndarray<const ComplexT, nb::c_contig> &state,
+           const nb::ndarray<const std::complex<PrecisionT>, nb::c_contig>
+               &state,
            const std::vector<std::size_t> &wires, const bool async) {
-            const ComplexT *data_ptr = state.data();
+            const auto *data_ptr =
+                PL_reinterpret_cast<const ComplexT>(state.data());
             std::size_t size = state.shape(0);
 
             if constexpr (requires {
