@@ -19,80 +19,22 @@ Unit tests for expval on :mod:`pennylane_lightning` MPI-enabled devices.
 import numpy as np
 import pennylane as qml
 import pytest
-from conftest import PHI, THETA, VARPHI, create_random_init_state, device_name
+from conftest import PHI, THETA, VARPHI, device_name
 from mpi4py import MPI
 
 numQubits = 8
 
 
-def apply_operation_gates_qnode_param(tol, dev_mpi, operation, par, Wires):
-    """Wrapper applying a parametric gate with QNode function."""
-    num_wires = numQubits
-    comm = MPI.COMM_WORLD
-    commSize = comm.Get_size()
-    num_global_wires = commSize.bit_length() - 1
-    num_local_wires = num_wires - num_global_wires
+def create_random_init_state(numWires, c_dtype, seed=None):
+    """Returns a random normalized state of c_dtype with 2**numWires elements."""
+    rng = np.random.default_rng(seed)
+    r_dtype = np.float64 if c_dtype == np.complex128 else np.float32
 
-    c_dtype = dev_mpi.c_dtype
-
-    expected_output_cpu = np.zeros(2**num_wires).astype(c_dtype)
-    local_state_vector = np.zeros(2**num_local_wires).astype(c_dtype)
-    local_expected_output_cpu = np.zeros(2**num_local_wires).astype(c_dtype)
-
-    state_vector = create_random_init_state(num_wires, dev_mpi.c_dtype)
-    comm.Bcast(state_vector, root=0)
-
-    comm.Scatter(state_vector, local_state_vector, root=0)
-    dev_cpu = qml.device("lightning.qubit", wires=num_wires, c_dtype=c_dtype)
-
-    def circuit(*params):
-        qml.StatePrep(state_vector, wires=range(num_wires))
-        operation(*params, wires=Wires)
-        return qml.state()
-
-    cpu_qnode = qml.QNode(circuit, dev_cpu)
-    expected_output_cpu = cpu_qnode(*par).astype(c_dtype)
-    comm.Scatter(expected_output_cpu, local_expected_output_cpu, root=0)
-
-    mpi_qnode = qml.QNode(circuit, dev_mpi)
-    local_state_vector = mpi_qnode(*par)
-
-    assert np.allclose(local_state_vector, local_expected_output_cpu, atol=tol, rtol=0)
-
-
-def apply_operation_gates_qnode_nonparam(tol, dev_mpi, operation, Wires):
-    """Wrapper applying a non-parametric gate with QNode function."""
-    num_wires = numQubits
-    comm = MPI.COMM_WORLD
-    commSize = comm.Get_size()
-    num_global_wires = commSize.bit_length() - 1
-    num_local_wires = num_wires - num_global_wires
-
-    c_dtype = dev_mpi.c_dtype
-
-    expected_output_cpu = np.zeros(2**num_wires).astype(c_dtype)
-    local_state_vector = np.zeros(2**num_local_wires).astype(c_dtype)
-    local_expected_output_cpu = np.zeros(2**num_local_wires).astype(c_dtype)
-
-    state_vector = create_random_init_state(num_wires, dev_mpi.c_dtype)
-    comm.Bcast(state_vector, root=0)
-
-    comm.Scatter(state_vector, local_state_vector, root=0)
-    dev_cpu = qml.device("lightning.qubit", wires=num_wires, c_dtype=c_dtype)
-
-    def circuit():
-        qml.StatePrep(state_vector, wires=range(num_wires))
-        operation(wires=Wires)
-        return qml.state()
-
-    cpu_qnode = qml.QNode(circuit, dev_cpu)
-    expected_output_cpu = cpu_qnode().astype(c_dtype)
-    comm.Scatter(expected_output_cpu, local_expected_output_cpu, root=0)
-
-    mpi_qnode = qml.QNode(circuit, dev_mpi)
-    local_state_vector = mpi_qnode()
-
-    assert np.allclose(local_state_vector, local_expected_output_cpu, atol=tol, rtol=0)
+    num_elements = 2**numWires
+    init_state = rng.random(num_elements).astype(r_dtype) + 1j * rng.random(num_elements).astype(
+        r_dtype
+    )
+    return init_state / np.linalg.norm(init_state)
 
 
 @pytest.mark.parametrize("c_dtype", [np.complex128, np.complex64])
@@ -111,7 +53,9 @@ class TestExpval:
         ],
     )
     @pytest.mark.parametrize("wires", [0, 1, 2, numQubits - 2, numQubits - 1])
-    def test_expval_single_wire_no_parameters(self, tol, operation, wires, c_dtype, batch_obs):
+    def test_expval_single_wire_no_parameters(
+        self, tol, operation, wires, c_dtype, batch_obs, seed
+    ):
         """Tests that expectation values are properly calculated for single-wire observables without parameters."""
         num_wires = numQubits
         comm = MPI.COMM_WORLD
@@ -122,7 +66,7 @@ class TestExpval:
 
         dev_cpu = qml.device("lightning.qubit", wires=num_wires, c_dtype=c_dtype)
 
-        state_vector = create_random_init_state(num_wires, dev_mpi.c_dtype)
+        state_vector = create_random_init_state(num_wires, dev_mpi.c_dtype, seed)
         comm.Bcast(state_vector, root=0)
 
         def circuit():

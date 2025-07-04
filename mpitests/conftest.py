@@ -178,26 +178,3 @@ def seed(request):
     if marker and marker.args:
         return original_seed + marker.args[0]
     return original_seed
-
-
-# Extract _default_rng_seed from `rng_salt` in pytest.ini
-# which are used for generating random vectors/matrices in functions below
-config = configparser.ConfigParser()
-pytest_ini_path = os.path.join(os.path.dirname(__file__), "pytest.ini")
-read_files = config.read(pytest_ini_path)
-config.read("pytest.ini")
-rng_salt = config["pytest"]["rng_salt"]
-_default_rng_seed = int(hashlib.sha256(rng_salt.encode()).hexdigest(), 16)
-
-
-def create_random_init_state(numWires, c_dtype, seed=None):
-    """Returns a random normalized state of c_dtype with 2**numWires elements."""
-    seed = seed or _default_rng_seed
-    rng = np.random.default_rng(seed)
-    r_dtype = np.float64 if c_dtype == np.complex128 else np.float32
-
-    num_elements = 2**numWires
-    init_state = rng.random(num_elements).astype(r_dtype) + 1j * rng.random(num_elements).astype(
-        r_dtype
-    )
-    return init_state / np.linalg.norm(init_state)

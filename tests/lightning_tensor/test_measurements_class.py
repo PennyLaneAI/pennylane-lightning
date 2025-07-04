@@ -171,7 +171,7 @@ class TestMeasurementFunction:
         dev = qml.device(device_name, wires=n_qubits, **method)
         dq = qml.device("default.qubit", wires=n_qubits)
 
-        init_state = get_random_normalized_state(init_state)
+        init_state = get_random_normalized_state(2**n_qubits)
 
         ops = [qml.StatePrep(init_state, wires=range(n_qubits))]
 

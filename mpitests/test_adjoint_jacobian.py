@@ -22,7 +22,7 @@ from functools import partial
 import pennylane as qml
 import pytest
 from conftest import LightningDevice as ld
-from conftest import LightningException, create_random_init_state, device_name
+from conftest import LightningException, device_name
 from mpi4py import MPI
 from pennylane import QNode
 from pennylane import numpy as np
@@ -55,6 +55,18 @@ def fixture_dev(request):
         c_dtype=request.param[0],
         batch_obs=request.param[1],
     )
+
+
+def create_random_init_state(numWires, c_dtype, seed=None):
+    """Returns a random normalized state of c_dtype with 2**numWires elements."""
+    rng = np.random.default_rng(seed)
+    r_dtype = np.float64 if c_dtype == np.complex128 else np.float32
+
+    num_elements = 2**numWires
+    init_state = rng.random(num_elements).astype(r_dtype) + 1j * rng.random(num_elements).astype(
+        r_dtype
+    )
+    return init_state / np.linalg.norm(init_state)
 
 
 class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
@@ -1272,7 +1284,7 @@ def test_qubit_unitary(dev, n_targets, seed):
     par = 2 * np.pi * rng.random(n_wires)
     U = rng.random((2**n_targets, 2**n_targets)) + 1j * rng.random((2**n_targets, 2**n_targets))
     U, _ = np.linalg.qr(U)
-    init_state = create_random_init_state(n_wires, dev.c_dtype)
+    init_state = create_random_init_state(n_wires, dev.c_dtype, seed)
 
     comm = MPI.COMM_WORLD
     par = comm.bcast(par, root=0)
@@ -1320,7 +1332,7 @@ def test_diff_qubit_unitary(dev, n_targets, seed):
     par = 2 * np.pi * rng.random(n_wires)
     U = rng.random((2**n_targets, 2**n_targets)) + 1j * rng.random((2**n_targets, 2**n_targets))
     U, _ = np.linalg.qr(U)
-    init_state = create_random_init_state(n_wires, dev.c_dtype)
+    init_state = create_random_init_state(n_wires, dev.c_dtype, seed)
 
     comm = MPI.COMM_WORLD
     par = comm.bcast(par, root=0)
