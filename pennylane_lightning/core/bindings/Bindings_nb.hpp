@@ -137,7 +137,7 @@ namespace Pennylane::NanoBindings {
  * @brief Register applyMatrix
  */
 template <class StateVectorT>
-void registerMatrix(
+void applyMatrix(
     StateVectorT &st,
     const nb::ndarray<const std::complex<typename StateVectorT::PrecisionT>,
                       nb::c_contig> &matrix,
@@ -152,6 +152,22 @@ void registerMatrix(
     st.applyMatrix(data_ptr, wires, inverse);
 }
 
+/**
+ * @brief Register controlled matrix kernel.
+ */
+template <class StateVectorT>
+void applyControlledMatrix(
+    StateVectorT &st,
+    const py::array_t<std::complex<typename StateVectorT::PrecisionT>,
+                      py::array::c_style | py::array::forcecast> &matrix,
+    const std::vector<std::size_t> &controlled_wires,
+    const std::vector<bool> &controlled_values,
+    const std::vector<std::size_t> &wires, bool inverse = false) {
+    using ComplexT = typename StateVectorT::ComplexT;
+    st.applyControlledMatrix(
+        static_cast<const ComplexT *>(matrix.request().ptr), controlled_wires,
+        controlled_values, wires, inverse);
+}
 /**
  * @brief Register StateVector class
  *
@@ -170,8 +186,10 @@ void registerGatesForStateVector(PyClass &pyclass) {
     using Pennylane::Util::for_each_enum;
     namespace Constant = Pennylane::Gates::Constant;
 
-    pyclass.def("applyMatrix", &registerMatrix<StateVectorT>,
+    pyclass.def("applyMatrix", &applyMatrix<StateVectorT>,
                 "Apply a given matrix to wires.");
+    pyclass.def("applyControlledMatrix", &applyControlledMatrix<StateVectorT>,
+                "Apply controlled operation");
 
     for_each_enum<GateOperation>([&pyclass](GateOperation gate_op) {
         using Pennylane::Util::lookup;
@@ -260,7 +278,8 @@ auto alignedArray(CPUMemoryModel memory_model, std::size_t size, bool zeroInit)
  * @param size Size of the array to create
  * @param dtype Python dtype object to create the array with
  * @param zeroInit Whether to initialize the array with zeros
- * @return nb::object A NumPy array with the specified dtype
+ * @return nb::object a general nanobind object that can assume any of the types
+ * in the method.
  */
 auto allocateAlignedArray(std::size_t size, const nb::object &dtype,
                           bool zeroInit = false) -> nb::object {
@@ -270,9 +289,11 @@ auto allocateAlignedArray(std::size_t size, const nb::object &dtype,
     std::string dtype_str = nb::cast<std::string>(dtype.attr("name"));
 
     if (dtype_str == "complex64") {
-        return nb::cast(alignedArray<std::complex<float>>(memory_model, size, zeroInit));
+        return nb::cast(
+            alignedArray<std::complex<float>>(memory_model, size, zeroInit));
     } else if (dtype_str == "complex128") {
-        return nb::cast(alignedArray<std::complex<double>>(memory_model, size, zeroInit));
+        return nb::cast(
+            alignedArray<std::complex<double>>(memory_model, size, zeroInit));
     } else if (dtype_str == "float32") {
         return nb::cast(alignedArray<float>(memory_model, size, zeroInit));
     } else if (dtype_str == "float64") {
@@ -603,7 +624,6 @@ void registerBackendAgnosticMeasurements(PyClass &pyclass) {
  */
 template <class StateVectorT> void registerAdjointJacobian(nb::module_ &m) {
     using PrecisionT = typename StateVectorT::PrecisionT;
-    using ComplexT = typename StateVectorT::ComplexT;
 
     const std::string bitsize =
         std::to_string(sizeof(std::complex<PrecisionT>) * 8);

@@ -128,23 +128,6 @@ auto svKernelMap(const StateVectorT &sv) -> nb::dict {
 }
 
 /**
- * @brief Register controlled matrix kernel.
- */
-template <class StateVectorT>
-void applyControlledMatrix(
-    StateVectorT &st,
-    const nb::ndarray<const std::complex<typename StateVectorT::PrecisionT>,
-                      nb::c_contig> &matrix,
-    const std::vector<std::size_t> &controlled_wires,
-    const std::vector<bool> &controlled_values,
-    const std::vector<std::size_t> &wires, bool inverse = false) {
-    using ComplexT = typename StateVectorT::ComplexT;
-    st.applyControlledMatrix(static_cast<const ComplexT *>(matrix.data()),
-                             controlled_wires, controlled_values, wires,
-                             inverse);
-}
-
-/**
  * @brief Update state vector data from an array
  *
  * This function accepts any array-like object that follows the buffer protocol,
@@ -181,14 +164,14 @@ template <class StateVectorT, class PyClass>
 void registerSparseMatrixOperators(PyClass &pyclass) {
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
-    using np_arr_c = nb::ndarray<std::complex<PrecisionT>, nb::c_contig>;
+    using ArrayCT = nb::ndarray<std::complex<PrecisionT>, nb::c_contig>;
     using SparseIndexT = std::size_t;
-    using np_arr_sparse_ind = nb::ndarray<SparseIndexT, nb::c_contig>;
+    using ArraySparseIndT = nb::ndarray<SparseIndexT, nb::c_contig>;
 
     pyclass.def(
         "applySparseMatrix",
-        [](StateVectorT &st, const np_arr_sparse_ind &row_map,
-           const np_arr_sparse_ind &col_idx, const np_arr_c &values,
+        [](StateVectorT &st, const ArraySparseIndT &row_map,
+           const ArraySparseIndT &col_idx, const ArrayCT &values,
            const std::vector<std::size_t> &wires, bool inverse) {
             st.applySparseMatrix(static_cast<SparseIndexT *>(row_map.data()),
                                  static_cast<SparseIndexT *>(col_idx.data()),
@@ -199,8 +182,8 @@ void registerSparseMatrixOperators(PyClass &pyclass) {
 
     pyclass.def(
         "applyControlledSparseMatrix",
-        [](StateVectorT &st, const np_arr_sparse_ind &row_map,
-           const np_arr_sparse_ind &col_idx, const np_arr_c &values,
+        [](StateVectorT &st, const ArraySparseIndT &row_map,
+           const ArraySparseIndT &col_idx, const ArrayCT &values,
            const std::vector<std::size_t> &controlled_wires,
            const std::vector<bool> &controlled_values,
            const std::vector<std::size_t> &wires, bool inverse) {
@@ -249,10 +232,6 @@ void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
     pyclass.def("normalize", &StateVectorT::normalize,
                 "Normalizes the statevector to norm 1.");
 
-    // Apply controlled matrix.
-    pyclass.def("applyControlledMatrix", &applyControlledMatrix<StateVectorT>,
-                "Apply controlled operation");
-
     // Kernel map.
     pyclass.def("kernel_map", &svKernelMap<StateVectorT>,
                 "Get internal kernels for operations");
@@ -291,11 +270,12 @@ void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
                 throw std::invalid_argument("Output array is too small");
             }
 
-            // Copy data to numpy array
+            // Copy data to DLPack array
             ComplexT *data_ptr = state.data();
             std::copy(sv.getData(), sv.getData() + sv.getLength(), data_ptr);
         },
-        "Copy StateVector data into a Numpy array.", nb::arg("state"));
+        "Copy StateVector data into a DLPack (Numpy-like) array.",
+        nb::arg("state"));
 }
 
 /**
@@ -325,9 +305,9 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
 
-    using np_arr_c = nb::ndarray<std::complex<PrecisionT>, nb::c_contig>;
+    using ArrayCT = nb::ndarray<std::complex<PrecisionT>, nb::c_contig>;
     using SparseIndexT = std::size_t;
-    using np_arr_sparse_ind = nb::ndarray<SparseIndexT, nb::c_contig>;
+    using ArraySparseIndT = nb::ndarray<SparseIndexT, nb::c_contig>;
 
     pyclass.def(
         "expval",
@@ -339,7 +319,7 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
 
     pyclass.def(
         "expval",
-        [](Measurements<StateVectorT> &M, const np_arr_c &matrix,
+        [](Measurements<StateVectorT> &M, const ArrayCT &matrix,
            const std::vector<std::size_t> &wires) {
             const std::size_t matrix_size = matrix.size();
             auto matrix_data =
@@ -352,8 +332,8 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
 
     pyclass.def(
         "expval",
-        [](Measurements<StateVectorT> &M, const np_arr_sparse_ind &row_map,
-           const np_arr_sparse_ind &col_idx, const np_arr_c &values) {
+        [](Measurements<StateVectorT> &M, const ArraySparseIndT &row_map,
+           const ArraySparseIndT &col_idx, const ArrayCT &values) {
             return M.expval(static_cast<SparseIndexT *>(row_map.data()),
                             static_cast<SparseIndexT>(row_map.size()),
                             static_cast<SparseIndexT *>(col_idx.data()),
@@ -372,8 +352,8 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
 
     pyclass.def(
         "var",
-        [](Measurements<StateVectorT> &M, const np_arr_sparse_ind &row_map,
-           const np_arr_sparse_ind &col_idx, const np_arr_c &values) {
+        [](Measurements<StateVectorT> &M, const ArraySparseIndT &row_map,
+           const ArraySparseIndT &col_idx, const ArrayCT &values) {
             return M.var(static_cast<SparseIndexT *>(row_map.data()),
                          static_cast<SparseIndexT>(row_map.size()),
                          static_cast<SparseIndexT *>(col_idx.data()),
@@ -436,7 +416,7 @@ void registerBackendSpecificObservables(nb::module_ &m) {
     const std::string bitsize =
         std::to_string(sizeof(std::complex<PrecisionT>) * 8);
 
-    using np_arr_c = nb::ndarray<std::complex<PrecisionT>, nb::c_contig>;
+    using ArrayCT = nb::ndarray<std::complex<PrecisionT>, nb::c_contig>;
 
     std::string class_name;
 
@@ -450,7 +430,7 @@ void registerBackendSpecificObservables(nb::module_ &m) {
         "Initialize SparseHamiltonian with data, indices, indptr, and wires");
     sparse_hamiltonian_class.def(
         "__init__",
-        [](SparseHamiltonian<StateVectorT> *self, const np_arr_c &data,
+        [](SparseHamiltonian<StateVectorT> *self, const ArrayCT &data,
            const std::vector<std::size_t> &indices,
            const std::vector<std::size_t> &indptr,
            const std::vector<std::size_t> &wires) {
