@@ -102,20 +102,41 @@ if(ENABLE_PYTHON)
     )
     FetchContent_MakeAvailable(nanobind)
     
-    if(NOT DEFINED Python_EXECUTABLE)
-        set(Python_EXECUTABLE ${PYTHON_EXECUTABLE})
+    # Ensure we have a valid Python executable
+    if(NOT Python_EXECUTABLE)
+        if(DEFINED PYTHON_EXECUTABLE)
+            set(Python_EXECUTABLE ${PYTHON_EXECUTABLE})
+        else()
+            # Try to find Python executable directly
+            find_program(Python_EXECUTABLE NAMES python3 python)
+        endif()
     endif()
     
-    # Ensure nanobind can find Python extension suffix
+    message(STATUS "Using Python executable: ${Python_EXECUTABLE}")
+    
+    # Ensure nanobind can find Python extension suffix - try multiple methods
     execute_process(
-        COMMAND ${Python_EXECUTABLE} -c "import sysconfig; print(sysconfig.get_config_var('EXT_SUFFIX'))"
+        COMMAND ${Python_EXECUTABLE} -c "import sysconfig; print(sysconfig.get_config_var('EXT_SUFFIX') or '.so')"
         OUTPUT_VARIABLE NANOBIND_EXT_SUFFIX
         OUTPUT_STRIP_TRAILING_WHITESPACE
+        RESULT_VARIABLE PY_RESULT
     )
-    if(NANOBIND_EXT_SUFFIX)
-        message(STATUS "Setting NANOBIND_EXT_SUFFIX to: ${NANOBIND_EXT_SUFFIX}")
-        set(ENV{NANOBIND_EXT_SUFFIX} ${NANOBIND_EXT_SUFFIX})
+    
+    if(NOT PY_RESULT EQUAL 0 OR NOT NANOBIND_EXT_SUFFIX)
+        # Fallback method
+        execute_process(
+            COMMAND ${Python_EXECUTABLE} -c "import importlib.machinery; print(importlib.machinery.EXTENSION_SUFFIXES[0] if importlib.machinery.EXTENSION_SUFFIXES else '.so')"
+            OUTPUT_VARIABLE NANOBIND_EXT_SUFFIX
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+            RESULT_VARIABLE PY_RESULT2
+        )
     endif()
+    
+    message(STATUS "Setting NANOBIND_EXT_SUFFIX to: ${NANOBIND_EXT_SUFFIX}")
+    set(ENV{NANOBIND_EXT_SUFFIX} ${NANOBIND_EXT_SUFFIX})
+    
+    # Also set it as a CMake variable that nanobind can access
+    set(NANOBIND_EXT_SUFFIX ${NANOBIND_EXT_SUFFIX} CACHE STRING "Python extension suffix")
     
     # Print nanobind include directory
     message(STATUS "Nanobind include directory: ${nanobind_SOURCE_DIR}/include")
