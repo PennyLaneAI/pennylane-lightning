@@ -2,7 +2,7 @@
 
 <h3>New features since last release</h3>
 
-- LK-MPI [FIXME]
+- Add support for distributed state vector simulation with MPI for `lightning.kokkos` device.
   [(#1114)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1114)
 
 - Mid-circuit measurements using the tree-traversal algorithm are now supported
@@ -22,7 +22,7 @@
   [(#1152)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1152)
   [(#1161)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1161)
 
-- Refactor MPIManager from GPU [FIXME]
+- Refactor `MPIManager` class from `lightning.gpu` to base class.
   [(#1162)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1162)
 
 <h3>Breaking changes 💔</h3>
@@ -50,7 +50,7 @@
   [(#1141)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1141)
   [(#1142)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1142)
 
-- Docs fix for typo in lightning-gpu adjoint-jacobian [FIXME]
+- Fix typo in `lightning.gpu` documentation adjoint-jacobian section.
   [(#1179)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1179)
 
 <h3>Bug fixes 🐛</h3>
