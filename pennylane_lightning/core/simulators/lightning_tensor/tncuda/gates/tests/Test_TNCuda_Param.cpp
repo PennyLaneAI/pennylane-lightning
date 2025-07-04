@@ -1303,7 +1303,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::DoubleExcitationMinus",
         std::vector<std::vector<cp_t>> expected_results{
             std::vector<cp_t>(1 << num_qubits, {0.17479168, -0.02641717}),
             std::vector<cp_t>(1 << num_qubits, {0.17479168, -0.02641717}),
-
         };
 
         expected_results[0][6] = {0.14837450, 0.0};
@@ -1389,7 +1388,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::DoubleExcitationPlus", "[TNCuda_Param]",
         std::vector<std::vector<cp_t>> expected_results{
             std::vector<cp_t>(1 << num_qubits, {0.17479168, 0.02641717}),
             std::vector<cp_t>(1 << num_qubits, {0.17479168, 0.02641717}),
-
         };
 
         expected_results[0][6] = {0.14837450, 0.0};

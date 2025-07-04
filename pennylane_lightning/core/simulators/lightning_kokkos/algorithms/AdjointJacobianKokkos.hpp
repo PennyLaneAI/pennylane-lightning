@@ -12,10 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #pragma once
-#include <span>
-
 #include "AdjointJacobianBase.hpp"
 #include "ObservablesKokkos.hpp"
+#include <span>
 
 /// @cond DEV
 namespace {
@@ -54,9 +53,10 @@ class AdjointJacobian final
     inline void updateJacobian(StateVectorT &sv1, StateVectorT &sv2,
                                std::span<PrecisionT> &jac,
                                PrecisionT scaling_coeff, std::size_t idx) {
-        jac[idx] = -2 * scaling_coeff *
-                   getImagOfComplexInnerProduct<PrecisionT>(sv1.getView(),
-                                                            sv2.getView());
+        auto element = -2 * scaling_coeff *
+                       getImagOfComplexInnerProduct<PrecisionT>(sv1.getView(),
+                                                                sv2.getView());
+        jac[idx] = element;
     }
 
   public:

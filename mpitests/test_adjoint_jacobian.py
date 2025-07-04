@@ -17,6 +17,7 @@ Unit tests for adjoint Jacobian on :mod:`pennylane_lightning` MPI-enabled device
 # pylint: disable=protected-access,cell-var-from-loop,c-extension-no-member
 import itertools
 import math
+from functools import partial
 
 import pennylane as qml
 import pytest
@@ -496,13 +497,14 @@ class TestAdjointJacobianQNode:
     def test_finite_shots_error(self):
         """Tests that an error is raised when computing the adjoint diff on a device with finite shots"""
 
-        dev = qml.device(device_name, wires=8, mpi=True, shots=1)
+        dev = qml.device(device_name, wires=8, mpi=True)
 
         with pytest.raises(
             QuantumFunctionError,
             match="does not support adjoint with requested circuit.",
         ):
 
+            @partial(qml.set_shots, shots=1)
             @qml.qnode(dev, diff_method="adjoint")
             def circ(x):
                 qml.RX(x, wires=0)
@@ -1096,6 +1098,9 @@ def test_integration_H2_Hamiltonian(
     assert np.allclose(jacs, jacs_comp)
 
 
+@pytest.mark.skipif(
+    device_name == "lightning.kokkos", reason="Kokkos MPI does not support SparseHamiltonian"
+)
 @pytest.mark.parametrize(
     "returns",
     [
@@ -1157,6 +1162,9 @@ def test_adjoint_SparseHamiltonian_custom_wires(returns):
     assert np.allclose(j_cpu, j_gpu)
 
 
+@pytest.mark.skipif(
+    device_name == "lightning.kokkos", reason="Kokkos MPI does not support SparseHamiltonian"
+)
 @pytest.mark.parametrize(
     "returns",
     [
