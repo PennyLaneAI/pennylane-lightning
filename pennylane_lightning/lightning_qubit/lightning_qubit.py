@@ -53,7 +53,7 @@ try:
     from pennylane_lightning.lightning_qubit_nb import backend_info
 
     LQ_CPP_BINARY_AVAILABLE = True
-except ImportError as ex:
+except ImportError:
     try:
         # Fall back to pybind11 version if nanobind version is not available
         from pennylane_lightning.lightning_qubit_ops import backend_info
@@ -63,7 +63,7 @@ except ImportError as ex:
             UserWarning,
         )
         LQ_CPP_BINARY_AVAILABLE = True
-    except ImportError:
+    except ImportError as ex:
         warn(str(ex), UserWarning)
         LQ_CPP_BINARY_AVAILABLE = False
 
