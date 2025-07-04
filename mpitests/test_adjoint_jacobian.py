@@ -1325,7 +1325,7 @@ def test_diff_qubit_unitary(dev, n_targets):
     par = 2 * np.pi * rng.random(n_wires)
     U = rng.random((2**n_targets, 2**n_targets)) + 1j * rng.random((2**n_targets, 2**n_targets))
     U, _ = np.linalg.qr(U)
-    init_state = create_random_init_state(nwires, dev.c_dtype)
+    init_state = create_random_init_state(n_wires, dev.c_dtype)
 
     comm = MPI.COMM_WORLD
     par = comm.bcast(par, root=0)
