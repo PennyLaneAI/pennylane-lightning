@@ -2,6 +2,14 @@
 
 <h3>New features since last release</h3>
 
+- Mid-circuit measurements using the tree-traversal algorithm are now supported
+  in the `lightning.qubit`, `lightning.kokkos` and `lightning.gpu` devices,
+  providing both significant memory savings and sampling efficiency!
+  [(#1166)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1166)
+
+- LK-MPI [FIXME]
+  [(#1114)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1114)
+
 <h3>Improvements 🛠</h3>
 
 - Lightning devices accept a `seed` argument to enable deterministic shots measurements.
@@ -10,24 +18,30 @@
 - `MultiControlledX` gates are now natively supported in Lightning-Tensor.
   [(#1169)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1169)
 
-- Remove `MultiControlledX` gates native support in Lightning-Tensor.
-  [(#1183)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1183)
-
 - PennyLane-Lightning is compatible with JAX version 0.5.3+.
   [(#1152)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1152)
   [(#1161)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1161)
 
-- Improve performance of computing expectation values of Pauli Sentences for `lightning.kokkos`.
-  [(#1126)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1126)
-
-- Mid-circuit measurements using the tree-traversal algorithm are now supported
-  in the `lightning.qubit`, `lightning.kokkos` and `lightning.gpu` devices,
-  providing both significant memory savings and sampling efficiency!
-  [(#1166)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1166)
+- Refactor MPIManager from GPU [FIXME]
+  [(#1162)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1162)
 
 <h3>Breaking changes 💔</h3>
 
+- The `LightningBaseStateVector`, `LightningBaseAdjointJacobian`, `LightningBaseMeasurements`, `LightningInterpreter` and `QuantumScriptSerializer` base classes now can be found at `pennylane_lightning.lightning_base`.
+
+  The new `lightning_base` module further enables the relocation of core files from `pennylane_lightning/core/src/*` to `pennylane_lightning/core/*`.
+
+  The license classifier and `project.license` as a TOML table are deprecated in favor of a SPDX license expression and removed in `pyproject.toml`.
+
+  To speedup the recompilation of C++ source code, `ccache` is also added to `Makefile`.
+
+  [(#1098)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1098)
+
+
 <h3>Deprecations 👋</h3>
+
+- Remove `MultiControlledX` gates native support in `lightning.tensor`.
+  [(#1183)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1183)
 
 <h3>Documentation 📝</h3>
 
@@ -36,16 +50,18 @@
   [(#1141)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1141)
   [(#1142)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1142)
 
+- Docs fix for typo in lightning-gpu adjoint-jacobian [FIXME]
+  [(#1179)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1179)
+
 <h3>Bug fixes 🐛</h3>
 
-- Fixed the implementation of multi-controlled gates with a single target wire for arbitrary control values in Lightning-Tensor.
+- Fixed the implementation of multi-controlled gates with a single target wire for arbitrary control values in `lightning.tensor`.
   [(#1169)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1169)
 
 - Only download JAX version 0.5.3 for non-X86 MacOS. 
   [(#1163)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1163)
 
-- Fix Docker build for Lighting-Kokkos with ROCM library for AMD GPUs.
-  Updating ROCM from 5.7 to 6.2.4. 
+- Fix Docker build for `lighting.kokkos` with ROCM library for AMD GPUs. Updating ROCM from 5.7 to 6.2.4. 
   [(#1158)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1158)
 
 - Fix using Torch with `AmplitudeEmbedding` by applying `qml.broadcast_expand` before decomposition in the preprocessing stage. 
@@ -77,33 +93,6 @@
 - Bump `readthedocs` Github action runner to use Ubuntu-24.04.
   [(#1151)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1151)
 
-- The `LightningBaseStateVector`, `LightningBaseAdjointJacobian`, `LightningBaseMeasurements`, `LightningInterpreter` and `QuantumScriptSerializer` base classes now can be found at `pennylane_lightning.lightning_base`.
-
-  The new `lightning_base` module further enables the relocation of core files from `pennylane_lightning/core/src/*` to `pennylane_lightning/core/*`.
-
-  The license classifier and `project.license` as a TOML table are deprecated in favor of a SPDX license expression and removed in `pyproject.toml`.
-
-  To speedup the recompilation of C++ source code, `ccache` is also added to `Makefile`.
-
-  [(#1098)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1098)
-
-- All Catalyst plugins have been updated to be compatible with the next version of Catalyst (v0.12) with changes to the `QuantumDevice` interface.
-  [(#1143)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1143)
-  [(#1147)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1147)
-
-- Updates for depending deprecations to `Observable`, `is_trainable`, and `AnyWires` in pennylane.
-  [(#1138)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1138)
-  [(#1146)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1146)
-
-- Import custom PennyLane errors from `pennylane.exceptions` rather than top-level.
-  [(#1122)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1122)
-
-- Merge the `v0.41.0-rc` branch to the master and bump version.
-  [(#1132)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1132)
-
-- Added flags to all Codecov reports and a default carryforward flag for all flags.
-  [(1144)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1144)
-
 - Updated the `clang-format` and `clang-tidy` versions to v20 for compatibility with Catalyst.
   [(#1153)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1153)
 
@@ -119,22 +108,25 @@
 - Adhere to PyPA binary distribution format for built wheels.
   [(#1193)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1193)
 
+- Merge the `v0.41.0-rc` branch to the `master` and bump version.
+  [(#1132)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1132)
+
 <h3>Contributors ✍️</h3>
 
 This release contains contributions from (in alphabetical order):
 
 Runor Agbaire,
 Ali Asadi,
-David Ittah,
+Yushao Chen,
 Christina Lee,
 Joseph Lee,
 Mehrdad Malekmohammadi,
 Anton Naim Ibrahim,
 Luis Alfredo Nuñez Meneses,
 Mudit Pandey,
-Andrija Paurevic,
 Shuli Shu,
-Marc Vandelle
+Marc Vandelle,
+Jake Zaia 
 
 ---
 
@@ -156,6 +148,25 @@ Marc Vandelle
 - Move the installation sections from `README.rst` to dedicated pages.
   [(#1131)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1131)
 
+<h3>Internal changes ⚙️</h3>
+
+- Updates for depending deprecations to `Observable`, `is_trainable`, and `AnyWires` in pennylane.
+  [(#1138)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1138)
+  [(#1146)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1146)
+
+- Improve performance of computing expectation values of Pauli Sentences for `lightning.kokkos`.
+  [(#1126)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1126)
+
+- Import custom PennyLane errors from `pennylane.exceptions` rather than top-level.
+  [(#1122)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1122)
+
+- Added flags to all Codecov reports and a default carryforward flag for all flags.
+  [(1144)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1144)
+
+- All Catalyst plugins have been updated to be compatible with the next version of Catalyst (v0.12) with changes to the `QuantumDevice` interface.
+  [(#1143)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1143)
+  [(#1147)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1147)
+
 <h3>Contributors ✍️</h3>
 
 This release contains contributions from (in alphabetical order):
@@ -163,9 +174,11 @@ This release contains contributions from (in alphabetical order):
 Ali Asadi,
 Amintor Dusko,
 Andrew Gardhouse,
+David Ittah,
 Joseph Lee,
 Anton Naim Ibrahim,
-Luis Alfredo Nuñez Meneses
+Luis Alfredo Nuñez Meneses,
+Andrija Paurevic,
 
 ---
 
