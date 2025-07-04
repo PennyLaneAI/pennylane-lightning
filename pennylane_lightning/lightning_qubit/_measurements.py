@@ -22,14 +22,8 @@ from warnings import warn
 
 try:
     from pennylane_lightning.lightning_qubit_nb import MeasurementsC64, MeasurementsC128
-except ImportError:
-    # Fall back to pybind11 version if nanobind version is not available
-    from pennylane_lightning.lightning_qubit_ops import MeasurementsC64, MeasurementsC128
-
-    warn(
-        "Using legacy pybind11 bindings. Consider upgrading to nanobind version for better performance.",
-        UserWarning,
-    )
+except ImportError as ex:
+    warn(str(ex), UserWarning)
 
 import numpy as np
 
