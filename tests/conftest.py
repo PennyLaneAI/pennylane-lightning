@@ -357,6 +357,7 @@ _default_rng_seed = int(hashlib.sha256(rng_salt.encode()).hexdigest(), 16)
 
 
 def get_random_matrix(n, seed=None):
+    """Generate a random complex matrix of shape (n, n)."""
     seed = seed or _default_rng_seed
     rng = np.random.default_rng(seed=seed)
     U = rng.random((n, n)) + 1.0j * rng.random((n, n))
@@ -364,6 +365,7 @@ def get_random_matrix(n, seed=None):
 
 
 def get_random_normalized_state(n, seed=None):
+    """Generate a random normalized complex state vector of n elements."""
     seed = seed or _default_rng_seed
     rng = np.random.default_rng(seed=seed)
     random_state = rng.random(n) + 1j * rng.random(n)
@@ -371,6 +373,7 @@ def get_random_normalized_state(n, seed=None):
 
 
 def get_hermitian_matrix(n, seed=None):
+    """Generate a random Hermitian matrix of shape (n, n)."""
     seed = seed or _default_rng_seed
     rng = np.random.default_rng(seed=seed)
     H = rng.random((n, n)) + 1.0j * rng.random((n, n))
@@ -378,6 +381,7 @@ def get_hermitian_matrix(n, seed=None):
 
 
 def get_sparse_hermitian_matrix(n):
+    """Generate a random sparse Hermitian matrix of shape (n, n)."""
     H = random_array((n, n), density=0.15)
     H = H + 1.0j * random_array((n, n), density=0.15)
     return csr_matrix(H + H.conj().T)
