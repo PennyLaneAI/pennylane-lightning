@@ -200,9 +200,9 @@ class TestExpval:
         n_qubits = 8
         dev = LightningDevice(wires=n_qubits, c_dtype=dtype)
 
-        np.random.seed(seed)
-        mat = np.random.rand(2**n_op_wires, 2**n_op_wires) + 1j * np.random.rand(
-            2**n_op_wires, 2**n_op_wires
+        rng = np.random.default_rng(seed=seed)
+        mat = rng.random((2**n_op_wires, 2**n_op_wires)) + 1j * rng.random(
+            (2**n_op_wires, 2**n_op_wires)
         )
         mat = mat + mat.conj().T
 

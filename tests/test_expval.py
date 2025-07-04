@@ -19,23 +19,12 @@ import itertools
 import numpy as np
 import pennylane as qml
 import pytest
-from conftest import GLOBAL_SEED, PHI, THETA, VARPHI
+from conftest import PHI, THETA, VARPHI
 from conftest import LightningDevice as ld
-from conftest import device_name
+from conftest import device_name, get_random_normalized_state, get_unitary_matrix
 
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
-
-
-def get_random_state(n):
-    np.random.seed(GLOBAL_SEED)
-    return np.random.rand(n) + 1j * np.random.rand(n)
-
-
-def get_unitary_matrix(n):
-    np.random.seed(GLOBAL_SEED)
-    U = np.random.rand(n, n) + 1.0j * np.random.rand(n, n)
-    return U
 
 
 @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
@@ -117,7 +106,7 @@ class TestExpval:
         dev_def = qml.device("default.qubit", wires=n_qubits)
         dev = qubit_device(wires=n_qubits)
 
-        init_state = get_random_state(2**n_qubits)
+        init_state = get_random_normalized_state(2**n_qubits)
         init_state /= np.linalg.norm(init_state)
         obs = qml.Projector(np.array([0, 1, 0, 0]) / np.sqrt(2), wires=[0, 1])
 
@@ -144,8 +133,7 @@ class TestExpval:
         U = U + np.conj(U.T)
         wires = list(range((n_qubits - n_wires), (n_qubits - n_wires) + n_wires))
         perms = list(itertools.permutations(wires))
-        init_state = get_random_state(2**n_qubits)
-        init_state /= np.linalg.norm(init_state)
+        init_state = get_random_normalized_state(2**n_qubits)
         if n_wires > 4:
             perms = perms[0::30]
         for perm in perms:

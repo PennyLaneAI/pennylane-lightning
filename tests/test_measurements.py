@@ -482,10 +482,11 @@ class TestSample:
         """Tests if `sample(wires)` returns correct statistics."""
         shots = 200000
         n_qubits = max(5, nwires + 1)
-        np.random.seed(seed)
-        wires = qml.wires.Wires(np.random.permutation(nwires))
-        state = np.random.rand(2**n_qubits) + 1j * np.random.rand(2**n_qubits)
-        state[np.random.randint(0, 2**n_qubits, 1)] += state.size / 10
+
+        rng = np.random.default_rng(seed)
+        wires = qml.wires.Wires(rng.permutation(nwires))
+        state = rng.random(2**n_qubits) + 1j * rng.random(2**n_qubits)
+        state[rng.integers(0, 2**n_qubits, 1)] += state.size / 10
         state /= np.linalg.norm(state)
         ops = [qml.StatePrep(state, wires=range(n_qubits))]
         tape = qml.tape.QuantumScript(ops, [qml.sample(wires=wires)], shots=shots)

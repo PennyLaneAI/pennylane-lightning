@@ -20,26 +20,15 @@ from functools import partial
 import numpy as np
 import pennylane as qml
 import pytest
-from conftest import GLOBAL_SEED, PHI, THETA
+from conftest import PHI, THETA
 from conftest import LightningDevice as ld
-from conftest import device_name
+from conftest import device_name, get_random_normalized_state, get_unitary_matrix
 from pennylane.exceptions import DeviceError
 from pennylane.operation import Operation
 from pennylane.wires import Wires
 
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
-
-
-def get_random_state(n):
-    np.random.seed(GLOBAL_SEED)
-    return np.random.rand(n) + 1j * np.random.rand(n)
-
-
-def get_unitary_matrix(n):
-    np.random.seed(GLOBAL_SEED)
-    U = np.random.rand(n, n) + 1.0j * np.random.rand(n, n)
-    return U
 
 
 class TestExpval:
@@ -863,8 +852,7 @@ class TestApplyLightningMethod:
 
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit", wires=n_qubits)
-        init_state = get_random_state(2**n_qubits)
-        init_state /= np.linalg.norm(init_state)
+        init_state = get_random_normalized_state(2**n_qubits)
 
         def circuit():
             qml.StatePrep(init_state, wires=range(n_qubits))
@@ -895,7 +883,7 @@ def test_circuit_with_stateprep(op, theta, phi, tol):
     m = 2**n_wires
     U = get_unitary_matrix(m)
     U, _ = np.linalg.qr(U)
-    init_state = get_random_state(2**n_qubits)
+    init_state = get_random_normalized_state(2**n_qubits)
     init_state /= np.linalg.norm(init_state)
 
     def circuit():

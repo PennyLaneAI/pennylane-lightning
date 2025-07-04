@@ -37,14 +37,14 @@ fixture_params = itertools.product(
 
 def create_random_init_state(numWires, c_dtype, seed_value=48):
     """Returns a random initial state of a certain type."""
-    np.random.seed(seed_value)
+    rng = np.random.default_rng(seed_value)
 
     r_dtype = np.float64 if c_dtype == np.complex128 else np.float32
 
     num_elements = 2**numWires
-    init_state = np.random.rand(num_elements).astype(r_dtype) + 1j * np.random.rand(
-        num_elements
-    ).astype(r_dtype)
+    init_state = rng.random(num_elements).astype(r_dtype) + 1j * rng.random(num_elements).astype(
+        r_dtype
+    )
     scale_sum = np.sqrt(np.sum(np.abs(init_state) ** 2)).astype(r_dtype)
     init_state = init_state / scale_sum
     return init_state
@@ -911,8 +911,8 @@ def test_integration(returns):
         return qml.math.hstack([qml.expval(r) for r in returns])
 
     n_params = 30
-    np.random.seed(1337)
-    params = np.random.rand(n_params)
+    rng = np.random.default_rng(1337)
+    params = rng.random(n_params)
 
     qnode_mpi = qml.QNode(circuit, dev_mpi, diff_method="parameter-shift")
     qnode_default = qml.QNode(circuit, dev_default, diff_method="parameter-shift")
@@ -955,8 +955,8 @@ def test_integration_custom_wires(returns):
         return qml.expval(returns), qml.expval(qml.PauliY(custom_wires[1]))
 
     n_params = 30
-    np.random.seed(1337)
-    params = np.random.rand(n_params)
+    rng = np.random.default_rng(1337)
+    params = rng.random(n_params)
 
     qnode_mpi = qml.QNode(circuit, dev_mpi, diff_method="parameter-shift")
     qnode_lightning = qml.QNode(circuit, dev_lightning, diff_method="parameter-shift")

@@ -192,8 +192,8 @@ def test_integration_for_all_supported_gates(returns, method, seed):
         return qml.math.hstack([qml.expval(r) for r in returns])
 
     n_params = 34
-    np.random.seed(seed)
-    params_init = np.random.rand(n_params)
+    rng = np.random.default_rng(seed)
+    params_init = rng.random(n_params)
 
     params = np.array(params_init, requires_grad=True)
     qnode_ltensor = qml.QNode(circuit, dev_ltensor)

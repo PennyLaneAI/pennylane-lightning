@@ -18,7 +18,7 @@ import functools
 
 import pennylane as qml
 import pytest
-from conftest import LightningDevice, device_name
+from conftest import LightningDevice, device_name, get_random_normalized_state
 from pennylane import numpy as np
 from pennylane.exceptions import DeviceError
 
@@ -41,8 +41,8 @@ class TestGrover:
     @pytest.mark.local_salt(42)
     @pytest.mark.parametrize("n_qubits", range(4, 8))
     def test_grover(self, n_qubits, seed):
-        np.random.seed(seed)
-        omega = np.random.rand(n_qubits) > 0.5
+        rng = np.random.default_rng(seed)
+        omega = rng.random(n_qubits) > 0.5
         dev = qml.device(device_name, wires=n_qubits)
         wires = list(range(n_qubits))
 
@@ -101,8 +101,8 @@ class TestAngleEmbedding:
             qml.AngleEmbedding(features=feature_vector, wires=range(n_qubits), rotation="Z")
             return qml.state()
 
-        np.random.seed(seed)
-        X = np.random.rand(n_qubits)
+        rng = np.random.default_rng(seed)
+        X = rng.random(n_qubits)
 
         res = qml.QNode(circuit, dev, diff_method=None)(X)
         ref = qml.QNode(circuit, dq, diff_method=None)(X)
@@ -132,8 +132,8 @@ class TestAmplitudeEmbedding:
             qml.AmplitudeEmbedding(features=f, wires=range(n_qubits))
             return qml.state()
 
-        np.random.seed(seed)
-        X = np.random.rand(2**n_qubits)
+        rng = np.random.default_rng(seed)
+        X = rng.random(2**n_qubits)
         X /= np.linalg.norm(X)
         res = qml.QNode(circuit, dev, diff_method=None)(f=X)
         ref = qml.QNode(circuit, dq, diff_method=None)(f=X)
@@ -216,9 +216,9 @@ class TestQAOAEmbedding:
             qml.QAOAEmbedding(features=feature_vector, weights=weights, wires=range(n_qubits))
             return qml.state()
 
-        np.random.seed(seed)
-        X = np.random.rand(n_qubits)
-        weights = np.random.rand(2, 3 if n_qubits == 2 else 2 * n_qubits)
+        rng = np.random.default_rng(seed)
+        X = rng.random(n_qubits)
+        weights = rng.random((2, 3 if n_qubits == 2 else 2 * n_qubits))
 
         res = qml.QNode(circuit, dev, diff_method=None)(X, weights)
         ref = qml.QNode(circuit, dq, diff_method=None)(X, weights)
@@ -238,9 +238,9 @@ class TestCVNeuralNetLayers:
             qml.CVNeuralNetLayers(*weights, wires=[0, 1])
             return qml.state()
 
-        np.random.seed(seed)
+        rng = np.random.default_rng(seed)
         shapes = qml.CVNeuralNetLayers.shape(n_layers=2, n_wires=n_qubits)
-        weights = [np.random.random(shape) for shape in shapes]
+        weights = [rng.random(size=shape) for shape in shapes]
 
         with pytest.raises(DeviceError, match="not supported"):
             _ = qml.QNode(circuit, dev, diff_method=None)(weights)
@@ -281,9 +281,9 @@ class TestStronglyEntanglingLayers:
             qml.StronglyEntanglingLayers(weights=weights, wires=range(n_qubits))
             return qml.state()
 
-        np.random.seed(seed)
+        rng = np.random.default_rng(seed)
         shape = qml.StronglyEntanglingLayers.shape(n_layers=2, n_wires=n_qubits)
-        weights = np.random.random(size=shape)
+        weights = rng.random(size=shape)
 
         res = qml.QNode(circuit, dev, diff_method=None)(weights)
         ref = qml.QNode(circuit, dq, diff_method=None)(weights)
@@ -307,9 +307,9 @@ class TestSimplifiedTwoDesign:
             )
             return [qml.expval(qml.Z(i)) for i in range(n_qubits)]
 
-        np.random.seed(seed)
+        rng = np.random.default_rng(seed)
         init_weights = np.random.rand(n_qubits)
-        weights = np.random.rand(2, n_qubits - 1, 2)
+        weights = rng.random((2, n_qubits - 1, 2))
 
         res = qml.QNode(circuit, dev, diff_method=None)(init_weights, weights)
         ref = qml.QNode(circuit, dq, diff_method=None)(init_weights, weights)
@@ -331,8 +331,8 @@ class TestBasicEntanglerLayers:
             qml.BasicEntanglerLayers(weights=weights, wires=range(n_qubits))
             return [qml.expval(qml.Z(i)) for i in range(n_qubits)]
 
-        np.random.seed(seed)
-        weights = np.random.rand(1, n_qubits)
+        rng = np.random.default_rng(seed)
+        weights = rng.random((1, n_qubits))
 
         res = qml.QNode(circuit, dev, diff_method=None)(weights)
         ref = qml.QNode(circuit, dq, diff_method=None)(weights)
@@ -343,9 +343,8 @@ class TestBasicEntanglerLayers:
 class TestMottonenStatePreparation:
     """Test the MottonenStatePreparation algorithm."""
 
-    @pytest.mark.local_salt(42)
     @pytest.mark.parametrize("n_qubits", range(2, 6, 2))
-    def test_mottonenstatepreparation(self, n_qubits, seed):
+    def test_mottonenstatepreparation(self, n_qubits):
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")
 
@@ -353,9 +352,7 @@ class TestMottonenStatePreparation:
             qml.MottonenStatePreparation(state_vector=state, wires=range(n_qubits))
             return qml.state()
 
-        np.random.seed(seed)
-        state = np.random.rand(2**n_qubits) + 1j * np.random.rand(2**n_qubits)
-        state = state / np.linalg.norm(state)
+        state = get_random_normalized_state(2**n_qubits)
 
         res = qml.QNode(circuit, dev, diff_method=None)(state)
         ref = qml.QNode(circuit, dq, diff_method=None)(state)
@@ -376,8 +373,8 @@ class TestArbitraryStatePreparation:
             qml.ArbitraryStatePreparation(weights, wires=range(n_qubits))
             return qml.state()
 
-        np.random.seed(seed)
-        weights = np.random.rand(2 ** (n_qubits + 1) - 2)
+        rng = np.random.default_rng(seed)
+        weights = rng.random(2 ** (n_qubits + 1) - 2)
 
         res = qml.QNode(circuit, dev, diff_method=None)(weights)
         ref = qml.QNode(circuit, dq, diff_method=None)(weights)
@@ -406,7 +403,8 @@ class TestCosineWindow:
 class TestAllSinglesDoubles:
     """Test the AllSinglesDoubles algorithm."""
 
-    def test_allsinglesdoubles(self):
+    @pytest.mark.local_salt(42)
+    def test_allsinglesdoubles(self, seed):
         n_qubits = 4
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")
@@ -423,7 +421,8 @@ class TestAllSinglesDoubles:
             qml.templates.AllSinglesDoubles(weights, range(n_qubits), hf_state, singles, doubles)
             return qml.state()
 
-        weights = np.random.normal(0, np.pi, len(singles) + len(doubles))
+        rng = np.random.default_rng(seed)
+        weights = rng.normal(0, np.pi, len(singles) + len(doubles))
         res = qml.QNode(circuit, dev, diff_method=None)(weights, hf_state, singles, doubles)
         ref = qml.QNode(circuit, dq, diff_method=None)(weights, hf_state, singles, doubles)
 
@@ -481,9 +480,9 @@ class TestGateFabric:
             return qml.state()
 
         layers = 2
-        np.random.seed(seed)
+        rng = np.random.default_rng(seed)
         shape = qml.GateFabric.shape(n_layers=layers, n_wires=n_qubits)
-        weights = np.random.random(size=shape)
+        weights = rng.random(size=shape)
 
         res = qml.QNode(circuit, dev, diff_method=None)(weights)
         ref = qml.QNode(circuit, dq, diff_method=None)(weights)
@@ -527,8 +526,8 @@ class TestUCCSD:
             qml.UCCSD(weights, range(n_qubits), s_wires, d_wires, hf_state)
             return qml.state()
 
-        np.random.seed(seed)
-        weights = np.random.random(len(singles) + len(doubles))
+        rng = np.random.default_rng(seed)
+        weights = rng.random(len(singles) + len(doubles))
 
         res = qml.QNode(circuit, dev, diff_method=None)(weights)
         ref = qml.QNode(circuit, dq, diff_method=None)(weights)
@@ -570,9 +569,9 @@ class TestkUpCCGSD:
 
         # Get the shape of the weights for this template
         layers = 1
-        np.random.seed(seed)
+        rng = np.random.default_rng(seed)
         shape = qml.kUpCCGSD.shape(k=layers, n_wires=n_qubits, delta_sz=0)
-        weights = np.random.random(size=shape)
+        weights = rng.random(size=shape)
 
         res = qml.QNode(circuit, dev, diff_method=None)(weights)
         ref = qml.QNode(circuit, dq, diff_method=None)(weights)
@@ -605,9 +604,9 @@ class TestParticleConservingU1:
             return qml.state()
 
         layers = 2
-        np.random.seed(seed)
+        rng = np.random.default_rng(seed)
         shape = qml.ParticleConservingU1.shape(layers, n_qubits)
-        weights = np.random.random(shape)
+        weights = rng.random(shape)
 
         res = qml.QNode(circuit, dev, diff_method=None)(weights)
         ref = qml.QNode(circuit, dq, diff_method=None)(weights)
@@ -640,9 +639,9 @@ class TestParticleConservingU2:
             return qml.state()
 
         layers = 2
-        np.random.seed(seed)
+        rng = np.random.default_rng(seed)
         shape = qml.ParticleConservingU2.shape(layers, n_qubits)
-        weights = np.random.random(shape)
+        weights = rng.random(shape)
 
         res = qml.QNode(circuit, dev, diff_method=None)(weights)
         ref = qml.QNode(circuit, dq, diff_method=None)(weights)

@@ -27,16 +27,16 @@ numQubits = 8
 
 def create_random_init_state(numWires, c_dtype, seed_value=48):
     """Returns a random initial state of a certain type."""
-    np.random.seed(seed_value)
+    rng = np.random.default_rng(seed_value)
 
     r_dtype = np.float64 if c_dtype == np.complex128 else np.float32
 
     num_elements = 2**numWires
-    init_state = np.random.rand(num_elements).astype(r_dtype) + 1j * np.random.rand(
-        num_elements
-    ).astype(r_dtype)
-
-    init_state = init_state / np.linalg.norm(init_state)
+    init_state = rng.random(num_elements).astype(r_dtype) + 1j * rng.random(num_elements).astype(
+        r_dtype
+    )
+    scale_sum = np.sqrt(np.sum(np.abs(init_state) ** 2)).astype(r_dtype)
+    init_state = init_state / scale_sum
     return init_state
 
 

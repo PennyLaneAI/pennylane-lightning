@@ -20,35 +20,24 @@ import numpy as np
 import pennylane as qml
 import pytest
 from conftest import (  # tested device
-    GLOBAL_SEED,
     PHI,
     THETA,
     LightningDevice,
     LightningMeasurements,
     LightningStateVector,
     device_name,
+    get_hermitian_matrix,
+    get_random_normalized_state,
+    get_sparse_hermitian_matrix,
     validate_counts,
     validate_others,
     validate_samples,
 )
 from pennylane.devices import DefaultQubit
 from pennylane.measurements import VarianceMP
-from scipy.sparse import csr_matrix, random_array
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
-
-
-def get_hermitian_matrix(n):
-    np.random.seed(GLOBAL_SEED)
-    H = np.random.rand(n, n) + 1.0j * np.random.rand(n, n)
-    return H + np.conj(H).T
-
-
-def get_sparse_hermitian_matrix(n):
-    H = random_array((n, n), density=0.15)
-    H = H + 1.0j * random_array((n, n), density=0.15)
-    return csr_matrix(H + H.conj().T)
 
 
 class CustomStateMeasurement(qml.measurements.StateMeasurement):
@@ -530,8 +519,8 @@ class TestSparseMeasurements:
         observable = observable(get_sparse_hermitian_matrix(2**n_qubits), wires=range(n_qubits))
 
         n_layers = 1
-        np.random.seed(seed)
-        weights = np.random.rand(n_layers, n_qubits, 3)
+        rng = np.random.default_rng(seed)
+        weights = rng.random((n_layers, n_qubits, 3))
         ops = [qml.Hadamard(i) for i in range(n_qubits)] + [
             qml.StronglyEntanglingLayers(weights, wires=range(n_qubits))
         ]
@@ -573,8 +562,8 @@ class TestSparseMeasurements:
         obs1_ = obs1_(get_sparse_hermitian_matrix(2**4), wires=range(n_qubits))
 
         n_layers = 1
-        np.random.seed(seed)
-        weights = np.random.rand(n_layers, n_qubits, 3)
+        rng = np.random.default_rng(seed)
+        weights = rng.random((n_layers, n_qubits, 3))
         ops = [qml.Hadamard(i) for i in range(n_qubits)] + [
             qml.StronglyEntanglingLayers(weights, wires=range(n_qubits))
         ]
@@ -677,8 +666,8 @@ class TestMeasurements:
 
         n_qubits = 4
         n_layers = 1
-        np.random.seed(seed)
-        weights = np.random.rand(n_layers, n_qubits, 3)
+        rng = np.random.default_rng(seed)
+        weights = rng.random((n_layers, n_qubits, 3))
         ops = [qml.Hadamard(i) for i in range(n_qubits)]
         if device_name != "lightning.tensor":
             ops += [qml.StronglyEntanglingLayers(weights, wires=range(n_qubits))]
@@ -782,8 +771,8 @@ class TestMeasurements:
 
         n_qubits = 4
         n_layers = 1
-        np.random.seed(seed)
-        weights = np.random.rand(n_layers, n_qubits, 3)
+        rng = np.random.default_rng(seed)
+        weights = rng.random((n_layers, n_qubits, 3))
         ops = [qml.Hadamard(i) for i in range(n_qubits)]
         if device_name != "lightning.tensor":
             ops += [qml.StronglyEntanglingLayers(weights, wires=range(n_qubits))]
@@ -934,8 +923,8 @@ class TestMeasurements:
             pytest.skip("qml.expval, qml.var do not take wire arguments.")
         n_qubits = 4
         n_layers = 1
-        np.random.seed(seed)
-        weights = np.random.rand(n_layers, n_qubits, 3)
+        rng = np.random.default_rng(seed)
+        weights = rng.random((n_layers, n_qubits, 3))
         ops = [qml.Hadamard(i) for i in range(n_qubits)]
         ops += [qml.StronglyEntanglingLayers(weights, wires=range(n_qubits))]
         measurements = (
@@ -1017,7 +1006,7 @@ class TestControlledOps:
         """Test that multi-controlled gates are correctly applied to a state"""
         threshold = 250 if device_name != "lightning.tensor" else 5
         num_wires = max(operation.num_wires, 1) if operation.num_wires else 1
-        np.random.seed(seed)
+        rng = np.random.default_rng(seed)
 
         if device_name not in ["lightning.qubit", "lightning.gpu"] and operation == qml.PCPhase:
             pytest.skip("PCPhase only supported on lightning.qubit and lightning.gpu.")
@@ -1030,7 +1019,7 @@ class TestControlledOps:
             for all_wires in wire_lists:
                 target_wires = all_wires[0:num_wires]
                 control_wires = all_wires[num_wires:]
-                init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
+                init_state = rng.random(2**n_qubits) + 1.0j * rng.random(2**n_qubits)
                 init_state /= np.linalg.norm(init_state)
 
                 if operation.num_params == 0:
@@ -1099,12 +1088,9 @@ class TestControlledOps:
 
         assert np.allclose(result, expected, tol)
 
-    @pytest.mark.local_salt(42)
     @pytest.mark.parametrize("control_wires", range(4))
     @pytest.mark.parametrize("target_wires", range(4))
-    def test_cnot_controlled_qubit_unitary(
-        self, control_wires, target_wires, tol, lightning_sv, seed
-    ):
+    def test_cnot_controlled_qubit_unitary(self, control_wires, target_wires, tol, lightning_sv):
         """Test that ControlledQubitUnitary is correctly applied to a state"""
         if control_wires == target_wires:
             return
@@ -1113,9 +1099,7 @@ class TestControlledOps:
         target_wires = [target_wires]
         wires = control_wires + target_wires
         U = qml.matrix(qml.PauliX(target_wires))
-        np.random.seed(seed)
-        init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
-        init_state /= np.linalg.norm(init_state)
+        init_state = get_random_normalized_state(2**n_qubits)
 
         tape = qml.tape.QuantumScript(
             [
@@ -1143,15 +1127,13 @@ class TestControlledOps:
         else:
             assert np.allclose(result, expected, tol)
 
-    @pytest.mark.local_salt(42)
     @pytest.mark.parametrize("control_value", [False, True])
     @pytest.mark.parametrize("n_qubits", list(range(2, 8)))
-    def test_controlled_globalphase(self, n_qubits, control_value, tol, lightning_sv, seed):
+    def test_controlled_globalphase(self, n_qubits, control_value, tol, lightning_sv):
         """Test that multi-controlled gates are correctly applied to a state"""
         threshold = 250 if device_name != "lightning.tensor" else 5
         operation = qml.GlobalPhase
         num_wires = max(operation.num_wires, 1) if operation.num_wires else 1
-        np.random.seed(seed)
 
         for n_wires in range(num_wires + 1, num_wires + 4):
             wire_lists = list(itertools.permutations(range(0, n_qubits), n_wires))
@@ -1161,8 +1143,7 @@ class TestControlledOps:
             for all_wires in wire_lists:
                 target_wires = all_wires[0:num_wires]
                 control_wires = all_wires[num_wires:]
-                init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
-                init_state /= np.linalg.norm(init_state)
+                init_state = get_random_normalized_state(2**n_qubits)
 
                 tape = qml.tape.QuantumScript(
                     [
