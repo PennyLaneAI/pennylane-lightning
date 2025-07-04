@@ -36,8 +36,6 @@ if device_name == "lightning.kokkos":
         HermitianObsC128,
         NamedObsC64,
         NamedObsC128,
-        SparseHamiltonianC64,
-        SparseHamiltonianC128,
         TensorProdObsC64,
         TensorProdObsC128,
     )
@@ -49,8 +47,6 @@ elif device_name == "lightning.gpu":
         HermitianObsC128,
         NamedObsC64,
         NamedObsC128,
-        SparseHamiltonianC64,
-        SparseHamiltonianC128,
         TensorProdObsC64,
         TensorProdObsC128,
     )
@@ -67,8 +63,6 @@ else:
         HermitianObsC128,
         NamedObsC64,
         NamedObsC128,
-        SparseHamiltonianC64,
-        SparseHamiltonianC128,
         TensorProdObsC64,
         TensorProdObsC128,
     )
@@ -614,6 +608,8 @@ class TestSerializeOps:
             qml.RY(0.6, wires=1)
             qml.CNOT(wires=[0, 1])
 
+        mat = np.array([])
+
         s = QuantumScriptSerializer(device_name).serialize_ops(tape, wires_map)
         s_expected = (
             (
@@ -621,7 +617,7 @@ class TestSerializeOps:
                 [np.array([0.4]), np.array([0.6]), []],
                 [[0], [1], [0, 1]],
                 [False, False, False],
-                [[], [], []],
+                [mat, mat, mat],
                 [[], [], []],
                 [[], [], []],
             ),
@@ -637,6 +633,7 @@ class TestSerializeOps:
             qml.Rot(0.1, 0.2, 0.3, wires=0)
 
         tape = qml.tape.QuantumScript.from_queue(q)
+        mat = np.array([])
         s = QuantumScriptSerializer(device_name).serialize_ops(tape, wires_map)
         s_expected = (
             (
@@ -644,7 +641,7 @@ class TestSerializeOps:
                 [np.array([0.1]), np.array([0.2]), np.array([0.3])],
                 [[0], [0], [0]],
                 [False, False, False],
-                [[], [], []],
+                [mat, mat, mat],
                 [[], [], []],
                 [[], [], []],
             ),
@@ -661,6 +658,7 @@ class TestSerializeOps:
             qml.RY(0.6, wires=1)
             qml.ctrl(ops, [4, 5])
 
+        mat = np.array([])
         s = QuantumScriptSerializer(device_name).serialize_ops(tape, wires_map)
         s_expected = (
             (
@@ -668,7 +666,7 @@ class TestSerializeOps:
                 [np.array([0.4]), np.array([0.6]), [0.0]],
                 [[0], [1], list(ops.wires)],
                 [False, False, False],
-                [[], [], [qml.matrix(ops)]],
+                [mat, mat, np.array([qml.matrix(ops)])],
                 [[], [], [4, 5]],
             ),
             False,
@@ -689,6 +687,7 @@ class TestSerializeOps:
             qml.RY(0.6, wires=1)
             qml.ctrl(qml.PauliX(wires=0), [1, 2, 3], control_values=[True, False, False])
 
+        mat = np.array([])
         s = QuantumScriptSerializer(device_name).serialize_ops(tape, wires_map)
         s_expected = (
             (
@@ -696,7 +695,7 @@ class TestSerializeOps:
                 [np.array([0.4]), np.array([0.6]), []],
                 [[0], [1], [0]],
                 [False, False, False],
-                [[], [], []],
+                [mat, mat, mat],
                 [[], [], [1, 2, 3]],
                 [[], [], [True, False, False]],
             ),
@@ -715,6 +714,7 @@ class TestSerializeOps:
             qml.RY(0.6, wires=1)
             qml.CNOT(wires=[0, 1])
 
+        mat = np.array([])
         s = QuantumScriptSerializer(device_name).serialize_ops(tape, wires_map)
         s_expected = (
             (
@@ -722,7 +722,7 @@ class TestSerializeOps:
                 [[0.4], [0.6], []],
                 [[0], [1], [0, 1]],
                 [False, False, False],
-                [[], [], []],
+                [mat, mat, mat],
                 [[], [], []],
                 [[], [], []],
             ),
@@ -763,6 +763,7 @@ class TestSerializeOps:
             qml.adjoint(qml.SingleExcitationMinus(0.5, wires=["a", 3.2]), lazy=False)
             qml.adjoint(qml.SingleExcitationMinus(0.5, wires=["a", 3.2]), lazy=True)
 
+        mat = np.array([])
         s = QuantumScriptSerializer(device_name).serialize_ops(tape, wires_dict)
         s_expected = (
             (
@@ -778,7 +779,7 @@ class TestSerializeOps:
                 [[0.4], [0.6], [], [0.5], [0.4], [-0.5], [0.5]],
                 [[0], [1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1]],
                 [False, False, False, False, False, False, True],
-                [[], [], [], [], [], [], []],
+                [mat, mat, mat, mat, mat, mat, mat],
                 [[], [], [], [], [], [], []],
                 [[], [], [], [], [], [], []],
             ),
@@ -800,6 +801,8 @@ class TestSerializeOps:
             qml.adjoint(qml.ctrl(ops, [4, 5]))
             qml.adjoint(qml.ctrl(qml.adjoint(ops), [4, 5]))
 
+        mat = np.array([])
+
         s = QuantumScriptSerializer(device_name).serialize_ops(tape, wires_map)
         s_expected = (
             (
@@ -817,14 +820,14 @@ class TestSerializeOps:
                 [[0], [0], [0], [0], [0], list(ops.wires), list(ops.wires), list(ops.wires)],
                 [False, False, True, True, False, False, True, True],
                 [
-                    [],
-                    [],
-                    [],
-                    [],
-                    [],
-                    [qml.matrix(qml.adjoint(ops))],
-                    [qml.matrix(ops)],
-                    [qml.matrix(qml.adjoint(ops))],
+                    mat,
+                    mat,
+                    mat,
+                    mat,
+                    mat,
+                    np.array([qml.matrix(qml.adjoint(ops))]),
+                    np.array([qml.matrix(ops)]),
+                    np.array([qml.matrix(qml.adjoint(ops))]),
                 ],
                 [[2, 3], [2, 3], [2, 3], [2, 3], [2, 3], [4, 5], [4, 5], [4, 5]],
             ),
@@ -857,10 +860,10 @@ class TestSerializeOps:
                 [list(op.wires), list(op.wires), list(op.wires), list(op.wires)],
                 [False, True, False, True],
                 [
-                    [qml.matrix(op)],
-                    [qml.matrix(op)],
-                    [qml.matrix(qml.adjoint(op))],
-                    [qml.matrix(qml.adjoint(op))],
+                    np.array([qml.matrix(op)]),
+                    np.array([qml.matrix(op)]),
+                    np.array([qml.matrix(qml.adjoint(op))]),
+                    np.array([qml.matrix(qml.adjoint(op))]),
                 ],
                 [[4, 5], [4, 5], [4, 5], [4, 5]],
             ),
@@ -894,7 +897,7 @@ class TestSerializeOps:
                 [[-0.5], [0.5], [0.0]],
                 [[0, 1], [0, 1], list(range(4))],
                 [False, True, True],
-                [[], [], [mat]],
+                [np.array([]), np.array([]), np.array([mat])],
                 [[], [], []],
                 [[], [], []],
             ),
@@ -926,6 +929,7 @@ class TestSerializeOps:
         s = QuantumScriptSerializer(device_name).serialize_ops(tape, wires_map)
 
         dtype = np.complex64 if C else np.complex128
+        mat = np.array([], dtype=dtype)
         s_expected = (
             (
                 [
@@ -942,14 +946,14 @@ class TestSerializeOps:
                 [[0], [1], [0, 1], [0, 1], [0, 1, 2], [3, 2, 1, 0], [0, 1, 2, 3], [0, 1, 2, 3]],
                 [False, False, False, False, False, False, False, False],
                 [
-                    [],
-                    [],
-                    [],
-                    qml.matrix(qml.QubitUnitary(np.eye(4, dtype=dtype), wires=[0, 1])),
-                    qml.matrix(qml.templates.QFT(wires=[0, 1, 2])),
-                    [],
-                    [],
-                    [],
+                    mat,
+                    mat,
+                    mat,
+                    np.array([qml.matrix(qml.QubitUnitary(np.eye(4, dtype=dtype), wires=[0, 1]))]),
+                    np.array([qml.matrix(qml.templates.QFT(wires=[0, 1, 2]))]),
+                    mat,
+                    mat,
+                    mat,
                 ],
             ),
             False,
