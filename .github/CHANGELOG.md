@@ -2,13 +2,13 @@
 
 <h3>New features since last release</h3>
 
+- LK-MPI [FIXME]
+  [(#1114)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1114)
+
 - Mid-circuit measurements using the tree-traversal algorithm are now supported
   in the `lightning.qubit`, `lightning.kokkos` and `lightning.gpu` devices,
   providing both significant memory savings and sampling efficiency!
   [(#1166)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1166)
-
-- LK-MPI [FIXME]
-  [(#1114)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1114)
 
 <h3>Improvements 🛠</h3>
 
