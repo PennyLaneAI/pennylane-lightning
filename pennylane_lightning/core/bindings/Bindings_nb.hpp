@@ -158,15 +158,15 @@ void applyMatrix(
 template <class StateVectorT>
 void applyControlledMatrix(
     StateVectorT &st,
-    const py::array_t<std::complex<typename StateVectorT::PrecisionT>,
-                      py::array::c_style | py::array::forcecast> &matrix,
+    const nb::ndarray<const std::complex<typename StateVectorT::PrecisionT>,
+                      nb::c_contig> &matrix,
     const std::vector<std::size_t> &controlled_wires,
     const std::vector<bool> &controlled_values,
     const std::vector<std::size_t> &wires, bool inverse = false) {
     using ComplexT = typename StateVectorT::ComplexT;
-    st.applyControlledMatrix(
-        static_cast<const ComplexT *>(matrix.request().ptr), controlled_wires,
-        controlled_values, wires, inverse);
+    st.applyControlledMatrix(static_cast<const ComplexT *>(matrix.data()),
+                             controlled_wires, controlled_values, wires,
+                             inverse);
 }
 /**
  * @brief Register StateVector class
@@ -761,9 +761,8 @@ void registerBackendAgnosticAlgorithms(nb::module_ &m) {
  */
 template <class StateVectorT, class PyClass>
 void registerBackendAgnosticStateVectorMethods(PyClass &pyclass) {
-    // using PrecisionT = typename StateVectorT::PrecisionT;
-    // using ComplexT = typename StateVectorT::ComplexT;
-    // using ParamT = PrecisionT;
+    using PrecisionT = typename StateVectorT::PrecisionT;
+    using ComplexT = typename StateVectorT::ComplexT;
 
     // Initialize with number of qubits
     pyclass.def(nb::init<size_t>());
@@ -771,6 +770,45 @@ void registerBackendAgnosticStateVectorMethods(PyClass &pyclass) {
     pyclass.def("__len__", &StateVectorT::getLength,
                 "Get the size of the statevector.");
     pyclass.def("size", &StateVectorT::getLength);
+
+    // Reset state vector - common across all backends
+    pyclass.def("resetStateVector", &StateVectorT::resetStateVector,
+                "Reset the state vector to |0...0>.");
+
+    // Set basis state - with conditional for async parameter (LGPU)
+    pyclass.def(
+        "setBasisState",
+        [](StateVectorT &sv, const std::vector<std::size_t> &state,
+           const std::vector<std::size_t> &wires, const bool async) {
+            if constexpr (requires { sv.setBasisState(state, wires, async); }) {
+                sv.setBasisState(state, wires, async);
+            } else {
+                sv.setBasisState(state, wires);
+            }
+        },
+        "Set the state vector to a computational basis state.",
+        nb::arg("state") = nullptr, nb::arg("wires") = nullptr,
+        nb::arg("async") = false);
+
+    // Set state vector - with conditional for async and size parameters (LGPU)
+    pyclass.def(
+        "setStateVector",
+        [](StateVectorT &sv,
+           const nb::ndarray<const ComplexT, nb::c_contig> &state,
+           const std::vector<std::size_t> &wires, const bool async) {
+            const ComplexT *data_ptr = state.data();
+            std::size_t size = state.shape(0);
+
+            if constexpr (requires {
+                              sv.setStateVector(data_ptr, size, wires, async);
+                          }) {
+                sv.setStateVector(data_ptr, size, wires, async);
+            } else {
+                sv.setStateVector(data_ptr, wires);
+            }
+        },
+        "Set the state vector to the data contained in 'state'.",
+        nb::arg("state"), nb::arg("wires"), nb::arg("async") = false);
 }
 
 /**

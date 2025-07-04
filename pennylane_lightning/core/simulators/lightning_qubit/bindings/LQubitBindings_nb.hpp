@@ -236,31 +236,9 @@ void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
     pyclass.def("kernel_map", &svKernelMap<StateVectorT>,
                 "Get internal kernels for operations");
 
-    pyclass.def("resetStateVector", &StateVectorT::resetStateVector,
-                "Reset the state vector to |0...0>.");
-
     pyclass.def("updateData", &updateStateVectorData<StateVectorT>,
                 "Update the state vector data from an array.",
                 nb::arg("state"));
-    pyclass.def(
-        "setBasisState",
-        [](StateVectorT &sv, const std::vector<std::size_t> &state,
-           const std::vector<std::size_t> &wires) {
-            sv.setBasisState(state, wires);
-        },
-        "Set the state vector to a basis state.", nb::arg("state"),
-        nb::arg("wires"));
-
-    pyclass.def(
-        "setStateVector",
-        [](StateVectorT &sv, const nb::ndarray<ComplexT, nb::c_contig> &state,
-           const std::vector<std::size_t> &wires) {
-            // Get data pointer directly from ndarray
-            const ComplexT *data_ptr = state.data();
-            sv.setStateVector(data_ptr, wires);
-        },
-        "Set the state vector to the data contained in `state`.",
-        nb::arg("state"), nb::arg("wires"));
 
     pyclass.def(
         "getState",
