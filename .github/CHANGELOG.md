@@ -59,6 +59,9 @@
 - Fix `applyMultiRZ` for `lightning.kokkos` device to use Kokkos function instead of lambda.
   [(#1194)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1194)
   
+- Enable `AmplitudeEmbedding` Python tests for `lightning.kokkos` and `lightning.gpu` devices.
+  [(#1192)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1192)
+  
 - Update docker build CI for stable version to use v0.41.1.
   [(#1188)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1188)
 
