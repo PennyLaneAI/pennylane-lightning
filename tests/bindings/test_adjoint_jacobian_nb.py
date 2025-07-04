@@ -116,9 +116,9 @@ class TestAdjointJacobianNanobind:
             [[self.param_value]],  # Parameters
             [[0]],  # Wires
             [False],  # Inverses
+            [np.array([])],  # Matrices
             [[]],  # Control wires
             [[]],  # Control values
-            [[]],  # Extra parameters
         )
 
         # Apply the operations to the state vector
@@ -336,3 +336,43 @@ class TestAdjointJacobianNanobind:
         expected = -np.sin(param_value)
 
         assert np.isclose(result[0], expected, atol=1e-7)
+
+    @pytest.mark.parametrize("precision", ["64", "128"])
+    def test_create_ops_list_function(self, current_nanobind_module, precision):
+        """Test the create_ops_list function has the same signature as pybind11 version."""
+        module = current_nanobind_module
+
+        # Get the create_ops_list function
+        create_ops_list_func_name = f"create_ops_listC{precision}"
+        if not hasattr(module.algorithms, create_ops_list_func_name):
+            pytest.skip(f"Function {create_ops_list_func_name} not available in module")
+
+        create_ops_list = getattr(module.algorithms, create_ops_list_func_name)
+
+        hermitian_matrix = np.array(
+            [[1, 0], [0, -1]], dtype=np.complex64 if precision == "64" else np.complex128
+        )
+
+        # Create simple test data
+        op_names = ["RX"]
+        op_params = [[0.5]]
+        op_wires = [[0]]
+        op_inverses = [False]
+        op_matrices = [hermitian_matrix]
+        op_controlled_wires = [[]]
+        op_controlled_values = [[]]
+
+        # Test that the function works with the expected signature
+        ops_struct = create_ops_list(
+            op_names,
+            op_params,
+            op_wires,
+            op_inverses,
+            op_matrices,  # This is the new argument
+            op_controlled_wires,
+            op_controlled_values,
+        )
+
+        # Check that the result is the expected type
+        ops_struct_class_name = f"OpsStructC{precision}"
+        assert ops_struct.__class__.__name__ == ops_struct_class_name

@@ -4,6 +4,9 @@
 
 <h3>Improvements 🛠</h3>
 
+- Added comprehensive tests for Python bindings.
+  [(#1198)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1198)
+
 - Lightning devices accept a `seed` argument to enable deterministic shots measurements.
   [(#1171)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1171)
 
@@ -52,6 +55,9 @@
   [(#1175)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1175)
 
 <h3>Internal changes ⚙️</h3>
+
+- Added Nanobind-based Python bindings for Lightning Qubit as an alternative to PyBind11.
+  [(#1198)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1198)
 
 - Update tests with `device(..., shots=...)` to use `qml.set_shots` to ensure compatibility with the latest version of PennyLane.
   [(#1173)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1173)
