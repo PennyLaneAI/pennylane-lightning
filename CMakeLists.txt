@@ -108,6 +108,23 @@ if(ENABLE_PYTHON)
     
     message(STATUS "Using Python executable: ${Python_EXECUTABLE}")
     
+    # Get Python include directory explicitly
+    execute_process(
+        COMMAND ${Python_EXECUTABLE} -c "import sysconfig; print(sysconfig.get_path('include'))"
+        OUTPUT_VARIABLE PYTHON_INCLUDE_DIR
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        RESULT_VARIABLE PY_INCLUDE_RESULT
+    )
+    
+    if(PY_INCLUDE_RESULT EQUAL 0 AND PYTHON_INCLUDE_DIR)
+        message(STATUS "Setting Python include directory: ${PYTHON_INCLUDE_DIR}")
+        set(Python_INCLUDE_DIRS ${PYTHON_INCLUDE_DIR})
+        set(_Python_INCLUDE_DIR ${PYTHON_INCLUDE_DIR})
+        include_directories(${PYTHON_INCLUDE_DIR})
+    else()
+        message(WARNING "Failed to get Python include directory")
+    endif()
+    
     # Ensure nanobind can find Python extension suffix - try multiple methods
     execute_process(
         COMMAND ${Python_EXECUTABLE} -c "import sysconfig; print(sysconfig.get_config_var('EXT_SUFFIX') or '.so')"
@@ -117,6 +134,7 @@ if(ENABLE_PYTHON)
     )
     
     if(NOT PY_RESULT EQUAL 0 OR NOT NANOBIND_EXT_SUFFIX)
+        message(WARNING "Failed to get Python extension suffix. Falling back to default '.so'")
         # Fallback method
         execute_process(
             COMMAND ${Python_EXECUTABLE} -c "import importlib.machinery; print(importlib.machinery.EXTENSION_SUFFIXES[0] if importlib.machinery.EXTENSION_SUFFIXES else '.so')"
@@ -124,6 +142,10 @@ if(ENABLE_PYTHON)
             OUTPUT_STRIP_TRAILING_WHITESPACE
             RESULT_VARIABLE PY_RESULT2
         )
+        if(NOT PY_RESULT2 EQUAL 0 OR NOT NANOBIND_EXT_SUFFIX)
+            message(FATAL_ERROR "Failed to get Python extension suffix")
+        endif()
+
     endif()
     
     message(STATUS "Setting NANOBIND_EXT_SUFFIX to: ${NANOBIND_EXT_SUFFIX}")
