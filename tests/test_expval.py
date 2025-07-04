@@ -21,7 +21,7 @@ import pennylane as qml
 import pytest
 from conftest import PHI, THETA, VARPHI
 from conftest import LightningDevice as ld
-from conftest import device_name, get_random_normalized_state, get_random_matrix
+from conftest import device_name, get_random_matrix, get_random_normalized_state
 
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)

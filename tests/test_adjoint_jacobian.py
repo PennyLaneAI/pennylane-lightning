@@ -20,12 +20,7 @@ import math
 import pennylane as qml
 import pytest
 from conftest import LightningDevice as ld
-from conftest import (
-    LightningException,
-    device_name,
-    get_random_normalized_state,
-    get_random_matrix,
-)
+from conftest import LightningException, device_name, get_random_matrix, get_random_normalized_state
 from pennylane import QNode
 from pennylane import numpy as np
 from pennylane import qchem, qnode

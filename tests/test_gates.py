@@ -22,7 +22,7 @@ import pennylane as qml
 import pytest
 from conftest import PHI, THETA
 from conftest import LightningDevice as ld
-from conftest import device_name, get_random_normalized_state, get_random_matrix
+from conftest import device_name, get_random_matrix, get_random_normalized_state
 from scipy.sparse import csr_matrix
 
 if not ld._CPP_BINARY_AVAILABLE:

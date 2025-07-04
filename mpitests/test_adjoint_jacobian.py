@@ -44,6 +44,7 @@ fixture_params = itertools.product(
     [True, False],
 )
 
+
 def create_random_init_state(numWires, c_dtype, seed_value=48):
     """Returns a random initial state of a certain type."""
     rng = np.random.default_rng(seed_value)
@@ -55,6 +56,7 @@ def create_random_init_state(numWires, c_dtype, seed_value=48):
         r_dtype
     )
     return init_state / np.linalg.norm(init_state)
+
 
 @pytest.fixture(name="dev", params=fixture_params)
 def fixture_dev(request):
