@@ -25,23 +25,9 @@ try:
         create_ops_listC64,
         create_ops_listC128,
     )
+except ImportError as ex:
+    warn(str(ex), UserWarning)
 
-    USING_NANOBIND = True
-except ImportError:
-    # Fall back to pybind11 version if nanobind version is not available
-    from pennylane_lightning.lightning_qubit_ops.algorithms import (
-        AdjointJacobianC64,
-        AdjointJacobianC128,
-        create_ops_listC64,
-        create_ops_listC128,
-    )
-
-    USING_NANOBIND = False
-
-    warn(
-        "Using legacy pybind11 bindings. Consider upgrading to nanobind version for better performance.",
-        UserWarning,
-    )
 
 from os import getenv
 
