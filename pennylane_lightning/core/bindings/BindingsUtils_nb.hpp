@@ -84,29 +84,6 @@ createNumpyArrayFromVector(const std::vector<VectorT> &data, std::size_t rows,
 }
 
 /**
- * @brief Convert complex matrices from nanobind ndarray to std::vector
- *
- * @tparam ComplexT Complex type to convert to
- * @param matrices Vector of ndarrays containing matrices
- * @return std::vector<std::vector<ComplexT>> Converted matrices
- */
-template <typename ComplexT>
-std::vector<std::vector<ComplexT>> convertMatrices(
-    const std::vector<nb::ndarray<const ComplexT, nb::c_contig>> &matrices) {
-    std::vector<std::vector<ComplexT>> conv_matrices(matrices.size());
-
-    for (std::size_t i = 0; i < matrices.size(); i++) {
-        if (matrices[i].size() > 0) {
-            const auto *m_ptr = matrices[i].data();
-            const auto m_size = matrices[i].size();
-            conv_matrices[i] = std::vector<ComplexT>(m_ptr, m_ptr + m_size);
-        }
-    }
-
-    return conv_matrices;
-}
-
-/**
  * @brief Generate string representation of operations data
  *
  * @tparam OpsDataT Type of operations data
