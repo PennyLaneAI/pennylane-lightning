@@ -20,7 +20,7 @@ import itertools
 import numpy as np
 import pennylane as qml
 import pytest
-from conftest import PHI, THETA, VARPHI, LightningDevice, device_name
+from conftest import PHI, THETA, VARPHI, LightningDevice, device_name, get_hermitian_matrix
 from pennylane.devices import DefaultQubit
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-access
@@ -200,11 +200,7 @@ class TestExpval:
         n_qubits = 8
         dev = LightningDevice(wires=n_qubits, c_dtype=dtype)
 
-        rng = np.random.default_rng(seed=seed)
-        mat = rng.random((2**n_op_wires, 2**n_op_wires)) + 1j * rng.random(
-            (2**n_op_wires, 2**n_op_wires)
-        )
-        mat = mat + mat.conj().T
+        mat = get_hermitian_matrix(2**n_op_wires)
 
         tape = qml.tape.QuantumScript(
             [

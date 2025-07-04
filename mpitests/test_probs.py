@@ -17,7 +17,7 @@ import pennylane as qml
 import pytest
 from conftest import device_name
 
-# pylint: disable=missing-function-docstring,unnecessary-comprehension,too-many-arguments,wrong-import-order,unused-variable,c-extension-no-member
+# pylint: disable=missing-function-docstring,unnecessary-comprehension,too-many-arguments,too-many-positional-arguments,wrong-import-order,unused-variable,c-extension-no-member
 from mpi4py import MPI
 
 numQubits = 8

@@ -14,7 +14,7 @@
 """
 Unit tests for apply on :mod:`pennylane_lightning` MPI-enabled devices.
 """
-# pylint: disable=protected-access,cell-var-from-loop,c-extension-no-member
+# pylint: disable=protected-access,cell-var-from-loop,c-extension-no-member,too-many-positional-arguments
 import itertools
 from functools import partial
 
@@ -47,7 +47,7 @@ def create_random_init_state(numWires, c_dtype, seed=None):
     return init_state / np.linalg.norm(init_state)
 
 
-def apply_operation_gates_qnode_param(tol, dev_mpi, operation, par, Wires, seed):
+def apply_operation_gates_qnode_param(tol, dev_mpi, operation, par, Wires, seed=None):
     """Wrapper applying a parametric gate with QNode function."""
     num_wires = numQubits
     comm = MPI.COMM_WORLD
@@ -81,7 +81,7 @@ def apply_operation_gates_qnode_param(tol, dev_mpi, operation, par, Wires, seed)
     assert np.allclose(local_state_vector, local_expected_output_cpu, atol=tol, rtol=0)
 
 
-def apply_operation_gates_qnode_nonparam(tol, dev_mpi, operation, Wires, seed):
+def apply_operation_gates_qnode_nonparam(tol, dev_mpi, operation, Wires, seed=None):
     """Wrapper applying a non-parametric gate with QNode function."""
     num_wires = numQubits
     comm = MPI.COMM_WORLD
