@@ -56,6 +56,9 @@
 - Update tests with `device(..., shots=...)` to use `qml.set_shots` to ensure compatibility with the latest version of PennyLane.
   [(#1173)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1173)
   
+- Enable `AmplitudeEmbedding` Python tests for `lightning.kokkos` and `lightning.gpu` devices.
+  [(#1192)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1192)
+  
 - Update docker build CI for stable version to use v0.41.1.
   [(#1188)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1188)
 
