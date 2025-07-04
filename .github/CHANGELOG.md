@@ -4,6 +4,9 @@
 
 <h3>Improvements 🛠</h3>
 
+- Added comprehensive tests for Python bindings.
+  [(#1198)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1198)
+
 - Lightning devices accept a `seed` argument to enable deterministic shots measurements.
   [(#1171)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1171)
 
@@ -52,6 +55,9 @@
   [(#1175)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1175)
 
 <h3>Internal changes ⚙️</h3>
+
+- Added Nanobind-based Python bindings for Lightning Qubit as an alternative to PyBind11.
+  [(#1198)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1198)
   
 - Introduce Nanobind as a new framework for Python bindings, and enhance modularity and performance of binding code. 
   This includes significant improvements to the build system and a first round of codebase simplification. 
