@@ -49,7 +49,7 @@ except TypeError:
     # To support toml and tomli APIs
     project_name = toml.load("pyproject.toml")['project']['name']
 
-backend = project_name.replace("PennyLane_", "").lower()
+backend = project_name.replace("pennylane_", "").lower()
 if (backend == "lightning"): backend = "lightning_qubit"
 
 class CMakeExtension(Extension):

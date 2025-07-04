@@ -223,7 +223,6 @@ isApproxEqual(const Data_t *data1, const std::size_t length1,
               typename Data_t::value_type eps =
                   std::numeric_limits<typename Data_t::value_type>::epsilon() *
                   100) {
-
     if (data1 == data2) {
         return true;
     }

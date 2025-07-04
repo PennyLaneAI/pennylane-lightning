@@ -199,7 +199,7 @@ class LightningKokkos(LightningBase):
             a request to seed from numpy's global random number generator.
             The default, ``seed="global"`` pulls a seed from NumPy's global generator. ``seed=None``
             will pull a seed from the OS entropy.
-        sync (bool): immediately sync with host-sv after applying operations
+        mpi  (bool): Use MPI to distribute statevector across multiple processes.
         kokkos_args (InitializationSettings): binding for Kokkos::InitializationSettings
             (threading parameters).
     """
@@ -229,6 +229,7 @@ class LightningKokkos(LightningBase):
         batch_obs: bool = False,
         seed: Union[str, None, int, ArrayLike, SeedSequence, BitGenerator, Generator] = "global",
         # Kokkos arguments
+        mpi: bool = False,
         kokkos_args=None,
     ):
         if not self._CPP_BINARY_AVAILABLE:
@@ -249,8 +250,20 @@ class LightningKokkos(LightningBase):
         # Set the attributes to call the Lightning classes
         self._set_lightning_classes()
 
-        self._statevector = None
-        self._sv_init_kwargs = {"kokkos_args": kokkos_args}
+        self._mpi = mpi
+        if mpi:
+            if wires is None:
+                raise DeviceError("Lightning-Kokkos-MPI does not support dynamic wires allocation.")
+            self._statevector = self.LightningStateVector(
+                num_wires=len(self.wires),
+                dtype=self.c_dtype,
+                kokkos_args=kokkos_args,
+                mpi=True,
+                rng=self._rng,
+            )
+        else:
+            self._statevector = None
+            self._sv_init_kwargs = {"kokkos_args": kokkos_args}
 
     @property
     def name(self):
