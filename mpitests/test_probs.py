@@ -15,25 +15,12 @@ Unit tests for probs on :mod:`pennylane_lightning` MPI-enabled devices.
 import numpy as np
 import pennylane as qml
 import pytest
-from conftest import device_name
+from conftest import create_random_init_state, device_name
 
 # pylint: disable=missing-function-docstring,unnecessary-comprehension,too-many-arguments,wrong-import-order,unused-variable,c-extension-no-member
 from mpi4py import MPI
 
 numQubits = 8
-
-
-def create_random_init_state(numWires, c_dtype, seed_value=48):
-    """Returns a random initial state of a certain type."""
-    rng = np.random.default_rng(seed_value)
-
-    r_dtype = np.float64 if c_dtype == np.complex128 else np.float32
-
-    num_elements = 2**numWires
-    init_state = rng.random(num_elements).astype(r_dtype) + 1j * rng.random(num_elements).astype(
-        r_dtype
-    )
-    return init_state / np.linalg.norm(init_state)
 
 
 def apply_probs_nonparam(tol, operation, GateWires, Wires, c_dtype):

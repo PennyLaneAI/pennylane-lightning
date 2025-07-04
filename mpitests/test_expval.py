@@ -19,23 +19,10 @@ Unit tests for expval on :mod:`pennylane_lightning` MPI-enabled devices.
 import numpy as np
 import pennylane as qml
 import pytest
-from conftest import PHI, THETA, VARPHI, device_name
+from conftest import PHI, THETA, VARPHI, create_random_init_state, device_name
 from mpi4py import MPI
 
 numQubits = 8
-
-
-def create_random_init_state(numWires, c_dtype, seed_value=48):
-    """Returns a random initial state of a certain type."""
-    rng = np.random.default_rng(seed_value)
-
-    r_dtype = np.float64 if c_dtype == np.complex128 else np.float32
-
-    num_elements = 2**numWires
-    init_state = rng.random(num_elements).astype(r_dtype) + 1j * rng.random(num_elements).astype(
-        r_dtype
-    )
-    return init_state / np.linalg.norm(init_state)
 
 
 def apply_operation_gates_qnode_param(tol, dev_mpi, operation, par, Wires):

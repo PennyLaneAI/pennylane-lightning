@@ -21,7 +21,7 @@ from functools import partial
 import numpy as np
 import pennylane as qml
 import pytest
-from conftest import TOL_STOCHASTIC, device_name, fixture_params
+from conftest import TOL_STOCHASTIC, create_random_init_state, device_name, fixture_params
 from mpi4py import MPI
 
 numQubits = 8
@@ -33,19 +33,6 @@ fixture_params = itertools.product(
     [np.complex64, np.complex128],
     [True, False],
 )
-
-
-def create_random_init_state(numWires, c_dtype, seed_value=48):
-    """Returns a random initial state of a certain type."""
-    rng = np.random.default_rng(seed_value)
-
-    r_dtype = np.float64 if c_dtype == np.complex128 else np.float32
-
-    num_elements = 2**numWires
-    init_state = rng.random(num_elements).astype(r_dtype) + 1j * rng.random(num_elements).astype(
-        r_dtype
-    )
-    return init_state / np.linalg.norm(init_state)
 
 
 def apply_operation_gates_qnode_param(tol, dev_mpi, operation, par, Wires):
@@ -862,6 +849,7 @@ def circuit_ansatz(params, wires):
     qml.DoubleExcitation(params[25], wires=[wires[2], wires[0], wires[1], wires[3]])
 
 
+@pytest.mark.local_salt(42)
 @pytest.mark.parametrize(
     "returns",
     [
@@ -897,7 +885,7 @@ def circuit_ansatz(params, wires):
         (0.5 * qml.PauliZ(0) @ qml.PauliZ(2),),
     ],
 )
-def test_integration(returns):
+def test_integration(returns, seed):
     """Integration tests that compare to default.qubit for a large circuit containing parametrized
     operations"""
     num_wires = numQubits
@@ -909,7 +897,7 @@ def test_integration(returns):
         return qml.math.hstack([qml.expval(r) for r in returns])
 
     n_params = 30
-    rng = np.random.default_rng(1337)
+    rng = np.random.default_rng(seed)
     params = rng.random(n_params)
 
     qnode_mpi = qml.QNode(circuit, dev_mpi, diff_method="parameter-shift")
@@ -930,6 +918,7 @@ def test_integration(returns):
 custom_wires = ["alice", 3.14, -1, 0, "bob", "l", "m", "n"]
 
 
+@pytest.mark.local_salt(42)
 @pytest.mark.parametrize(
     "returns",
     [
@@ -942,7 +931,7 @@ custom_wires = ["alice", 3.14, -1, 0, "bob", "l", "m", "n"]
         qml.PauliY(custom_wires[0]) @ qml.PauliY(custom_wires[2]) @ qml.PauliY(custom_wires[3]),
     ],
 )
-def test_integration_custom_wires(returns):
+def test_integration_custom_wires(returns, seed):
     """Integration tests that compare to default.qubit for a large circuit containing parametrized
     operations and when using custom wire labels"""
     dev_lightning = qml.device("lightning.qubit", wires=custom_wires)
@@ -953,7 +942,7 @@ def test_integration_custom_wires(returns):
         return qml.expval(returns), qml.expval(qml.PauliY(custom_wires[1]))
 
     n_params = 30
-    rng = np.random.default_rng(1337)
+    rng = np.random.default_rng(seed)
     params = rng.random(n_params)
 
     qnode_mpi = qml.QNode(circuit, dev_mpi, diff_method="parameter-shift")

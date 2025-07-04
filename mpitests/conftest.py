@@ -16,6 +16,8 @@ Pytest configuration file for PennyLane-Lightning MPI test suite.
 """
 # pylint: disable=missing-function-docstring,wrong-import-order,unused-import
 
+import configparser
+import hashlib
 import itertools
 import os
 
@@ -141,3 +143,61 @@ def qubit_device(request):
         )
 
     return _device
+
+
+@pytest.fixture(autouse=True)
+def restore_global_seed():
+    original_state = np.random.get_state()
+    yield
+    np.random.set_state(original_state)
+
+
+@pytest.fixture
+def seed(request):
+    """An integer random number generator seed
+
+    This fixture overrides the ``seed`` fixture provided by pytest-rng, adding the flexibility
+    of locally getting a new seed for a test case by applying the ``local_salt`` marker. This is
+    useful when the seed from pytest-rng happens to be a bad seed that causes your test to fail.
+
+    .. code_block:: python
+
+        @pytest.mark.local_salt(42)
+        def test_something(seed):
+            ...
+
+    The value passed to ``local_salt`` needs to be an integer.
+
+    """
+
+    fixture_manager = request._fixturemanager  # pylint:disable=protected-access
+    fixture_defs = fixture_manager.getfixturedefs("seed", request.node)
+    original_fixture_def = fixture_defs[0]  # the original seed fixture provided by pytest-rng
+    original_seed = original_fixture_def.func(request)
+    marker = request.node.get_closest_marker("local_salt")
+    if marker and marker.args:
+        return original_seed + marker.args[0]
+    return original_seed
+
+
+# Extract _default_rng_seed from `rng_salt` in pytest.ini
+# which are used for generating random vectors/matrices in functions below
+config = configparser.ConfigParser()
+pytest_ini_path = os.path.join(os.path.dirname(__file__), "pytest.ini")
+read_files = config.read(pytest_ini_path)
+config.read("pytest.ini")
+rng_salt = config["pytest"]["rng_salt"]
+_default_rng_seed = int(hashlib.sha256(rng_salt.encode()).hexdigest(), 16)
+
+
+def create_random_init_state(numWires, c_dtype, seed=None):
+    """Returns a random normalized state of c_dtype with 2**numWires elements."""
+    seed = seed or _default_rng_seed
+    rng = np.random.default_rng(seed)
+    r_dtype = np.float64 if c_dtype == np.complex128 else np.float32
+
+    num_elements = 2**numWires
+    init_state = rng.random(num_elements).astype(r_dtype) + 1j * rng.random(num_elements).astype(
+        r_dtype
+    )
+    return init_state / np.linalg.norm(init_state)
