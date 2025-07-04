@@ -350,9 +350,9 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
             // Create a 2D NumPy array with shape (num_shots, num_wires)
             std::vector<std::size_t> shape = {num_shots, num_wires};
 
-            std::vector<ssize_t> strides = {
-                static_cast<ssize_t>(num_wires * sizeof(std::size_t)),
-                static_cast<ssize_t>(sizeof(std::size_t))};
+            std::vector<std::size_t> strides = {
+                static_cast<std::size_t>(num_wires * sizeof(std::size_t)),
+                static_cast<std::size_t>(sizeof(std::size_t))};
 
             return createNumpyArrayFromVector<std::size_t>(result, shape[0],
                                                            shape[1]);
@@ -370,9 +370,9 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
             // Create a 2D NumPy array with shape (num_shots, num_wires)
             std::vector<std::size_t> shape = {num_shots, num_wires};
 
-            std::vector<ssize_t> strides = {
-                static_cast<ssize_t>(num_wires * sizeof(std::size_t)),
-                static_cast<ssize_t>(sizeof(std::size_t))};
+            std::vector<std::size_t> strides = {
+                static_cast<std::size_t>(num_wires * sizeof(std::size_t)),
+                static_cast<std::size_t>(sizeof(std::size_t))};
 
             return createNumpyArrayFromVector<std::size_t>(result, shape[0],
                                                            shape[1]);
