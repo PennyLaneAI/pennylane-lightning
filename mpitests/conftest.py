@@ -16,8 +16,6 @@ Pytest configuration file for PennyLane-Lightning MPI test suite.
 """
 # pylint: disable=missing-function-docstring,wrong-import-order,unused-import
 
-import configparser
-import hashlib
 import itertools
 import os
 
