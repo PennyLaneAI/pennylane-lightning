@@ -22,18 +22,8 @@ try:
         StateVectorC128,
         allocate_aligned_array,
     )
-except ImportError:
-    # Fall back to pybind11 version if nanobind version is not available
-    from pennylane_lightning.lightning_qubit_ops import (
-        StateVectorC64,
-        StateVectorC128,
-        allocate_aligned_array,
-    )
-
-    warn(
-        "Using legacy pybind11 bindings. Consider upgrading to nanobind version for better performance.",
-        UserWarning,
-    )
+except ImportError as ex:
+    warn(str(ex), UserWarning)
 
 from typing import Union
 
