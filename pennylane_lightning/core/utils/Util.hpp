@@ -583,7 +583,8 @@ std::vector<T1> cast_vector(const std::vector<T0> &vec) {
  * @return bool True if the vectors are disjoint, false otherwise.
  */
 template <typename T = std::size_t>
-bool areVecsDisjoint(const std::vector<T> &v1, const std::vector<T> &v2) {
+inline bool areVecsDisjoint(const std::vector<T> &v1,
+                            const std::vector<T> &v2) {
     std::set<T> s0(v1.begin(), v1.end());
     for (const auto &element : v2) {
         if (s0.find(element) != s0.end()) {
@@ -591,6 +592,62 @@ bool areVecsDisjoint(const std::vector<T> &v1, const std::vector<T> &v2) {
         }
     }
     return true;
+}
+
+/**
+ * @brief Check if an element is in a vector.
+ * @tparam T Data type.
+ * @param vec Vector to check.
+ * @param element Element to check for.
+ *
+ * @return bool True if the element is in the vector, false otherwise.
+ */
+template <typename T>
+inline bool isElementInVector(const std::vector<T> &vec, const T &element) {
+    return std::any_of(vec.begin(), vec.end(), [&](const T &current_element) {
+        return current_element == element;
+    });
+}
+
+/**
+ * @brief Find an element in a vector.
+ * @tparam T Data type.
+ * @param vec Vector to check.
+ * @param element Element to find.
+ *
+ * @return std::vector<T>::const_iterator Iterator to the found element, or
+ * vec.end() if the element is not found.
+ */
+template <typename T>
+inline auto findElementInVector(const std::vector<T> &vec, const T &element) {
+    return std::find(vec.begin(), vec.end(), element);
+}
+
+/**
+ * @brief Get the index of an element in a vector.
+ * @tparam T Data type.
+ * @param vec Vector to check.
+ * @param element Element to find.
+ *
+ * @return std::size_t Index of the found element.
+ * @throws Error if the element is not found in the vector.
+ */
+template <typename T>
+inline std::size_t getElementIndexInVector(const std::vector<T> &vec,
+                                           const T &element) {
+    auto it = findElementInVector(vec, element);
+    if (it != vec.end()) {
+        return std::distance(vec.begin(), it);
+    } else {
+        PL_ABORT("Element not in vector");
+    }
+}
+
+inline std::size_t getRevWireIndex(const std::vector<std::size_t> &wires,
+                                   std::size_t element_index) {
+    PL_ABORT_IF(element_index >= wires.size(),
+                "Element index is out of bounds for the given wires.");
+    return wires.size() - 1 - element_index;
 }
 
 /**
