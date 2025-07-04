@@ -33,9 +33,7 @@ def create_random_init_state(numWires, c_dtype, seed_value=48):
     init_state = rng.random(num_elements).astype(r_dtype) + 1j * rng.random(num_elements).astype(
         r_dtype
     )
-    scale_sum = np.sqrt(np.sum(np.abs(init_state) ** 2)).astype(r_dtype)
-    init_state = init_state / scale_sum
-    return init_state
+    return init_state / np.linalg.norm(init_state)
 
 
 def apply_probs_nonparam(tol, operation, GateWires, Wires, c_dtype):

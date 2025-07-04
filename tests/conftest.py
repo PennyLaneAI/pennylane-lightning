@@ -347,7 +347,7 @@ def pytest_report_header():
 
 
 # Extract _default_rng_seed from `rng_salt` in pytest.ini
-# which are used for generating random numbers in tests.
+# which are used for generating random vectors/matrices in functions below
 config = configparser.ConfigParser()
 pytest_ini_path = os.path.join(os.path.dirname(__file__), "pytest.ini")
 read_files = config.read(pytest_ini_path)
@@ -356,7 +356,7 @@ rng_salt = config["pytest"]["rng_salt"]
 _default_rng_seed = int(hashlib.sha256(rng_salt.encode()).hexdigest(), 16)
 
 
-def get_unitary_matrix(n, seed=None):
+def get_random_matrix(n, seed=None):
     seed = seed or _default_rng_seed
     rng = np.random.default_rng(seed=seed)
     U = rng.random((n, n)) + 1.0j * rng.random((n, n))

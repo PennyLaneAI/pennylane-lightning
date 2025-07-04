@@ -21,7 +21,7 @@ import pennylane as qml
 import pytest
 from conftest import PHI, THETA, VARPHI
 from conftest import LightningDevice as ld
-from conftest import device_name, get_random_normalized_state, get_unitary_matrix
+from conftest import device_name, get_random_normalized_state, get_random_matrix
 
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
@@ -129,7 +129,7 @@ class TestExpval:
         dev = qubit_device(wires=n_qubits)
 
         m = 2**n_wires
-        U = get_unitary_matrix(m)
+        U = get_random_matrix(m)
         U = U + np.conj(U.T)
         wires = list(range((n_qubits - n_wires), (n_qubits - n_wires) + n_wires))
         perms = list(itertools.permutations(wires))

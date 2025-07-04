@@ -24,7 +24,7 @@ from conftest import (
     LightningException,
     device_name,
     get_random_normalized_state,
-    get_unitary_matrix,
+    get_random_matrix,
 )
 from pennylane import QNode
 from pennylane import numpy as np
@@ -1490,7 +1490,7 @@ def test_qubit_unitary(n_targets, seed):
     dev_def = qml.device("default.qubit", wires=n_wires)
 
     init_state = get_random_normalized_state(2**n_wires)
-    U = get_unitary_matrix(2**n_targets)
+    U = get_random_matrix(2**n_targets)
     U, _ = np.linalg.qr(U)
     U = np.array(U, requires_grad=False)
 
@@ -1532,7 +1532,7 @@ def test_diff_qubit_unitary(n_targets, seed):
 
     init_state = get_random_normalized_state(2**n_wires)
     init_state = np.array(init_state, requires_grad=False)
-    U = get_unitary_matrix(2**n_targets)
+    U = get_random_matrix(2**n_targets)
     U, _ = np.linalg.qr(U)
     U = np.array(U, requires_grad=False)
 

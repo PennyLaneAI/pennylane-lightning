@@ -22,7 +22,7 @@ import pennylane as qml
 import pytest
 from conftest import PHI, THETA
 from conftest import LightningDevice as ld
-from conftest import device_name, get_random_normalized_state, get_unitary_matrix
+from conftest import device_name, get_random_normalized_state, get_random_matrix
 from scipy.sparse import csr_matrix
 
 if not ld._CPP_BINARY_AVAILABLE:
@@ -430,7 +430,7 @@ def test_qubit_unitary(n_wires, theta, phi, tol):
     dev_def = qml.device("default.qubit", wires=n_qubits)
     dev = qml.device(device_name, wires=n_qubits)
     m = 2**n_wires
-    U = get_unitary_matrix(m)
+    U = get_random_matrix(m)
     U, _ = np.linalg.qr(U)
     init_state = get_random_normalized_state(2**n_qubits)
     wires = list(range((n_qubits - n_wires), (n_qubits - n_wires) + n_wires))
@@ -502,7 +502,7 @@ def test_controlled_qubit_unitary(n_qubits, control_value, tol):
                 control_wires = all_wires[0:i]
                 target_wires = all_wires[i:]
                 m = 2 ** len(target_wires)
-                U = get_unitary_matrix(m)
+                U = get_random_matrix(m)
                 U, _ = np.linalg.qr(U)
                 init_state = get_random_normalized_state(2**n_qubits)
 
@@ -543,7 +543,7 @@ def test_controlled_sparse_qubit_unitary(n_wires, n_qubits, control_value, tol):
             control_wires = all_wires[0:i]
             target_wires = all_wires[i:]
             m = 2 ** len(target_wires)
-            U = get_unitary_matrix(m)
+            U = get_random_matrix(m)
             U, _ = np.linalg.qr(U)
             init_state = get_random_normalized_state(2**n_qubits)
 
@@ -877,7 +877,7 @@ def test_adjoint_controlled_qubit_unitary(n_qubits, control_value, tol):
                 control_wires = all_wires[0:i]
                 target_wires = all_wires[i:]
                 m = 2 ** len(target_wires)
-                U = get_unitary_matrix(m)
+                U = get_random_matrix(m)
                 U, _ = np.linalg.qr(U)
                 init_state = get_random_normalized_state(2**n_qubits)
 
@@ -916,7 +916,7 @@ def test_controlled_adjoint_qubit_unitary(n_qubits, control_value, tol):
                 control_wires = all_wires[0:i]
                 target_wires = all_wires[i:]
                 m = 2 ** len(target_wires)
-                U = get_unitary_matrix(m)
+                U = get_random_matrix(m)
                 U, _ = np.linalg.qr(U)
                 init_state = get_random_normalized_state(2**n_qubits)
 

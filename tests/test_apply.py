@@ -22,7 +22,7 @@ import pennylane as qml
 import pytest
 from conftest import PHI, THETA
 from conftest import LightningDevice as ld
-from conftest import device_name, get_random_normalized_state, get_unitary_matrix
+from conftest import device_name, get_random_normalized_state, get_random_matrix
 from pennylane.exceptions import DeviceError
 from pennylane.operation import Operation
 from pennylane.wires import Wires
@@ -881,7 +881,7 @@ def test_circuit_with_stateprep(op, theta, phi, tol):
     dev_def = qml.device("default.qubit", wires=n_qubits)
     dev = qml.device(device_name, wires=n_qubits)
     m = 2**n_wires
-    U = get_unitary_matrix(m)
+    U = get_random_matrix(m)
     U, _ = np.linalg.qr(U)
     init_state = get_random_normalized_state(2**n_qubits)
     init_state /= np.linalg.norm(init_state)
