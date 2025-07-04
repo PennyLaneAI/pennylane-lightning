@@ -96,12 +96,6 @@ if(ENABLE_PYTHON)
 
     message(STATUS "Enabling Nanobind Python bindings")
     
-    FetchContent_Declare(nanobind
-                    GIT_REPOSITORY https://github.com/wjakob/nanobind.git
-                    GIT_TAG        v2.7.0
-    )
-    FetchContent_MakeAvailable(nanobind)
-    
     # Ensure we have a valid Python executable
     if(NOT Python_EXECUTABLE)
         if(DEFINED PYTHON_EXECUTABLE)
@@ -140,6 +134,12 @@ if(ENABLE_PYTHON)
     
     # Print nanobind include directory
     message(STATUS "Nanobind include directory: ${nanobind_SOURCE_DIR}/include")
+
+    FetchContent_Declare(nanobind
+                GIT_REPOSITORY https://github.com/wjakob/nanobind.git
+                GIT_TAG        v2.7.0
+    )
+    FetchContent_MakeAvailable(nanobind)
 
 
 endif()
