@@ -14,7 +14,7 @@ macro(findCUDATK external_libs)
 endmacro()
 
 # Macro to aid in finding MPI lib
-macro(findMPI external_libs)
+macro(findMPI_LG external_libs)
     if(ENABLE_MPI)
         find_package(MPI REQUIRED)
         if(MPI_FOUND)

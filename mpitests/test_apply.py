@@ -16,6 +16,7 @@ Unit tests for apply on :mod:`pennylane_lightning` MPI-enabled devices.
 """
 # pylint: disable=protected-access,cell-var-from-loop,c-extension-no-member
 import itertools
+from functools import partial
 
 import numpy as np
 import pennylane as qml
@@ -391,6 +392,9 @@ class TestApply:  # pylint: disable=missing-function-docstring,too-many-argument
         assert np.allclose(local_state_vector, local_expected_output_cpu, atol=tol, rtol=0)
 
 
+@pytest.mark.skipif(
+    device_name == "lightning.kokkos", reason="Sparse Hamiltonian not supported on Kokkos MPI"
+)
 class TestSparseHamExpval:  # pylint: disable=too-few-public-methods,missing-function-docstring
     """Tests sparse hamiltonian expectation values."""
 
@@ -649,9 +653,10 @@ class TestGenerateSample:
         """
         num_wires = numQubits
 
-        dev_mpi = qml.device(device_name, wires=num_wires, mpi=True, shots=1000, c_dtype=c_dtype)
+        dev_mpi = qml.device(device_name, wires=num_wires, mpi=True, c_dtype=c_dtype)
         dev_mpi._statevector.reset_state()
 
+        @partial(qml.set_shots, shots=2000)
         @qml.qnode(dev_mpi)
         def circuit():
             qml.RX(1.5708, wires=0)
@@ -668,8 +673,9 @@ class TestGenerateSample:
         """
         num_wires = 3
 
-        dev_mpi = qml.device(device_name, wires=num_wires, mpi=True, shots=1000, c_dtype=c_dtype)
+        dev_mpi = qml.device(device_name, wires=num_wires, mpi=True, c_dtype=c_dtype)
 
+        @partial(qml.set_shots, shots=2000)
         @qml.qnode(dev_mpi)
         def circuit():
             qml.Hadamard(0)
@@ -685,12 +691,13 @@ class TestGenerateSample:
         """Test that a tensor product involving PauliX and PauliY works correctly"""
         num_wires = 3
 
-        dev_mpi = qml.device(device_name, wires=num_wires, mpi=True, shots=1000, c_dtype=c_dtype)
+        dev_mpi = qml.device(device_name, wires=num_wires, mpi=True, c_dtype=c_dtype)
 
         theta = 0.432
         phi = 0.123
         varphi = -0.543
 
+        @partial(qml.set_shots, shots=2000)
         @qml.qnode(dev_mpi)
         def circuit():
             qml.RX(theta, wires=[0])
@@ -725,12 +732,13 @@ class TestGenerateSample:
         """Test that a tensor product involving PauliZ and PauliY and hadamard works correctly"""
         num_wires = 3
 
-        dev_mpi = qml.device(device_name, wires=num_wires, mpi=True, shots=1000, c_dtype=c_dtype)
+        dev_mpi = qml.device(device_name, wires=num_wires, mpi=True, c_dtype=c_dtype)
 
         theta = 0.432
         phi = 0.123
         varphi = -0.543
 
+        @partial(qml.set_shots, shots=2000)
         @qml.qnode(dev_mpi)
         def circuit():
             qml.RX(theta, wires=[0])
@@ -769,12 +777,13 @@ class TestTensorVar:
         """Test that a tensor product involving PauliX and PauliY works correctly"""
         num_wires = 3
 
-        dev_mpi = qml.device(device_name, wires=num_wires, mpi=True, shots=1000, c_dtype=c_dtype)
+        dev_mpi = qml.device(device_name, wires=num_wires, mpi=True, c_dtype=c_dtype)
 
         theta = 0.432
         phi = 0.123
         varphi = -0.543
 
+        @partial(qml.set_shots, shots=2000)
         @qml.qnode(dev_mpi)
         def circuit():
             qml.RX(theta, wires=[0])
@@ -800,12 +809,13 @@ class TestTensorVar:
     def test_pauliz_hadamard(self, c_dtype, tol=TOL_STOCHASTIC):
         """Test that a tensor product involving PauliZ and PauliY and hadamard works correctly"""
         num_wires = 3
-        dev_mpi = qml.device(device_name, wires=num_wires, mpi=True, shots=1000, c_dtype=c_dtype)
+        dev_mpi = qml.device(device_name, wires=num_wires, mpi=True, c_dtype=c_dtype)
 
         theta = 0.432
         phi = 0.123
         varphi = -0.543
 
+        @partial(qml.set_shots, shots=2000)
         @qml.qnode(dev_mpi)
         def circuit():
             qml.RX(theta, wires=[0])
