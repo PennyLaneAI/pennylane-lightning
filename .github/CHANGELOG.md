@@ -119,6 +119,10 @@
 - Adhere to PyPA binary distribution format for built wheels.
   [(#1193)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1193)
 
+- Update JAX version from 0.6.0 to 0.6.2, keeping the same version as PennyLane and Catalyst
+  [(#1200)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1200)
+
+
 <h3>Contributors ✍️</h3>
 
 This release contains contributions from (in alphabetical order):
