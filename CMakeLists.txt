@@ -102,6 +102,21 @@ if(ENABLE_PYTHON)
     )
     FetchContent_MakeAvailable(nanobind)
     
+    if(NOT DEFINED Python_EXECUTABLE)
+        set(Python_EXECUTABLE ${PYTHON_EXECUTABLE})
+    endif()
+    
+    # Ensure nanobind can find Python extension suffix
+    execute_process(
+        COMMAND ${Python_EXECUTABLE} -c "import sysconfig; print(sysconfig.get_config_var('EXT_SUFFIX'))"
+        OUTPUT_VARIABLE NANOBIND_EXT_SUFFIX
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    if(NANOBIND_EXT_SUFFIX)
+        message(STATUS "Setting NANOBIND_EXT_SUFFIX to: ${NANOBIND_EXT_SUFFIX}")
+        set(ENV{NANOBIND_EXT_SUFFIX} ${NANOBIND_EXT_SUFFIX})
+    endif()
+    
     # Print nanobind include directory
     message(STATUS "Nanobind include directory: ${nanobind_SOURCE_DIR}/include")
 
