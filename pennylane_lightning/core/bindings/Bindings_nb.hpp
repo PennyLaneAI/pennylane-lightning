@@ -127,9 +127,9 @@ namespace nb = nanobind;
 /// @cond DEV
 namespace {
 using Pennylane::NanoBindings::Utils::createNumpyArrayFromVector;
-using Pennylane::Util::PL_reinterpret_cast;
 using Pennylane::Util::bestCPUMemoryModel;
 using Pennylane::Util::CPUMemoryModel;
+using Pennylane::Util::PL_reinterpret_cast;
 } // namespace
 /// @endcond
 
