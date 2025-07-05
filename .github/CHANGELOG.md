@@ -56,6 +56,9 @@
 - Update tests with `device(..., shots=...)` to use `qml.set_shots` to ensure compatibility with the latest version of PennyLane.
   [(#1173)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1173)
   
+- Fix `applyMultiRZ` for `lightning.kokkos` device to use Kokkos function instead of lambda.
+  [(#1194)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1194)
+  
 - Enable `AmplitudeEmbedding` Python tests for `lightning.kokkos` and `lightning.gpu` devices.
   [(#1192)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1192)
   
