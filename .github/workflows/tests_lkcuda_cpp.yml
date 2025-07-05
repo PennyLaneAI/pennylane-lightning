@@ -196,7 +196,7 @@ jobs:
         run: |
           cd main
           cmake . -BBuild -G Ninja \
-            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_BUILD_TYPE=RelWithDebugInfo \
             -DBUILD_TESTS=ON \
             -DENABLE_PYTHON=OFF \
             -DSCIPY_OPENBLAS=$(python -c "import scipy_openblas32; print(scipy_openblas32.get_lib_dir())") \
