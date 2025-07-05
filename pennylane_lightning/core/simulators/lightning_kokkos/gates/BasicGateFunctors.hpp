@@ -1765,6 +1765,9 @@ void applyDoubleExcitationPlus(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
         arr_, num_qubits, {}, {}, wires, inverse, params);
 }
 
+// Note: Directly using parallel_for with KOKKOS_LAMBDA
+// may cause segmentation faults for CUDA with RelWithDebugInfo.
+// Therefore we use a functor class to encapsulate the logic
 template <typename PrecisionT> class applyMultiRZFunctor {
     using KokkosComplexVector = Kokkos::View<Kokkos::complex<PrecisionT> *>;
     using KokkosIntVector = Kokkos::View<std::size_t *>;
