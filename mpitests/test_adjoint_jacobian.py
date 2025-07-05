@@ -57,6 +57,18 @@ def fixture_dev(request):
     )
 
 
+def create_random_init_state(numWires, c_dtype, seed=None):
+    """Returns a random normalized state of c_dtype with 2**numWires elements."""
+    rng = np.random.default_rng(seed)
+    r_dtype = np.float64 if c_dtype == np.complex128 else np.float32
+
+    num_elements = 2**numWires
+    init_state = rng.random(num_elements).astype(r_dtype) + 1j * rng.random(num_elements).astype(
+        r_dtype
+    )
+    return init_state / np.linalg.norm(init_state)
+
+
 class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
     """Tests for the adjoint_jacobian method"""
 
@@ -895,6 +907,7 @@ def test_integration_custom_wires(returns):
     assert np.allclose(j_def, j_lightning)
 
 
+@pytest.mark.local_salt(42)
 @pytest.mark.parametrize(
     "returns",
     [
@@ -921,7 +934,7 @@ def test_integration_custom_wires(returns):
         ),
     ],
 )
-def test_integration_custom_wires_batching(returns):
+def test_integration_custom_wires_batching(returns, seed):
     """Integration tests that compare to default.qubit for a large circuit containing parametrized
     operations and when using custom wire labels"""
 
@@ -933,8 +946,8 @@ def test_integration_custom_wires_batching(returns):
         return [qml.expval(r) for r in returns] + [qml.expval(qml.PauliY(custom_wires[1]))]
 
     n_params = 30
-    np.random.seed(1337)
-    params = np.random.rand(n_params)
+    rng = np.random.default_rng(seed)
+    params = rng.random(n_params)
 
     qnode_mpi = qml.QNode(circuit, dev_mpi, diff_method="adjoint")
     qnode_def = qml.QNode(circuit, dev_def)
@@ -951,6 +964,7 @@ def test_integration_custom_wires_batching(returns):
     assert np.allclose(j_gpu, j_def, atol=1e-7)
 
 
+@pytest.mark.local_salt(42)
 @pytest.mark.parametrize(
     "returns",
     [
@@ -982,7 +996,7 @@ def test_integration_custom_wires_batching(returns):
         ),
     ],
 )
-def test_batching_H(returns):
+def test_batching_H(returns, seed):
     """Integration tests that compare to default.qubit for a large circuit containing parametrized
     operations and when using custom wire labels"""
 
@@ -995,8 +1009,8 @@ def test_batching_H(returns):
         return qml.math.hstack([qml.expval(r) for r in returns])
 
     n_params = 30
-    np.random.seed(1337)
-    params = np.random.rand(n_params)
+    rng = np.random.default_rng(seed)
+    params = rng.random(n_params)
 
     qnode_cpu = qml.QNode(circuit, dev_cpu, diff_method="parameter-shift")
     qnode_mpi = qml.QNode(circuit, dev_mpi, diff_method="adjoint")
@@ -1098,6 +1112,7 @@ def test_integration_H2_Hamiltonian(
     assert np.allclose(jacs, jacs_comp)
 
 
+@pytest.mark.local_salt(42)
 @pytest.mark.skipif(
     device_name == "lightning.kokkos", reason="Kokkos MPI does not support SparseHamiltonian"
 )
@@ -1130,7 +1145,7 @@ def test_integration_H2_Hamiltonian(
         ),
     ],
 )
-def test_adjoint_SparseHamiltonian_custom_wires(returns):
+def test_adjoint_SparseHamiltonian_custom_wires(returns, seed):
     """Integration tests that compare to default.qubit for a large circuit containing parametrized
     operations and when using custom wire labels"""
 
@@ -1144,8 +1159,8 @@ def test_adjoint_SparseHamiltonian_custom_wires(returns):
 
     if comm.Get_rank() == 0:
         n_params = 30
-        np.random.seed(1337)
-        params = np.random.rand(n_params)
+        rng = np.random.default_rng(seed)
+        params = rng.random(n_params)
     else:
         params = None
 
@@ -1165,6 +1180,7 @@ def test_adjoint_SparseHamiltonian_custom_wires(returns):
 @pytest.mark.skipif(
     device_name == "lightning.kokkos", reason="Kokkos MPI does not support SparseHamiltonian"
 )
+@pytest.mark.local_salt(42)
 @pytest.mark.parametrize(
     "returns",
     [
@@ -1223,7 +1239,7 @@ def test_adjoint_SparseHamiltonian_custom_wires(returns):
         ),
     ],
 )
-def test_adjoint_SparseHamiltonian(returns):
+def test_adjoint_SparseHamiltonian(returns, seed):
     """Integration tests that compare to default.qubit for a large circuit containing parametrized
     operations and when using custom wire labels"""
 
@@ -1237,8 +1253,8 @@ def test_adjoint_SparseHamiltonian(returns):
 
     if comm.Get_rank() == 0:
         n_params = 30
-        np.random.seed(1337)
-        params = np.random.rand(n_params)
+        rng = np.random.default_rng(seed)
+        params = rng.random(n_params)
     else:
         params = None
 
@@ -1255,20 +1271,20 @@ def test_adjoint_SparseHamiltonian(returns):
     assert np.allclose(j_cpu, j_gpu)
 
 
+@pytest.mark.local_salt(42)
 @pytest.mark.parametrize("n_targets", range(1, 5))
-def test_qubit_unitary(dev, n_targets):
+def test_qubit_unitary(dev, n_targets, seed):
     """Tests that ``qml.QubitUnitary`` can be included in circuits differentiated with the adjoint method."""
     n_wires = len(dev.wires)
     dev_def = qml.device("default.qubit", wires=n_wires)
     h = 1e-3 if dev.c_dtype == np.complex64 else 1e-7
     c_dtype = dev.c_dtype
 
-    np.random.seed(1337)
-    par = 2 * np.pi * np.random.rand(n_wires)
-    U = np.random.rand(2**n_targets, 2**n_targets) + 1j * np.random.rand(2**n_targets, 2**n_targets)
+    rng = np.random.default_rng(seed)
+    par = 2 * np.pi * rng.random(n_wires)
+    U = rng.random((2**n_targets, 2**n_targets)) + 1j * rng.random((2**n_targets, 2**n_targets))
     U, _ = np.linalg.qr(U)
-    init_state = np.random.rand(2**n_wires) + 1j * np.random.rand(2**n_wires)
-    init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+    init_state = create_random_init_state(n_wires, dev.c_dtype, seed)
 
     comm = MPI.COMM_WORLD
     par = comm.bcast(par, root=0)
@@ -1303,20 +1319,20 @@ def test_qubit_unitary(dev, n_targets):
     assert np.allclose(jac, jac_def, atol=h, rtol=0)
 
 
+@pytest.mark.local_salt(42)
 @pytest.mark.parametrize("n_targets", [1, 2])
-def test_diff_qubit_unitary(dev, n_targets):
+def test_diff_qubit_unitary(dev, n_targets, seed):
     """Tests that ``qml.QubitUnitary`` can be differentiated with the adjoint method."""
     n_wires = len(dev.wires)
     dev_def = qml.device("default.qubit", wires=n_wires)
     h = 1e-3 if dev.c_dtype == np.complex64 else 1e-7
     c_dtype = dev.c_dtype
 
-    np.random.seed(1337)
-    par = 2 * np.pi * np.random.rand(n_wires)
-    U = np.random.rand(2**n_targets, 2**n_targets) + 1j * np.random.rand(2**n_targets, 2**n_targets)
+    rng = np.random.default_rng(seed)
+    par = 2 * np.pi * rng.random(n_wires)
+    U = rng.random((2**n_targets, 2**n_targets)) + 1j * rng.random((2**n_targets, 2**n_targets))
     U, _ = np.linalg.qr(U)
-    init_state = np.random.rand(2**n_wires) + 1j * np.random.rand(2**n_wires)
-    init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+    init_state = create_random_init_state(n_wires, dev.c_dtype, seed)
 
     comm = MPI.COMM_WORLD
     par = comm.bcast(par, root=0)

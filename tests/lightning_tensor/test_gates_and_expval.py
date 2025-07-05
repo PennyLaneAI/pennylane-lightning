@@ -139,6 +139,7 @@ def circuit_ansatz(params, wires):
 
 
 # The expected values were generated using default.qubit
+@pytest.mark.local_salt(42)
 @pytest.mark.parametrize("method", [{"method": "mps", "max_bond_dim": 128}, {"method": "tn"}])
 @pytest.mark.parametrize(
     "returns",
@@ -177,7 +178,7 @@ def circuit_ansatz(params, wires):
         (qml.ops.prod(qml.X(0), qml.Y(1))),
     ],
 )
-def test_integration_for_all_supported_gates(returns, method):
+def test_integration_for_all_supported_gates(returns, method, seed):
     """Integration tests that compare to default.qubit for a large circuit containing parametrized
     operations"""
 
@@ -191,8 +192,8 @@ def test_integration_for_all_supported_gates(returns, method):
         return qml.math.hstack([qml.expval(r) for r in returns])
 
     n_params = 34
-    np.random.seed(1337)
-    params_init = np.random.rand(n_params)
+    rng = np.random.default_rng(seed)
+    params_init = rng.random(n_params)
 
     params = np.array(params_init, requires_grad=True)
     qnode_ltensor = qml.QNode(circuit, dev_ltensor)
