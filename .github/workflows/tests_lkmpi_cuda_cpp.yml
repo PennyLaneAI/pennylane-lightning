@@ -165,7 +165,7 @@ jobs:
             -DPL_BACKEND=lightning_kokkos \
             -DENABLE_PYTHON=OFF \
             -DENABLE_MPI=ON \
-            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_BUILD_TYPE=RelWithDebugInfo \
             -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }} \
             -DENABLE_COVERAGE=ON \
             -DBUILD_TESTS=ON \
