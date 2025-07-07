@@ -349,19 +349,6 @@ def precision(request):
     return request.param
 
 
-@pytest.fixture
-def get_precision_class(nanobind_module, precision):
-    """Get class of specified precision from nanobind module."""
-
-    def _get_class(class_prefix):
-        class_name = f"{class_prefix}C{precision}"
-        if hasattr(nanobind_module, class_name):
-            return getattr(nanobind_module, class_name)
-        pytest.skip(f"Class {class_name} not available in module")
-
-    return _get_class
-
-
 @pytest.fixture(scope="session")
 def current_nanobind_module():
     """Return the nanobind module for the current backend."""

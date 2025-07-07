@@ -33,7 +33,6 @@ class TestJAXCompatibility:
 
         return _get_class
 
-    @pytest.mark.parametrize("precision", ["64", "128"])
     def test_jax_array_initialization(
         self, current_nanobind_module, precision, get_statevector_class
     ):
@@ -74,7 +73,6 @@ class TestJAXCompatibility:
         assert np.allclose(state_data[0], 1.0)
         assert np.allclose(state_data[1:], 0.0)
 
-    @pytest.mark.parametrize("precision", ["64", "128"])
     def test_jax_array_operations(self, current_nanobind_module, precision, get_statevector_class):
         """Test operations on StateVector with JAX arrays."""
         module = current_nanobind_module
@@ -117,7 +115,6 @@ class TestJAXCompatibility:
         assert np.allclose(state_data[0], 0.0)
         assert np.allclose(state_data[1], 1.0)
 
-    @pytest.mark.parametrize("precision", ["64", "128"])
     def test_jax_array_with_measurements_class(
         self, current_nanobind_module, precision, get_statevector_class
     ):
@@ -178,7 +175,6 @@ class TestJAXCompatibility:
         expected_probs = np.array([0.5, 0.5])
         assert np.allclose(np_probs, expected_probs)
 
-    @pytest.mark.parametrize("precision", ["64", "128"])
     def test_jax_array_with_measurements_expval(
         self, current_nanobind_module, precision, get_statevector_class
     ):
