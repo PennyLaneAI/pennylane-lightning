@@ -356,15 +356,3 @@ def current_nanobind_module():
         return importlib.import_module(nanobind_module_name)
     except ImportError as e:
         pytest.skip(f"Nanobind module {nanobind_module_name} not available: {str(e)}")
-
-
-@pytest.fixture(scope="session")
-def enable_jax_x64():
-    """Enable JAX 64-bit precision for tests that use this fixture."""
-    try:
-        import jax
-
-        jax.config.update("jax_enable_x64", True)
-        print(f"JAX 64-bit precision enabled: {jax.config.read('jax_enable_x64')}")
-    except ImportError:
-        pytest.skip("JAX not available")

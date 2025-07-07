@@ -564,7 +564,7 @@ class TestAdjointJacobian:
 
 
 class TestAdjointJacobianQNode:
-    """Tests for the adjoint_jacobian method with QNode"""
+    """Test QNode integration with the adjoint_jacobian method"""
 
     @pytest.fixture(params=fixture_params)
     def dev(self, request):
@@ -963,14 +963,17 @@ class TestAdjointJacobianQNode:
 
         assert np.allclose(grad_adjoint, grad_fd)
 
-    @pytest.mark.usefixtures("enable_jax_x64")
     def test_interface_jax(self, dev):
         """Test if the gradients agree between adjoint and finite-difference methods in the
         jax interface"""
 
         jax = pytest.importorskip("jax")
-
         dtype = np.float32 if dev.c_dtype == np.complex64 else np.float64
+
+        if dtype == np.float64:
+            from jax import config
+
+            config.update("jax_enable_x64", True)
 
         def f(params1, params2):
             qml.RX(0.4, wires=[0])
