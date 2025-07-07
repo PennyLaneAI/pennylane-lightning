@@ -2,7 +2,8 @@
 
 <h3>New features since last release</h3>
 
-- Add support for distributed state vector simulation with MPI for `lightning.kokkos` device.
+- The distributed simulation using MPI in the `lightning.kokkos` device is added,
+  enabling larger quantum circuits by distributing workloads across multiple CPUs or GPUs.
   [(#1114)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1114)
 
 - Mid-circuit measurements using the tree-traversal algorithm are now supported
@@ -37,6 +38,8 @@
 
   [(#1098)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1098)
 
+- Adhere to PyPA binary distribution format for built wheels.
+  [(#1193)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1193)
 
 <h3>Deprecations 👋</h3>
 
@@ -110,9 +113,6 @@
   
 - Bump Github action runner to use `Ubuntu-24.04` or `Ubuntu-latest`. Fixing all `ubuntu-latest` action runners to `ubuntu-24.04`.
   [(#1167)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1167)
-
-- Adhere to PyPA binary distribution format for built wheels.
-  [(#1193)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1193)
 
 - Edit and prepare `CHANGELOG.md` for the release `v0.42.0`.
   [(#1199)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1199)
