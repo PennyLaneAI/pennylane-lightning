@@ -26,15 +26,15 @@ if ! command -v gh &> /dev/null; then
 fi
 
 # Find the end of the current version section in the CHANGELOG
-changelog_lower_bound=$(grep -n -- "---" $CHANGELOG_FILE | head -n 1 | cut -d: -f1)
+changelog_lower_bound=$(grep -n -- "---" "${CHANGELOG_FILE}" | head -n 1 | cut -d: -f1)
 
 # Find the beginning of the Contributors section
-contributors_begin=$(grep -n "<h3>Contributors ✍️</h3>" $CHANGELOG_FILE | head -n 1 | cut -d: -f1)
+contributors_begin=$(grep -n "<h3>Contributors ✍️</h3>" "${CHANGELOG_FILE}" | head -n 1 | cut -d: -f1)
 
 # Print list of Authors from Changelog and Git
 echo "Authors in CHANGELOG       /  Authors in Git"
 echo "---------------------------|---------------------------"
-paste <(sed -n "$((contributors_begin + 4)),$((changelog_lower_bound - 2))p" $CHANGELOG_FILE | sort | sed 's/,//; s/$/,/') <(git log master --since=$LAST_RELEASE_DATE | grep "Author:" | sort | uniq | sed 's|<.*|| ; s|Author: ||' ) | column -t -s ','
+paste <(sed -n "$((contributors_begin + 4)),$((changelog_lower_bound - 2))p" "${CHANGELOG_FILE}" | sort | sed 's/,//; s/$/,/') <(git log master --since=$LAST_RELEASE_DATE | grep "Author:" | sort | uniq | sed 's|<.*|| ; s|Author: ||' ) | column -t -s ','
 
 echo "--------------------------------------------------------------------------------"
 
@@ -42,7 +42,7 @@ echo "--------------------------------------------------------------------------
 gh pr list --state merged --base master --search "merged:>=$LAST_RELEASE_DATE" -L 1000  | sort -h | awk -F 'MERGED' '{print $1}' > release_list_merged_PR.txt
 
 # Create the list of PRs in the CHANGELOG
-sed -n "1,${changelog_lower_bound}p" $CHANGELOG_FILE | grep -B 1 'pull/'  | tr -d "\n" | sed 's/--/\n/g; s|pull/|pull/_ |g ; s/)//g'| awk '{print $NF, "  ", $0}' | sed 's|\[(.*||' |   sort -h -k1 > release_list_PR_in_changelog.txt
+sed -n "1,${changelog_lower_bound}p" "${CHANGELOG_FILE}" | grep -B 1 'pull/'  | tr -d "\n" | sed 's/--/\n/g; s|pull/|pull/_ |g ; s/)//g'| awk '{print $NF, "  ", $0}' | sed 's|\[(.*||' |   sort -h -k1 > release_list_PR_in_changelog.txt
 
 
 interleave_rows(){
