@@ -67,6 +67,7 @@
 
 - Remove flaky tests and add random seed to measurement tests.
   [(#1172)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1172)
+  [(#1196)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1196)
 
 - Use local catalyst repository instead of fetching on Github CI.
   [(#1164)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1164)
