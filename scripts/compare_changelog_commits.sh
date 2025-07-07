@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # This script compares the list of merged PRs in Git with the list of PRs in the CHANGELOG.
 # It prints the authors of the merged PRs and the PRs in the CHANGELOG, and highlights any discrepancies.
@@ -38,11 +38,11 @@ paste <(sed -n "$((contributors_begin + 4)),$((changelog_lower_bound - 2))p" $CH
 
 echo "--------------------------------------------------------------------------------"
 
-# Create the lis of merged PR 
+# Create the list of merged PR
 gh pr list --state merged --base master --search "merged:>=$LAST_RELEASE_DATE" -L 1000  | sort -h | awk -F 'MERGED' '{print $1}' > release_list_merged_PR.txt
 
 # Create the list of PRs in the CHANGELOG
-sed -n "1,${changelog_lower_bound}p" $CHANGELOG_FILE | grep -B 1 'pull/'  | tr -d "\n" | sed 's/--/\n/g; s|pull/|pull/_ |g ; s/)//g'| awk '{print $NF, "  ", $0}' | sed 's|\[(.*||' |   sort -h -k1 > release_list_PR_in_CHANGELOG.txt 
+sed -n "1,${changelog_lower_bound}p" $CHANGELOG_FILE | grep -B 1 'pull/'  | tr -d "\n" | sed 's/--/\n/g; s|pull/|pull/_ |g ; s/)//g'| awk '{print $NF, "  ", $0}' | sed 's|\[(.*||' |   sort -h -k1 > release_list_PR_in_changelog.txt
 
 
 interleave_rows(){
@@ -51,7 +51,7 @@ interleave_rows(){
 
     spliter="---------------------------------------------------------------------"
 
-    while IFS= read -r line1; do 
+    while IFS= read -r line1; do
     # Extract the first column from each line
     col1=$(echo "$line1" | awk '{print $1}')
 
@@ -75,7 +75,7 @@ interleave_rows(){
         echo $spliter
     done < "$file1"
 
-    while IFS= read -r line2; do 
+    while IFS= read -r line2; do
     # Extract the first column from each line
     col2=$(echo "$line2" | awk '{print $1}')
 
@@ -96,4 +96,4 @@ interleave_rows(){
 # Compare the two lists
 echo "--------------------------------------------------------------------------------"
 echo "Merged PRs in Git / PRs in CHANGELOG"
-interleave_rows release_list_merged_PR.txt release_list_PR_in_CHANGELOG.txt
+interleave_rows release_list_merged_PR.txt release_list_PR_in_changelog.txt
