@@ -3,6 +3,11 @@
 # This script compares the list of merged PRs in Git with the list of PRs in the CHANGELOG.
 # It prints the authors of the merged PRs and the PRs in the CHANGELOG, and highlights any discrepancies.
 
+# Usage:
+# Edit the variable LAST_RELEASE_DATE with the date from https://github.com/PennyLaneAI/pennylane-lightning/releases
+# Run the script with 
+# bash compare_changelog_commits.sh 
+
 # Last release date
 LAST_RELEASE_DATE="2025-05-05"
 
