@@ -47,7 +47,7 @@ def create_random_init_state(numWires, c_dtype, seed=None):
     return init_state / np.linalg.norm(init_state)
 
 
-def apply_operation_gates_qnode_param(tol, dev_mpi, operation, par, Wires, seed=None):
+def apply_operation_gates_qnode_param(tol, dev_mpi, operation, par, wires, seed=None):
     """Wrapper applying a parametric gate with QNode function."""
     num_wires = numQubits
     comm = MPI.COMM_WORLD
@@ -68,7 +68,7 @@ def apply_operation_gates_qnode_param(tol, dev_mpi, operation, par, Wires, seed=
 
     def circuit(*params):
         qml.StatePrep(state_vector, wires=range(num_wires))
-        operation(*params, wires=Wires)
+        operation(*params, wires=wires)
         return qml.state()
 
     cpu_qnode = qml.QNode(circuit, dev_cpu)
@@ -81,7 +81,7 @@ def apply_operation_gates_qnode_param(tol, dev_mpi, operation, par, Wires, seed=
     assert np.allclose(local_state_vector, local_expected_output_cpu, atol=tol, rtol=0)
 
 
-def apply_operation_gates_qnode_nonparam(tol, dev_mpi, operation, Wires, seed=None):
+def apply_operation_gates_qnode_nonparam(tol, dev_mpi, operation, wires, seed=None):
     """Wrapper applying a non-parametric gate with QNode function."""
     num_wires = numQubits
     comm = MPI.COMM_WORLD
@@ -102,7 +102,7 @@ def apply_operation_gates_qnode_nonparam(tol, dev_mpi, operation, Wires, seed=No
 
     def circuit():
         qml.StatePrep(state_vector, wires=range(num_wires))
-        operation(wires=Wires)
+        operation(wires=wires)
         return qml.state()
 
     cpu_qnode = qml.QNode(circuit, dev_cpu)
@@ -132,18 +132,18 @@ class TestApply:  # pylint: disable=missing-function-docstring,too-many-argument
     @pytest.mark.parametrize(
         "operation", [qml.PauliX, qml.PauliY, qml.PauliZ, qml.Hadamard, qml.S, qml.T]
     )
-    @pytest.mark.parametrize("Wires", [0, 1, numQubits - 2, numQubits - 1])
-    def test_apply_operation_single_wire_nonparam(self, tol, operation, Wires, dev_mpi, seed):
-        apply_operation_gates_qnode_nonparam(tol, dev_mpi, operation, Wires, seed)
+    @pytest.mark.parametrize("wires", [0, 1, numQubits - 2, numQubits - 1])
+    def test_apply_operation_single_wire_nonparam(self, tol, operation, wires, dev_mpi, seed):
+        apply_operation_gates_qnode_nonparam(tol, dev_mpi, operation, wires, seed)
 
     @pytest.mark.parametrize("operation", [qml.CNOT, qml.SWAP, qml.CY, qml.CZ])
-    @pytest.mark.parametrize("Wires", [[0, 1], [numQubits - 2, numQubits - 1], [0, numQubits - 1]])
-    def test_apply_operation_two_wire_nonparam(self, tol, operation, Wires, dev_mpi, seed):
-        apply_operation_gates_qnode_nonparam(tol, dev_mpi, operation, Wires, seed)
+    @pytest.mark.parametrize("wires", [[0, 1], [numQubits - 2, numQubits - 1], [0, numQubits - 1]])
+    def test_apply_operation_two_wire_nonparam(self, tol, operation, wires, dev_mpi, seed):
+        apply_operation_gates_qnode_nonparam(tol, dev_mpi, operation, wires, seed)
 
     @pytest.mark.parametrize("operation", [qml.CSWAP, qml.Toffoli])
     @pytest.mark.parametrize(
-        "Wires",
+        "wires",
         [
             [0, 1, 2],
             [numQubits - 3, numQubits - 2, numQubits - 1],
@@ -151,12 +151,12 @@ class TestApply:  # pylint: disable=missing-function-docstring,too-many-argument
             [0, numQubits - 2, numQubits - 1],
         ],
     )
-    def test_apply_operation_three_wire_nonparam(self, tol, operation, Wires, dev_mpi, seed):
-        apply_operation_gates_qnode_nonparam(tol, dev_mpi, operation, Wires, seed)
+    def test_apply_operation_three_wire_nonparam(self, tol, operation, wires, dev_mpi, seed):
+        apply_operation_gates_qnode_nonparam(tol, dev_mpi, operation, wires, seed)
 
     @pytest.mark.parametrize("operation", [qml.CSWAP, qml.Toffoli])
     @pytest.mark.parametrize(
-        "Wires",
+        "wires",
         [
             [0, 1, 2],
             [numQubits - 3, numQubits - 2, numQubits - 1],
@@ -164,32 +164,32 @@ class TestApply:  # pylint: disable=missing-function-docstring,too-many-argument
             [0, numQubits - 2, numQubits - 1],
         ],
     )
-    def test_apply_operation_three_wire_qnode_nonparam(self, tol, operation, Wires, dev_mpi, seed):
-        apply_operation_gates_qnode_nonparam(tol, dev_mpi, operation, Wires, seed)
+    def test_apply_operation_three_wire_qnode_nonparam(self, tol, operation, wires, dev_mpi, seed):
+        apply_operation_gates_qnode_nonparam(tol, dev_mpi, operation, wires, seed)
 
     @pytest.mark.parametrize("operation", [qml.PhaseShift, qml.RX, qml.RY, qml.RZ])
     @pytest.mark.parametrize("par", [[0.1], [0.2], [0.3]])
-    @pytest.mark.parametrize("Wires", [0, numQubits - 1])
+    @pytest.mark.parametrize("wires", [0, numQubits - 1])
     def test_apply_operation_1gatequbit_1param_gate_qnode_param(
-        self, tol, operation, par, Wires, dev_mpi, seed
+        self, tol, operation, par, wires, dev_mpi, seed
     ):
-        apply_operation_gates_qnode_param(tol, dev_mpi, operation, par, Wires, seed)
+        apply_operation_gates_qnode_param(tol, dev_mpi, operation, par, wires, seed)
 
     @pytest.mark.parametrize("operation", [qml.Rot])
     @pytest.mark.parametrize("par", [[0.1, 0.2, 0.3], [0.2, 0.3, 0.4]])
-    @pytest.mark.parametrize("Wires", [0, numQubits - 1])
+    @pytest.mark.parametrize("wires", [0, numQubits - 1])
     def test_apply_operation_1gatequbit_3param_gate_qnode_param(
-        self, tol, operation, par, Wires, dev_mpi, seed
+        self, tol, operation, par, wires, dev_mpi, seed
     ):
-        apply_operation_gates_qnode_param(tol, dev_mpi, operation, par, Wires, seed)
+        apply_operation_gates_qnode_param(tol, dev_mpi, operation, par, wires, seed)
 
     @pytest.mark.parametrize("operation", [qml.CRot])
     @pytest.mark.parametrize("par", [[0.1, 0.2, 0.3], [0.2, 0.3, 0.4]])
-    @pytest.mark.parametrize("Wires", [[0, numQubits - 1], [0, 1], [numQubits - 2, numQubits - 1]])
+    @pytest.mark.parametrize("wires", [[0, numQubits - 1], [0, 1], [numQubits - 2, numQubits - 1]])
     def test_apply_operation_1gatequbit_3param_cgate_qnode_param(
-        self, tol, operation, par, Wires, dev_mpi, seed
+        self, tol, operation, par, wires, dev_mpi, seed
     ):
-        apply_operation_gates_qnode_param(tol, dev_mpi, operation, par, Wires, seed)
+        apply_operation_gates_qnode_param(tol, dev_mpi, operation, par, wires, seed)
 
     @pytest.mark.parametrize(
         "operation",
@@ -208,11 +208,11 @@ class TestApply:  # pylint: disable=missing-function-docstring,too-many-argument
         ],
     )
     @pytest.mark.parametrize("par", [[0.1], [0.2], [0.3]])
-    @pytest.mark.parametrize("Wires", [[0, numQubits - 1], [0, 1], [numQubits - 2, numQubits - 1]])
+    @pytest.mark.parametrize("wires", [[0, numQubits - 1], [0, 1], [numQubits - 2, numQubits - 1]])
     def test_apply_operation_2gatequbit_1param_gate_qnode_param(
-        self, tol, operation, par, Wires, dev_mpi, seed
+        self, tol, operation, par, wires, dev_mpi, seed
     ):
-        apply_operation_gates_qnode_param(tol, dev_mpi, operation, par, Wires, seed)
+        apply_operation_gates_qnode_param(tol, dev_mpi, operation, par, wires, seed)
 
     @pytest.mark.parametrize(
         "operation",
@@ -220,7 +220,7 @@ class TestApply:  # pylint: disable=missing-function-docstring,too-many-argument
     )
     @pytest.mark.parametrize("par", [[0.13], [0.2], [0.3]])
     @pytest.mark.parametrize(
-        "Wires",
+        "wires",
         [
             [0, 1, numQubits - 2, numQubits - 1],
             [0, 1, 2, 3],
@@ -228,9 +228,9 @@ class TestApply:  # pylint: disable=missing-function-docstring,too-many-argument
         ],
     )
     def test_apply_operation_4gatequbit_1param_gate_qnode_param(
-        self, tol, operation, par, Wires, dev_mpi, seed
+        self, tol, operation, par, wires, dev_mpi, seed
     ):
-        apply_operation_gates_qnode_param(tol, dev_mpi, operation, par, Wires, seed)
+        apply_operation_gates_qnode_param(tol, dev_mpi, operation, par, wires, seed)
 
     @pytest.mark.parametrize(
         "operation",
@@ -239,9 +239,9 @@ class TestApply:  # pylint: disable=missing-function-docstring,too-many-argument
     @pytest.mark.parametrize("par", [[0.13], [0.2], [0.3]])
     def test_apply_global_phase(self, tol, operation, par, dev_mpi, seed):
         """Test applying the GlobalPhase operation."""
-        Wires = range(numQubits)
+        wires = range(numQubits)
 
-        apply_operation_gates_qnode_param(tol, dev_mpi, operation, par, Wires, seed)
+        apply_operation_gates_qnode_param(tol, dev_mpi, operation, par, wires, seed)
 
     # BasisState test
     @pytest.mark.parametrize("operation", [qml.BasisState])
@@ -285,7 +285,7 @@ class TestApply:  # pylint: disable=missing-function-docstring,too-many-argument
         assert np.allclose(local_state_vector, local_expected_output_cpu, atol=tol, rtol=0)
 
     @pytest.mark.parametrize(
-        "par, Wires",
+        "par, wires",
         [
             (np.array([1 / np.sqrt(2), 1 / np.sqrt(2)]), [0]),
             (np.array([1 / np.sqrt(2), 1 / np.sqrt(2)]), [1]),
@@ -310,7 +310,7 @@ class TestApply:  # pylint: disable=missing-function-docstring,too-many-argument
             ),
         ],
     )
-    def test_qubit_state_prep(self, tol, par, Wires, dev_mpi, seed):
+    def test_qubit_state_prep(self, tol, par, wires, dev_mpi, seed):
         num_wires = numQubits
         comm = MPI.COMM_WORLD
         commSize = comm.Get_size()
@@ -333,7 +333,7 @@ class TestApply:  # pylint: disable=missing-function-docstring,too-many-argument
         dev_cpu = qml.device("lightning.qubit", wires=num_wires, c_dtype=c_dtype)
 
         def circuit():
-            qml.StatePrep(par, wires=Wires)
+            qml.StatePrep(par, wires=wires)
             return qml.state()
 
         cpu_qnode = qml.QNode(circuit, dev_cpu)

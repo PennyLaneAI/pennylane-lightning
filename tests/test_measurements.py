@@ -507,6 +507,7 @@ class TestSample:
         assert np.allclose(probs, probs_ref, atol=2.0e-2, rtol=1.0e-4)
 
 
+@pytest.mark.local_salt(42)
 @pytest.mark.parametrize("shots", [None, 100000, [100000, 111111]])
 @pytest.mark.parametrize("measure_f", [qml.counts, qml.expval, qml.probs, qml.sample, qml.var])
 @pytest.mark.parametrize(
@@ -525,7 +526,7 @@ class TestSample:
 @pytest.mark.parametrize("mcmc", [False, True])
 @pytest.mark.parametrize("n_wires", [None, 3])
 @pytest.mark.parametrize("kernel_name", ["Local", "NonZeroRandom"])
-def test_shots_single_measure_obs(shots, measure_f, obs, n_wires, mcmc, kernel_name):
+def test_shots_single_measure_obs(shots, measure_f, obs, n_wires, mcmc, kernel_name, seed):
     """Tests that Lightning handles shots in a circuit where a single measurement of a common observable is performed at the end."""
 
     if (
@@ -542,13 +543,16 @@ def test_shots_single_measure_obs(shots, measure_f, obs, n_wires, mcmc, kernel_n
     if measure_f in (qml.expval, qml.var) and obs is None:
         pytest.skip("qml.expval, qml.var requires observable.")
 
-    if device_name in ("lightning.gpu", "lightning.kokkos", "lightning.tensor"):
-        dev = qml.device(device_name, wires=n_wires)
-    else:
+    if device_name in ("lightning.gpu", "lightning.kokkos"):
+        dev = qml.device(device_name, wires=n_wires, seed=seed)
+    elif device_name == "lightning.qubit":
         dev = qml.device(
-            device_name, wires=n_wires, shots=shots, mcmc=mcmc, kernel_name=kernel_name
+            device_name, wires=n_wires, shots=shots, mcmc=mcmc, kernel_name=kernel_name, seed=seed
         )
-    dq = qml.device("default.qubit", wires=n_wires)
+    else:
+        dev = qml.device(device_name, wires=n_wires)
+
+    dq = qml.device("default.qubit", wires=n_wires, seed=seed)
     params = [np.pi / 4, -np.pi / 4]
 
     def func(x, y):
@@ -576,15 +580,16 @@ def test_shots_single_measure_obs(shots, measure_f, obs, n_wires, mcmc, kernel_n
 
 
 # TODO: Add LT after extending the support for shots_vector
+@pytest.mark.local_salt(42)
 @pytest.mark.skipif(
     device_name == "lightning.tensor",
     reason="lightning.tensor does not support single-wire devices.",
 )
 @pytest.mark.parametrize("shots", ((1, 10), (1, 10, 100), (1, 10, 10, 100, 100, 100)))
-def test_shots_bins(shots, qubit_device):
+def test_shots_bins(shots, qubit_device, seed):
     """Tests that Lightning handles multiple shots."""
 
-    dev = qubit_device(wires=1, shots=shots)
+    dev = qubit_device(wires=1, shots=shots, seed=seed)
 
     @qml.qnode(dev)
     def circuit():

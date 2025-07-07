@@ -190,8 +190,13 @@ else:
     params=[np.complex64, np.complex128],
 )
 def qubit_device(request):
-    def _device(wires, shots=None):
-        return qml.device(device_name, wires=wires, shots=shots, c_dtype=request.param)
+    def _device(wires, shots=None, seed=None):
+        if device_name == "lightning.tensor":
+            return qml.device(device_name, wires=wires, shots=shots, c_dtype=request.param)
+        else:
+            return qml.device(
+                device_name, wires=wires, shots=shots, c_dtype=request.param, seed=seed
+            )
 
     return _device
 
