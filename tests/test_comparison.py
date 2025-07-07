@@ -275,14 +275,16 @@ class TestComparison:
     )
     @pytest.mark.parametrize("wires", range(1, 17))
     @pytest.mark.parametrize("num_threads", [1, 2])
-    def test_n_qubit_circuit(self, monkeypatch, wires, lightning_dev_version, num_threads):
+    def test_n_qubit_circuit(self, monkeypatch, wires, lightning_dev_version, num_threads, seed):
         """Test an n-qubit circuit"""
 
         monkeypatch.setenv("OMP_NUM_THREADS", str(num_threads))
 
         vec = np.array([1] * (2**wires)) / np.sqrt(2**wires)
         shape = qml.StronglyEntanglingLayers.shape(2, wires)
-        w = np.random.uniform(high=2 * np.pi, size=shape)
+
+        rng = np.random.default_rng(seed)
+        w = rng.uniform(high=2 * np.pi, size=shape)
 
         def circuit(measurement):
             """Prepares the equal superposition state and then applies StronglyEntanglingLayers
