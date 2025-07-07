@@ -52,6 +52,15 @@
   [(#1175)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1175)
 
 <h3>Internal changes ⚙️</h3>
+
+- Update tests with `device(..., shots=...)` to use `qml.set_shots` to ensure compatibility with the latest version of PennyLane.
+  [(#1173)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1173)
+  
+- Fix `applyMultiRZ` for `lightning.kokkos` device to use Kokkos function instead of lambda.
+  [(#1194)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1194)
+  
+- Enable `AmplitudeEmbedding` Python tests for `lightning.kokkos` and `lightning.gpu` devices.
+  [(#1192)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1192)
   
 - Introduce Nanobind as a new framework for Python bindings, and enhance modularity and performance of binding code. 
   This includes significant improvements to the build system and a first round of codebase simplification. 
@@ -60,9 +69,6 @@
 
 - Update docker build CI for stable version to use v0.41.1.
   [(#1188)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1188)
-  
-- Updates `LightningInterpreter` to adjust to a change in `adjoint_transform_prim` and `ctrl_transform_prim`.
-  [(#1177)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1177)
 
 - Remove flaky tests and add random seed to measurement tests.
   [(#1172)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1172)
@@ -118,8 +124,11 @@
 - Removed `max_workers` argument for `default.qubit` device in Python tests to reduce CI testing time.
   [(##1174)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1174)
   
- - Bump Github action runner to use `Ubuntu-24.04` or `Ubuntu-latest`. Fixing all `ubuntu-latest` action runners to `ubuntu-24.04`.
+- Bump Github action runner to use `Ubuntu-24.04` or `Ubuntu-latest`. Fixing all `ubuntu-latest` action runners to `ubuntu-24.04`.
   [(#1167)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1167)
+
+- Adhere to PyPA binary distribution format for built wheels.
+  [(#1193)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1193)
 
 <h3>Contributors ✍️</h3>
 

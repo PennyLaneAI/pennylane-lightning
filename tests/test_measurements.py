@@ -542,12 +542,12 @@ def test_shots_single_measure_obs(shots, measure_f, obs, n_wires, mcmc, kernel_n
         pytest.skip("qml.expval, qml.var requires observable.")
 
     if device_name in ("lightning.gpu", "lightning.kokkos", "lightning.tensor"):
-        dev = qml.device(device_name, wires=n_wires, shots=shots)
+        dev = qml.device(device_name, wires=n_wires)
     else:
         dev = qml.device(
             device_name, wires=n_wires, shots=shots, mcmc=mcmc, kernel_name=kernel_name
         )
-    dq = qml.device("default.qubit", wires=n_wires, shots=shots)
+    dq = qml.device("default.qubit", wires=n_wires)
     params = [np.pi / 4, -np.pi / 4]
 
     def func(x, y):
@@ -559,12 +559,16 @@ def test_shots_single_measure_obs(shots, measure_f, obs, n_wires, mcmc, kernel_n
 
     if obs == []:
         with pytest.raises(ValueError, match="Cannot set an empty list of wires"):
-            qml.QNode(func, dev)(*params)
+            qn = qml.QNode(func, dev)
+            qn = qml.set_shots(qn, shots=shots)
+            qn(*params)
     else:
         func1 = qml.QNode(func, dev)
+        func1 = qml.set_shots(func1, shots=shots)
         results1 = func1(*params)
 
         func2 = qml.QNode(func, dq)
+        func2 = qml.set_shots(func2, shots=shots)
         results2 = func2(*params)
 
         validate_measurements(measure_f, shots, results1, results2)
