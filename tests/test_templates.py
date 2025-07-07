@@ -302,7 +302,7 @@ class TestSimplifiedTwoDesign:
             return [qml.expval(qml.Z(i)) for i in range(n_qubits)]
 
         rng = np.random.default_rng(seed)
-        init_weights = np.random.rand(n_qubits)
+        init_weights = rng.random(n_qubits)
         weights = rng.random((2, n_qubits - 1, 2))
 
         res = qml.QNode(circuit, dev, diff_method=None)(init_weights, weights)

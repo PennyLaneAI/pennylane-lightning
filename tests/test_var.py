@@ -57,7 +57,6 @@ class TestVar:
         dev = qubit_device(wires=n_qubits)
 
         init_state = get_random_normalized_state(2**n_qubits)
-        init_state /= np.linalg.norm(init_state)
         obs = qml.Projector(np.array([0, 1, 0, 0]) / np.sqrt(2), wires=[0, 1])
 
         def circuit():

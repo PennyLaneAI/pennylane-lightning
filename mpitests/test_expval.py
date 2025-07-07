@@ -184,7 +184,7 @@ class TestExpval:
 
     @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
     @pytest.mark.parametrize("n_wires", range(1, numQubits))
-    def test_hermitian_expectation(self, n_wires, theta, phi, tol, c_dtype, batch_obs):
+    def test_hermitian_expectation(self, n_wires, theta, phi, tol, c_dtype, batch_obs, seed):
         """Test that Hadamard expectation value is correct"""
         n_qubits = numQubits - 1
         dev_def = qml.device("default.qubit", wires=n_qubits)
@@ -193,14 +193,15 @@ class TestExpval:
         )
         comm = MPI.COMM_WORLD
 
+        rng = np.random.default_rng(seed)
         m = 2**n_wires
-        U = np.random.rand(m, m) + 1j * np.random.rand(m, m)
+        U = rng.random((m, m)) + 1j * rng.random((m, m))
         U = U + np.conj(U.T)
         U = U.astype(dev.c_dtype)
         comm.Bcast(U, root=0)
         obs = qml.Hermitian(U, wires=range(n_wires))
 
-        init_state = np.random.rand(2**n_qubits) + 1j * np.random.rand(2**n_qubits)
+        init_state = rng.random(2**n_qubits) + 1j * rng.random(2**n_qubits)
         init_state = init_state / np.linalg.norm(init_state)
         init_state = init_state.astype(dev.c_dtype)
         comm.Bcast(init_state, root=0)

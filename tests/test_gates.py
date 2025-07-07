@@ -465,17 +465,18 @@ def test_qubit_unitary(n_wires, theta, phi, tol):
     reason="PennyLane-like StatePrep only implemented in lightning.qubit and lightning.kokkos.",
 )
 @pytest.mark.parametrize("n_targets", list(range(2, 8)))
-def test_state_prep(n_targets, tol):
+def test_state_prep(n_targets, tol, seed):
     """Test that StatePrep is correctly applied to a state."""
     n_wires = 7
     dq = qml.device("default.qubit", wires=n_wires)
     dev = qml.device(device_name, wires=n_wires)
     init_state = get_random_normalized_state(2**n_targets)
+    rng = np.random.default_rng(seed)
     for i in range(10):
         if i == 0:
             wires = np.arange(n_targets, dtype=int)
         else:
-            wires = np.random.permutation(n_wires)[0:n_targets]
+            wires = rng.permutation(n_wires)[0:n_targets]
         tape = qml.tape.QuantumTape(
             [qml.StatePrep(init_state, wires=wires)] + [qml.X(i) for i in range(n_wires)],
             [qml.state()],
@@ -701,11 +702,7 @@ def test_paulirot(n_wires, n_targets, tol, seed):
 
     rng = np.random.default_rng(seed)
     for i in range(10):
-        word = (
-            "Z" * n_targets
-            if i == 0
-            else "".join(pws[w] for w in np.random.randint(0, 3, n_targets))
-        )
+        word = "Z" * n_targets if i == 0 else "".join(pws[w] for w in rng.integers(0, 3, n_targets))
         wires = rng.permutation(n_wires)[0:n_targets]
         stateprep = qml.StatePrep(init_state, wires=range(n_wires))
         op = qml.PauliRot(theta, word, wires=wires)

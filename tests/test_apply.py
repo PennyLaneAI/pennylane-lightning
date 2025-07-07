@@ -884,7 +884,6 @@ def test_circuit_with_stateprep(op, theta, phi, tol):
     U = get_random_matrix(m)
     U, _ = np.linalg.qr(U)
     init_state = get_random_normalized_state(2**n_qubits)
-    init_state /= np.linalg.norm(init_state)
 
     def circuit():
         qml.StatePrep(init_state, wires=range(n_qubits))
