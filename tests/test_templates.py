@@ -113,12 +113,6 @@ class TestAmplitudeEmbedding:
     @pytest.mark.parametrize("first_op", [False, True])
     @pytest.mark.parametrize("n_qubits", range(2, 10, 2))
     def test_amplitudeembedding(self, first_op, n_qubits):
-        if not first_op:
-            if device_name != "lightning.qubit":
-                pytest.xfail(
-                    f"Operation StatePrep cannot be used after other Operations have already been applied on a {device_name} device."
-                )
-
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")
 
