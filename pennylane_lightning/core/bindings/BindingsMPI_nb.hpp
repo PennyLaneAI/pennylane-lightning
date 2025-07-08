@@ -216,7 +216,6 @@ template <class StateVectorT> void registerObservablesMPI(nb::module_ &m) {
 template <class StateVectorT, class PyClass>
 void registerBackendAgnosticMeasurementsMPI(PyClass &pyclass) {
     using PrecisionT = typename StateVectorT::PrecisionT;
-    using ParamT = PrecisionT;
 
     pyclass
         .def("probs",
