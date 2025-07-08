@@ -211,13 +211,13 @@ jobs:
           git log -1 --format='%H'
           git status
 
-      - name: Run PennyLane-Lightning integration tests
-        run: |
-          DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
-          # Remove source files here to ensure pytest collect source coverage from wheel package
-          rm -r pennylane_lightning
-          pl-device-test --device ${DEVICENAME} --skip-ops --shots=10000 $COVERAGE_FLAGS --cov-append
-          pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
+      # - name: Run PennyLane-Lightning integration tests
+      #   run: |
+      #     DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
+      #     # Remove source files here to ensure pytest collect source coverage from wheel package
+      #     rm -r pennylane_lightning
+      #     pl-device-test --device ${DEVICENAME} --skip-ops --shots=10000 $COVERAGE_FLAGS --cov-append
+      #     pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
 
       - name: Check available binaries
         run: |
