@@ -110,6 +110,9 @@ jobs:
                   print(f"\nWARNING: Both pybind11 ({pybind_module}) and nanobind ({nanobind_module}) modules are loaded!")
           EOF
 
+      - name: Python packages
+        run: pip freeze
+
       - name: Run adjoint Jacobian tests
         run: |
           python -m pytest tests/test_adjoint_jacobian.py -s
