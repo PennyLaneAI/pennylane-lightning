@@ -31,6 +31,7 @@
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/vector.h>
 
+#include "BindingsUtils_nb.hpp"
 #include "JacobianData.hpp"
 
 #ifdef _ENABLE_PLGPU
@@ -56,7 +57,6 @@ static_assert(false, "Backend not found.");
 #endif
 
 namespace nb = nanobind;
-
 namespace Pennylane::NanoBindings {
 
 /**
@@ -222,45 +222,11 @@ void registerBackendAgnosticMeasurementsMPI(PyClass &pyclass) {
         .def("probs",
              [](MeasurementsMPI<StateVectorT> &M,
                 const std::vector<std::size_t> &wires) {
-                 auto probs = M.probs(wires);
-
-                 // Create a new array with the right size
-                 std::size_t size = probs.size();
-                 std::vector<std::size_t> shape{size};
-
-                 // Allocate new memory and copy the data
-                 ParamT *new_data = new ParamT[size];
-                 std::memcpy(new_data, probs.data(), size * sizeof(ParamT));
-
-                 // Create a capsule to manage memory
-                 auto capsule = nb::capsule(new_data, [](void *p) noexcept {
-                     delete[] static_cast<ParamT *>(p);
-                 });
-
-                 // Create and return the ndarray with numpy format
-                 return nb::ndarray<ParamT, nb::numpy, nb::c_contig>(
-                     new_data, shape.size(), shape.data(), capsule);
+                 return createNumpyArrayFromVector<PrecisionT>(M.probs(wires));
              })
         .def("probs",
              [](MeasurementsMPI<StateVectorT> &M) {
-                 auto probs = M.probs();
-
-                 // Create a new array with the right size
-                 std::size_t size = probs.size();
-                 std::vector<std::size_t> shape{size};
-
-                 // Allocate new memory and copy the data
-                 ParamT *new_data = new ParamT[size];
-                 std::memcpy(new_data, probs.data(), size * sizeof(ParamT));
-
-                 // Create a capsule to manage memory
-                 auto capsule = nb::capsule(new_data, [](void *p) noexcept {
-                     delete[] static_cast<ParamT *>(p);
-                 });
-
-                 // Create and return the ndarray with numpy format
-                 return nb::ndarray<ParamT, nb::numpy, nb::c_contig>(
-                     new_data, shape.size(), shape.data(), capsule);
+                 return createNumpyArrayFromVector<PrecisionT>(M.probs());
              })
         .def(
             "expval",
@@ -279,25 +245,8 @@ void registerBackendAgnosticMeasurementsMPI(PyClass &pyclass) {
         .def("generate_samples", [](MeasurementsMPI<StateVectorT> &M,
                                     std::size_t num_wires,
                                     std::size_t num_shots) {
-            auto result = M.generate_samples(num_shots);
-
-            // Create a 2D array with shape (num_shots, num_wires)
-            std::vector<std::size_t> shape = {num_shots, num_wires};
-
-            // Allocate new memory and copy the data
-            std::size_t total_size = num_shots * num_wires;
-            std::size_t *new_data = new std::size_t[total_size];
-            std::memcpy(new_data, result.data(),
-                        total_size * sizeof(std::size_t));
-
-            // Create a capsule to manage memory
-            auto capsule = nb::capsule(new_data, [](void *p) noexcept {
-                delete[] static_cast<std::size_t *>(p);
-            });
-
-            // Create and return the ndarray with numpy format
-            return nb::ndarray<std::size_t, nb::numpy>(new_data, shape.size(),
-                                                       shape.data(), capsule);
+            return createNumpyArrayFromVector<std::size_t>(
+                M.generate_samples(num_shots), num_shots, num_wires);
         });
 }
 
@@ -319,22 +268,7 @@ auto registerAdjointJacobianMPI(
                                            trainableParams};
     adjoint_jacobian.adjointJacobian(std::span{jac}, jd, sv);
 
-    // Create a new array with the right size
-    std::size_t size = jac.size();
-    std::vector<std::size_t> shape{size};
-
-    // Allocate new memory and copy the data
-    PrecisionT *new_data = new PrecisionT[size];
-    std::memcpy(new_data, jac.data(), size * sizeof(PrecisionT));
-
-    // Create a capsule to manage memory
-    auto capsule = nb::capsule(new_data, [](void *p) noexcept {
-        delete[] static_cast<PrecisionT *>(p);
-    });
-
-    // Create and return the ndarray with numpy format
-    return nb::ndarray<PrecisionT, nb::numpy, nb::c_contig>(
-        new_data, shape.size(), shape.data(), capsule);
+    return createNumpyArrayFromVector<PrecisionT>(std::move(jac));
 }
 
 /**
@@ -440,22 +374,7 @@ void registerBackendAgnosticAlgorithmsMPI(nb::module_ &m) {
                     trainableParams};
                 self.adjointJacobian_serial(std::span{jac}, jd);
 
-                // Create a new array with the right size
-                std::size_t size = jac.size();
-                std::vector<std::size_t> shape{size};
-
-                // Allocate new memory and copy the data
-                PrecisionT *new_data = new PrecisionT[size];
-                std::memcpy(new_data, jac.data(), size * sizeof(PrecisionT));
-
-                // Create a capsule to manage memory
-                auto capsule = nb::capsule(new_data, [](void *p) noexcept {
-                    delete[] static_cast<PrecisionT *>(p);
-                });
-
-                // Create and return the ndarray with numpy format
-                return nb::ndarray<PrecisionT, nb::numpy, nb::c_contig>(
-                    new_data, shape.size(), shape.data(), capsule);
+                return createNumpyArrayFromVector<PrecisionT>(std::move(jac));
             },
             "Batch Adjoint Jacobian method.");
 }
