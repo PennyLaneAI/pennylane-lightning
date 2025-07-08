@@ -24,6 +24,20 @@ try:
         allocate_aligned_array,
         print_configuration,
     )
+
+    try:
+        from pennylane_lightning.lightning_kokkos_ops import (
+            MPIManagerKokkos,
+            StateVectorMPIC64,
+            StateVectorMPIC128,
+        )
+
+        mpi_error = None
+        MPI_SUPPORT = True
+    except ImportError as ex_mpi:
+        mpi_error = ex_mpi
+        MPI_SUPPORT = False
+
 except ImportError as ex:
     warn(str(ex), UserWarning)
 
@@ -50,22 +64,23 @@ class LightningKokkosStateVector(LightningBaseStateVector):
     Interfaces with C++ python binding methods for state-vector manipulation.
 
     Args:
-        num_wires(int): the number of wires to initialize the device with
+        num_wires (int): the number of wires to initialize the device with
         dtype: Datatypes for state-vector representation. Must be one of
             ``np.complex64`` or ``np.complex128``. Default is ``np.complex128``
         rng (Generator): random number generator to use for seeding sampling measurement.
-        kokkos_args(InitializationSettings): binding for Kokkos::InitializationSettings
+        kokkos_args (InitializationSettings): binding for Kokkos::InitializationSettings
             (threading parameters).
-        sync(bool): immediately sync with host-sv after applying operations
+        mpi (bool): Use MPI for distributed state vector.
 
     """
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-arguments, too-many-positional-arguments
         self,
         num_wires: int,
         dtype: Union[np.complex128, np.complex64] = np.complex128,
         rng: Generator = None,
         kokkos_args=None,
+        mpi: bool = None,
     ):
 
         super().__init__(num_wires, dtype, rng)
@@ -74,15 +89,22 @@ class LightningKokkosStateVector(LightningBaseStateVector):
 
         self._kokkos_config = {}
 
+        self._mpi = mpi
+
         # Initialize the state vector
-        if kokkos_args is None:
-            self._qubit_state = self._state_dtype()(num_wires)
-        elif isinstance(kokkos_args, InitializationSettings):
-            self._qubit_state = self._state_dtype()(num_wires, kokkos_args)
-        else:
-            raise TypeError(
-                f"Argument kokkos_args must be of type {type(InitializationSettings())} but it is of {type(kokkos_args)}."
-            )
+        sv_init_args = [self.num_wires]
+        if mpi:
+            self._mpi_manager = MPIManagerKokkos()
+            sv_init_args.insert(0, self._mpi_manager)
+
+        if kokkos_args is not None:
+            if not isinstance(kokkos_args, InitializationSettings):
+                raise TypeError(
+                    f"Argument kokkos_args must be of type {type(InitializationSettings())} but it is of {type(kokkos_args)}."
+                )
+            sv_init_args.append(kokkos_args)
+
+        self._qubit_state = self._state_dtype()(*sv_init_args)
 
         if not self._kokkos_config:
             self._kokkos_config = self._kokkos_configuration()
@@ -101,6 +123,12 @@ class LightningKokkosStateVector(LightningBaseStateVector):
         >>> print(dev.state)
         [0.+0.j 1.+0.j]
         """
+        if self._mpi:
+            self._qubit_state.reorderAllWires()
+            local_size = self._qubit_state.getLocalBlockSize()
+            state = np.zeros(local_size, dtype=self.dtype)
+            self.sync_d2h(state)
+            return state
         state = np.zeros(2**self._num_wires, dtype=self.dtype)
         self.sync_d2h(state)
         return state
@@ -110,6 +138,9 @@ class LightningKokkosStateVector(LightningBaseStateVector):
 
         Returns: the state vector class
         """
+        if self._mpi:
+            return StateVectorMPIC128 if self.dtype == np.complex128 else StateVectorMPIC64
+
         return StateVectorC128 if self.dtype == np.complex128 else StateVectorC64
 
     def sync_h2d(self, state_vector):
@@ -191,6 +222,14 @@ class LightningKokkosStateVector(LightningBaseStateVector):
 
         if len(device_wires) == self._num_wires and Wires(sorted(device_wires)) == device_wires:
             # Initialize the entire device state with the input state
+            if self._mpi:
+                self._qubit_state.resetIndices()
+                myrank = self._mpi_manager.getRank()
+                local_size = self._qubit_state.getLocalBlockSize()
+                local_state = state[myrank * local_size : (myrank + 1) * local_size]
+                self.sync_h2d(local_state)
+                return
+
             output_shape = (2,) * self._num_wires
             state = np.reshape(state, output_shape).ravel(order="C")
             self.sync_h2d(np.reshape(state, output_shape))

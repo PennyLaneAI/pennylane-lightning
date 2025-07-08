@@ -189,6 +189,44 @@ void registerGatesForStateVector(PyClass &pyclass) {
 }
 
 /**
+ * @brief Register controlled gate operations for a statevector.
+ *
+ * @tparam StateVectorT State vector type
+ * @tparam PyClass Nanobind class type
+ * @param pyclass Nanobind class to bind methods to
+ */
+template <class StateVectorT, class PyClass>
+void registerControlledGates(PyClass &pyclass) {
+    using PrecisionT = typename StateVectorT::PrecisionT;
+    using ParamT = PrecisionT;
+
+    using Pennylane::Gates::ControlledGateOperation;
+    using Pennylane::Util::for_each_enum;
+    namespace Constant = Pennylane::Gates::Constant;
+
+    for_each_enum<ControlledGateOperation>(
+        [&pyclass](ControlledGateOperation gate_op) {
+            using Pennylane::Util::lookup;
+            const auto gate_name =
+                std::string(lookup(Constant::controlled_gate_names, gate_op));
+            const std::string doc = "Apply the " + gate_name + " gate.";
+            auto func = [gate_name = gate_name](
+                            StateVectorT &sv,
+                            const std::vector<std::size_t> &controlled_wires,
+                            const std::vector<bool> &controlled_values,
+                            const std::vector<std::size_t> &wires, bool inverse,
+                            const std::vector<ParamT> &params) {
+                sv.applyOperation(gate_name, controlled_wires,
+                                  controlled_values, wires, inverse, params);
+            };
+            pyclass.def(gate_name.c_str(), func, doc.c_str(),
+                        nb::arg("controlled_wires"),
+                        nb::arg("controlled_values"), nb::arg("wires"),
+                        nb::arg("inverse") = false,
+                        nb::arg("params") = std::vector<ParamT>{});
+        });
+}
+/**
  * @brief Create an aligned array for a given type, memory model and array size.
  *
  * @tparam VectorT Datatype of array to create
@@ -554,6 +592,29 @@ void registerBackendAgnosticMeasurements(PyClass &pyclass) {
 }
 
 /**
+ * @brief Register the adjoint Jacobian method.
+ */
+template <class StateVectorT>
+auto registerAdjointJacobian(
+    AdjointJacobian<StateVectorT> &adjoint_jacobian, const StateVectorT &sv,
+    const std::vector<std::shared_ptr<Observable<StateVectorT>>> &observables,
+    const OpsData<StateVectorT> &operations,
+    const std::vector<std::size_t> &trainableParams)
+    -> nb::ndarray<typename StateVectorT::PrecisionT, nb::numpy, nb::c_contig> {
+    using PrecisionT = typename StateVectorT::PrecisionT;
+    std::vector<PrecisionT> jac(observables.size() * trainableParams.size(),
+                                PrecisionT{0.0});
+    const JacobianData<StateVectorT> jd{operations.getTotalNumParams(),
+                                        sv.getLength(),
+                                        sv.getData(),
+                                        observables,
+                                        operations,
+                                        trainableParams};
+    adjoint_jacobian.adjointJacobian(std::span{jac}, jd, sv);
+    return createNumpyArrayFromVector<PrecisionT>(jac);
+}
+
+/**
  * @brief Create operations list from data
  *
  * @tparam StateVectorT State vector type
@@ -609,8 +670,6 @@ void registerBackendAgnosticAlgorithms(nb::module_ &m) {
         typename StateVectorT::ComplexT; // Statevector's complex type
     using ParamT = PrecisionT;           // Parameter's data precision
 
-    using arr_c = nb::ndarray<const std::complex<ParamT>, nb::c_contig>;
-
     const std::string bitsize =
         std::to_string(sizeof(std::complex<PrecisionT>) * 8);
 
@@ -647,6 +706,16 @@ void registerBackendAgnosticAlgorithms(nb::module_ &m) {
     std::string function_name = "create_ops_listC" + bitsize;
     m.def(function_name.c_str(), &createOpsList<StateVectorT>,
           "Create a list of operations from data.");
+    //***********************************************************************//
+    //                            Adjoint Jacobian
+    //***********************************************************************//
+    class_name = "AdjointJacobianC" + bitsize;
+    auto adjoint_class =
+        nb::class_<AdjointJacobian<StateVectorT>>(m, class_name.c_str());
+
+    adjoint_class.def(nb::init<>());
+    adjoint_class.def("__call__", &registerAdjointJacobian<StateVectorT>,
+                      "Adjoint Jacobian method.");
 }
 
 /**
@@ -658,55 +727,12 @@ void registerBackendAgnosticAlgorithms(nb::module_ &m) {
  */
 template <class StateVectorT, class PyClass>
 void registerBackendAgnosticStateVectorMethods(PyClass &pyclass) {
-    // using PrecisionT = typename StateVectorT::PrecisionT;
-    // using ComplexT = typename StateVectorT::ComplexT;
-    // using ParamT = PrecisionT;
-
     // Initialize with number of qubits
     pyclass.def(nb::init<size_t>());
 
     pyclass.def("__len__", &StateVectorT::getLength,
                 "Get the size of the statevector.");
     pyclass.def("size", &StateVectorT::getLength);
-}
-
-/**
- * @brief Register controlled gate operations for a statevector.
- *
- * @tparam StateVectorT State vector type
- * @tparam PyClass Nanobind class type
- * @param pyclass Nanobind class to bind methods to
- */
-template <class StateVectorT, class PyClass>
-void registerControlledGates(PyClass &pyclass) {
-    using PrecisionT = typename StateVectorT::PrecisionT;
-    using ParamT = PrecisionT;
-
-    using Pennylane::Gates::ControlledGateOperation;
-    using Pennylane::Util::for_each_enum;
-    namespace Constant = Pennylane::Gates::Constant;
-
-    for_each_enum<ControlledGateOperation>(
-        [&pyclass](ControlledGateOperation gate_op) {
-            using Pennylane::Util::lookup;
-            const auto gate_name =
-                std::string(lookup(Constant::controlled_gate_names, gate_op));
-            const std::string doc = "Apply the " + gate_name + " gate.";
-            auto func = [gate_name = gate_name](
-                            StateVectorT &sv,
-                            const std::vector<std::size_t> &controlled_wires,
-                            const std::vector<bool> &controlled_values,
-                            const std::vector<std::size_t> &wires, bool inverse,
-                            const std::vector<ParamT> &params) {
-                sv.applyOperation(gate_name, controlled_wires,
-                                  controlled_values, wires, inverse, params);
-            };
-            pyclass.def(gate_name.c_str(), func, doc.c_str(),
-                        nb::arg("controlled_wires"),
-                        nb::arg("controlled_values"), nb::arg("wires"),
-                        nb::arg("inverse") = false,
-                        nb::arg("params") = std::vector<ParamT>{});
-        });
 }
 
 /**
@@ -717,8 +743,6 @@ void registerControlledGates(PyClass &pyclass) {
  */
 template <class StateVectorT> void lightningClassBindings(nb::module_ &m) {
     using PrecisionT = typename StateVectorT::PrecisionT;
-    // using ComplexT = typename StateVectorT::ComplexT;
-    // using ParamT = PrecisionT;
 
     const std::string bitsize =
         std::to_string(sizeof(std::complex<PrecisionT>) * 8);

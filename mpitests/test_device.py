@@ -88,13 +88,21 @@ def test_dynamic_wires_from_circuit_fixed_wires(circuit_in, n_wires, wires_list)
     assert circuit_out.operations == circuit_in.operations
     assert circuit_out.measurements == circuit_in.measurements
 
-    assert dev._statevector._mpi_handler.use_mpi
-    assert (
-        dev._statevector._mpi_handler.num_local_wires
-        + dev._statevector._mpi_handler.num_global_wires
-    ) == n_wires
+    if device_name == "lightning.gpu":
+        assert dev._statevector._mpi_handler.use_mpi
+        assert (
+            dev._statevector._mpi_handler.num_local_wires
+            + dev._statevector._mpi_handler.num_global_wires
+        ) == n_wires
+    elif device_name == "lightning.kokkos":
+        assert dev._statevector._mpi
+        assert (
+            dev._statevector._qubit_state.getNumLocalWires()
+            + dev._statevector._qubit_state.getNumGlobalWires()
+        ) == n_wires
 
 
+@pytest.mark.skipif(device_name != "lightning.gpu", reason="Only for LGPU")
 def test_unsupported_mpi_buf_size():
     with pytest.raises(ValueError, match="Unsupported mpi_buf_size value"):
         dev = qml.device(device_name, mpi=True, wires=4, mpi_buf_size=-1)
@@ -112,6 +120,7 @@ def test_unsupported_mpi_buf_size():
         dev = qml.device(device_name, mpi=True, wires=1)
 
 
+@pytest.mark.skipif(device_name != "lightning.gpu", reason="Only for LGPU")
 def test_unsupported_gate():
     comm = MPI.COMM_WORLD
     dev = qml.device(device_name, mpi=True, wires=4)
