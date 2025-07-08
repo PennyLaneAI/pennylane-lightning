@@ -697,7 +697,6 @@ void registerBackendAgnosticAlgorithms(nb::module_ &m) {
  */
 template <class StateVectorT, class PyClass>
 void registerBackendAgnosticStateVectorMethods(PyClass &pyclass) {
-
     // Initialize with number of qubits
     pyclass.def(nb::init<size_t>());
 
