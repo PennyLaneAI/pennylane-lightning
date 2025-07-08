@@ -611,7 +611,7 @@ auto registerAdjointJacobian(
                                         operations,
                                         trainableParams};
     adjoint_jacobian.adjointJacobian(std::span{jac}, jd, sv);
-    return createNumpyArrayFromVector<PrecisionT>(jac);
+    return createNumpyArrayFromVector<PrecisionT>(std::move(jac));
 }
 
 /**
