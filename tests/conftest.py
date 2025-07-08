@@ -134,11 +134,11 @@ nanobind_module_name = f"pennylane_lightning.lightning_{backend}_nb"
 
 # Handle lightning.tensor separately since it has different class structure
 if backend == "tensor":
-    from pennylane_lightning.lightning_tensor_ops import LightningTensor as LightningDevice
-    from pennylane_lightning.lightning_tensor_ops._measurements import (
+    from pennylane_lightning.lightning_tensor import LightningTensor as LightningDevice
+    from pennylane_lightning.lightning_tensor._measurements import (
         LightningTensorMeasurements as LightningMeasurements,
     )
-    from pennylane_lightning.lightning_tensor_ops._tensornet import (
+    from pennylane_lightning.lightning_tensor._tensornet import (
         LightningTensorNet as LightningStateVector,
     )
 
