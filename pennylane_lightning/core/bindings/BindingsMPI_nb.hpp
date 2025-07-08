@@ -242,12 +242,12 @@ void registerBackendAgnosticMeasurementsMPI(PyClass &pyclass) {
                 return M.var(*ob);
             },
             "Variance of an observable object.")
-        .def("generate_samples", [](MeasurementsMPI<StateVectorT> &M,
-                                    std::size_t num_wires,
-                                    std::size_t num_shots) {
-            return createNumpyArrayFromVector<std::size_t>(
-                M.generate_samples(num_shots), num_shots, num_wires);
-        });
+        .def("generate_samples",
+             [](MeasurementsMPI<StateVectorT> &M, std::size_t num_wires,
+                std::size_t num_shots) {
+                 return createNumpyArrayFromVector<std::size_t>(
+                     M.generate_samples(num_shots), num_shots, num_wires);
+             });
 }
 
 /**
