@@ -211,76 +211,16 @@ jobs:
           git log -1 --format='%H'
           git status
 
-      # - name: Run PennyLane-Lightning integration tests
-      #   run: |
-      #     DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
-      #     # Remove source files here to ensure pytest collect source coverage from wheel package
-      #     rm -r pennylane_lightning
-      #     pl-device-test --device ${DEVICENAME} --skip-ops --shots=10000 $COVERAGE_FLAGS --cov-append
-      #     pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
-
-      - name: Check available binaries
+      - name: Run PennyLane-Lightning integration tests
         run: |
-          echo "Checking available binary modules..."
-          python - <<EOF
-          import sys
-          import importlib
-          import pennylane_lightning
-
-          # Print all loaded modules that contain 'lightning'
-          lightning_modules = [name for name in sys.modules if "lightning" in name]
-          print(f"Loaded Lightning modules: {lightning_modules}")
-
-          # Check each backend for binary availability
-          backends = ["qubit", "kokkos", "gpu", "tensor"]
-
-          for backend in backends:
-              # Check for pybind11 module
-              pybind_module = f"pennylane_lightning.lightning_{backend}_ops"
-              has_pybind = hasattr(pennylane_lightning, f"lightning_{backend}_ops")
-
-              # Check for nanobind module
-              nanobind_module = f"pennylane_lightning.lightning_{backend}_nb"
-              has_nanobind = hasattr(pennylane_lightning, f"lightning_{backend}_nb")
-
-              print(f"\nBackend: lightning.{backend}")
-              print(f"  Pybind11 module available: {has_pybind}")
-              print(f"  Nanobind module available: {has_nanobind}")
-
-              # Try to import the main device class
-              try:
-                  if backend == "tensor":
-                      module_path = f"pennylane_lightning.lightning_{backend}"
-                      module = importlib.import_module(module_path)
-                      device_class = f"LightningTensor"
-                  else:
-                      module_path = f"pennylane_lightning.lightning_{backend}"
-                      module = importlib.import_module(module_path)
-                      device_class = f"Lightning{backend.capitalize()}" if backend != "qubit" else "LightningQubit"
-                      if backend == "gpu":
-                          device_class = "LightningGPU"
-
-                  device = getattr(module, device_class)
-                  binary_available = getattr(device, "_CPP_BINARY_AVAILABLE", False)
-                  print(f"  {device_class}._CPP_BINARY_AVAILABLE: {binary_available}")
-              except (ImportError, AttributeError) as e:
-                  print(f"  Error importing {device_class}: {str(e)}")
-
-          # If both pybind11 and nanobind modules are loaded for any backend, print a warning
-          for backend in backends:
-              pybind_module = f"pennylane_lightning.lightning_{backend}_ops"
-              nanobind_module = f"pennylane_lightning.lightning_{backend}_nb"
-
-              if pybind_module in sys.modules and nanobind_module in sys.modules:
-                  print(f"\nWARNING: Both pybind11 ({pybind_module}) and nanobind ({nanobind_module}) modules are loaded!")
-          EOF
+          DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
+          # Remove source files here to ensure pytest collect source coverage from wheel package
+          rm -r pennylane_lightning
+          pl-device-test --device ${DEVICENAME} --skip-ops --shots=10000 $COVERAGE_FLAGS --cov-append
+          pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
 
       - name: Python packages
         run: pip freeze
-
-      - name: Run adjoint Jacobian tests
-        run: |
-          python -m pytest tests/test_adjoint_jacobian.py -s
 
       - name: Run PennyLane-Lightning unit tests
         env:
