@@ -17,7 +17,7 @@ Unit tests for measurements class.
 import numpy as np
 import pennylane as qml
 import pytest
-from conftest import LightningDevice, device_name  # tested device
+from conftest import LightningDevice, device_name, get_random_normalized_state  # tested device
 
 if device_name != "lightning.tensor":
     pytest.skip(
@@ -144,8 +144,7 @@ class TestMeasurementFunction:
         dev = qml.device(device_name, wires=n_qubits, **method)
         dq = qml.device("default.qubit", wires=n_qubits)
 
-        init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
-        init_state /= np.linalg.norm(init_state)
+        init_state = get_random_normalized_state(2**n_qubits)
 
         ops = [qml.StatePrep(init_state, wires=range(n_qubits))]
 
@@ -172,8 +171,7 @@ class TestMeasurementFunction:
         dev = qml.device(device_name, wires=n_qubits, **method)
         dq = qml.device("default.qubit", wires=n_qubits)
 
-        init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
-        init_state /= np.linalg.norm(init_state)
+        init_state = get_random_normalized_state(2**n_qubits)
 
         ops = [qml.StatePrep(init_state, wires=range(n_qubits))]
 

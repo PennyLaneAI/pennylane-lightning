@@ -22,7 +22,7 @@ import pennylane as qml
 import pytest
 from conftest import PHI, THETA
 from conftest import LightningDevice as ld
-from conftest import device_name
+from conftest import device_name, get_random_matrix, get_random_normalized_state
 from pennylane.exceptions import DeviceError
 from pennylane.operation import Operation
 from pennylane.wires import Wires
@@ -852,8 +852,7 @@ class TestApplyLightningMethod:
 
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit", wires=n_qubits)
-        init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
-        init_state /= np.linalg.norm(init_state)
+        init_state = get_random_normalized_state(2**n_qubits)
 
         def circuit():
             qml.StatePrep(init_state, wires=range(n_qubits))
@@ -882,10 +881,9 @@ def test_circuit_with_stateprep(op, theta, phi, tol):
     dev_def = qml.device("default.qubit", wires=n_qubits)
     dev = qml.device(device_name, wires=n_qubits)
     m = 2**n_wires
-    U = np.random.rand(m, m) + 1j * np.random.rand(m, m)
+    U = get_random_matrix(m)
     U, _ = np.linalg.qr(U)
-    init_state = np.random.rand(2**n_qubits) + 1j * np.random.rand(2**n_qubits)
-    init_state /= np.linalg.norm(init_state)
+    init_state = get_random_normalized_state(2**n_qubits)
 
     def circuit():
         qml.StatePrep(init_state, wires=range(n_qubits))

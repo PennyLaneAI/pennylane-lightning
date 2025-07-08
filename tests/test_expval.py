@@ -21,7 +21,7 @@ import pennylane as qml
 import pytest
 from conftest import PHI, THETA, VARPHI
 from conftest import LightningDevice as ld
-from conftest import device_name
+from conftest import device_name, get_random_matrix, get_random_normalized_state
 
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
@@ -106,8 +106,7 @@ class TestExpval:
         dev_def = qml.device("default.qubit", wires=n_qubits)
         dev = qubit_device(wires=n_qubits)
 
-        init_state = np.random.rand(2**n_qubits) + 1j * np.random.rand(2**n_qubits)
-        init_state /= np.linalg.norm(init_state)
+        init_state = get_random_normalized_state(2**n_qubits)
         obs = qml.Projector(np.array([0, 1, 0, 0]) / np.sqrt(2), wires=[0, 1])
 
         def circuit():
@@ -129,12 +128,11 @@ class TestExpval:
         dev = qubit_device(wires=n_qubits)
 
         m = 2**n_wires
-        U = np.random.rand(m, m) + 1j * np.random.rand(m, m)
+        U = get_random_matrix(m)
         U = U + np.conj(U.T)
         wires = list(range((n_qubits - n_wires), (n_qubits - n_wires) + n_wires))
         perms = list(itertools.permutations(wires))
-        init_state = np.random.rand(2**n_qubits) + 1j * np.random.rand(2**n_qubits)
-        init_state /= np.linalg.norm(init_state)
+        init_state = get_random_normalized_state(2**n_qubits)
         if n_wires > 4:
             perms = perms[0::30]
         for perm in perms:
