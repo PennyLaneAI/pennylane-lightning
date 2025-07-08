@@ -51,6 +51,7 @@ class TestJAXCompatibility:
     @pytest.fixture
     def get_measurements_class(self, current_nanobind_module):
         module = current_nanobind_module
+
         def _get_class(dtype):
             class_name = "MeasurementsC64" if dtype == np.complex64 else "MeasurementsC128"
             if hasattr(module, class_name):
@@ -58,7 +59,6 @@ class TestJAXCompatibility:
             pytest.skip(f"Class {class_name} not available in module {module}")
 
         return _get_class
-
 
     @pytest.fixture
     def get_named_obs_class(self, current_nanobind_module):
@@ -100,7 +100,13 @@ class TestJAXCompatibility:
         return _get_class
 
     @pytest.mark.parametrize("precision", ["64", "128"])
-    def test_adjoint_jacobian_jax(self, get_statevector_class_and_precision, get_adjoint_jacobian_class, get_named_obs_class, get_ops_struct_class):
+    def test_adjoint_jacobian_jax(
+        self,
+        get_statevector_class_and_precision,
+        get_adjoint_jacobian_class,
+        get_named_obs_class,
+        get_ops_struct_class,
+    ):
         """Test adjoint Jacobian with JAX parameters."""
 
         StateVectorClass, dtype = get_statevector_class_and_precision
@@ -156,7 +162,11 @@ class TestJAXCompatibility:
 
     @pytest.mark.parametrize("precision", ["64", "128"])
     def test_adjoint_jacobian_multiple_params_jax(
-        self, get_statevector_class_and_precision, get_adjoint_jacobian_class, get_named_obs_class, get_ops_struct_class
+        self,
+        get_statevector_class_and_precision,
+        get_adjoint_jacobian_class,
+        get_named_obs_class,
+        get_ops_struct_class,
     ):
         """Test adjoint Jacobian with multiple JAX parameters."""
 
@@ -211,9 +221,7 @@ class TestJAXCompatibility:
         assert np.allclose(jacobian, expected_jacobian, atol=1e-5)
 
     @pytest.mark.parametrize("precision", ["64", "128"])
-    def test_jax_array_initialization(
-        self, get_statevector_class_and_precision
-    ):
+    def test_jax_array_initialization(self, get_statevector_class_and_precision):
         """Test initialization of StateVector with JAX arrays."""
 
         StateVectorClass, dtype = get_statevector_class_and_precision
@@ -364,7 +372,6 @@ class TestJAXCompatibility:
 
         # For |+⟩ state, ⟨Z⟩ = 0
         assert np.allclose(z_expval, 0.0)
-
 
     def test_adjoint_jacobian_jax(
         self,
