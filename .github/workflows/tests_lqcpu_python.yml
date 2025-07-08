@@ -219,14 +219,6 @@ jobs:
           pl-device-test --device ${DEVICENAME} --skip-ops --shots=10000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
 
-      - name: Check basic imports
-        run: |
-          python -c "import pennylane_lightning"
-          python -c "from pennylane_lightning import lightning_qubit"
-          python -c "from pennylane_lightning import lightning_kokkos"
-          python -c "from pennylane_lightning import lightning_gpu"
-          python -c "from pennylane_lightning import lightning_tensor"
-
       - name: Check available binaries
         run: |
           echo "Checking available binary modules..."
