@@ -41,6 +41,8 @@ help:
 	@echo "                           Default: lightning_gpu"
 	@echo "  test-python [device=?]   to run the Python test suite"
 	@echo "                           Default: lightning.qubit"
+	@echo "  test-python-mpi [device=?] to run the Python test suite"
+	@echo "                           Default: lightning.gpu"
 	@echo "  wheel [backend=?]        to configure and build Python wheels"
 	@echo "                           Default: lightning_qubit"
 	@echo "  coverage [device=?]      to generate a coverage report for python interface"
@@ -106,7 +108,7 @@ coverage-cpp:
 	genhtml coverage.info --output-directory out || echo "genhtml failed"
 	echo "Coverage report generated in ./BuildCov/out/index.html"
 
-.PHONY: test-python test-builtin test-suite test-cpp test-cpp-mpi
+.PHONY: test-python test-python-mpi test-builtin test-suite test-cpp test-cpp-mpi
 test-python: test-builtin test-suite
 
 test-builtin:
@@ -115,6 +117,9 @@ test-builtin:
 test-suite:
 	pl-device-test --device $(if $(device:-=),$(device),lightning.qubit) --skip-ops --shots=10000
 	pl-device-test --device $(if $(device:-=),$(device),lightning.qubit) --shots=None --skip-ops
+
+test-python-mpi:
+	PL_DEVICE=$(if $(device:-=),$(device),lightning.gpu) mpirun -n 2 $(PYTHON) -I  -m pytest mpitests --tb=short
 
 test-cpp:
 	rm -rf ./BuildTests
@@ -141,21 +146,33 @@ test-cpp-mpi:
 		  -DCMAKE_BUILD_TYPE=Debug \
 		  -DBUILD_TESTS=ON \
 		  -DENABLE_WARNINGS=ON \
-		  -DPL_BACKEND=lightning_gpu \
+		  -DPL_BACKEND=$(PL_BACKEND) \
 		  -DSCIPY_OPENBLAS=$(SCIPY_OPENBLAS) \
-		  -DENABLE_MPI=ON \
 		  -DCMAKE_C_COMPILER_LAUNCHER=$(COMPILER_LAUNCHER) \
 		  -DCMAKE_CXX_COMPILER_LAUNCHER=$(COMPILER_LAUNCHER) \
+		  -DENABLE_MPI=ON \
 		  $(OPTIONS)
 ifdef target
 	cmake --build ./BuildTests $(VERBOSE) --target $(target)
 	mpirun -np 2 ./BuildTests/$(target)
 else
 	cmake --build ./BuildTests $(VERBOSE)
-	for file in ./BuildTests/*_test_runner_mpi; do \
-		echo "Running $$file"; \
-		mpirun -np 2 $$file ; \
-	done
+	
+	if [ "$(PL_BACKEND)" = "lightning_gpu" ]; then \
+		for file in ./BuildTests/*_test_runner_mpi; do \
+			echo "Running $$file"; \
+			mpirun -np 2 $$file ; \
+		done ; \
+	elif [ "$(PL_BACKEND)" = "lightning_kokkos" ]; then \
+		for file in ./BuildTests/lightning_kokkos*test_runner_mpi; do \
+			echo "Running $$file"; \
+			mpirun -np 4 $$file ; \
+		done ; \
+		for file in ./BuildTests/utils_test_runner_mpi; do \
+			echo "Running $$file"; \
+			mpirun -np 2 $$file ; \
+		done; \
+	fi
 endif
 
 
@@ -242,7 +259,7 @@ build-nanobind:
 
 .PHONY: test-bindings
 test-bindings:
-	$(PYTHON) -m pytest tests/bindings -vv -x -s
+	$(PYTHON) -m pytest tests/bindings -vv -s
 
 .PHONY: build-test-bindings
 build-test-bindings:

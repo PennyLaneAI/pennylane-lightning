@@ -17,28 +17,25 @@ import pennylane as qml
 import pytest
 from conftest import device_name
 
-# pylint: disable=missing-function-docstring,unnecessary-comprehension,too-many-arguments,wrong-import-order,unused-variable,c-extension-no-member
+# pylint: disable=missing-function-docstring,unnecessary-comprehension,too-many-arguments,too-many-positional-arguments,wrong-import-order,unused-variable,c-extension-no-member
 from mpi4py import MPI
 
 numQubits = 8
 
 
-def create_random_init_state(numWires, c_dtype, seed_value=48):
-    """Returns a random initial state of a certain type."""
-    np.random.seed(seed_value)
-
+def create_random_init_state(numWires, c_dtype, seed=None):
+    """Returns a random normalized state of c_dtype with 2**numWires elements."""
+    rng = np.random.default_rng(seed)
     r_dtype = np.float64 if c_dtype == np.complex128 else np.float32
 
     num_elements = 2**numWires
-    init_state = np.random.rand(num_elements).astype(r_dtype) + 1j * np.random.rand(
-        num_elements
-    ).astype(r_dtype)
-
-    init_state = init_state / np.linalg.norm(init_state)
-    return init_state
+    init_state = rng.random(num_elements).astype(r_dtype) + 1j * rng.random(num_elements).astype(
+        r_dtype
+    )
+    return init_state / np.linalg.norm(init_state)
 
 
-def apply_probs_nonparam(tol, operation, GateWires, Wires, c_dtype):
+def apply_probs_nonparam(tol, operation, GateWires, Wires, c_dtype, seed=None):
     num_wires = numQubits
     comm = MPI.COMM_WORLD
     rank = comm.Get_rank()
@@ -47,7 +44,7 @@ def apply_probs_nonparam(tol, operation, GateWires, Wires, c_dtype):
     dev_cpu = qml.device("lightning.qubit", wires=num_wires, c_dtype=c_dtype)
     dev_mpi = qml.device(device_name, wires=num_wires, mpi=True, c_dtype=c_dtype)
 
-    state_vector = create_random_init_state(num_wires, dev_mpi.c_dtype)
+    state_vector = create_random_init_state(num_wires, dev_mpi.c_dtype, seed)
     comm.Bcast(state_vector, root=0)
 
     def circuit():
@@ -80,7 +77,7 @@ def apply_probs_nonparam(tol, operation, GateWires, Wires, c_dtype):
     comm.Barrier()
 
 
-def apply_probs_param(tol, operation, par, GateWires, Wires, c_dtype):
+def apply_probs_param(tol, operation, par, GateWires, Wires, c_dtype, seed=None):
     num_wires = numQubits
     comm = MPI.COMM_WORLD
     rank = comm.Get_rank()
@@ -89,7 +86,7 @@ def apply_probs_param(tol, operation, par, GateWires, Wires, c_dtype):
     dev_cpu = qml.device("lightning.qubit", wires=num_wires, c_dtype=c_dtype)
     dev_mpi = qml.device(device_name, wires=num_wires, mpi=True, c_dtype=c_dtype)
 
-    state_vector = create_random_init_state(num_wires, dev_mpi.c_dtype)
+    state_vector = create_random_init_state(num_wires, dev_mpi.c_dtype, seed)
     comm.Bcast(state_vector, root=0)
 
     def circuit():
@@ -143,15 +140,15 @@ class TestProbs:
         "operation", [qml.PauliX, qml.PauliY, qml.PauliZ, qml.Hadamard, qml.S, qml.T]
     )
     @pytest.mark.parametrize("GateWires", [[0], [numQubits - 1]])
-    def test_prob_single_wire_nonparam(self, tol, operation, GateWires, Wires, c_dtype):
-        apply_probs_nonparam(tol, operation, GateWires, Wires, c_dtype)
+    def test_prob_single_wire_nonparam(self, tol, operation, GateWires, Wires, c_dtype, seed):
+        apply_probs_nonparam(tol, operation, GateWires, Wires, c_dtype, seed)
 
     @pytest.mark.parametrize("operation", [qml.CNOT, qml.SWAP, qml.CY, qml.CZ])
     @pytest.mark.parametrize(
         "GateWires", [[0, 1], [numQubits - 2, numQubits - 1], [0, numQubits - 1]]
     )
-    def test_prob_two_wire_nonparam(self, tol, operation, GateWires, Wires, c_dtype):
-        apply_probs_nonparam(tol, operation, GateWires, Wires, c_dtype)
+    def test_prob_two_wire_nonparam(self, tol, operation, GateWires, Wires, c_dtype, seed):
+        apply_probs_nonparam(tol, operation, GateWires, Wires, c_dtype, seed)
 
     @pytest.mark.parametrize("operation", [qml.CSWAP, qml.Toffoli])
     @pytest.mark.parametrize(
@@ -163,28 +160,28 @@ class TestProbs:
             [0, numQubits - 2, numQubits - 1],
         ],
     )
-    def test_prob_three_wire_nonparam(self, tol, operation, GateWires, Wires, c_dtype):
-        apply_probs_nonparam(tol, operation, GateWires, Wires, c_dtype)
+    def test_prob_three_wire_nonparam(self, tol, operation, GateWires, Wires, c_dtype, seed):
+        apply_probs_nonparam(tol, operation, GateWires, Wires, c_dtype, seed)
 
     @pytest.mark.parametrize("operation", [qml.PhaseShift, qml.RX, qml.RY, qml.RZ])
     @pytest.mark.parametrize("par", [[0.1], [0.2], [0.3]])
     @pytest.mark.parametrize("GateWires", [0, numQubits - 1])
-    def test_prob_single_wire_param(self, tol, operation, par, GateWires, Wires, c_dtype):
-        apply_probs_param(tol, operation, par, GateWires, Wires, c_dtype)
+    def test_prob_single_wire_param(self, tol, operation, par, GateWires, Wires, c_dtype, seed):
+        apply_probs_param(tol, operation, par, GateWires, Wires, c_dtype, seed)
 
     @pytest.mark.parametrize("operation", [qml.Rot])
     @pytest.mark.parametrize("par", [[0.1, 0.2, 0.3], [0.2, 0.3, 0.4]])
     @pytest.mark.parametrize("GateWires", [0, numQubits - 1])
-    def test_prob_single_wire_3param(self, tol, operation, par, GateWires, Wires, c_dtype):
-        apply_probs_param(tol, operation, par, GateWires, Wires, c_dtype)
+    def test_prob_single_wire_3param(self, tol, operation, par, GateWires, Wires, c_dtype, seed):
+        apply_probs_param(tol, operation, par, GateWires, Wires, c_dtype, seed)
 
     @pytest.mark.parametrize("operation", [qml.CRot])
     @pytest.mark.parametrize("par", [[0.1, 0.2, 0.3], [0.2, 0.3, 0.4]])
     @pytest.mark.parametrize(
         "GateWires", [[0, numQubits - 1], [0, 1], [numQubits - 2, numQubits - 1]]
     )
-    def test_prob_two_wire_3param(self, tol, operation, par, GateWires, Wires, c_dtype):
-        apply_probs_param(tol, operation, par, GateWires, Wires, c_dtype)
+    def test_prob_two_wire_3param(self, tol, operation, par, GateWires, Wires, c_dtype, seed):
+        apply_probs_param(tol, operation, par, GateWires, Wires, c_dtype, seed)
 
     @pytest.mark.parametrize(
         "operation",
@@ -205,8 +202,8 @@ class TestProbs:
     @pytest.mark.parametrize(
         "GateWires", [[0, numQubits - 1], [0, 1], [numQubits - 2, numQubits - 1]]
     )
-    def test_prob_two_wire_param(self, tol, operation, par, GateWires, Wires, c_dtype):
-        apply_probs_param(tol, operation, par, GateWires, Wires, c_dtype)
+    def test_prob_two_wire_param(self, tol, operation, par, GateWires, Wires, c_dtype, seed):
+        apply_probs_param(tol, operation, par, GateWires, Wires, c_dtype, seed)
 
     @pytest.mark.parametrize(
         "operation",
@@ -221,5 +218,5 @@ class TestProbs:
             [numQubits - 4, numQubits - 3, numQubits - 2, numQubits - 1],
         ],
     )
-    def test_prob_four_wire_param(self, tol, operation, par, GateWires, Wires, c_dtype):
-        apply_probs_param(tol, operation, par, GateWires, Wires, c_dtype)
+    def test_prob_four_wire_param(self, tol, operation, par, GateWires, Wires, c_dtype, seed):
+        apply_probs_param(tol, operation, par, GateWires, Wires, c_dtype, seed)

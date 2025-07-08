@@ -297,3 +297,38 @@ class TestStateVectorNB:
         sv.getState(result)
 
         assert np.allclose(result, state_data)
+
+    @pytest.mark.parametrize("precision", ["64", "128"])
+    def test_statevector_with_aligned_array(
+        self, current_nanobind_module, precision, get_statevector_class
+    ):
+        """Test StateVector with aligned array."""
+        StateVectorClass = get_statevector_class(current_nanobind_module, precision)
+
+        # Create a state vector
+        num_qubits = 2
+        sv = StateVectorClass(num_qubits)
+
+        # Create an aligned array
+        dtype_str = np.complex64 if precision == "64" else np.complex128
+        capsule = current_nanobind_module.allocate_aligned_array(
+            2**num_qubits, np.dtype(dtype_str), True
+        )
+
+        # Convert the capsule to a numpy array using numpy's array interface
+        # This approach works with both pybind11 and nanobind
+        arr = np.asarray(capsule, dtype=dtype_str)
+
+        # Set the first element to 1.0 to create a valid state
+        arr[0] = 1.0
+
+        # Update the state vector with the aligned array
+        sv.updateData(arr)
+
+        # Check that the state is correct
+        result = np.zeros(2**num_qubits, dtype=dtype_str)
+        sv.getState(result)
+
+        expected = np.zeros(2**num_qubits, dtype=dtype_str)
+        expected[0] = 1.0
+        assert np.allclose(result, expected)

@@ -72,7 +72,7 @@ class QuantumScriptSerializer:
         self.split_obs = split_obs
         if device_name == "lightning.qubit":
             try:
-                import pennylane_lightning.lightning_qubit_ops as lightning_ops
+                import pennylane_lightning.lightning_qubit_nb as lightning_ops
             except ImportError as exception:
                 raise ImportError(
                     f"Pre-compiled binaries for {device_name} are not available."
@@ -201,10 +201,16 @@ class QuantumScriptSerializer:
             self.hamiltonian_mpi_c64 = lightning_ops.observablesMPI.HamiltonianMPIC64
             self.hamiltonian_mpi_c128 = lightning_ops.observablesMPI.HamiltonianMPIC128
 
-            self.sparse_hamiltonian_mpi_c64 = lightning_ops.observablesMPI.SparseHamiltonianMPIC64
-            self.sparse_hamiltonian_mpi_c128 = lightning_ops.observablesMPI.SparseHamiltonianMPIC128
-
-            self._mpi_manager = lightning_ops.MPIManagerGPU
+            if self.device_name == "lightning.gpu":
+                self.sparse_hamiltonian_mpi_c64 = (
+                    lightning_ops.observablesMPI.SparseHamiltonianMPIC64
+                )
+                self.sparse_hamiltonian_mpi_c128 = (
+                    lightning_ops.observablesMPI.SparseHamiltonianMPIC128
+                )
+                self._mpi_manager = lightning_ops.MPIManagerGPU
+            elif self.device_name == "lightning.kokkos":
+                self._mpi_manager = lightning_ops.MPIManagerKokkos
 
     def _set_lightning_tensor_bindings(self, tensor_backend, lightning_ops):
         """Define the variables needed to access the modules from the C++ bindings for tensor network."""
@@ -380,6 +386,10 @@ class QuantumScriptSerializer:
                 raise NotImplementedError(
                     "SparseHamiltonian is not supported on the lightning.tensor device."
                 )
+            if self._use_mpi and self.device_name == "lightning.kokkos":
+                raise NotImplementedError(
+                    "SparseHamiltonian is not supported on the lightning.kokkos device with MPI."
+                )
             return self._sparse_hamiltonian(observable, wires_map)
         return self._hermitian_ob(observable, wires_map)
 
@@ -531,7 +541,7 @@ class QuantumScriptSerializer:
                 else:
                     if hasattr(self.sv_type, name):
                         params.append(single_op_base.parameters)
-                        mats.append([])
+                        mats.append(np.array([]))
                     else:
                         params.append([])
                         mats.append(matrix(single_op_base))

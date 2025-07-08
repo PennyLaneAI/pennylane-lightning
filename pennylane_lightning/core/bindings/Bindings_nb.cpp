@@ -18,6 +18,9 @@
  */
 
 #include "Bindings_nb.hpp"
+#ifdef _ENABLE_MPI
+#include "BindingsMPI.hpp"
+#endif
 #include "CPUMemoryModel.hpp"
 #include "Memory.hpp"
 
@@ -41,8 +44,10 @@ NB_MODULE(LIGHTNING_MODULE_NAME, m) {
 
     // Register lightning class bindings
     registerLightningClassBindings<StateVectorBackends>(m);
-#ifdef _ENABLE_PLGPU_MPI
-    // registerLightningClassBindingsMPI<StateVectorMPIBackends>(m);
+#ifdef _ENABLE_MPI
+    registerInfoMPI(m);
+    registerBackendSpecificInfoMPI(m);
+    registerLightningClassBindingsMPI<StateVectorMPIBackends>(m);
 #endif
     // Register exception types - using nanobind's approach
     nb::exception<Pennylane::Util::LightningException>(m, "LightningException");
