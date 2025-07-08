@@ -268,7 +268,7 @@ jobs:
         run: |
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
           # Remove `python -m` to avoid running tests with relative modules
-          PL_DEVICE=${DEVICENAME} pytest -s tests/ $COVERAGE_FLAGS --splits 7 --group ${{ matrix.group }} \
+          PL_DEVICE=${DEVICENAME} pytest tests/ $COVERAGE_FLAGS --splits 7 --group ${{ matrix.group }} \
             --store-durations --durations-path='.github/workflows/python_lightning_kokkos_test_durations.json' --splitting-algorithm=least_duration
           mv .github/workflows/python_lightning_kokkos_test_durations.json ${{ github.workspace }}/.test_durations-${{ matrix.exec_model }}-${{ matrix.group }}
 
@@ -282,7 +282,7 @@ jobs:
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
           PL_BACKEND=${DEVICENAME} python scripts/configure_pyproject_toml.py
           python -m pip install -e . --config-settings editable_mode=compat -vv
-          PL_DEVICE=${DEVICENAME} python -m pytest -s tests/test_device.py $COVERAGE_FLAGS --cov-append
+          PL_DEVICE=${DEVICENAME} python -m pytest tests/test_device.py $COVERAGE_FLAGS --cov-append
 
       - name: Upload test durations
         uses: actions/upload-artifact@v4
