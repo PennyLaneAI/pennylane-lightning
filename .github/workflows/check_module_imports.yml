@@ -1,5 +1,6 @@
 name: Check Module Imports
-
+permissions:
+  contents: read
 on:
   pull_request:
   push:
@@ -19,7 +20,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -e .
+          python -m pip install -e . --config-settings editable_mode=compat -vv
       - name: Check basic imports
         run: |
           python -c "import pennylane_lightning"
