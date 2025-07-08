@@ -128,7 +128,7 @@ jobs:
       - name: Run PennyLane-Lightning unit tests for all backends
         run: |
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
-          PL_DEVICE=${DEVICENAME} python -m pytest tests/ $COVERAGE_FLAGS
+          PL_DEVICE=${DEVICENAME} python -m pytest -s tests/ $COVERAGE_FLAGS
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4

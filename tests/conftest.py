@@ -131,11 +131,11 @@ nanobind_module_name = f"pennylane_lightning.lightning_{backend}_nb"
 
 # Handle lightning.tensor separately since it has different class structure
 if backend == "tensor":
-    from pennylane_lightning.lightning_tensor import LightningTensor as LightningDevice
-    from pennylane_lightning.lightning_tensor._measurements import (
+    from pennylane_lightning.lightning_tensor_ops import LightningTensor as LightningDevice
+    from pennylane_lightning.lightning_tensor_ops._measurements import (
         LightningTensorMeasurements as LightningMeasurements,
     )
-    from pennylane_lightning.lightning_tensor._tensornet import (
+    from pennylane_lightning.lightning_tensor_ops._tensornet import (
         LightningTensorNet as LightningStateVector,
     )
 
@@ -356,3 +356,26 @@ def current_nanobind_module():
         return importlib.import_module(nanobind_module_name)
     except ImportError as e:
         pytest.skip(f"Nanobind module {nanobind_module_name} not available: {str(e)}")
+
+
+@pytest.fixture(scope="session", autouse=True)
+def check_module_imports():
+    """Check which modules are being imported."""
+    import sys
+    
+    # Print all loaded modules that contain 'lightning'
+    lightning_modules = [name for name in sys.modules if 'lightning' in name]
+    print(f"Loaded Lightning modules: {lightning_modules}")
+    
+    # Check if both pybind11 and nanobind modules are loaded
+    pybind_module = f"pennylane_lightning.lightning_{backend}_ops"
+    nanobind_module = f"pennylane_lightning.lightning_{backend}_nb"
+    
+    if pybind_module in sys.modules and nanobind_module in sys.modules:
+        print(f"WARNING: Both pybind11 ({pybind_module}) and nanobind ({nanobind_module}) modules are loaded!")
+    elif pybind_module in sys.modules:
+        print(f"Using pybind11 module: {pybind_module}")
+    elif nanobind_module in sys.modules:
+        print(f"Using nanobind module: {nanobind_module}")
+    else:
+        print(f"Neither pybind11 nor nanobind module is loaded yet!")
