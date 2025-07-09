@@ -15,112 +15,110 @@
 
 import numpy as np
 import pytest
-from conftest import backend
 
 try:
     import jax
     import jax.numpy as jnp
 
     # Enable 64-bit precision for tests that need it
-    jax.config.update("jax_enable_x64", True)
     JAX_AVAILABLE = True
 except ImportError:
     JAX_AVAILABLE = False
-
-# Skip all tests if JAX is not available
-pytestmark = pytest.mark.skipif(not JAX_AVAILABLE, reason="JAX not available")
+    # Skip all tests if JAX is not available
+    pytestmark = pytest.mark.skip(reason="JAX not available")
 
 
 class TestJAXCompatibility:
     """Tests for JAX compatibility with nanobind-based bindings."""
 
     @pytest.fixture
-    def get_statevector_class(self):
-        """Get the StateVector class from a module."""
+    def get_statevector_class_and_precision(self, precision, current_nanobind_module):
+        """Get StateVectorC64/128 class from module based on precision."""
+        module = current_nanobind_module
+        if JAX_AVAILABLE:
+            if precision == "128":
+                jax.config.update("jax_enable_x64", True)
 
-        def _get_class(module, precision="64"):
+        def _get_class():
             class_name = f"StateVectorC{precision}"
             if hasattr(module, class_name):
                 return getattr(module, class_name)
-            pytest.skip(f"Class {class_name} not available in module")
+            pytest.skip(f"Class {class_name} not available in module {module}")
 
-        return _get_class
+        dtype = np.complex128 if precision == "128" else np.complex64
+        return _get_class(), dtype
 
     @pytest.fixture
-    def get_measurements_class(self):
-        """Get the Measurements class from a module."""
+    def get_measurements_class(self, current_nanobind_module):
+        module = current_nanobind_module
 
-        def _get_class(module, precision="64"):
-            class_name = f"MeasurementsC{precision}"
+        def _get_class(dtype):
+            class_name = "MeasurementsC64" if dtype == np.complex64 else "MeasurementsC128"
             if hasattr(module, class_name):
                 return getattr(module, class_name)
-            pytest.skip(f"Class {class_name} not available in module")
+            pytest.skip(f"Class {class_name} not available in module {module}")
 
         return _get_class
 
     @pytest.fixture
-    def get_named_obs_class(self):
+    def get_named_obs_class(self, current_nanobind_module):
         """Get the NamedObs class from a module."""
+        module = current_nanobind_module.observables
 
-        def _get_class(module, precision="64"):
-            class_name = f"NamedObsC{precision}"
-            if hasattr(module.observables, class_name):
-                return getattr(module.observables, class_name)
-            pytest.skip(f"Class {class_name} not available in module.observables")
+        def _get_class(dtype):
+            class_name = "NamedObsC64" if dtype == np.complex64 else "NamedObsC128"
+            if hasattr(module, class_name):
+                return getattr(module, class_name)
+            pytest.skip(f"Class {class_name} not available in {module}.observables")
 
         return _get_class
 
     @pytest.fixture
-    def get_ops_struct_class(self):
+    def get_ops_struct_class(self, current_nanobind_module):
         """Get the OpsStruct class from a module."""
+        module = current_nanobind_module.algorithms
 
-        def _get_class(module, precision="64"):
-            class_name = f"OpsStructC{precision}"
-            if hasattr(module.algorithms, class_name):
-                return getattr(module.algorithms, class_name)
-            pytest.skip(f"Class {class_name} not available in module.algorithms")
+        def _get_class(dtype):
+            class_name = "OpsStructC64" if dtype == np.complex64 else "OpsStructC128"
+            if hasattr(module, class_name):
+                return getattr(module, class_name)
+            pytest.skip(f"Class {class_name} not available in {module}.algorithms")
 
         return _get_class
 
     @pytest.fixture
-    def get_adjoint_jacobian_class(self):
+    def get_adjoint_jacobian_class(self, current_nanobind_module):
         """Get the AdjointJacobian class from a module."""
+        module = current_nanobind_module.algorithms
 
-        def _get_class(module, precision="64"):
-            class_name = f"AdjointJacobianC{precision}"
-            if hasattr(module.algorithms, class_name):
-                return getattr(module.algorithms, class_name)
-            pytest.skip(f"Class {class_name} not available in module.algorithms")
+        def _get_class(dtype):
+            class_name = "AdjointJacobianC64" if dtype == np.complex64 else "AdjointJacobianC128"
+            if hasattr(module, class_name):
+                return getattr(module, class_name)
+            pytest.skip(f"Class {class_name} not available in {module}.algorithms")
 
         return _get_class
 
     @pytest.mark.parametrize("precision", ["64", "128"])
-    def test_adjoint_jacobian_jax(self, current_nanobind_module, precision, get_statevector_class):
+    def test_adjoint_jacobian_jax(
+        self,
+        get_statevector_class_and_precision,
+        get_adjoint_jacobian_class,
+        get_named_obs_class,
+        get_ops_struct_class,
+    ):
         """Test adjoint Jacobian with JAX parameters."""
-        # Skip if JAX doesn't support the precision
-        if precision == "128" and not jax.config.read("jax_enable_x64"):
-            pytest.skip("JAX x64 precision not enabled")
 
-        module = current_nanobind_module
-        StateVectorClass = get_statevector_class(module, precision)
+        StateVectorClass, dtype = get_statevector_class_and_precision
 
         # Check if the module has AdjointJacobian class
-        adjoint_jacobian_class_name = f"AdjointJacobianC{precision}"
-        if not hasattr(module.algorithms, adjoint_jacobian_class_name):
-            pytest.skip(f"Class {adjoint_jacobian_class_name} not available in module")
-        AdjointJacobianClass = getattr(module.algorithms, adjoint_jacobian_class_name)
+        AdjointJacobianClass = get_adjoint_jacobian_class(dtype)
 
         # Check if the module has NamedObs class
-        named_obs_class_name = f"NamedObsC{precision}"
-        if not hasattr(module.observables, named_obs_class_name):
-            pytest.skip(f"Class {named_obs_class_name} not available in module")
-        NamedObsClass = getattr(module.observables, named_obs_class_name)
+        NamedObsClass = get_named_obs_class(dtype)
 
         # Check if the module has OpsStruct class
-        ops_struct_class_name = f"OpsStructC{precision}"
-        if not hasattr(module.algorithms, ops_struct_class_name):
-            pytest.skip(f"Class {ops_struct_class_name} not available in module")
-        OpsStructClass = getattr(module.algorithms, ops_struct_class_name)
+        OpsStructClass = get_ops_struct_class(dtype)
 
         # Create a simple state vector
         num_qubits = 2
@@ -164,23 +162,20 @@ class TestJAXCompatibility:
 
     @pytest.mark.parametrize("precision", ["64", "128"])
     def test_adjoint_jacobian_multiple_params_jax(
-        self, current_nanobind_module, precision, get_statevector_class
+        self,
+        get_statevector_class_and_precision,
+        get_adjoint_jacobian_class,
+        get_named_obs_class,
+        get_ops_struct_class,
     ):
         """Test adjoint Jacobian with multiple JAX parameters."""
-        # Skip if JAX doesn't support the precision
-        if precision == "128" and not jax.config.read("jax_enable_x64"):
-            pytest.skip("JAX x64 precision not enabled")
 
-        # Set the appropriate dtype for the precision
-        dtype = jnp.complex128 if precision == "128" else jnp.complex64
-
-        module = current_nanobind_module
-        StateVectorClass = get_statevector_class(module, precision)
+        StateVectorClass, dtype = get_statevector_class_and_precision
 
         # Get necessary classes
-        AdjointJacobianClass = getattr(module.algorithms, f"AdjointJacobianC{precision}")
-        NamedObsClass = getattr(module.observables, f"NamedObsC{precision}")
-        OpsStructClass = getattr(module.algorithms, f"OpsStructC{precision}")
+        AdjointJacobianClass = get_adjoint_jacobian_class(dtype)
+        NamedObsClass = get_named_obs_class(dtype)
+        OpsStructClass = get_ops_struct_class(dtype)
 
         # Create a simple state vector
         num_qubits = 2
@@ -226,25 +221,20 @@ class TestJAXCompatibility:
         assert np.allclose(jacobian, expected_jacobian, atol=1e-5)
 
     @pytest.mark.parametrize("precision", ["64", "128"])
-    def test_jax_array_initialization(
-        self, current_nanobind_module, precision, get_statevector_class
-    ):
+    def test_jax_array_initialization(self, get_statevector_class_and_precision):
         """Test initialization of StateVector with JAX arrays."""
-        # Skip if JAX doesn't support the precision
-        if precision == "128" and not jax.config.read("jax_enable_x64"):
-            pytest.skip("JAX x64 precision not enabled")
 
-        StateVectorClass = get_statevector_class(current_nanobind_module, precision)
+        StateVectorClass, dtype = get_statevector_class_and_precision
 
         # Check if it has updateData method
         if not hasattr(StateVectorClass, "updateData"):
-            pytest.skip(f"updateData method not available in StateVectorC{precision}")
+            pytest.skip(f"updateData method not available.")
 
         num_qubits = 3
         dim = 2**num_qubits
 
         # Create JAX array for |0> state
-        jax_data = jnp.zeros(dim, dtype=jnp.complex128 if precision == "128" else jnp.complex64)
+        jax_data = jnp.zeros(dim, dtype=dtype)
         jax_data = jax_data.at[0].set(1.0)  # Set to |000⟩ state
 
         # Create state vector and update with JAX data
@@ -252,30 +242,25 @@ class TestJAXCompatibility:
         sv.updateData(jax_data)
 
         # Get state back as numpy array and verify
-        state_data = np.zeros(dim, dtype=np.complex128 if precision == "128" else np.complex64)
+        # Create a numpy array to receive the state data
+        state_data = np.zeros(dim, dtype=dtype)
         sv.getState(state_data)
 
         assert np.allclose(state_data[0], 1.0)
         assert np.allclose(state_data[1:], 0.0)
 
-    @pytest.mark.parametrize("precision", ["64", "128"])
-    def test_jax_array_operations(self, current_nanobind_module, precision, get_statevector_class):
+    def test_jax_array_operations(self, get_statevector_class_and_precision):
         """Test operations on StateVector with JAX arrays."""
-        # Skip if JAX doesn't support the precision
-        if precision == "128" and not jax.config.read("jax_enable_x64"):
-            pytest.skip("JAX x64 precision not enabled")
+        # Skip if module doesn't have StateVectorC class
+        StateVectorClass, dtype = get_statevector_class_and_precision
 
-        StateVectorClass = get_statevector_class(current_nanobind_module, precision)
-
-        # Check if it has updateData method
         if not hasattr(StateVectorClass, "updateData"):
-            pytest.skip(f"updateData method not available in StateVectorC{precision}")
+            pytest.skip(f"updateData method not available. ")
 
         num_qubits = 1
         dim = 2**num_qubits
 
         # Create JAX array for |0> state
-        dtype = jnp.complex128 if precision == "128" else jnp.complex64
         jax_data = jnp.zeros(dim, dtype=dtype)
         jax_data = jax_data.at[0].set(1.0)  # Set to |0⟩ state
 
@@ -289,33 +274,29 @@ class TestJAXCompatibility:
         sv.applyMatrix(x_matrix, [0], False)
 
         # Get state back as numpy array and verify
-        state_data = np.zeros(dim, dtype=np.complex128 if precision == "128" else np.complex64)
+        state_data = np.zeros(dim, dtype=dtype)
         sv.getState(state_data)
 
         assert np.allclose(state_data[0], 0.0)
         assert np.allclose(state_data[1], 1.0)
 
-    @pytest.mark.parametrize("precision", ["64", "128"])
     def test_jax_array_with_measurements_class(
-        self, current_nanobind_module, precision, get_statevector_class, get_measurements_class
+        self, get_statevector_class_and_precision, get_measurements_class
     ):
         """Test using the Measurements class with JAX arrays."""
-        # Skip if JAX doesn't support the precision
-        if precision == "128" and not jax.config.read("jax_enable_x64"):
-            pytest.skip("JAX x64 precision not enabled")
+        # Skip if module doesn't have StateVectorC class
+        StateVectorClass, dtype = get_statevector_class_and_precision
 
-        StateVectorClass = get_statevector_class(current_nanobind_module, precision)
-        MeasurementsClass = get_measurements_class(current_nanobind_module, precision)
-
-        # Check if it has updateData method
         if not hasattr(StateVectorClass, "updateData"):
-            pytest.skip(f"updateData method not available in StateVectorC{precision}")
+            pytest.skip(f"updateData method not available.")
+
+        # Check if the module has a Measurements class and get it.
+        MeasurementsClass = get_measurements_class(dtype)
 
         num_qubits = 1
         dim = 2**num_qubits
 
         # Create a simple |0⟩ state
-        dtype = jnp.complex128 if precision == "128" else jnp.complex64
         jax_data = jnp.zeros(dim, dtype=dtype)
         jax_data = jax_data.at[0].set(1.0)
 
@@ -344,83 +325,68 @@ class TestJAXCompatibility:
         expected_probs = np.array([0.5, 0.5])
         assert np.allclose(np_probs, expected_probs)
 
-    @pytest.mark.parametrize("precision", ["64", "128"])
     def test_jax_array_with_measurements_expval(
-        self,
-        current_nanobind_module,
-        precision,
-        get_statevector_class,
-        get_measurements_class,
-        get_named_obs_class,
+        self, get_statevector_class_and_precision, get_measurements_class, get_named_obs_class
     ):
         """Test expectation value calculation using the Measurements class with JAX arrays."""
-        # Skip if JAX doesn't support the precision
-        if precision == "128" and not jax.config.read("jax_enable_x64"):
-            pytest.skip("JAX x64 precision not enabled")
 
-        StateVectorClass = get_statevector_class(current_nanobind_module, precision)
-        MeasurementsClass = get_measurements_class(current_nanobind_module, precision)
-        NamedObsClass = get_named_obs_class(current_nanobind_module, precision)
+        # Skip if module doesn't have StateVectorC class
+        StateVectorClass, dtype = get_statevector_class_and_precision
 
-        # Check if it has updateData method
         if not hasattr(StateVectorClass, "updateData"):
-            pytest.skip(f"updateData method not available in StateVectorC{precision}")
+            pytest.skip(f"updateData method not available.")
+
+        # Check if the module has a Measurements class
+        MeasurementsClass = get_measurements_class(dtype)
+
+        # Check if the module has an observables submodule with NamedObs class
+        NamedObsClass = get_named_obs_class(dtype)
 
         num_qubits = 1
         dim = 2**num_qubits
 
         # Create a |+⟩ state (equal superposition)
-        dtype = jnp.complex128 if precision == "128" else jnp.complex64
         jax_data = jnp.ones(dim, dtype=dtype) / jnp.sqrt(2.0)
 
         # Create state vector and update with JAX data
         sv = StateVectorClass(num_qubits)
         sv.updateData(jax_data)
 
-        try:
-            # Create a Measurements object
-            measurements = MeasurementsClass(sv)
+        # Create a Measurements object
+        measurements = MeasurementsClass(sv)
 
-            # Create PauliX observable
-            x_obs = NamedObsClass("PauliX", [0])
+        # Create PauliX observable
+        x_obs = NamedObsClass("PauliX", [0])
 
-            # Calculate expectation value
-            x_expval = measurements.expval(x_obs)
+        # Calculate expectation value
+        x_expval = measurements.expval(x_obs)
 
-            # For |+⟩ state, ⟨X⟩ = 1
-            assert np.allclose(x_expval, 1.0)
+        # For |+⟩ state, ⟨X⟩ = 1
+        assert np.allclose(x_expval, 1.0)
 
-            # Create PauliZ observable
-            z_obs = NamedObsClass("PauliZ", [0])
+        # Create PauliZ observable
+        z_obs = NamedObsClass("PauliZ", [0])
 
-            # Calculate expectation value
-            z_expval = measurements.expval(z_obs)
+        # Calculate expectation value
+        z_expval = measurements.expval(z_obs)
 
-            # For |+⟩ state, ⟨Z⟩ = 0
-            assert np.allclose(z_expval, 0.0)
+        # For |+⟩ state, ⟨Z⟩ = 0
+        assert np.allclose(z_expval, 0.0)
 
-        except Exception as e:
-            pytest.skip(f"Measurements class failed with error: {str(e)}")
-
-    @pytest.mark.parametrize("precision", ["64", "128"])
     def test_adjoint_jacobian_jax(
         self,
-        current_nanobind_module,
-        precision,
-        get_statevector_class,
+        get_statevector_class_and_precision,
         get_adjoint_jacobian_class,
         get_named_obs_class,
         get_ops_struct_class,
     ):
         """Test adjoint Jacobian with JAX parameters."""
         # Skip if JAX doesn't support the precision
-        if precision == "128" and not jax.config.read("jax_enable_x64"):
-            pytest.skip("JAX x64 precision not enabled")
+        StateVectorClass, dtype = get_statevector_class_and_precision
 
-        StateVectorClass = get_statevector_class(current_nanobind_module, precision)
-        AdjointJacobianClass = get_adjoint_jacobian_class(current_nanobind_module, precision)
-        NamedObsClass = get_named_obs_class(current_nanobind_module, precision)
-        OpsStructClass = get_ops_struct_class(current_nanobind_module, precision)
+        AdjointJacobianClass = get_adjoint_jacobian_class(dtype)
+        NamedObsClass = get_named_obs_class(dtype)
+        OpsStructClass = get_ops_struct_class(dtype)
 
         # Create a state vector
         num_qubits = 2
@@ -470,7 +436,7 @@ class TestJAXCompatibility:
         self,
         current_nanobind_module,
         precision,
-        get_statevector_class,
+        get_statevector_class_and_precision,
         get_adjoint_jacobian_class,
         get_named_obs_class,
         get_ops_struct_class,
@@ -480,10 +446,10 @@ class TestJAXCompatibility:
         if precision == "128" and not jax.config.read("jax_enable_x64"):
             pytest.skip("JAX x64 precision not enabled")
 
-        StateVectorClass = get_statevector_class(current_nanobind_module, precision)
-        AdjointJacobianClass = get_adjoint_jacobian_class(current_nanobind_module, precision)
-        NamedObsClass = get_named_obs_class(current_nanobind_module, precision)
-        OpsStructClass = get_ops_struct_class(current_nanobind_module, precision)
+        StateVectorClass, dtype = get_statevector_class_and_precision
+        AdjointJacobianClass = get_adjoint_jacobian_class(dtype)
+        NamedObsClass = get_named_obs_class(dtype)
+        OpsStructClass = get_ops_struct_class(dtype)
 
         # Create a state vector
         num_qubits = 2

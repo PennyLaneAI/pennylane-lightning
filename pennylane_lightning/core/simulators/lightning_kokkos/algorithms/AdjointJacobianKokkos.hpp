@@ -27,7 +27,7 @@ using Pennylane::LightningKokkos::Util::getImagOfComplexInnerProduct;
 namespace Pennylane::LightningKokkos::Algorithms {
 /**
  * @brief Kokkos-enabled adjoint Jacobian evaluator following the method of
- * arXiV:2009.02823
+ * arXiv:2009.02823
  *
  * @tparam StateVectorT State vector type.
  */
@@ -35,10 +35,10 @@ template <class StateVectorT>
 class AdjointJacobian final
     : public AdjointJacobianBase<StateVectorT, AdjointJacobian<StateVectorT>> {
   private:
-    using ComplexT = typename StateVectorT::ComplexT;
-    using PrecisionT = typename StateVectorT::PrecisionT;
     using BaseType =
         AdjointJacobianBase<StateVectorT, AdjointJacobian<StateVectorT>>;
+    using typename BaseType::ComplexT;
+    using typename BaseType::PrecisionT;
 
     /**
      * @brief Utility method to update the Jacobian at a given index by

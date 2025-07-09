@@ -831,8 +831,6 @@ void registerBackendAgnosticStateVectorMethods(PyClass &pyclass) {
  */
 template <class StateVectorT> void lightningClassBindings(nb::module_ &m) {
     using PrecisionT = typename StateVectorT::PrecisionT;
-    // using ComplexT = typename StateVectorT::ComplexT;
-    // using ParamT = PrecisionT;
 
     const std::string bitsize =
         std::to_string(sizeof(std::complex<PrecisionT>) * 8);
