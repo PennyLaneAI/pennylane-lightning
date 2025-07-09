@@ -437,9 +437,7 @@ void registerBackendAgnosticObservables(nb::module_ &m) {
 
     // Register HermitianObs class
     class_name = "HermitianObsC" + bitsize;
-    auto hermitian_obs =
-        nb::class_<HermitianObsT, ObservableT>(m, class_name.c_str());
-    hermitian_obs
+    nb::class_<HermitianObsT, ObservableT>(m, class_name.c_str())
         .def("__init__",
              [](HermitianObsT *self, const nd_arr_c &matrix,
                 const std::vector<std::size_t> &wires) {
@@ -460,9 +458,8 @@ void registerBackendAgnosticObservables(nb::module_ &m) {
 
     // Register TensorProdObs class
     class_name = "TensorProdObsC" + bitsize;
-    auto tensor_prod_obs =
-        nb::class_<TensorProdObsT, ObservableT>(m, class_name.c_str());
-    tensor_prod_obs.def(nb::init<const std::vector<ObsPtr> &>())
+    nb::class_<TensorProdObsT, ObservableT>(m, class_name.c_str())
+        .def(nb::init<const std::vector<ObsPtr> &>())
         .def("__repr__", &TensorProdObsT::getObsName)
         .def("get_wires", &TensorProdObsT::getWires, "Get wires of observables")
         .def("get_ops", &TensorProdObsT::getObs, "Get operations list")
@@ -474,9 +471,7 @@ void registerBackendAgnosticObservables(nb::module_ &m) {
 
     // Register Hamiltonian class
     class_name = "HamiltonianC" + bitsize;
-    auto hamiltonian =
-        nb::class_<HamiltonianT, ObservableT>(m, class_name.c_str());
-    hamiltonian
+    nb::class_<HamiltonianT, ObservableT>(m, class_name.c_str())
         .def(nb::init<const std::vector<ParamT> &,
                       const std::vector<ObsPtr> &>())
         .def("__init__",
