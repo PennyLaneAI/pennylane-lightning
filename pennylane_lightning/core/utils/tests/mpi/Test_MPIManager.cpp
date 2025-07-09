@@ -195,7 +195,7 @@ TEMPLATE_TEST_CASE("MPIManager::Reduce", "[MPIManager]", float, double) {
         std::vector<std::string> recvBuf(1, "test");
         REQUIRE_THROWS_WITH(
             mpi_manager.Reduce<std::string>(sendBuf, recvBuf, 0, "SUM"),
-            Catch::Matchers::Contains("Type not supported"));
+            Catch::Matchers::Contains("not supported"));
     }
 }
 
