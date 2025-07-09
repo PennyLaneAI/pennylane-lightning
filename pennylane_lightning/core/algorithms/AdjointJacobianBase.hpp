@@ -31,8 +31,8 @@ namespace Pennylane::Algorithms {
  * class, derive from it passing your class as the Derived template parameter:
  *
  * @code
- * class LThunderAdjointJacobian : public AdjointJacobianBase<LThunderStateVector,
- * LThunderAdjointJacobian> { public:
+ * class LThunderAdjointJacobian : public
+ * AdjointJacobianBase<LThunderStateVector, LThunderAdjointJacobian> { public:
  *     // Must implement this method as required by the base class
  *     void adjointJacobian(std::span<PrecisionT> jac,
  *                          const JacobianData<StateVectorT> &jd,
