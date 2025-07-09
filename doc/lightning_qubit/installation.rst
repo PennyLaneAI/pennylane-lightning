@@ -47,7 +47,10 @@ For development and testing, you can install by cloning the repository:
 
     git clone https://github.com/PennyLaneAI/pennylane-lightning.git
     cd pennylane-lightning
-    pip install -r requirements-dev.txt
+    
+    pip install -r requirements.txt
+    pip install git+https://github.com/PennyLaneAI/pennylane.git@master
+
     PL_BACKEND=${PL_BACKEND} python scripts/configure_pyproject_toml.py
     pip install -e . --config-settings editable_mode=compat -vv
 
@@ -101,6 +104,7 @@ Test the Python code with:
 
 .. code-block:: bash
 
+    pip install -r requirements-tests.txt
     make test-python device=${PL.DEVICE}
 
 where ``${PL.DEVICE}`` differs from ``${PL_BACKEND}`` by replacing the underscore with a period. Options for ``${PL.DEVICE}`` are

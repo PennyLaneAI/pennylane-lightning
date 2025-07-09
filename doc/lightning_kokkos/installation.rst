@@ -33,8 +33,8 @@ Build Kokkos for NVIDIA A100 cards (``SM80`` architecture), and append the insta
 
 .. code-block:: bash
 
-    # Replace <install-path> by the path where you want to install Kokkos
-    # e.g. /path_kokkos_install/kokkos/4.5.0/AMPERE80
+    # Replace <install-path> with the path to install Kokkos
+    # e.g. $HOME/kokkos-install/4.5.0/AMPERE80
     export KOKKOS_INSTALL_PATH=<install-path>
     mkdir -p ${KOKKOS_INSTALL_PATH}
 
@@ -117,7 +117,9 @@ Then Lightning-Kokkos with MPI support can be installed in the *editable* mode b
 
     git clone https://github.com/PennyLaneAI/pennylane-lightning.git
     cd pennylane-lightning
-    pip install -r requirements-dev.txt
+    pip install -r requirements.txt
+    pip install git+https://github.com/PennyLaneAI/pennylane.git@master
+
 
     # Lightning-Qubit needs to be 'installed' by pip before Lightning-Kokkos 
     # (compilation is not necessary)
@@ -144,6 +146,7 @@ After installing Lightning-Kokkos with MPI, you can test the Python layer of the
 
 .. code-block:: bash
 
+    pip install -r requirements-tests.txt
     PL_DEVICE="lightning_kokkos" mpirun -np 2 python -m pytest mpitests --tb=short
 
 To compile and test the C++ code, you can use the following command:
