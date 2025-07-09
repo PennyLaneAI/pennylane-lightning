@@ -45,7 +45,7 @@ namespace Pennylane::LightningGPU::Algorithms {
 
 /**
  * @brief GPU-enabled adjoint Jacobian evaluator following the method of
- * arXiV:2009.02823
+ * arXiv:2009.02823
  *
  * @tparam StateVectorT State vector type.
  */

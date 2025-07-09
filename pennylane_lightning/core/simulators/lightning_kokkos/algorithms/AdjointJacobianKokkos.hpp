@@ -27,7 +27,7 @@ using Pennylane::LightningKokkos::Util::getImagOfComplexInnerProduct;
 namespace Pennylane::LightningKokkos::Algorithms {
 /**
  * @brief Kokkos-enabled adjoint Jacobian evaluator following the method of
- * arXiV:2009.02823
+ * arXiv:2009.02823
  *
  * @tparam StateVectorT State vector type.
  */

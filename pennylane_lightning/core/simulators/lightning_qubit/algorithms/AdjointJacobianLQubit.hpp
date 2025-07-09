@@ -41,7 +41,7 @@ using Pennylane::LightningQubit::Util::Transpose;
 
 namespace Pennylane::LightningQubit::Algorithms {
 /**
- * @brief Adjoint Jacobian evaluator following the method of arXiV:2009.02823.
+ * @brief Adjoint Jacobian evaluator following the method of arXiv:2009.02823.
  *
  * @tparam StateVectorT State vector type.
  */
