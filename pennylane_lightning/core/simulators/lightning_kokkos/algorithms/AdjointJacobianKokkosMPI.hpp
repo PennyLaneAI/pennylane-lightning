@@ -36,10 +36,10 @@ class AdjointJacobianMPI final
     : public AdjointJacobianBase<StateVectorT,
                                  AdjointJacobianMPI<StateVectorT>> {
   private:
-    using ComplexT = typename StateVectorT::ComplexT;
-    using PrecisionT = typename StateVectorT::PrecisionT;
     using BaseType =
         AdjointJacobianBase<StateVectorT, AdjointJacobianMPI<StateVectorT>>;
+    using typename BaseType::ComplexT;
+    using typename BaseType::PrecisionT;
 
     /**
      * @brief Utility method to update the Jacobian at a given index by
