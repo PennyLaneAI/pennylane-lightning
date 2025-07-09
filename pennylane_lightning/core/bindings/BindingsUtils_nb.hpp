@@ -25,7 +25,7 @@ namespace Pennylane::NanoBindings::Utils {
  */
 template <typename VectorT>
 nb::ndarray<VectorT, nb::numpy, nb::c_contig>
-createNumpyArrayFromVector(const std::vector<VectorT> &&data,
+createNumpyArrayFromVector(std::vector<VectorT> &&data,
                            const std::vector<size_t> &shape) {
     // Calculate total size from shape
     size_t total_size = 1;
@@ -61,7 +61,7 @@ createNumpyArrayFromVector(const std::vector<VectorT> &&data,
  */
 template <typename VectorT>
 nb::ndarray<VectorT, nb::numpy, nb::c_contig>
-createNumpyArrayFromVector(const std::vector<VectorT> &&data) {
+createNumpyArrayFromVector(std::vector<VectorT> &&data) {
     return createNumpyArrayFromVector<VectorT>(std::move(data), {data.size()});
 }
 
@@ -77,7 +77,7 @@ createNumpyArrayFromVector(const std::vector<VectorT> &&data) {
  */
 template <typename VectorT>
 nb::ndarray<VectorT, nb::numpy, nb::c_contig>
-createNumpyArrayFromVector(const std::vector<VectorT> &&data, std::size_t rows,
+createNumpyArrayFromVector(std::vector<VectorT> &&data, std::size_t rows,
                            std::size_t cols) {
     return createNumpyArrayFromVector<VectorT>(std::move(data), {rows, cols});
 }
