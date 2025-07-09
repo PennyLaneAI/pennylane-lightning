@@ -35,10 +35,10 @@ template <class StateVectorT>
 class AdjointJacobian final
     : public AdjointJacobianBase<StateVectorT, AdjointJacobian<StateVectorT>> {
   private:
-    using ComplexT = typename StateVectorT::ComplexT;
-    using PrecisionT = typename StateVectorT::PrecisionT;
     using BaseType =
         AdjointJacobianBase<StateVectorT, AdjointJacobian<StateVectorT>>;
+    using typename BaseType::ComplexT;
+    using typename BaseType::PrecisionT;
 
     /**
      * @brief Utility method to update the Jacobian at a given index by
