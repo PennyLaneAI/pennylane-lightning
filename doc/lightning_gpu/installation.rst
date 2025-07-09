@@ -24,7 +24,7 @@ To install Lightning-GPU from the package sources using the direct SDK path firs
 
     git clone https://github.com/PennyLaneAI/pennylane-lightning.git
     cd pennylane-lightning
-    pip install -r requirements.txt
+    pip install -r requirements-dev.txt
     pip install custatevec-cu12
     PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
     SKIP_COMPILATION=True pip install -e . --config-settings editable_mode=compat -vv

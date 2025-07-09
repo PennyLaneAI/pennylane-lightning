@@ -47,7 +47,7 @@ For development and testing, you can install by cloning the repository:
 
     git clone https://github.com/PennyLaneAI/pennylane-lightning.git
     cd pennylane-lightning
-    pip install -r requirements.txt
+    pip install -r requirements-dev.txt
     PL_BACKEND=${PL_BACKEND} python scripts/configure_pyproject_toml.py
     pip install -e . --config-settings editable_mode=compat -vv
 

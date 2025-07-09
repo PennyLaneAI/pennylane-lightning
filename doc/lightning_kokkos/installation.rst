@@ -33,9 +33,14 @@ Build Kokkos for NVIDIA A100 cards (``SM80`` architecture), and append the insta
 
 .. code-block:: bash
 
+    # Replace <install-path> by the path where you want to install Kokkos
+    # e.g. /path_kokkos_install/kokkos/4.5.0/AMPERE80
+    export KOKKOS_INSTALL_PATH=<install-path>
+    mkdir -p ${KOKKOS_INSTALL_PATH}
+
     cmake -S . -B build -G Ninja \
         -DCMAKE_BUILD_TYPE=RelWithDebugInfo \
-        -DCMAKE_INSTALL_PREFIX=/opt/kokkos/4.x.y.z/AMPERE80 \
+        -DCMAKE_INSTALL_PREFIX=${KOKKOS_INSTALL_PATH} \
         -DCMAKE_CXX_STANDARD=20 \
         -DBUILD_SHARED_LIBS:BOOL=ON \
         -DBUILD_TESTING:BOOL=OFF \
@@ -46,7 +51,7 @@ Build Kokkos for NVIDIA A100 cards (``SM80`` architecture), and append the insta
         -DKokkos_ENABLE_TESTS:BOOL=OFF \
         -DKokkos_ENABLE_LIBDL:BOOL=OFF
     cmake --build build && cmake --install build
-    export CMAKE_PREFIX_PATH=/opt/kokkos/4.x.y.z/AMPERE80:$CMAKE_PREFIX_PATH
+    export CMAKE_PREFIX_PATH=:"${KOKKOS_INSTALL_PATH}":$CMAKE_PREFIX_PATH
 
 
 Note that the C++20 standard is required (enabled via the ``-DCMAKE_CXX_STANDARD=20`` option), hence CUDA 12 is required for the CUDA backend.
@@ -62,6 +67,7 @@ The simplest way to install Lightning-Kokkos (OpenMP backend) through ``pip``.
 
     git clone https://github.com/PennyLaneAI/pennylane-lightning.git
     cd pennylane-lightning
+    pip install -r requirements-dev.txt
     
     # Lightning-Qubit needs to be 'installed' by pip before Lightning-Kokkos 
     # (compilation is not necessary)
@@ -111,6 +117,7 @@ Then Lightning-Kokkos with MPI support can be installed in the *editable* mode b
 
     git clone https://github.com/PennyLaneAI/pennylane-lightning.git
     cd pennylane-lightning
+    pip install -r requirements-dev.txt
 
     # Lightning-Qubit needs to be 'installed' by pip before Lightning-Kokkos 
     # (compilation is not necessary)
