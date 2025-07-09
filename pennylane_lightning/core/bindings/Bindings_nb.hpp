@@ -152,7 +152,6 @@ void applyMatrix(
     st.applyMatrix(data_ptr, wires, inverse);
 }
 
-#ifndef _ENABLE_PLTENSOR
 /**
  * @brief Register controlled matrix kernel.
  */
@@ -165,11 +164,22 @@ void applyControlledMatrix(
     const std::vector<bool> &controlled_values,
     const std::vector<std::size_t> &wires, bool inverse = false) {
     using ComplexT = typename StateReprT::ComplexT;
+#ifdef _ENABLE_PLTENSOR
+    std::vector<ComplexT> conv_matrix;
+    if (matrix.size()) {
+        conv_matrix =
+            std::vector<ComplexT>{matrix.data(), matrix.data() + matrix.size()};
+    }
+
+    st.applyControlledOperation("applyControlledMatrix", controlled_wires,
+                                controlled_values, wires, inverse, {},
+                                conv_matrix);
+#else
     st.applyControlledMatrix(PL_reinterpret_cast<const ComplexT>(matrix.data()),
                              controlled_wires, controlled_values, wires,
                              inverse);
-}
 #endif
+}
 
 /**
  * @brief Register gates for a given backend.
@@ -396,7 +406,7 @@ void registerArrayAlignmentBindings(nb::module_ &m) {
           "Allocate aligned array with specified dtype", nb::arg("size"),
           nb::arg("dtype"), nb::arg("zero_init") = false);
 }
-#endif // indef _ENABLE_PLTENSOR
+#endif // ifndef _ENABLE_PLTENSOR
 
 /**
  * @brief Register bindings for general info
@@ -541,8 +551,7 @@ void registerBackendAgnosticObservables(nb::module_ &m) {
  */
 template <class MeasurementsT>
 nb::ndarray<typename MeasurementsT::PrecisionT, nb::numpy, nb::c_contig>
-probsForWires(MeasurementsT &M,
-              const std::vector<std::size_t> &wires) {
+probsForWires(MeasurementsT &M, const std::vector<std::size_t> &wires) {
     using PrecisionT = typename MeasurementsT::PrecisionT;
     auto probs_vec = M.probs(wires);
     return createNumpyArrayFromVector<PrecisionT>(probs_vec);
@@ -789,7 +798,7 @@ template <class StateVectorT, class PyClass>
 void registerBackendAgnosticStateVectorMethods(PyClass &pyclass) {
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
-    
+
     // Initialize with number of qubits
     pyclass.def(nb::init<size_t>());
 

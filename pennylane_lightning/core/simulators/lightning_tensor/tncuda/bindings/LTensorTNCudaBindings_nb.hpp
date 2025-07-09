@@ -64,29 +64,6 @@ using TensorNetworkBackends =
                               ExactTNCuda<float>, ExactTNCuda<double>, void>;
 
 /**
- * @brief Register controlled matrix kernel.
- */
-template <class TensorNet>
-void applyControlledMatrix(
-    TensorNet &tensor_network,
-    const nb::ndarray<std::complex<typename TensorNet::PrecisionT>,
-                      nb::c_contig> &matrix,
-    const std::vector<std::size_t> &controlled_wires,
-    const std::vector<bool> &controlled_values,
-    const std::vector<std::size_t> &target_wires, bool inverse = false) {
-    using ComplexT = typename TensorNet::ComplexT;
-    std::vector<ComplexT> conv_matrix;
-    if (matrix.size()) {
-        conv_matrix =
-            std::vector<ComplexT>{matrix.data(), matrix.data() + matrix.size()};
-    }
-
-    tensor_network.applyControlledOperation(
-        "applyControlledMatrix", controlled_wires, controlled_values,
-        target_wires, inverse, {}, conv_matrix);
-}
-
-/**
  * @brief Get a gate kernel map for a tensor network using MPS.
  *
  * @tparam TensorNetT
@@ -109,8 +86,6 @@ void registerBackendClassSpecificBindingsMPS(PyClass &pyclass) {
             tensor_network.getData(state.data(), state.size());
         },
         "Copy StateVector data into a Numpy array.");
-    pyclass.def("applyControlledMatrix", &applyControlledMatrix<TensorNet>,
-                "Apply controlled operation");
     pyclass.def(
         "updateMPSSitesData",
         [](TensorNet &tensor_network, std::vector<ArrayT> &tensors) {
@@ -186,8 +161,6 @@ void registerBackendClassSpecificBindingsExactTNCuda(PyClass &pyclass) {
             tensor_network.getData(state.data(), state.size());
         },
         "Copy StateVector data into a Numpy array.");
-    pyclass.def("applyControlledMatrix", &applyControlledMatrix<TensorNet>,
-                "Apply controlled operation");
     pyclass.def(
         "setBasisState",
         [](TensorNet &tensor_network, std::vector<std::size_t> &basisState) {
@@ -269,10 +242,22 @@ template <class StateVectorT>
 void registerBackendSpecificAlgorithms(nb::module_ &) {} // m
 
 /**
+ * @brief Provide backend information.
+ */
+auto getBackendInfo() -> nb::dict {
+    nb::dict info;
+    info["NAME"] = "lightning.tensor";
+    return info;
+}
+
+/**
  * @brief Register bindings for backend-specific info.
  *
  * @param m Nanobind module.
  */
-void registerBackendSpecificInfo(nb::module_ &) {} // m
+void registerBackendSpecificInfo(nb::module_ &) {
+    m.def("backend_info", &getBackendInfo, "Backend-specific information.");
+    registerCudaUtils(m);
+} // m
 
 } // namespace Pennylane::LightningTensor::TNCuda::NanoBindings
