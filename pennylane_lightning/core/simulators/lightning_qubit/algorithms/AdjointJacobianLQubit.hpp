@@ -51,7 +51,6 @@ class AdjointJacobian final
   private:
     using BaseType =
         AdjointJacobianBase<StateVectorT, AdjointJacobian<StateVectorT>>;
-    // Use types from the base class
     using typename BaseType::ComplexT;
     using typename BaseType::PrecisionT;
 
