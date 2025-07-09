@@ -79,20 +79,18 @@ template <class StateVectorT> void registerObservablesMPI(nb::module_ &m) {
     using arr_r = nb::ndarray<ParamT, nb::c_contig>;
     using SpIDX = typename std::conditional<std::is_same<ParamT, float>::value,
                                             int32_t, int64_t>::type;
+    using ObservableT = Observable<StateVectorT>;
+    using ObsPtr = std::shared_ptr<ObservableT>;
 
     std::string class_name;
 
     // Register Observable base class
     class_name = "ObservableMPIC" + bitsize;
-    nb::class_<Observable<StateVectorT>,
-               std::shared_ptr<Observable<StateVectorT>>>(m,
-                                                          class_name.c_str());
+    nb::class_<ObservableT>(m, class_name.c_str());
 
     // Register NamedObsMPI class
     class_name = "NamedObsMPIC" + bitsize;
-    nb::class_<NamedObsMPI<StateVectorT>,
-               std::shared_ptr<NamedObsMPI<StateVectorT>>,
-               Observable<StateVectorT>>(m, class_name.c_str())
+    nb::class_<NamedObsMPI<StateVectorT>, ObservableT>(m, class_name.c_str())
         .def(nb::init<const std::string &, const std::vector<std::size_t> &>())
         .def("__repr__", &NamedObsMPI<StateVectorT>::getObsName)
         .def("get_wires", &NamedObsMPI<StateVectorT>::getWires,
@@ -111,9 +109,8 @@ template <class StateVectorT> void registerObservablesMPI(nb::module_ &m) {
 
     // Register HermitianObsMPI class
     class_name = "HermitianObsMPIC" + bitsize;
-    nb::class_<HermitianObsMPI<StateVectorT>,
-               std::shared_ptr<HermitianObsMPI<StateVectorT>>,
-               Observable<StateVectorT>>(m, class_name.c_str())
+    nb::class_<HermitianObsMPI<StateVectorT>, ObservableT>(m,
+                                                           class_name.c_str())
         .def(nb::init<const std::vector<ComplexT> &,
                       const std::vector<std::size_t> &>())
         .def("__repr__", &HermitianObsMPI<StateVectorT>::getObsName)
@@ -134,11 +131,9 @@ template <class StateVectorT> void registerObservablesMPI(nb::module_ &m) {
 
     // Register TensorProdObsMPI class
     class_name = "TensorProdObsMPIC" + bitsize;
-    nb::class_<TensorProdObsMPI<StateVectorT>,
-               std::shared_ptr<TensorProdObsMPI<StateVectorT>>,
-               Observable<StateVectorT>>(m, class_name.c_str())
-        .def(nb::init<
-             const std::vector<std::shared_ptr<Observable<StateVectorT>>> &>())
+    nb::class_<TensorProdObsMPI<StateVectorT>, ObservableT>(m,
+                                                            class_name.c_str())
+        .def(nb::init<const std::vector<ObsPtr> &>())
         .def("__repr__", &TensorProdObsMPI<StateVectorT>::getObsName)
         .def("get_wires", &TensorProdObsMPI<StateVectorT>::getWires,
              "Get wires of observables")
@@ -157,10 +152,7 @@ template <class StateVectorT> void registerObservablesMPI(nb::module_ &m) {
 
     // Register HamiltonianMPI class
     class_name = "HamiltonianMPIC" + bitsize;
-    using ObsPtr = std::shared_ptr<Observable<StateVectorT>>;
-    nb::class_<HamiltonianMPI<StateVectorT>,
-               std::shared_ptr<HamiltonianMPI<StateVectorT>>,
-               Observable<StateVectorT>>(m, class_name.c_str())
+    nb::class_<HamiltonianMPI<StateVectorT>, ObservableT>(m, class_name.c_str())
         .def(nb::init<const std::vector<ParamT> &,
                       const std::vector<ObsPtr> &>())
         .def("__repr__", &HamiltonianMPI<StateVectorT>::getObsName)
@@ -181,9 +173,8 @@ template <class StateVectorT> void registerObservablesMPI(nb::module_ &m) {
 #ifdef _ENABLE_PLGPU
     // Register SparseHamiltonianMPI class
     class_name = "SparseHamiltonianMPIC" + bitsize;
-    nb::class_<SparseHamiltonianMPI<StateVectorT>,
-               std::shared_ptr<SparseHamiltonianMPI<StateVectorT>>,
-               Observable<StateVectorT>>(m, class_name.c_str())
+    nb::class_<SparseHamiltonianMPI<StateVectorT>, ObservableT>(
+        m, class_name.c_str())
         .def(nb::init<const std::vector<ComplexT> &, const std::vector<SpIDX> &,
                       const std::vector<SpIDX> &,
                       const std::vector<std::size_t> &>())
@@ -216,6 +207,8 @@ template <class StateVectorT> void registerObservablesMPI(nb::module_ &m) {
 template <class StateVectorT, class PyClass>
 void registerBackendAgnosticMeasurementsMPI(PyClass &pyclass) {
     using PrecisionT = typename StateVectorT::PrecisionT;
+    using ParamT = PrecisionT;
+    using ObsPtr = std::shared_ptr<Observable<StateVectorT>>;
 
     pyclass
         .def("probs",
@@ -229,15 +222,13 @@ void registerBackendAgnosticMeasurementsMPI(PyClass &pyclass) {
              })
         .def(
             "expval",
-            [](MeasurementsMPI<StateVectorT> &M,
-               const std::shared_ptr<Observable<StateVectorT>> &ob) {
+            [](MeasurementsMPI<StateVectorT> &M, const ObsPtr &ob) {
                 return M.expval(*ob);
             },
             "Expected value of an observable object.")
         .def(
             "var",
-            [](MeasurementsMPI<StateVectorT> &M,
-               const std::shared_ptr<Observable<StateVectorT>> &ob) {
+            [](MeasurementsMPI<StateVectorT> &M, const ObsPtr &ob) {
                 return M.var(*ob);
             },
             "Variance of an observable object.")
