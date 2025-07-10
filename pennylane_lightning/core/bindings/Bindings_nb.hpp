@@ -832,10 +832,7 @@ template <class StateVectorT, class PyClass>
 void registerBackendAgnosticStateVectorMethods(PyClass &pyclass) {
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
-<<<<<<< HEAD
 
-=======
->>>>>>> feature/nanobind_LQubit
     // Initialize with number of qubits
     pyclass.def(nb::init<size_t>());
 
