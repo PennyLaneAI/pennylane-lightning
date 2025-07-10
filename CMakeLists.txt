@@ -88,6 +88,7 @@ set(CMAKE_POLICY_DEFAULT_CMP0127 NEW) # To suppress pybind11 CMP0127 warning
 if(ENABLE_PYTHON)
     # Add pybind11
     find_package(Python COMPONENTS Interpreter Development)
+
     FetchContent_Declare(pybind11
                         GIT_REPOSITORY https://github.com/pybind/pybind11.git
                         GIT_TAG        v2.13.5

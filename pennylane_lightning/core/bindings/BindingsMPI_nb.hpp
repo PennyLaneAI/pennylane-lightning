@@ -34,7 +34,8 @@
 #include "BindingsUtils_nb.hpp"
 #include "JacobianData.hpp"
 
-#ifdef _ENABLE_PLGPU
+#if _ENABLE_PLGPU == 1
+
 #include "AdjointJacobianGPUMPI.hpp"
 #include "JacobianDataMPI.hpp"
 #include "LGPUBindingsMPI.hpp"
@@ -47,6 +48,23 @@ using namespace Pennylane::LightningGPU;
 using namespace Pennylane::LightningGPU::Algorithms;
 using namespace Pennylane::LightningGPU::Observables;
 using namespace Pennylane::LightningGPU::Measures;
+} // namespace
+/// @endcond
+
+#elif _ENABLE_PLKOKKOS == 1
+
+#include "AdjointJacobianKokkosMPI.hpp"
+#include "JacobianDataMPI.hpp"
+#include "LKokkosBindingsMPI.hpp"
+#include "MeasurementsKokkosMPI.hpp"
+#include "ObservablesKokkosMPI.hpp"
+
+/// @cond DEV
+namespace {
+using namespace Pennylane::LightningKokkos;
+using namespace Pennylane::LightningKokkos::Algorithms;
+using namespace Pennylane::LightningKokkos::Observables;
+using namespace Pennylane::LightningKokkos::Measures;
 } // namespace
 /// @endcond
 
@@ -77,8 +95,6 @@ template <class StateVectorT> void registerObservablesMPI(nb::module_ &m) {
 
     using arr_c = nb::ndarray<std::complex<ParamT>, nb::c_contig>;
     using arr_r = nb::ndarray<ParamT, nb::c_contig>;
-    using SpIDX = typename std::conditional<std::is_same<ParamT, float>::value,
-                                            int32_t, int64_t>::type;
     using ObservableT = Observable<StateVectorT>;
     using ObsPtr = std::shared_ptr<ObservableT>;
 
@@ -170,13 +186,18 @@ template <class StateVectorT> void registerObservablesMPI(nb::module_ &m) {
             },
             "Compare two observables");
 
-#ifdef _ENABLE_PLGPU
+#if _ENABLE_PLGPU == 1
+    using SparseIndexT =
+        typename std::conditional<std::is_same<ParamT, float>::value, int32_t,
+                                  int64_t>::type;
+
     // Register SparseHamiltonianMPI class
     class_name = "SparseHamiltonianMPIC" + bitsize;
     nb::class_<SparseHamiltonianMPI<StateVectorT>, ObservableT>(
         m, class_name.c_str())
-        .def(nb::init<const std::vector<ComplexT> &, const std::vector<SpIDX> &,
-                      const std::vector<SpIDX> &,
+        .def(nb::init<const std::vector<ComplexT> &,
+                      const std::vector<SparseIndexT> &,
+                      const std::vector<SparseIndexT> &,
                       const std::vector<std::size_t> &>())
         .def("__repr__", &SparseHamiltonianMPI<StateVectorT>::getObsName)
         .def("get_wires", &SparseHamiltonianMPI<StateVectorT>::getWires,
@@ -198,7 +219,7 @@ template <class StateVectorT> void registerObservablesMPI(nb::module_ &m) {
 }
 
 /**
- * @brief Register agnostic measurements class functionalities for MPI.
+ * @brief Register backend-agnostic measurement class functionalities for MPI.
  *
  * @tparam StateVectorT
  * @tparam PyClass
@@ -253,16 +274,25 @@ auto registerAdjointJacobianMPI(
     using PrecisionT = typename StateVectorT::PrecisionT;
     std::vector<PrecisionT> jac(observables.size() * trainableParams.size(),
                                 PrecisionT{0.0});
+#if _ENABLE_PLGPU == 1
     const JacobianDataMPI<StateVectorT> jd{operations.getTotalNumParams(), sv,
                                            observables, operations,
                                            trainableParams};
+#elif _ENABLE_PLKOKKOS == 1
+    const JacobianData<StateVectorT> jd{operations.getTotalNumParams(),
+                                        sv.getLength(),
+                                        sv.getData(),
+                                        observables,
+                                        operations,
+                                        trainableParams};
+#endif
     adjoint_jacobian.adjointJacobian(std::span{jac}, jd, sv);
 
     return createNumpyArrayFromVector<PrecisionT>(std::move(jac));
 }
 
 /**
- * @brief Register agnostic algorithms.
+ * @brief Register backend-agnostic algorithms.
  *
  * @tparam StateVectorT
  * @param m Nanobind module
@@ -321,15 +351,10 @@ void registerBackendAgnosticAlgorithmsMPI(nb::module_ &m) {
            const std::vector<arr_c> &ops_matrices,
            const std::vector<std::vector<std::size_t>> &ops_controlled_wires,
            const std::vector<std::vector<bool>> &ops_controlled_values) {
-            std::vector<std::vector<ComplexT>> conv_matrices(
-                ops_matrices.size());
-            for (std::size_t op = 0; op < ops_name.size(); op++) {
-                if (ops_matrices[op].size() > 0) {
-                    const auto m_ptr = ops_matrices[op].data();
-                    conv_matrices[op] = std::vector<ComplexT>{
-                        m_ptr, m_ptr + ops_matrices[op].size()};
-                }
-            }
+            std::vector<std::vector<ComplexT>> conv_matrices =
+                Pennylane::NanoBindings::Utils::convertMatrices<ComplexT,
+                                                                ParamT>(
+                    ops_matrices);
             return OpsData<StateVectorT>{ops_name,
                                          ops_params,
                                          ops_wires,
@@ -359,9 +384,22 @@ void registerBackendAgnosticAlgorithmsMPI(nb::module_ &m) {
                 std::vector<PrecisionT> jac(observables.size() *
                                                 trainableParams.size(),
                                             PrecisionT{0.0});
+#if _ENABLE_PLGPU == 1
                 const JacobianDataMPI<StateVectorT> jd{
                     operations.getTotalNumParams(), sv, observables, operations,
                     trainableParams};
+                adjoint_jacobian.adjointJacobian_serial(std::span{jac}, jd);
+#elif _ENABLE_PLKOKKOS == 1
+                const JacobianData<StateVectorT> jd{
+                    operations.getTotalNumParams(),
+                    sv.getLength(),
+                    sv.getData(),
+                    observables,
+                    operations,
+                    trainableParams};
+                adjoint_jacobian.adjointJacobian(std::span{jac}, jd, sv);
+
+#endif
                 self.adjointJacobian_serial(std::span{jac}, jd);
 
                 return createNumpyArrayFromVector<PrecisionT>(std::move(jac));
@@ -370,7 +408,7 @@ void registerBackendAgnosticAlgorithmsMPI(nb::module_ &m) {
 }
 
 /**
- * @brief Register backend agnostic MPI.
+ * @brief Register backend-agnostic MPI.
  *
  * @param m Nanobind module
  */
