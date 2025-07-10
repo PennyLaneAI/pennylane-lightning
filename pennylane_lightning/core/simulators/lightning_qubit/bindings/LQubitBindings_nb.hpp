@@ -344,18 +344,8 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
         "generate_samples",
         [](Measurements<StateVectorT> &M, const std::vector<std::size_t> &wires,
            const std::size_t num_shots) {
-            const std::size_t num_wires = wires.size();
-            auto &&result = M.generate_samples(wires, num_shots);
-
-            // Create a 2D NumPy array with shape (num_shots, num_wires)
-            std::vector<std::size_t> shape = {num_shots, num_wires};
-
-            std::vector<std::size_t> strides = {
-                static_cast<std::size_t>(num_wires * sizeof(std::size_t)),
-                static_cast<std::size_t>(sizeof(std::size_t))};
-
-            return createNumpyArrayFromVector<std::size_t>(result, shape[0],
-                                                           shape[1]);
+            return createNumpyArrayFromVector<std::size_t>(
+                M.generate_samples(wires, num_shots), num_shots, wires.size());
         },
         "Generate samples from the statevector.");
 
@@ -364,18 +354,10 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
         [](Measurements<StateVectorT> &M, std::size_t num_wires,
            const std::string &kernelname, std::size_t num_burnin,
            std::size_t num_shots) {
-            std::vector<std::size_t> &&result = M.generate_samples_metropolis(
-                kernelname, num_burnin, num_shots);
-
-            // Create a 2D NumPy array with shape (num_shots, num_wires)
-            std::vector<std::size_t> shape = {num_shots, num_wires};
-
-            std::vector<std::size_t> strides = {
-                static_cast<std::size_t>(num_wires * sizeof(std::size_t)),
-                static_cast<std::size_t>(sizeof(std::size_t))};
-
-            return createNumpyArrayFromVector<std::size_t>(result, shape[0],
-                                                           shape[1]);
+            return createNumpyArrayFromVector<std::size_t>(
+                M.generate_samples_metropolis(kernelname, num_burnin,
+                                              num_shots),
+                num_shots, num_wires);
         },
         "Generate samples using MCMC.");
 }
@@ -458,7 +440,7 @@ auto registerVJP(
 
     calculate_vjp(std::span{vjp}, jd, std::span{dy.data(), dy.size()});
 
-    return createNumpyArrayFromVector<ComplexT>(vjp);
+    return createNumpyArrayFromVector<ComplexT>(std::move(vjp));
 }
 
 /**
