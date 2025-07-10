@@ -16,9 +16,6 @@
 - Lightning devices can now accept a `seed` argument to enable deterministic shots measurements.
   [(#1171)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1171)
 
-- `MultiControlledX` gates are now natively supported in `lightning.tensor`.
-  [(#1169)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1169)
-
 - PennyLane-Lightning is compatible with JAX version 0.5.3+.
   [(#1152)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1152)
   [(#1161)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1161)
@@ -40,7 +37,8 @@
 
 <h3>Deprecations 👋</h3>
 
-- Removed native support for `MultiControlledX` gates in `lightning.tensor`.
+- Added and subsequently removed native support for `MultiControlledX` gates in `lightning.tensor`.
+  [(#1169)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1169)
   [(#1183)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1183)
 
 <h3>Documentation 📝</h3>
@@ -49,6 +47,10 @@
   [(#1139)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1139)
   [(#1141)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1141)
   [(#1142)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1142)
+
+- Edited and prepared `CHANGELOG.md` for the release `v0.42.0`.
+  [(#1199)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1199)
+  [(#1204)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1204)
 
 - Fixed typo in `lightning.gpu` documentation adjoint-jacobian section.
   [(#1179)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1179)
@@ -109,9 +111,6 @@
 - Bumped Github action runner to use `Ubuntu-24.04` or `Ubuntu-latest`.
   Fixed all `ubuntu-latest` action runners to `ubuntu-24.04`.
   [(#1167)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1167)
-
-- Edited and prepared `CHANGELOG.md` for the release `v0.42.0`.
-  [(#1199)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1199)
 
 - Merged the `v0.41.0-rc` branch to the `master` and bump version.
   [(#1132)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1132)
