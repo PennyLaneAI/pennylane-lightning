@@ -156,6 +156,9 @@ jobs:
             dnf install gcc-toolset-13 -y
             source /opt/rh/gcc-toolset-13/enable -y
             PATH="/opt/rh/gcc-toolset-13/root/usr/bin:$PATH"
+            # debugging for nanobind EXT_SUFFIX issue
+            python -c "import sysconfig; print(f'EXT_SUFFIX: {sysconfig.get_config_var(\"EXT_SUFFIX\")}')"
+            python -m pip install --upgrade setuptools wheel
 
           CIBW_ENVIRONMENT: |
             PATH="/opt/rh/gcc-toolset-13/root/usr/bin:$PATH" CMAKE_ARGS="-DCMAKE_BUILD_TYPE=Release"
