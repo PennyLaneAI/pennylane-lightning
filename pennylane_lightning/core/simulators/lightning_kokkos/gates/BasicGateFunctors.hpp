@@ -615,6 +615,15 @@ void applyNCGlobalPhase(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                         const std::vector<PrecisionT> &params = {}) {
     const Kokkos::complex<PrecisionT> phase = Kokkos::exp(
         Kokkos::complex<PrecisionT>{0, (inverse) ? params[0] : -params[0]});
+
+    // This is a special case to preserve the behavior of the
+    // applyGlobalPhase function with PennyLane `default.qubit`
+    // for 0 qubits.
+    if (!num_qubits) {
+        arr_(0) *= phase;
+        return;
+    }
+
     auto core_function =
         KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
                       std::size_t i0, std::size_t i1) {

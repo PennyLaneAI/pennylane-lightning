@@ -120,6 +120,27 @@ def test_device_init_zero_qubit():
 
 
 @pytest.mark.skipif(
+    (device_name == "lightning.kokkos" and sys.platform == "win32"),
+    reason="lightning.kokkos doesn't support 0 wires on Windows.",
+)
+@pytest.mark.skipif(
+    device_name in ["lightning.gpu", "lightning.tensor"],
+    reason=device_name + " doesn't support 0 wires.",
+)
+def test_device_gphase_zero_qubit():
+    """Test the device initialization with zero-qubit."""
+
+    dev = qml.device(device_name, wires=0)
+
+    @qml.qnode(dev)
+    def circuit():
+        qml.adjoint(qml.GlobalPhase(np.pi / 4))
+        return qml.state()
+
+    assert np.allclose(circuit(), np.array([1.0]) * np.exp(1j * np.pi / 4))
+
+
+@pytest.mark.skipif(
     (device_name != "lightning.kokkos" or sys.platform != "win32"),
     reason="This test is for Kokkos under Windows only.",
 )
