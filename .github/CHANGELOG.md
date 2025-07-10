@@ -2,7 +2,7 @@
 
 <h3>New features since last release</h3>
 
-- The distributed simulation using MPI in the `lightning.kokkos` device is added,
+- Added distributed simulation using MPI to the `lightning.kokkos` device,
   enabling larger quantum circuits by distributing workloads across multiple CPUs or GPUs.
   [(#1114)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1114)
 
