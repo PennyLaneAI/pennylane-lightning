@@ -31,6 +31,7 @@
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/vector.h>
 
+#include "BindingsUtils_nb.hpp"
 #include "JacobianData.hpp"
 
 #ifdef _ENABLE_PLGPU
@@ -56,7 +57,6 @@ static_assert(false, "Backend not found.");
 #endif
 
 namespace nb = nanobind;
-
 namespace Pennylane::NanoBindings {
 
 /**
@@ -79,20 +79,18 @@ template <class StateVectorT> void registerObservablesMPI(nb::module_ &m) {
     using arr_r = nb::ndarray<ParamT, nb::c_contig>;
     using SpIDX = typename std::conditional<std::is_same<ParamT, float>::value,
                                             int32_t, int64_t>::type;
+    using ObservableT = Observable<StateVectorT>;
+    using ObsPtr = std::shared_ptr<ObservableT>;
 
     std::string class_name;
 
     // Register Observable base class
     class_name = "ObservableMPIC" + bitsize;
-    nb::class_<Observable<StateVectorT>,
-               std::shared_ptr<Observable<StateVectorT>>>(m,
-                                                          class_name.c_str());
+    nb::class_<ObservableT>(m, class_name.c_str());
 
     // Register NamedObsMPI class
     class_name = "NamedObsMPIC" + bitsize;
-    nb::class_<NamedObsMPI<StateVectorT>,
-               std::shared_ptr<NamedObsMPI<StateVectorT>>,
-               Observable<StateVectorT>>(m, class_name.c_str())
+    nb::class_<NamedObsMPI<StateVectorT>, ObservableT>(m, class_name.c_str())
         .def(nb::init<const std::string &, const std::vector<std::size_t> &>())
         .def("__repr__", &NamedObsMPI<StateVectorT>::getObsName)
         .def("get_wires", &NamedObsMPI<StateVectorT>::getWires,
@@ -111,9 +109,8 @@ template <class StateVectorT> void registerObservablesMPI(nb::module_ &m) {
 
     // Register HermitianObsMPI class
     class_name = "HermitianObsMPIC" + bitsize;
-    nb::class_<HermitianObsMPI<StateVectorT>,
-               std::shared_ptr<HermitianObsMPI<StateVectorT>>,
-               Observable<StateVectorT>>(m, class_name.c_str())
+    nb::class_<HermitianObsMPI<StateVectorT>, ObservableT>(m,
+                                                           class_name.c_str())
         .def(nb::init<const std::vector<ComplexT> &,
                       const std::vector<std::size_t> &>())
         .def("__repr__", &HermitianObsMPI<StateVectorT>::getObsName)
@@ -134,11 +131,9 @@ template <class StateVectorT> void registerObservablesMPI(nb::module_ &m) {
 
     // Register TensorProdObsMPI class
     class_name = "TensorProdObsMPIC" + bitsize;
-    nb::class_<TensorProdObsMPI<StateVectorT>,
-               std::shared_ptr<TensorProdObsMPI<StateVectorT>>,
-               Observable<StateVectorT>>(m, class_name.c_str())
-        .def(nb::init<
-             const std::vector<std::shared_ptr<Observable<StateVectorT>>> &>())
+    nb::class_<TensorProdObsMPI<StateVectorT>, ObservableT>(m,
+                                                            class_name.c_str())
+        .def(nb::init<const std::vector<ObsPtr> &>())
         .def("__repr__", &TensorProdObsMPI<StateVectorT>::getObsName)
         .def("get_wires", &TensorProdObsMPI<StateVectorT>::getWires,
              "Get wires of observables")
@@ -157,10 +152,7 @@ template <class StateVectorT> void registerObservablesMPI(nb::module_ &m) {
 
     // Register HamiltonianMPI class
     class_name = "HamiltonianMPIC" + bitsize;
-    using ObsPtr = std::shared_ptr<Observable<StateVectorT>>;
-    nb::class_<HamiltonianMPI<StateVectorT>,
-               std::shared_ptr<HamiltonianMPI<StateVectorT>>,
-               Observable<StateVectorT>>(m, class_name.c_str())
+    nb::class_<HamiltonianMPI<StateVectorT>, ObservableT>(m, class_name.c_str())
         .def(nb::init<const std::vector<ParamT> &,
                       const std::vector<ObsPtr> &>())
         .def("__repr__", &HamiltonianMPI<StateVectorT>::getObsName)
@@ -181,9 +173,8 @@ template <class StateVectorT> void registerObservablesMPI(nb::module_ &m) {
 #ifdef _ENABLE_PLGPU
     // Register SparseHamiltonianMPI class
     class_name = "SparseHamiltonianMPIC" + bitsize;
-    nb::class_<SparseHamiltonianMPI<StateVectorT>,
-               std::shared_ptr<SparseHamiltonianMPI<StateVectorT>>,
-               Observable<StateVectorT>>(m, class_name.c_str())
+    nb::class_<SparseHamiltonianMPI<StateVectorT>, ObservableT>(
+        m, class_name.c_str())
         .def(nb::init<const std::vector<ComplexT> &, const std::vector<SpIDX> &,
                       const std::vector<SpIDX> &,
                       const std::vector<std::size_t> &>())
@@ -217,88 +208,36 @@ template <class StateVectorT, class PyClass>
 void registerBackendAgnosticMeasurementsMPI(PyClass &pyclass) {
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ParamT = PrecisionT;
+    using ObsPtr = std::shared_ptr<Observable<StateVectorT>>;
 
     pyclass
         .def("probs",
              [](MeasurementsMPI<StateVectorT> &M,
                 const std::vector<std::size_t> &wires) {
-                 auto probs = M.probs(wires);
-
-                 // Create a new array with the right size
-                 std::size_t size = probs.size();
-                 std::vector<std::size_t> shape{size};
-
-                 // Allocate new memory and copy the data
-                 ParamT *new_data = new ParamT[size];
-                 std::memcpy(new_data, probs.data(), size * sizeof(ParamT));
-
-                 // Create a capsule to manage memory
-                 auto capsule = nb::capsule(new_data, [](void *p) noexcept {
-                     delete[] static_cast<ParamT *>(p);
-                 });
-
-                 // Create and return the ndarray with numpy format
-                 return nb::ndarray<ParamT, nb::numpy, nb::c_contig>(
-                     new_data, shape.size(), shape.data(), capsule);
+                 return createNumpyArrayFromVector<PrecisionT>(M.probs(wires));
              })
         .def("probs",
              [](MeasurementsMPI<StateVectorT> &M) {
-                 auto probs = M.probs();
-
-                 // Create a new array with the right size
-                 std::size_t size = probs.size();
-                 std::vector<std::size_t> shape{size};
-
-                 // Allocate new memory and copy the data
-                 ParamT *new_data = new ParamT[size];
-                 std::memcpy(new_data, probs.data(), size * sizeof(ParamT));
-
-                 // Create a capsule to manage memory
-                 auto capsule = nb::capsule(new_data, [](void *p) noexcept {
-                     delete[] static_cast<ParamT *>(p);
-                 });
-
-                 // Create and return the ndarray with numpy format
-                 return nb::ndarray<ParamT, nb::numpy, nb::c_contig>(
-                     new_data, shape.size(), shape.data(), capsule);
+                 return createNumpyArrayFromVector<PrecisionT>(M.probs());
              })
         .def(
             "expval",
-            [](MeasurementsMPI<StateVectorT> &M,
-               const std::shared_ptr<Observable<StateVectorT>> &ob) {
+            [](MeasurementsMPI<StateVectorT> &M, const ObsPtr &ob) {
                 return M.expval(*ob);
             },
             "Expected value of an observable object.")
         .def(
             "var",
-            [](MeasurementsMPI<StateVectorT> &M,
-               const std::shared_ptr<Observable<StateVectorT>> &ob) {
+            [](MeasurementsMPI<StateVectorT> &M, const ObsPtr &ob) {
                 return M.var(*ob);
             },
             "Variance of an observable object.")
-        .def("generate_samples", [](MeasurementsMPI<StateVectorT> &M,
-                                    std::size_t num_wires,
-                                    std::size_t num_shots) {
-            auto result = M.generate_samples(num_shots);
-
-            // Create a 2D array with shape (num_shots, num_wires)
-            std::vector<std::size_t> shape = {num_shots, num_wires};
-
-            // Allocate new memory and copy the data
-            std::size_t total_size = num_shots * num_wires;
-            std::size_t *new_data = new std::size_t[total_size];
-            std::memcpy(new_data, result.data(),
-                        total_size * sizeof(std::size_t));
-
-            // Create a capsule to manage memory
-            auto capsule = nb::capsule(new_data, [](void *p) noexcept {
-                delete[] static_cast<std::size_t *>(p);
-            });
-
-            // Create and return the ndarray with numpy format
-            return nb::ndarray<std::size_t, nb::numpy>(new_data, shape.size(),
-                                                       shape.data(), capsule);
-        });
+        .def("generate_samples",
+             [](MeasurementsMPI<StateVectorT> &M, std::size_t num_wires,
+                std::size_t num_shots) {
+                 return createNumpyArrayFromVector<std::size_t>(
+                     M.generate_samples(num_shots), num_shots, num_wires);
+             });
 }
 
 /**
@@ -319,22 +258,7 @@ auto registerAdjointJacobianMPI(
                                            trainableParams};
     adjoint_jacobian.adjointJacobian(std::span{jac}, jd, sv);
 
-    // Create a new array with the right size
-    std::size_t size = jac.size();
-    std::vector<std::size_t> shape{size};
-
-    // Allocate new memory and copy the data
-    PrecisionT *new_data = new PrecisionT[size];
-    std::memcpy(new_data, jac.data(), size * sizeof(PrecisionT));
-
-    // Create a capsule to manage memory
-    auto capsule = nb::capsule(new_data, [](void *p) noexcept {
-        delete[] static_cast<PrecisionT *>(p);
-    });
-
-    // Create and return the ndarray with numpy format
-    return nb::ndarray<PrecisionT, nb::numpy, nb::c_contig>(
-        new_data, shape.size(), shape.data(), capsule);
+    return createNumpyArrayFromVector<PrecisionT>(std::move(jac));
 }
 
 /**
@@ -440,22 +364,7 @@ void registerBackendAgnosticAlgorithmsMPI(nb::module_ &m) {
                     trainableParams};
                 self.adjointJacobian_serial(std::span{jac}, jd);
 
-                // Create a new array with the right size
-                std::size_t size = jac.size();
-                std::vector<std::size_t> shape{size};
-
-                // Allocate new memory and copy the data
-                PrecisionT *new_data = new PrecisionT[size];
-                std::memcpy(new_data, jac.data(), size * sizeof(PrecisionT));
-
-                // Create a capsule to manage memory
-                auto capsule = nb::capsule(new_data, [](void *p) noexcept {
-                    delete[] static_cast<PrecisionT *>(p);
-                });
-
-                // Create and return the ndarray with numpy format
-                return nb::ndarray<PrecisionT, nb::numpy, nb::c_contig>(
-                    new_data, shape.size(), shape.data(), capsule);
+                return createNumpyArrayFromVector<PrecisionT>(std::move(jac));
             },
             "Batch Adjoint Jacobian method.");
 }

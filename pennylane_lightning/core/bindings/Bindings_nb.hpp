@@ -406,13 +406,13 @@ void registerInfo(nb::module_ &m) {
 /**
  * @brief Register backend-agnostic observables
  *
- * @tparam LightningBackendT
+ * @tparam StateVectorT
  * @param m Nanobind module
  */
-template <class LightningBackendT>
+template <class StateVectorT>
 void registerBackendAgnosticObservables(nb::module_ &m) {
-    using PrecisionT = typename LightningBackendT::PrecisionT;
-    using ComplexT = typename LightningBackendT::ComplexT;
+    using PrecisionT = typename StateVectorT::PrecisionT;
+    using ComplexT = typename StateVectorT::ComplexT;
     using ParamT = PrecisionT;
 
     using nd_arr_c = nb::ndarray<const std::complex<ParamT>, nb::c_contig>;
@@ -421,31 +421,32 @@ void registerBackendAgnosticObservables(nb::module_ &m) {
         std::to_string(sizeof(std::complex<PrecisionT>) * 8);
 
 #ifdef _ENABLE_PLTENSOR
-    using ObservableT = ObservableTNCuda<LightningBackendT>;
-    using NamedObsT = NamedObsTNCuda<LightningBackendT>;
-    using HermitianObsT = HermitianObsTNCuda<LightningBackendT>;
-    using TensorProdObsT = TensorProdObsTNCuda<LightningBackendT>;
-    using HamiltonianT = HamiltonianTNCuda<LightningBackendT>;
+    using ObservableT = ObservableTNCuda<StateVectorT>;
+    using NamedObsT = NamedObsTNCuda<StateVectorT>;
+    using HermitianObsT = HermitianObsTNCuda<StateVectorT>;
+    using TensorProdObsT = TensorProdObsTNCuda<StateVectorT>;
+    using HamiltonianT = HamiltonianTNCuda<StateVectorT>;
 #else
-    using ObservableT = Observable<LightningBackendT>;
-    using NamedObsT = NamedObs<LightningBackendT>;
-    using HermitianObsT = HermitianObs<LightningBackendT>;
-    using TensorProdObsT = TensorProdObs<LightningBackendT>;
-    using HamiltonianT = Hamiltonian<LightningBackendT>;
+    using ObservableT = Observable<StateVectorT>;
+    using NamedObsT = NamedObs<StateVectorT>;
+    using HermitianObsT = HermitianObs<StateVectorT>;
+    using TensorProdObsT = TensorProdObs<StateVectorT>;
+    using HamiltonianT = Hamiltonian<StateVectorT>;
 #endif
+
+    using ObsPtr = std::shared_ptr<ObservableT>;
 
     std::string class_name;
 
     // Register Observable base class
     class_name = "ObservableC" + bitsize;
-    auto observable = nb::class_<ObservableT>(m, class_name.c_str());
-    observable.def("get_wires", &ObservableT::getWires,
-                   "Get wires the observable acts on.");
+    nb::class_<ObservableT>(m, class_name.c_str())
+        .def("get_wires", &ObservableT::getWires,
+             "Get wires the observable acts on.");
 
     // Register NamedObs class
     class_name = "NamedObsC" + bitsize;
-    auto named_obs = nb::class_<NamedObsT, ObservableT>(m, class_name.c_str());
-    named_obs
+    nb::class_<NamedObsT, ObservableT>(m, class_name.c_str())
         .def(nb::init<const std::string &, const std::vector<std::size_t> &>())
         .def("__repr__", &NamedObsT::getObsName)
         .def("get_wires", &NamedObsT::getWires, "Get wires of observables")
@@ -458,9 +459,7 @@ void registerBackendAgnosticObservables(nb::module_ &m) {
 
     // Register HermitianObs class
     class_name = "HermitianObsC" + bitsize;
-    auto hermitian_obs =
-        nb::class_<HermitianObsT, ObservableT>(m, class_name.c_str());
-    hermitian_obs
+    nb::class_<HermitianObsT, ObservableT>(m, class_name.c_str())
         .def("__init__",
              [](HermitianObsT *self, const nd_arr_c &matrix,
                 const std::vector<std::size_t> &wires) {
@@ -481,10 +480,8 @@ void registerBackendAgnosticObservables(nb::module_ &m) {
 
     // Register TensorProdObs class
     class_name = "TensorProdObsC" + bitsize;
-    auto tensor_prod_obs =
-        nb::class_<TensorProdObsT, ObservableT>(m, class_name.c_str());
-    tensor_prod_obs
-        .def(nb::init<const std::vector<std::shared_ptr<ObservableT>> &>())
+    nb::class_<TensorProdObsT, ObservableT>(m, class_name.c_str())
+        .def(nb::init<const std::vector<ObsPtr> &>())
         .def("__repr__", &TensorProdObsT::getObsName)
         .def("get_wires", &TensorProdObsT::getWires, "Get wires of observables")
         .def("get_ops", &TensorProdObsT::getObs, "Get operations list")
@@ -496,10 +493,7 @@ void registerBackendAgnosticObservables(nb::module_ &m) {
 
     // Register Hamiltonian class
     class_name = "HamiltonianC" + bitsize;
-    using ObsPtr = std::shared_ptr<ObservableT>;
-    auto hamiltonian =
-        nb::class_<HamiltonianT, ObservableT>(m, class_name.c_str());
-    hamiltonian
+    nb::class_<HamiltonianT, ObservableT>(m, class_name.c_str())
         .def(nb::init<const std::vector<ParamT> &,
                       const std::vector<ObsPtr> &>())
         .def("__init__",
@@ -536,8 +530,7 @@ nb::ndarray<typename StateVectorT::PrecisionT, nb::numpy, nb::c_contig>
 probsForWires(Measurements<StateVectorT> &M,
               const std::vector<std::size_t> &wires) {
     using PrecisionT = typename StateVectorT::PrecisionT;
-    auto probs_vec = M.probs(wires);
-    return createNumpyArrayFromVector<PrecisionT>(probs_vec);
+    return createNumpyArrayFromVector<PrecisionT>(M.probs(wires));
 }
 
 /**
@@ -552,8 +545,7 @@ template <class StateVectorT>
 nb::ndarray<typename StateVectorT::PrecisionT, nb::numpy, nb::c_contig>
 probsForAllWires(Measurements<StateVectorT> &M) {
     using PrecisionT = typename StateVectorT::PrecisionT;
-    auto probs_vec = M.probs();
-    return createNumpyArrayFromVector<PrecisionT>(probs_vec);
+    return createNumpyArrayFromVector<PrecisionT>(M.probs());
 }
 
 /**
@@ -570,9 +562,8 @@ template <class StateVectorT>
 nb::ndarray<std::size_t, nb::numpy, nb::c_contig>
 generateSamples(Measurements<StateVectorT> &M, std::size_t num_wires,
                 std::size_t num_shots) {
-    auto result = M.generate_samples(num_shots);
-    return createNumpyArrayFromVector<std::size_t>(result, num_shots,
-                                                   num_wires);
+    return createNumpyArrayFromVector<std::size_t>(
+        M.generate_samples(num_shots), num_shots, num_wires);
 }
 
 /**
@@ -651,7 +642,7 @@ template <class StateVectorT> void registerAdjointJacobian(nb::module_ &m) {
                                                 operations,
                                                 trainableParams};
             adj.adjointJacobian(std::span{jac}, jd, sv);
-            return createNumpyArrayFromVector<PrecisionT>(jac);
+            return createNumpyArrayFromVector<PrecisionT>(std::move(jac));
         },
         "Calculate the Jacobian using the adjoint method.");
 }
