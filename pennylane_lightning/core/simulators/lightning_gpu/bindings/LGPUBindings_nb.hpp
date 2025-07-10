@@ -113,6 +113,16 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
         "Expected value of Hamiltonian represented by Pauli words.");
     pyclass.def(
         "expval",
+        [](Measurements<StateVectorT> &M,
+           const std::vector<std::string> &pauli_words,
+           const std::vector<std::vector<std::size_t>> &target_wires,
+           const std::vector<std::complex<ParamT>> &coeffs) {
+            // Required to be able to accept `coeffs` as a python tuple
+            return M.expval(pauli_words, target_wires, coeffs.data());
+        },
+        "Expected value of Hamiltonian represented by Pauli words.");
+    pyclass.def(
+        "expval",
         [](Measurements<StateVectorT> &M, const ArrayT &matrix,
            const std::vector<std::size_t> &wires) {
             const std::size_t matrix_size = exp2(2 * wires.size());
@@ -171,13 +181,14 @@ void registerBackendSpecificObservables(nb::module_ &m) {
     auto pyclass =
         nb::class_<SparseHamiltonian<StateVectorT>, Observable<StateVectorT>>(
             m, class_name.c_str());
-    pyclass.def("__init__", [](const ArrayT &data,
+    pyclass.def("__init__", [](SparseHamiltonian<StateVectorT> *self,
+                               const ArrayT &data,
                                const ArraySparseIndexT &indices,
                                const ArraySparseIndexT &offsets,
                                const std::vector<std::size_t> &wires) {
         // TODO: We can probably avoid a copy here by not constructing
         // a vector
-        return SparseHamiltonian<StateVectorT>{
+        new (self) SparseHamiltonian<StateVectorT>{
             std::vector<ComplexT>({data.data(), data.data() + data.size()}),
             std::vector<IdxT>(
                 {indices.data(), indices.data() + indices.size()}),
@@ -245,8 +256,8 @@ void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
 
     pyclass.def(nb::init<std::size_t>());              // qubits, device
     pyclass.def(nb::init<std::size_t, DevTag<int>>()); // qubits, dev-tag
-    pyclass.def("__init__", [](const ArrayT &arr) {
-        return new StateVectorT(arr.data(), arr.size());
+    pyclass.def("__init__", [](PyClass *self, const ArrayT &arr) {
+        new (self) StateVectorT(arr.data(), arr.size());
     });
     pyclass.def(
         "setBasisState",
