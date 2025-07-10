@@ -26,9 +26,9 @@
 <h3>Breaking changes 💔</h3>
 
 - The `LightningBaseStateVector`, `LightningBaseAdjointJacobian`, `LightningBaseMeasurements`,
-  `LightningInterpreter` and `QuantumScriptSerializer` base classes now can be found at `pennylane_lightning.lightning_base`.
-  The new `lightning_base` module further enables the relocation of core files from `pennylane_lightning/core/src/*` to `pennylane_lightning/core/*`.
-  The license classifier and `project.license` as a TOML table are deprecated in favor of a SPDX license expression and removed in `pyproject.toml`.
+  `LightningInterpreter` and `QuantumScriptSerializer` base classes now can be found at `pennylane_lightning.lightning_base`.  
+  The new `lightning_base` module further enables the relocation of core files from `pennylane_lightning/core/src/*` to `pennylane_lightning/core/*`.  
+  The license classifier and `project.license` as a TOML table are deprecated in favor of a SPDX license expression and removed in `pyproject.toml`.  
   To speedup the recompilation of C++ source code, `ccache` is also added to `Makefile`.
   [(#1098)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1098)
 
@@ -60,13 +60,13 @@
 - Fixed the implementation of multi-controlled gates with a single target wire for arbitrary control values in `lightning.tensor`.
   [(#1169)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1169)
 
-- Only download JAX version 0.5.3 for non-X86 MacOS. 
+- Updated requirements to only download JAX version 0.5.3 for non-X86 MacOS. 
   [(#1163)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1163)
 
-- Fixed Docker build for `lighting.kokkos` with ROCM library for AMD GPUs. Updating ROCM from 5.7 to 6.2.4. 
+- Fixed Docker build for `lighting.kokkos` with ROCM library for AMD GPUs. Updated ROCM from 5.7 to 6.2.4. 
   [(#1158)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1158)
 
-- Fixed using Torch with `AmplitudeEmbedding` by applying `qml.broadcast_expand` before decomposition in the preprocessing stage. 
+- Fixed use of Torch with `AmplitudeEmbedding` by applying `qml.broadcast_expand` before decomposition in the preprocessing stage. 
   [(#1175)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1175)
 
 <h3>Internal changes ⚙️</h3>
@@ -83,20 +83,20 @@
 - Updated docker build CI for stable version to use v0.41.1.
   [(#1188)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1188)
 
-- Removed flaky tests and add random seed to measurement tests.
+- Removed flaky tests and added random seeding to measurement tests.
   [(#1172)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1172)
   [(#1196)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1196)
 
-- Use local catalyst repository instead of fetching on Github CI.
+- Improved CI to use local catalyst repository instead of fetching on Github CI.
   [(#1164)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1164)
 
 - Updated the Lightning build dependencies.
   [(#1168)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1168)
 
-- Use JAX version 0.6.0 for CI tests for latest version.
+- Updated dev requirements to use JAX version 0.6.0 for CI tests.
   [(#1161)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1161)
   
-- Use JAX version 0.4.28 for CI tests for stable version.
+- Updated stable requirements to use JAX version 0.4.28 for CI tests.
   [(#1160)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1160)
 
 - Bumped `readthedocs` Github action runner to use Ubuntu-24.04.
