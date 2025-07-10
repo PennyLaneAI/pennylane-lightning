@@ -106,9 +106,9 @@ if(ENABLE_PYTHON)
             find_program(Python_EXECUTABLE NAMES python3 python)
         endif()
     endif()
-
+    
     message(STATUS "Using Python executable: ${Python_EXECUTABLE}")
-
+    
     # Get Python include directory explicitly
     execute_process(
         COMMAND ${Python_EXECUTABLE} -c "import sysconfig; print(sysconfig.get_path('include'))"
@@ -116,7 +116,7 @@ if(ENABLE_PYTHON)
         OUTPUT_STRIP_TRAILING_WHITESPACE
         RESULT_VARIABLE PY_INCLUDE_RESULT
     )
-
+    
     if(PY_INCLUDE_RESULT EQUAL 0 AND PYTHON_INCLUDE_DIR)
         message(STATUS "Setting Python include directory: ${PYTHON_INCLUDE_DIR}")
         set(Python_INCLUDE_DIRS ${PYTHON_INCLUDE_DIR})
@@ -125,7 +125,7 @@ if(ENABLE_PYTHON)
     else()
         message(WARNING "Failed to get Python include directory")
     endif()
-
+    
     # Ensure nanobind can find Python extension suffix - try multiple methods
     execute_process(
         COMMAND ${Python_EXECUTABLE} -c "import sysconfig; print(sysconfig.get_config_var('EXT_SUFFIX') or '.so')"
@@ -133,7 +133,7 @@ if(ENABLE_PYTHON)
         OUTPUT_STRIP_TRAILING_WHITESPACE
         RESULT_VARIABLE PY_RESULT
     )
-
+    
     if(NOT PY_RESULT EQUAL 0 OR NOT NANOBIND_EXT_SUFFIX)
         message(WARNING "Failed to get Python extension suffix. Falling back to default '.so'")
         # Fallback method
@@ -148,15 +148,21 @@ if(ENABLE_PYTHON)
         endif()
 
     endif()
-
+    
     message(STATUS "Setting NANOBIND_EXT_SUFFIX to: ${NANOBIND_EXT_SUFFIX}")
     set(ENV{NANOBIND_EXT_SUFFIX} ${NANOBIND_EXT_SUFFIX})
-
+    
     # Also set it as a CMake variable that nanobind can access
     set(NANOBIND_EXT_SUFFIX ${NANOBIND_EXT_SUFFIX} CACHE STRING "Python extension suffix")
     
     # Print nanobind include directory
     message(STATUS "Nanobind include directory: ${nanobind_SOURCE_DIR}/include")
+
+    FetchContent_Declare(nanobind
+                GIT_REPOSITORY https://github.com/wjakob/nanobind.git
+                GIT_TAG        v2.7.0
+    )
+    FetchContent_MakeAvailable(nanobind)
 
 
 endif()
