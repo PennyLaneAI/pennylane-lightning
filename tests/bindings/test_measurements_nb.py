@@ -17,7 +17,7 @@ import numpy as np
 import pytest
 from conftest import backend
 
-if backend != "qubit":
+if backend not in ("qubit", "gpu"):
     pytest.skip("Skipping tests for binaries other than lightning_qubit .", allow_module_level=True)
 
 
