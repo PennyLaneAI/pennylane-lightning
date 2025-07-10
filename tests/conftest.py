@@ -95,6 +95,8 @@ def n_subsystems(request):
 default_device = "lightning.qubit"
 supported_devices = {"lightning.kokkos", "lightning.qubit", "lightning.gpu", "lightning.tensor"}
 
+SUPPORTED_BACKENDS = ("qubit", "gpu")
+
 
 def get_device():
     """Return the pennylane lightning device.
