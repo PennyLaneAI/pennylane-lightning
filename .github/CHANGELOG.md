@@ -112,7 +112,7 @@
   Fixed all `ubuntu-latest` action runners to `ubuntu-24.04`.
   [(#1167)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1167)
 
-- Merged the `v0.41.0-rc` branch to the `master` and bump version.
+- Merged the `v0.41.0-rc` branch to the `master` and bumped the version.
   [(#1132)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1132)
 
 <h3>Contributors ✍️</h3>
