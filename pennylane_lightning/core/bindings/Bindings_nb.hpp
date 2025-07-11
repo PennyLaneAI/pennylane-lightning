@@ -418,7 +418,7 @@ void registerBackendAgnosticObservables(nb::module_ &m) {
     using nd_arr_c = nb::ndarray<const std::complex<ParamT>, nb::c_contig>;
 
     const std::string bitsize =
-        std::to_string(sizeof(std::complex<PrecisionT>) * 8);
+        std::is_same_v<PrecisionT, float> ? "64" : "128";
 
 #ifdef _ENABLE_PLTENSOR
     using ObservableT = ObservableTNCuda<StateVectorT>;
