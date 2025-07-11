@@ -108,7 +108,9 @@ Install Lightning-Kokkos with MPI
 .. note::
 
     Building Lightning-Kokkos with MPI requires an MPI library and ``mpi4py``. 
-    If building for GPU, please ensure that MPI is built with GPU support - for example, see guide to building OpenMPI with `CUDA <https://docs.open-mpi.org/en/v5.0.x/tuning-apps/networking/cuda.html>`_ and `ROCm <https://docs.open-mpi.org/en/v5.0.x/tuning-apps/networking/rocm.html>`_ support.
+    If building for GPU, please ensure that MPI is built with GPU support - for example, see the guide to
+    build OpenMPI with `CUDA <https://docs.open-mpi.org/en/v5.0.x/tuning-apps/networking/cuda.html>`_
+    and `ROCm <https://docs.open-mpi.org/en/v5.0.x/tuning-apps/networking/rocm.html>`_ support.
 
 
 To install Lightning-Kokkos with MPI support, we recommend first installing Kokkos for your specific architecture such as CPU (``SERIAL``, ``OPENMP``),  Nvidia GPU (``CUDA``), or AMD GPU (``HIP``)

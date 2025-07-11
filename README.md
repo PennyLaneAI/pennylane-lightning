@@ -69,7 +69,7 @@ PennyLane-Lightning high performance simulators include the following backends:
 * ``lightning.kokkos``: a state-vector simulator written with [Kokkos](https://kokkos.github.io/kokkos-core-wiki/index.html).
   It can exploit the inherent parallelism of modern processing units supporting the [OpenMP](https://www.openmp.org/>`),
   [CUDA](https://developer.nvidia.com/cuda-toolkit) or [HIP](https://rocm.docs.amd.com/projects/HIP/en/latest) programming models.
-  It also implements a distributed state-vector simulator based on [MPI](https://www.mpi-forum.org/docs/).
+  ``lightning.kokkos`` also offers distributed state-vector simulation via [MPI](https://www.mpi-forum.org/docs/).
 * ``lightning.tensor``: a tensor-network simulator based on the [NVIDIA cuQuantum SDK](https://developer.nvidia.com/cuquantum-sdk).
   The supported methods are Matrix Product State (MPS) and Exact Tensor Network (TN).
 
