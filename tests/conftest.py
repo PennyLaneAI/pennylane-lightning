@@ -143,9 +143,9 @@ if device_name == "lightning.tensor":
 
     LightningAdjointJacobian = None
 
-    if hasattr(pennylane_lightning, "lightning_tensor_ops"):
-        import pennylane_lightning.lightning_tensor_ops as lightning_ops
-        from pennylane_lightning.lightning_tensor_ops import LightningException
+    if hasattr(pennylane_lightning, "lightning_tensor_nb"):
+        import pennylane_lightning.lightning_tensor_nb as lightning_ops
+        from pennylane_lightning.lightning_tensor_nb import LightningException
 else:
     # General case for lightning.qubit, lightning.kokkos, and lightning.gpu
     # Capitalize device name for class names
@@ -176,11 +176,16 @@ else:
     LightningStateVector = getattr(state_vector_module, f"Lightning{backend_cap}StateVector")
 
     # Try to import ops module
-    ops_module_path = f"pennylane_lightning.{device_module_name}_ops"
-    if hasattr(pennylane_lightning, f"{device_module_name}_ops"):
+    ops_module_path = f"pennylane_lightning.{device_module_name}_nb"
+    print(ops_module_path)
+    if hasattr(pennylane_lightning, f"{device_module_name}_nb"):
         lightning_ops = importlib.import_module(ops_module_path)
         if hasattr(lightning_ops, "LightningException"):
             LightningException = lightning_ops.LightningException
+        else:
+            print("no exception")
+    else:
+        print("no ops")
 
 
 # General qubit_device fixture, for any number of wires.

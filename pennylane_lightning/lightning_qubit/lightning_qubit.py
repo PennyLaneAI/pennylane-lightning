@@ -58,13 +58,12 @@ except ImportError:
         # Fall back to pybind11 version if nanobind version is not available
         from pennylane_lightning.lightning_qubit_ops import backend_info
 
-        warn(
+        raise RuntimeError(
             "Using legacy pybind11 bindings. Consider upgrading to nanobind version for better performance.",
-            UserWarning,
         )
         LQ_CPP_BINARY_AVAILABLE = True
     except ImportError as ex:
-        warn(str(ex), UserWarning)
+        raise RuntimeError(str(ex))
         LQ_CPP_BINARY_AVAILABLE = False
 
 from ._adjoint_jacobian import LightningAdjointJacobian
