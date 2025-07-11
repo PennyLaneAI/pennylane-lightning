@@ -18,7 +18,7 @@ import inspect
 
 import numpy as np
 import pytest
-from conftest import backend
+from conftest import device_module_name
 
 try:
     from mpi4py import MPI
@@ -34,7 +34,7 @@ if MPI_AVAILABLE:
 
 # Try to import the MPI module
 try:
-    module_name = f"pennylane_lightning.lightning_{backend}_nb"
+    module_name = f"pennylane_lightning.{device_module_name}_nb"
     mpi_module = importlib.import_module(module_name)
 except ImportError:
     mpi_module = None

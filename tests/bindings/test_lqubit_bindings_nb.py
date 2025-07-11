@@ -15,10 +15,10 @@
 
 import numpy as np
 import pytest
-from conftest import backend
+from conftest import device_name
 
 # Skip all tests if not using lightning.qubit
-if backend != "qubit":
+if device_name != "lightning.qubit":
     pytest.skip("Skipping tests for binaries other than lightning_qubit.", allow_module_level=True)
 
 

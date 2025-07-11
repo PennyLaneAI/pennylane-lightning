@@ -18,7 +18,7 @@ import inspect
 
 import numpy as np
 import pytest
-from conftest import backend
+from conftest import device_module_name
 
 
 def get_module_attributes(module):
@@ -43,7 +43,7 @@ class TestNanobindBindings:
     """Tests for nanobind-based bindings."""
 
     # Define the corresponding pybind module for comparison
-    pb_module_name = f"pennylane_lightning.lightning_{backend}_ops"
+    pb_module_name = f"pennylane_lightning.{device_module_name}_ops"
 
     @pytest.fixture(autouse=True)
     def setup_module_attributes(self, current_nanobind_module):
