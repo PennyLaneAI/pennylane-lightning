@@ -39,7 +39,7 @@ createNumpyArrayFromVector(std::vector<VectorT> &&data,
             "Data size does not match the specified shape");
     }
 
-    std::vector<VectorT> *new_data = new std::vector<VectorT>(std::move(data));
+    auto *new_data = new std::vector<VectorT>(std::move(data));
 
     // Create a capsule to manage memory
     auto capsule = nb::capsule(new_data, [](void *p) noexcept {
