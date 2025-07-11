@@ -25,25 +25,23 @@ class TestStateVectorNB:
     """Tests for StateVectorC64 and StateVectorC128 classes in nanobind-based modules."""
 
     @pytest.fixture
-    def get_statevector_class(self):
+    def get_statevector_class_and_precision(self, precision, current_nanobind_module):
         """Get StateVectorC64/128 class from module based on precision."""
+        module = current_nanobind_module
 
-        def _get_class(module, precision="64"):
+        def _get_class():
             class_name = f"StateVectorC{precision}"
             if hasattr(module, class_name):
                 return getattr(module, class_name)
             pytest.skip(f"Class {class_name} not available in module")
 
-        return _get_class
+        dtype = np.complex128 if precision == "128" else np.complex64
 
-    def test_statevector_initialization(
-        self, current_nanobind_module, precision, get_statevector_class
-    ):
+        return _get_class(), dtype
+
+    def test_statevector_initialization(self, get_statevector_class_and_precision):
         """Test initialization of StateVectorC64/128 classes."""
-        module = current_nanobind_module
-
-        # Get the appropriate StateVector class based on precision
-        StateVectorClass = get_statevector_class(module, precision)
+        StateVectorClass, dtype = get_statevector_class_and_precision
 
         # Test initialization with number of qubits
         num_qubits = 3
@@ -55,7 +53,6 @@ class TestStateVectorNB:
         assert sv.size() == 2**num_qubits
 
         # Verify the state is |0⟩
-        dtype = np.complex128 if precision == "128" else np.complex64
         result = np.zeros(2**num_qubits, dtype=dtype)
         sv.getState(result)
 
@@ -65,13 +62,9 @@ class TestStateVectorNB:
 
         np.testing.assert_allclose(result, expected)
 
-    def test_statevector_gate_operations(
-        self, current_nanobind_module, precision, get_statevector_class
-    ):
+    def test_statevector_gate_operations(self, get_statevector_class_and_precision):
         """Test gate operations on StateVectorC64/128 classes."""
-        module = current_nanobind_module
-
-        StateVectorClass = get_statevector_class(module, precision)
+        StateVectorClass, _ = get_statevector_class_and_precision
 
         num_qubits = 2
         # Initialize with number of qubits - already in |0⟩ state
@@ -87,13 +80,9 @@ class TestStateVectorNB:
         # If we get here without exceptions, the test passes
         assert True
 
-    def test_statevector_parametric_gates(
-        self, current_nanobind_module, precision, get_statevector_class
-    ):
+    def test_statevector_parametric_gates(self, get_statevector_class_and_precision):
         """Test parametric gates on StateVectorC64/128 classes."""
-        module = current_nanobind_module
-
-        StateVectorClass = get_statevector_class(module, precision)
+        StateVectorClass, _ = get_statevector_class_and_precision
 
         num_qubits = 1
         # Initialize with number of qubits - already in |0⟩ state
@@ -108,20 +97,15 @@ class TestStateVectorNB:
         # If we get here without exceptions, the test passes
         assert True
 
-    def test_statevector_matrix_application(
-        self, current_nanobind_module, precision, get_statevector_class
-    ):
+    def test_statevector_matrix_application(self, get_statevector_class_and_precision):
         """Test matrix application on StateVectorC64/128 classes."""
-        module = current_nanobind_module
-
-        StateVectorClass = get_statevector_class(module, precision)
+        StateVectorClass, dtype = get_statevector_class_and_precision
 
         num_qubits = 1
         # Initialize with number of qubits - already in |0⟩ state
         sv = StateVectorClass(num_qubits)
 
         # Get the result
-        dtype = np.complex128 if precision == "128" else np.complex64
         result = np.zeros(2**num_qubits, dtype=dtype)
         sv.getState(result)
 
@@ -140,11 +124,9 @@ class TestStateVectorNB:
         # Assert the result matches the expected state
         np.testing.assert_allclose(result, expected)
 
-    def test_statevector_reset(self, current_nanobind_module, precision, get_statevector_class):
+    def test_statevector_reset(self, get_statevector_class_and_precision):
         """Test resetStateVector method on StateVectorC64/128 classes."""
-        module = current_nanobind_module
-
-        StateVectorClass = get_statevector_class(module, precision)
+        StateVectorClass, dtype = get_statevector_class_and_precision
 
         num_qubits = 2
         # Initialize with number of qubits - already in |0⟩ state
@@ -157,7 +139,6 @@ class TestStateVectorNB:
         sv.resetStateVector()
 
         # Get the result
-        dtype = np.complex128 if precision == "128" else np.complex64
         result = np.zeros(2**num_qubits, dtype=dtype)
         sv.getState(result)
 
@@ -167,16 +148,11 @@ class TestStateVectorNB:
 
         assert np.allclose(result, expected)
 
-    def test_statevector_set_basis_state(
-        self, current_nanobind_module, precision, get_statevector_class
-    ):
+    def test_statevector_set_basis_state(self, get_statevector_class_and_precision):
         """Test setBasisState method on StateVectorC64/128 classes."""
-        module = current_nanobind_module
-
-        StateVectorClass = get_statevector_class(module, precision)
+        StateVectorClass, dtype = get_statevector_class_and_precision
 
         num_qubits = 3
-        dtype = np.complex128 if precision == "128" else np.complex64
         # Initialize with number of qubits
         sv = StateVectorClass(num_qubits)
 
@@ -208,20 +184,15 @@ class TestStateVectorNB:
 
         assert np.allclose(result, expected)
 
-    def test_statevector_set_state_vector(
-        self, current_nanobind_module, precision, get_statevector_class
-    ):
+    def test_statevector_set_state_vector(self, get_statevector_class_and_precision):
         """Test setStateVector method on StateVectorC64/128 classes."""
-        module = current_nanobind_module
-
-        StateVectorClass = get_statevector_class(module, precision)
+        StateVectorClass, dtype = get_statevector_class_and_precision
 
         num_qubits = 2
         # Initialize with number of qubits
         sv = StateVectorClass(num_qubits)
 
         # Create a superposition state for a single qubit
-        dtype = np.complex128 if precision == "128" else np.complex64
         superposition = np.array([1.0 / np.sqrt(2), 1.0 / np.sqrt(2)], dtype=dtype)
 
         # Set qubit 0 to the superposition state
@@ -255,13 +226,9 @@ class TestStateVectorNB:
 
         assert np.allclose(result, expected)
 
-    def test_statevector_len_and_size(
-        self, current_nanobind_module, precision, get_statevector_class
-    ):
+    def test_statevector_len_and_size(self, get_statevector_class_and_precision):
         """Test __len__ and size methods on StateVectorC64/128 classes."""
-        module = current_nanobind_module
-
-        StateVectorClass = get_statevector_class(module, precision)
+        StateVectorClass, dtype = get_statevector_class_and_precision
 
         # Test with different numbers of qubits
         for num_qubits in range(1, 5):
@@ -272,23 +239,19 @@ class TestStateVectorNB:
             assert len(sv) == expected_size
             assert sv.size() == expected_size
 
-    def test_statevector_update_data_nontrivial(
-        self, current_nanobind_module, precision, get_statevector_class
-    ):
+    @pytest.mark.skipif(
+        backend != "qubit" and backend != "gpu",
+        reason="Skipping tests for binaries other than lightning_qubit and lightning_gpu.",
+    )
+    def test_statevector_update_data_nontrivial(self, get_statevector_class_and_precision):
         """Test updateData method with non-trivial state vectors."""
-        module = current_nanobind_module
-        # Skip if updateData is not available
-        if not hasattr(module, "StateVectorC" + precision):
-            pytest.skip(f"Class StateVectorC{precision} not available in module")
-
-        StateVectorClass = get_statevector_class(module, precision)
+        StateVectorClass, dtype = get_statevector_class_and_precision
 
         num_qubits = 2
         # Initialize with number of qubits
         sv = StateVectorClass(num_qubits)
 
         # Create a non-trivial state vector
-        dtype = np.complex128 if precision == "128" else np.complex64
         state_data = np.array([1, 2, 3, 4], dtype=dtype) / np.sqrt(30)
         sv.updateData(state_data)
 

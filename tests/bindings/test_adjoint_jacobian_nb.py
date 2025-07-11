@@ -24,33 +24,39 @@ class TestAdjointJacobianNanobind:
     param_values = [0.5, 0.3]
 
     @pytest.fixture
-    def get_statevector_class(self):
-        """Get StateVector class from module based on precision."""
+    def get_statevector_class_and_precision(self, precision, current_nanobind_module):
+        """Get StateVectorC64/128 class from module based on precision."""
+        module = current_nanobind_module
 
-        def _get_class(module, precision="64"):
+        def _get_class():
             class_name = f"StateVectorC{precision}"
             if hasattr(module, class_name):
-                return getattr(module, class_name)
-            pytest.skip(f"Class {class_name} not available in module")
+                StateVectorClass = getattr(module, class_name)
+                return StateVectorClass
+            pytest.skip(f"Class {class_name} not available in module {module}")
 
-        return _get_class
+        dtype = np.complex128 if precision == "128" else np.complex64
+        return _get_class(), dtype
 
     @pytest.fixture
-    def get_adjoint_jacobian_class(self):
+    def get_adjoint_jacobian_class(self, current_nanobind_module):
         """Get AdjointJacobian class from submodule algorithms based on precision."""
+        module = current_nanobind_module
 
-        def _get_class(module, precision="64"):
-            if hasattr(module.algorithms, f"AdjointJacobianC{precision}"):
-                return getattr(module.algorithms, f"AdjointJacobianC{precision}")
-            pytest.skip(f"Class AdjointJacobianC{precision} not available in module")
+        def _get_class(dtype):
+            class_name = f"AdjointJacobianC64" if dtype == np.complex64 else "AdjointJacobianC128"
+            if hasattr(module.algorithms, class_name):
+                return getattr(module.algorithms, class_name)
+            pytest.skip(f"Class {class_name} not available in module {module}")
 
         return _get_class
 
     @pytest.fixture
-    def get_observable_classes(self):
+    def get_observable_classes(self, current_nanobind_module):
         """Get observable classes from submodule observables based on precision."""
+        module = current_nanobind_module
 
-        def _get_classes(module, precision="64"):
+        def _get_classes(dtype):
             # Check if observables submodule exists
             if not hasattr(module, "observables"):
                 pytest.skip("Submodule observables not available in module")
@@ -58,14 +64,16 @@ class TestAdjointJacobianNanobind:
             classes = {}
 
             # Get NamedObs class
-            named_obs_class_name = f"NamedObsC{precision}"
+            named_obs_class_name = f"NamedObsC64" if dtype == np.complex64 else "NamedObsC128"
             if hasattr(module.observables, named_obs_class_name):
                 classes["named"] = getattr(module.observables, named_obs_class_name)
             else:
                 pytest.skip(f"Class {named_obs_class_name} not available in module")
 
             # Get HermitianObs class
-            hermitian_obs_class_name = f"HermitianObsC{precision}"
+            hermitian_obs_class_name = (
+                f"HermitianObsC64" if dtype == np.complex64 else "HermitianObsC128"
+            )
             if hasattr(module.observables, hermitian_obs_class_name):
                 classes["hermitian"] = getattr(module.observables, hermitian_obs_class_name)
             else:
@@ -76,33 +84,32 @@ class TestAdjointJacobianNanobind:
         return _get_classes
 
     @pytest.fixture
-    def get_ops_struct_class(self):
+    def get_ops_struct_class(self, current_nanobind_module):
         """Get OpsStruct class from submodule algorithms based on precision."""
+        module = current_nanobind_module
 
-        def _get_class(module, precision="64"):
-            if hasattr(module.algorithms, f"OpsStructC{precision}"):
-                return getattr(module.algorithms, f"OpsStructC{precision}")
-            pytest.skip(f"Class OpsStructC{precision} not available in module")
+        def _get_class(dtype):
+            class_name = f"OpsStructC64" if dtype == np.complex64 else "OpsStructC128"
+            if hasattr(module.algorithms, class_name):
+                return getattr(module.algorithms, class_name)
+            pytest.skip(f"Class {class_name} not available in module {module}")
 
         return _get_class
 
     @pytest.mark.parametrize("precision", ["64", "128"])
     def test_adjoint_jacobian_call(
         self,
-        current_nanobind_module,
-        precision,
-        get_statevector_class,
+        get_statevector_class_and_precision,
         get_adjoint_jacobian_class,
         get_observable_classes,
         get_ops_struct_class,
     ):
         """Test calling the adjoint Jacobian directly."""
 
-        module = current_nanobind_module
-        StateVectorClass = get_statevector_class(module, precision)
-        AdjointJacobianClass = get_adjoint_jacobian_class(module, precision)
-        ObservableClasses = get_observable_classes(module, precision)
-        OpsStructClass = get_ops_struct_class(module, precision)
+        StateVectorClass, dtype = get_statevector_class_and_precision
+        AdjointJacobianClass = get_adjoint_jacobian_class(dtype)
+        ObservableClasses = get_observable_classes(dtype)
+        OpsStructClass = get_ops_struct_class(dtype)
 
         # Create objects:
         num_qubits = 2
@@ -150,23 +157,19 @@ class TestAdjointJacobianNanobind:
     )
     def test_adjoint_jacobian_multiple_observables(
         self,
-        current_nanobind_module,
-        precision,
         operation,
         expected_values,
-        get_statevector_class,
+        get_statevector_class_and_precision,
         get_adjoint_jacobian_class,
         get_observable_classes,
         get_ops_struct_class,
     ):
         """Test adjoint Jacobian with multiple observables."""
 
-        module = current_nanobind_module
-
-        StateVectorClass = get_statevector_class(module, precision)
-        AdjointJacobianClass = get_adjoint_jacobian_class(module, precision)
-        ObservableClasses = get_observable_classes(module, precision)
-        OpsStructClass = get_ops_struct_class(module, precision)
+        StateVectorClass, dtype = get_statevector_class_and_precision
+        AdjointJacobianClass = get_adjoint_jacobian_class(dtype)
+        ObservableClasses = get_observable_classes(dtype)
+        OpsStructClass = get_ops_struct_class(dtype)
 
         # Create objects
         num_qubits = 2
@@ -220,23 +223,19 @@ class TestAdjointJacobianNanobind:
                 result_reversed[i], expected, atol=1e-7
             ), f"Expected {expected}, got {result_reversed[i]}"
 
-    @pytest.mark.parametrize("precision", ["64", "128"])
     def test_adjoint_jacobian_multiple_params(
         self,
-        current_nanobind_module,
-        precision,
-        get_statevector_class,
+        get_statevector_class_and_precision,
         get_adjoint_jacobian_class,
         get_observable_classes,
         get_ops_struct_class,
     ):
         """Test adjoint Jacobian with multiple parameters."""
 
-        module = current_nanobind_module
-        StateVectorClass = get_statevector_class(module, precision)
-        AdjointJacobianClass = get_adjoint_jacobian_class(module, precision)
-        ObservableClasses = get_observable_classes(module, precision)
-        OpsStructClass = get_ops_struct_class(module, precision)
+        StateVectorClass, dtype = get_statevector_class_and_precision
+        AdjointJacobianClass = get_adjoint_jacobian_class(dtype)
+        ObservableClasses = get_observable_classes(dtype)
+        OpsStructClass = get_ops_struct_class(dtype)
 
         # Create objects
         num_qubits = 2
@@ -277,32 +276,26 @@ class TestAdjointJacobianNanobind:
         assert np.isclose(result[0], expected_0, atol=1e-7)
         assert np.isclose(result[1], expected_1, atol=1e-7)
 
-    @pytest.mark.parametrize("precision", ["64", "128"])
     def test_adjoint_jacobian_hermitian_observable(
         self,
-        current_nanobind_module,
-        precision,
-        get_statevector_class,
+        get_statevector_class_and_precision,
         get_adjoint_jacobian_class,
         get_observable_classes,
         get_ops_struct_class,
     ):
         """Test adjoint Jacobian with Hermitian observable."""
 
-        module = current_nanobind_module
-        StateVectorClass = get_statevector_class(module, precision)
-        AdjointJacobianClass = get_adjoint_jacobian_class(module, precision)
-        ObservableClasses = get_observable_classes(module, precision)
-        OpsStructClass = get_ops_struct_class(module, precision)
+        StateVectorClass, dtype = get_statevector_class_and_precision
+        AdjointJacobianClass = get_adjoint_jacobian_class(dtype)
+        ObservableClasses = get_observable_classes(dtype)
+        OpsStructClass = get_ops_struct_class(dtype)
 
         # Create objects
         num_qubits = 1
         sv = StateVectorClass(num_qubits)
 
         # Create Hermitian observable (equivalent to PauliZ)
-        hermitian_matrix = np.array([[1, 0], [0, -1]], dtype=np.complex128)
-        if precision == "64":
-            hermitian_matrix = hermitian_matrix.astype(np.complex64)
+        hermitian_matrix = np.array([[1, 0], [0, -1]], dtype=dtype)
 
         obs = ObservableClasses["hermitian"](hermitian_matrix, [0])
 

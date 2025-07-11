@@ -27,10 +27,11 @@ class TestMeasurementsNB:
     num_qubits = 2
 
     @pytest.fixture
-    def get_classes(self):
+    def get_classes_and_precision(self, current_nanobind_module, precision):
         """Get StateVector, Measurements, NamedObs, and HermitianObs classes from module based on precision."""
+        module = current_nanobind_module
 
-        def _get_classes(module, precision="64"):
+        def _get_classes():
             # Get StateVector class
             state_vector_class_name = f"StateVectorC{precision}"
             if hasattr(module, state_vector_class_name):
@@ -73,15 +74,21 @@ class TestMeasurementsNB:
                 else:
                     hermitian_obs_class = None
 
-            return state_vector_class, measurements_class, named_obs_class, hermitian_obs_class
+            dtype = np.complex128 if precision == "128" else np.complex64
+            return (
+                state_vector_class,
+                measurements_class,
+                named_obs_class,
+                hermitian_obs_class,
+                dtype,
+            )
 
         return _get_classes
 
-    def test_state_initialization(self, current_nanobind_module, precision, get_classes):
+    def test_state_initialization(self, get_classes_and_precision):
         """Test state vector initialization."""
-        module = current_nanobind_module
 
-        StateVectorClass, MeasurementsClass, _, _ = get_classes(module, precision)
+        StateVectorClass, MeasurementsClass, _, _, _ = get_classes_and_precision()
 
         # Initialize with number of qubits - already in |0⟩ state
         sv = StateVectorClass(self.num_qubits)
@@ -94,11 +101,10 @@ class TestMeasurementsNB:
         assert probs[0] == pytest.approx(1.0)
         assert all(p == pytest.approx(0.0) for p in probs[1:])
 
-    def test_bell_state(self, current_nanobind_module, precision, get_classes):
+    def test_bell_state(self, get_classes_and_precision):
         """Test Bell state creation."""
-        module = current_nanobind_module
 
-        StateVectorClass, MeasurementsClass, _, _ = get_classes(module, precision)
+        StateVectorClass, MeasurementsClass, _, _, _ = get_classes_and_precision()
 
         # Initialize with number of qubits - already in |00⟩ state
         sv = StateVectorClass(self.num_qubits)
@@ -117,11 +123,10 @@ class TestMeasurementsNB:
         bell_probs = bell_meas.probs([0, 1])
         assert np.allclose(bell_probs, [0.5, 0.0, 0.0, 0.5], atol=1e-6)
 
-    def test_measurements_expval_named_obs(self, current_nanobind_module, precision, get_classes):
+    def test_measurements_expval_named_obs(self, get_classes_and_precision):
         """Test expectation value calculation with NamedObs."""
-        module = current_nanobind_module
 
-        StateVectorClass, MeasurementsClass, NamedObsClass, _ = get_classes(module, precision)
+        StateVectorClass, MeasurementsClass, NamedObsClass, _, _ = get_classes_and_precision()
 
         num_qubits = 1
 
@@ -142,15 +147,14 @@ class TestMeasurementsNB:
         expval_z = meas.expval(obs_z)
         assert np.isclose(expval_z, 0.0, atol=1e-6)
 
-    def test_measurements_var_named_obs(self, current_nanobind_module, precision, get_classes):
+    def test_measurements_var_named_obs(self, get_classes_and_precision):
         """Test variance calculation with NamedObs."""
-        module = current_nanobind_module
 
-        StateVectorClass, MeasurementsClass, NamedObsClass, _ = get_classes(module, precision)
+        StateVectorClass, MeasurementsClass, NamedObsClass, _, _ = get_classes_and_precision()
 
         # Skip if NamedObsClass is None
         if NamedObsClass is None:
-            pytest.skip(f"NamedObsClass not available for {backend} with precision {precision}")
+            pytest.skip(f"NamedObsClass not available for {backend}")
 
         num_qubits = 1
 
@@ -171,17 +175,16 @@ class TestMeasurementsNB:
         var_z = meas.var(obs_z)
         assert np.isclose(var_z, 1.0, atol=1e-6)
 
-    def test_measurements_expval_hermitian_obs(
-        self, current_nanobind_module, precision, get_classes
-    ):
+    def test_measurements_expval_hermitian_obs(self, get_classes_and_precision):
         """Test expectation value calculation with HermitianObs."""
-        module = current_nanobind_module
 
-        StateVectorClass, MeasurementsClass, _, HermitianObsClass = get_classes(module, precision)
+        StateVectorClass, MeasurementsClass, _, HermitianObsClass, dtype = (
+            get_classes_and_precision()
+        )
 
         # Skip if HermitianObsClass is None
         if HermitianObsClass is None:
-            pytest.skip(f"HermitianObsClass not available for {backend} with precision {precision}")
+            pytest.skip(f"HermitianObsClass not available for {backend}")
 
         num_qubits = 1
 
@@ -193,7 +196,7 @@ class TestMeasurementsNB:
         meas = MeasurementsClass(sv)
 
         # Define Pauli-X matrix
-        pauli_x_matrix = np.array([[0, 1], [1, 0]], dtype=complex)
+        pauli_x_matrix = np.array([[0, 1], [1, 0]], dtype=dtype)
 
         # Create Hermitian observable with Pauli-X matrix
         obs_x = HermitianObsClass(pauli_x_matrix.flatten(), [0])
@@ -201,22 +204,23 @@ class TestMeasurementsNB:
         assert np.isclose(expval_x, 1.0, atol=1e-6)
 
         # Define Pauli-Z matrix
-        pauli_z_matrix = np.array([[1, 0], [0, -1]], dtype=complex)
+        pauli_z_matrix = np.array([[1, 0], [0, -1]], dtype=dtype)
 
         # Create Hermitian observable with Pauli-Z matrix
         obs_z = HermitianObsClass(pauli_z_matrix.flatten(), [0])
         expval_z = meas.expval(obs_z)
         assert np.isclose(expval_z, 0.0, atol=1e-6)
 
-    def test_measurements_var_hermitian_obs(self, current_nanobind_module, precision, get_classes):
+    def test_measurements_var_hermitian_obs(self, get_classes_and_precision):
         """Test variance calculation with HermitianObs."""
-        module = current_nanobind_module
 
-        StateVectorClass, MeasurementsClass, _, HermitianObsClass = get_classes(module, precision)
+        StateVectorClass, MeasurementsClass, _, HermitianObsClass, dtype = (
+            get_classes_and_precision()
+        )
 
         # Skip if HermitianObsClass is None
         if HermitianObsClass is None:
-            pytest.skip(f"HermitianObsClass not available for {backend} with precision {precision}")
+            pytest.skip(f"HermitianObsClass not available for {backend}")
 
         num_qubits = 1
 
@@ -228,7 +232,7 @@ class TestMeasurementsNB:
         meas = MeasurementsClass(sv)
 
         # Define Pauli-X matrix
-        pauli_x_matrix = np.array([[0, 1], [1, 0]], dtype=complex)
+        pauli_x_matrix = np.array([[0, 1], [1, 0]], dtype=dtype)
 
         # Create Hermitian observable with Pauli-X matrix
         obs_x = HermitianObsClass(pauli_x_matrix.flatten(), [0])
@@ -236,19 +240,17 @@ class TestMeasurementsNB:
         assert np.isclose(var_x, 0.0, atol=1e-6)
 
         # Define Pauli-Z matrix
-        pauli_z_matrix = np.array([[1, 0], [0, -1]], dtype=complex)
+        pauli_z_matrix = np.array([[1, 0], [0, -1]], dtype=dtype)
 
         # Create Hermitian observable with Pauli-Z matrix
         obs_z = HermitianObsClass(pauli_z_matrix.flatten(), [0])
         var_z = meas.var(obs_z)
         assert np.isclose(var_z, 1.0, atol=1e-6)
 
-    def test_hadamard_gate(self, current_nanobind_module, precision, get_classes):
+    def test_hadamard_gate(self, get_classes_and_precision):
         """Test Hadamard gate application."""
-        module = current_nanobind_module
 
-        StateVectorClass, MeasurementsClass, _, _ = get_classes(module, precision)
-        dtype = np.complex64 if precision == "64" else np.complex128
+        StateVectorClass, MeasurementsClass, _, _, dtype = get_classes_and_precision()
 
         num_qubits = 1
         # Initialize with number of qubits first
@@ -279,11 +281,10 @@ class TestMeasurementsNB:
         # Should be [0.5, 0.5]
         assert np.allclose(probs, [0.5, 0.5], atol=1e-6)
 
-    def test_measurements_generate_samples(self, get_classes, precision, current_nanobind_module):
+    def test_measurements_generate_samples(self, get_classes_and_precision):
         """Test sample generation."""
-        module = current_nanobind_module
 
-        StateVectorClass, MeasurementsClass, _, _ = get_classes(module, precision)
+        StateVectorClass, MeasurementsClass, _, _, _ = get_classes_and_precision()
 
         num_qubits = 2
 
@@ -326,13 +327,9 @@ class TestMeasurementsNB:
         assert 0.4 * num_samples <= count_00_all <= 0.6 * num_samples
         assert 0.4 * num_samples <= count_11_all <= 0.6 * num_samples
 
-    def test_measurements_with_controlled_gates(
-        self, current_nanobind_module, precision, get_classes
-    ):
+    def test_measurements_with_controlled_gates(self, get_classes_and_precision):
         """Test measurements with controlled gates."""
-        module = current_nanobind_module
-
-        StateVectorClass, MeasurementsClass, NamedObsClass, _ = get_classes(module, precision)
+        StateVectorClass, MeasurementsClass, NamedObsClass, _, _ = get_classes_and_precision()
 
         num_qubits = 3
 
@@ -401,12 +398,9 @@ class TestMeasurementsNB:
         assert np.isclose(probs[1], 0.0, atol=1e-6)  # |01⟩
         assert np.isclose(probs[2], 0.0, atol=1e-6)  # |10⟩
 
-    def test_measurements_with_multi_controlled_gates(
-        self, current_nanobind_module, precision, get_classes
-    ):
+    def test_measurements_with_multi_controlled_gates(self, get_classes_and_precision):
         """Test measurements with multi-controlled gates."""
-        module = current_nanobind_module
-        StateVectorClass, MeasurementsClass, NamedObsClass, _ = get_classes(module, precision)
+        StateVectorClass, MeasurementsClass, NamedObsClass, _, _ = get_classes_and_precision()
 
         sv = StateVectorClass(3)
 

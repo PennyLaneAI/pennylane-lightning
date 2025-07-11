@@ -243,7 +243,6 @@ class TestNanobindBindings:
                     # Skip if we can't easily test the return type
                     pass
 
-    @pytest.mark.parametrize("precision", ["64", "128"])
     def test_observables_submodule_exists(self, precision):
         """Test that the observables submodule exists and contains expected classes."""
         # Check if observables submodule exists
@@ -269,7 +268,6 @@ class TestNanobindBindings:
             f"HamiltonianC{precision}" in self.nb_module.observables.__dir__()
         ), f"HamiltonianC{precision} not found in observables submodule"
 
-    @pytest.mark.parametrize("precision", ["64", "128"])
     def test_algorithms_submodule_exists(self, precision):
         """Test that the algorithms submodule exists and contains expected classes."""
         # Check if algorithms submodule exists

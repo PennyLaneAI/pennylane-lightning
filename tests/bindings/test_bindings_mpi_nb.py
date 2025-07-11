@@ -55,10 +55,7 @@ def get_module_attributes(module):
             classes.append(name)
         elif inspect.isfunction(obj):
             functions.append(name)
-
-    # Also check submodules
-    for name, obj in inspect.getmembers(module):
-        if inspect.ismodule(obj):
+        elif inspect.ismodule(obj):
             submodule_classes = []
             submodule_functions = []
             for subname, subobj in inspect.getmembers(obj):
