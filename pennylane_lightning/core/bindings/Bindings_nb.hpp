@@ -85,7 +85,7 @@ using namespace Pennylane::LightningKokkos::NanoBindings;
 
 #elif _ENABLE_PLGPU == 1
 #include "AdjointJacobianGPU.hpp"
-#include "BindingsCudaUtils.hpp"
+#include "BindingsCudaUtils_nb.hpp"
 #include "LGPUBindings_nb.hpp"
 #include "MeasurementsGPU.hpp"
 #include "ObservablesGPU.hpp"
@@ -440,13 +440,13 @@ void registerBackendAgnosticObservables(nb::module_ &m) {
 
     // Register Observable base class
     class_name = "ObservableC" + bitsize;
-    nb::class_<ObservableT>(m, class_name.c_str())
-        .def("get_wires", &ObservableT::getWires,
-             "Get wires the observable acts on.");
+    auto obs_class = nb::class_<ObservableT>(m, class_name.c_str());
+    obs_class.def("get_wires", &ObservableT::getWires,
+                  "Get wires the observable acts on.");
 
     // Register NamedObs class
     class_name = "NamedObsC" + bitsize;
-    nb::class_<NamedObsT, ObservableT>(m, class_name.c_str())
+    nb::class_<NamedObsT>(m, class_name.c_str(), obs_class)
         .def(nb::init<const std::string &, const std::vector<std::size_t> &>())
         .def("__repr__", &NamedObsT::getObsName)
         .def("get_wires", &NamedObsT::getWires, "Get wires of observables")
@@ -645,6 +645,31 @@ template <class StateVectorT> void registerAdjointJacobian(nb::module_ &m) {
             return createNumpyArrayFromVector<PrecisionT>(std::move(jac));
         },
         "Calculate the Jacobian using the adjoint method.");
+
+#ifdef _ENABLE_PLGPU
+    // lightning.gpu supports an additional batched adjoint jacobian
+    adjoint_jacobian_class.def(
+        "batched",
+        [](AdjointJacobian<StateVectorT> &adjoint_jacobian,
+           const StateVectorT &sv,
+           const std::vector<std::shared_ptr<Observable<StateVectorT>>>
+               &observables,
+           const OpsData<StateVectorT> &operations,
+           const std::vector<std::size_t> &trainableParams) {
+            using PrecisionT = typename StateVectorT::PrecisionT;
+            std::vector<PrecisionT> jac(
+                observables.size() * trainableParams.size(), PrecisionT{0.0});
+            const JacobianData<StateVectorT> jd{operations.getTotalNumParams(),
+                                                sv.getLength(),
+                                                sv.getData(),
+                                                observables,
+                                                operations,
+                                                trainableParams};
+            adjoint_jacobian.batchAdjointJacobian(std::span{jac}, jd);
+            return createNumpyArrayFromVector<PrecisionT>(std::move(jac));
+        },
+        "Batch Adjoint Jacobian method.");
+#endif
 }
 
 /**
@@ -748,6 +773,49 @@ void registerBackendAgnosticAlgorithms(nb::module_ &m) {
 }
 
 /**
+ * @brief Update state vector data from an array
+ *
+ * This function accepts any array-like object that follows the buffer protocol,
+ * including NumPy arrays and JAX arrays (for example).
+ *
+ * Example with JAX:
+ * ```python
+ * import jax.numpy as jnp
+ * import pennylane_lightning.lightning_qubit_nb as plq
+ *
+ * # Create a JAX array
+ * jax_data = jnp.zeros(2**3, dtype=jnp.complex64)
+ * jax_data = jax_data.at[0].set(1.0)  # Set to |000⟩ state
+ *
+ * # Create a state vector and update with JAX data
+ * sv = plq.StateVectorC64(3)  # 3 qubits
+ * sv.updateData(jax_data)     # Works with JAX arrays!
+ * ```
+ *
+ * @tparam StateVectorT State vector type
+ * @param sv State vector to update
+ * @param data Array with new data
+ */
+template <class StateVectorT>
+void updateStateVectorData(
+    StateVectorT &sv,
+    const nb::ndarray<typename StateVectorT::ComplexT, nb::c_contig> &data) {
+    using ComplexT = typename StateVectorT::ComplexT;
+
+    // Check dimensions
+    if (data.ndim() != 1) {
+        throw std::invalid_argument("Array must be 1-dimensional");
+    }
+
+    // Get data pointer and size
+    const ComplexT *data_ptr = static_cast<const ComplexT *>(data.data());
+    std::size_t size = data.shape(0);
+
+    // Update the state vector data
+    sv.updateData(data_ptr, size);
+}
+
+/**
  * @brief Register backend agnostic state vector methods.
  *
  * @tparam StateVectorT
@@ -761,6 +829,9 @@ void registerBackendAgnosticStateVectorMethods(PyClass &pyclass) {
     // Initialize with number of qubits
     pyclass.def(nb::init<size_t>());
 
+    pyclass.def("updateData", &updateStateVectorData<StateVectorT>,
+                "Update the state vector data from an array.",
+                nb::arg("state"));
     pyclass.def("__len__", &StateVectorT::getLength,
                 "Get the size of the statevector.");
     pyclass.def("size", &StateVectorT::getLength);
@@ -851,7 +922,14 @@ template <class StateVectorT> void lightningClassBindings(nb::module_ &m) {
     auto pyclass_measurements =
         nb::class_<Measurements<StateVectorT>>(m, class_name.c_str());
 
+#ifdef _ENABLE_PLGPU
+    // TODO: Find if getting `const` to work with GPU state vector is an easy
+    // lift
+    pyclass_measurements.def(nb::init<StateVectorT &>());
+#else
     pyclass_measurements.def(nb::init<const StateVectorT &>());
+#endif
+
     registerBackendAgnosticMeasurements<StateVectorT>(pyclass_measurements);
     registerBackendSpecificMeasurements<StateVectorT>(pyclass_measurements);
 

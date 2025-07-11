@@ -15,10 +15,10 @@
 
 import numpy as np
 import pytest
-from conftest import device_name
+from conftest import device_name, SUPPORTED_DEVICES
 
-if device_name != "lightning.qubit":
-    pytest.skip("Skipping tests for binaries other than lightning_qubit .", allow_module_level=True)
+if device_name not in SUPPORTED_DEVICES:
+    pytest.skip("Skipping tests for binaries other than one of {SUPPORTED_DEVICES}.", allow_module_level=True)
 
 
 class TestMeasurementsNB:

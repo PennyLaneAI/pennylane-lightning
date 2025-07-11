@@ -88,7 +88,7 @@ def test_devpool_is_pickleable():
         pickled_devpool = pkl.dumps(dev._dp)
         un_pickled_devpool = pkl.loads(pickled_devpool)
 
-        from pennylane_lightning.lightning_gpu_ops import DevPool
+        from pennylane_lightning.lightning_gpu_nb import DevPool
 
         d = DevPool()
 

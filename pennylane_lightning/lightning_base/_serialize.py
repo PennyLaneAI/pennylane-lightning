@@ -86,7 +86,7 @@ class QuantumScriptSerializer:
                 ) from exception
         elif device_name == "lightning.gpu":
             try:
-                import pennylane_lightning.lightning_gpu_ops as lightning_ops
+                import pennylane_lightning.lightning_gpu_nb as lightning_ops
             except ImportError as exception:
                 raise ImportError(
                     f"Pre-compiled binaries for {device_name} are not available."

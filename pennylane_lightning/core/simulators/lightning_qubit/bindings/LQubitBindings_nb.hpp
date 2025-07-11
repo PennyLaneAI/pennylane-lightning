@@ -128,32 +128,6 @@ auto svKernelMap(const StateVectorT &sv) -> nb::dict {
 }
 
 /**
- * @brief Update state vector data from an array
- *
- * This function accepts any array-like object that follows the buffer protocol,
- * including NumPy arrays and JAX arrays (for example).
- */
-template <class StateVectorT>
-void updateStateVectorData(
-    StateVectorT &sv,
-    const nb::ndarray<const typename StateVectorT::ComplexT, nb::c_contig>
-        &data) {
-    using ComplexT = typename StateVectorT::ComplexT;
-
-    // Check dimensions
-    if (data.ndim() != 1) {
-        throw std::invalid_argument("Array must be 1-dimensional");
-    }
-
-    // Get data pointer and size
-    const ComplexT *data_ptr = data.data();
-    std::size_t size = data.shape(0);
-
-    // Update the state vector data
-    sv.updateData(data_ptr, size);
-}
-
-/**
  * @brief Register sparse matrix operators for a statevector.
  *
  * @tparam StateVectorT
@@ -235,10 +209,6 @@ void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
     // Kernel map.
     pyclass.def("kernel_map", &svKernelMap<StateVectorT>,
                 "Get internal kernels for operations");
-
-    pyclass.def("updateData", &updateStateVectorData<StateVectorT>,
-                "Update the state vector data from an array.",
-                nb::arg("state"));
 
     pyclass.def(
         "getState",
