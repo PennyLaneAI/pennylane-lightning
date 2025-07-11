@@ -54,8 +54,8 @@ try:
 
     LQ_CPP_BINARY_AVAILABLE = True
 except ImportError as ex:
+    warn(str(ex), UserWarning)
     LQ_CPP_BINARY_AVAILABLE = False
-    raise RuntimeError(str(ex))
 
 from ._adjoint_jacobian import LightningAdjointJacobian
 from ._measurements import LightningMeasurements

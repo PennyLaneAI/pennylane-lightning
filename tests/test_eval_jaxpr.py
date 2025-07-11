@@ -605,7 +605,7 @@ def test_vmap_integration(use_jit):
 def test_vmap_in_axes(in_axis, out_axis):
     """Test that vmap works with specified in_axes and out_axes."""
 
-    @qml.qnode(qml.device(device_name, wires=1))
+    @qml.qnode(qml.device(device_name, wires=1, c_dtype=jax.numpy.complex64))
     def circuit(mat):
         qml.QubitUnitary(mat, 0)
         return qml.expval(qml.Z(0)), qml.state()
