@@ -15,9 +15,9 @@
 
 import numpy as np
 import pytest
-from conftest import backend
+from conftest import device_name
 
-if backend != "qubit":
+if device_name not in ["lightning.qubit", "lightning.gpu"]:
     pytest.skip("Skipping tests for binaries other than lightning_qubit .", allow_module_level=True)
 
 
@@ -240,7 +240,7 @@ class TestStateVectorNB:
             assert sv.size() == expected_size
 
     @pytest.mark.skipif(
-        backend != "qubit" and backend != "gpu",
+        device_name != "lightning.qubit" and device_name != "lightning.gpu",
         reason="Skipping tests for binaries other than lightning_qubit and lightning_gpu.",
     )
     def test_statevector_update_data_nontrivial(self, get_statevector_class_and_precision):
@@ -261,26 +261,24 @@ class TestStateVectorNB:
 
         assert np.allclose(result, state_data)
 
-    @pytest.mark.parametrize("precision", ["64", "128"])
     def test_statevector_with_aligned_array(
-        self, current_nanobind_module, precision, get_statevector_class
+        self, get_statevector_class_and_precision, current_nanobind_module
     ):
         """Test StateVector with aligned array."""
-        StateVectorClass = get_statevector_class(current_nanobind_module, precision)
+        StateVectorClass, dtype = get_statevector_class_and_precision
 
         # Create a state vector
         num_qubits = 2
         sv = StateVectorClass(num_qubits)
 
         # Create an aligned array
-        dtype_str = np.complex64 if precision == "64" else np.complex128
         capsule = current_nanobind_module.allocate_aligned_array(
-            2**num_qubits, np.dtype(dtype_str), True
+            2**num_qubits, np.dtype(dtype), True
         )
 
         # Convert the capsule to a numpy array using numpy's array interface
         # This approach works with both pybind11 and nanobind
-        arr = np.asarray(capsule, dtype=dtype_str)
+        arr = np.asarray(capsule, dtype=dtype)
 
         # Set the first element to 1.0 to create a valid state
         arr[0] = 1.0
@@ -289,9 +287,9 @@ class TestStateVectorNB:
         sv.updateData(arr)
 
         # Check that the state is correct
-        result = np.zeros(2**num_qubits, dtype=dtype_str)
+        result = np.zeros(2**num_qubits, dtype=dtype)
         sv.getState(result)
 
-        expected = np.zeros(2**num_qubits, dtype=dtype_str)
+        expected = np.zeros(2**num_qubits, dtype=dtype)
         expected[0] = 1.0
         assert np.allclose(result, expected)
