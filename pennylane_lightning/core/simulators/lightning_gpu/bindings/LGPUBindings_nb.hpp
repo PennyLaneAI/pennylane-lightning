@@ -86,7 +86,7 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
         "expval",
         [](Measurements<StateVectorT> &M, const std::string &operation,
            const std::vector<std::size_t> &wires) {
-            M.expval(operation, wires);
+            return M.expval(operation, wires);
         },
         "Expected value of an operation by name.");
     pyclass.def(

@@ -440,9 +440,9 @@ void registerBackendAgnosticObservables(nb::module_ &m) {
 
     // Register Observable base class
     class_name = "ObservableC" + bitsize;
-    auto obs_class = nb::class_<ObservableT>(m, class_name.c_str())
-        .def("get_wires", &ObservableT::getWires,
-             "Get wires the observable acts on.");
+    auto obs_class = nb::class_<ObservableT>(m, class_name.c_str());
+    obs_class.def("get_wires", &ObservableT::getWires,
+                  "Get wires the observable acts on.");
 
     // Register NamedObs class
     class_name = "NamedObsC" + bitsize;
@@ -649,30 +649,27 @@ template <class StateVectorT> void registerAdjointJacobian(nb::module_ &m) {
 #ifdef _ENABLE_PLGPU
     // lightning.gpu supports an additional batched adjoint jacobian
     adjoint_jacobian_class.def(
-            "batched",
-            [](AdjointJacobian<StateVectorT> &adjoint_jacobian,
-               const StateVectorT &sv,
-               const std::vector<std::shared_ptr<Observable<StateVectorT>>>
-                   &observables,
-               const OpsData<StateVectorT> &operations,
-               const std::vector<std::size_t> &trainableParams) {
-                using PrecisionT = typename StateVectorT::PrecisionT;
-                std::vector<PrecisionT> jac(observables.size() *
-                                                trainableParams.size(),
-                                            PrecisionT{0.0});
-                const JacobianData<StateVectorT> jd{
-                    operations.getTotalNumParams(),
-                    sv.getLength(),
-                    sv.getData(),
-                    observables,
-                    operations,
-                    trainableParams};
-                adjoint_jacobian.batchAdjointJacobian(std::span{jac}, jd);
-                return createNumpyArrayFromVector<PrecisionT>(std::move(jac));
-            },
-            "Batch Adjoint Jacobian method.");
+        "batched",
+        [](AdjointJacobian<StateVectorT> &adjoint_jacobian,
+           const StateVectorT &sv,
+           const std::vector<std::shared_ptr<Observable<StateVectorT>>>
+               &observables,
+           const OpsData<StateVectorT> &operations,
+           const std::vector<std::size_t> &trainableParams) {
+            using PrecisionT = typename StateVectorT::PrecisionT;
+            std::vector<PrecisionT> jac(
+                observables.size() * trainableParams.size(), PrecisionT{0.0});
+            const JacobianData<StateVectorT> jd{operations.getTotalNumParams(),
+                                                sv.getLength(),
+                                                sv.getData(),
+                                                observables,
+                                                operations,
+                                                trainableParams};
+            adjoint_jacobian.batchAdjointJacobian(std::span{jac}, jd);
+            return createNumpyArrayFromVector<PrecisionT>(std::move(jac));
+        },
+        "Batch Adjoint Jacobian method.");
 #endif
-
 }
 
 /**
