@@ -18,7 +18,7 @@ import inspect
 
 import numpy as np
 import pytest
-from conftest import backend
+from conftest import device_module_name
 
 
 def get_module_attributes(module):
@@ -43,7 +43,7 @@ class TestNanobindBindings:
     """Tests for nanobind-based bindings."""
 
     # Define the corresponding pybind module for comparison
-    pb_module_name = f"pennylane_lightning.lightning_{backend}_ops"
+    pb_module_name = f"pennylane_lightning.{device_module_name}_ops"
 
     @pytest.fixture(autouse=True)
     def setup_module_attributes(self, current_nanobind_module):
@@ -243,7 +243,6 @@ class TestNanobindBindings:
                     # Skip if we can't easily test the return type
                     pass
 
-    @pytest.mark.parametrize("precision", ["64", "128"])
     def test_observables_submodule_exists(self, precision):
         """Test that the observables submodule exists and contains expected classes."""
         # Check if observables submodule exists
@@ -269,7 +268,6 @@ class TestNanobindBindings:
             f"HamiltonianC{precision}" in self.nb_module.observables.__dir__()
         ), f"HamiltonianC{precision} not found in observables submodule"
 
-    @pytest.mark.parametrize("precision", ["64", "128"])
     def test_algorithms_submodule_exists(self, precision):
         """Test that the algorithms submodule exists and contains expected classes."""
         # Check if algorithms submodule exists
