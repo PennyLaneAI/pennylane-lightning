@@ -67,7 +67,8 @@ The simplest way to install Lightning-Kokkos (OpenMP backend) through ``pip``.
 
     git clone https://github.com/PennyLaneAI/pennylane-lightning.git
     cd pennylane-lightning
-    pip install -r requirements-dev.txt
+    pip install -r requirements.txt
+    pip install git+https://github.com/PennyLaneAI/pennylane.git@master
     
     # Lightning-Qubit needs to be 'installed' by pip before Lightning-Kokkos 
     # (compilation is not necessary)
@@ -123,7 +124,6 @@ Then Lightning-Kokkos with MPI support can be installed in the *editable* mode b
     cd pennylane-lightning
     pip install -r requirements.txt
     pip install git+https://github.com/PennyLaneAI/pennylane.git@master
-
 
     # Lightning-Qubit needs to be 'installed' by pip before Lightning-Kokkos 
     # (compilation is not necessary)
