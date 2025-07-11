@@ -102,7 +102,6 @@ class TestJAXCompatibility:
 
         return _get_class
 
-    @pytest.mark.parametrize("precision", ["64", "128"])
     def test_adjoint_jacobian_jax(
         self,
         get_statevector_class_and_precision,
@@ -163,7 +162,6 @@ class TestJAXCompatibility:
         assert result.shape == (1,)
         assert np.isclose(result[0], -np.sin(param_value))
 
-    @pytest.mark.parametrize("precision", ["64", "128"])
     def test_adjoint_jacobian_multiple_params_jax(
         self,
         get_statevector_class_and_precision,
@@ -223,7 +221,6 @@ class TestJAXCompatibility:
         expected_jacobian = np.array([[-np.sin(params[0]), 0]])
         assert np.allclose(jacobian, expected_jacobian, atol=1e-5)
 
-    @pytest.mark.parametrize("precision", ["64", "128"])
     def test_jax_array_initialization(self, get_statevector_class_and_precision):
         """Test initialization of StateVector with JAX arrays."""
         # Skip if module doesn't have StateVectorClass, or if StateVectorClass doesn't have updateData
@@ -425,20 +422,14 @@ class TestJAXCompatibility:
         assert result.shape == (1,)
         assert np.isclose(result[0], -np.sin(param_value))
 
-    @pytest.mark.parametrize("precision", ["64", "128"])
     def test_adjoint_jacobian_multiple_params_jax(
         self,
-        current_nanobind_module,
-        precision,
         get_statevector_class_and_precision,
         get_adjoint_jacobian_class,
         get_named_obs_class,
         get_ops_struct_class,
     ):
         """Test adjoint Jacobian with multiple JAX parameters."""
-        # Skip if JAX doesn't support the precision
-        if precision == "128" and not jax.config.read("jax_enable_x64"):
-            pytest.skip("JAX x64 precision not enabled")
 
         StateVectorClass, dtype = get_statevector_class_and_precision
         AdjointJacobianClass = get_adjoint_jacobian_class(dtype)

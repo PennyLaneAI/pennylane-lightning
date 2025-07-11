@@ -18,7 +18,7 @@ import inspect
 
 import numpy as np
 import pytest
-from conftest import backend
+from conftest import device_module_name
 
 
 def get_module_attributes(module):
@@ -43,7 +43,7 @@ class TestNanobindBindings:
     """Tests for nanobind-based bindings."""
 
     # Define the corresponding pybind module for comparison
-    pb_module_name = f"pennylane_lightning.lightning_{backend}_ops"
+    pb_module_name = f"pennylane_lightning.{device_module_name}_ops"
 
     @pytest.fixture(autouse=True)
     def setup_module_attributes(self, current_nanobind_module):
@@ -243,7 +243,6 @@ class TestNanobindBindings:
                     # Skip if we can't easily test the return type
                     pass
 
-    @pytest.mark.parametrize("precision", ["64", "128"])
     def test_observables_submodule_exists(self, precision):
         """Test that the observables submodule exists and contains expected classes."""
         # Check if observables submodule exists
@@ -269,7 +268,6 @@ class TestNanobindBindings:
             f"HamiltonianC{precision}" in self.nb_module.observables.__dir__()
         ), f"HamiltonianC{precision} not found in observables submodule"
 
-    @pytest.mark.parametrize("precision", ["64", "128"])
     def test_algorithms_submodule_exists(self, precision):
         """Test that the algorithms submodule exists and contains expected classes."""
         # Check if algorithms submodule exists
@@ -305,3 +303,44 @@ class TestNanobindBindings:
         # Check for expected keys
         for key in ["cpu.arch", "compiler.name", "compiler.version", "AVX2", "AVX512F"]:
             assert key in info
+
+
+class TestAlignedArrayNB:
+    """Tests for allocate_aligned_array function in nanobind-based modules."""
+
+    @pytest.mark.parametrize("dtype", [np.complex64, np.complex128, np.float32, np.float64])
+    def test_allocate_aligned_array_basic(self, current_nanobind_module, dtype):
+        """Test basic functionality of allocate_aligned_array."""
+        size = 1024
+        arr = current_nanobind_module.allocate_aligned_array(size, np.dtype(dtype), False)
+
+        # Check array properties
+        assert arr.size == size
+        assert arr.dtype == dtype
+
+    @pytest.mark.parametrize("dtype", [np.complex64, np.complex128, np.float32, np.float64])
+    def test_allocate_aligned_array_zero_init(self, current_nanobind_module, dtype):
+        """Test zero initialization of allocate_aligned_array."""
+        size = 1024
+        arr = current_nanobind_module.allocate_aligned_array(size, np.dtype(dtype), True)
+
+        # Check array is zero-initialized
+        assert arr.size == size
+        assert arr.dtype == dtype
+        assert np.all(arr == 0)
+
+    def test_allocate_aligned_array_invalid_dtype(self, current_nanobind_module):
+        """Test allocate_aligned_array with invalid dtype raises an error."""
+        size = 1024
+        with pytest.raises((TypeError, RuntimeError)):
+            current_nanobind_module.allocate_aligned_array(size, np.dtype(np.int32), False)
+
+    def test_allocate_aligned_array_memory_alignment(self, current_nanobind_module):
+        """Test memory alignment of allocated array."""
+        size = 1024
+        arr = current_nanobind_module.allocate_aligned_array(size, np.dtype(np.complex128), False)
+
+        # Check array memory alignment
+        # The pointer address should be divisible by 32 (for AVX2) or 64 (for AVX512)
+        ptr_addr = arr.__array_interface__["data"][0]
+        assert ptr_addr % 32 == 0, "Memory not aligned to 32-byte boundary"
