@@ -92,7 +92,6 @@ class LightningKokkosStateVector(LightningBaseStateVector):
         self._mpi = mpi
 
         # Initialize the state vector
-
         sv_init_args = [self.num_wires]
         if mpi:
             self._mpi_manager = MPIManagerKokkos()

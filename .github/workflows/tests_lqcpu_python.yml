@@ -219,6 +219,9 @@ jobs:
           pl-device-test --device ${DEVICENAME} --skip-ops --shots=10000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
 
+      - name: Python packages
+        run: pip freeze
+
       - name: Run PennyLane-Lightning unit tests
         env:
           OMP_NUM_THREADS: 1

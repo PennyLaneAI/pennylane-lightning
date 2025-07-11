@@ -41,7 +41,7 @@ using Pennylane::LightningQubit::Util::Transpose;
 
 namespace Pennylane::LightningQubit::Algorithms {
 /**
- * @brief Adjoint Jacobian evaluator following the method of arXiV:2009.02823.
+ * @brief Adjoint Jacobian evaluator following the method of arXiv:2009.02823.
  *
  * @tparam StateVectorT State vector type.
  */
@@ -49,10 +49,10 @@ template <class StateVectorT>
 class AdjointJacobian final
     : public AdjointJacobianBase<StateVectorT, AdjointJacobian<StateVectorT>> {
   private:
-    using ComplexT = typename StateVectorT::ComplexT;
-    using PrecisionT = typename StateVectorT::PrecisionT;
     using BaseType =
         AdjointJacobianBase<StateVectorT, AdjointJacobian<StateVectorT>>;
+    using typename BaseType::ComplexT;
+    using typename BaseType::PrecisionT;
 
     /**
      * @brief Utility method to update the Jacobian at a given index by
@@ -190,6 +190,8 @@ class AdjointJacobian final
     }
 
   public:
+    AdjointJacobian() = default;
+
     /**
      * @brief Calculates the Jacobian for the statevector for the selected set
      * of parametric gates.
