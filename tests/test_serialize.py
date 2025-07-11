@@ -17,7 +17,7 @@ Unit tests for the serialization helper functions.
 import numpy as np
 import pennylane as qml
 import pytest
-from conftest import LightningDevice, device_name
+from conftest import LightningDevice, compare_serialized_ops, device_name
 from pennylane.exceptions import DeviceError
 
 from pennylane_lightning.lightning_base._serialize import (
@@ -36,6 +36,8 @@ if device_name == "lightning.kokkos":
         HermitianObsC128,
         NamedObsC64,
         NamedObsC128,
+        SparseHamiltonianC64,
+        SparseHamiltonianC128,
         TensorProdObsC64,
         TensorProdObsC128,
     )
@@ -47,6 +49,8 @@ elif device_name == "lightning.gpu":
         HermitianObsC128,
         NamedObsC64,
         NamedObsC128,
+        SparseHamiltonianC64,
+        SparseHamiltonianC128,
         TensorProdObsC64,
         TensorProdObsC128,
     )
@@ -63,6 +67,8 @@ else:
         HermitianObsC128,
         NamedObsC64,
         NamedObsC128,
+        SparseHamiltonianC64,
+        SparseHamiltonianC128,
         TensorProdObsC64,
         TensorProdObsC128,
     )
@@ -163,7 +169,7 @@ class TestSerializeObs:
         s, _ = QuantumScriptSerializer(device_name, use_csingle).serialize_observables(
             tape, wires_map
         )
-        assert s == s_expected
+        assert compare_serialized_ops(s, s_expected)
 
     @pytest.mark.parametrize("use_csingle", [True, False])
     @pytest.mark.parametrize("wires_map", [wires_dict, None])
@@ -623,7 +629,7 @@ class TestSerializeOps:
             ),
             False,
         )
-        assert s == s_expected
+        assert compare_serialized_ops(s, s_expected)
 
     @pytest.mark.parametrize("wires_map", [wires_dict, None])
     def test_Rot_in_circuit(self, wires_map):
@@ -647,7 +653,7 @@ class TestSerializeOps:
             ),
             False,
         )
-        assert s == s_expected
+        assert compare_serialized_ops(s, s_expected)
 
     @pytest.mark.parametrize("wires_map", [wires_dict, None])
     def test_basic_circuit_not_implemented_ctrl_ops(self, wires_map):
@@ -671,13 +677,7 @@ class TestSerializeOps:
             ),
             False,
         )
-        assert s[0][0] == s_expected[0][0]
-        assert s[0][1] == s_expected[0][1]
-        assert s[0][2] == s_expected[0][2]
-        assert s[0][3] == s_expected[0][3]
-        assert all(np.allclose(s0, s1) for s0, s1 in zip(s[0][4], s_expected[0][4]))
-        assert s[0][5] == s_expected[0][5]
-        assert s[1] == s_expected[1]
+        assert compare_serialized_ops(s, s_expected)
 
     @pytest.mark.parametrize("wires_map", [wires_dict, None])
     def test_multicontrolledx(self, wires_map):
@@ -701,7 +701,7 @@ class TestSerializeOps:
             ),
             False,
         )
-        assert s == s_expected
+        assert compare_serialized_ops(s, s_expected)
 
     @pytest.mark.parametrize("wires_map", [wires_dict, None])
     def test_skips_prep_circuit(self, wires_map):
@@ -728,7 +728,7 @@ class TestSerializeOps:
             ),
             True,
         )
-        assert s == s_expected
+        assert compare_serialized_ops(s, s_expected)
 
     @pytest.mark.parametrize("wires_map", [wires_dict, None])
     def test_unsupported_kernel_circuit(self, wires_map):
@@ -748,8 +748,7 @@ class TestSerializeOps:
             ),
             False,
         )
-        assert s[0][0] == s_expected[0][0]
-        assert s[0][1] == s_expected[0][1]
+        assert compare_serialized_ops(s, s_expected)
 
     def test_custom_wires_circuit(self):
         """Test expected serialization for a simple circuit with custom wire labels"""
@@ -785,7 +784,7 @@ class TestSerializeOps:
             ),
             False,
         )
-        assert s == s_expected
+        assert compare_serialized_ops(s, s_expected)
 
     @pytest.mark.parametrize("wires_map", [wires_dict, None])
     def test_ctrl_inverse(self, wires_map):
@@ -833,13 +832,7 @@ class TestSerializeOps:
             ),
             False,
         )
-        assert s[0][0] == s_expected[0][0]
-        assert s[0][1] == s_expected[0][1]
-        assert s[0][2] == s_expected[0][2]
-        assert s[0][3] == s_expected[0][3]
-        assert all(np.allclose(s0, s1) for s0, s1 in zip(s[0][4], s_expected[0][4]))
-        assert s[0][5] == s_expected[0][5]
-        assert s[1] == s_expected[1]
+        assert compare_serialized_ops(s, s_expected)
 
     @pytest.mark.parametrize("wires_map", [wires_dict, None])
     def test_ctrl_qubitunitary_inverse(self, wires_map):
@@ -869,13 +862,8 @@ class TestSerializeOps:
             ),
             False,
         )
-        assert s[0][0] == s_expected[0][0]
-        assert s[0][1] == s_expected[0][1]
-        assert s[0][2] == s_expected[0][2]
-        assert s[0][3] == s_expected[0][3]
-        assert all(np.allclose(s0, s1) for s0, s1 in zip(s[0][4], s_expected[0][4]))
-        assert s[0][5] == s_expected[0][5]
-        assert s[1] == s_expected[1]
+
+        assert compare_serialized_ops(s, s_expected)
 
     @pytest.mark.parametrize("wires_map", [wires_dict, None])
     def test_inverse(self, wires_map):
@@ -904,13 +892,7 @@ class TestSerializeOps:
             False,
         )
 
-        assert s[0][0] == s_expected[0][0]
-        assert s[0][1] == s_expected[0][1]
-        assert s[0][2] == s_expected[0][2]
-        assert s[0][3] == s_expected[0][3]
-        assert all(np.allclose(s0, s1) for s0, s1 in zip(s[0][4], s_expected[0][4]))
-        assert s[0][5] == s_expected[0][5]
-        assert s[1] == s_expected[1]
+        assert compare_serialized_ops(s, s_expected)
 
     @pytest.mark.parametrize("wires_map", [wires_dict, None])
     @pytest.mark.parametrize("C", [True, False])
@@ -958,13 +940,7 @@ class TestSerializeOps:
             ),
             False,
         )
-        assert s[0][0] == s_expected[0][0]
-        assert s[0][1] == s_expected[0][1]
-        assert s[0][2] == s_expected[0][2]
-        assert s[0][3] == s_expected[0][3]
-        assert s[1] == s_expected[1]
-
-        assert all(np.allclose(s1, s2) for s1, s2 in zip(s[0][4], s_expected[0][4]))
+        assert compare_serialized_ops(s, s_expected)
 
 
 def check_global_phase_diagonal(par, wires, targets, controls, control_values):
