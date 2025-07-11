@@ -15,9 +15,9 @@
 
 import numpy as np
 import pytest
-from conftest import backend
+from conftest import device_name
 
-if backend != "qubit":
+if device_name != "lightning.qubit":
     pytest.skip("Skipping tests for binaries other than lightning_qubit .", allow_module_level=True)
 
 
@@ -154,7 +154,7 @@ class TestMeasurementsNB:
 
         # Skip if NamedObsClass is None
         if NamedObsClass is None:
-            pytest.skip(f"NamedObsClass not available for {backend}")
+            pytest.skip(f"NamedObsClass not available for {device_name}.")
 
         num_qubits = 1
 
@@ -184,7 +184,7 @@ class TestMeasurementsNB:
 
         # Skip if HermitianObsClass is None
         if HermitianObsClass is None:
-            pytest.skip(f"HermitianObsClass not available for {backend}")
+            pytest.skip(f"HermitianObsClass not available for {device_name}.")
 
         num_qubits = 1
 
@@ -220,7 +220,7 @@ class TestMeasurementsNB:
 
         # Skip if HermitianObsClass is None
         if HermitianObsClass is None:
-            pytest.skip(f"HermitianObsClass not available for {backend}")
+            pytest.skip(f"HermitianObsClass not available for {device_name}.")
 
         num_qubits = 1
 
