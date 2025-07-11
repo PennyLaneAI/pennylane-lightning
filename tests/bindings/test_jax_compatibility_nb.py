@@ -1,8 +1,20 @@
+# Copyright 2025 Xanadu Quantum Technologies Inc.
+
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+
+#     http://www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 """Tests for JAX compatibility with nanobind-based bindings."""
 
 import numpy as np
 import pytest
-from conftest import backend
 
 try:
     import jax
@@ -20,14 +32,14 @@ class TestJAXCompatibility:
     """Tests for JAX compatibility with nanobind-based bindings."""
 
     @pytest.fixture
-    def get_statevector_class_and_precision(self, current_nanobind_module, precision):
+    def get_statevector_class_and_precision(self, precision, current_nanobind_module):
         """Get StateVectorC64/128 class from module based on precision."""
+        module = current_nanobind_module
         if JAX_AVAILABLE:
             if precision == "128":
                 jax.config.update("jax_enable_x64", True)
 
         def _get_class():
-            module = current_nanobind_module
             class_name = f"StateVectorC{precision}"
             if hasattr(module, class_name):
                 StateVectorClass = getattr(module, class_name)
@@ -41,8 +53,9 @@ class TestJAXCompatibility:
 
     @pytest.fixture
     def get_measurements_class(self, current_nanobind_module):
+        module = current_nanobind_module
+
         def _get_class(dtype):
-            module = current_nanobind_module
             class_name = "MeasurementsC64" if dtype == np.complex64 else "MeasurementsC128"
             if hasattr(module, class_name):
                 return getattr(module, class_name)
@@ -52,19 +65,173 @@ class TestJAXCompatibility:
 
     @pytest.fixture
     def get_named_obs_class(self, current_nanobind_module):
+        """Get the NamedObs class from a module."""
+        module = current_nanobind_module.observables
+
         def _get_class(dtype):
-            module = current_nanobind_module
             class_name = "NamedObsC64" if dtype == np.complex64 else "NamedObsC128"
             if hasattr(module, class_name):
                 return getattr(module, class_name)
-            pytest.skip(f"Class {class_name} not available in module {module}")
+            pytest.skip(f"Class {class_name} not available in {module}.observables")
 
         return _get_class
 
+    @pytest.fixture
+    def get_ops_struct_class(self, current_nanobind_module):
+        """Get the OpsStruct class from a module."""
+        module = current_nanobind_module.algorithms
+
+        def _get_class(dtype):
+            class_name = "OpsStructC64" if dtype == np.complex64 else "OpsStructC128"
+            if hasattr(module, class_name):
+                return getattr(module, class_name)
+            pytest.skip(f"Class {class_name} not available in {module}.algorithms")
+
+        return _get_class
+
+    @pytest.fixture
+    def get_adjoint_jacobian_class(self, current_nanobind_module):
+        """Get the AdjointJacobian class from a module."""
+        module = current_nanobind_module.algorithms
+
+        def _get_class(dtype):
+            class_name = "AdjointJacobianC64" if dtype == np.complex64 else "AdjointJacobianC128"
+            if hasattr(module, class_name):
+                return getattr(module, class_name)
+            pytest.skip(f"Class {class_name} not available in {module}.algorithms")
+
+        return _get_class
+
+    @pytest.mark.parametrize("precision", ["64", "128"])
+    def test_adjoint_jacobian_jax(
+        self,
+        get_statevector_class_and_precision,
+        get_adjoint_jacobian_class,
+        get_named_obs_class,
+        get_ops_struct_class,
+    ):
+        """Test adjoint Jacobian with JAX parameters."""
+
+        StateVectorClass, dtype = get_statevector_class_and_precision
+
+        # Check if the module has AdjointJacobian class
+        AdjointJacobianClass = get_adjoint_jacobian_class(dtype)
+
+        # Check if the module has NamedObs class
+        NamedObsClass = get_named_obs_class(dtype)
+
+        # Check if the module has OpsStruct class
+        OpsStructClass = get_ops_struct_class(dtype)
+
+        # Create a simple state vector
+        num_qubits = 2
+        sv = StateVectorClass(num_qubits)
+
+        # Create a simple observable
+        obs = NamedObsClass("PauliZ", [0])
+
+        # Create a simple operation with JAX parameter
+        param_value = jnp.array(0.5)
+        ops_name = ["RX"]
+        ops_params = [[param_value]]
+        ops_wires = [[0]]
+        ops_inverses = [False]
+        ops_matrices = [[]]
+        ops_controlled_wires = [[]]
+        ops_controlled_values = [[]]
+
+        # Create the operations structure
+        ops = OpsStructClass(
+            ops_name,
+            ops_params,
+            ops_wires,
+            ops_inverses,
+            ops_matrices,
+            ops_controlled_wires,
+            ops_controlled_values,
+        )
+
+        # Create the adjoint Jacobian
+        adj = AdjointJacobianClass()
+
+        # Calculate the Jacobian with the correct parameter order
+        trainable_params = [0]
+        result = adj(sv, [obs], ops, trainable_params)
+
+        # The result should be a numpy array with shape (1,)
+        assert isinstance(result, np.ndarray)
+        assert result.shape == (1,)
+        assert np.isclose(result[0], -np.sin(param_value))
+
+    @pytest.mark.parametrize("precision", ["64", "128"])
+    def test_adjoint_jacobian_multiple_params_jax(
+        self,
+        get_statevector_class_and_precision,
+        get_adjoint_jacobian_class,
+        get_named_obs_class,
+        get_ops_struct_class,
+    ):
+        """Test adjoint Jacobian with multiple JAX parameters."""
+
+        StateVectorClass, dtype = get_statevector_class_and_precision
+
+        # Get necessary classes
+        AdjointJacobianClass = get_adjoint_jacobian_class(dtype)
+        NamedObsClass = get_named_obs_class(dtype)
+        OpsStructClass = get_ops_struct_class(dtype)
+
+        # Create a simple state vector
+        num_qubits = 2
+        sv = StateVectorClass(num_qubits)
+
+        # Create a simple observable
+        obs = NamedObsClass("PauliZ", [0])
+
+        # Create operations with JAX parameters
+        params = jnp.array([0.1, 0.2], dtype=dtype)
+        ops_name = ["RX", "RY"]
+        ops_params = [[params[0]], [params[1]]]
+        ops_wires = [[0], [0]]
+        ops_inverses = [False, False]
+        ops_matrices = [[], []]
+        ops_controlled_wires = [[], []]
+        ops_controlled_values = [[], []]
+
+        # Create the operations structure
+        ops = OpsStructClass(
+            ops_name,
+            ops_params,
+            ops_wires,
+            ops_inverses,
+            ops_matrices,
+            ops_controlled_wires,
+            ops_controlled_values,
+        )
+
+        # Create the adjoint Jacobian
+        adj = AdjointJacobianClass()
+
+        # Calculate the Jacobian with the correct parameter order
+        trainable_params = [0, 1]
+        jacobian = adj(sv, [obs], ops, trainable_params)
+
+        # Verify the shape of the Jacobian
+        assert jacobian.shape == (1, 2)  # 1 expectation value, 2 parameters
+
+        # Verify the correctness of the Jacobian
+        # The expected Jacobian can be computed analytically
+        expected_jacobian = np.array([[-np.sin(params[0]), 0]])
+        assert np.allclose(jacobian, expected_jacobian, atol=1e-5)
+
+    @pytest.mark.parametrize("precision", ["64", "128"])
     def test_jax_array_initialization(self, get_statevector_class_and_precision):
         """Test initialization of StateVector with JAX arrays."""
         # Skip if module doesn't have StateVectorClass, or if StateVectorClass doesn't have updateData
         StateVectorClass, dtype = get_statevector_class_and_precision
+
+        # Check if it has updateData method
+        if not hasattr(StateVectorClass, "updateData"):
+            pytest.skip(f"updateData method not available.")
 
         num_qubits = 3
         dim = 2**num_qubits
@@ -199,3 +366,130 @@ class TestJAXCompatibility:
 
         # For |+⟩ state, ⟨Z⟩ = 0
         assert np.allclose(z_expval, 0.0)
+
+    def test_adjoint_jacobian_jax(
+        self,
+        get_statevector_class_and_precision,
+        get_adjoint_jacobian_class,
+        get_named_obs_class,
+        get_ops_struct_class,
+    ):
+        """Test adjoint Jacobian with JAX parameters."""
+        # Skip if JAX doesn't support the precision
+        StateVectorClass, dtype = get_statevector_class_and_precision
+
+        AdjointJacobianClass = get_adjoint_jacobian_class(dtype)
+        NamedObsClass = get_named_obs_class(dtype)
+        OpsStructClass = get_ops_struct_class(dtype)
+
+        # Create a state vector
+        num_qubits = 2
+        sv = StateVectorClass(num_qubits)
+        param_value = jnp.array(0.5)
+
+        # Apply the operations to the state vector
+        sv.RX([0], False, [param_value])
+
+        # Create an observable
+        obs = NamedObsClass("PauliZ", [0])
+
+        # Create operations with JAX parameters
+        ops_name = ["RX"]
+        ops_params = [[param_value]]
+        ops_wires = [[0]]
+        ops_inverses = [False]
+        ops_matrices = [[]]
+        ops_controlled_wires = [[]]
+        ops_controlled_values = [[]]
+
+        # Create the operations structure
+        ops = OpsStructClass(
+            ops_name,
+            ops_params,
+            ops_wires,
+            ops_inverses,
+            ops_matrices,
+            ops_controlled_wires,
+            ops_controlled_values,
+        )
+
+        # Create the adjoint Jacobian
+        adj = AdjointJacobianClass()
+
+        # Calculate the Jacobian with the correct parameter order
+        trainable_params = [0]
+        result = adj(sv, [obs], ops, trainable_params)
+
+        # The result should be a numpy array with shape (1,)
+        assert isinstance(result, np.ndarray)
+        assert result.shape == (1,)
+        assert np.isclose(result[0], -np.sin(param_value))
+
+    @pytest.mark.parametrize("precision", ["64", "128"])
+    def test_adjoint_jacobian_multiple_params_jax(
+        self,
+        current_nanobind_module,
+        precision,
+        get_statevector_class_and_precision,
+        get_adjoint_jacobian_class,
+        get_named_obs_class,
+        get_ops_struct_class,
+    ):
+        """Test adjoint Jacobian with multiple JAX parameters."""
+        # Skip if JAX doesn't support the precision
+        if precision == "128" and not jax.config.read("jax_enable_x64"):
+            pytest.skip("JAX x64 precision not enabled")
+
+        StateVectorClass, dtype = get_statevector_class_and_precision
+        AdjointJacobianClass = get_adjoint_jacobian_class(dtype)
+        NamedObsClass = get_named_obs_class(dtype)
+        OpsStructClass = get_ops_struct_class(dtype)
+
+        # Create a state vector
+        num_qubits = 2
+        params = jnp.array([0.1, 0.2])
+
+        sv = StateVectorClass(num_qubits)
+        sv.RX([0], False, [params[0]])
+        sv.RY([0], False, [params[1]])
+
+        # Create an observable
+        obs = NamedObsClass("PauliZ", [0])
+
+        # Create operations with JAX parameters
+        ops_name = ["RX", "RY"]
+        ops_params = [[params[0]], [params[1]]]
+        ops_wires = [[0], [0]]
+        ops_inverses = [False, False]
+        ops_matrices = [[], []]
+        ops_controlled_wires = [[], []]
+        ops_controlled_values = [[], []]
+
+        # Create the operations structure
+        ops = OpsStructClass(
+            ops_name,
+            ops_params,
+            ops_wires,
+            ops_inverses,
+            ops_matrices,
+            ops_controlled_wires,
+            ops_controlled_values,
+        )
+
+        # Create the adjoint Jacobian
+        adj = AdjointJacobianClass()
+
+        # Calculate the Jacobian with the correct parameter order
+        trainable_params = [0, 1]
+        jacobian = adj(sv, [obs], ops, trainable_params)
+
+        # Verify the shape of the Jacobian
+        assert jacobian.shape == (2,)  # 1 observable * 2 parameters = 2 elements
+
+        # Verify the correctness of the Jacobian
+        # Expected values calculated analytically
+        expected_0 = -np.cos(params[1]) * np.sin(params[0])
+        expected_1 = -np.sin(params[1]) * np.cos(params[0])
+
+        assert np.isclose(jacobian[0], expected_0, atol=1e-7)
+        assert np.isclose(jacobian[1], expected_1, atol=1e-7)
