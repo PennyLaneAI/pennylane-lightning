@@ -673,18 +673,12 @@ OpsData<StateVectorT> createOpsList(
     const std::vector<std::vector<std::size_t>> &ops_controlled_wires,
     const std::vector<std::vector<bool>> &ops_controlled_values) {
     using ComplexT = typename StateVectorT::ComplexT;
+    using PrecisionT = typename StateVectorT::PrecisionT;
 
     // Convert ops_matrices to std::vector<std::vector<ComplexT>>
-    std::vector<std::vector<ComplexT>> conv_matrices(ops_matrices.size());
-
-    for (std::size_t i = 0; i < ops_matrices.size(); i++) {
-        if (ops_matrices[i].size() > 0) {
-            const auto *m_ptr =
-                PL_reinterpret_cast<const ComplexT>(ops_matrices[i].data());
-            const auto m_size = ops_matrices[i].size();
-            conv_matrices[i] = std::vector<ComplexT>(m_ptr, m_ptr + m_size);
-        }
-    }
+    std::vector<std::vector<ComplexT>> conv_matrices =
+        Pennylane::NanoBindings::Utils::convertMatrices<ComplexT, PrecisionT>(
+            ops_matrices);
 
     return OpsData<StateVectorT>{ops_name,
                                  ops_params,
@@ -787,7 +781,7 @@ void registerBackendAgnosticStateVectorMethods(PyClass &pyclass) {
             }
         },
         "Set the state vector to a computational basis state.",
-        nb::arg("state") = nullptr, nb::arg("wires") = nullptr,
+        nb::arg("state") = nb::none(), nb::arg("wires") = nb::none(),
         nb::arg("async") = false);
 
     // Set state vector - with conditional for async and size parameters (LGPU)

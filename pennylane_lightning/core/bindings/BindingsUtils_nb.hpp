@@ -116,4 +116,25 @@ std::string opsDataToString(const OpsDataT &ops,
     return "Operations: [" + ops_stream.str() + "]";
 }
 
+/**
+ * @brief Convert complex matrices from nanobind ndarray to std::vector
+ *
+ * @tparam ComplexT Complex type to convert to
+ * @tparam PrecisionT Precision type of the complex numbers
+ * @param matrices Vector of ndarrays containing matrices
+ * @return std::vector<std::vector<ComplexT>> Converted matrices
+ */
+template <typename ComplexT, typename PrecisionT>
+std::vector<std::vector<ComplexT>> convertMatrices(
+    const std::vector<nb::ndarray<const std::complex<PrecisionT>, nb::c_contig>>
+        &matrices) {
+    std::vector<std::vector<ComplexT>> conv_matrices(matrices.size());
+
+    std::transform(matrices.begin(), matrices.end(), conv_matrices.begin(),
+                   [](const auto &matrix) {
+                       return std::vector<ComplexT>(
+                           matrix.data(), matrix.data() + matrix.size());
+                   });
+    return conv_matrices;
+}
 } // namespace Pennylane::NanoBindings::Utils
