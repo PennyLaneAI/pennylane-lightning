@@ -103,7 +103,7 @@ using namespace Pennylane::LightningGPU::NanoBindings;
 /// @endcond
 
 #elif _ENABLE_PLTENSOR == 1
-#include "AdjointJacobianTNCuda.hpp"
+#include "LTensorTNCudaBindings_nb.hpp"
 #include "MeasurementsTNCuda.hpp"
 #include "ObservablesTNCuda.hpp"
 
@@ -137,13 +137,13 @@ namespace Pennylane::NanoBindings {
 /**
  * @brief Register applyMatrix
  */
-template <class StateVectorT>
+template <class StateReprT>
 void applyMatrix(
-    StateVectorT &st,
-    const nb::ndarray<const std::complex<typename StateVectorT::PrecisionT>,
+    StateReprT &st,
+    const nb::ndarray<const std::complex<typename StateReprT::PrecisionT>,
                       nb::c_contig> &matrix,
     const std::vector<std::size_t> &wires, bool inverse = false) {
-    using ComplexT = typename StateVectorT::ComplexT;
+    using ComplexT = typename StateReprT::ComplexT;
 
     PL_ASSERT(matrix.size() == Util::exp2(2 * wires.size()));
 
@@ -155,40 +155,53 @@ void applyMatrix(
 /**
  * @brief Register controlled matrix kernel.
  */
-template <class StateVectorT>
+template <class StateReprT>
 void applyControlledMatrix(
-    StateVectorT &st,
-    const nb::ndarray<const std::complex<typename StateVectorT::PrecisionT>,
+    StateReprT &st,
+    const nb::ndarray<const std::complex<typename StateReprT::PrecisionT>,
                       nb::c_contig> &matrix,
     const std::vector<std::size_t> &controlled_wires,
     const std::vector<bool> &controlled_values,
     const std::vector<std::size_t> &wires, bool inverse = false) {
-    using ComplexT = typename StateVectorT::ComplexT;
+    using ComplexT = typename StateReprT::ComplexT;
+#ifdef _ENABLE_PLTENSOR
+    std::vector<ComplexT> conv_matrix;
+    if (matrix.size()) {
+        conv_matrix =
+            std::vector<ComplexT>{matrix.data(), matrix.data() + matrix.size()};
+    }
+
+    st.applyControlledOperation("applyControlledMatrix", controlled_wires,
+                                controlled_values, wires, inverse, {},
+                                conv_matrix);
+#else
     st.applyControlledMatrix(PL_reinterpret_cast<const ComplexT>(matrix.data()),
                              controlled_wires, controlled_values, wires,
                              inverse);
+#endif
 }
+
 /**
- * @brief Register StateVector class
+ * @brief Register gates for a given backend.
  *
- * @tparam StateVectorT Statevector type to register
+ * @tparam StateReprT The type used to represent the state (statevector,
+ * tensornet, etc.)
  * @tparam PyClass Nanobind's class object type
  *
  * @param pyclass Nanobind's class object to bind statevector
  */
-template <class StateVectorT, class PyClass>
-void registerGatesForStateVector(PyClass &pyclass) {
-    using PrecisionT =
-        typename StateVectorT::PrecisionT; // Statevector's precision
-    using ParamT = PrecisionT;             // Parameter's data precision
+template <class StateReprT, class PyClass>
+void registerGates(PyClass &pyclass) {
+    using PrecisionT = typename StateReprT::PrecisionT; // State's precision
+    using ParamT = PrecisionT; // Parameter's data precision
 
     using Pennylane::Gates::GateOperation;
     using Pennylane::Util::for_each_enum;
     namespace Constant = Pennylane::Gates::Constant;
 
-    pyclass.def("applyMatrix", &applyMatrix<StateVectorT>,
+    pyclass.def("applyMatrix", &applyMatrix<StateReprT>,
                 "Apply a given matrix to wires.");
-    pyclass.def("applyControlledMatrix", &applyControlledMatrix<StateVectorT>,
+    pyclass.def("applyControlledMatrix", &applyControlledMatrix<StateReprT>,
                 "Apply controlled operation");
 
     for_each_enum<GateOperation>([&pyclass](GateOperation gate_op) {
@@ -197,9 +210,9 @@ void registerGatesForStateVector(PyClass &pyclass) {
             std::string(lookup(Constant::gate_names, gate_op));
         const std::string doc = "Apply the " + gate_name + " gate.";
         auto func =
-            [gate_name](StateVectorT &sv, const std::vector<std::size_t> &wires,
+            [gate_name](StateReprT &st, const std::vector<std::size_t> &wires,
                         bool inverse, const std::vector<ParamT> &params) {
-                sv.applyOperation(gate_name, wires, inverse, params);
+                st.applyOperation(gate_name, wires, inverse, params);
             };
         pyclass.def(gate_name.c_str(), func, doc.c_str());
     });
@@ -208,13 +221,13 @@ void registerGatesForStateVector(PyClass &pyclass) {
 /**
  * @brief Register controlled gate operations for a statevector
  *
- * @tparam StateVectorT State vector type
+ * @tparam StateReprT State vector type
  * @tparam PyClass Nanobind class type
  * @param pyclass Nanobind class to bind methods to
  */
-template <class StateVectorT, class PyClass>
+template <class StateReprT, class PyClass>
 void registerControlledGates(PyClass &pyclass) {
-    using PrecisionT = typename StateVectorT::PrecisionT;
+    using PrecisionT = typename StateReprT::PrecisionT;
     using ParamT = PrecisionT;
 
     using Pennylane::Gates::ControlledGateOperation;
@@ -228,12 +241,12 @@ void registerControlledGates(PyClass &pyclass) {
                 std::string(lookup(Constant::controlled_gate_names, gate_op));
             const std::string doc = "Apply the " + gate_name + " gate.";
             auto func = [gate_name = gate_name](
-                            StateVectorT &sv,
+                            StateReprT &st,
                             const std::vector<std::size_t> &controlled_wires,
                             const std::vector<bool> &controlled_values,
                             const std::vector<std::size_t> &wires, bool inverse,
                             const std::vector<ParamT> &params) {
-                sv.applyOperation(gate_name, controlled_wires,
+                st.applyOperation(gate_name, controlled_wires,
                                   controlled_values, wires, inverse, params);
             };
             pyclass.def(gate_name.c_str(), func, doc.c_str(),
@@ -242,77 +255,6 @@ void registerControlledGates(PyClass &pyclass) {
                         nb::arg("inverse") = false,
                         nb::arg("params") = std::vector<ParamT>{});
         });
-}
-/**
- * @brief Create an aligned array for a given type, memory model and array size
- *
- * @tparam VectorT Datatype of array to create
- * @param memory_model Memory model to use
- * @param size Size of the array to create
- * @return nb::ndarray<VectorT, nb::numpy, nb::c_contig>
- */
-template <typename VectorT>
-auto alignedArray(CPUMemoryModel memory_model, std::size_t size, bool zeroInit)
-    -> nb::ndarray<VectorT, nb::numpy, nb::c_contig> {
-    using Pennylane::Util::alignedAlloc;
-    using Pennylane::Util::getAlignment;
-
-    // Allocate aligned memory
-    void *ptr = alignedAlloc(getAlignment<VectorT>(memory_model),
-                             sizeof(VectorT) * size, zeroInit);
-
-    // Create capsule with custom deleter
-    auto capsule =
-        nb::capsule(ptr, [](void *p) noexcept { Util::alignedFree(p); });
-
-    std::vector<size_t> shape{size};
-
-    // Return ndarray with custom allocated memory
-    return nb::ndarray<VectorT, nb::numpy, nb::c_contig>(ptr, shape.size(),
-                                                         shape.data(), capsule);
-}
-
-/**
- * @brief Allocate aligned array with specified dtype
- *
- * @param size Size of the array to create
- * @param dtype Python dtype object to create the array with
- * @param zeroInit Whether to initialize the array with zeros
- * @return nb::object a general nanobind object that can assume any of the types
- * in the method.
- */
-auto allocateAlignedArray(std::size_t size, const nb::object &dtype,
-                          bool zeroInit = false) -> nb::object {
-    auto memory_model = bestCPUMemoryModel();
-
-    // Convert dtype to string representation
-    std::string dtype_str = nb::cast<std::string>(dtype.attr("name"));
-
-    if (dtype_str == "complex64") {
-        return nb::cast(
-            alignedArray<std::complex<float>>(memory_model, size, zeroInit));
-    } else if (dtype_str == "complex128") {
-        return nb::cast(
-            alignedArray<std::complex<double>>(memory_model, size, zeroInit));
-    } else if (dtype_str == "float32") {
-        return nb::cast(alignedArray<float>(memory_model, size, zeroInit));
-    } else if (dtype_str == "float64") {
-        return nb::cast(alignedArray<double>(memory_model, size, zeroInit));
-    }
-
-    throw std::runtime_error("Unsupported dtype: " + dtype_str);
-}
-
-/**
- * @brief Register array alignment functionality
- *
- * @param m Nanobind module
- */
-void registerArrayAlignmentBindings(nb::module_ &m) {
-    // Add allocate_aligned_array function
-    m.def("allocate_aligned_array", &allocateAlignedArray,
-          "Allocate aligned array with specified dtype", nb::arg("size"),
-          nb::arg("dtype"), nb::arg("zero_init") = false);
 }
 
 /**
@@ -389,6 +331,82 @@ nb::dict getCompileInfo() {
 
     return info;
 }
+
+#ifndef _ENABLE_PLTENSOR
+// These functions are used solely by the statevector simulators
+
+/**
+ * @brief Create an aligned array for a given type, memory model and array size
+ *
+ * @tparam VectorT Datatype of array to create
+ * @param memory_model Memory model to use
+ * @param size Size of the array to create
+ * @return nb::ndarray<VectorT, nb::numpy, nb::c_contig>
+ */
+template <typename VectorT>
+auto alignedArray(CPUMemoryModel memory_model, std::size_t size, bool zeroInit)
+    -> nb::ndarray<VectorT, nb::numpy, nb::c_contig> {
+    using Pennylane::Util::alignedAlloc;
+    using Pennylane::Util::getAlignment;
+
+    // Allocate aligned memory
+    void *ptr = alignedAlloc(getAlignment<VectorT>(memory_model),
+                             sizeof(VectorT) * size, zeroInit);
+
+    // Create capsule with custom deleter
+    auto capsule =
+        nb::capsule(ptr, [](void *p) noexcept { Util::alignedFree(p); });
+
+    std::vector<size_t> shape{size};
+
+    // Return ndarray with custom allocated memory
+    return nb::ndarray<VectorT, nb::numpy, nb::c_contig>(ptr, shape.size(),
+                                                         shape.data(), capsule);
+}
+
+/**
+ * @brief Allocate aligned array with specified dtype
+ *
+ * @param size Size of the array to create
+ * @param dtype Python dtype object to create the array with
+ * @param zeroInit Whether to initialize the array with zeros
+ * @return nb::object a general nanobind object that can assume any of the types
+ * in the method.
+ */
+auto allocateAlignedArray(std::size_t size, const nb::object &dtype,
+                          bool zeroInit = false) -> nb::object {
+    auto memory_model = bestCPUMemoryModel();
+
+    // Convert dtype to string representation
+    std::string dtype_str = nb::cast<std::string>(dtype.attr("name"));
+
+    if (dtype_str == "complex64") {
+        return nb::cast(
+            alignedArray<std::complex<float>>(memory_model, size, zeroInit));
+    } else if (dtype_str == "complex128") {
+        return nb::cast(
+            alignedArray<std::complex<double>>(memory_model, size, zeroInit));
+    } else if (dtype_str == "float32") {
+        return nb::cast(alignedArray<float>(memory_model, size, zeroInit));
+    } else if (dtype_str == "float64") {
+        return nb::cast(alignedArray<double>(memory_model, size, zeroInit));
+    }
+
+    throw std::runtime_error("Unsupported dtype: " + dtype_str);
+}
+
+/**
+ * @brief Register array alignment functionality
+ *
+ * @param m Nanobind module
+ */
+void registerArrayAlignmentBindings(nb::module_ &m) {
+    // Add allocate_aligned_array function
+    m.def("allocate_aligned_array", &allocateAlignedArray,
+          "Allocate aligned array with specified dtype", nb::arg("size"),
+          nb::arg("dtype"), nb::arg("zero_init") = false);
+}
+#endif // ifndef _ENABLE_PLTENSOR
 
 /**
  * @brief Register bindings for general info
@@ -519,48 +537,47 @@ void registerBackendAgnosticObservables(nb::module_ &m) {
 /**
  * @brief Register probs method for specific wires with proper data ownership
  *
- * @tparam StateVectorT State vector type
+ * @tparam MeasurementsT Representation of Measurements type
  * @param M Measurements object
  * @param wires Vector of wire indices
  * @return nb::ndarray<PrecisionT, nb::numpy, nb::c_contig> NumPy array with
  * probabilities
  */
-template <class StateVectorT>
-nb::ndarray<typename StateVectorT::PrecisionT, nb::numpy, nb::c_contig>
-probsForWires(Measurements<StateVectorT> &M,
-              const std::vector<std::size_t> &wires) {
-    using PrecisionT = typename StateVectorT::PrecisionT;
+template <class MeasurementsT>
+nb::ndarray<typename MeasurementsT::PrecisionT, nb::numpy, nb::c_contig>
+probsForWires(MeasurementsT &M, const std::vector<std::size_t> &wires) {
+    using PrecisionT = typename MeasurementsT::PrecisionT;
     return createNumpyArrayFromVector<PrecisionT>(M.probs(wires));
 }
 
 /**
  * @brief Register probs method for all wires with proper data ownership
  *
- * @tparam StateVectorT State vector type
+ * @tparam MeasurementsT Representation of Measurements type
  * @param M Measurements object
  * @return nb::ndarray<PrecisionT, nb::numpy, nb::c_contig> NumPy array with
  * probabilities
  */
-template <class StateVectorT>
-nb::ndarray<typename StateVectorT::PrecisionT, nb::numpy, nb::c_contig>
-probsForAllWires(Measurements<StateVectorT> &M) {
-    using PrecisionT = typename StateVectorT::PrecisionT;
+template <class MeasurementsT>
+nb::ndarray<typename MeasurementsT::PrecisionT, nb::numpy, nb::c_contig>
+probsForAllWires(MeasurementsT &M) {
+    using PrecisionT = typename MeasurementsT::PrecisionT;
     return createNumpyArrayFromVector<PrecisionT>(M.probs());
 }
 
 /**
  * @brief Generate samples with proper data ownership
  *
- * @tparam StateVectorT State vector type
+ * @tparam MeasurementsT Representation of Measurements type
  * @param M Measurements object
  * @param num_wires Number of wires
  * @param num_shots Number of shots
  * @return nb::ndarray<std::size_t, nb::numpy, nb::c_contig> NumPy 2D array with
  * samples
  */
-template <class StateVectorT>
+template <class MeasurementsT>
 nb::ndarray<std::size_t, nb::numpy, nb::c_contig>
-generateSamples(Measurements<StateVectorT> &M, std::size_t num_wires,
+generateSamples(MeasurementsT &M, std::size_t num_wires,
                 std::size_t num_shots) {
     return createNumpyArrayFromVector<std::size_t>(
         M.generate_samples(num_shots), num_shots, num_wires);
@@ -569,44 +586,52 @@ generateSamples(Measurements<StateVectorT> &M, std::size_t num_wires,
 /**
  * @brief Register backend-agnostic measurement class functionalities.
  *
- * @tparam StateVectorT
+ * @tparam MeasurementsT Representation of Measurements type
+ * @tparam ObservableT Representation of Observable type
+ * @tparam Pyclass Nanobind's class object type
  * @param pyclass Nanobind's class object to bind measurements
  */
-template <class StateVectorT, class PyClass>
+template <class MeasurementsT, class ObservableT, class PyClass>
 void registerBackendAgnosticMeasurements(PyClass &pyclass) {
-    // Add probs method for specific wires
-    pyclass.def("probs", &probsForWires<StateVectorT>,
-                "Calculate probabilities for specific wires.");
+    // These functions are common to all *statevector* simulators
+#ifndef _ENABLE_PLTENSOR
+    // Set random seed
+    pyclass.def("set_random_seed",
+                [](MeasurementsT &M, std::size_t seed) { M.setSeed(seed); });
 
     // Add probs method for all wires
-    pyclass.def("probs", &probsForAllWires<StateVectorT>,
+    pyclass.def("probs", &probsForAllWires<MeasurementsT>,
                 "Calculate probabilities for all wires.");
+
+    // Add generate_samples method
+    pyclass.def("generate_samples", &generateSamples<MeasurementsT>,
+                "Generate samples for all wires.");
+#endif
+
+    // Add probs method for specific wires
+    pyclass.def("probs", &probsForWires<MeasurementsT>,
+                "Calculate probabilities for specific wires.");
 
     // Add expval method for observable
     pyclass.def(
         "expval",
-        [](Measurements<StateVectorT> &M, const Observable<StateVectorT> &obs) {
-            return M.expval(obs);
+        [](MeasurementsT &M, const std::shared_ptr<ObservableT> &ob) {
+            return M.expval(*ob);
         },
-        "Calculate expectation value for an observable.");
+        "Expected value of an observable object.");
 
     // Add var method for observable
     pyclass.def(
         "var",
-        [](Measurements<StateVectorT> &M, const Observable<StateVectorT> &obs) {
-            return M.var(obs);
+        [](MeasurementsT &M, const std::shared_ptr<ObservableT> &ob) {
+            return M.var(*ob);
         },
         "Calculate variance for an observable.");
 
-    // Add generate_samples method
-    pyclass.def("generate_samples", &generateSamples<StateVectorT>,
-                "Generate samples for all wires.");
-
-    // Set random seed
-    pyclass.def("set_random_seed", [](Measurements<StateVectorT> &M,
-                                      std::size_t seed) { M.setSeed(seed); });
+    // TODO: generate_samples method for specific wires for ltensor
 }
 
+#ifndef _ENABLE_PLTENSOR
 /**
  * @brief Register AdjointJacobian class.
  *
@@ -724,7 +749,7 @@ OpsData<StateVectorT> createOpsList(
 }
 
 /**
- * @brief Register agnostic algorithms.
+ * @brief Register agnostic algorithms for statevector simulators.
  *
  * @tparam StateVectorT
  * @param m Nanobind module
@@ -835,6 +860,7 @@ template <class StateVectorT, class PyClass>
 void registerBackendAgnosticStateVectorMethods(PyClass &pyclass) {
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
+
     // Initialize with number of qubits
     pyclass.def(nb::init<size_t>());
 
@@ -886,31 +912,37 @@ void registerBackendAgnosticStateVectorMethods(PyClass &pyclass) {
         "Set the state vector to the data contained in 'state'.",
         nb::arg("state"), nb::arg("wires"), nb::arg("async") = false);
 }
+#endif
 
 /**
  * @brief Templated class to build lightning class bindings.
  *
- * @tparam StateVectorT State vector type
+ * @tparam StateReprT State representation type (e.g., a StateVector, TensorNet)
  * @param m Nanobind module.
  */
-template <class StateVectorT> void lightningClassBindings(nb::module_ &m) {
-    using PrecisionT = typename StateVectorT::PrecisionT;
+template <class StateReprT> void lightningClassBindings(nb::module_ &m) {
+    using PrecisionT = typename StateReprT::PrecisionT;
 
     const std::string bitsize =
         std::to_string(sizeof(std::complex<PrecisionT>) * 8);
 
+#ifdef _ENABLE_PLTENSOR
+    std::string class_name = "TensorNetC" + bitsize;
+    auto pyclass = nb::class_<StateReprT>(m, class_name.c_str());
+#else
     // StateVector class
     std::string class_name = "StateVectorC" + bitsize;
-    auto pyclass = nb::class_<StateVectorT>(m, class_name.c_str());
-    registerBackendAgnosticStateVectorMethods<StateVectorT>(pyclass);
-    registerBackendSpecificStateVectorMethods<StateVectorT>(pyclass);
+    auto pyclass = nb::class_<StateReprT>(m, class_name.c_str());
+    registerBackendAgnosticStateVectorMethods<StateReprT>(pyclass);
+    registerBackendSpecificStateVectorMethods<StateReprT>(pyclass);
+#endif
 
-    // Register gates for StateVector
-    registerGatesForStateVector<StateVectorT>(pyclass);
-    registerControlledGates<StateVectorT>(pyclass);
+    // Register gates
+    registerGates<StateReprT>(pyclass);
+    registerControlledGates<StateReprT>(pyclass);
 
     // Register backend specific bindings
-    registerBackendClassSpecificBindings<StateVectorT>(pyclass);
+    registerBackendClassSpecificBindings<StateReprT>(pyclass);
 
     //***********************************************************************//
     //                              Observables
@@ -919,28 +951,39 @@ template <class StateVectorT> void lightningClassBindings(nb::module_ &m) {
     /* Observables submodule */
     nb::module_ obs_submodule =
         m.def_submodule("observables", "Submodule for observables classes.");
-    registerBackendAgnosticObservables<StateVectorT>(obs_submodule);
-    registerBackendSpecificObservables<StateVectorT>(obs_submodule);
+
+#ifndef _ENABLE_PLTENSOR
+    registerBackendAgnosticObservables<StateReprT>(obs_submodule);
+#endif
+    registerBackendSpecificObservables<StateReprT>(obs_submodule);
 
     //***********************************************************************//
     //                              Measurements
     //***********************************************************************//
 
+#ifdef _ENABLE_PLTENSOR
+    using MeasurementsT = MeasurementsTNCuda<StateReprT>;
+    using ObservableT = ObservableTNCuda<StateReprT>;
+#else
+    using MeasurementsT = Measurements<StateReprT>;
+    using ObservableT = Observable<StateReprT>;
+#endif
+
     /* Measurements class */
     class_name = "MeasurementsC" + bitsize;
     auto pyclass_measurements =
-        nb::class_<Measurements<StateVectorT>>(m, class_name.c_str());
+        nb::class_<MeasurementsT>(m, class_name.c_str());
 
 #ifdef _ENABLE_PLGPU
     // TODO: Find if getting `const` to work with GPU state vector is an easy
     // lift
-    pyclass_measurements.def(nb::init<StateVectorT &>());
+    pyclass_measurements.def(nb::init<StateReprT &>());
 #else
-    pyclass_measurements.def(nb::init<const StateVectorT &>());
+    pyclass_measurements.def(nb::init<const StateReprT &>());
 #endif
-
-    registerBackendAgnosticMeasurements<StateVectorT>(pyclass_measurements);
-    registerBackendSpecificMeasurements<StateVectorT>(pyclass_measurements);
+    registerBackendAgnosticMeasurements<MeasurementsT, ObservableT>(
+        pyclass_measurements);
+    registerBackendSpecificMeasurements<StateReprT>(pyclass_measurements);
 
     //***********************************************************************//
     //                              Algorithms
@@ -949,8 +992,10 @@ template <class StateVectorT> void lightningClassBindings(nb::module_ &m) {
     /* Algorithms submodule */
     nb::module_ alg_submodule = m.def_submodule(
         "algorithms", "Submodule for the algorithms functionality.");
-    registerBackendAgnosticAlgorithms<StateVectorT>(alg_submodule);
-    registerBackendSpecificAlgorithms<StateVectorT>(alg_submodule);
+#ifndef _ENABLE_PLTENSOR
+    registerBackendAgnosticAlgorithms<StateReprT>(alg_submodule);
+#endif
+    registerBackendSpecificAlgorithms<StateReprT>(alg_submodule);
 }
 
 /**
@@ -962,8 +1007,8 @@ template <class StateVectorT> void lightningClassBindings(nb::module_ &m) {
 template <typename TypeList>
 void registerLightningClassBindings(nb::module_ &m) {
     if constexpr (!std::is_same_v<TypeList, void>) {
-        using StateVectorT = typename TypeList::Type;
-        lightningClassBindings<StateVectorT>(m);
+        using StateReprT = typename TypeList::Type;
+        lightningClassBindings<StateReprT>(m);
         registerLightningClassBindings<typename TypeList::Next>(m);
     }
 }

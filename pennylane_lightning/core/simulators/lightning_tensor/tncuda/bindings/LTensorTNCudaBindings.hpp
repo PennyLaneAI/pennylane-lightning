@@ -52,7 +52,6 @@ using TensorNetworkBackends =
                               ExactTNCuda<float>, ExactTNCuda<double>, void>;
 /// @endcond
 
-// TODO: Unify registerTensor and registerGatesForStateVector
 /**
  * @brief Register matrix.
  */
@@ -73,7 +72,6 @@ void registerTensor(
                                   conv_matrix);
 }
 
-// TODO: Unify registerGatesForTensorNet and registerMatrix
 /**
  * @brief Register TensorNet class to pybind.
  *

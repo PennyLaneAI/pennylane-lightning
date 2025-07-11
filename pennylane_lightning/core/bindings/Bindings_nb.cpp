@@ -27,6 +27,7 @@
 namespace Pennylane::NanoBindings {
 
 #if defined(LIGHTNING_MODULE_NAME)
+
 /**
  * @brief Add Lightning State-vector C++ classes, methods and functions to
  * Python module using Nanobind.
@@ -62,7 +63,7 @@ NB_MODULE(LIGHTNING_TENSOR_MODULE_NAME, m) {
     // Register bindings for backend-specific info:
     registerBackendSpecificInfo(m);
 
-    registerLightningTensorClassBindings<TensorNetworkBackends>(m);
+    registerLightningClassBindings<TensorNetworkBackends>(m);
 }
 #endif
 } // namespace Pennylane::NanoBindings
