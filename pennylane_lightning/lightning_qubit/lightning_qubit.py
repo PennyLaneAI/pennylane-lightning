@@ -56,7 +56,7 @@ try:
 except ImportError:
     try:
         # Fall back to pybind11 version if nanobind version is not available
-        from pennylane_lightning.lightning_qubit_ops import backend_info
+        from pennylane_lightning.lightning_qubit_nb import backend_info
 
         raise RuntimeError(
             "Using legacy pybind11 bindings. Consider upgrading to nanobind version for better performance.",
