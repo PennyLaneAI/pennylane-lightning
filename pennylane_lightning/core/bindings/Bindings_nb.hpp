@@ -445,12 +445,16 @@ void registerBackendAgnosticObservables(nb::module_ &m) {
     using HermitianObsT = HermitianObsTNCuda<StateReprT>;
     using TensorProdObsT = TensorProdObsTNCuda<StateReprT>;
     using HamiltonianT = HamiltonianTNCuda<StateReprT>;
+
+    const std::string prefix = std::string(StateReprT::method);
 #else
     using ObservableT = Observable<StateReprT>;
     using NamedObsT = NamedObs<StateReprT>;
     using HermitianObsT = HermitianObs<StateReprT>;
     using TensorProdObsT = TensorProdObs<StateReprT>;
     using HamiltonianT = Hamiltonian<StateReprT>;
+
+    const std::string prefix = "";
 #endif
 
     using ObsPtr = std::shared_ptr<ObservableT>;
@@ -464,7 +468,7 @@ void registerBackendAgnosticObservables(nb::module_ &m) {
                   "Get wires the observable acts on.");
 
     // Register NamedObs class
-    class_name = "NamedObsC" + bitsize;
+    class_name = prefix + "NamedObsC" + bitsize;
     nb::class_<NamedObsT>(m, class_name.c_str(), obs_class)
         .def(nb::init<const std::string &, const std::vector<std::size_t> &>())
         .def("__repr__", &NamedObsT::getObsName)
@@ -477,7 +481,7 @@ void registerBackendAgnosticObservables(nb::module_ &m) {
             "Compare two observables");
 
     // Register HermitianObs class
-    class_name = "HermitianObsC" + bitsize;
+    class_name = prefix + "HermitianObsC" + bitsize;
     nb::class_<HermitianObsT, ObservableT>(m, class_name.c_str())
         .def("__init__",
              [](HermitianObsT *self, const nd_arr_c &matrix,
@@ -498,7 +502,7 @@ void registerBackendAgnosticObservables(nb::module_ &m) {
             "Compare two observables");
 
     // Register TensorProdObs class
-    class_name = "TensorProdObsC" + bitsize;
+    class_name = prefix + "TensorProdObsC" + bitsize;
     nb::class_<TensorProdObsT, ObservableT>(m, class_name.c_str())
         .def(nb::init<const std::vector<ObsPtr> &>())
         .def("__repr__", &TensorProdObsT::getObsName)
@@ -511,7 +515,7 @@ void registerBackendAgnosticObservables(nb::module_ &m) {
             "Compare two observables");
 
     // Register Hamiltonian class
-    class_name = "HamiltonianC" + bitsize;
+    class_name = prefix + "HamiltonianC" + bitsize;
     nb::class_<HamiltonianT, ObservableT>(m, class_name.c_str())
         .def(nb::init<const std::vector<ParamT> &,
                       const std::vector<ObsPtr> &>())
@@ -919,7 +923,8 @@ template <class StateReprT> void lightningClassBindings(nb::module_ &m) {
         std::to_string(sizeof(std::complex<PrecisionT>) * 8);
 
 #ifdef _ENABLE_PLTENSOR
-    std::string class_name = "TensorNetC" + bitsize;
+    std::string class_name =
+        std::string(StateReprT::method) + "TensorNetC" + bitsize;
     auto pyclass = nb::class_<StateReprT>(m, class_name.c_str());
 #else
     // StateVector class
@@ -954,13 +959,17 @@ template <class StateReprT> void lightningClassBindings(nb::module_ &m) {
 #ifdef _ENABLE_PLTENSOR
     using MeasurementsT = MeasurementsTNCuda<StateReprT>;
     using ObservableT = ObservableTNCuda<StateReprT>;
+
+    const std::string prefix = std::string(StateReprT::method);
 #else
     using MeasurementsT = Measurements<StateReprT>;
     using ObservableT = Observable<StateReprT>;
+
+    const std::string prefix = "";
 #endif
 
     /* Measurements class */
-    class_name = "MeasurementsC" + bitsize;
+    class_name = prefix + "MeasurementsC" + bitsize;
     auto pyclass_measurements =
         nb::class_<MeasurementsT>(m, class_name.c_str());
 
