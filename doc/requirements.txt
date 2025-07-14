@@ -5,7 +5,7 @@ pybind11
 tomlkit
 custatevec-cu12; sys_platform == "linux"
 cutensornet-cu12; sys_platform == "linux"
-git+https://github.com/PennyLaneAI/pennylane.git@v0.42.0-rc0
+git+https://github.com/PennyLaneAI/pennylane.git@master
 
 # Documentation / Formatting / Linting Dependencies
 breathe
