@@ -275,6 +275,9 @@ class TestNanobindBindings:
 
     def test_algorithms_submodule_exists(self, precision):
         """Test that the algorithms submodule exists and contains expected classes."""
+        if device_name == "lightning.tensor":
+            pytest.skip("lightning.tensor does not have algorithms submodule")
+
         # Check if algorithms submodule exists
         assert hasattr(self.nb_module, "algorithms"), "Module does not have algorithms submodule"
 
@@ -310,6 +313,7 @@ class TestNanobindBindings:
             assert key in info
 
 
+@pytest.mark.skipif(device_name == "lightning.tensor", reason="lightning.tensor does not support aligned arrays")
 class TestAlignedArrayNB:
     """Tests for allocate_aligned_array function in nanobind-based modules."""
 
