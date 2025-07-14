@@ -19,7 +19,7 @@
 
 #include "Bindings_nb.hpp"
 #ifdef _ENABLE_MPI
-#include "BindingsMPI.hpp"
+#include "BindingsMPI_nb.hpp"
 #endif
 #include "CPUMemoryModel.hpp"
 #include "Memory.hpp"

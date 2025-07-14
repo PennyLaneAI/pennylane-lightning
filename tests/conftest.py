@@ -95,6 +95,10 @@ def n_subsystems(request):
 default_device = "lightning.qubit"
 supported_devices = {"lightning.kokkos", "lightning.qubit", "lightning.gpu", "lightning.tensor"}
 
+# Temporary, a list of devices which are ready to be tested, add to this list as new bindings are added
+# FIXME: Remove this before merging base nanobind branch to main
+SUPPORTED_DEVICES = ("lightning.qubit", "lightning.gpu")
+
 
 def get_device():
     """Return the pennylane lightning device.
@@ -107,7 +111,7 @@ def get_device():
     device = device.replace("_", ".")
 
     if device not in supported_devices:
-        raise ValueError(f"Invalid backend {device}. Supported: {', '.join(supported_devices)}")
+        raise ValueError(f"Invalid device {device}. Supported: {', '.join(supported_devices)}")
 
     if device not in qml.plugin_devices:
         raise DeviceError(
@@ -118,22 +122,21 @@ def get_device():
 
 
 device_name = get_device()
+device_module_name = device_name.replace(".", "_")  # lightning_qubit
+print(f"Running tests for {device_name}")
 
 # Device specification
 import importlib
-
-# Extract backend name from device_name
-backend = device_name.split(".")[1]  # qubit, kokkos, gpu, or tensor
 
 # Initialize variables for device classes
 lightning_ops = None
 LightningException = None
 
-# Define nanobind module name based on current backend
-nanobind_module_name = f"pennylane_lightning.lightning_{backend}_nb"
+# Define nanobind module name based on current device
+nanobind_module_name = f"pennylane_lightning.{device_module_name}_nb"
 
 # Handle lightning.tensor separately since it has different class structure
-if backend == "tensor":
+if device_name == "lightning.tensor":
     from pennylane_lightning.lightning_tensor import LightningTensor as LightningDevice
     from pennylane_lightning.lightning_tensor._measurements import (
         LightningTensorMeasurements as LightningMeasurements,
@@ -144,22 +147,22 @@ if backend == "tensor":
 
     LightningAdjointJacobian = None
 
-    if hasattr(pennylane_lightning, "lightning_tensor_ops"):
-        import pennylane_lightning.lightning_tensor_ops as lightning_ops
-        from pennylane_lightning.lightning_tensor_ops import LightningException
+    if hasattr(pennylane_lightning, "lightning_tensor_nb"):
+        import pennylane_lightning.lightning_tensor_nb as lightning_ops
+        from pennylane_lightning.lightning_tensor_nb import LightningException
 else:
     # General case for lightning.qubit, lightning.kokkos, and lightning.gpu
-    # Capitalize backend name for class names
-    backend_cap = backend.capitalize()
-    if backend == "gpu":
+    # Capitalize device name for class names
+    backend_cap = device_name.split(".")[1].capitalize()
+    if device_name == "lightning.gpu":
         backend_cap = "GPU"  # Special case for GPU (uppercase)
-    if backend == "qubit":
+    if device_name == "lightning.qubit":
         backend_cap = ""  # Special case for LightningQubit (default)
 
     # Import main device class
-    module_path = f"pennylane_lightning.lightning_{backend}"
+    module_path = f"pennylane_lightning.{device_module_name}"
     device_class = (
-        f"LightningQubit" if backend == "qubit" else f"Lightning{backend_cap}"
+        f"LightningQubit" if device_name == "lightning.qubit" else f"Lightning{backend_cap}"
     )  # Special case for LightningQubit (default)
     module = importlib.import_module(module_path)
     LightningDevice = getattr(module, device_class)
@@ -177,11 +180,16 @@ else:
     LightningStateVector = getattr(state_vector_module, f"Lightning{backend_cap}StateVector")
 
     # Try to import ops module
-    ops_module_path = f"pennylane_lightning.lightning_{backend}_ops"
-    if hasattr(pennylane_lightning, f"lightning_{backend}_ops"):
+    ops_module_path = f"pennylane_lightning.{device_module_name}_nb"
+    print(ops_module_path)
+    if hasattr(pennylane_lightning, f"{device_module_name}_nb"):
         lightning_ops = importlib.import_module(ops_module_path)
         if hasattr(lightning_ops, "LightningException"):
             LightningException = lightning_ops.LightningException
+        else:
+            print("no exception")
+    else:
+        print("no ops")
 
 
 # General qubit_device fixture, for any number of wires.
@@ -359,7 +367,7 @@ def precision(request):
 
 @pytest.fixture(scope="session")
 def current_nanobind_module():
-    """Return the nanobind module for the current backend."""
+    """Return the nanobind module for the current device."""
     try:
         return importlib.import_module(nanobind_module_name)
     except ImportError as e:
@@ -405,3 +413,37 @@ def get_sparse_hermitian_matrix(n):
     H = random_array((n, n), density=0.15)
     H = H + 1.0j * random_array((n, n), density=0.15)
     return csr_matrix(H + H.conj().T)
+
+
+def compare_serialized_ops(actual, expected):
+    """Helper function to compare serialized operations that may contain NumPy arrays.
+
+    This function handles partial comparisons where the expected structure may be incomplete.
+    It only compares elements that exist in the expected structure.
+    """
+    if isinstance(actual, np.ndarray) and isinstance(expected, np.ndarray):
+        # Use allclose for floating point arrays to handle numerical precision issues
+        if np.issubdtype(actual.dtype, np.number) or np.issubdtype(expected.dtype, np.number):
+            return np.allclose(actual, expected)
+        return np.array_equal(actual, expected)
+    elif isinstance(actual, (list, tuple)) and isinstance(expected, (list, tuple)):
+        # Handle case where expected is shorter than actual (partial comparison)
+        if len(expected) > len(actual):
+            return False
+
+        # For tuples and lists, compare only the elements that exist in expected
+        if isinstance(expected, tuple) and len(expected) < len(actual):
+            # Only compare elements up to the length of expected
+            return all(
+                compare_serialized_ops(a, e) for a, e in zip(actual[: len(expected)], expected)
+            )
+
+        # For regular lists, compare all elements
+        return all(compare_serialized_ops(a, e) for a, e in zip(actual, expected))
+    elif isinstance(expected, dict) and isinstance(actual, dict):
+        # For dictionaries, only check keys that exist in expected
+        return all(
+            k in actual and compare_serialized_ops(actual[k], v) for k, v in expected.items()
+        )
+    else:
+        return actual == expected

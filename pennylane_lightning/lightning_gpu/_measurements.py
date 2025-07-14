@@ -20,7 +20,7 @@ from __future__ import annotations
 from warnings import warn
 
 try:
-    from pennylane_lightning.lightning_gpu_ops import MeasurementsC64, MeasurementsC128
+    from pennylane_lightning.lightning_gpu_nb import MeasurementsC64, MeasurementsC128
 
     try:
         from pennylane_lightning.lightning_gpu_ops import MeasurementsMPIC64, MeasurementsMPIC128

@@ -64,7 +64,10 @@ using StateVectorBackends =
                               StateVectorLQubitManaged<double>, void>;
 
 /**
- * @brief Get a gate kernel map for a statevector.
+ * @brief Update state vector data from an array
+ *
+ * This function accepts any array-like object that follows the buffer protocol,
+ * including NumPy arrays and JAX arrays (for example).
  */
 template <class StateVectorT>
 auto svKernelMap(const StateVectorT &sv) -> nb::dict {
@@ -344,7 +347,7 @@ void registerBackendSpecificObservables(nb::module_ &m) {
     using ComplexT = typename StateVectorT::ComplexT;
 
     const std::string bitsize =
-        std::to_string(sizeof(std::complex<PrecisionT>) * 8);
+        std::is_same_v<PrecisionT, float> ? "64" : "128";
 
     using ArrayCT = nb::ndarray<std::complex<PrecisionT>, nb::c_contig>;
 
@@ -424,7 +427,7 @@ void registerBackendSpecificAlgorithms(nb::module_ &m) {
     using PrecisionT = typename StateVectorT::PrecisionT;
 
     const std::string bitsize =
-        std::to_string(sizeof(std::complex<PrecisionT>) * 8);
+        std::is_same_v<PrecisionT, float> ? "64" : "128";
 
     std::string class_name;
 

@@ -17,7 +17,7 @@ Class implementation for lightning_gpu state-vector manipulation.
 from warnings import warn
 
 try:
-    from pennylane_lightning.lightning_gpu_ops import StateVectorC64, StateVectorC128
+    from pennylane_lightning.lightning_gpu_nb import StateVectorC64, StateVectorC128
 
     try:  # Try to import the MPI modules
         from pennylane_lightning.lightning_gpu_ops import StateVectorMPIC64, StateVectorMPIC128

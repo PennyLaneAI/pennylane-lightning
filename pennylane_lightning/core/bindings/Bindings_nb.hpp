@@ -436,7 +436,7 @@ void registerBackendAgnosticObservables(nb::module_ &m) {
     using nd_arr_c = nb::ndarray<const std::complex<ParamT>, nb::c_contig>;
 
     const std::string bitsize =
-        std::to_string(sizeof(std::complex<PrecisionT>) * 8);
+        std::is_same_v<PrecisionT, float> ? "64" : "128";
 
 #ifdef _ENABLE_PLTENSOR
     using ObservableT = ObservableTNCuda<StateVectorT>;
@@ -458,13 +458,13 @@ void registerBackendAgnosticObservables(nb::module_ &m) {
 
     // Register Observable base class
     class_name = "ObservableC" + bitsize;
-    nb::class_<ObservableT>(m, class_name.c_str())
-        .def("get_wires", &ObservableT::getWires,
-             "Get wires the observable acts on.");
+    auto obs_class = nb::class_<ObservableT>(m, class_name.c_str());
+    obs_class.def("get_wires", &ObservableT::getWires,
+                  "Get wires the observable acts on.");
 
     // Register NamedObs class
     class_name = "NamedObsC" + bitsize;
-    nb::class_<NamedObsT, ObservableT>(m, class_name.c_str())
+    nb::class_<NamedObsT>(m, class_name.c_str(), obs_class)
         .def(nb::init<const std::string &, const std::vector<std::size_t> &>())
         .def("__repr__", &NamedObsT::getObsName)
         .def("get_wires", &NamedObsT::getWires, "Get wires of observables")
@@ -670,6 +670,31 @@ template <class StateVectorT> void registerAdjointJacobian(nb::module_ &m) {
             return createNumpyArrayFromVector<PrecisionT>(std::move(jac));
         },
         "Calculate the Jacobian using the adjoint method.");
+
+#ifdef _ENABLE_PLGPU
+    // lightning.gpu supports an additional batched adjoint jacobian
+    adjoint_jacobian_class.def(
+        "batched",
+        [](AdjointJacobian<StateVectorT> &adjoint_jacobian,
+           const StateVectorT &sv,
+           const std::vector<std::shared_ptr<Observable<StateVectorT>>>
+               &observables,
+           const OpsData<StateVectorT> &operations,
+           const std::vector<std::size_t> &trainableParams) {
+            using PrecisionT = typename StateVectorT::PrecisionT;
+            std::vector<PrecisionT> jac(
+                observables.size() * trainableParams.size(), PrecisionT{0.0});
+            const JacobianData<StateVectorT> jd{operations.getTotalNumParams(),
+                                                sv.getLength(),
+                                                sv.getData(),
+                                                observables,
+                                                operations,
+                                                trainableParams};
+            adjoint_jacobian.batchAdjointJacobian(std::span{jac}, jd);
+            return createNumpyArrayFromVector<PrecisionT>(std::move(jac));
+        },
+        "Batch Adjoint Jacobian method.");
+#endif
 }
 
 /**
@@ -698,18 +723,12 @@ OpsData<StateVectorT> createOpsList(
     const std::vector<std::vector<std::size_t>> &ops_controlled_wires,
     const std::vector<std::vector<bool>> &ops_controlled_values) {
     using ComplexT = typename StateVectorT::ComplexT;
+    using PrecisionT = typename StateVectorT::PrecisionT;
 
     // Convert ops_matrices to std::vector<std::vector<ComplexT>>
-    std::vector<std::vector<ComplexT>> conv_matrices(ops_matrices.size());
-
-    for (std::size_t i = 0; i < ops_matrices.size(); i++) {
-        if (ops_matrices[i].size() > 0) {
-            const auto *m_ptr =
-                PL_reinterpret_cast<const ComplexT>(ops_matrices[i].data());
-            const auto m_size = ops_matrices[i].size();
-            conv_matrices[i] = std::vector<ComplexT>(m_ptr, m_ptr + m_size);
-        }
-    }
+    std::vector<std::vector<ComplexT>> conv_matrices =
+        Pennylane::NanoBindings::Utils::convertMatrices<ComplexT, PrecisionT>(
+            ops_matrices);
 
     return OpsData<StateVectorT>{ops_name,
                                  ops_params,
@@ -859,7 +878,7 @@ void registerBackendAgnosticStateVectorMethods(PyClass &pyclass) {
             }
         },
         "Set the state vector to a computational basis state.",
-        nb::arg("state") = nullptr, nb::arg("wires") = nullptr,
+        nb::arg("state") = nb::none(), nb::arg("wires") = nb::none(),
         nb::arg("async") = false);
 
     // Set state vector - with conditional for async and size parameters (LGPU)
