@@ -103,6 +103,7 @@ using namespace Pennylane::LightningGPU::NanoBindings;
 /// @endcond
 
 #elif _ENABLE_PLTENSOR == 1
+#include "BindingsCudaUtils_nb.hpp"
 #include "LTensorTNCudaBindings_nb.hpp"
 #include "MeasurementsTNCuda.hpp"
 #include "ObservablesTNCuda.hpp"
@@ -424,13 +425,13 @@ void registerInfo(nb::module_ &m) {
 /**
  * @brief Register backend-agnostic observables
  *
- * @tparam StateVectorT
+ * @tparam StateReprT
  * @param m Nanobind module
  */
-template <class StateVectorT>
+template <class StateReprT>
 void registerBackendAgnosticObservables(nb::module_ &m) {
-    using PrecisionT = typename StateVectorT::PrecisionT;
-    using ComplexT = typename StateVectorT::ComplexT;
+    using PrecisionT = typename StateReprT::PrecisionT;
+    using ComplexT = typename StateReprT::ComplexT;
     using ParamT = PrecisionT;
 
     using nd_arr_c = nb::ndarray<const std::complex<ParamT>, nb::c_contig>;
@@ -439,17 +440,17 @@ void registerBackendAgnosticObservables(nb::module_ &m) {
         std::is_same_v<PrecisionT, float> ? "64" : "128";
 
 #ifdef _ENABLE_PLTENSOR
-    using ObservableT = ObservableTNCuda<StateVectorT>;
-    using NamedObsT = NamedObsTNCuda<StateVectorT>;
-    using HermitianObsT = HermitianObsTNCuda<StateVectorT>;
-    using TensorProdObsT = TensorProdObsTNCuda<StateVectorT>;
-    using HamiltonianT = HamiltonianTNCuda<StateVectorT>;
+    using ObservableT = ObservableTNCuda<StateReprT>;
+    using NamedObsT = NamedObsTNCuda<StateReprT>;
+    using HermitianObsT = HermitianObsTNCuda<StateReprT>;
+    using TensorProdObsT = TensorProdObsTNCuda<StateReprT>;
+    using HamiltonianT = HamiltonianTNCuda<StateReprT>;
 #else
-    using ObservableT = Observable<StateVectorT>;
-    using NamedObsT = NamedObs<StateVectorT>;
-    using HermitianObsT = HermitianObs<StateVectorT>;
-    using TensorProdObsT = TensorProdObs<StateVectorT>;
-    using HamiltonianT = Hamiltonian<StateVectorT>;
+    using ObservableT = Observable<StateReprT>;
+    using NamedObsT = NamedObs<StateReprT>;
+    using HermitianObsT = HermitianObs<StateReprT>;
+    using TensorProdObsT = TensorProdObs<StateReprT>;
+    using HamiltonianT = Hamiltonian<StateReprT>;
 #endif
 
     using ObsPtr = std::shared_ptr<ObservableT>;
@@ -943,9 +944,7 @@ template <class StateReprT> void lightningClassBindings(nb::module_ &m) {
     nb::module_ obs_submodule =
         m.def_submodule("observables", "Submodule for observables classes.");
 
-#ifndef _ENABLE_PLTENSOR
     registerBackendAgnosticObservables<StateReprT>(obs_submodule);
-#endif
     registerBackendSpecificObservables<StateReprT>(obs_submodule);
 
     //***********************************************************************//

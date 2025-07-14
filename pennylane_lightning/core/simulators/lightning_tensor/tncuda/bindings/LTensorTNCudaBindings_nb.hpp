@@ -217,8 +217,8 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
         const std::vector<std::size_t> shape{num_shots, num_wires};
         auto &&result = M.generate_samples(wires, num_shots);
 
-        return createNumpyArrayFromVector<std::size_t>(result, num_shots,
-                                                       num_wires);
+        return createNumpyArrayFromVector<std::size_t>(std::move(result),
+                                                       num_shots, num_wires);
     });
 } // pyclass
 
@@ -241,21 +241,21 @@ template <class StateVectorT>
 void registerBackendSpecificAlgorithms(nb::module_ &) {} // m
 
 /**
- * @brief Provide backend information.
- */
-auto getBackendInfo() -> nb::dict {
-    nb::dict info;
-    info["NAME"] = "lightning.tensor";
-    return info;
-}
-
-/**
  * @brief Register bindings for backend-specific info.
  *
  * @param m Nanobind module.
  */
-void registerBackendSpecificInfo(nb::module_ &) {
-    m.def("backend_info", &getBackendInfo, "Backend-specific information.");
+void registerBackendSpecificInfo(nb::module_ &m) {
+    m.def(
+        "backend_info",
+        []() {
+            nb::dict info;
+
+            info["NAME"] = "lightning.tensor";
+
+            return info;
+        },
+        "Backend-specific information.");
     registerCudaUtils(m);
 } // m
 

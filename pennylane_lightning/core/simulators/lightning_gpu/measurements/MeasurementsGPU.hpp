@@ -66,7 +66,7 @@ class Measurements final
   private:
     cudaDataType_t data_type_;
 
-    GateCache<PrecisionT> gate_cache_;
+    GateCache<typename StateVectorT::PrecisionT> gate_cache_;
 
   public:
     using PrecisionT = typename StateVectorT::PrecisionT;

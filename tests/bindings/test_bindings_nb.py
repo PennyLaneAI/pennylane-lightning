@@ -18,7 +18,7 @@ import inspect
 
 import numpy as np
 import pytest
-from conftest import device_module_name
+from conftest import device_module_name, device_name
 
 
 def get_module_attributes(module):
@@ -75,9 +75,14 @@ class TestNanobindBindings:
     def test_statevector_classes_exists(self):
         """Test if StateVectorC classes exists in the module."""
         for precision in ["64", "128"]:
-            assert (
-                f"StateVectorC{precision}" in self.nb_module_attr["classes"]
-            ), f"StateVectorC{precision} not found in module"
+            if device_name == "lightning.tensor":
+                assert (
+                    f"TensorNetC{precision}" in self.nb_module_attr["classes"]
+                ), f"TensorNetC{precision} not found in module"
+            else:
+                assert (
+                    f"StateVectorC{precision}" in self.nb_module_attr["classes"]
+                ), f"StateVectorC{precision} not found in module"
 
     def test_exception_class_exists(self):
         """Test if LightningException class exists in the module."""
