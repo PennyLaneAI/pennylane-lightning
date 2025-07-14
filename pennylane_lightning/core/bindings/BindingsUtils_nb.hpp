@@ -39,7 +39,7 @@ createNumpyArrayFromVector(std::vector<VectorT> &&data,
             "Data size does not match the specified shape");
     }
 
-    std::vector<VectorT> *new_data = new std::vector<VectorT>(std::move(data));
+    auto *new_data = new std::vector<VectorT>(std::move(data));
 
     // Create a capsule to manage memory
     auto capsule = nb::capsule(new_data, [](void *p) noexcept {
@@ -83,31 +83,6 @@ createNumpyArrayFromVector(std::vector<VectorT> &&data, std::size_t rows,
 }
 
 /**
- * @brief Convert complex matrices from nanobind ndarray to std::vector
- *
- * @tparam ComplexT Complex type to convert to
- * @tparam ParamT Precision type of the complex numbers
- * @param matrices Vector of ndarrays containing matrices
- * @return std::vector<std::vector<ComplexT>> Converted matrices
- */
-template <typename ComplexT, typename ParamT>
-std::vector<std::vector<ComplexT>> convertMatrices(
-    const std::vector<nb::ndarray<const std::complex<ParamT>, nb::c_contig>>
-        &matrices) {
-    std::vector<std::vector<ComplexT>> conv_matrices(matrices.size());
-
-    for (std::size_t i = 0; i < matrices.size(); i++) {
-        if (matrices[i].size() > 0) {
-            const auto *m_ptr = matrices[i].data();
-            const auto m_size = matrices[i].size();
-            conv_matrices[i] = std::vector<ComplexT>(m_ptr, m_ptr + m_size);
-        }
-    }
-
-    return conv_matrices;
-}
-
-/**
  * @brief Generate string representation of operations data
  *
  * @tparam OpsDataT Type of operations data
@@ -141,4 +116,25 @@ std::string opsDataToString(const OpsDataT &ops,
     return "Operations: [" + ops_stream.str() + "]";
 }
 
+/**
+ * @brief Convert complex matrices from nanobind ndarray to std::vector
+ *
+ * @tparam ComplexT Complex type to convert to
+ * @tparam PrecisionT Precision type of the complex numbers
+ * @param matrices Vector of ndarrays containing matrices
+ * @return std::vector<std::vector<ComplexT>> Converted matrices
+ */
+template <typename ComplexT, typename PrecisionT>
+std::vector<std::vector<ComplexT>> convertMatrices(
+    const std::vector<nb::ndarray<const std::complex<PrecisionT>, nb::c_contig>>
+        &matrices) {
+    std::vector<std::vector<ComplexT>> conv_matrices(matrices.size());
+
+    std::transform(matrices.begin(), matrices.end(), conv_matrices.begin(),
+                   [](const auto &matrix) {
+                       return std::vector<ComplexT>(
+                           matrix.data(), matrix.data() + matrix.size());
+                   });
+    return conv_matrices;
+}
 } // namespace Pennylane::NanoBindings::Utils

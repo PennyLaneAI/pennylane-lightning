@@ -665,6 +665,8 @@ template <typename DestType, typename SrcType>
 inline auto PL_reinterpret_cast(const SrcType *src_ptr) -> const DestType * {
     static_assert(sizeof(DestType) == sizeof(SrcType),
                   "Types must have the same size for reinterpretation");
+    static_assert(alignof(DestType) == alignof(SrcType),
+                  "Types must have the same alignment for reinterpretation");
     return reinterpret_cast<const DestType *>(src_ptr);
 }
 

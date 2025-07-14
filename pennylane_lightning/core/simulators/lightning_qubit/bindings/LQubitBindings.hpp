@@ -260,7 +260,7 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
             },
             "Copy StateVector data into a Numpy array.")
         .def(
-            "UpdateData",
+            "updateData",
             [](StateVectorT &device_sv, const np_arr_c &state) {
                 const py::buffer_info numpyArrayInfo = state.request();
                 auto *data_ptr = static_cast<ComplexT *>(numpyArrayInfo.ptr);
