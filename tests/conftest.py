@@ -99,6 +99,7 @@ supported_devices = {"lightning.kokkos", "lightning.qubit", "lightning.gpu", "li
 # FIXME: Remove this before merging base nanobind branch to main
 SUPPORTED_DEVICES = ("lightning.qubit", "lightning.gpu")
 
+
 def get_device():
     """Return the pennylane lightning device.
 

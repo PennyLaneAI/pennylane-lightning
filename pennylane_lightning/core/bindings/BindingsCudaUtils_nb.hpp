@@ -73,7 +73,7 @@ void registerCudaUtils(nb::module_ &m) {
             throw std::runtime_error("Invalid state!");
         }
 
-        self.refresh();
+        new (&self) DevicePool<int>(); // Reconstruct the object
     });
 
     auto pyclass_devtag = nb::class_<DevTag<int>>(m, "DevTag");

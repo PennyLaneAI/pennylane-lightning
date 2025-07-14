@@ -15,10 +15,13 @@
 
 import numpy as np
 import pytest
-from conftest import device_name, SUPPORTED_DEVICES
+from conftest import SUPPORTED_DEVICES, device_name
 
 if device_name not in SUPPORTED_DEVICES:
-    pytest.skip("Skipping tests for binaries other than one of {SUPPORTED_DEVICES}.", allow_module_level=True)
+    pytest.skip(
+        "Skipping tests for binaries other than one of {SUPPORTED_DEVICES}.",
+        allow_module_level=True,
+    )
 
 
 class TestStateVectorNB:
