@@ -65,6 +65,76 @@ using StateVectorBackends =
 
 /**
  * @brief Get a gate kernel map for a statevector.
+<<<<<<< HEAD
+=======
+ */
+template <class StateVectorT>
+auto svKernelMap(const StateVectorT &sv) -> nb::dict {
+    using PrecisionT = typename StateVectorT::PrecisionT;
+    nb::dict res_map;
+    namespace Constant = Pennylane::Gates::Constant;
+    using Pennylane::Util::lookup;
+
+    const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
+
+    auto [GateKernelMap, GeneratorKernelMap, MatrixKernelMap,
+          ControlledGateKernelMap, ControlledGeneratorKernelMap,
+          ControlledMatrixKernelMap] = sv.getSupportedKernels();
+
+    for (const auto &[gate_op, kernel] : GateKernelMap) {
+        const auto key = std::string(lookup(Constant::gate_names, gate_op));
+        const auto value = dispatcher.getKernelName(kernel);
+
+        res_map[key.c_str()] = value;
+    }
+
+    for (const auto &[gen_op, kernel] : GeneratorKernelMap) {
+        const auto key = std::string(lookup(Constant::generator_names, gen_op));
+        const auto value = dispatcher.getKernelName(kernel);
+
+        res_map[key.c_str()] = value;
+    }
+
+    for (const auto &[mat_op, kernel] : MatrixKernelMap) {
+        const auto key = std::string(lookup(Constant::matrix_names, mat_op));
+        const auto value = dispatcher.getKernelName(kernel);
+
+        res_map[key.c_str()] = value;
+    }
+
+    for (const auto &[mat_op, kernel] : ControlledGateKernelMap) {
+        const auto key =
+            std::string(lookup(Constant::controlled_gate_names, mat_op));
+        const auto value = dispatcher.getKernelName(kernel);
+
+        res_map[key.c_str()] = value;
+    }
+
+    for (const auto &[mat_op, kernel] : ControlledGeneratorKernelMap) {
+        const auto key =
+            std::string(lookup(Constant::controlled_generator_names, mat_op));
+        const auto value = dispatcher.getKernelName(kernel);
+
+        res_map[key.c_str()] = value;
+    }
+
+    for (const auto &[mat_op, kernel] : ControlledMatrixKernelMap) {
+        const auto key =
+            std::string(lookup(Constant::controlled_matrix_names, mat_op));
+        const auto value = dispatcher.getKernelName(kernel);
+
+        res_map[key.c_str()] = value;
+    }
+
+    return res_map;
+}
+
+/**
+ * @brief Update state vector data from an array
+ *
+ * This function accepts any array-like object that follows the buffer protocol,
+ * including NumPy arrays and JAX arrays (for example).
+>>>>>>> feature/nanobind
  */
 template <class StateVectorT>
 auto svKernelMap(const StateVectorT &sv) -> nb::dict {
@@ -184,6 +254,7 @@ void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
 
     // Register sparse matrix operators.
     registerSparseMatrixOperators<StateVectorT>(pyclass);
+<<<<<<< HEAD
 
     // Add Pauli rotation.
     pyclass.def(
@@ -209,6 +280,37 @@ void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
     // Kernel map.
     pyclass.def("kernel_map", &svKernelMap<StateVectorT>,
                 "Get internal kernels for operations");
+=======
+
+    // Add Pauli rotation.
+    pyclass.def(
+        "applyPauliRot",
+        [](StateVectorT &sv, const std::vector<std::size_t> &wires,
+           const bool inverse, const std::vector<PrecisionT> &params,
+           const std::string &word) {
+            sv.applyPauliRot(wires, inverse, params, word);
+        },
+        "Apply a Pauli rotation.");
+
+    // Fix constructor binding for nanobind.
+    pyclass.def(nb::init<std::size_t>(), "Initialize with number of qubits");
+
+    // Collapse and normalize methods.
+    pyclass.def(
+        "collapse", &StateVectorT::collapse,
+        "Collapse the statevector onto the 0 or 1 branch of a given wire.");
+
+    pyclass.def("normalize", &StateVectorT::normalize,
+                "Normalizes the statevector to norm 1.");
+
+    // Kernel map.
+    pyclass.def("kernel_map", &svKernelMap<StateVectorT>,
+                "Get internal kernels for operations");
+
+    pyclass.def("updateData", &updateStateVectorData<StateVectorT>,
+                "Update the state vector data from an array.",
+                nb::arg("state"));
+>>>>>>> feature/nanobind
 
     pyclass.def(
         "getState",
