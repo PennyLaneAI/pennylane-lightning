@@ -611,7 +611,9 @@ def test_vmap_in_axes(in_axis, out_axis):
         return qml.expval(qml.Z(0)), qml.state()
 
     mats = jax.numpy.stack(
-        [qml.X.compute_matrix(), qml.Y.compute_matrix(), qml.Z.compute_matrix()], axis=in_axis
+        [qml.X.compute_matrix(), qml.Y.compute_matrix(), qml.Z.compute_matrix()],
+        axis=in_axis,
+        dtype=jax.numpy.complex64,
     )
     expval, state = jax.vmap(circuit, in_axes=in_axis, out_axes=(0, out_axis))(mats)
 
