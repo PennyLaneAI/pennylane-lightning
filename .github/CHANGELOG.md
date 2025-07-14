@@ -15,7 +15,7 @@
 <h3>Internal changes ⚙️</h3>
 
 - Merged the `v0.42.0_rc_merge` branch to the `master` and bumped the version.
-  [(#11xx)](https://github.com/PennyLaneAI/pennylane-lightning/pull/11xx)
+  [(#1209)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1209)
 
 <h3>Contributors ✍️</h3>
 
