@@ -14,6 +14,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Increased minimum version of `pytest` within requirements files to `8.4.1`.
+  [(#1207)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1207)
+
 - Merged the `v0.42.0_rc_merge` branch to the `master` and bumped the version.
   [(#1209)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1209)
 
@@ -21,7 +24,8 @@
 
 This release contains contributions from (in alphabetical order):
 
-Luis Alfredo Nuñez Meneses
+Luis Alfredo Nuñez Meneses,
+Jake Zaia
 
 ---
 
