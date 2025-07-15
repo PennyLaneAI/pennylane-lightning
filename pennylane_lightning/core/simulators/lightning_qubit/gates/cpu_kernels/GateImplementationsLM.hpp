@@ -1247,9 +1247,8 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     template <class PrecisionT>
     static void applyIdentity(std::complex<PrecisionT> *arr,
                               const std::size_t num_qubits,
-                              const std::vector<std::size_t> &wires,
+                              [[maybe_unused]] const std::vector<std::size_t> &wires,
                               [[maybe_unused]] const bool inverse) {
-        PL_ASSERT(wires.size() == 1);
         static_cast<void>(arr);        // No-op
         static_cast<void>(num_qubits); // No-op
         static_cast<void>(wires);      // No-op

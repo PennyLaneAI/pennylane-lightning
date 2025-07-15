@@ -14,6 +14,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Removed assert for applying Identity gate with more than 1 wire.
+  [(#1XXX)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1XXX)
+
 - Increased minimum version of `pytest` within requirements files to `8.4.1`.
   [(#1207)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1207)
 
