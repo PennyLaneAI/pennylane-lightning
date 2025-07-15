@@ -108,6 +108,18 @@ void testApplyIdentity() {
                                           false);
         CHECK(std::equal(st_pre.begin(), st_pre.end(), st_post.begin()));
     }
+    for (std::size_t index = 0; index < (num_qubits - 1); index++) {
+        auto st_pre = createZeroState<ComplexT>(num_qubits);
+        auto st_post = createZeroState<ComplexT>(num_qubits);
+        GateImplementation::applyHadamard(st_pre.data(), num_qubits, {index},
+                                          false);
+        GateImplementation::applyHadamard(st_post.data(), num_qubits, {index},
+                                          false);
+
+        GateImplementation::applyIdentity(st_pre.data(), num_qubits,
+                                          {index, index + 1}, false);
+        CHECK(std::equal(st_pre.begin(), st_pre.end(), st_post.begin()));
+    }
 }
 PENNYLANE_RUN_TEST(Identity);
 
