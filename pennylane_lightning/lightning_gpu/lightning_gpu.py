@@ -350,7 +350,7 @@ class LightningGPU(LightningBase):
         new_device_options.update(mcmc_default)
 
         mcm_supported_methods = (
-            ("deferred", "tree-traversal", "one-shot", None)
+            ("device", "deferred", "tree-traversal", "one-shot", None)
             if not qml.capture.enabled()
             else ("deferred", "single-branch-statistics", None)
         )
@@ -359,6 +359,9 @@ class LightningGPU(LightningBase):
 
         if (mcm_method := mcm_config.mcm_method) not in mcm_supported_methods:
             raise DeviceError(f"mcm_method='{mcm_method}' is not supported with lightning.gpu.")
+
+        if mcm_config.mcm_method == "device":
+            mcm_config = replace(mcm_config, mcm_method="tree-traversal")
 
         if qml.capture.enabled():
 
@@ -374,8 +377,9 @@ class LightningGPU(LightningBase):
             elif mcm_method is None:
                 mcm_updated_values["mcm_method"] = "deferred"
 
-            updated_values["mcm_config"] = replace(mcm_config, **mcm_updated_values)
+            mcm_config = replace(mcm_config, **mcm_updated_values)
 
+        updated_values["mcm_config"] = mcm_config
         return replace(config, **updated_values, device_options=new_device_options)
 
     def preprocess(self, execution_config: ExecutionConfig = DefaultExecutionConfig):
