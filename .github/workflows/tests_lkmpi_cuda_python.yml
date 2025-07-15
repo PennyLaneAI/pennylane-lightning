@@ -65,7 +65,6 @@ jobs:
         with:
           repository: PennyLaneAI/catalyst
           path: ${{ github.workspace}}/catalyst
-          ref: ${{ (inputs.pennylane-version == 'stable' && 'v0.11.0') || 'main' }} # FIXME: remove after v0.42 release
 
       - name: Switch to release build of Lightning
         if: inputs.lightning-version == 'release'
@@ -129,12 +128,6 @@ jobs:
           python -m pip install mpi4py openfermionpyscf
           python scripts/configure_pyproject_toml.py || true
           python -m pip install . -vv
-
-      - name: Revert to older JAX version for stable
-        if: inputs.pennylane-version == 'stable'
-        run: |
-          # FIXME: remove after v0.42 release
-          python -m pip install "jax[cpu]==0.4.28"
 
       - name: Clone Kokkos repository
         run: |
