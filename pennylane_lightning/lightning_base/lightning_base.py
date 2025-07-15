@@ -72,6 +72,8 @@ class LightningBase(Device):
             computing the jacobian.
     """
 
+    # pylint: disable=too-many-instance-attributes
+
     def __init__(  # pylint: disable=too-many-arguments
         self,
         wires: Union[int, List] = None,
