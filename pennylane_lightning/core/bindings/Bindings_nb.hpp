@@ -807,7 +807,7 @@ void updateStateVectorData(
     }
 
     // Get data pointer and size
-    const ComplexT *data_ptr = static_cast<const ComplexT *>(data.data());
+    const ComplexT *data_ptr = PL_reinterpret_cast<const ComplexT *>(data.data());
     std::size_t size = data.shape(0);
 
     // Update the state vector data
