@@ -20,7 +20,7 @@ import math
 import pennylane as qml
 import pytest
 from conftest import LightningDevice as ld
-from conftest import LightningException, device_name, get_random_matrix, get_random_normalized_state
+from conftest import device_name, get_random_matrix, get_random_normalized_state
 from pennylane import QNode
 from pennylane import numpy as np
 from pennylane import qchem, qnode
@@ -159,7 +159,7 @@ class TestAdjointJacobian:
             qml.expval(qml.PauliZ(0))
 
         with pytest.raises(
-            LightningException,
+            RuntimeError,
             match="The operation is not supported using the adjoint differentiation method",
         ):
             dev.compute_derivatives(tape)

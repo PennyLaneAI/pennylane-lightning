@@ -86,12 +86,6 @@ class TestNanobindBindings:
                     f"StateVectorC{precision}" in self.nb_module_attr["classes"]
                 ), f"StateVectorC{precision} not found in module"
 
-    def test_exception_class_exists(self):
-        """Test if LightningException class exists in the module."""
-        assert (
-            "LightningException" in self.nb_module_attr["classes"]
-        ), f"LightningException not found in module"
-
     @pytest.mark.xfail(reason="Expected to fail while we don't have backend-specific bindings.")
     def test_api_parity_with_pybind(self):
         """Test that nanobind modules have the same API as pybind modules."""

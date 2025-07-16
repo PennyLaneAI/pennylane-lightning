@@ -49,8 +49,6 @@ NB_MODULE(LIGHTNING_MODULE_NAME, m) {
     registerBackendSpecificInfoMPI(m);
     registerLightningClassBindingsMPI<StateVectorMPIBackends>(m);
 #endif
-    // Register exception types - using nanobind's approach
-    nb::exception<Pennylane::Util::LightningException>(m, "LightningException");
 }
 #endif
 
