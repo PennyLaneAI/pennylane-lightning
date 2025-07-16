@@ -405,7 +405,10 @@ void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
                 // Convert to numpy array first for flexible input handling
                 auto np_module = nb::module_::import_("numpy");
                 auto asarray = np_module.attr("asarray");
-                auto converted = asarray(host_sv, nb::arg("dtype")=nb::dtype<std::complex<PrecisionT>>(), nb::arg("order")="C");
+                auto converted = asarray(
+                    host_sv,
+                    nb::arg("dtype") = nb::dtype<std::complex<PrecisionT>>(),
+                    nb::arg("order") = "C");
                 auto arr = nb::cast<arr_c>(converted);
                 auto *data_ptr = PL_reinterpret_cast<ComplexT>(arr.data());
                 if (arr.size()) {
@@ -429,7 +432,10 @@ void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
                 // Convert to numpy array first for flexible input handling
                 auto np_module = nb::module_::import_("numpy");
                 auto asarray = np_module.attr("asarray");
-                auto converted = asarray(host_sv, nb::arg("dtype")=nb::dtype<std::complex<PrecisionT>>(), nb::arg("order")="C");
+                auto converted = asarray(
+                    host_sv,
+                    nb::arg("dtype") = nb::dtype<std::complex<PrecisionT>>(),
+                    nb::arg("order") = "C");
                 auto arr = nb::cast<arr_c>(converted);
                 auto *data_ptr = const_cast<ComplexT *>(
                     PL_reinterpret_cast<ComplexT>(arr.data()));
@@ -437,7 +443,8 @@ void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
                     device_sv.HostToDevice(data_ptr, arr.size());
                 }
             },
-            "Synchronize data from the host device to Kokkos (flexible input).");
+            "Synchronize data from the host device to Kokkos (flexible "
+            "input).");
 
     // Apply operation method
     pyclass.def(
