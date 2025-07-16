@@ -3,9 +3,9 @@ requires = ["cmake", "ninja; platform_system!='Windows'", "setuptools>=75.8.1", 
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "PennyLane_Lightning"
+name = "pennylane_lightning"
 description = "PennyLane-Lightning plugin"
-readme = "README.rst"
+readme = "README.md"
 requires-python = ">=3.10"
 license = "Apache-2.0"
 classifiers = [ 

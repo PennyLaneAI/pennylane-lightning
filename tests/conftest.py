@@ -14,6 +14,8 @@
 """
 Pytest configuration file for PennyLane-Lightning test suite.
 """
+import configparser
+import hashlib
 import os
 from functools import reduce
 from typing import Sequence
@@ -22,6 +24,7 @@ import numpy as np
 import pennylane as qml
 import pytest
 from pennylane.exceptions import DeviceError
+from scipy.sparse import csr_matrix, random_array
 
 import pennylane_lightning
 
@@ -187,8 +190,13 @@ else:
     params=[np.complex64, np.complex128],
 )
 def qubit_device(request):
-    def _device(wires, shots=None):
-        return qml.device(device_name, wires=wires, shots=shots, c_dtype=request.param)
+    def _device(wires, shots=None, seed=None):
+        if device_name == "lightning.tensor":
+            return qml.device(device_name, wires=wires, shots=shots, c_dtype=request.param)
+        else:
+            return qml.device(
+                device_name, wires=wires, shots=shots, c_dtype=request.param, seed=seed
+            )
 
     return _device
 
@@ -341,3 +349,44 @@ def pytest_report_header():
         "PennyLane-Lightning Test Suite",
         f"::: Device: {device_name:<17} :::",
     ]
+
+
+# Extract _default_rng_seed from `rng_salt` in pytest.ini
+# which are used for generating random vectors/matrices in functions below
+config = configparser.ConfigParser()
+pytest_ini_path = os.path.join(os.path.dirname(__file__), "pytest.ini")
+read_files = config.read(pytest_ini_path)
+config.read("pytest.ini")
+rng_salt = config["pytest"]["rng_salt"]
+_default_rng_seed = int(hashlib.sha256(rng_salt.encode()).hexdigest(), 16)
+
+
+def get_random_matrix(n, seed=None):
+    """Generate a random complex matrix of shape (n, n)."""
+    seed = seed or _default_rng_seed
+    rng = np.random.default_rng(seed=seed)
+    U = rng.random((n, n)) + 1.0j * rng.random((n, n))
+    return U
+
+
+def get_random_normalized_state(n, seed=None):
+    """Generate a random normalized complex state vector of n elements."""
+    seed = seed or _default_rng_seed
+    rng = np.random.default_rng(seed=seed)
+    random_state = rng.random(n) + 1j * rng.random(n)
+    return random_state / np.linalg.norm(random_state)
+
+
+def get_hermitian_matrix(n, seed=None):
+    """Generate a random Hermitian matrix of shape (n, n)."""
+    seed = seed or _default_rng_seed
+    rng = np.random.default_rng(seed=seed)
+    H = rng.random((n, n)) + 1.0j * rng.random((n, n))
+    return H + np.conj(H).T
+
+
+def get_sparse_hermitian_matrix(n):
+    """Generate a random sparse Hermitian matrix of shape (n, n)."""
+    H = random_array((n, n), density=0.15)
+    H = H + 1.0j * random_array((n, n), density=0.15)
+    return csr_matrix(H + H.conj().T)
