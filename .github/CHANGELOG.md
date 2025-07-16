@@ -6,6 +6,9 @@
 
 - Added comprehensive tests for Python bindings.
   [(#1198)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1198)
+
+- Added Nanobind bindings for Lightning Kokkos.
+  [(#1213)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1213)
   
 <h3>Breaking changes 💔</h3>
 
