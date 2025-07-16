@@ -75,7 +75,6 @@ jobs:
         with:
           repository: PennyLaneAI/catalyst
           path: ${{ github.workspace}}/catalyst
-          ref: ${{ (inputs.pennylane-version == 'stable' && 'v0.11.0') || 'main' }} # FIXME: remove after v0.42 release
 
       - name: Switch to release build of Lightning
         if: inputs.lightning-version == 'release'
@@ -213,12 +212,6 @@ jobs:
             SKIP_COMPILATION=True python -m pip install . -vv
           fi
           python -m pip install ${{ github.workspace }}/$WHEEL_NAME --no-deps
-
-      - name: Revert to older JAX version for stable
-        if: inputs.pennylane-version == 'stable'
-        run: |
-          # FIXME: remove after v0.42 release
-          python -m pip install "jax[cpu]==0.4.28"
 
       - name: Checkout PennyLane for release or latest build
         if: inputs.pennylane-version == 'release' || inputs.pennylane-version == 'latest'
