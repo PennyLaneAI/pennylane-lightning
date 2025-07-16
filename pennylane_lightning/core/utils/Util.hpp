@@ -683,10 +683,11 @@ inline auto PL_reinterpret_cast(const SrcType *src_ptr) -> const DestType * {
  */
 template <typename DestType, typename SrcType>
 inline auto PL_reinterpret_cast(SrcType *src_ptr) -> DestType * {
-    // Call the const version with a const_cast to avoid duplicating the static
-    // assertions
-    return const_cast<DestType *>(
-        PL_reinterpret_cast<DestType>(const_cast<const SrcType *>(src_ptr)));
+    static_assert(sizeof(DestType) == sizeof(SrcType),
+                  "Types must have the same size for reinterpretation");
+    static_assert(alignof(DestType) == alignof(SrcType),
+                  "Types must have the same alignment for reinterpretation");
+    return reinterpret_cast<DestType *>(src_ptr);
 }
 
 } // namespace Pennylane::Util
