@@ -18,6 +18,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Remove FIXMEs for pinning jax & catalyst 0.11.0 for CI testing stable version.
+  [(#1211)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1211)
+
 - Increased minimum version of `pytest` within requirements files to `8.4.1`.
   [(#1207)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1207)
 
