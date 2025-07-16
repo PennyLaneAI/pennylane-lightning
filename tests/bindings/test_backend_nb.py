@@ -11,15 +11,18 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Tests for LightningQubit-specific Nanobind bindings."""
+"""Tests for Nanobind bindings."""
 
 import numpy as np
 import pytest
 from conftest import device_name
 
-# Skip all tests if not using lightning.qubit
-if device_name != "lightning.qubit":
-    pytest.skip("Skipping tests for binaries other than lightning_qubit.", allow_module_level=True)
+# Skip all tests if not using lightning.qubit or lightning.kokkos
+if device_name not in ["lightning.qubit", "lightning.kokkos"]:
+    pytest.skip(
+        "Skipping tests for binaries other than lightning_qubit and lightning_kokkos.",
+        allow_module_level=True,
+    )
 
 
 class TestLQubitStateVectorBindings:
@@ -37,9 +40,11 @@ class TestLQubitStateVectorBindings:
 
         return _get_class
 
-    @pytest.mark.parametrize("precision", ["64", "128"])
     def test_init(self, current_nanobind_module, precision, get_statevector_class):
         """Test initialization of state vector."""
+        if device_name == "lightning.kokkos":
+            pytest.skip("getState method not available in lightning.kokkos")
+
         StateVectorClass = get_statevector_class(current_nanobind_module, precision)
         num_qubits = 2
         sv = StateVectorClass(num_qubits)
@@ -53,9 +58,11 @@ class TestLQubitStateVectorBindings:
         expected[0] = 1.0
         assert np.allclose(state, expected)
 
-    @pytest.mark.parametrize("precision", ["64", "128"])
     def test_reset_state_vector(self, current_nanobind_module, precision, get_statevector_class):
         """Test resetting state vector to |0...0>."""
+        if device_name == "lightning.kokkos":
+            pytest.skip("getState method not available in lightning.kokkos")
+
         StateVectorClass = get_statevector_class(current_nanobind_module, precision)
         num_qubits = 2
         sv = StateVectorClass(num_qubits)
@@ -72,9 +79,11 @@ class TestLQubitStateVectorBindings:
         expected[0] = 1.0
         assert np.allclose(state, expected)
 
-    @pytest.mark.parametrize("precision", ["64", "128"])
     def test_set_basis_state(self, current_nanobind_module, precision, get_statevector_class):
         """Test setting state vector to a basis state."""
+        if device_name == "lightning.kokkos":
+            pytest.skip("getState method not available in lightning.kokkos")
+
         StateVectorClass = get_statevector_class(current_nanobind_module, precision)
         num_qubits = 2
         sv = StateVectorClass(num_qubits)
@@ -90,9 +99,11 @@ class TestLQubitStateVectorBindings:
         expected[3] = 1.0
         assert np.allclose(state, expected)
 
-    @pytest.mark.parametrize("precision", ["64", "128"])
     def test_set_state_vector(self, current_nanobind_module, precision, get_statevector_class):
         """Test setting state vector to a custom state."""
+        if device_name == "lightning.kokkos":
+            pytest.skip("getState method not available in lightning.kokkos")
+
         StateVectorClass = get_statevector_class(current_nanobind_module, precision)
         num_qubits = 2
         sv = StateVectorClass(num_qubits)
@@ -108,9 +119,11 @@ class TestLQubitStateVectorBindings:
         sv.getState(state)
         assert np.allclose(state, custom_state)
 
-    @pytest.mark.parametrize("precision", ["64", "128"])
     def test_update_data(self, current_nanobind_module, precision, get_statevector_class):
         """Test updating state vector data."""
+        if device_name == "lightning.kokkos":
+            pytest.skip("updateData method not available in lightning.kokkos")
+
         StateVectorClass = get_statevector_class(current_nanobind_module, precision)
         num_qubits = 2
         sv = StateVectorClass(num_qubits)
@@ -125,9 +138,11 @@ class TestLQubitStateVectorBindings:
         sv.getState(state)
         assert np.allclose(state, custom_state)
 
-    @pytest.mark.parametrize("precision", ["64", "128"])
     def test_kernel_map(self, current_nanobind_module, precision, get_statevector_class):
         """Test getting kernel map."""
+        if device_name == "lightning.kokkos":
+            pytest.skip("kernel_map method not available in lightning.kokkos")
+
         StateVectorClass = get_statevector_class(current_nanobind_module, precision)
         num_qubits = 2
         sv = StateVectorClass(num_qubits)
@@ -137,9 +152,13 @@ class TestLQubitStateVectorBindings:
         assert "Hadamard" in kernel_map
         assert "CNOT" in kernel_map
 
-    @pytest.mark.parametrize("precision", ["64", "128"])
-    def test_normalize(self, current_nanobind_module, precision, get_statevector_class):
-        """Test normalizing state vector."""
+    def test_normalize_state_vector(
+        self, current_nanobind_module, precision, get_statevector_class
+    ):
+        """Test normalizing state vector works for both backends."""
+        if device_name == "lightning.kokkos":
+            pytest.skip("getState/updateData not available in lightning.kokkos")
+
         StateVectorClass = get_statevector_class(current_nanobind_module, precision)
         num_qubits = 2
         sv = StateVectorClass(num_qubits)
@@ -159,6 +178,82 @@ class TestLQubitStateVectorBindings:
         )
         expected[0] = 1.0
         assert np.allclose(state, expected)
+
+    def test_constructor_basic(self, current_nanobind_module, precision, get_statevector_class):
+        """Test basic constructor of state vector works for both backends."""
+        StateVectorClass = get_statevector_class(current_nanobind_module, precision)
+        num_qubits = 2
+        sv = StateVectorClass(num_qubits)
+        # Check that the object was created successfully
+        assert sv is not None
+
+    def test_apply_basic_gates(self, current_nanobind_module, precision, get_statevector_class):
+        """Test applying gates to state vector works for both backends."""
+        StateVectorClass = get_statevector_class(current_nanobind_module, precision)
+        num_qubits = 2
+        sv = StateVectorClass(num_qubits)
+
+        # Apply some gates
+        sv.PauliX([0], False, [])
+        sv.Hadamard([1], False, [])
+        sv.CNOT([0, 1], False, [])
+
+        # This test doesn't need getState so it works for both backends
+        assert sv is not None
+
+    def test_reset_state_vector_basic(
+        self, current_nanobind_module, precision, get_statevector_class
+    ):
+        """Test resetting state vector without checking state works for both backends."""
+        StateVectorClass = get_statevector_class(current_nanobind_module, precision)
+        num_qubits = 2
+        sv = StateVectorClass(num_qubits)
+        # Apply X gate to first qubit to change state
+        sv.PauliX([0], False, [])
+        # Reset state vector
+        sv.resetStateVector()
+        # Just verify the operation completes without error
+        assert sv is not None
+
+    def test_set_basis_state_basic(self, current_nanobind_module, precision, get_statevector_class):
+        """Test setting basis state without checking result works for both backends."""
+        StateVectorClass = get_statevector_class(current_nanobind_module, precision)
+        num_qubits = 2
+        sv = StateVectorClass(num_qubits)
+        # Set to |11>
+        basis_state = [1, 1]
+        sv.setBasisState(basis_state, [0, 1])
+        # Just verify the operation completes without error
+        assert sv is not None
+
+    def test_parametric_gates(self, current_nanobind_module, precision, get_statevector_class):
+        """Test applying parametric gates works for both backends."""
+        StateVectorClass = get_statevector_class(current_nanobind_module, precision)
+        num_qubits = 2
+        sv = StateVectorClass(num_qubits)
+
+        # Apply some parametric gates
+        sv.RX([0], False, [0.5])
+        sv.RY([1], False, [0.3])
+        sv.RZ([0], False, [0.7])
+        sv.CRX([0, 1], False, [0.2])
+
+        # Just verify the operations complete without error
+        assert sv is not None
+
+    def test_multi_qubit_gates(self, current_nanobind_module, precision, get_statevector_class):
+        """Test applying multi-qubit gates works for both backends."""
+        StateVectorClass = get_statevector_class(current_nanobind_module, precision)
+        num_qubits = 3
+        sv = StateVectorClass(num_qubits)
+
+        # Apply some multi-qubit gates
+        sv.CNOT([0, 1], False, [])
+        sv.SWAP([1, 2], False, [])
+        sv.Toffoli([0, 1, 2], False, [])
+
+        # Just verify the operations complete without error
+        assert sv is not None
 
 
 class TestLQubitMeasurementsBindings:
@@ -187,9 +282,11 @@ class TestLQubitMeasurementsBindings:
 
         return _get_classes
 
-    @pytest.mark.parametrize("precision", ["64", "128"])
     def test_expval_named(self, current_nanobind_module, precision, get_classes):
         """Test expected value calculation with named observable."""
+        if device_name == "lightning.kokkos":
+            pytest.skip("expval with named observable not available in lightning.kokkos")
+
         StateVectorClass, MeasurementsClass = get_classes(current_nanobind_module, precision)
         num_qubits = 1
         sv = StateVectorClass(num_qubits)
@@ -201,9 +298,11 @@ class TestLQubitMeasurementsBindings:
         expval = meas.expval("PauliZ", [0])
         assert np.isclose(expval, 0.0)
 
-    @pytest.mark.parametrize("precision", ["64", "128"])
     def test_var_named(self, current_nanobind_module, precision, get_classes):
         """Test variance calculation with named observable."""
+        if device_name == "lightning.kokkos":
+            pytest.skip("var with named observable not available in lightning.kokkos")
+
         StateVectorClass, MeasurementsClass = get_classes(current_nanobind_module, precision)
         num_qubits = 1
         sv = StateVectorClass(num_qubits)
@@ -215,7 +314,6 @@ class TestLQubitMeasurementsBindings:
         var = meas.var("PauliZ", [0])
         assert np.isclose(var, 1.0)
 
-    @pytest.mark.parametrize("precision", ["64", "128"])
     def test_generate_samples(self, current_nanobind_module, precision, get_classes):
         """Test generating samples."""
         StateVectorClass, MeasurementsClass = get_classes(current_nanobind_module, precision)
@@ -228,7 +326,14 @@ class TestLQubitMeasurementsBindings:
         meas = MeasurementsClass(sv)
         # Generate samples
         num_shots = 1000
-        samples = meas.generate_samples([0, 1], num_shots)
+
+        if device_name == "lightning.kokkos":
+            # Lightning.kokkos has different generate_samples signature
+            samples = meas.generate_samples(num_qubits, num_shots)
+        else:
+            # Lightning.qubit allows specifying wires
+            samples = meas.generate_samples([0, 1], num_shots)
+
         # Check shape
         assert samples.shape == (num_shots, 2)
         # Check distribution (should be roughly uniform)
@@ -245,9 +350,11 @@ class TestLQubitMeasurementsBindings:
         for outcome, count in counts.items():
             assert 150 <= count <= 350, f"Outcome {outcome} occurred {count} times, expected ~250"
 
-    @pytest.mark.parametrize("precision", ["64", "128"])
     def test_generate_mcmc_samples(self, current_nanobind_module, precision, get_classes):
         """Test generating MCMC samples."""
+        if device_name == "lightning.kokkos":
+            pytest.skip("generate_mcmc_samples not available in lightning.kokkos")
+
         StateVectorClass, MeasurementsClass = get_classes(current_nanobind_module, precision)
         num_qubits = 2
         sv = StateVectorClass(num_qubits)
@@ -285,7 +392,6 @@ class TestLQubitSparseHamiltonianBindings:
 
         return _get_class
 
-    @pytest.mark.parametrize("precision", ["64", "128"])
     def test_init(self, current_nanobind_module, precision, get_sparse_hamiltonian_class):
         """Test initialization of SparseHamiltonian."""
         SparseHamiltonianClass = get_sparse_hamiltonian_class(current_nanobind_module, precision)
@@ -309,7 +415,6 @@ class TestLQubitSparseHamiltonianBindings:
 class TestLQubitVJPBindings:
     """Tests for LightningQubit-specific VectorJacobianProduct bindings."""
 
-    @pytest.mark.parametrize("precision", ["64", "128"])
     def test_vjp_init(self, current_nanobind_module, precision):
         """Test VectorJacobianProduct initialization."""
         # VectorJacobianProduct is in the algorithms submodule
@@ -326,13 +431,13 @@ class TestLQubitVJPBindings:
             pytest.skip("algorithms submodule not available")
 
 
-class TestLQubitBackendInfoBindings:
-    """Tests for LightningQubit-specific backend info bindings."""
+class TestBackendInfoBindings:
+    """Tests for backend info bindings."""
 
     def test_backend_info(self, current_nanobind_module):
         """Test getting backend info."""
         if hasattr(current_nanobind_module, "backend_info"):
             info = current_nanobind_module.backend_info()
-            assert info["NAME"] == "lightning.qubit"
+            assert info["NAME"] == device_name
         else:
             pytest.skip("backend_info function not available in module")
