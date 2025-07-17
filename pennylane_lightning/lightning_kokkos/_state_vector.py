@@ -216,7 +216,7 @@ class LightningKokkosStateVector(LightningBaseStateVector):
             state = state.toarray().flatten()
 
         if isinstance(state, self._qubit_state.__class__):
-            state_data = allocate_aligned_array(state.size, np.dtype(self.dtype), True)
+            state_data = allocate_aligned_array(state.size(), np.dtype(self.dtype), True)
             state.DeviceToHost(state_data)
             state = state_data
 
