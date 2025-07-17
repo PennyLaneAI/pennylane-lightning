@@ -28,8 +28,7 @@ namespace Pennylane::Gates {
 enum class GateOperation : uint32_t {
     BEGIN = 0,
     /* Single-qubit gates */
-    Identity = 0,
-    PauliX,
+    PauliX = 0,
     PauliY,
     PauliZ,
     Hadamard,
@@ -67,6 +66,7 @@ enum class GateOperation : uint32_t {
     DoubleExcitationMinus,
     DoubleExcitationPlus,
     /* Multi-qubit gates */
+    Identity,
     MultiRZ,
     GlobalPhase,
     PCPhase,

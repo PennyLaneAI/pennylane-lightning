@@ -361,9 +361,6 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
                         const std::vector<std::size_t> &wires,
                         bool inverse = false,
                         const std::vector<PrecisionT> &params = {}) {
-        if (opName == "Identity") {
-            return;
-        }
         auto *arr = BaseType::getData();
         DynamicDispatcher<PrecisionT>::getInstance().applyOperation(
             kernel, arr, BaseType::getNumQubits(), opName, wires, inverse,
@@ -441,9 +438,6 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
                         const std::vector<std::size_t> &wires, bool inverse,
                         const std::vector<PrecisionT> &params,
                         const std::vector<ComplexT, Alloc> &matrix) {
-        if (opName == "Identity") {
-            return;
-        }
         auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
         if (dispatcher.hasGateOp(opName)) {
             applyOperation(opName, wires, inverse, params);
@@ -477,9 +471,6 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
         PL_ABORT_IF_NOT(controlled_wires.size() == controlled_values.size(),
                         "`controlled_wires` must have the same size as "
                         "`controlled_values`.");
-        if (opName == "Identity") {
-            return;
-        }
         if (!controlled_wires.empty()) {
             applyOperation(opName, controlled_wires, controlled_values, wires,
                            inverse, params);
