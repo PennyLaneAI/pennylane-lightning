@@ -42,7 +42,7 @@ if device_name == "lightning.tensor":
 
 kokkos_args = [None]
 if device_name == "lightning.kokkos":
-    from pennylane_lightning.lightning_kokkos_ops import InitializationSettings
+    from pennylane_lightning.lightning_kokkos_nb import InitializationSettings
 
     kokkos_args += [InitializationSettings().set_num_threads(2)]
 
