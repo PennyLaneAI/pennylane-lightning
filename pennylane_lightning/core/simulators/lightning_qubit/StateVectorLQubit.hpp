@@ -413,9 +413,6 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
         PL_ABORT_IF_NOT(controlled_wires.size() == controlled_values.size(),
                         "`controlled_wires` must have the same size as "
                         "`controlled_values`.");
-        if (opName == "Identity") {
-            return;
-        }
         auto *arr = BaseType::getData();
         const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
         const auto gate_op = dispatcher.strToControlledGateOp(opName);
