@@ -400,55 +400,12 @@ void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
             },
             "Synchronize data from the Kokkos device to host.")
         .def(
-            "DeviceToHost",
-            [](StateVectorT &device_sv, nb::object host_sv) {
-                // Convert to numpy array first for flexible input handling
-                auto np_module = nb::module_::import_("numpy");
-                auto asarray = np_module.attr("asarray");
-                auto converted = asarray(
-                    host_sv,
-                    nb::arg("dtype") = nb::dtype<std::complex<PrecisionT>>(),
-                    nb::arg("order") = "C");
-                auto arr = nb::cast<arr_c>(converted);
-                auto *data_ptr =
-                    PL_reinterpret_cast<ComplexT>(arr.data());
-                if (arr.size()) {
-                    device_sv.DeviceToHost(data_ptr, arr.size());
-                }
-            },
-            "Synchronize data from the Kokkos device to host (flexible input).")
-        .def(
             "HostToDevice",
-            [](StateVectorT &device_sv, nb::object host_sv) {
-                // Try to handle as regular numpy array first
-                try {
-                    auto arr = nb::cast<arr_c>(host_sv);
-                    auto *data_ptr = PL_reinterpret_cast<ComplexT>(arr.data());
-                    if (arr.size()) {
-                        device_sv.HostToDevice(data_ptr, arr.size());
-                    }
-                    return;
-                } catch (const nb::cast_error &) {
-                    // Fall through to flexible handling
-                }
-
-                // Handle custom wrapper or other array-like objects
-                auto np_module = nb::module_::import_("numpy");
-                auto asarray = np_module.attr("asarray");
-                auto converted = asarray(
-                    host_sv,
-                    nb::arg("dtype") = nb::dtype<std::complex<PrecisionT>>(),
-                    nb::arg("order") = "C");
-
-                // Get raw pointer using ctypes
-                auto ctypes = nb::module_::import_("ctypes");
-                auto data_ptr_int = converted.attr("ctypes").attr("data");
-                auto data_address = nb::cast<std::uintptr_t>(data_ptr_int);
-                auto *data_ptr = reinterpret_cast<ComplexT *>(data_address);
-
-                auto size = nb::cast<std::size_t>(converted.attr("size"));
-                if (size) {
-                    device_sv.HostToDevice(data_ptr, size);
+            [](StateVectorT &device_sv, const arr_c &host_sv) {
+                auto *data_ptr = const_cast<ComplexT *>(
+                    PL_reinterpret_cast<ComplexT>(host_sv.data()));
+                if (host_sv.size()) {
+                    device_sv.HostToDevice(data_ptr, host_sv.size());
                 }
             },
             "Synchronize data from the host device to Kokkos.");

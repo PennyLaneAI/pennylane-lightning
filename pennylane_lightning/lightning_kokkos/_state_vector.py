@@ -220,6 +220,10 @@ class LightningKokkosStateVector(LightningBaseStateVector):
             state.DeviceToHost(state_data)
             state = state_data
 
+        # Convert PennyLane tensor to NumPy array if needed
+        if hasattr(state, "numpy"):
+            state = state.numpy()
+
         if len(device_wires) == self._num_wires and Wires(sorted(device_wires)) == device_wires:
             # Initialize the entire device state with the input state
             if self._mpi:
