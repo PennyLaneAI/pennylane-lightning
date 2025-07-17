@@ -411,7 +411,7 @@ void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
                     nb::arg("order") = "C");
                 auto arr = nb::cast<arr_c>(converted);
                 auto *data_ptr =
-                    PL_reinterpret_cast<const ComplexT>(arr.data());
+                    PL_reinterpret_cast<ComplexT>(arr.data());
                 if (arr.size()) {
                     device_sv.DeviceToHost(data_ptr, arr.size());
                 }
