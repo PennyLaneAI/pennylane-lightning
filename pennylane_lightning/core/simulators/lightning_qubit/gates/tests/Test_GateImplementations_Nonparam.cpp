@@ -82,7 +82,7 @@ using namespace Pennylane::Util;
     static_assert(true, "Require semicolon")
 
 /*******************************************************************************
- * Single-qubit gates
+ * Identity
  ******************************************************************************/
 template <typename PrecisionT, class GateImplementation>
 void testApplyIdentity() {
@@ -96,6 +96,8 @@ void testApplyIdentity() {
                                           false);
         CHECK(std::equal(st_pre.begin(), st_pre.end(), st_post.begin()));
     }
+
+    // Apply Identity on 1 qubit
     for (std::size_t index = 0; index < num_qubits; index++) {
         auto st_pre = createZeroState<ComplexT>(num_qubits);
         auto st_post = createZeroState<ComplexT>(num_qubits);
@@ -108,6 +110,8 @@ void testApplyIdentity() {
                                           false);
         CHECK(std::equal(st_pre.begin(), st_pre.end(), st_post.begin()));
     }
+    
+    // Apply Identity on 2 qubits
     for (std::size_t index = 0; index < (num_qubits - 1); index++) {
         auto st_pre = createZeroState<ComplexT>(num_qubits);
         auto st_post = createZeroState<ComplexT>(num_qubits);
@@ -123,6 +127,9 @@ void testApplyIdentity() {
 }
 PENNYLANE_RUN_TEST(Identity);
 
+/*******************************************************************************
+ * Single-qubit gates
+ ******************************************************************************/
 template <typename PrecisionT, class GateImplementation>
 void testApplyPauliX() {
     using ComplexT = std::complex<PrecisionT>;
