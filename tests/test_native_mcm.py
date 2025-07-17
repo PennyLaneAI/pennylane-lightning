@@ -43,6 +43,7 @@ def get_device(wires, **kwargs):
 @pytest.fixture(
     scope="function",
     params=[
+        "device",
         "deferred",
         "one-shot",
         "tree-traversal",
@@ -258,6 +259,10 @@ class TestSupportedConfigurationsMCM:
             spy_deffered.assert_not_called()
             spy_tree_traversal.assert_not_called()
         elif mcm_method == "tree-traversal":
+            spy_tree_traversal.assert_called_once()
+            spy_deffered.assert_not_called()
+            spy_one_shot.assert_not_called()
+        elif mcm_method == "device":
             spy_tree_traversal.assert_called_once()
             spy_deffered.assert_not_called()
             spy_one_shot.assert_not_called()

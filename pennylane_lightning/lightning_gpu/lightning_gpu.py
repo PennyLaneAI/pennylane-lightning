@@ -29,7 +29,7 @@ import numpy as np
 import pennylane as qml
 from numpy.random import BitGenerator, Generator, SeedSequence
 from numpy.typing import ArrayLike
-from pennylane.devices import DefaultExecutionConfig, ExecutionConfig
+from pennylane.devices import DefaultExecutionConfig, ExecutionConfig, MCMConfig
 from pennylane.devices.capabilities import OperatorProperties
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
 from pennylane.devices.preprocess import (
@@ -349,33 +349,7 @@ class LightningGPU(LightningBase):
 
         new_device_options.update(mcmc_default)
 
-        mcm_supported_methods = (
-            ("deferred", "tree-traversal", "one-shot", None)
-            if not qml.capture.enabled()
-            else ("deferred", "single-branch-statistics", None)
-        )
-
-        mcm_config = config.mcm_config
-
-        if (mcm_method := mcm_config.mcm_method) not in mcm_supported_methods:
-            raise DeviceError(f"mcm_method='{mcm_method}' is not supported with lightning.gpu.")
-
-        if qml.capture.enabled():
-
-            mcm_updated_values = {}
-
-            if mcm_method == "single-branch-statistics" and mcm_config.postselect_mode is not None:
-                warn(
-                    "Setting 'postselect_mode' is not supported with mcm_method='single-branch-"
-                    "statistics'. 'postselect_mode' will be ignored.",
-                    UserWarning,
-                )
-                mcm_updated_values["postselect_mode"] = None
-            elif mcm_method is None:
-                mcm_updated_values["mcm_method"] = "deferred"
-
-            updated_values["mcm_config"] = replace(mcm_config, **mcm_updated_values)
-
+        updated_values["mcm_config"] = _resolve_mcm_method(config.mcm_config)
         return replace(config, **updated_values, device_options=new_device_options)
 
     def preprocess(self, execution_config: ExecutionConfig = DefaultExecutionConfig):
@@ -490,6 +464,40 @@ class LightningGPU(LightningBase):
         """
 
         return LightningBase.get_c_interface_impl("LightningGPUSimulator", "lightning_gpu")
+
+
+def _resolve_mcm_method(mcm_config: MCMConfig):
+    """Resolve the mcm config for the LightningGPU device."""
+
+    mcm_supported_methods = (
+        ("device", "deferred", "tree-traversal", "one-shot", None)
+        if not qml.capture.enabled()
+        else ("deferred", "single-branch-statistics", None)
+    )
+
+    if (mcm_method := mcm_config.mcm_method) not in mcm_supported_methods:
+        raise DeviceError(f"mcm_method='{mcm_method}' is not supported with lightning.gpu.")
+
+    if mcm_config.mcm_method == "device":
+        mcm_config = replace(mcm_config, mcm_method="tree-traversal")
+
+    if qml.capture.enabled():
+
+        mcm_updated_values = {}
+
+        if mcm_method == "single-branch-statistics" and mcm_config.postselect_mode is not None:
+            warn(
+                "Setting 'postselect_mode' is not supported with mcm_method='single-branch-"
+                "statistics'. 'postselect_mode' will be ignored.",
+                UserWarning,
+            )
+            mcm_updated_values["postselect_mode"] = None
+        elif mcm_method is None:
+            mcm_updated_values["mcm_method"] = "deferred"
+
+        mcm_config = replace(mcm_config, **mcm_updated_values)
+
+    return mcm_config
 
 
 _supports_operation = LightningGPU.capabilities.supports_operation
