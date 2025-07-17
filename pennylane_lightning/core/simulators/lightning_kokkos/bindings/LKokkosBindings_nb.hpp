@@ -410,7 +410,8 @@ void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
                     nb::arg("dtype") = nb::dtype<std::complex<PrecisionT>>(),
                     nb::arg("order") = "C");
                 auto arr = nb::cast<arr_c>(converted);
-                auto *data_ptr = PL_reinterpret_cast<ComplexT>(arr.data());
+                auto *data_ptr =
+                    PL_reinterpret_cast<const ComplexT>(arr.data());
                 if (arr.size()) {
                     device_sv.DeviceToHost(data_ptr, arr.size());
                 }
@@ -422,8 +423,7 @@ void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
                 // Try to handle as regular numpy array first
                 try {
                     auto arr = nb::cast<arr_c>(host_sv);
-                    auto *data_ptr = PL_reinterpret_cast<ComplexT>(
-                        const_cast<ComplexT *>(arr.data()));
+                    auto *data_ptr = PL_reinterpret_cast<ComplexT>(arr.data());
                     if (arr.size()) {
                         device_sv.HostToDevice(data_ptr, arr.size());
                     }
