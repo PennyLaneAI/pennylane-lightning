@@ -14,6 +14,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Update JAX version from 0.6.0 to 0.6.2, keeping the same version as PennyLane and Catalyst
+  [(#1200)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1200)
+
 - Remove FIXMEs for pinning jax & catalyst 0.11.0 for CI testing stable version.
   [(#1211)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1211)
 
@@ -148,10 +151,6 @@ Jake Zaia
 
 - Merged the `v0.41.0-rc` branch to the `master` and bumped the version.
   [(#1132)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1132)
-
-- Update JAX version from 0.6.0 to 0.6.2, keeping the same version as PennyLane and Catalyst
-  [(#1200)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1200)
-
 
 <h3>Contributors ✍️</h3>
 
