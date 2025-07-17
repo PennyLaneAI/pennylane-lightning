@@ -73,8 +73,6 @@ class LightningBase(Device):
     """
 
     # pylint: disable=too-many-instance-attributes
-    pennylane_requires = ">=0.41"
-    version = __version__
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
