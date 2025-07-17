@@ -444,7 +444,7 @@ void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
                 auto ctypes = nb::module_::import_("ctypes");
                 auto data_ptr_int = converted.attr("ctypes").attr("data");
                 auto data_address = nb::cast<std::uintptr_t>(data_ptr_int);
-                auto *data_ptr = PL_reinterpret_cast<ComplexT>(data_address);
+                auto *data_ptr = reinterpret_cast<ComplexT *>(data_address);
 
                 auto size = nb::cast<std::size_t>(converted.attr("size"));
                 if (size) {
