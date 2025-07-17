@@ -110,7 +110,7 @@ void testApplyIdentity() {
                                           false);
         CHECK(std::equal(st_pre.begin(), st_pre.end(), st_post.begin()));
     }
-    
+
     // Apply Identity on 2 qubits
     for (std::size_t index = 0; index < (num_qubits - 1); index++) {
         auto st_pre = createZeroState<ComplexT>(num_qubits);
