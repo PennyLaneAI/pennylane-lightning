@@ -17,7 +17,7 @@ import numpy as np
 import pennylane as qml
 import pytest
 from conftest import PHI, THETA, LightningDevice, device_name  # tested device
-from pennylane.devices import DefaultExecutionConfig, DefaultQubit, ExecutionConfig
+from pennylane.devices import DefaultQubit, ExecutionConfig
 from pennylane.tape import QuantumScript
 
 if device_name == "lightning.tensor":

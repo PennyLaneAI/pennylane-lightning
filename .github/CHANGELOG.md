@@ -14,6 +14,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Replace `DefaultExecutionConfig` with `ExecutionConfig()` across the Lightning Python device APIs.
+  [(#1185)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1185)
+
 - Update JAX version from 0.6.0 to 0.6.2, keeping the same version as PennyLane and Catalyst
   [(#1200)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1200)
 
