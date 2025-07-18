@@ -17,7 +17,7 @@ Unit tests for the serialization helper functions.
 import numpy as np
 import pennylane as qml
 import pytest
-from conftest import LightningDevice, device_name
+from conftest import LightningDevice, compare_serialized_ops, device_name
 from pennylane.exceptions import DeviceError
 
 from pennylane_lightning.lightning_base._serialize import (
@@ -60,7 +60,7 @@ elif device_name == "lightning.tensor":
         allow_module_level=True,
     )
 else:
-    from pennylane_lightning.lightning_qubit_ops.observables import (
+    from pennylane_lightning.lightning_qubit_nb.observables import (
         HamiltonianC64,
         HamiltonianC128,
         HermitianObsC64,
@@ -169,7 +169,7 @@ class TestSerializeObs:
         s, _ = QuantumScriptSerializer(device_name, use_csingle).serialize_observables(
             tape, wires_map
         )
-        assert s == s_expected
+        assert compare_serialized_ops(s, s_expected)
 
     @pytest.mark.parametrize("use_csingle", [True, False])
     @pytest.mark.parametrize("wires_map", [wires_dict, None])
@@ -614,6 +614,8 @@ class TestSerializeOps:
             qml.RY(0.6, wires=1)
             qml.CNOT(wires=[0, 1])
 
+        mat = np.array([])
+
         s = QuantumScriptSerializer(device_name).serialize_ops(tape, wires_map)
         s_expected = (
             (
@@ -621,13 +623,13 @@ class TestSerializeOps:
                 [np.array([0.4]), np.array([0.6]), []],
                 [[0], [1], [0, 1]],
                 [False, False, False],
-                [[], [], []],
+                [mat, mat, mat],
                 [[], [], []],
                 [[], [], []],
             ),
             False,
         )
-        assert s == s_expected
+        assert compare_serialized_ops(s, s_expected)
 
     @pytest.mark.parametrize("wires_map", [wires_dict, None])
     def test_Rot_in_circuit(self, wires_map):
@@ -637,6 +639,7 @@ class TestSerializeOps:
             qml.Rot(0.1, 0.2, 0.3, wires=0)
 
         tape = qml.tape.QuantumScript.from_queue(q)
+        mat = np.array([])
         s = QuantumScriptSerializer(device_name).serialize_ops(tape, wires_map)
         s_expected = (
             (
@@ -644,13 +647,13 @@ class TestSerializeOps:
                 [np.array([0.1]), np.array([0.2]), np.array([0.3])],
                 [[0], [0], [0]],
                 [False, False, False],
-                [[], [], []],
+                [mat, mat, mat],
                 [[], [], []],
                 [[], [], []],
             ),
             False,
         )
-        assert s == s_expected
+        assert compare_serialized_ops(s, s_expected)
 
     @pytest.mark.parametrize("wires_map", [wires_dict, None])
     def test_basic_circuit_not_implemented_ctrl_ops(self, wires_map):
@@ -661,6 +664,7 @@ class TestSerializeOps:
             qml.RY(0.6, wires=1)
             qml.ctrl(ops, [4, 5])
 
+        mat = np.array([])
         s = QuantumScriptSerializer(device_name).serialize_ops(tape, wires_map)
         s_expected = (
             (
@@ -668,18 +672,12 @@ class TestSerializeOps:
                 [np.array([0.4]), np.array([0.6]), [0.0]],
                 [[0], [1], list(ops.wires)],
                 [False, False, False],
-                [[], [], [qml.matrix(ops)]],
+                [mat, mat, np.array([qml.matrix(ops)])],
                 [[], [], [4, 5]],
             ),
             False,
         )
-        assert s[0][0] == s_expected[0][0]
-        assert s[0][1] == s_expected[0][1]
-        assert s[0][2] == s_expected[0][2]
-        assert s[0][3] == s_expected[0][3]
-        assert all(np.allclose(s0, s1) for s0, s1 in zip(s[0][4], s_expected[0][4]))
-        assert s[0][5] == s_expected[0][5]
-        assert s[1] == s_expected[1]
+        assert compare_serialized_ops(s, s_expected)
 
     @pytest.mark.parametrize("wires_map", [wires_dict, None])
     def test_multicontrolledx(self, wires_map):
@@ -689,6 +687,7 @@ class TestSerializeOps:
             qml.RY(0.6, wires=1)
             qml.ctrl(qml.PauliX(wires=0), [1, 2, 3], control_values=[True, False, False])
 
+        mat = np.array([])
         s = QuantumScriptSerializer(device_name).serialize_ops(tape, wires_map)
         s_expected = (
             (
@@ -696,13 +695,13 @@ class TestSerializeOps:
                 [np.array([0.4]), np.array([0.6]), []],
                 [[0], [1], [0]],
                 [False, False, False],
-                [[], [], []],
+                [mat, mat, mat],
                 [[], [], [1, 2, 3]],
                 [[], [], [True, False, False]],
             ),
             False,
         )
-        assert s == s_expected
+        assert compare_serialized_ops(s, s_expected)
 
     @pytest.mark.parametrize("wires_map", [wires_dict, None])
     def test_skips_prep_circuit(self, wires_map):
@@ -715,6 +714,7 @@ class TestSerializeOps:
             qml.RY(0.6, wires=1)
             qml.CNOT(wires=[0, 1])
 
+        mat = np.array([])
         s = QuantumScriptSerializer(device_name).serialize_ops(tape, wires_map)
         s_expected = (
             (
@@ -722,13 +722,13 @@ class TestSerializeOps:
                 [[0.4], [0.6], []],
                 [[0], [1], [0, 1]],
                 [False, False, False],
-                [[], [], []],
+                [mat, mat, mat],
                 [[], [], []],
                 [[], [], []],
             ),
             True,
         )
-        assert s == s_expected
+        assert compare_serialized_ops(s, s_expected)
 
     @pytest.mark.parametrize("wires_map", [wires_dict, None])
     def test_unsupported_kernel_circuit(self, wires_map):
@@ -748,8 +748,7 @@ class TestSerializeOps:
             ),
             False,
         )
-        assert s[0][0] == s_expected[0][0]
-        assert s[0][1] == s_expected[0][1]
+        assert compare_serialized_ops(s, s_expected)
 
     def test_custom_wires_circuit(self):
         """Test expected serialization for a simple circuit with custom wire labels"""
@@ -763,6 +762,7 @@ class TestSerializeOps:
             qml.adjoint(qml.SingleExcitationMinus(0.5, wires=["a", 3.2]), lazy=False)
             qml.adjoint(qml.SingleExcitationMinus(0.5, wires=["a", 3.2]), lazy=True)
 
+        mat = np.array([])
         s = QuantumScriptSerializer(device_name).serialize_ops(tape, wires_dict)
         s_expected = (
             (
@@ -778,13 +778,13 @@ class TestSerializeOps:
                 [[0.4], [0.6], [], [0.5], [0.4], [-0.5], [0.5]],
                 [[0], [1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1]],
                 [False, False, False, False, False, False, True],
-                [[], [], [], [], [], [], []],
+                [mat, mat, mat, mat, mat, mat, mat],
                 [[], [], [], [], [], [], []],
                 [[], [], [], [], [], [], []],
             ),
             False,
         )
-        assert s == s_expected
+        assert compare_serialized_ops(s, s_expected)
 
     @pytest.mark.parametrize("wires_map", [wires_dict, None])
     def test_ctrl_inverse(self, wires_map):
@@ -799,6 +799,8 @@ class TestSerializeOps:
             qml.ctrl(qml.adjoint(ops), [4, 5])
             qml.adjoint(qml.ctrl(ops, [4, 5]))
             qml.adjoint(qml.ctrl(qml.adjoint(ops), [4, 5]))
+
+        mat = np.array([])
 
         s = QuantumScriptSerializer(device_name).serialize_ops(tape, wires_map)
         s_expected = (
@@ -817,26 +819,20 @@ class TestSerializeOps:
                 [[0], [0], [0], [0], [0], list(ops.wires), list(ops.wires), list(ops.wires)],
                 [False, False, True, True, False, False, True, True],
                 [
-                    [],
-                    [],
-                    [],
-                    [],
-                    [],
-                    [qml.matrix(qml.adjoint(ops))],
-                    [qml.matrix(ops)],
-                    [qml.matrix(qml.adjoint(ops))],
+                    mat,
+                    mat,
+                    mat,
+                    mat,
+                    mat,
+                    np.array([qml.matrix(qml.adjoint(ops))]),
+                    np.array([qml.matrix(ops)]),
+                    np.array([qml.matrix(qml.adjoint(ops))]),
                 ],
                 [[2, 3], [2, 3], [2, 3], [2, 3], [2, 3], [4, 5], [4, 5], [4, 5]],
             ),
             False,
         )
-        assert s[0][0] == s_expected[0][0]
-        assert s[0][1] == s_expected[0][1]
-        assert s[0][2] == s_expected[0][2]
-        assert s[0][3] == s_expected[0][3]
-        assert all(np.allclose(s0, s1) for s0, s1 in zip(s[0][4], s_expected[0][4]))
-        assert s[0][5] == s_expected[0][5]
-        assert s[1] == s_expected[1]
+        assert compare_serialized_ops(s, s_expected)
 
     @pytest.mark.parametrize("wires_map", [wires_dict, None])
     def test_ctrl_qubitunitary_inverse(self, wires_map):
@@ -857,22 +853,17 @@ class TestSerializeOps:
                 [list(op.wires), list(op.wires), list(op.wires), list(op.wires)],
                 [False, True, False, True],
                 [
-                    [qml.matrix(op)],
-                    [qml.matrix(op)],
-                    [qml.matrix(qml.adjoint(op))],
-                    [qml.matrix(qml.adjoint(op))],
+                    np.array([qml.matrix(op)]),
+                    np.array([qml.matrix(op)]),
+                    np.array([qml.matrix(qml.adjoint(op))]),
+                    np.array([qml.matrix(qml.adjoint(op))]),
                 ],
                 [[4, 5], [4, 5], [4, 5], [4, 5]],
             ),
             False,
         )
-        assert s[0][0] == s_expected[0][0]
-        assert s[0][1] == s_expected[0][1]
-        assert s[0][2] == s_expected[0][2]
-        assert s[0][3] == s_expected[0][3]
-        assert all(np.allclose(s0, s1) for s0, s1 in zip(s[0][4], s_expected[0][4]))
-        assert s[0][5] == s_expected[0][5]
-        assert s[1] == s_expected[1]
+
+        assert compare_serialized_ops(s, s_expected)
 
     @pytest.mark.parametrize("wires_map", [wires_dict, None])
     def test_inverse(self, wires_map):
@@ -894,20 +885,14 @@ class TestSerializeOps:
                 [[-0.5], [0.5], [0.0]],
                 [[0, 1], [0, 1], list(range(4))],
                 [False, True, True],
-                [[], [], [mat]],
+                [np.array([]), np.array([]), np.array([mat])],
                 [[], [], []],
                 [[], [], []],
             ),
             False,
         )
 
-        assert s[0][0] == s_expected[0][0]
-        assert s[0][1] == s_expected[0][1]
-        assert s[0][2] == s_expected[0][2]
-        assert s[0][3] == s_expected[0][3]
-        assert all(np.allclose(s0, s1) for s0, s1 in zip(s[0][4], s_expected[0][4]))
-        assert s[0][5] == s_expected[0][5]
-        assert s[1] == s_expected[1]
+        assert compare_serialized_ops(s, s_expected)
 
     @pytest.mark.parametrize("wires_map", [wires_dict, None])
     @pytest.mark.parametrize("C", [True, False])
@@ -926,6 +911,7 @@ class TestSerializeOps:
         s = QuantumScriptSerializer(device_name).serialize_ops(tape, wires_map)
 
         dtype = np.complex64 if C else np.complex128
+        mat = np.array([], dtype=dtype)
         s_expected = (
             (
                 [
@@ -942,25 +928,19 @@ class TestSerializeOps:
                 [[0], [1], [0, 1], [0, 1], [0, 1, 2], [3, 2, 1, 0], [0, 1, 2, 3], [0, 1, 2, 3]],
                 [False, False, False, False, False, False, False, False],
                 [
-                    [],
-                    [],
-                    [],
-                    qml.matrix(qml.QubitUnitary(np.eye(4, dtype=dtype), wires=[0, 1])),
-                    qml.matrix(qml.templates.QFT(wires=[0, 1, 2])),
-                    [],
-                    [],
-                    [],
+                    mat,
+                    mat,
+                    mat,
+                    np.array([qml.matrix(qml.QubitUnitary(np.eye(4, dtype=dtype), wires=[0, 1]))]),
+                    np.array([qml.matrix(qml.templates.QFT(wires=[0, 1, 2]))]),
+                    mat,
+                    mat,
+                    mat,
                 ],
             ),
             False,
         )
-        assert s[0][0] == s_expected[0][0]
-        assert s[0][1] == s_expected[0][1]
-        assert s[0][2] == s_expected[0][2]
-        assert s[0][3] == s_expected[0][3]
-        assert s[1] == s_expected[1]
-
-        assert all(np.allclose(s1, s2) for s1, s2 in zip(s[0][4], s_expected[0][4]))
+        assert compare_serialized_ops(s, s_expected)
 
 
 def check_global_phase_diagonal(par, wires, targets, controls, control_values):

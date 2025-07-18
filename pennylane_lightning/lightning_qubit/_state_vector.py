@@ -17,7 +17,7 @@ Class implementation for lightning_qubit state-vector manipulation.
 from warnings import warn
 
 try:
-    from pennylane_lightning.lightning_qubit_ops import (
+    from pennylane_lightning.lightning_qubit_nb import (
         StateVectorC64,
         StateVectorC128,
         allocate_aligned_array,
@@ -66,7 +66,7 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
         self._device_name = "lightning.qubit"
 
         # Initialize the state vector
-        self._qubit_state = self._state_dtype()(self._num_wires)
+        self._qubit_state = self._state_dtype()(num_wires)
 
     @property
     def state(self):
@@ -112,15 +112,19 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
         if sp.sparse.issparse(state):
             state = state.toarray().flatten()
         elif isinstance(state, self._qubit_state.__class__):
-            state_data = allocate_aligned_array(state.size, np.dtype(self.dtype), True)
+            state_data = allocate_aligned_array(state.size(), np.dtype(self.dtype), True)
             state.getState(state_data)
             state = state_data
+
+        # Convert PennyLane tensor to NumPy array if needed
+        if hasattr(state, "numpy"):
+            state = state.numpy()
 
         if len(device_wires) == self._num_wires and Wires(sorted(device_wires)) == device_wires:
             # Initialize the entire device state with the input state
             output_shape = (2,) * self._num_wires
             state = np.reshape(state, output_shape).ravel(order="C")
-            self._qubit_state.UpdateData(state)
+            self._qubit_state.updateData(state)
             return
 
         self._qubit_state.setStateVector(state, list(device_wires))
