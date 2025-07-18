@@ -20,6 +20,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Update JAX version from 0.6.0 to 0.6.2, keeping the same version as PennyLane and Catalyst
+  [(#1200)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1200)
+
 - Remove FIXMEs for pinning jax & catalyst 0.11.0 for CI testing stable version.
   [(#1211)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1211)
 
