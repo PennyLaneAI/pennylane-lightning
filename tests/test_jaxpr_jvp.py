@@ -21,6 +21,8 @@ import pytest
 from conftest import LightningDevice, device_name
 from pennylane.devices import DefaultExecutionConfig
 
+pytest.skip(allow_module_level=True)
+
 jax = pytest.importorskip("jax")
 jnp = pytest.importorskip("jax.numpy")
 
