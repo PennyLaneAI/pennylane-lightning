@@ -22,10 +22,9 @@ import numpy as np
 import pennylane as qml
 import pytest
 from conftest import LightningDevice as ld
-from conftest import LightningException, device_name, lightning_ops, validate_measurements
+from conftest import device_name, lightning_ops, validate_measurements
 from pennylane.exceptions import DeviceError, QuantumFunctionError
 from pennylane.measurements import ExpectationMP, Shots, VarianceMP
-from pennylane.wires import Wires
 
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
@@ -64,7 +63,7 @@ class TestProbs:
             return qml.probs(wires=[0, 1])
 
         if device_name == "lightning.tensor" and wire == 1 and dev.num_wires is None:
-            with pytest.raises(LightningException, match="Invalid wire indices order"):
+            with pytest.raises(RuntimeError, match="Invalid wire indices order"):
                 # With dynamic wires, in this case since wires appear in this order 1, 0
                 # The wires will map 1 -> 0 and 0 -> 1. Therefore the wires in the probs
                 # measurement will be [1, 0] which is out of order and invalid for LT.
