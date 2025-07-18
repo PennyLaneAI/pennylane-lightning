@@ -15,7 +15,7 @@
 <h3>Internal changes ⚙️</h3>
 
 - Pin JAX version to 0.6.0 for CI tests for stable versions of Pennylane and Lightning.
-  [(#12XX)](https://github.com/PennyLaneAI/pennylane-lightning/pull/12XX)
+  [(#1214)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1214)
 
 - Update JAX version from 0.6.0 to 0.6.2, keeping the same version as PennyLane and Catalyst
   [(#1200)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1200)
