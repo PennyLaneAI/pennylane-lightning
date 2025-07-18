@@ -43,8 +43,6 @@ class TestJAXCompatibility:
             class_name = f"StateVectorC{precision}"
             if hasattr(module, class_name):
                 StateVectorClass = getattr(module, class_name)
-                if not hasattr(StateVectorClass, "updateData"):
-                    pytest.skip(f"updateData method not available.")
                 return StateVectorClass
             pytest.skip(f"Class {class_name} not available in module {module}")
 
@@ -254,6 +252,10 @@ class TestJAXCompatibility:
         # Skip if module doesn't have StateVectorClass, or if StateVectorClass doesn't have updateData
         StateVectorClass, dtype = get_statevector_class_and_precision
 
+        # Check if it has updateData method
+        if not hasattr(StateVectorClass, "updateData"):
+            pytest.skip(f"updateData method not available.")
+
         num_qubits = 1
         dim = 2**num_qubits
 
@@ -286,6 +288,10 @@ class TestJAXCompatibility:
 
         # Check if the module has a Measurements class and get it.
         MeasurementsClass = get_measurements_class(dtype)
+
+        # Check if it has updateData method
+        if not hasattr(StateVectorClass, "updateData"):
+            pytest.skip(f"updateData method not available.")
 
         num_qubits = 1
         dim = 2**num_qubits
@@ -332,6 +338,10 @@ class TestJAXCompatibility:
 
         # Check if the module has an observables submodule with NamedObs class
         NamedObsClass = get_named_obs_class(dtype)
+
+        # Check if it has updateData method
+        if not hasattr(StateVectorClass, "updateData"):
+            pytest.skip(f"updateData method not available.")
 
         num_qubits = 1
         dim = 2**num_qubits

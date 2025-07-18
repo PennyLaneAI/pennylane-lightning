@@ -188,6 +188,19 @@ void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
     // Register sparse matrix operators.
     registerSparseMatrixOperators<StateVectorT>(pyclass);
 
+    // Add updateData method for LQubit
+    pyclass.def(
+        "updateData",
+        [](StateVectorT &sv, const nb::ndarray<const std::complex<PrecisionT>,
+                                               nb::c_contig> &data) {
+            if (data.ndim() != 1) {
+                throw std::invalid_argument("Array must be 1-dimensional");
+            }
+            std::size_t size = data.shape(0);
+            sv.updateData(data.data(), size);
+        },
+        "Update the state vector data from an array.", nb::arg("data"));
+
     // Add Pauli rotation.
     pyclass.def(
         "applyPauliRot",
