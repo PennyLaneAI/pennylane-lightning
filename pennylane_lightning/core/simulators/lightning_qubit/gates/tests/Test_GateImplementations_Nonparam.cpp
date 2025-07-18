@@ -97,6 +97,19 @@ void testApplyIdentity() {
         CHECK(std::equal(st_pre.begin(), st_pre.end(), st_post.begin()));
     }
 
+    // Apply Identity on 0 qubit
+    for (std::size_t index = 0; index < num_qubits; index++) {
+        auto st_pre = createZeroState<ComplexT>(num_qubits);
+        auto st_post = createZeroState<ComplexT>(num_qubits);
+        GateImplementation::applyHadamard(st_pre.data(), num_qubits, {index},
+                                          false);
+        GateImplementation::applyHadamard(st_post.data(), num_qubits, {index},
+                                          false);
+
+        GateImplementation::applyIdentity(st_pre.data(), num_qubits, {}, false);
+        CHECK(std::equal(st_pre.begin(), st_pre.end(), st_post.begin()));
+    }
+
     // Apply Identity on 1 qubit
     for (std::size_t index = 0; index < num_qubits; index++) {
         auto st_pre = createZeroState<ComplexT>(num_qubits);

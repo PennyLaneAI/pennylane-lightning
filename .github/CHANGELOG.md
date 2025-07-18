@@ -14,7 +14,7 @@
 
 <h3>Internal changes ⚙️</h3>
 
-- Skip Identity operation in Lightning Qubit and removed assert for applying Identity gate with more than 1 wire.
+- Skip Identity operation in Lightning Qubit and removed assert for applying Identity gate not equal to 1 wire.
   [(#1212)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1212)
 
 - Update JAX version from 0.6.0 to 0.6.2, keeping the same version as PennyLane and Catalyst
