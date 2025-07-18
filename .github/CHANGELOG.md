@@ -14,6 +14,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Use `pennylane.exceptions` for custom pennylane exceptions.
+  [(#1215)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1215)
+
 - Update JAX version from 0.6.0 to 0.6.2, keeping the same version as PennyLane and Catalyst
   [(#1200)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1200)
 
@@ -31,7 +34,8 @@
 This release contains contributions from (in alphabetical order):
 
 Luis Alfredo Nuñez Meneses,
-Jake Zaia
+Andrija Paurevic,
+Jake Zaia.
 
 ---
 
