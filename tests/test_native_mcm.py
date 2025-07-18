@@ -128,7 +128,7 @@ class TestUnsupportedConfigurationsMCM:
         )
 
         with pytest.raises(
-            qml.wires.WireError,
+            qml.exceptions.WireError,
             match=f"on {device_name} as they contain wires not found on the device: {{1}}",
         ):
             circuit(1.33)
