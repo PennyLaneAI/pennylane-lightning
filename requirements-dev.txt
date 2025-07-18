@@ -17,7 +17,6 @@ pytest-rng
 pytest-xdist>=2.5.0
 pytest-split
 flaky>=3.7.0 # For pl-device-test
-jax[cpu]==0.6.2; (platform_machine != "x86_64" or platform_system != "Darwin")
 
 # Formatting / Linting Dependencies
 pre-commit>=2.19.0
