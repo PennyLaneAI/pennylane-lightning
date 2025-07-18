@@ -87,6 +87,14 @@ GateImplementationsLM::applyNCMultiQubitSparseOp<double, std::size_t>(
     const std::vector<std::size_t> &, const std::vector<bool> &,
     const std::vector<std::size_t> &, bool);
 
+/* Identity gate*/
+
+template void GateImplementationsLM::applyIdentity<float>(
+    std::complex<float> *, std::size_t, const std::vector<std::size_t> &, bool);
+template void GateImplementationsLM::applyIdentity<double>(
+    std::complex<double> *, std::size_t, const std::vector<std::size_t> &,
+    bool);
+
 /* Single-qubit gates */
 
 template void GateImplementationsLM::applyPauliX<float>(
@@ -261,12 +269,6 @@ template void GateImplementationsLM::applyCRot<double, double>(
     double, double, double);
 
 /* Multi-qubit gates */
-
-template void GateImplementationsLM::applyIdentity<float>(
-    std::complex<float> *, std::size_t, const std::vector<std::size_t> &, bool);
-template void GateImplementationsLM::applyIdentity<double>(
-    std::complex<double> *, std::size_t, const std::vector<std::size_t> &,
-    bool);
 template void GateImplementationsLM::applyMultiRZ<float, float>(
     std::complex<float> *, std::size_t, const std::vector<std::size_t> &, bool,
     float);
