@@ -33,6 +33,7 @@
 
 This release contains contributions from (in alphabetical order):
 
+Joseph Lee,
 Luis Alfredo Nuñez Meneses,
 Jake Zaia
 
