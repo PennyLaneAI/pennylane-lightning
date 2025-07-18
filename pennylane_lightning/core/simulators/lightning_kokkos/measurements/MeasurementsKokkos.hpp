@@ -55,9 +55,6 @@ template <class StateVectorT>
 class Measurements final
     : public MeasurementsBase<StateVectorT, Measurements<StateVectorT>> {
   private:
-    using PrecisionT = typename StateVectorT::PrecisionT;
-    using ComplexT = typename StateVectorT::ComplexT;
-    using BaseType = MeasurementsBase<StateVectorT, Measurements<StateVectorT>>;
     using KokkosExecSpace = typename StateVectorT::KokkosExecSpace;
     using HostExecSpace = typename StateVectorT::HostExecSpace;
     using KokkosVector = typename StateVectorT::KokkosVector;
@@ -72,6 +69,9 @@ class Measurements final
     using TeamPolicy = typename StateVectorT::TeamPolicy;
 
   public:
+    using PrecisionT = typename StateVectorT::PrecisionT;
+    using ComplexT = typename StateVectorT::ComplexT;
+    using BaseType = MeasurementsBase<StateVectorT, Measurements<StateVectorT>>;
 #if _ENABLE_PLKOKKOS_MPI == 1
     explicit Measurements(StateVectorT &statevector) : BaseType{statevector} {
 #else
