@@ -4,6 +4,9 @@
 
 <h3>Improvements 🛠</h3>
 
+- Skip Identity operation in Lightning Qubit and removed assert for applying Identity gate not equal to 1 wire.
+  [(#1212)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1212)
+
 <h3>Breaking changes 💔</h3>
 
 <h3>Deprecations 👋</h3>
