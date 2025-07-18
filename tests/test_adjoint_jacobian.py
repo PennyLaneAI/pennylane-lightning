@@ -101,6 +101,7 @@ class TestAdjointJacobian:
     def dev(self, request):
         params = request.param
         if device_name == "lightning.kokkos":
+            print("params", params)
             return qml.device(device_name, wires=3, c_dtype=params[0], kokkos_args=params[1])
         return qml.device(device_name, wires=params[2], c_dtype=params[0])
 
@@ -962,32 +963,41 @@ class TestAdjointJacobianQNode:
         jax interface"""
 
         jax = pytest.importorskip("jax")
-        dtype = np.float32 if dev.c_dtype == np.complex64 else np.float64
 
-        if dtype == np.float64:
-            from jax import config
+        # Determine the correct dtype for JAX arrays based on device configuration
+        if dev.c_dtype == np.complex64:
+            r_dtype = np.float32
+            x64_enabled = False
+        else:
+            r_dtype = np.float64
+            x64_enabled = True
 
-            config.update("jax_enable_x64", True)
+        # Save original JAX configuration and set it appropriately
+        original_x64 = jax.config.jax_enable_x64
+        try:
+            jax.config.update("jax_enable_x64", x64_enabled)
 
-        def f(params1, params2):
-            qml.RX(0.4, wires=[0])
-            qml.RZ(params1 * jax.numpy.sqrt(params2), wires=[0])
-            qml.RY(jax.numpy.cos(params2), wires=[0])
-            return qml.expval(qml.PauliZ(0))
+            def circuit(params1, params2):
+                qml.RX(0.4, wires=[0])
+                qml.RZ(params1 * jax.numpy.sqrt(params2), wires=[0])
+                qml.RY(jax.numpy.cos(params2), wires=[0])
+                return qml.expval(qml.PauliZ(0))
 
-        params1 = jax.numpy.array(0.3, dtype)
-        params2 = jax.numpy.array(0.4, dtype)
-        tol, h = get_tolerance_and_stepsize(dev, step_size=True)
+            params1 = jax.numpy.array(0.3, r_dtype)
+            params2 = jax.numpy.array(0.4, r_dtype)
+            tol, h = get_tolerance_and_stepsize(dev, step_size=True)
 
-        qnode_adjoint = QNode(f, dev, interface="jax", diff_method="adjoint")
-        qnode_fd = QNode(
-            f, dev, interface="jax", diff_method="finite-diff", gradient_kwargs={"h": h}
-        )
+            qnode_adjoint = QNode(circuit, dev, interface="jax", diff_method="adjoint")
+            qnode_fd = QNode(
+                circuit, dev, interface="jax", diff_method="finite-diff", gradient_kwargs={"h": h}
+            )
 
-        grad_adjoint = jax.grad(qnode_adjoint)(params1, params2)
-        grad_fd = jax.grad(qnode_fd)(params1, params2)
+            grad_adjoint = jax.grad(qnode_adjoint)(params1, params2)
+            grad_fd = jax.grad(qnode_fd)(params1, params2)
 
-        assert np.allclose(grad_adjoint, grad_fd, atol=tol)
+            assert np.allclose(grad_adjoint, grad_fd, atol=tol)
+        finally:
+            jax.config.update("jax_enable_x64", original_x64)
 
     def test_torch_amplitude_embedding(self, dev):
         """Test that the adjoint Jacobian works with AmplitudeEmbedding in a TorchLayer"""
