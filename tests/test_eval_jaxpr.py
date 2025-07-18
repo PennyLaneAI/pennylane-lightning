@@ -22,8 +22,6 @@ from conftest import LightningDevice, device_name
 from pennylane.exceptions import DeviceError
 from pennylane.transforms.defer_measurements import DeferMeasurementsInterpreter
 
-pytest.skip(allow_module_level=True)
-
 jax = pytest.importorskip("jax")
 
 if device_name == "lightning.tensor":
