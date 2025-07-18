@@ -164,12 +164,6 @@ jobs:
           python -m pip install openfermionpyscf semantic-version
           python -m pip install ${{ github.workspace }}/$WHEEL_NAME --no-deps --force-reinstall
 
-      - name: Revert to older JAX version for stable
-        if: inputs.pennylane-version == 'stable'
-        run: |
-          # FIXME: remove after v0.43 release
-          python -m pip install "jax[cpu]==0.6.0"
-
       - name: Checkout PennyLane for release or latest build
         if: inputs.pennylane-version == 'release' || inputs.pennylane-version == 'latest'
         uses: actions/checkout@v4
