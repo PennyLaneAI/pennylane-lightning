@@ -54,7 +54,7 @@ using namespace Pennylane::LightningGPU::Measures;
 #elif _ENABLE_PLKOKKOS == 1
 
 #include "AdjointJacobianKokkosMPI.hpp"
-#include "LKokkosBindingsMPI.hpp"
+#include "LKokkosBindingsMPI_nb.hpp"
 #include "MeasurementsKokkosMPI.hpp"
 #include "ObservablesKokkosMPI.hpp"
 
