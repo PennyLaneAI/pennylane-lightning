@@ -4,7 +4,10 @@
 
 <h3>Improvements 🛠</h3>
 
-- Skip Identity operation in Lightning Qubit and removed assert for applying Identity gate not equal to 1 wire.
+- Added support for `GlobalPhase` with zero-qubit Lightning devices.
+  [(#1205)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1205)
+
+- Skipped Identity operation in Lightning Qubit and removed assert for applying Identity gate not equal to 1 wire.
   [(#1212)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1212)
 
 <h3>Breaking changes 💔</h3>
@@ -17,10 +20,10 @@
 
 <h3>Internal changes ⚙️</h3>
 
-- Update JAX version from 0.6.0 to 0.6.2, keeping the same version as PennyLane and Catalyst
+- Updated JAX version from 0.6.0 to 0.6.2, keeping the same version as PennyLane and Catalyst
   [(#1200)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1200)
 
-- Remove FIXMEs for pinning jax & catalyst 0.11.0 for CI testing stable version.
+- Removed FIXMEs for pinning jax & catalyst 0.11.0 for CI testing stable version.
   [(#1211)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1211)
 
 - Increased minimum version of `pytest` within requirements files to `8.4.1`.
@@ -33,6 +36,7 @@
 
 This release contains contributions from (in alphabetical order):
 
+Ali Asadi,
 Joseph Lee,
 Luis Alfredo Nuñez Meneses,
 Jake Zaia
