@@ -617,8 +617,8 @@ void applyNCGlobalPhase(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
         Kokkos::complex<PrecisionT>{0, (inverse) ? params[0] : -params[0]});
 
     // This is a special case to preserve the behavior of the
-    // applyGlobalPhase function with PennyLane `default.qubit`
-    // for 0 qubits.
+    // `applyNCGlobalPhase` function with PennyLane `default.qubit`
+    // for zero number of qubits.
     if (!num_qubits) {
         arr_(0) *= phase;
         return;
