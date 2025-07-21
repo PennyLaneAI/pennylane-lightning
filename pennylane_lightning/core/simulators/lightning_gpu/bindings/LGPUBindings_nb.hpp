@@ -77,9 +77,9 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
         typename StateVectorT::ComplexT; // Statevector's complex type
 
     using ArrayT = nb::ndarray<std::complex<PrecisionT>, nb::c_contig>;
-    using IdxT = typename std::conditional<std::is_same<PrecisionT, float>::value,
+    using IndexT = typename std::conditional<std::is_same<PrecisionT, float>::value,
                                            int32_t, int64_t>::type;
-    using ArraySparseIndexT = nb::ndarray<IdxT, nb::c_contig>;
+    using ArraySparseIndexT = nb::ndarray<IndexT, nb::c_contig>;
 
     pyclass.def(
         "expval",
@@ -173,8 +173,8 @@ void registerBackendSpecificObservables(nb::module_ &m) {
     std::string class_name;
 
     class_name = "SparseHamiltonianC" + bitsize;
-    using IdxT = typename SparseHamiltonian<StateVectorT>::IdxT;
-    using ArraySparseIndexT = nb::ndarray<IdxT, nb::c_contig>;
+    using IndexT = typename SparseHamiltonian<StateVectorT>::IdxT;
+    using ArraySparseIndexT = nb::ndarray<IndexT, nb::c_contig>;
 
     auto pyclass =
         nb::class_<SparseHamiltonian<StateVectorT>, Observable<StateVectorT>>(
@@ -188,9 +188,9 @@ void registerBackendSpecificObservables(nb::module_ &m) {
         // a vector
         new (self) SparseHamiltonian<StateVectorT>{
             std::vector<ComplexT>({data.data(), data.data() + data.size()}),
-            std::vector<IdxT>(
+            std::vector<IndexT>(
                 {indices.data(), indices.data() + indices.size()}),
-            std::vector<IdxT>(
+            std::vector<IndexT>(
                 {offsets.data(), offsets.data() + offsets.size()}),
             wires};
     });
