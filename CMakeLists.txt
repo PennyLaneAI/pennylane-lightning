@@ -227,12 +227,12 @@ if(ENABLE_PYTHON)
     nanobind_add_module("${PL_BACKEND}_nb" "pennylane_lightning/core/bindings/Bindings_nb.cpp")
     
     # Remove nanobind's problematic flags that are incompatible with NVCC
-    target_compile_options("${PL_BACKEND}_nb" PRIVATE
+    target_compile_options("${PL_BACKEND}_nb" PRIVATE 
         -fno-function-sections
         -fno-data-sections
         -O2  # Override nanobind's -Os with -O2
     )
-
+    
     # Set properties for both modules
     set(CMAKE_BUILD_RPATH_USE_ORIGIN ON)
     if("${PL_BACKEND}" STREQUAL "lightning_gpu" OR "${PL_BACKEND}" STREQUAL "lightning_tensor")

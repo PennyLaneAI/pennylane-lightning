@@ -97,7 +97,7 @@ supported_devices = {"lightning.kokkos", "lightning.qubit", "lightning.gpu", "li
 
 # Temporary, a list of devices which are ready to be tested, add to this list as new bindings are added
 # FIXME: Remove this before merging base nanobind branch to main
-SUPPORTED_DEVICES = ("lightning.qubit", "lightning.gpu", "lightning.tensor")
+SUPPORTED_DEVICES = ("lightning.qubit", "lightning.gpu", "lightning.kokkos", "lightning.tensor")
 
 
 def get_device():

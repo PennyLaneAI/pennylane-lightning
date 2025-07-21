@@ -29,7 +29,7 @@ if not LightningDevice._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
 if device_name == "lightning.kokkos":
-    from pennylane_lightning.lightning_kokkos_ops.observables import (
+    from pennylane_lightning.lightning_kokkos_nb.observables import (
         HamiltonianC64,
         HamiltonianC128,
         HermitianObsC64,
