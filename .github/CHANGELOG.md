@@ -7,6 +7,9 @@
 - Added comprehensive tests for Python bindings.
   [(#1198)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1198)
   
+- Skip Identity operation in Lightning Qubit and removed assert for applying Identity gate not equal to 1 wire.
+  [(#1212)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1212)
+
 <h3>Breaking changes 💔</h3>
 
 <h3>Deprecations 👋</h3>
@@ -33,6 +36,7 @@
 
 This release contains contributions from (in alphabetical order):
 
+Joseph Lee,
 Luis Alfredo Nuñez Meneses,
 Amintor Dusko,
 Jake Zaia
