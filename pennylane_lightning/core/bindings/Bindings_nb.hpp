@@ -180,7 +180,6 @@ template <class StateVectorT, class PyClass>
 void registerGatesForStateVector(PyClass &pyclass) {
     using PrecisionT =
         typename StateVectorT::PrecisionT; // Statevector's precision
-                                           // Parameter's data precision
 
     using Pennylane::Gates::GateOperation;
     using Pennylane::Util::for_each_enum;
@@ -724,7 +723,6 @@ void registerBackendAgnosticAlgorithms(nb::module_ &m) {
         typename StateVectorT::PrecisionT; // Statevector's precision
     using ComplexT =
         typename StateVectorT::ComplexT; // Statevector's complex type
-                                         // Parameter's data precision
 
     const std::string bitsize =
         std::to_string(sizeof(std::complex<PrecisionT>) * 8);
@@ -875,8 +873,6 @@ template <class StateVectorT> void lightningClassBindings(nb::module_ &m) {
         nb::class_<Measurements<StateVectorT>>(m, class_name.c_str());
 
 #ifdef _ENABLE_PLGPU
-    // TODO: Find if getting `const` to work with GPU state vector is an easy
-    // lift
     pyclass_measurements.def(nb::init<StateVectorT &>());
 #else
     pyclass_measurements.def(nb::init<const StateVectorT &>());

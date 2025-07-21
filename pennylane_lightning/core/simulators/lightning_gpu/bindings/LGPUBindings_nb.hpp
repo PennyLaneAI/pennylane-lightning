@@ -75,12 +75,12 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
         typename StateVectorT::PrecisionT; // Statevector's precision
     using ComplexT =
         typename StateVectorT::ComplexT; // Statevector's complex type
-    using ParamT = PrecisionT;           // Parameter's data precision
 
-    using ArrayT = nb::ndarray<std::complex<ParamT>, nb::c_contig>;
-    using IdxT = typename std::conditional<std::is_same<ParamT, float>::value,
-                                           int32_t, int64_t>::type;
-    using ArraySparseIndexT = nb::ndarray<IdxT, nb::c_contig>;
+    using ArrayT = nb::ndarray<std::complex<PrecisionT>, nb::c_contig>;
+    using IndexT =
+        typename std::conditional<std::is_same<PrecisionT, float>::value,
+                                  int32_t, int64_t>::type;
+    using ArraySparseIndexT = nb::ndarray<IndexT, nb::c_contig>;
 
     pyclass.def(
         "expval",
@@ -116,7 +116,7 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
         [](Measurements<StateVectorT> &M,
            const std::vector<std::string> &pauli_words,
            const std::vector<std::vector<std::size_t>> &target_wires,
-           const std::vector<std::complex<ParamT>> &coeffs) {
+           const std::vector<std::complex<PrecisionT>> &coeffs) {
             // Required to be able to accept `coeffs` as a python tuple
             return M.expval(pauli_words, target_wires, coeffs.data());
         },
@@ -165,18 +165,17 @@ void registerBackendSpecificObservables(nb::module_ &m) {
         typename StateVectorT::PrecisionT; // Statevector's precision.
     using ComplexT =
         typename StateVectorT::ComplexT; // Statevector's complex type.
-    using ParamT = PrecisionT;           // Parameter's data precision
 
     const std::string bitsize =
         std::to_string(sizeof(std::complex<PrecisionT>) * 8);
 
-    using ArrayT = nb::ndarray<std::complex<ParamT>, nb::c_contig>;
+    using ArrayT = nb::ndarray<std::complex<PrecisionT>, nb::c_contig>;
 
     std::string class_name;
 
     class_name = "SparseHamiltonianC" + bitsize;
-    using IdxT = typename SparseHamiltonian<StateVectorT>::IdxT;
-    using ArraySparseIndexT = nb::ndarray<IdxT, nb::c_contig>;
+    using IndexT = typename SparseHamiltonian<StateVectorT>::IdxT;
+    using ArraySparseIndexT = nb::ndarray<IndexT, nb::c_contig>;
 
     auto pyclass =
         nb::class_<SparseHamiltonian<StateVectorT>, Observable<StateVectorT>>(
@@ -190,9 +189,9 @@ void registerBackendSpecificObservables(nb::module_ &m) {
         // a vector
         new (self) SparseHamiltonian<StateVectorT>{
             std::vector<ComplexT>({data.data(), data.data() + data.size()}),
-            std::vector<IdxT>(
+            std::vector<IndexT>(
                 {indices.data(), indices.data() + indices.size()}),
-            std::vector<IdxT>(
+            std::vector<IndexT>(
                 {offsets.data(), offsets.data() + offsets.size()}),
             wires};
     });
@@ -251,8 +250,7 @@ template <class StateVectorT, class PyClass>
 void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
     using PrecisionT =
         typename StateVectorT::PrecisionT; // Statevector's precision
-    using ParamT = PrecisionT;             // Parameter's data precision
-    using ArrayT = nb::ndarray<std::complex<ParamT>, nb::c_contig>;
+    using ArrayT = nb::ndarray<std::complex<PrecisionT>, nb::c_contig>;
 
     pyclass.def(nb::init<std::size_t>());              // qubits, device
     pyclass.def(nb::init<std::size_t, DevTag<int>>()); // qubits, dev-tag
@@ -332,7 +330,7 @@ void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
            const std::vector<std::size_t> &controlled_wires,
            const std::vector<bool> &controlled_values,
            const std::vector<std::size_t> &wires, bool inverse,
-           const std::vector<ParamT> &params) {
+           const std::vector<PrecisionT> &params) {
             sv.applyOperation(gate_name, controlled_wires, controlled_values,
                               wires, inverse, params);
         },
@@ -341,10 +339,10 @@ void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
         "apply",
         [](StateVectorT &sv, const std::string &str,
            const std::vector<std::size_t> &wires, bool inv,
-           const std::vector<std::vector<ParamT>> &params,
+           const std::vector<std::vector<PrecisionT>> &params,
            const ArrayT &gate_matrix) {
             if (params.empty()) {
-                sv.applyOperation(str, wires, inv, std::vector<ParamT>{},
+                sv.applyOperation(str, wires, inv, std::vector<PrecisionT>{},
                                   gate_matrix.data(), gate_matrix.size());
             } else {
                 PL_ABORT_IF(params.size() != 1,
