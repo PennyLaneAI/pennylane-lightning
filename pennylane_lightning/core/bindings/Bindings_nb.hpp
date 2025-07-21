@@ -194,7 +194,6 @@ void applyControlledMatrix(
 template <class StateReprT, class PyClass>
 void registerGates(PyClass &pyclass) {
     using PrecisionT = typename StateReprT::PrecisionT; // State's precision
-    using ParamT = PrecisionT; // Parameter's data precision
 
     using Pennylane::Gates::GateOperation;
     using Pennylane::Util::for_each_enum;
@@ -212,7 +211,7 @@ void registerGates(PyClass &pyclass) {
         const std::string doc = "Apply the " + gate_name + " gate.";
         auto func =
             [gate_name](StateReprT &st, const std::vector<std::size_t> &wires,
-                        bool inverse, const std::vector<ParamT> &params) {
+                        bool inverse, const std::vector<PrecisionT> &params) {
                 st.applyOperation(gate_name, wires, inverse, params);
             };
         pyclass.def(gate_name.c_str(), func, doc.c_str());
@@ -229,7 +228,6 @@ void registerGates(PyClass &pyclass) {
 template <class StateReprT, class PyClass>
 void registerControlledGates(PyClass &pyclass) {
     using PrecisionT = typename StateReprT::PrecisionT;
-    using ParamT = PrecisionT;
 
     using Pennylane::Gates::ControlledGateOperation;
     using Pennylane::Util::for_each_enum;
@@ -246,7 +244,7 @@ void registerControlledGates(PyClass &pyclass) {
                             const std::vector<std::size_t> &controlled_wires,
                             const std::vector<bool> &controlled_values,
                             const std::vector<std::size_t> &wires, bool inverse,
-                            const std::vector<ParamT> &params) {
+                            const std::vector<PrecisionT> &params) {
                 st.applyOperation(gate_name, controlled_wires,
                                   controlled_values, wires, inverse, params);
             };
@@ -254,7 +252,7 @@ void registerControlledGates(PyClass &pyclass) {
                         nb::arg("controlled_wires"),
                         nb::arg("controlled_values"), nb::arg("wires"),
                         nb::arg("inverse") = false,
-                        nb::arg("params") = std::vector<ParamT>{});
+                        nb::arg("params") = std::vector<PrecisionT>{});
         });
 }
 
@@ -432,9 +430,8 @@ template <class StateReprT>
 void registerBackendAgnosticObservables(nb::module_ &m) {
     using PrecisionT = typename StateReprT::PrecisionT;
     using ComplexT = typename StateReprT::ComplexT;
-    using ParamT = PrecisionT;
 
-    using nd_arr_c = nb::ndarray<const std::complex<ParamT>, nb::c_contig>;
+    using nd_arr_c = nb::ndarray<const std::complex<PrecisionT>, nb::c_contig>;
 
     const std::string bitsize =
         std::is_same_v<PrecisionT, float> ? "64" : "128";
@@ -517,15 +514,15 @@ void registerBackendAgnosticObservables(nb::module_ &m) {
     // Register Hamiltonian class
     class_name = prefix + "HamiltonianC" + bitsize;
     nb::class_<HamiltonianT, ObservableT>(m, class_name.c_str())
-        .def(nb::init<const std::vector<ParamT> &,
+        .def(nb::init<const std::vector<PrecisionT> &,
                       const std::vector<ObsPtr> &>())
         .def("__init__",
              [](HamiltonianT *self,
-                const nb::ndarray<ParamT, nb::c_contig> &coeffs,
+                const nb::ndarray<PrecisionT, nb::c_contig> &coeffs,
                 const std::vector<ObsPtr> &obs) {
                  const auto ptr = coeffs.data();
                  new (self) HamiltonianT(
-                     std::vector<ParamT>(ptr, ptr + coeffs.size()), obs);
+                     std::vector<PrecisionT>(ptr, ptr + coeffs.size()), obs);
              })
         .def("__repr__", &HamiltonianT::getObsName)
         .def("get_wires", &HamiltonianT::getWires, "Get wires of observables")
@@ -756,7 +753,6 @@ void registerBackendAgnosticAlgorithms(nb::module_ &m) {
         typename StateVectorT::PrecisionT; // Statevector's precision
     using ComplexT =
         typename StateVectorT::ComplexT; // Statevector's complex type
-    using ParamT = PrecisionT;           // Parameter's data precision
 
     const std::string bitsize =
         std::to_string(sizeof(std::complex<PrecisionT>) * 8);
@@ -771,13 +767,13 @@ void registerBackendAgnosticAlgorithms(nb::module_ &m) {
     auto ops_class = nb::class_<OpsData<StateVectorT>>(m, class_name.c_str());
 
     ops_class.def(nb::init<const std::vector<std::string> &,
-                           const std::vector<std::vector<ParamT>> &,
+                           const std::vector<std::vector<PrecisionT>> &,
                            const std::vector<std::vector<std::size_t>> &,
                            const std::vector<bool> &,
                            const std::vector<std::vector<ComplexT>> &>());
 
     ops_class.def(nb::init<const std::vector<std::string> &,
-                           const std::vector<std::vector<ParamT>> &,
+                           const std::vector<std::vector<PrecisionT>> &,
                            const std::vector<std::vector<std::size_t>> &,
                            const std::vector<bool> &,
                            const std::vector<std::vector<ComplexT>> &,
@@ -974,8 +970,6 @@ template <class StateReprT> void lightningClassBindings(nb::module_ &m) {
         nb::class_<MeasurementsT>(m, class_name.c_str());
 
 #ifdef _ENABLE_PLGPU
-    // TODO: Find if getting `const` to work with GPU state vector is an easy
-    // lift
     pyclass_measurements.def(nb::init<StateReprT &>());
 #else
     pyclass_measurements.def(nb::init<const StateReprT &>());
