@@ -99,16 +99,15 @@ void registerBackendClassSpecificBindingsMPI(PyClass &pyclass) {
             "setStateVector",
             [](StateVectorT &sv, const arr_c &state,
                const std::vector<std::size_t> &wires) {
-                const auto buffer = state.request();
-                sv.setStateVector(static_cast<const ComplexT *>(buffer.ptr),
-                                  wires);
+                sv.setStateVector(
+                    PL_reinterpret_cast<const ComplexT>(state.data()), wires);
             },
             "Set the state vector to the data contained in `state`.")
         .def(
             "DeviceToHost",
             [](StateVectorT &device_sv, arr_c &host_sv) {
                 auto buffer_info = host_sv.request();
-                auto *data_ptr = static_cast<ComplexT *>(buffer_info.ptr);
+                auto *data_ptr = PL_reinterpret_cast<ComplexT>(host_sv.data());
                 if (host_sv.size()) {
                     device_sv.DeviceToHost(data_ptr, host_sv.size());
                 }
@@ -121,12 +120,10 @@ void registerBackendClassSpecificBindingsMPI(PyClass &pyclass) {
         .def(
             "HostToDevice",
             [](StateVectorT &device_sv, const arr_c &host_sv) {
-                const auto buffer_info = host_sv.request();
-                auto *data_ptr = static_cast<ComplexT *>(buffer_info.ptr);
-                const auto length =
-                    static_cast<std::size_t>(buffer_info.shape[0]);
-                if (length) {
-                    device_sv.HostToDevice(data_ptr, length);
+                auto *data_ptr = const_cast<ComplexT *>(
+                    PL_reinterpret_cast<ComplexT>(host_sv.data()));
+                if (host_sv.size()) {
+                    device_sv.HostToDevice(data_ptr, host_sv.size());
                 }
             },
             "Synchronize data from the host device to Kokkos.")
@@ -137,14 +134,11 @@ void registerBackendClassSpecificBindingsMPI(PyClass &pyclass) {
                [[maybe_unused]] const std::vector<std::vector<PrecisionT>>
                    &params,
                [[maybe_unused]] const arr_c &gate_matrix) {
-                const auto m_buffer = gate_matrix.request();
-                std::vector<Kokkos::complex<PrecisionT>> conv_matrix;
-                if (m_buffer.size) {
-                    const auto m_ptr =
-                        static_cast<const Kokkos::complex<PrecisionT> *>(
-                            m_buffer.ptr);
-                    conv_matrix = std::vector<Kokkos::complex<PrecisionT>>{
-                        m_ptr, m_ptr + m_buffer.size};
+                std::vector<ComplexT> conv_matrix;
+                if (gate_matrix.size()) {
+                    conv_matrix = std::vector<ComplexT>{gate_matrix.data(),
+                                                        gate_matrix.data() +
+                                                            gate_matrix.size()};
                 }
                 sv.applyOperation(str, wires, inv, std::vector<PrecisionT>{},
                                   conv_matrix);
@@ -249,43 +243,9 @@ void registerBackendSpecificAlgorithmsMPI(nb::module_ &m) {
  * @param m Nanobind module.
  */
 void registerBackendSpecificInfoMPI(nb::module_ &m) {
-    using np_arr_c64 = nb::ndarray<std::complex<float>, nb::c_contig>;
-    using np_arr_c128 = nb::ndarray<std::complex<double>, nb::c_contig>;
-
-    nb::class_<MPIManagerKokkos>(m, "MPIManagerKokkos")
-        .def(nb::init<>())
-        .def(nb::init<MPIManagerKokkos &>())
-        .def("Barrier", &MPIManagerKokkos::Barrier)
-        .def("getRank", &MPIManagerKokkos::getRank)
-        .def("getSize", &MPIManagerKokkos::getSize)
-        .def("getSizeNode", &MPIManagerKokkos::getSizeNode)
-        .def("getTime", &MPIManagerKokkos::getTime)
-        .def("getVendor", &MPIManagerKokkos::getVendor)
-        .def("getVersion", &MPIManagerKokkos::getVersion)
-        .def(
-            "Scatter",
-            [](MPIManagerKokkos &mpi_manager, np_arr_c64 &sendBuf,
-               np_arr_c64 &recvBuf, int root) {
-                auto send_ptr =
-                    static_cast<std::complex<float> *>(sendBuf.request().ptr);
-                auto recv_ptr =
-                    static_cast<std::complex<float> *>(recvBuf.request().ptr);
-                mpi_manager.template Scatter<std::complex<float>>(
-                    send_ptr, recv_ptr, recvBuf.size(), root);
-            },
-            "MPI Scatter.")
-        .def(
-            "Scatter",
-            [](MPIManagerKokkos &mpi_manager, np_arr_c128 &sendBuf,
-               np_arr_c128 &recvBuf, int root) {
-                auto send_ptr =
-                    static_cast<std::complex<double> *>(sendBuf.request().ptr);
-                auto recv_ptr =
-                    static_cast<std::complex<double> *>(recvBuf.request().ptr);
-                mpi_manager.template Scatter<std::complex<double>>(
-                    send_ptr, recv_ptr, recvBuf.size(), root);
-            },
-            "MPI Scatter.");
+    // This function is intentionally left empty as there are no
+    // backend-specific info for Kokkos MPI.
+    // registerInfoMPI was generalized as a template.
 }
 
 } // namespace Pennylane::LightningKokkos::NanoBindings
