@@ -263,7 +263,7 @@ class TestSupportedConfigurationsMCM:
             spy_one_shot.assert_not_called()
 
     @pytest.mark.parametrize("shots", [None, 10])
-    def test_qnode_default_mcm_method_device(self, mocker):
+    def test_qnode_default_mcm_method_device(self, shots, mocker):
         """Test the default mcm method is used for analytical simulation"""
         spy_deferred = mocker.spy(qml.defer_measurements, "_transform")
         spy_dynamic_one_shot = mocker.spy(qml.dynamic_one_shot, "_transform")
