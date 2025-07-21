@@ -77,8 +77,9 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
         typename StateVectorT::ComplexT; // Statevector's complex type
 
     using ArrayT = nb::ndarray<std::complex<PrecisionT>, nb::c_contig>;
-    using IndexT = typename std::conditional<std::is_same<PrecisionT, float>::value,
-                                           int32_t, int64_t>::type;
+    using IndexT =
+        typename std::conditional<std::is_same<PrecisionT, float>::value,
+                                  int32_t, int64_t>::type;
     using ArraySparseIndexT = nb::ndarray<IndexT, nb::c_contig>;
 
     pyclass.def(
