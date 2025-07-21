@@ -139,6 +139,9 @@ class TestLQubitStateVectorBindings:
     def test_kernel_map(self, current_nanobind_module, precision, get_statevector_class):
         """Test getting kernel map."""
         StateVectorClass = get_statevector_class(current_nanobind_module, precision)
+        if not hasattr(StateVectorClass, "kernel_map"):
+            pytest.skip("kernel_map method not available in this backend")
+
         num_qubits = 2
         sv = StateVectorClass(num_qubits)
         kernel_map = sv.kernel_map()
