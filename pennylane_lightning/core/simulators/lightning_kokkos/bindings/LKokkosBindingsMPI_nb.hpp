@@ -106,7 +106,6 @@ void registerBackendClassSpecificBindingsMPI(PyClass &pyclass) {
         .def(
             "DeviceToHost",
             [](StateVectorT &device_sv, arr_c &host_sv) {
-                auto buffer_info = host_sv.request();
                 auto *data_ptr = PL_reinterpret_cast<ComplexT>(host_sv.data());
                 if (host_sv.size()) {
                     device_sv.DeviceToHost(data_ptr, host_sv.size());
