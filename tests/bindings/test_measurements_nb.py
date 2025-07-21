@@ -254,9 +254,9 @@ class TestMeasurementsNB:
         """Test Hadamard gate application."""
         StateVectorClass, MeasurementsClass, _, _, dtype = get_classes_and_precision()
 
-        # Check if it has updateData method
-        if not hasattr(StateVectorClass, "updateData"):
-            pytest.skip(f"updateData method not available.")
+        # Check if it has getState method
+        if not hasattr(StateVectorClass, "getState"):
+            pytest.skip("getState method not available in this backend")
 
         num_qubits = 1
         # Initialize with number of qubits first

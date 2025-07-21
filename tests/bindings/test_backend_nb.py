@@ -42,10 +42,9 @@ class TestLQubitStateVectorBindings:
 
     def test_init(self, current_nanobind_module, precision, get_statevector_class):
         """Test initialization of state vector."""
-        if device_name == "lightning.kokkos":
-            pytest.skip("getState method not available in lightning.kokkos")
-
         StateVectorClass = get_statevector_class(current_nanobind_module, precision)
+        if not hasattr(StateVectorClass, "getState"):
+            pytest.skip("getState method not available in this backend")
         num_qubits = 2
         sv = StateVectorClass(num_qubits)
         # Check that we can get the state
@@ -60,10 +59,9 @@ class TestLQubitStateVectorBindings:
 
     def test_reset_state_vector(self, current_nanobind_module, precision, get_statevector_class):
         """Test resetting state vector to |0...0>."""
-        if device_name == "lightning.kokkos":
-            pytest.skip("getState method not available in lightning.kokkos")
-
         StateVectorClass = get_statevector_class(current_nanobind_module, precision)
+        if not hasattr(StateVectorClass, "getState"):
+            pytest.skip("getState method not available in this backend")
         num_qubits = 2
         sv = StateVectorClass(num_qubits)
         # Apply X gate to first qubit to change state
@@ -81,10 +79,9 @@ class TestLQubitStateVectorBindings:
 
     def test_set_basis_state(self, current_nanobind_module, precision, get_statevector_class):
         """Test setting state vector to a basis state."""
-        if device_name == "lightning.kokkos":
-            pytest.skip("getState method not available in lightning.kokkos")
-
         StateVectorClass = get_statevector_class(current_nanobind_module, precision)
+        if not hasattr(StateVectorClass, "getState"):
+            pytest.skip("getState method not available in this backend")
         num_qubits = 2
         sv = StateVectorClass(num_qubits)
         # Set to |11>
@@ -101,10 +98,9 @@ class TestLQubitStateVectorBindings:
 
     def test_set_state_vector(self, current_nanobind_module, precision, get_statevector_class):
         """Test setting state vector to a custom state."""
-        if device_name == "lightning.kokkos":
-            pytest.skip("getState method not available in lightning.kokkos")
-
         StateVectorClass = get_statevector_class(current_nanobind_module, precision)
+        if not hasattr(StateVectorClass, "getState"):
+            pytest.skip("getState method not available in this backend")
         num_qubits = 2
         sv = StateVectorClass(num_qubits)
         # Create a custom state (|00> + |11>)/sqrt(2)
@@ -121,10 +117,12 @@ class TestLQubitStateVectorBindings:
 
     def test_update_data(self, current_nanobind_module, precision, get_statevector_class):
         """Test updating state vector data."""
-        if device_name == "lightning.kokkos":
-            pytest.skip("updateData method not available in lightning.kokkos")
 
         StateVectorClass = get_statevector_class(current_nanobind_module, precision)
+        if not hasattr(StateVectorClass, "updateData"):
+            pytest.skip("updateData method not available in this backend")
+        if not hasattr(StateVectorClass, "getState"):
+            pytest.skip("getState method not available in this backend")
         num_qubits = 2
         sv = StateVectorClass(num_qubits)
         # Create a custom state (|01>)
@@ -140,9 +138,6 @@ class TestLQubitStateVectorBindings:
 
     def test_kernel_map(self, current_nanobind_module, precision, get_statevector_class):
         """Test getting kernel map."""
-        if device_name == "lightning.kokkos":
-            pytest.skip("kernel_map method not available in lightning.kokkos")
-
         StateVectorClass = get_statevector_class(current_nanobind_module, precision)
         num_qubits = 2
         sv = StateVectorClass(num_qubits)
@@ -156,10 +151,11 @@ class TestLQubitStateVectorBindings:
         self, current_nanobind_module, precision, get_statevector_class
     ):
         """Test normalizing state vector works for both backends."""
-        if device_name == "lightning.kokkos":
-            pytest.skip("getState/updateData not available in lightning.kokkos")
-
         StateVectorClass = get_statevector_class(current_nanobind_module, precision)
+        if not hasattr(StateVectorClass, "getState"):
+            pytest.skip("getState method not available in this backend")
+        if not hasattr(StateVectorClass, "updateData"):
+            pytest.skip("updateData method not available in this backend")
         num_qubits = 2
         sv = StateVectorClass(num_qubits)
         # Create a non-normalized state

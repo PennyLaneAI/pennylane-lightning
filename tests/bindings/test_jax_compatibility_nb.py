@@ -221,12 +221,13 @@ class TestJAXCompatibility:
 
     def test_jax_array_initialization(self, get_statevector_class_and_precision):
         """Test initialization of StateVector with JAX arrays."""
-        # Skip if module doesn't have StateVectorClass, or if StateVectorClass doesn't have updateData
         StateVectorClass, dtype = get_statevector_class_and_precision
 
-        # Check if it has updateData method
+        # Check if it has updateData and getState methods
         if not hasattr(StateVectorClass, "updateData"):
-            pytest.skip(f"updateData method not available.")
+            pytest.skip("updateData method not available in this backend")
+        if not hasattr(StateVectorClass, "getState"):
+            pytest.skip("getState method not available in this backend")
 
         num_qubits = 3
         dim = 2**num_qubits
@@ -249,12 +250,13 @@ class TestJAXCompatibility:
 
     def test_jax_array_operations(self, get_statevector_class_and_precision):
         """Test operations on StateVector with JAX arrays."""
-        # Skip if module doesn't have StateVectorClass, or if StateVectorClass doesn't have updateData
         StateVectorClass, dtype = get_statevector_class_and_precision
 
-        # Check if it has updateData method
+        # Check if it has updateData and getState methods
         if not hasattr(StateVectorClass, "updateData"):
-            pytest.skip(f"updateData method not available.")
+            pytest.skip("updateData method not available in this backend")
+        if not hasattr(StateVectorClass, "getState"):
+            pytest.skip("getState method not available in this backend")
 
         num_qubits = 1
         dim = 2**num_qubits
@@ -283,7 +285,6 @@ class TestJAXCompatibility:
         self, get_statevector_class_and_precision, get_measurements_class
     ):
         """Test using the Measurements class with JAX arrays."""
-        # Skip if module doesn't have StateVectorClass, or if StateVectorClass doesn't have updateData
         StateVectorClass, dtype = get_statevector_class_and_precision
 
         # Check if the module has a Measurements class and get it.
@@ -291,7 +292,7 @@ class TestJAXCompatibility:
 
         # Check if it has updateData method
         if not hasattr(StateVectorClass, "updateData"):
-            pytest.skip(f"updateData method not available.")
+            pytest.skip("updateData method not available in this backend")
 
         num_qubits = 1
         dim = 2**num_qubits
@@ -330,7 +331,6 @@ class TestJAXCompatibility:
     ):
         """Test expectation value calculation using the Measurements class with JAX arrays."""
 
-        # Skip if module doesn't have StateVectorClass, or if StateVectorClass doesn't have updateData
         StateVectorClass, dtype = get_statevector_class_and_precision
 
         # Check if the module has a Measurements class
@@ -341,7 +341,7 @@ class TestJAXCompatibility:
 
         # Check if it has updateData method
         if not hasattr(StateVectorClass, "updateData"):
-            pytest.skip(f"updateData method not available.")
+            pytest.skip("updateData method not available in this backend")
 
         num_qubits = 1
         dim = 2**num_qubits
