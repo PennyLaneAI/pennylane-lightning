@@ -34,6 +34,7 @@
 
 #include "CPUMemoryModel.hpp" // CPUMemoryModel, getMemoryModel, bestCPUMemoryModel, getAlignment
 #include "JacobianData.hpp"
+#include "MPIManager.hpp"
 #include "Macros.hpp" // CPUArch
 #include "Memory.hpp" // alignedAlloc
 #include "Observables.hpp"

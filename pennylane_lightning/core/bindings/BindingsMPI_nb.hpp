@@ -39,6 +39,7 @@
 #include "AdjointJacobianGPUMPI.hpp"
 #include "JacobianDataMPI.hpp"
 #include "LGPUBindingsMPI.hpp"
+#include "MPIManagerGPU.hpp"
 #include "MeasurementsGPUMPI.hpp"
 #include "ObservablesGPUMPI.hpp"
 
@@ -48,6 +49,10 @@ using namespace Pennylane::LightningGPU;
 using namespace Pennylane::LightningGPU::Algorithms;
 using namespace Pennylane::LightningGPU::Observables;
 using namespace Pennylane::LightningGPU::Measures;
+using namespace Pennylane::LightningGPU::Util;
+
+using Pennylane::LightningGPU::Util::MPIManagerGPU = typename MPIManagerT;
+
 } // namespace
 /// @endcond
 
@@ -55,6 +60,7 @@ using namespace Pennylane::LightningGPU::Measures;
 
 #include "AdjointJacobianKokkosMPI.hpp"
 #include "LKokkosBindingsMPI_nb.hpp"
+#include "MPIManagerKokkos.hpp"
 #include "MeasurementsKokkosMPI.hpp"
 #include "ObservablesKokkosMPI.hpp"
 
@@ -64,6 +70,9 @@ using namespace Pennylane::LightningKokkos;
 using namespace Pennylane::LightningKokkos::Algorithms;
 using namespace Pennylane::LightningKokkos::Observables;
 using namespace Pennylane::LightningKokkos::Measures;
+using namespace Pennylane::LightningKokkos::Util;
+
+using Pennylane::LightningKokkos::Util::MPIManagerKokkos = typename MPIManagerT;
 } // namespace
 /// @endcond
 
@@ -405,21 +414,21 @@ void registerBackendAgnosticAlgorithmsMPI(nb::module_ &m) {
  * @param m Nanobind module
  */
 inline void registerInfoMPI(nb::module_ &m) {
-    nb::class_<MPIManager>(m, "MPIManager")
+    nb::class_<MPIManagerT>(m, "MPIManager")
         .def(nb::init<>())
-        .def(nb::init<MPIManager &>())
-        .def("Barrier", &MPIManager::Barrier)
-        .def("getRank", &MPIManager::getRank)
-        .def("getSize", &MPIManager::getSize)
-        .def("getSizeNode", &MPIManager::getSizeNode)
-        .def("getTime", &MPIManager::getTime)
-        .def("getVendor", &MPIManager::getVendor)
-        .def("getVersion", &MPIManager::getVersion)
+        .def(nb::init<MPIManagerT &>())
+        .def("Barrier", &MPIManagerT::Barrier)
+        .def("getRank", &MPIManagerT::getRank)
+        .def("getSize", &MPIManagerT::getSize)
+        .def("getSizeNode", &MPIManagerT::getSizeNode)
+        .def("getTime", &MPIManagerT::getTime)
+        .def("getVendor", &MPIManagerT::getVendor)
+        .def("getVersion", &MPIManagerT::getVersion)
         // Template version with explicit type constraints
         .def(
             "Scatter",
             []<typename PrecisionT>(
-                MPIManager &mpi_manager,
+                MPIManagerT &mpi_manager,
                 nb::ndarray<std::complex<PrecisionT>, nb::c_contig> &sendBuf,
                 nb::ndarray<std::complex<PrecisionT>, nb::c_contig> &recvBuf,
                 int root) {
