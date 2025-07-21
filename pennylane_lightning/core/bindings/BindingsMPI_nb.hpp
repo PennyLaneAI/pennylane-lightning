@@ -427,17 +427,28 @@ inline void registerInfoMPI(nb::module_ &m) {
         // Template version with explicit type constraints
         .def(
             "Scatter",
-            []<typename PrecisionT>(
-                MPIManagerT &mpi_manager,
-                nb::ndarray<std::complex<PrecisionT>, nb::c_contig> &sendBuf,
-                nb::ndarray<std::complex<PrecisionT>, nb::c_contig> &recvBuf,
-                int root) {
+            [](MPIManagerT &mpi_manager,
+               nb::ndarray<std::complex<float>, nb::c_contig> &sendBuf,
+               nb::ndarray<std::complex<float>, nb::c_contig> &recvBuf,
+               int root) {
                 auto send_ptr = sendBuf.data();
                 auto recv_ptr = recvBuf.data();
-                mpi_manager.template Scatter<std::complex<PrecisionT>>(
+                mpi_manager.template Scatter<std::complex<float>>(
                     send_ptr, recv_ptr, recvBuf.size(), root);
             },
-            "MPI Scatter for complex arrays.");
+            "MPI Scatter for complex float arrays.")
+        .def(
+            "Scatter",
+            [](MPIManagerT &mpi_manager,
+               nb::ndarray<std::complex<double>, nb::c_contig> &sendBuf,
+               nb::ndarray<std::complex<double>, nb::c_contig> &recvBuf,
+               int root) {
+                auto send_ptr = sendBuf.data();
+                auto recv_ptr = recvBuf.data();
+                mpi_manager.template Scatter<std::complex<double>>(
+                    send_ptr, recv_ptr, recvBuf.size(), root);
+            },
+            "MPI Scatter for complex double arrays.");
 }
 
 /**
