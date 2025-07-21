@@ -4,7 +4,7 @@
 
 <h3>Improvements 🛠</h3>
 
-- Added support for `GlobalPhase` with zero-qubit Lightning devices.
+- Added support for `GlobalPhase` with zero-qubit Lightning devices. Currently, only the `lightning.qubit` and `lightning.kokkos` backends support zero-qubit initialization.
   [(#1205)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1205)
 
 - Skipped Identity operation in Lightning Qubit and removed assert for applying Identity gate not equal to 1 wire.
