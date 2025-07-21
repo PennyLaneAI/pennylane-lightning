@@ -34,7 +34,6 @@
 
 #include "CPUMemoryModel.hpp" // CPUMemoryModel, getMemoryModel, bestCPUMemoryModel, getAlignment
 #include "JacobianData.hpp"
-#include "MPIManager.hpp"
 #include "Macros.hpp" // CPUArch
 #include "Memory.hpp" // alignedAlloc
 #include "Observables.hpp"
@@ -44,6 +43,7 @@
 #include "AdjointJacobianGPUMPI.hpp"
 #include "JacobianDataMPI.hpp"
 #include "LGPUBindingsMPI.hpp"
+#include "MPIManagerGPU.hpp"
 #include "MeasurementsGPUMPI.hpp"
 #include "ObservablesGPUMPI.hpp"
 
@@ -53,6 +53,9 @@ using namespace Pennylane::LightningGPU;
 using namespace Pennylane::LightningGPU::Algorithms;
 using namespace Pennylane::LightningGPU::Observables;
 using namespace Pennylane::LightningGPU::Measures;
+using namespace Pennylane::LightningGPU::Util;
+
+using Pennylane::LightningGPU::Util::MPIManagerGPU == MPIManager;
 } // namespace
 /// @endcond
 
@@ -60,6 +63,7 @@ using namespace Pennylane::LightningGPU::Measures;
 
 #include "AdjointJacobianKokkosMPI.hpp"
 #include "LKokkosBindingsMPI.hpp"
+#include "MPIManagerKokkos.hpp"
 #include "MeasurementsKokkosMPI.hpp"
 #include "ObservablesKokkosMPI.hpp"
 /// @cond DEV
@@ -68,6 +72,8 @@ using namespace Pennylane::LightningKokkos;
 using namespace Pennylane::LightningKokkos::Algorithms;
 using namespace Pennylane::LightningKokkos::Observables;
 using namespace Pennylane::LightningKokkos::Measures;
+using namespace Pennylane::LightningKokkos::Util;
+using Pennylane::LightningKokkos::Util::MPIManagerKokkos == MPIManager;
 } // namespace
   /// @endcond
 
