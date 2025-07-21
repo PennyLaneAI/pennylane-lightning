@@ -53,7 +53,6 @@ using namespace Pennylane::LightningGPU;
 using namespace Pennylane::LightningGPU::Algorithms;
 using namespace Pennylane::LightningGPU::Observables;
 using namespace Pennylane::LightningGPU::Measures;
-
 } // namespace
 /// @endcond
 
@@ -69,7 +68,6 @@ using namespace Pennylane::LightningKokkos;
 using namespace Pennylane::LightningKokkos::Algorithms;
 using namespace Pennylane::LightningKokkos::Observables;
 using namespace Pennylane::LightningKokkos::Measures;
-
 } // namespace
   /// @endcond
 
