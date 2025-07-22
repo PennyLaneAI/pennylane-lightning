@@ -16,7 +16,8 @@ This module contains the LightningQubit class, a PennyLane simulator device that
 interfaces with C++ for fast linear algebra calculations.
 """
 from dataclasses import replace
-from functools import reduce
+from functools import partial, reduce
+from multiprocessing import current_process
 from pathlib import Path
 from typing import List, Optional, Sequence, Union
 from warnings import warn
@@ -72,6 +73,16 @@ _to_matrix_ops = {
     "SISWAP": OperatorProperties(),
     "SQISW": OperatorProperties(),
 }
+
+class PkgFunc:
+    def __init__(self, fn):
+        import dill
+        self._fn = dill.dumps(fn)
+
+    def __call__(self, *args, **kwargs):
+        import dill
+        return dill.loads(self._fn)(*args, **kwargs)
+
 
 
 def stopping_condition(op: Operator) -> bool:
@@ -415,11 +426,43 @@ class LightningQubit(LightningBase):
             _add_adjoint_transforms(program)
         return program, exec_config
 
+
+    @staticmethod
+    def execute_static(circuit: QuantumTape_or_Batch, execution_config: ExecutionConfig, wire_map = None):
+        mcmc = {
+            "mcmc": False,
+            "kernel_name": None,
+            "num_burnin": None,
+        }
+        if wire_map is not None:
+            [circuit], _ = qml.map_wires(circuit, wire_map)
+        local_dev = qml.device("lightning.qubit", wires=circuit.wires)
+        res = local_dev.simulate(
+            local_dev.dynamic_wires_from_circuit(circuit),
+            local_dev._statevector,
+            mcmc=mcmc,
+            postselect_mode=execution_config.mcm_config.postselect_mode,
+            mcm_method=execution_config.mcm_config.mcm_method,
+        )
+
+        return res
+    
+    @staticmethod
+    def batched(iterable, n):
+        from itertools import islice
+        "Batch data into tuples of length n. The last batch may be shorter."
+        if n < 1:
+            raise ValueError('n must be at least one')
+        it = iter(iterable)
+        while batch := tuple(islice(it, n)):
+            yield batch
+
+
     # pylint: disable=unused-argument
     def execute(
         self,
         circuits: QuantumTape_or_Batch,
-        execution_config: ExecutionConfig = DefaultExecutionConfig,
+        execution_config: ExecutionConfig = DefaultExecutionConfig
     ) -> Result_or_ResultBatch:
         """Execute a circuit or a batch of circuits and turn it into results.
 
@@ -435,19 +478,32 @@ class LightningQubit(LightningBase):
             "kernel_name": self._kernel_name,
             "num_burnin": self._num_burnin,
         }
+
         results = []
-        for circuit in circuits:
-            if self._wire_map is not None:
-                [circuit], _ = qml.map_wires(circuit, self._wire_map)
-            results.append(
-                self.simulate(
-                    self.dynamic_wires_from_circuit(circuit),
-                    self._statevector,
-                    mcmc=mcmc,
-                    postselect_mode=execution_config.mcm_config.postselect_mode,
-                    mcm_method=execution_config.mcm_config.mcm_method,
+
+        from pennylane.concurrency.executors import create_executor
+
+        ec = execution_config
+        if not isinstance(execution_config.gradient_method, PkgFunc):
+            ec.gradient_method = PkgFunc(execution_config.gradient_method)
+        if len(circuits) > 1 and current_process().name == "MainProcess":
+            func = partial(LightningQubit.execute_static, execution_config=ec, wire_map=self._wire_map)
+            results = []
+            with create_executor(max_workers=8) as exec_backend:
+                results = exec_backend.map(func, circuits)
+        else:
+            for circuit in circuits:
+                if self._wire_map is not None:
+                    [circuit], _ = qml.map_wires(circuit, self._wire_map)
+                results.append(
+                    self.simulate(
+                        self.dynamic_wires_from_circuit(circuit),
+                        self._statevector,
+                        mcmc=mcmc,
+                        postselect_mode=execution_config.mcm_config.postselect_mode,
+                        mcm_method=execution_config.mcm_config.mcm_method,
+                    )
                 )
-            )
 
         return tuple(results)
 
