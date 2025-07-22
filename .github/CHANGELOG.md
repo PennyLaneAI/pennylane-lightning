@@ -21,7 +21,7 @@
 
 <h3>Internal changes ⚙️</h3>
 
-- Use `pennylane.exceptions` for custom pennylane exceptions.
+- Used `pennylane.exceptions` for custom PennyLane exceptions across Lightning Python code.
   [(#1215)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1215)
   
 - Switched off the PLxPR integration tests by removing JAX dependency from requirements files.
