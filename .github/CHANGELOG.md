@@ -21,6 +21,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Updated tests with `circuit(..., shots=...)` to use `qml.set_shots` to ensure compatibility with the latest version of PennyLane.
+  [(#1216)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1216)
+
 - Switched off the PLxPR integration tests by removing JAX dependency from requirements files.
   [(#1214)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1214)
 
@@ -40,6 +43,7 @@
 
 This release contains contributions from (in alphabetical order):
 
+Yushao Chen,
 Joseph Lee,
 Luis Alfredo Nuñez Meneses,
 Jake Zaia
