@@ -158,7 +158,7 @@ class LightningBase(Device):
         return circuit
 
     @abstractmethod
-    def preprocess(self, execution_config: Optional[ExecutionConfig] = None):
+    def preprocess(self, execution_config: ExecutionConfig | None = None):
         """This function defines the device transform program to be applied and an updated device configuration.
 
         Args:
@@ -182,7 +182,7 @@ class LightningBase(Device):
     def execute(
         self,
         circuits: QuantumTape_or_Batch,
-        execution_config: Optional[ExecutionConfig] = None,
+        execution_config: ExecutionConfig | None = None,
     ) -> Result_or_ResultBatch:
         """Execute a circuit or a batch of circuits and turn it into results.
 
@@ -270,7 +270,7 @@ class LightningBase(Device):
     @abstractmethod
     def supports_derivatives(
         self,
-        execution_config: Optional[ExecutionConfig] = None,
+        execution_config: ExecutionConfig | None = None,
         circuit: Optional[qml.tape.QuantumTape] = None,
     ) -> bool:
         """Check whether or not derivatives are available for a given configuration and circuit.
@@ -408,7 +408,7 @@ class LightningBase(Device):
     def compute_derivatives(
         self,
         circuits: QuantumTape_or_Batch,
-        execution_config: Optional[ExecutionConfig] = None,
+        execution_config: ExecutionConfig | None = None,
     ) -> Tuple:
         """Calculate the jacobian of either a single or a batch of circuits on the device.
 
@@ -437,7 +437,7 @@ class LightningBase(Device):
     def execute_and_compute_derivatives(
         self,
         circuits: QuantumTape_or_Batch,
-        execution_config: Optional[ExecutionConfig] = None,
+        execution_config: ExecutionConfig | None = None,
     ) -> Tuple:
         """Compute the results and jacobians of circuits at the same time.
 
@@ -465,7 +465,7 @@ class LightningBase(Device):
 
     def supports_vjp(
         self,
-        execution_config: Optional[ExecutionConfig] = None,
+        execution_config: ExecutionConfig | None = None,
         circuit: Optional[QuantumTape] = None,
     ) -> bool:
         """Whether or not this device defines a custom vector jacobian product.
@@ -482,7 +482,7 @@ class LightningBase(Device):
         self,
         circuits: QuantumTape_or_Batch,
         cotangents: Tuple[Number],
-        execution_config: Optional[ExecutionConfig] = None,
+        execution_config: ExecutionConfig | None = None,
     ) -> Tuple:
         r"""The vector jacobian product used in reverse-mode differentiation. ``Lightning[Device]`` uses the
         adjoint differentiation method to compute the VJP.
@@ -530,7 +530,7 @@ class LightningBase(Device):
         self,
         circuits: QuantumTape_or_Batch,
         cotangents: Tuple[Number],
-        execution_config: Optional[ExecutionConfig] = None,
+        execution_config: ExecutionConfig | None = None,
     ) -> Tuple:
         """Calculate both the results and the vector jacobian product used in reverse-mode differentiation.
         Args:
@@ -564,7 +564,7 @@ class LightningBase(Device):
         jaxpr: "jax.extend.core.Jaxpr",
         consts: list[TensorLike],
         *args: TensorLike,
-        execution_config: Optional[ExecutionConfig] = None,
+        execution_config: ExecutionConfig | None = None,
     ) -> list[TensorLike]:
         """Execute pennylane variant jaxpr using C++ simulation tools.
 
@@ -574,7 +574,7 @@ class LightningBase(Device):
             *args (TensorLike): The arguments to the jaxpr.
 
         Keyword Args:
-            execution_config (Optional[ExecutionConfig]): a datastructure with additional
+            execution_config (ExecutionConfig | None): a datastructure with additional
                 information required for execution
 
         Returns:
@@ -645,7 +645,7 @@ class LightningBase(Device):
         jaxpr: "jax.extend.core.Jaxpr",
         args: Sequence[TensorLike],
         tangents: Sequence[TensorLike],
-        execution_config: Optional[ExecutionConfig] = None,
+        execution_config: ExecutionConfig | None = None,
     ) -> tuple[Sequence[TensorLike], Sequence[TensorLike]]:
         """
         An **experimental** method for computing the results and jvp for PLXPR with LightningBase devices.
@@ -659,7 +659,7 @@ class LightningBase(Device):
                 May contain ``jax.interpreters.ad.Zero``.
 
         Keyword Args:
-            execution_config (Optional[ExecutionConfig]): a data structure with additional information required for execution
+            execution_config (ExecutionConfig | None): a data structure with additional information required for execution
 
         Returns:
             Sequence[TensorLike], Sequence[TensorLike]: the results and Jacobian vector products

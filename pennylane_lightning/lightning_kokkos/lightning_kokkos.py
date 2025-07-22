@@ -315,7 +315,7 @@ class LightningKokkos(LightningBase):
         updated_values["mcm_config"] = _resolve_mcm_method(config.mcm_config)
         return replace(config, **updated_values, device_options=new_device_options)
 
-    def preprocess(self, execution_config: Optional[ExecutionConfig] = None):
+    def preprocess(self, execution_config: ExecutionConfig | None = None):
         """This function defines the device transform program to be applied and an updated device configuration.
 
         Args:
@@ -371,7 +371,7 @@ class LightningKokkos(LightningBase):
     def execute(
         self,
         circuits: QuantumTape_or_Batch,
-        execution_config: Optional[ExecutionConfig] = None,
+        execution_config: ExecutionConfig | None = None,
     ) -> Result_or_ResultBatch:
         """Execute a circuit or a batch of circuits and turn it into results.
 
@@ -401,7 +401,7 @@ class LightningKokkos(LightningBase):
 
     def supports_derivatives(
         self,
-        execution_config: Optional[ExecutionConfig] = None,
+        execution_config: ExecutionConfig | None = None,
         circuit: Optional[qml.tape.QuantumTape] = None,
     ) -> bool:
         """Check whether or not derivatives are available for a given configuration and circuit.
