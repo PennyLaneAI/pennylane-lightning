@@ -126,7 +126,7 @@ std::string opsDataToString(const OpsDataT &ops,
  */
 template <typename ComplexT, typename PrecisionT>
 std::vector<std::vector<ComplexT>> convertMatrices(
-    const std::vector<nb::ndarray<const std::complex<PrecisionT>, nb::c_contig>>
+    const std::vector<nb::ndarray<std::complex<PrecisionT>, nb::c_contig>>
         &matrices) {
     std::vector<std::vector<ComplexT>> conv_matrices(matrices.size());
 

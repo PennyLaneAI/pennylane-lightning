@@ -412,7 +412,7 @@ void registerBackendAgnosticObservables(nb::module_ &m) {
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
 
-    using nd_arr_c = nb::ndarray<const std::complex<PrecisionT>, nb::c_contig>;
+    using nd_ArrCT = nb::ndarray<const std::complex<PrecisionT>, nb::c_contig>;
 
     const std::string bitsize =
         std::is_same_v<PrecisionT, float> ? "64" : "128";
@@ -458,7 +458,7 @@ void registerBackendAgnosticObservables(nb::module_ &m) {
     class_name = "HermitianObsC" + bitsize;
     nb::class_<HermitianObsT, ObservableT>(m, class_name.c_str())
         .def("__init__",
-             [](HermitianObsT *self, const nd_arr_c &matrix,
+             [](HermitianObsT *self, const nd_ArrCT &matrix,
                 const std::vector<std::size_t> &wires) {
                  const auto ptr = matrix.data();
                  new (self) HermitianObsT(
@@ -683,17 +683,17 @@ template <class StateVectorT> void registerAdjointJacobian(nb::module_ &m) {
  * @return OpsData<StateVectorT> Operations data
  */
 template <class StateVectorT>
-OpsData<StateVectorT> createOpsList(
-    const std::vector<std::string> &ops_name,
-    const std::vector<std::vector<typename StateVectorT::PrecisionT>>
-        &ops_params,
-    const std::vector<std::vector<std::size_t>> &ops_wires,
-    const std::vector<bool> &ops_inverses,
-    const std::vector<nb::ndarray<
-        const std::complex<typename StateVectorT::PrecisionT>, nb::c_contig>>
-        &ops_matrices,
-    const std::vector<std::vector<std::size_t>> &ops_controlled_wires,
-    const std::vector<std::vector<bool>> &ops_controlled_values) {
+OpsData<StateVectorT>
+createOpsList(const std::vector<std::string> &ops_name,
+              const std::vector<std::vector<typename StateVectorT::PrecisionT>>
+                  &ops_params,
+              const std::vector<std::vector<std::size_t>> &ops_wires,
+              const std::vector<bool> &ops_inverses,
+              const std::vector<
+                  nb::ndarray<std::complex<typename StateVectorT::PrecisionT>,
+                              nb::c_contig>> &ops_matrices,
+              const std::vector<std::vector<std::size_t>> &ops_controlled_wires,
+              const std::vector<std::vector<bool>> &ops_controlled_values) {
     using ComplexT = typename StateVectorT::ComplexT;
     using PrecisionT = typename StateVectorT::PrecisionT;
 
