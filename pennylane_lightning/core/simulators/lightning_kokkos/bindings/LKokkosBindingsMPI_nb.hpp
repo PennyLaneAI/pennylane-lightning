@@ -43,6 +43,18 @@
 #include "TypeList.hpp"
 #include "Util.hpp" // exp2
 
+/// @cond DEV
+namespace {
+using namespace Pennylane::NanoBindings;
+using namespace Pennylane::LightningKokkos::Algorithms;
+using namespace Pennylane::LightningKokkos::Measures;
+using namespace Pennylane::LightningKokkos::Observables;
+using Kokkos::InitializationSettings;
+using Pennylane::LightningKokkos::StateVectorKokkos;
+using Pennylane::Util::exp2;
+} // namespace
+/// @endcond
+
 namespace nb = nanobind;
 
 namespace Pennylane::LightningKokkos::NanoBindings {
