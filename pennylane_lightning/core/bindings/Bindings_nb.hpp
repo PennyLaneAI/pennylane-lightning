@@ -466,74 +466,87 @@ void registerBackendAgnosticObservables(nb::module_ &m) {
 
     // Register NamedObs class
     class_name = prefix + "NamedObsC" + bitsize;
-    nb::class_<NamedObsT>(m, class_name.c_str(), obs_class)
-        .def(nb::init<const std::string &, const std::vector<std::size_t> &>())
-        .def("__repr__", &NamedObsT::getObsName)
-        .def("get_wires", &NamedObsT::getWires, "Get wires of observables")
-        .def(
-            "__eq__",
-            [](const NamedObsT &self, const NamedObsT &other) -> bool {
-                return self == other;
-            },
-            "Compare two observables");
+    auto named_obs_class =
+        nb::class_<NamedObsT>(m, class_name.c_str(), obs_class);
+    named_obs_class.def(
+        nb::init<const std::string &, const std::vector<std::size_t> &>());
+    named_obs_class.def("__repr__", &NamedObsT::getObsName);
+    named_obs_class.def("get_wires", &NamedObsT::getWires,
+                        "Get wires of observables");
+    named_obs_class.def(
+        "__eq__",
+        [](const NamedObsT &self, const NamedObsT &other) -> bool {
+            return self == other;
+        },
+        "Compare two observables");
 
     // Register HermitianObs class
     class_name = prefix + "HermitianObsC" + bitsize;
-    nb::class_<HermitianObsT, ObservableT>(m, class_name.c_str())
-        .def("__init__",
-             [](HermitianObsT *self, const nd_arr_c &matrix,
-                const std::vector<std::size_t> &wires) {
-                 const auto ptr = matrix.data();
-                 new (self) HermitianObsT(
-                     std::vector<ComplexT>(ptr, ptr + matrix.size()), wires);
-             })
-        .def("__repr__", &HermitianObsT::getObsName)
-        .def("get_wires", &HermitianObsT::getWires, "Get wires of observables")
-        .def("get_matrix", &HermitianObsT::getMatrix,
-             "Get matrix representation of Hermitian operator")
-        .def(
-            "__eq__",
-            [](const HermitianObsT &self, const HermitianObsT &other) -> bool {
-                return self == other;
-            },
-            "Compare two observables");
+    auto hermitian_obs_class =
+        nb::class_<HermitianObsT, ObservableT>(m, class_name.c_str());
+    hermitian_obs_class.def(
+        "__init__", [](HermitianObsT *self, const nd_arr_c &matrix,
+                       const std::vector<std::size_t> &wires) {
+            const auto ptr = matrix.data();
+            new (self) HermitianObsT(
+                std::vector<ComplexT>(ptr, ptr + matrix.size()), wires);
+        });
+    hermitian_obs_class.def("__repr__", &HermitianObsT::getObsName);
+    hermitian_obs_class.def("get_wires", &HermitianObsT::getWires,
+                            "Get wires of observables");
+    hermitian_obs_class.def("get_matrix", &HermitianObsT::getMatrix,
+                            "Get matrix representation of Hermitian operator");
+    hermitian_obs_class.def(
+        "__eq__",
+        [](const HermitianObsT &self, const HermitianObsT &other) -> bool {
+            return self == other;
+        },
+        "Compare two observables");
 
     // Register TensorProdObs class
     class_name = prefix + "TensorProdObsC" + bitsize;
-    nb::class_<TensorProdObsT, ObservableT>(m, class_name.c_str())
-        .def(nb::init<const std::vector<ObsPtr> &>())
-        .def("__repr__", &TensorProdObsT::getObsName)
-        .def("get_wires", &TensorProdObsT::getWires, "Get wires of observables")
-        .def("get_ops", &TensorProdObsT::getObs, "Get operations list")
-        .def(
-            "__eq__",
-            [](const TensorProdObsT &self,
-               const TensorProdObsT &other) -> bool { return self == other; },
-            "Compare two observables");
+    auto tensor_prod_obs_class =
+        nb::class_<TensorProdObsT, ObservableT>(m, class_name.c_str());
+    tensor_prod_obs_class.def(nb::init<const std::vector<ObsPtr> &>());
+    tensor_prod_obs_class.def("__repr__", &TensorProdObsT::getObsName);
+    tensor_prod_obs_class.def("get_wires", &TensorProdObsT::getWires,
+                              "Get wires of observables");
+    tensor_prod_obs_class.def("get_ops", &TensorProdObsT::getObs,
+                              "Get operations list");
+    tensor_prod_obs_class.def(
+        "__eq__",
+        [](const TensorProdObsT &self, const TensorProdObsT &other) -> bool {
+            return self == other;
+        },
+        "Compare two observables");
 
     // Register Hamiltonian class
     class_name = prefix + "HamiltonianC" + bitsize;
-    nb::class_<HamiltonianT, ObservableT>(m, class_name.c_str())
-        .def(nb::init<const std::vector<PrecisionT> &,
-                      const std::vector<ObsPtr> &>())
-        .def("__init__",
-             [](HamiltonianT *self,
-                const nb::ndarray<PrecisionT, nb::c_contig> &coeffs,
-                const std::vector<ObsPtr> &obs) {
-                 const auto ptr = coeffs.data();
-                 new (self) HamiltonianT(
-                     std::vector<PrecisionT>(ptr, ptr + coeffs.size()), obs);
-             })
-        .def("__repr__", &HamiltonianT::getObsName)
-        .def("get_wires", &HamiltonianT::getWires, "Get wires of observables")
-        .def("get_coeffs", &HamiltonianT::getCoeffs, "Get coefficients")
-        .def("get_ops", &HamiltonianT::getObs, "Get operations list")
-        .def(
-            "__eq__",
-            [](const HamiltonianT &self, const HamiltonianT &other) -> bool {
-                return self == other;
-            },
-            "Compare two observables");
+    auto hamiltonian_class =
+        nb::class_<HamiltonianT, ObservableT>(m, class_name.c_str());
+    hamiltonian_class.def(nb::init<const std::vector<PrecisionT> &,
+                                   const std::vector<ObsPtr> &>());
+    hamiltonian_class.def(
+        "__init__", [](HamiltonianT *self,
+                       const nb::ndarray<PrecisionT, nb::c_contig> &coeffs,
+                       const std::vector<ObsPtr> &obs) {
+            const auto ptr = coeffs.data();
+            new (self) HamiltonianT(
+                std::vector<PrecisionT>(ptr, ptr + coeffs.size()), obs);
+        });
+    hamiltonian_class.def("__repr__", &HamiltonianT::getObsName);
+    hamiltonian_class.def("get_wires", &HamiltonianT::getWires,
+                          "Get wires of observables");
+    hamiltonian_class.def("get_coeffs", &HamiltonianT::getCoeffs,
+                          "Get coefficients");
+    hamiltonian_class.def("get_ops", &HamiltonianT::getObs,
+                          "Get operations list");
+    hamiltonian_class.def(
+        "__eq__",
+        [](const HamiltonianT &self, const HamiltonianT &other) -> bool {
+            return self == other;
+        },
+        "Compare two observables");
 }
 
 /**

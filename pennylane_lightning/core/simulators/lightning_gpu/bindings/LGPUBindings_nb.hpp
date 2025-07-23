@@ -236,7 +236,7 @@ void registerBackendSpecificInfo(nb::module_ &m) {
             return info;
         },
         "Backend-specific information.");
-    registerCudaUtils(m);
+    Pennylane::LightningGPU::Util::NanoBindings::registerCudaUtils(m);
 } // m
 
 /**
