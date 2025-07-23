@@ -21,6 +21,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Used `pennylane.exceptions` for custom PennyLane exceptions across Lightning Python code.
+  [(#1215)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1215)
+  
 - Switched off the PLxPR integration tests by removing JAX dependency from requirements files.
   [(#1214)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1214)
 
@@ -42,7 +45,8 @@ This release contains contributions from (in alphabetical order):
 
 Joseph Lee,
 Luis Alfredo Nuñez Meneses,
-Jake Zaia
+Andrija Paurevic,
+Jake Zaia.
 
 ---
 
