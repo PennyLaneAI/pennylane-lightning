@@ -169,7 +169,7 @@ template <class StateVectorT> void registerObservablesMPI(nb::module_ &m) {
     // Register HamiltonianMPI class
     class_name = "HamiltonianMPIC" + bitsize;
     nb::class_<HamiltonianMPI<StateVectorT>, ObservableT>(m, class_name.c_str())
-        .def(nb::init<const std::vector<ParamT> &,
+        .def(nb::init<const std::vector<PrecisionT> &,
                       const std::vector<ObsPtr> &>())
         .def("__repr__", &HamiltonianMPI<StateVectorT>::getObsName)
         .def("get_wires", &HamiltonianMPI<StateVectorT>::getWires,
@@ -319,7 +319,7 @@ void registerBackendAgnosticAlgorithmsMPI(nb::module_ &m) {
     class_name = "OpsStructMPIC" + bitsize;
     nb::class_<OpsData<StateVectorT>>(m, class_name.c_str())
         .def(nb::init<const std::vector<std::string> &,
-                      const std::vector<std::vector<ParamT>> &,
+                      const std::vector<std::vector<PrecisionT>> &,
                       const std::vector<std::vector<std::size_t>> &,
                       const std::vector<bool> &,
                       const std::vector<std::vector<ComplexT>> &>())
@@ -375,7 +375,7 @@ void registerBackendAgnosticAlgorithmsMPI(nb::module_ &m) {
              "Adjoint Jacobian method.")
         .def(
             "batched",
-            [](AdjointJacobianMPI<StateVectorT> &self, StateVectorT &sv,
+            [](AdjointJacobianMPI<StateVectorT> &self, const StateVectorT &sv,
                const std::vector<std::shared_ptr<Observable<StateVectorT>>>
                    &observables,
                const OpsData<StateVectorT> &operations,
@@ -388,7 +388,7 @@ void registerBackendAgnosticAlgorithmsMPI(nb::module_ &m) {
                 const JacobianDataMPI<StateVectorT> jd{
                     operations.getTotalNumParams(), sv, observables, operations,
                     trainableParams};
-                adjoint_jacobian.adjointJacobian_serial(std::span{jac}, jd);
+                self.adjointJacobian_serial(std::span{jac}, jd);
 #elif _ENABLE_PLKOKKOS == 1
                 const JacobianData<StateVectorT> jd{
                     operations.getTotalNumParams(),
@@ -397,11 +397,8 @@ void registerBackendAgnosticAlgorithmsMPI(nb::module_ &m) {
                     observables,
                     operations,
                     trainableParams};
-                adjoint_jacobian.adjointJacobian(std::span{jac}, jd, sv);
-
+                self.adjointJacobian(std::span{jac}, jd, sv);
 #endif
-                self.adjointJacobian_serial(std::span{jac}, jd);
-
                 return createNumpyArrayFromVector<PrecisionT>(std::move(jac));
             },
             "Batch Adjoint Jacobian method.");
@@ -413,29 +410,41 @@ void registerBackendAgnosticAlgorithmsMPI(nb::module_ &m) {
  * @param m Nanobind module
  */
 inline void registerInfoMPI(nb::module_ &m) {
-    nb::class_<MPIManager>(m, "MPIManager")
+    nb::class_<MPIManagerT>(m, "MPIManager")
         .def(nb::init<>())
-        .def(nb::init<MPIManager &>())
-        .def("Barrier", &MPIManager::Barrier)
-        .def("getRank", &MPIManager::getRank)
-        .def("getSize", &MPIManager::getSize)
-        .def("getSizeNode", &MPIManager::getSizeNode)
-        .def("getTime", &MPIManager::getTime)
-        .def("getVendor", &MPIManager::getVendor)
-        .def("getVersion", &MPIManager::getVersion)
+        .def(nb::init<MPIManagerT &>())
+        .def("Barrier", &MPIManagerT::Barrier)
+        .def("getRank", &MPIManagerT::getRank)
+        .def("getSize", &MPIManagerT::getSize)
+        .def("getSizeNode", &MPIManagerT::getSizeNode)
+        .def("getTime", &MPIManagerT::getTime)
+        .def("getVendor", &MPIManagerT::getVendor)
+        .def("getVersion", &MPIManagerT::getVersion)
         // Template version with explicit type constraints
         .def(
             "Scatter",
-            []<typename T>(MPIManager &mpi_manager,
-                           nb::ndarray<std::complex<T>, nb::c_contig> &sendBuf,
-                           nb::ndarray<std::complex<T>, nb::c_contig> &recvBuf,
-                           int root) {
+            [](MPIManagerT &mpi_manager,
+               nb::ndarray<std::complex<float>, nb::c_contig> &sendBuf,
+               nb::ndarray<std::complex<float>, nb::c_contig> &recvBuf,
+               int root) {
                 auto send_ptr = sendBuf.data();
                 auto recv_ptr = recvBuf.data();
-                mpi_manager.template Scatter<std::complex<T>>(
+                mpi_manager.template Scatter<std::complex<float>>(
                     send_ptr, recv_ptr, recvBuf.size(), root);
             },
-            "MPI Scatter for complex arrays.");
+            "MPI Scatter for complex float arrays.")
+        .def(
+            "Scatter",
+            [](MPIManagerT &mpi_manager,
+               nb::ndarray<std::complex<double>, nb::c_contig> &sendBuf,
+               nb::ndarray<std::complex<double>, nb::c_contig> &recvBuf,
+               int root) {
+                auto send_ptr = sendBuf.data();
+                auto recv_ptr = recvBuf.data();
+                mpi_manager.template Scatter<std::complex<double>>(
+                    send_ptr, recv_ptr, recvBuf.size(), root);
+            },
+            "MPI Scatter for complex double arrays.");
 }
 
 /**

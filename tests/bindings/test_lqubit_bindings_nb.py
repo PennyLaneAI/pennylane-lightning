@@ -17,9 +17,12 @@ import numpy as np
 import pytest
 from conftest import device_name
 
-# Skip all tests if not using lightning.qubit
-if device_name != "lightning.qubit":
-    pytest.skip("Skipping tests for binaries other than lightning_qubit.", allow_module_level=True)
+# Skip all tests if not using lightning.qubit or lightning.kokkos
+if device_name not in ["lightning.qubit", "lightning.kokkos"]:
+    pytest.skip(
+        "Skipping tests for binaries other than lightning_qubit and lightning_kokkos.",
+        allow_module_level=True,
+    )
 
 
 class TestLQubitStateVectorBindings:

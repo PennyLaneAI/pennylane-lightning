@@ -458,7 +458,7 @@ void registerBackendAgnosticObservables(nb::module_ &m) {
     class_name = "HermitianObsC" + bitsize;
     nb::class_<HermitianObsT, ObservableT>(m, class_name.c_str())
         .def("__init__",
-             [](HermitianObsT *self, const nd_arr_c &matrix,
+             [](HermitianObsT *self, const nd_ArrCT &matrix,
                 const std::vector<std::size_t> &wires) {
                  const auto ptr = matrix.data();
                  new (self) HermitianObsT(
