@@ -7,6 +7,10 @@
 - Added comprehensive tests for Python bindings.
   [(#1198)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1198)
   
+- Using `mcm_method="device"` on `lightning.qubit`, `lightning.kokkos` and `lightning.gpu`
+  now resolves to the tree-traversal method.
+  [(#1210)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1210)
+
 - Skip Identity operation in Lightning Qubit and removed assert for applying Identity gate not equal to 1 wire.
   [(#1212)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1212)
 
@@ -20,6 +24,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Used `pennylane.exceptions` for custom PennyLane exceptions across Lightning Python code.
+  [(#1215)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1215)
+  
 - Switched off the PLxPR integration tests by removing JAX dependency from requirements files.
   [(#1214)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1214)
 
@@ -39,10 +46,11 @@
 
 This release contains contributions from (in alphabetical order):
 
-Joseph Lee,
 Luis Alfredo Nuñez Meneses,
 Amintor Dusko,
-Jake Zaia
+Joseph Lee,
+Andrija Paurevic,
+Jake Zaia.
 
 ---
 
