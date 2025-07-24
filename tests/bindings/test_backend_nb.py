@@ -20,7 +20,7 @@ from conftest import SUPPORTED_DEVICES, device_name
 # Skip all tests if not using lightning.qubit or lightning.kokkos
 if device_name not in SUPPORTED_DEVICES:
     pytest.skip(
-        "Skipping tests for binaries other than lightning_qubit and lightning_kokkos.",
+        f"Skipping tests for binaries other than {SUPPORTED_DEVICES}.",
         allow_module_level=True,
     )
 

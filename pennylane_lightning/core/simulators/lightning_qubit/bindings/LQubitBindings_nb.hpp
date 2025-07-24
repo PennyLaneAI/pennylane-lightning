@@ -455,21 +455,21 @@ void registerBackendSpecificAlgorithms(nb::module_ &m) {
 }
 
 /**
- * @brief Provide backend information.
- */
-auto getBackendInfo() -> nb::dict {
-    nb::dict info;
-    info["NAME"] = "lightning.qubit";
-    return info;
-}
-
-/**
  * @brief Register bindings for backend-specific info.
  *
  * @param m Nanobind module.
  */
 void registerBackendSpecificInfo(nb::module_ &m) {
-    m.def("backend_info", &getBackendInfo, "Backend-specific information.");
-}
+    m.def(
+        "backend_info",
+        []() {
+            nb::dict info;
+
+            info["NAME"] = "lightning.qubit";
+
+            return info;
+        },
+        "Backend-specific information.");
+} // m
 
 } // namespace Pennylane::LightningQubit::NanoBindings

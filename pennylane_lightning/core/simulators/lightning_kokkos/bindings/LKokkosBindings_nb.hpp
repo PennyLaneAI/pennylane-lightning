@@ -213,15 +213,6 @@ template <class StateVectorT>
 void registerBackendSpecificAlgorithms(nb::module_ &) {} // m
 
 /**
- * @brief Provide backend information.
- */
-auto getBackendInfo() -> nb::dict {
-    nb::dict info;
-    info["NAME"] = "lightning.kokkos";
-    return info;
-}
-
-/**
  * @brief Register bindings for backend-specific info.
  *
  * @param m Nanobind module.
@@ -233,7 +224,6 @@ void registerBackendSpecificInfo(nb::module_ &m) {
     m.def("kokkos_finalize", []() { Kokkos::finalize(); });
     m.def("kokkos_is_initialized", []() { return Kokkos::is_initialized(); });
     m.def("kokkos_is_finalized", []() { return Kokkos::is_finalized(); });
-    m.def("backend_info", &getBackendInfo, "Backend-specific information.");
     m.def(
         "print_configuration",
         []() {
@@ -329,6 +319,16 @@ void registerBackendSpecificInfo(nb::module_ &m) {
             args_stream << "tools_args = " << args.get_tools_args();
             return args_stream.str();
         });
+    m.def(
+        "backend_info",
+        []() {
+            nb::dict info;
+
+            info["NAME"] = "lightning.kokkos";
+
+            return info;
+        },
+        "Backend-specific information.");
 }
 
 /**
