@@ -22,6 +22,6 @@
 
 #include <nanobind/nanobind.h>
 
-namespace Pennylane::LightningGPU::Util::NanoBindings {
+namespace Pennylane::Util::NanoBindings {
 void registerCudaUtils(nanobind::module_);
 }

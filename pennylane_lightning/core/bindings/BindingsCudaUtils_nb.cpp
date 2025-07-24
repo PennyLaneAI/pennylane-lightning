@@ -3,7 +3,10 @@
 #include "DevicePool.hpp"
 #include "cuda_helpers.hpp"
 
-namespace Pennylane::LightningGPU::Util::NanoBindings {
+using namespace Pennylane::LightningGPU;
+using namespace Pennylane::LightningGPU::Util;
+
+namespace Pennylane::Util::NanoBindings {
 
 namespace nb = nanobind;
 
@@ -74,4 +77,4 @@ void registerCudaUtils(nb::module_ &m) {
     pyclass_devtag.def("refresh", &DevTag<int>::refresh);
 }
 
-} // namespace Pennylane::LightningGPU::Util::NanoBindings
+} // namespace Pennylane::Util::NanoBindings

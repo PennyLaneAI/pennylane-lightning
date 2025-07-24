@@ -37,6 +37,7 @@ namespace nb = nanobind;
 
 /// @cond DEV
 namespace {
+using namespace Pennylane::Util::NanoBindings;
 using namespace Pennylane::LightningGPU::Measures;
 using namespace Pennylane::LightningGPU::Observables;
 } // namespace
@@ -236,7 +237,7 @@ void registerBackendSpecificInfo(nb::module_ &m) {
             return info;
         },
         "Backend-specific information.");
-    Pennylane::LightningGPU::Util::NanoBindings::registerCudaUtils(m);
+    registerCudaUtils(m);
 } // m
 
 /**
