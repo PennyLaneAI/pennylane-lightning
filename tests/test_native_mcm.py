@@ -128,7 +128,7 @@ class TestUnsupportedConfigurationsMCM:
         )
 
         with pytest.raises(
-            qml.wires.WireError,
+            qml.exceptions.WireError,
             match=f"on {device_name} as they contain wires not found on the device: {{1}}",
         ):
             circuit(1.33)
@@ -262,6 +262,27 @@ class TestSupportedConfigurationsMCM:
             spy_deffered.assert_not_called()
             spy_one_shot.assert_not_called()
 
+    @pytest.mark.parametrize("shots", [None, 10])
+    def test_qnode_default_mcm_method_device(self, shots, mocker):
+        """Test the default mcm method is used for analytical simulation"""
+        spy_deferred = mocker.spy(qml.defer_measurements, "_transform")
+        spy_dynamic_one_shot = mocker.spy(qml.dynamic_one_shot, "_transform")
+        spy_tree_traversal = mocker.patch(
+            "pennylane_lightning.lightning_base.lightning_base.mcm_tree_traversal"
+        )
+
+        circuit = self.generate_mcm_circuit(
+            device_kwargs={"wires": 3, "shots": shots},
+            qnode_kwargs={"mcm_method": "device"},
+            mcm_kwargs={},
+        )
+
+        _ = circuit(np.pi / 8)
+
+        spy_deferred.assert_not_called()
+        spy_dynamic_one_shot.assert_not_called()
+        spy_tree_traversal.assert_called_once()
+
     def test_qnode_default_mcm_method_analytical(self, mocker):
         """Test the default mcm method is used for analytical simulation"""
         spy_deferred = mocker.spy(qml.defer_measurements, "_transform")
@@ -376,7 +397,7 @@ class TestExecutionMCM:
             )
 
         res1 = qml.QNode(circuit_op, dq)()
-        res2 = qml.QNode(circuit_op, dev, mcm_method=mcm_method)(shots=10)
+        res2 = qml.set_shots(qml.QNode(circuit_op, dev, mcm_method=mcm_method), shots=10)()
         for r1, r2 in zip(res1, res2):
             if isinstance(r1, Sequence):
                 assert len(r1) == len(r2)
@@ -389,7 +410,7 @@ class TestExecutionMCM:
             return qml.expval(op=m), qml.probs(op=m), qml.var(op=m)
 
         res1 = qml.QNode(circuit_mcm, dq)()
-        res2 = qml.QNode(circuit_mcm, dev, mcm_method=mcm_method)(shots=10)
+        res2 = qml.set_shots(qml.QNode(circuit_mcm, dev, mcm_method=mcm_method), shots=10)()
         for r1, r2 in zip(res1, res2):
             if isinstance(r1, Sequence):
                 assert len(r1) == len(r2)

@@ -7,6 +7,10 @@
 - Added support for `GlobalPhase` with zero-qubit Lightning devices. Currently, only the `lightning.qubit` and `lightning.kokkos` backends support zero-qubit initialization.
   [(#1205)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1205)
 
+- Using `mcm_method="device"` on `lightning.qubit`, `lightning.kokkos` and `lightning.gpu`
+  now resolves to the tree-traversal method.
+  [(#1210)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1210)
+
 - Skipped Identity operation in Lightning Qubit and removed assert for applying Identity gate not equal to 1 wire.
   [(#1212)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1212)
 
@@ -19,6 +23,15 @@
 <h3>Bug fixes 🐛</h3>
 
 <h3>Internal changes ⚙️</h3>
+
+- Updated tests with `circuit(..., shots=...)` to use `qml.set_shots` to ensure compatibility with the latest version of PennyLane.
+  [(#1216)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1216)
+
+- Used `pennylane.exceptions` for custom PennyLane exceptions across Lightning Python code.
+  [(#1215)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1215)
+  
+- Switched off the PLxPR integration tests by removing JAX dependency from requirements files.
+  [(#1214)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1214)
 
 - Updated JAX version from 0.6.0 to 0.6.2, keeping the same version as PennyLane and Catalyst
   [(#1200)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1200)
@@ -37,9 +50,11 @@
 This release contains contributions from (in alphabetical order):
 
 Ali Asadi,
+Yushao Chen,
 Joseph Lee,
 Luis Alfredo Nuñez Meneses,
-Jake Zaia
+Andrija Paurevic,
+Jake Zaia.
 
 ---
 

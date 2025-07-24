@@ -3,7 +3,7 @@ requires = ["cmake", "ninja; platform_system!='Windows'", "setuptools>=75.8.1", 
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "pennylane_lightning"
+name = "pennylane_lightning_kokkos"
 description = "PennyLane-Lightning plugin"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -14,7 +14,6 @@ classifiers = [
     "Intended Audience :: Science/Research", 
     "Natural Language :: English", 
     "Operating System :: MacOS :: MacOS X", 
-    "Operating System :: Microsoft :: Windows", 
     "Operating System :: POSIX", 
     "Operating System :: POSIX :: Linux", 
     "Programming Language :: Python", 
@@ -26,7 +25,7 @@ classifiers = [
     "Programming Language :: Python :: 3.13", 
     "Topic :: Scientific/Engineering :: Physics",
 ]
-dependencies = ["pennylane>=0.41", "scipy-openblas32>=0.3.26"]
+dependencies = ["pennylane>=0.41", "scipy-openblas32>=0.3.26", "pennylane_lightning==0.43.0-dev9"]
 dynamic = [ "version",]
 [[project.maintainers]]
 name = "Xanadu Quantum Technologies Inc."
@@ -41,7 +40,7 @@ tensor = [ "pennylane-lightning-tensor",]
 Homepage = "https://github.com/PennyLaneAI/pennylane-lightning"
 
 [project.entry-points."pennylane.plugins"]
-"lightning.qubit" = "pennylane_lightning.lightning_qubit:LightningQubit"
+"lightning.kokkos" = "pennylane_lightning.lightning_kokkos:LightningKokkos"
 
 [tool.bandit]
 targets = "pennylane_lightning"

@@ -1721,13 +1721,12 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyGlobalPhase",
     using ComplexT = StateVectorKokkos<TestType>::ComplexT;
     std::mt19937_64 re{1337};
     const TestType param = 0.234;
+    const bool inverse = GENERATE(false, true);
+    const ComplexT phase = Kokkos::exp(ComplexT{0, (inverse) ? param : -param});
 
     DYNAMIC_SECTION("GlobalPhase with 0-qubit - "
                     << PrecisionToName<TestType>::value) {
         const std::size_t num_qubits = 0;
-        const bool inverse = GENERATE(false, true);
-        const ComplexT phase =
-            Kokkos::exp(ComplexT{0, (inverse) ? param : -param});
 
         auto sv_data = createRandomStateVectorData<TestType>(re, num_qubits);
         StateVectorKokkos<TestType> kokkos_sv(
@@ -1742,10 +1741,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyGlobalPhase",
     DYNAMIC_SECTION("GlobalPhase with 3-qubit - "
                     << PrecisionToName<TestType>::value) {
         const std::size_t num_qubits = 3;
-        const bool inverse = GENERATE(false, true);
         const std::size_t index = GENERATE(0, 1, 2);
-        const ComplexT phase =
-            Kokkos::exp(ComplexT{0, (inverse) ? param : -param});
 
         auto sv_data = createRandomStateVectorData<TestType>(re, num_qubits);
         StateVectorKokkos<TestType> kokkos_sv(
