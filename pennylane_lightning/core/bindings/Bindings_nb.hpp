@@ -872,7 +872,7 @@ template <class StateVectorT> void lightningClassBindings(nb::module_ &m) {
     auto pyclass_measurements =
         nb::class_<Measurements<StateVectorT>>(m, class_name.c_str());
 
-#ifdef _ENABLE_PLGPU
+#if defined(_ENABLE_PLGPU) || defined(_ENABLE_PLKOKKOS)
     pyclass_measurements.def(nb::init<StateVectorT &>());
 #else
     pyclass_measurements.def(nb::init<const StateVectorT &>());
