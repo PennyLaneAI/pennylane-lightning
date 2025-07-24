@@ -33,8 +33,6 @@
 #include "StateVectorCudaManaged.hpp"
 #include "TypeList.hpp"
 
-namespace nb = nanobind;
-
 /// @cond DEV
 namespace {
 using namespace Pennylane::LightningGPU::Measures;
@@ -43,6 +41,8 @@ using namespace Pennylane::LightningGPU::Observables;
 /// @endcond
 
 namespace Pennylane::LightningGPU::NanoBindings {
+
+namespace nb = nanobind;
 
 /**
  * @brief Define StateVector backends for lightning.gpu

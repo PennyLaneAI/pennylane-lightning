@@ -24,8 +24,10 @@
 #include "DevicePool.hpp"
 #include "cuda_helpers.hpp"
 
-namespace nb = nanobind;
 namespace Pennylane::LightningGPU::NanoBindings {
+
+namespace nb = nanobind;
+
 /**
  * @brief Register bindings for CUDA utils.
  *
