@@ -49,7 +49,6 @@
 
 This release contains contributions from (in alphabetical order):
 
-
 Luis Alfredo Nuñez Meneses,
 Yushao Chen,
 Amintor Dusko,
