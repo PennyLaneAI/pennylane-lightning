@@ -2563,6 +2563,8 @@ TEMPLATE_TEST_CASE(
     std::mt19937 re{1337};
     const int num_qubits = 4;
     const auto margin = PrecisionT{1e-5};
+    bool inverse = GENERATE(false, true);
+    PrecisionT param = GENERATE(-1.5, -0.5, 0, 0.5, 1.5);
     const std::size_t control = GENERATE(0, 1, 2, 3);
     const std::size_t wire = GENERATE(0, 1, 2, 3);
     StateVectorLQubitManaged<PrecisionT> sv0(num_qubits);
@@ -2572,8 +2574,6 @@ TEMPLATE_TEST_CASE(
                     << "controls = {" << control << "} "
                     << ", wires = {" << wire << "} - "
                     << PrecisionToName<PrecisionT>::value) {
-        bool inverse = GENERATE(false, true);
-        PrecisionT param = GENERATE(-1.5, -0.5, 0, 0.5, 1.5);
         if (control != wire) {
             auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
             sv0.updateData(st0);
@@ -2594,8 +2594,6 @@ TEMPLATE_TEST_CASE(
                     << "controls = {" << control << "} "
                     << ", wires = {" << wire << "} - "
                     << PrecisionToName<PrecisionT>::value) {
-        bool inverse = GENERATE(false, true);
-        PrecisionT param = GENERATE(-1.5, -0.5, 0, 0.5, 1.5);
         if (control != wire) {
             auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
             sv0.updateData(st0);
@@ -2615,8 +2613,6 @@ TEMPLATE_TEST_CASE(
                     << "controls = {" << control << "} "
                     << ", wires = {" << wire << "} - "
                     << PrecisionToName<PrecisionT>::value) {
-        bool inverse = GENERATE(false, true);
-        PrecisionT param = GENERATE(-1.5, -0.5, 0, 0.5, 1.5);
         if (control != wire) {
             auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
             sv0.updateData(st0);
@@ -2636,8 +2632,6 @@ TEMPLATE_TEST_CASE(
                     << "controls = {" << control << "} "
                     << ", wires = {" << wire << "} - "
                     << PrecisionToName<PrecisionT>::value) {
-        bool inverse = GENERATE(false, true);
-        PrecisionT param = GENERATE(-1.5, -0.5, 0, 0.5, 1.5);
         if (control != wire) {
             auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
             sv0.updateData(st0);
@@ -2657,8 +2651,6 @@ TEMPLATE_TEST_CASE(
                     << "controls = {" << control << "} "
                     << ", wires = {" << wire << "} - "
                     << PrecisionToName<PrecisionT>::value) {
-        const bool inverse = GENERATE(false, true);
-        const PrecisionT param = GENERATE(-1.5, -0.5, 0, 0.5, 1.5);
         if (control != wire) {
             auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
             sv0.updateData(st0);
@@ -2684,6 +2676,8 @@ TEMPLATE_TEST_CASE(
     std::mt19937 re{1337};
     const int num_qubits = 4;
     const auto margin = PrecisionT{1e-5};
+    bool inverse = GENERATE(false, true);
+    PrecisionT param = GENERATE(-1.5, -0.5, 0, 0.5, 1.5);
     const std::size_t control = GENERATE(0, 1, 2, 3);
     const std::size_t wire0 = GENERATE(0, 1, 2, 3);
     const std::size_t wire1 = GENERATE(0, 1, 2, 3);
@@ -2707,8 +2701,6 @@ TEMPLATE_TEST_CASE(
                     << "controls = {" << control << "} "
                     << ", wires = {" << wire0 << ", " << wire1 << "} - "
                     << PrecisionToName<PrecisionT>::value) {
-        bool inverse = GENERATE(false, true);
-        PrecisionT param = GENERATE(-1.5, -0.5, 0, 0.5, 1.5);
         if (control != wire0 && control != wire1 && wire0 != wire1) {
             auto matrix = getIsingXX<std::complex, PrecisionT>(param);
             std::vector<ComplexT> cmatrix = getControlledGate(matrix);
@@ -2730,8 +2722,6 @@ TEMPLATE_TEST_CASE(
                     << "controls = {" << control << "} "
                     << ", wires = {" << wire0 << ", " << wire1 << "} - "
                     << PrecisionToName<PrecisionT>::value) {
-        bool inverse = GENERATE(false, true);
-        PrecisionT param = GENERATE(-1.5, -0.5, 0, 0.5, 1.5);
         if (control != wire0 && control != wire1 && wire0 != wire1) {
             auto matrix = getIsingXY<std::complex, PrecisionT>(param);
             std::vector<ComplexT> cmatrix = getControlledGate(matrix);
@@ -2753,8 +2743,6 @@ TEMPLATE_TEST_CASE(
                     << "controls = {" << control << "} "
                     << ", wires = {" << wire0 << ", " << wire1 << "} - "
                     << PrecisionToName<PrecisionT>::value) {
-        bool inverse = GENERATE(false, true);
-        PrecisionT param = GENERATE(-1.5, -0.5, 0, 0.5, 1.5);
         if (control != wire0 && control != wire1 && wire0 != wire1) {
             auto matrix = getIsingYY<std::complex, PrecisionT>(param);
             std::vector<ComplexT> cmatrix = getControlledGate(matrix);
@@ -2776,8 +2764,6 @@ TEMPLATE_TEST_CASE(
                     << "controls = {" << control << "} "
                     << ", wires = {" << wire0 << ", " << wire1 << "} - "
                     << PrecisionToName<PrecisionT>::value) {
-        bool inverse = GENERATE(false, true);
-        PrecisionT param = GENERATE(-1.5, -0.5, 0, 0.5, 1.5);
         if (control != wire0 && control != wire1 && wire0 != wire1) {
             auto matrix = getIsingZZ<std::complex, PrecisionT>(param);
             std::vector<ComplexT> cmatrix = getControlledGate(matrix);
@@ -2799,8 +2785,6 @@ TEMPLATE_TEST_CASE(
                     << "controls = {" << control << "} "
                     << ", wires = {" << wire0 << ", " << wire1 << "} - "
                     << PrecisionToName<PrecisionT>::value) {
-        bool inverse = GENERATE(false, true);
-        PrecisionT param = GENERATE(-1.5, -0.5, 0, 0.5, 1.5);
         if (control != wire0 && control != wire1 && wire0 != wire1) {
             auto matrix = getSingleExcitation<std::complex, PrecisionT>(param);
             std::vector<ComplexT> cmatrix = getControlledGate(matrix);
@@ -2822,8 +2806,6 @@ TEMPLATE_TEST_CASE(
                     << "controls = {" << control << "} "
                     << ", wires = {" << wire0 << ", " << wire1 << "} - "
                     << PrecisionToName<PrecisionT>::value) {
-        bool inverse = GENERATE(false, true);
-        PrecisionT param = GENERATE(-1.5, -0.5, 0, 0.5, 1.5);
         if (control != wire0 && control != wire1 && wire0 != wire1) {
             auto matrix =
                 getSingleExcitationMinus<std::complex, PrecisionT>(param);
@@ -2846,8 +2828,6 @@ TEMPLATE_TEST_CASE(
                     << "controls = {" << control << "} "
                     << ", wires = {" << wire0 << ", " << wire1 << "} - "
                     << PrecisionToName<PrecisionT>::value) {
-        bool inverse = GENERATE(false, true);
-        PrecisionT param = GENERATE(-1.5, -0.5, 0, 0.5, 1.5);
         if (control != wire0 && control != wire1 && wire0 != wire1) {
             auto matrix =
                 getSingleExcitationPlus<std::complex, PrecisionT>(param);
@@ -2870,8 +2850,6 @@ TEMPLATE_TEST_CASE(
                     << "controls = {" << control << "} "
                     << ", wires = {" << wire0 << ", " << wire1 << "} - "
                     << PrecisionToName<PrecisionT>::value) {
-        bool inverse = GENERATE(false, true);
-        PrecisionT param = GENERATE(-1.5, -0.5, 0, 0.5, 1.5);
         if (control != wire0 && control != wire1 && wire0 != wire1) {
             auto matrix = getPSWAP<std::complex, PrecisionT>(param);
             std::vector<ComplexT> cmatrix = getControlledGate(matrix);
@@ -2898,6 +2876,8 @@ TEMPLATE_TEST_CASE(
     std::mt19937 re{1337};
     const int num_qubits = 5;
     const auto margin = PrecisionT{1e-5};
+    bool inverse = GENERATE(false, true);
+    PrecisionT param = GENERATE(-1.5, -0.5, 0, 0.5, 1.5);
     const std::size_t control = GENERATE(0, 1, 2, 3, 4);
     const std::size_t wire0 = GENERATE(0, 1, 2, 3, 4);
     const std::size_t wire1 = GENERATE(0, 1, 2, 3, 4);
@@ -2924,8 +2904,6 @@ TEMPLATE_TEST_CASE(
                     << ", wires = {" << wire0 << ", " << wire1 << ", " << wire2
                     << ", " << wire3 << "} - "
                     << PrecisionToName<PrecisionT>::value) {
-        bool inverse = GENERATE(false, true);
-        PrecisionT param = GENERATE(-1.5, -0.5, 0, 0.5, 1.5);
         std::vector<std::size_t> wires = {control, wire0, wire1, wire2, wire3};
         std::sort(wires.begin(), wires.end());
         if (std::adjacent_find(wires.begin(), wires.end()) == wires.end()) {
@@ -2952,8 +2930,6 @@ TEMPLATE_TEST_CASE(
                     << ", wires = {" << wire0 << ", " << wire1 << ", " << wire2
                     << ", " << wire3 << "} - "
                     << PrecisionToName<PrecisionT>::value) {
-        bool inverse = GENERATE(false, true);
-        PrecisionT param = GENERATE(-1.5, -0.5, 0, 0.5, 1.5);
         std::vector<std::size_t> wires = {control, wire0, wire1, wire2, wire3};
         std::sort(wires.begin(), wires.end());
         if (std::adjacent_find(wires.begin(), wires.end()) == wires.end()) {
@@ -2981,8 +2957,6 @@ TEMPLATE_TEST_CASE(
                     << ", wires = {" << wire0 << ", " << wire1 << ", " << wire2
                     << ", " << wire3 << "} - "
                     << PrecisionToName<PrecisionT>::value) {
-        bool inverse = GENERATE(false, true);
-        PrecisionT param = GENERATE(-1.5, -0.5, 0, 0.5, 1.5);
         std::vector<std::size_t> wires = {control, wire0, wire1, wire2, wire3};
         std::sort(wires.begin(), wires.end());
         if (std::adjacent_find(wires.begin(), wires.end()) == wires.end()) {
@@ -3010,8 +2984,6 @@ TEMPLATE_TEST_CASE(
                     << wire1 << "} "
                     << ", wires = {" << wire2 << ", " << wire3 << "} - "
                     << PrecisionToName<PrecisionT>::value) {
-        bool inverse = GENERATE(false, true);
-        PrecisionT param = GENERATE(-1.5, -0.5, 0, 0.5, 1.5);
         std::vector<std::size_t> wires = {control, wire0, wire1, wire2, wire3};
         std::sort(wires.begin(), wires.end());
         const ComplexT e = std::exp(ComplexT{0, -0.5} * param);
@@ -3041,8 +3013,6 @@ TEMPLATE_TEST_CASE(
                     << wire1 << "} "
                     << ", wires = {" << wire2 << ", " << wire3 << "} - "
                     << PrecisionToName<PrecisionT>::value) {
-        bool inverse = GENERATE(false, true);
-        PrecisionT param = GENERATE(-1.5, -0.5, 0, 0.5, 1.5);
         PrecisionT dimension = GENERATE(0, 1, 2, 3, 4);
 
         std::vector<std::size_t> wires = {control, wire0, wire1, wire2, wire3};
@@ -3082,22 +3052,39 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::applyGlobalPhase",
                    "[StateVectorLQubitManaged_Param]", double) {
     using ComplexT = StateVectorLQubitManaged<TestType>::ComplexT;
     std::mt19937_64 re{1337};
-
-    const std::size_t num_qubits = 3;
-    const bool inverse = GENERATE(false, true);
-    const std::size_t index = GENERATE(0, 1, 2);
     const TestType param = 0.234;
+    const bool inverse = GENERATE(false, true);
     const ComplexT phase = std::exp(ComplexT{0, (inverse) ? param : -param});
 
-    auto sv_data = createRandomStateVectorData<TestType>(re, num_qubits);
-    StateVectorLQubitManaged<TestType> sv(
-        reinterpret_cast<ComplexT *>(sv_data.data()), sv_data.size());
-    sv.applyOperation("GlobalPhase", {index}, inverse, {param});
-    auto result_sv = sv.getDataVector();
-    for (std::size_t j = 0; j < exp2(num_qubits); j++) {
-        ComplexT tmp = phase * ComplexT(sv_data[j]);
-        CHECK((real(result_sv[j])) == Approx(real(tmp)));
-        CHECK((imag(result_sv[j])) == Approx(imag(tmp)));
+    DYNAMIC_SECTION("GlobalPhase with 0-qubit - "
+                    << PrecisionToName<TestType>::value) {
+        const std::size_t num_qubits = 0;
+
+        auto sv_data = createRandomStateVectorData<TestType>(re, num_qubits);
+        StateVectorLQubitManaged<TestType> sv(
+            reinterpret_cast<ComplexT *>(sv_data.data()), sv_data.size());
+        sv.applyOperation("GlobalPhase", {}, inverse, {param});
+        auto result_sv = sv.getDataVector();
+        ComplexT tmp = phase * ComplexT(sv_data[0]);
+        CHECK((real(result_sv[0])) == Approx(real(tmp)));
+        CHECK((imag(result_sv[0])) == Approx(imag(tmp)));
+    }
+
+    DYNAMIC_SECTION("GlobalPhase with 3-qubit - "
+                    << PrecisionToName<TestType>::value) {
+        const std::size_t num_qubits = 3;
+        const std::size_t index = GENERATE(0, 1, 2);
+
+        auto sv_data = createRandomStateVectorData<TestType>(re, num_qubits);
+        StateVectorLQubitManaged<TestType> sv(
+            reinterpret_cast<ComplexT *>(sv_data.data()), sv_data.size());
+        sv.applyOperation("GlobalPhase", {index}, inverse, {param});
+        auto result_sv = sv.getDataVector();
+        for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+            ComplexT tmp = phase * ComplexT(sv_data[j]);
+            CHECK((real(result_sv[j])) == Approx(real(tmp)));
+            CHECK((imag(result_sv[j])) == Approx(imag(tmp)));
+        }
     }
 }
 
@@ -3110,14 +3097,14 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::applyControlledGlobalPhase",
     const std::size_t num_qubits = 3;
     const bool inverse = GENERATE(false, true);
     /* The `phase` array contains the diagonal entries of the controlled-phase
-       operator. It can be created in Python using the following command
+      operator. It can be created in Python using the following command
 
-       ```
-       global_phase_diagonal(-np.pi/2, wires=[0, 1, 2], controls=[0, 1],
-       control_values=[0, 1])
-       ```
+      ```
+      global_phase_diagonal(-np.pi/2, wires=[0, 1, 2], controls=[0, 1],
+      control_values=[0, 1])
+      ```
 
-       where the phase angle is chosen as `-np.pi/2` for simplicity.
+      where the phase angle is chosen as `-np.pi/2` for simplicity.
     */
     const std::vector<ComplexT> phase = {{1.0, 0.}, {1.0, 0.}, {0.0, 1.},
                                          {0.0, 1.}, {1.0, 0.}, {1.0, 0.},

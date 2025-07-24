@@ -783,6 +783,28 @@ def test_controlled_globalphase(n_qubits, control_value, tol):
             assert np.allclose(circ(), circ_def(), tol)
 
 
+@pytest.mark.parametrize("control_value", [False, True])
+@pytest.mark.parametrize("n_qubits", list(range(2, 4)))
+def test_controlled_globalphase_zero_targetwire(n_qubits, control_value, tol):
+    """Test that multi-controlled GlobalPhase with zero-wire are correctly applied to a state"""
+    dev_def = qml.device("default.qubit", wires=n_qubits)
+    dev = qml.device(device_name, wires=n_qubits)
+    control_wires = list(range(1, n_qubits))
+
+    def circuit():
+        qml.StatePrep(get_random_normalized_state(2**n_qubits), wires=range(n_qubits))
+        qml.ctrl(
+            qml.GlobalPhase(0.1234),
+            control_wires,
+            control_values=([control_value or bool(i % 2) for i, _ in enumerate(control_wires)]),
+        )
+        return qml.state()
+
+    circ = qml.QNode(circuit, dev)
+    circ_def = qml.QNode(circuit, dev_def)
+    assert np.allclose(circ(), circ_def(), tol)
+
+
 @pytest.mark.parametrize(
     "operation",
     [
