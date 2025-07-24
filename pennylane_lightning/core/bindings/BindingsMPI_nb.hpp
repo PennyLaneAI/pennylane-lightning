@@ -509,4 +509,4 @@ template <class StateVectorT> void lightningClassBindingsMPI(nb::module_ &m) {
 template <typename TypeList>
 void registerLightningClassBindingsMPI(nb::module_ &m) {}
 
-// namespace Pennylane::NanoBindings
+} // namespace Pennylane::NanoBindings
