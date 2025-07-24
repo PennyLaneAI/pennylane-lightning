@@ -14,7 +14,7 @@
 
 /**
  * @file BindingsCudaUtils.hpp
- * Defines CUDA device - specific operations to export to Python, other
+ * Defines CUDA device-specific operations to export to Python, other
  * utility functions interfacing with Nanobind and support to agnostic bindings.
  */
 
