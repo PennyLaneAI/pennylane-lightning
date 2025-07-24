@@ -82,7 +82,7 @@ void registerBackendClassSpecificBindingsMPI(PyClass &pyclass) {
 
     // Register gates for state vector
     registerGatesForStateVector<StateVectorT>(pyclass);
-    registerControlledGate<StateVectorT>(pyclass);
+    registerControlledGates<StateVectorT>(pyclass);
 
     pyclass.def(nb::init<std::size_t>());
     pyclass.def(nb::init<MPIManagerKokkos &, std::size_t>());

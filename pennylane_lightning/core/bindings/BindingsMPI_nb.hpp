@@ -488,10 +488,10 @@ template <class StateVectorT> void lightningClassBindingsMPI(nb::module_ &m) {
     //***********************************************************************//
 
     class_name = "MeasurementsMPIC" + bitsize;
-    auto pyclass_measurements =
-        nb::class_<MeasurementsMPI<StateVectorT>>(m, class_name.c_str());
+    auto pyclass_measurements = nb::class_<MeasurementsMPI<StateVectorT>>(
+        m, class_name.c_str(), nb::module_local());
 
-    pyclass_measurements.def(nb::init<const StateVectorT &>());
+    pyclass_measurements.def(nb::init<StateVectorT &>());
     registerBackendAgnosticMeasurementsMPI<StateVectorT>(pyclass_measurements);
     registerBackendSpecificMeasurementsMPI<StateVectorT>(pyclass_measurements);
 
