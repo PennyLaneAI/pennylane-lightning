@@ -4,9 +4,11 @@
 
 <h3>Improvements 🛠</h3>
 
-- Added comprehensive tests for Python bindings.
+- Replaced pybind11 bindings with nanobind
+  [(#1176)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1176)
   [(#1198)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1198)
-  
+  [(#1184)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1184)
+
 - Using `mcm_method="device"` on `lightning.qubit`, `lightning.kokkos` and `lightning.gpu`
   now resolves to the tree-traversal method.
   [(#1210)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1210)
