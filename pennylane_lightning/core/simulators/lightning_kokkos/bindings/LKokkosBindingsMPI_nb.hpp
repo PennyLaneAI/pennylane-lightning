@@ -55,9 +55,9 @@ using Pennylane::Util::exp2;
 } // namespace
 /// @endcond
 
-namespace nb = nanobind;
-
 namespace Pennylane::LightningKokkos::NanoBindings {
+
+namespace nb = nanobind;
 
 /**
  * @brief Define StateVector backends for lightning.kokkos MPI
