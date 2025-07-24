@@ -14,7 +14,7 @@ AVX2/AVX512 kernels
 
 .. title-card::
    :name: Kernel Performance Tuning
-   :description: Explains how to tune Lightning-Qubit's kernel performance using CMake flags for OpenMP threading and AVX streaming.
+   :description: Explain how to tune Lightning-Qubit's kernel performance using CMake flags for OpenMP threading and AVX streaming.
    :link: ./kernel_tuning.html
 
 .. raw:: html
