@@ -122,8 +122,6 @@ using namespace Pennylane::LightningTensor::TNCuda::NanoBindings;
 static_assert(false, "Backend not found.");
 #endif
 
-namespace nb = nanobind;
-
 /// @cond DEV
 namespace {
 using Pennylane::NanoBindings::Utils::createNumpyArrayFromVector;
@@ -134,6 +132,9 @@ using Pennylane::Util::PL_reinterpret_cast;
 /// @endcond
 
 namespace Pennylane::NanoBindings {
+
+namespace nb = nanobind;
+
 /**
  * @brief Register applyMatrix
  */

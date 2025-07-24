@@ -52,9 +52,9 @@ using Pennylane::NanoBindings::Utils::createNumpyArrayFromVector;
 } // namespace
 /// @endcond
 
-namespace nb = nanobind;
-
 namespace Pennylane::LightningQubit::NanoBindings {
+
+namespace nb = nanobind;
 
 /**
  * @brief Define StateVector backends for lightning.qubit
