@@ -507,14 +507,6 @@ template <class StateVectorT> void lightningClassBindingsMPI(nb::module_ &m) {
 }
 
 template <typename TypeList>
-void registerLightningClassBindingsMPI(nb::module_ &m) {
-    if constexpr (!std::is_same_v<TypeList, void>) {
-        using StateVectorT = typename TypeList::Type;
-        lightningClassBindingsMPI<StateVectorT>(m);
-        registerLightningClassBindingsMPI<typename TypeList::Next>(m);
-        nb::exception<Pennylane::Util::LightningException>(
-            m, "LightningExceptionMPI");
-    }
-}
+void registerLightningClassBindingsMPI(nb::module_ &m) {}
 
-} // namespace Pennylane::NanoBindings
+// namespace Pennylane::NanoBindings
