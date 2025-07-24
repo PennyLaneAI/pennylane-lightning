@@ -18,7 +18,7 @@ import inspect
 
 import numpy as np
 import pytest
-from conftest import device_module_name
+from conftest import device_module_name, device_name
 
 
 def get_module_attributes(module):
@@ -75,9 +75,16 @@ class TestNanobindBindings:
     def test_statevector_classes_exists(self):
         """Test if StateVectorC classes exists in the module."""
         for precision in ["64", "128"]:
-            assert (
-                f"StateVectorC{precision}" in self.nb_module_attr["classes"]
-            ), f"StateVectorC{precision} not found in module"
+            if device_name == "lightning.tensor":
+                for method in ["exact", "mps"]:
+                    class_name = f"{method}TensorNetC{precision}"
+                    assert (
+                        class_name in self.nb_module_attr["classes"]
+                    ), f"{class_name} not found in module"
+            else:
+                assert (
+                    f"StateVectorC{precision}" in self.nb_module_attr["classes"]
+                ), f"StateVectorC{precision} not found in module"
 
     @pytest.mark.xfail(reason="Expected to fail while we don't have backend-specific bindings.")
     def test_api_parity_with_pybind(self):
@@ -242,28 +249,37 @@ class TestNanobindBindings:
         # Check if observables submodule exists
         assert hasattr(self.nb_module, "observables"), "Module does not have observables submodule"
 
-        # Check for NamedObs classes
-        assert (
-            f"NamedObsC{precision}" in self.nb_module.observables.__dir__()
-        ), f"NamedObsC{precision} not found in observables submodule"
+        if device_name == "lightning.tensor":
+            prefixes = ["exact", "mps"]
+        else:
+            prefixes = [""]
 
-        # Check for HermitianObs classes
-        assert (
-            f"HermitianObsC{precision}" in self.nb_module.observables.__dir__()
-        ), f"HermitianObsC{precision} not found in observables submodule"
+        for prefix in prefixes:
+            # Check for NamedObs classes
+            assert (
+                f"{prefix}NamedObsC{precision}" in self.nb_module.observables.__dir__()
+            ), f"{prefix}NamedObsC{precision} not found in observables submodule"
 
-        # Check for TensorProdObs classes
-        assert (
-            f"TensorProdObsC{precision}" in self.nb_module.observables.__dir__()
-        ), f"TensorProdObsC{precision} not found in observables submodule"
+            # Check for HermitianObs classes
+            assert (
+                f"{prefix}HermitianObsC{precision}" in self.nb_module.observables.__dir__()
+            ), f"{prefix}HermitianObsC{precision} not found in observables submodule"
 
-        # Check for Hamiltonian classes
-        assert (
-            f"HamiltonianC{precision}" in self.nb_module.observables.__dir__()
-        ), f"HamiltonianC{precision} not found in observables submodule"
+            # Check for TensorProdObs classes
+            assert (
+                f"{prefix}TensorProdObsC{precision}" in self.nb_module.observables.__dir__()
+            ), f"{prefix}TensorProdObsC{precision} not found in observables submodule"
+
+            # Check for Hamiltonian classes
+            assert (
+                f"{prefix}HamiltonianC{precision}" in self.nb_module.observables.__dir__()
+            ), f"{prefix}HamiltonianC{precision} not found in observables submodule"
 
     def test_algorithms_submodule_exists(self, precision):
         """Test that the algorithms submodule exists and contains expected classes."""
+        if device_name == "lightning.tensor":
+            pytest.skip("lightning.tensor does not have algorithms submodule")
+
         # Check if algorithms submodule exists
         assert hasattr(self.nb_module, "algorithms"), "Module does not have algorithms submodule"
 
@@ -299,6 +315,9 @@ class TestNanobindBindings:
             assert key in info
 
 
+@pytest.mark.skipif(
+    device_name == "lightning.tensor", reason="lightning.tensor does not support aligned arrays"
+)
 class TestAlignedArrayNB:
     """Tests for allocate_aligned_array function in nanobind-based modules."""
 

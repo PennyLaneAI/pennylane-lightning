@@ -25,7 +25,8 @@
 #include "cuda_helpers.hpp"
 
 namespace nb = nanobind;
-namespace Pennylane::LightningGPU::NanoBindings {
+
+namespace Pennylane::LightningGPU::Util::NanoBindings {
 /**
  * @brief Register bindings for CUDA utils.
  *
@@ -93,4 +94,4 @@ void registerCudaUtils(nb::module_ &m) {
     pyclass_devtag.def("refresh", &DevTag<int>::refresh);
 }
 
-} // namespace Pennylane::LightningGPU::NanoBindings
+} // namespace Pennylane::LightningGPU::Util::NanoBindings

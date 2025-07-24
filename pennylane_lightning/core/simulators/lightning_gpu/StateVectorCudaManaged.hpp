@@ -295,7 +295,7 @@ class StateVectorCudaManaged
      * @param adjoint Indicates whether to use adjoint of gate.
      * @param params Optional parameter list for parametric gates.
      * @param matrix Gate data (in row-major format).
-     * @param mat_size The size of the gate matrix
+     * @param mat_size The number of components in the gate matrix
      */
     void applyOperation(const std::string &opName,
                         const std::vector<std::size_t> &wires, bool adjoint,
