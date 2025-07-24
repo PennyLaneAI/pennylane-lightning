@@ -17,6 +17,9 @@
 
 <h3>Documentation 📝</h3>
 
+- Added missing `Kernel performance tuning` documentation page to the AVX2/AVX512 kernels index for improved discoverability.
+  [(#1217)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1217)
+
 <h3>Bug fixes 🐛</h3>
 
 <h3>Internal changes ⚙️</h3>
