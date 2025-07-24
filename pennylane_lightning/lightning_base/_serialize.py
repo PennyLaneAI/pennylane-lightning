@@ -208,9 +208,9 @@ class QuantumScriptSerializer:
                 self.sparse_hamiltonian_mpi_c128 = (
                     lightning_ops.observablesMPI.SparseHamiltonianMPIC128
                 )
-                self._mpi_manager = lightning_ops.MPIManagerGPU
+                self._mpi_manager = lightning_ops.MPIManager
             elif self.device_name == "lightning.kokkos":
-                self._mpi_manager = lightning_ops.MPIManagerKokkos
+                self._mpi_manager = lightning_ops.MPIManager
 
     def _set_lightning_tensor_bindings(self, tensor_backend, lightning_ops):
         """Define the variables needed to access the modules from the C++ bindings for tensor network."""
