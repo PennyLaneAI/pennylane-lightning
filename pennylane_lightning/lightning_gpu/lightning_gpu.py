@@ -455,15 +455,16 @@ class LightningGPU(LightningBase):
             Bool: Whether or not a derivative can be calculated provided the given information
 
         """
-        if execution_config is None:
+        if execution_config is None and circuit is None:
             return True
 
-        if execution_config.gradient_method in {"adjoint", "best"}:
-            if circuit is None:
-                return True
-            return _supports_adjoint(circuit=circuit)
+        if execution_config.gradient_method not in {"adjoint", "best"}:
+            return False
 
-        return False
+        if circuit is None:
+            return True
+
+        return _supports_adjoint(circuit=circuit)
 
     @staticmethod
     def get_c_interface():
