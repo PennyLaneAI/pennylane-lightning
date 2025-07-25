@@ -543,6 +543,15 @@ class TestExecution:
         "config, expected_config",
         [
             (
+                ExecutionConfig(),
+                ExecutionConfig(
+                    grad_on_execution=None,
+                    use_device_gradient=False,
+                    use_device_jacobian_product=False,
+                    device_options=_default_device_options,
+                ),
+            ),
+            (
                 None,
                 ExecutionConfig(
                     grad_on_execution=None,
