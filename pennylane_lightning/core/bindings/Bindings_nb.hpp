@@ -249,6 +249,7 @@ void registerControlledGates(PyClass &pyclass) {
  * @tparam VectorT Datatype of array to create
  * @param memory_model Memory model to use
  * @param size Size of the array to create
+ * @param zeroInit Whether to initialize the array with zeros
  * @return nb::ndarray<VectorT, nb::numpy, nb::c_contig>
  */
 template <typename VectorT>
@@ -257,13 +258,27 @@ auto alignedArray(CPUMemoryModel memory_model, std::size_t size, bool zeroInit)
     using Pennylane::Util::alignedAlloc;
     using Pennylane::Util::getAlignment;
 
-    // Allocate aligned memory
-    void *ptr = alignedAlloc(getAlignment<VectorT>(memory_model),
-                             sizeof(VectorT) * size, zeroInit);
+    // Allocate memory based on alignment requirements
+    void *ptr;
+    if (getAlignment<VectorT>(memory_model) > alignof(std::max_align_t)) {
+        ptr = alignedAlloc(getAlignment<VectorT>(memory_model),
+                           sizeof(VectorT) * size, zeroInit);
+    } else {
+        if (zeroInit) {
+            ptr = new VectorT[size](); // Value-initialize (zero-init)
+        } else {
+            ptr = new VectorT[size]; // Default-initialize
+        }
+    }
 
     // Create capsule with custom deleter
-    auto capsule =
-        nb::capsule(ptr, [](void *p) noexcept { Util::alignedFree(p); });
+    auto capsule = nb::capsule(ptr, [memory_model](void *p) noexcept {
+        if (getAlignment<VectorT>(memory_model) > alignof(std::max_align_t)) {
+            Util::alignedFree(p);
+        } else {
+            delete[] static_cast<VectorT *>(p);
+        }
+    });
 
     std::vector<size_t> shape{size};
 
@@ -417,7 +432,7 @@ void registerBackendAgnosticObservables(nb::module_ &m) {
 
     using nd_arr_c = nb::ndarray<const std::complex<ParamT>, nb::c_contig>;
 
-    const std::string bitsize =
+    constexpr std::string bitsize =
         std::is_same_v<PrecisionT, float> ? "64" : "128";
 
 #ifdef _ENABLE_PLTENSOR
@@ -703,7 +718,7 @@ void registerBackendAgnosticAlgorithms(nb::module_ &m) {
         typename StateVectorT::ComplexT; // Statevector's complex type
     using ParamT = PrecisionT;           // Parameter's data precision
 
-    const std::string bitsize =
+    constexpr std::string bitsize =
         std::to_string(sizeof(std::complex<PrecisionT>) * 8);
 
     std::string class_name;
@@ -816,7 +831,7 @@ void registerBackendAgnosticStateVectorMethods(PyClass &pyclass) {
 template <class StateVectorT> void lightningClassBindings(nb::module_ &m) {
     using PrecisionT = typename StateVectorT::PrecisionT;
 
-    const std::string bitsize =
+    constexpr std::string bitsize =
         std::to_string(sizeof(std::complex<PrecisionT>) * 8);
 
     // StateVector class

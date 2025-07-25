@@ -211,6 +211,8 @@ void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
     // Register sparse matrix operators.
     registerSparseMatrixOperators<StateVectorT>(pyclass);
 
+    pyclass.def(nb::init<std::size_t>(), "Initialize with number of qubits");
+
     // Add Pauli rotation.
     pyclass.def(
         "applyPauliRot",
@@ -220,9 +222,6 @@ void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
             sv.applyPauliRot(wires, inverse, params, word);
         },
         "Apply a Pauli rotation.");
-
-    // Fix constructor binding for nanobind.
-    pyclass.def(nb::init<std::size_t>(), "Initialize with number of qubits");
 
     // Collapse and normalize methods.
     pyclass.def(
@@ -373,7 +372,7 @@ void registerBackendSpecificObservables(nb::module_ &m) {
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
 
-    const std::string bitsize =
+    constexpr std::string bitsize =
         std::is_same_v<PrecisionT, float> ? "64" : "128";
 
     using ArrayCT = nb::ndarray<std::complex<PrecisionT>, nb::c_contig>;
@@ -453,7 +452,7 @@ template <class StateVectorT>
 void registerBackendSpecificAlgorithms(nb::module_ &m) {
     using PrecisionT = typename StateVectorT::PrecisionT;
 
-    const std::string bitsize =
+    constexpr std::string bitsize =
         std::is_same_v<PrecisionT, float> ? "64" : "128";
 
     std::string class_name;
