@@ -429,7 +429,7 @@ void registerBackendAgnosticObservables(nb::module_ &m) {
 
     using nd_arr_c = nb::ndarray<const std::complex<ParamT>, nb::c_contig>;
 
-    constexpr std::string bitsize =
+    const std::string bitsize =
         std::is_same_v<PrecisionT, float> ? "64" : "128";
 
 #ifdef _ENABLE_PLTENSOR

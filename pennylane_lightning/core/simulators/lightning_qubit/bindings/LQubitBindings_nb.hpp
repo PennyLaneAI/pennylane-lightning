@@ -372,7 +372,7 @@ void registerBackendSpecificObservables(nb::module_ &m) {
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
 
-    constexpr std::string bitsize =
+    const std::string bitsize =
         std::is_same_v<PrecisionT, float> ? "64" : "128";
 
     using ArrayCT = nb::ndarray<std::complex<PrecisionT>, nb::c_contig>;
@@ -452,7 +452,7 @@ template <class StateVectorT>
 void registerBackendSpecificAlgorithms(nb::module_ &m) {
     using PrecisionT = typename StateVectorT::PrecisionT;
 
-    constexpr std::string bitsize =
+    const std::string bitsize =
         std::is_same_v<PrecisionT, float> ? "64" : "128";
 
     std::string class_name;

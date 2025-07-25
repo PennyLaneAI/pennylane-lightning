@@ -90,7 +90,7 @@ template <class StateVectorT> void registerObservablesMPI(nb::module_ &m) {
         typename StateVectorT::ComplexT; // Statevector's complex type.
     using ParamT = PrecisionT;           // Parameter's data precision
 
-    constexpr std::string bitsize =
+    const std::string bitsize =
         std::is_same_v<PrecisionT, float> ? "64" : "128";
 
     using arr_c = nb::ndarray<std::complex<ParamT>, nb::c_contig>;
@@ -307,7 +307,7 @@ void registerBackendAgnosticAlgorithmsMPI(nb::module_ &m) {
 
     using arr_c = nb::ndarray<std::complex<ParamT>, nb::c_contig>;
 
-    constexpr std::string bitsize =
+    const std::string bitsize =
         std::is_same_v<PrecisionT, float> ? "64" : "128";
 
     std::string class_name;
@@ -448,7 +448,7 @@ template <class StateVectorT> void lightningClassBindingsMPI(nb::module_ &m) {
     using PrecisionT =
         typename StateVectorT::PrecisionT; // Statevector's precision.
     // Enable module name to be based on size of complex datatype
-    constexpr std::string bitsize =
+    const std::string bitsize =
         std::is_same_v<PrecisionT, float> ? "64" : "128";
 
     //***********************************************************************//
