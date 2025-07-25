@@ -24,6 +24,12 @@
 - Replace `DefaultExecutionConfig` with `ExecutionConfig()` across the Lightning Python device APIs.
   [(#1185)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1185)
 
+- Updated tests with `circuit(..., shots=...)` to use `qml.set_shots` to ensure compatibility with the latest version of PennyLane.
+  [(#1216)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1216)
+
+- Used `pennylane.exceptions` for custom PennyLane exceptions across Lightning Python code.
+  [(#1215)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1215)
+  
 - Switched off the PLxPR integration tests by removing JAX dependency from requirements files.
   [(#1214)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1214)
 
@@ -43,9 +49,11 @@
 
 This release contains contributions from (in alphabetical order):
 
+Yushao Chen,
 Joseph Lee,
 Luis Alfredo Nuñez Meneses,
-Jake Zaia
+Andrija Paurevic,
+Jake Zaia.
 
 ---
 

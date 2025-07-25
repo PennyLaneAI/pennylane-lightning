@@ -128,7 +128,7 @@ class TestUnsupportedConfigurationsMCM:
         )
 
         with pytest.raises(
-            qml.wires.WireError,
+            qml.exceptions.WireError,
             match=f"on {device_name} as they contain wires not found on the device: {{1}}",
         ):
             circuit(1.33)
@@ -397,7 +397,7 @@ class TestExecutionMCM:
             )
 
         res1 = qml.QNode(circuit_op, dq)()
-        res2 = qml.QNode(circuit_op, dev, mcm_method=mcm_method)(shots=10)
+        res2 = qml.set_shots(qml.QNode(circuit_op, dev, mcm_method=mcm_method), shots=10)()
         for r1, r2 in zip(res1, res2):
             if isinstance(r1, Sequence):
                 assert len(r1) == len(r2)
@@ -410,7 +410,7 @@ class TestExecutionMCM:
             return qml.expval(op=m), qml.probs(op=m), qml.var(op=m)
 
         res1 = qml.QNode(circuit_mcm, dq)()
-        res2 = qml.QNode(circuit_mcm, dev, mcm_method=mcm_method)(shots=10)
+        res2 = qml.set_shots(qml.QNode(circuit_mcm, dev, mcm_method=mcm_method), shots=10)()
         for r1, r2 in zip(res1, res2):
             if isinstance(r1, Sequence):
                 assert len(r1) == len(r2)
