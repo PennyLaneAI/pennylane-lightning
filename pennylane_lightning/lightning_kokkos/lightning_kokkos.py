@@ -420,10 +420,8 @@ class LightningKokkos(LightningBase):
             return True
         if execution_config.gradient_method not in {"adjoint", "best"}:
             return False
-
         if circuit is None:
             return True
-
         return _supports_adjoint(circuit=circuit)
 
     @staticmethod

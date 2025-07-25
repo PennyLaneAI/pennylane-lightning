@@ -461,7 +461,6 @@ class LightningGPU(LightningBase):
             return False
         if circuit is None:
             return True
-
         return _supports_adjoint(circuit=circuit)
 
     @staticmethod
