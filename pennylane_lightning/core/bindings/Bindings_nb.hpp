@@ -260,27 +260,6 @@ auto alignedArray(CPUMemoryModel memory_model, std::size_t size, bool zeroInit)
 
     // Allocate memory based on alignment requirements
     void *ptr;
-<<<<<<< Updated upstream
-    if (getAlignment<VectorT>(memory_model) > alignof(std::max_align_t)) {
-        ptr = alignedAlloc(getAlignment<VectorT>(memory_model),
-                           sizeof(VectorT) * size, zeroInit);
-    } else {
-        if (zeroInit) {
-            ptr = new VectorT[size](); // Value-initialize (zero-init)
-        } else {
-            ptr = new VectorT[size]; // Default-initialize
-        }
-    }
-
-    // Create capsule with custom deleter
-    auto capsule = nb::capsule(ptr, [memory_model](void *p) noexcept {
-        if (getAlignment<VectorT>(memory_model) > alignof(std::max_align_t)) {
-            Util::alignedFree(p);
-        } else {
-            delete[] static_cast<VectorT *>(p);
-        }
-    });
-=======
     nb::capsule capsule;
 
     if (getAlignment<VectorT>(memory_model) > alignof(std::max_align_t)) {
@@ -297,7 +276,6 @@ auto alignedArray(CPUMemoryModel memory_model, std::size_t size, bool zeroInit)
         capsule = nb::capsule(
             ptr, [](void *p) noexcept { delete[] static_cast<VectorT *>(p); });
     }
->>>>>>> Stashed changes
 
     std::vector<size_t> shape{size};
 
