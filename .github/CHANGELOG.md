@@ -4,6 +4,9 @@
 
 <h3>Improvements 🛠</h3>
 
+- Added comprehensive tests for Python bindings.
+  [(#1198)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1198)
+  
 - Using `mcm_method="device"` on `lightning.qubit`, `lightning.kokkos` and `lightning.gpu`
   now resolves to the tree-traversal method.
   [(#1210)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1210)
@@ -46,9 +49,10 @@
 
 This release contains contributions from (in alphabetical order):
 
-Yushao Chen,
-Joseph Lee,
 Luis Alfredo Nuñez Meneses,
+Yushao Chen,
+Amintor Dusko,
+Joseph Lee,
 Andrija Paurevic,
 Jake Zaia.
 
@@ -127,6 +131,9 @@ Jake Zaia.
 
 <h3>Internal changes ⚙️</h3>
 
+- Added Nanobind-based Python bindings for Lightning Qubit as an alternative to PyBind11.
+  [(#1198)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1198)
+
 - Updated tests with `device(..., shots=...)` to use `qml.set_shots` to ensure compatibility with the latest version of PennyLane.
   [(#1173)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1173)
   
@@ -136,6 +143,13 @@ Jake Zaia.
 - Enabled `AmplitudeEmbedding` Python tests for `lightning.kokkos` and `lightning.gpu` devices.
   [(#1192)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1192)
   
+- Introduce Nanobind as a new framework for Python bindings, and enhance modularity and performance of binding code. 
+  This includes significant improvements to the build system and a first round of codebase simplification. 
+  Legacy PyBind11 code remains accessible for compatibility and will be incrementally phased out.
+  [(#1176)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1176)
+  [(#1187)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1187)
+  [(#1189)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1189)
+
 - Updated docker build CI for stable version to use v0.41.1.
   [(#1188)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1188)
 
@@ -177,6 +191,7 @@ This release contains contributions from (in alphabetical order):
 
 Runor Agbaire,
 Ali Asadi,
+Amintor Dusko
 Yushao Chen,
 Christina Lee,
 Joseph Lee,
@@ -186,7 +201,7 @@ Luis Alfredo Nuñez Meneses,
 Mudit Pandey,
 Shuli Shu,
 Marc Vandelle,
-Jake Zaia 
+Jake Zaia
 
 ---
 
