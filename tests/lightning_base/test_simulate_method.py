@@ -105,7 +105,7 @@ class TestSimulate:
             "num_burnin": 100,
         }
 
-        execution_config = None
+        execution_config = ExecutionConfig()
 
         dev = LightningDevice(wires=1)
         result = dev.simulate(
