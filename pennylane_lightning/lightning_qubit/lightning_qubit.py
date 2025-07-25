@@ -447,12 +447,13 @@ class LightningQubit(LightningBase):
             Bool: Whether or not a derivative can be calculated provided the given information
 
         """
-        if execution_config is None and circuit is None:
-            return True
-        if execution_config.gradient_method not in {"adjoint", "best"}:
-            return False
         if circuit is None:
             return True
+        if execution_config is not None and execution_config.gradient_method not in {
+            "adjoint",
+            "best",
+        }:
+            return False
         return _supports_adjoint(circuit=circuit)
 
     @staticmethod
