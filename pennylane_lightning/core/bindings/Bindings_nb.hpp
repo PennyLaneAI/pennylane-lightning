@@ -629,7 +629,7 @@ template <class StateVectorT> void registerAdjointJacobian(nb::module_ &m) {
     using PrecisionT = typename StateVectorT::PrecisionT;
 
     const std::string bitsize =
-        std::to_string(sizeof(std::complex<PrecisionT>) * 8);
+        std::is_same_v<PrecisionT, float> ? "64" : "128";
 
     std::string class_name = "AdjointJacobianC" + bitsize;
     auto adjoint_jacobian_class =
@@ -715,8 +715,8 @@ void registerBackendAgnosticAlgorithms(nb::module_ &m) {
         typename StateVectorT::ComplexT; // Statevector's complex type
     using ParamT = PrecisionT;           // Parameter's data precision
 
-    constexpr std::string bitsize =
-        std::to_string(sizeof(std::complex<PrecisionT>) * 8);
+    const std::string bitsize =
+        std::is_same_v<PrecisionT, float> ? "64" : "128";
 
     std::string class_name;
 
@@ -828,8 +828,8 @@ void registerBackendAgnosticStateVectorMethods(PyClass &pyclass) {
 template <class StateVectorT> void lightningClassBindings(nb::module_ &m) {
     using PrecisionT = typename StateVectorT::PrecisionT;
 
-    constexpr std::string bitsize =
-        std::to_string(sizeof(std::complex<PrecisionT>) * 8);
+    const std::string bitsize =
+        std::is_same_v<PrecisionT, float> ? "64" : "128";
 
     // StateVector class
     std::string class_name = "StateVectorC" + bitsize;
