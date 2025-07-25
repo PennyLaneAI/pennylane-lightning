@@ -33,9 +33,9 @@
 #include "StateVectorTNCuda.hpp"
 #include "TypeList.hpp"
 
-namespace nb = nanobind;
-
 namespace Pennylane::LightningTensor::TNCuda::NanoBindings {
+
+namespace nb = nanobind;
 
 /**
  * @brief Define StateVector backends for lightning.tensor

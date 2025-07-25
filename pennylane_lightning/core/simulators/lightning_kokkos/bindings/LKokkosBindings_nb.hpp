@@ -33,9 +33,9 @@
 #include "StateVectorKokkos.hpp"
 #include "TypeList.hpp"
 
-namespace nb = nanobind;
-
 namespace Pennylane::LightningKokkos::NanoBindings {
+
+namespace nb = nanobind;
 
 /**
  * @brief Define StateVector backends for lightning.kokkos

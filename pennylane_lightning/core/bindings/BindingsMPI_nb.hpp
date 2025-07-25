@@ -74,8 +74,9 @@ static_assert(false, "Backend not found.");
 
 #endif
 
-namespace nb = nanobind;
 namespace Pennylane::NanoBindings {
+
+namespace nb = nanobind;
 
 /**
  * @brief Register observable classes for MPI.

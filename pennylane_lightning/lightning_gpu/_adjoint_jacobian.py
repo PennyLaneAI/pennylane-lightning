@@ -20,8 +20,8 @@ from __future__ import annotations
 from warnings import warn
 
 try:
-    from pennylane_lightning.lightning_gpu_ops import DevPool
-    from pennylane_lightning.lightning_gpu_ops.algorithms import (
+    from pennylane_lightning.lightning_gpu_nb import DevPool
+    from pennylane_lightning.lightning_gpu_nb.algorithms import (
         AdjointJacobianC64,
         AdjointJacobianC128,
         create_ops_listC64,

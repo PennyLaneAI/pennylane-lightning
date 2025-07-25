@@ -42,7 +42,7 @@ if device_name == "lightning.kokkos":
         TensorProdObsC128,
     )
 elif device_name == "lightning.gpu":
-    from pennylane_lightning.lightning_gpu_ops.observables import (
+    from pennylane_lightning.lightning_gpu_nb.observables import (
         HamiltonianC64,
         HamiltonianC128,
         HermitianObsC64,
