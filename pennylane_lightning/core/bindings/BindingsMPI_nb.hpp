@@ -415,47 +415,8 @@ void registerBackendAgnosticAlgorithmsMPI(nb::module_ &m) {
  * @param m Nanobind module
  */
 inline void registerInfoMPI(nb::module_ &m) {
-    nb::class_<MPIManagerT>(m, "MPIManager")
-        .def(nb::init<>())
-        .def(nb::init<MPIManagerT &>())
-        .def("Barrier", &MPIManagerT::Barrier)
-        .def("getRank", &MPIManagerT::getRank)
-        .def("getSize", &MPIManagerT::getSize)
-        .def("getSizeNode", &MPIManagerT::getSizeNode)
-        .def("getTime", &MPIManagerT::getTime)
-        .def("getVendor", &MPIManagerT::getVendor)
-        .def("getVersion", &MPIManagerT::getVersion)
-        // Template version with explicit type constraints
-        .def(
-            "Scatter",
-            [](MPIManagerT &mpi_manager,
-               nb::ndarray<std::complex<float>, nb::c_contig> &sendBuf,
-               nb::ndarray<std::complex<float>, nb::c_contig> &recvBuf,
-               int root) {
-                auto send_ptr =
-                    static_cast<std::complex<float> *>(sendBuf.data());
-                auto recv_ptr =
-                    static_cast<std::complex<float> *>(recvBuf.data());
-                mpi_manager.template Scatter<std::complex<float>>(
-                    send_ptr, recv_ptr,
-                    static_cast<std::size_t>(recvBuf.size()), root);
-            },
-            "MPI Scatter for complex float arrays.")
-        .def(
-            "Scatter",
-            [](MPIManagerT &mpi_manager,
-               nb::ndarray<std::complex<double>, nb::c_contig> &sendBuf,
-               nb::ndarray<std::complex<double>, nb::c_contig> &recvBuf,
-               int root) {
-                auto send_ptr =
-                    static_cast<std::complex<double> *>(sendBuf.data());
-                auto recv_ptr =
-                    static_cast<std::complex<double> *>(recvBuf.data());
-                mpi_manager.template Scatter<std::complex<double>>(
-                    send_ptr, recv_ptr,
-                    static_cast<std::size_t>(recvBuf.size()), root);
-            },
-            "MPI Scatter for complex double arrays.");
+    // This function is now empty - MPI manager registration moved to
+    // backend-specific
 }
 
 /**

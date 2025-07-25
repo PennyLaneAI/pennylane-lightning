@@ -243,9 +243,45 @@ void registerBackendSpecificAlgorithmsMPI(nb::module_ &m) {
  * @param m Nanobind module.
  */
 void registerBackendSpecificInfoMPI(nb::module_ &m) {
-    // This function is intentionally left empty as there are no
-    // backend-specific info for Kokkos MPI.
-    // registerInfoMPI was generalized as a template.
+    using ArrCT_f = nb::ndarray<std::complex<float>, nb::c_contig>;
+    using ArrCT_d = nb::ndarray<std::complex<double>, nb::c_contig>;
+
+    nb::class_<MPIManagerKokkos>(m, "MPIManagerKokkos")
+        .def(nb::init<>())
+        .def(nb::init<MPIManagerKokkos &>())
+        .def("Barrier", &MPIManagerKokkos::Barrier)
+        .def("getRank", &MPIManagerKokkos::getRank)
+        .def("getSize", &MPIManagerKokkos::getSize)
+        .def("getSizeNode", &MPIManagerKokkos::getSizeNode)
+        .def("getTime", &MPIManagerKokkos::getTime)
+        .def("getVendor", &MPIManagerKokkos::getVendor)
+        .def("getVersion", &MPIManagerKokkos::getVersion)
+        .def(
+            "Scatter",
+            [](MPIManagerKokkos &mpi_manager, ArrCT_f &sendBuf,
+               ArrCT_f &recvBuf, int root) {
+                auto send_ptr =
+                    static_cast<std::complex<float> *>(sendBuf.data());
+                auto recv_ptr =
+                    static_cast<std::complex<float> *>(recvBuf.data());
+                mpi_manager.template Scatter<std::complex<float>>(
+                    send_ptr, recv_ptr,
+                    static_cast<std::size_t>(recvBuf.size()), root);
+            },
+            "MPI Scatter for complex float arrays.")
+        .def(
+            "Scatter",
+            [](MPIManagerKokkos &mpi_manager, ArrCT_d &sendBuf,
+               ArrCT_d &recvBuf, int root) {
+                auto send_ptr =
+                    static_cast<std::complex<double> *>(sendBuf.data());
+                auto recv_ptr =
+                    static_cast<std::complex<double> *>(recvBuf.data());
+                mpi_manager.template Scatter<std::complex<double>>(
+                    send_ptr, recv_ptr,
+                    static_cast<std::size_t>(recvBuf.size()), root);
+            },
+            "MPI Scatter for complex double arrays.");
 }
 
 } // namespace Pennylane::LightningKokkos::NanoBindings
