@@ -58,6 +58,10 @@ template <class StateVectorT, class Derived> class AdjointJacobianBase {
     AdjointJacobianBase &operator=(const AdjointJacobianBase &) = default;
     AdjointJacobianBase &operator=(AdjointJacobianBase &&) noexcept = default;
 
+  public:
+    virtual ~AdjointJacobianBase() = default;
+
+  protected:
     /**
      * @brief Apply all operations from given
      * `%OpsData<StateVectorT>` object to `%UpdatedStateVectorT`.
@@ -225,8 +229,5 @@ template <class StateVectorT, class Derived> class AdjointJacobianBase {
         return static_cast<Derived *>(this)->adjointJacobian(jac, jd, ref_data,
                                                              apply_operations);
     }
-
-  public:
-    virtual ~AdjointJacobianBase() = default;
 };
 } // namespace Pennylane::Algorithms
