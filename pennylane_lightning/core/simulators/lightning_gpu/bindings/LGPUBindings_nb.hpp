@@ -359,6 +359,6 @@ void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
             sv.CopyGpuDataToHost(state.data(), state.size());
         },
         "Copy state vector data to a numpy array.", nb::arg("state"));
-} // pyclass
+} // registerBackendSpecificStateVectorMethods
 
 } // namespace Pennylane::LightningGPU::NanoBindings
