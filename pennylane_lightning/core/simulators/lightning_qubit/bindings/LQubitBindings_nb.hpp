@@ -188,6 +188,8 @@ void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
     // Register sparse matrix operators.
     registerSparseMatrixOperators<StateVectorT>(pyclass);
 
+    pyclass.def(nb::init<std::size_t>(), "Initialize with number of qubits");
+
     // Add Pauli rotation.
     pyclass.def(
         "applyPauliRot",
@@ -197,9 +199,6 @@ void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
             sv.applyPauliRot(wires, inverse, params, word);
         },
         "Apply a Pauli rotation.");
-
-    // Fix constructor binding for nanobind.
-    pyclass.def(nb::init<std::size_t>(), "Initialize with number of qubits");
 
     // Collapse and normalize methods.
     pyclass.def(

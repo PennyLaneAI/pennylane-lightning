@@ -248,6 +248,7 @@ void registerControlledGates(PyClass &pyclass) {
  * @tparam VectorT Datatype of array to create
  * @param memory_model Memory model to use
  * @param size Size of the array to create
+ * @param zeroInit Whether to initialize the array with zeros
  * @return nb::ndarray<VectorT, nb::numpy, nb::c_contig>
  */
 template <typename VectorT>
@@ -256,13 +257,24 @@ auto alignedArray(CPUMemoryModel memory_model, std::size_t size, bool zeroInit)
     using Pennylane::Util::alignedAlloc;
     using Pennylane::Util::getAlignment;
 
-    // Allocate aligned memory
-    void *ptr = alignedAlloc(getAlignment<VectorT>(memory_model),
-                             sizeof(VectorT) * size, zeroInit);
+    // Allocate memory based on alignment requirements
+    void *ptr;
+    nb::capsule capsule;
 
-    // Create capsule with custom deleter
-    auto capsule =
-        nb::capsule(ptr, [](void *p) noexcept { Util::alignedFree(p); });
+    if (getAlignment<VectorT>(memory_model) > alignof(std::max_align_t)) {
+        ptr = alignedAlloc(getAlignment<VectorT>(memory_model),
+                           sizeof(VectorT) * size, zeroInit);
+        capsule =
+            nb::capsule(ptr, [](void *p) noexcept { Util::alignedFree(p); });
+    } else {
+        if (zeroInit) {
+            ptr = new VectorT[size](); // Value-initialize (zero-init)
+        } else {
+            ptr = new VectorT[size]; // Default-initialize
+        }
+        capsule = nb::capsule(
+            ptr, [](void *p) noexcept { delete[] static_cast<VectorT *>(p); });
+    }
 
     std::vector<size_t> shape{size};
 
@@ -615,7 +627,7 @@ template <class StateVectorT> void registerAdjointJacobian(nb::module_ &m) {
     using PrecisionT = typename StateVectorT::PrecisionT;
 
     const std::string bitsize =
-        std::to_string(sizeof(std::complex<PrecisionT>) * 8);
+        std::is_same_v<PrecisionT, float> ? "64" : "128";
 
     std::string class_name = "AdjointJacobianC" + bitsize;
     auto adjoint_jacobian_class =
@@ -726,7 +738,7 @@ void registerBackendAgnosticAlgorithms(nb::module_ &m) {
         typename StateVectorT::ComplexT; // Statevector's complex type
 
     const std::string bitsize =
-        std::to_string(sizeof(std::complex<PrecisionT>) * 8);
+        std::is_same_v<PrecisionT, float> ? "64" : "128";
 
     std::string class_name;
 
@@ -885,7 +897,7 @@ template <class StateVectorT> void lightningClassBindings(nb::module_ &m) {
     using PrecisionT = typename StateVectorT::PrecisionT;
 
     const std::string bitsize =
-        std::to_string(sizeof(std::complex<PrecisionT>) * 8);
+        std::is_same_v<PrecisionT, float> ? "64" : "128";
 
     // StateVector class
     std::string class_name = "StateVectorC" + bitsize;
