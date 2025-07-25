@@ -31,7 +31,7 @@ from conftest import (
     LightningStateVector,
     device_name,
 )
-from pennylane.devices import DefaultExecutionConfig, DefaultQubit, ExecutionConfig, MCMConfig
+from pennylane.devices import DefaultQubit, ExecutionConfig, MCMConfig
 from pennylane.devices.default_qubit import adjoint_ops
 from pennylane.exceptions import DeviceError, QuantumFunctionError
 from pennylane.measurements import ProbabilityMP
@@ -543,7 +543,16 @@ class TestExecution:
         "config, expected_config",
         [
             (
-                DefaultExecutionConfig,
+                ExecutionConfig(),
+                ExecutionConfig(
+                    grad_on_execution=None,
+                    use_device_gradient=False,
+                    use_device_jacobian_product=False,
+                    device_options=_default_device_options,
+                ),
+            ),
+            (
+                None,
                 ExecutionConfig(
                     grad_on_execution=None,
                     use_device_gradient=False,
@@ -1016,7 +1025,7 @@ class TestDerivatives:
         "config, tape, expected",
         [
             (None, None, True),
-            (DefaultExecutionConfig, None, False),
+            (ExecutionConfig(), None, False),
             (ExecutionConfig(gradient_method="backprop"), None, False),
             (
                 ExecutionConfig(gradient_method="backprop"),
@@ -1395,7 +1404,17 @@ class TestVJP:
         "config, tape, expected",
         [
             (None, None, True),
-            (DefaultExecutionConfig, None, False),
+            (ExecutionConfig(), None, False),
+            (
+                None,
+                QuantumScript([qml.RX(0.123, 0)], [qml.expval(qml.Z(0))]),
+                False,
+            ),
+            (
+                None,
+                QuantumScript([qml.RX(0.123, 0)], [qml.var(qml.Z(0))]),
+                False,
+            ),
             (ExecutionConfig(gradient_method="backprop"), None, False),
             (
                 ExecutionConfig(gradient_method="backprop"),
