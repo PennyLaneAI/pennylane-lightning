@@ -1405,6 +1405,16 @@ class TestVJP:
         [
             (None, None, True),
             (ExecutionConfig(), None, False),
+            (
+                None,
+                QuantumScript([qml.RX(0.123, 0)], [qml.expval(qml.Z(0))]),
+                False,
+            ),
+            (
+                None,
+                QuantumScript([qml.RX(0.123, 0)], [qml.var(qml.Z(0))]),
+                False,
+            ),
             (ExecutionConfig(gradient_method="backprop"), None, False),
             (
                 ExecutionConfig(gradient_method="backprop"),
