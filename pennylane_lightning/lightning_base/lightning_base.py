@@ -687,6 +687,8 @@ class LightningBase(Device):
         if self.wires is None:
             raise NotImplementedError("Wires must be specified for integration with plxpr capture.")
 
+        if execution_config is None:
+            execution_config = ExecutionConfig()
         gradient_method = getattr(execution_config, "gradient_method", "adjoint")
 
         if gradient_method != "adjoint":
