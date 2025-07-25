@@ -432,10 +432,13 @@ inline void registerInfoMPI(nb::module_ &m) {
                nb::ndarray<std::complex<float>, nb::c_contig> &sendBuf,
                nb::ndarray<std::complex<float>, nb::c_contig> &recvBuf,
                int root) {
-                auto send_ptr = sendBuf.data();
-                auto recv_ptr = recvBuf.data();
+                auto send_ptr =
+                    static_cast<std::complex<float> *>(sendBuf.data());
+                auto recv_ptr =
+                    static_cast<std::complex<float> *>(recvBuf.data());
                 mpi_manager.template Scatter<std::complex<float>>(
-                    send_ptr, recv_ptr, recvBuf.size(), root);
+                    send_ptr, recv_ptr,
+                    static_cast<std::size_t>(recvBuf.size()), root);
             },
             "MPI Scatter for complex float arrays.")
         .def(
@@ -444,10 +447,13 @@ inline void registerInfoMPI(nb::module_ &m) {
                nb::ndarray<std::complex<double>, nb::c_contig> &sendBuf,
                nb::ndarray<std::complex<double>, nb::c_contig> &recvBuf,
                int root) {
-                auto send_ptr = sendBuf.data();
-                auto recv_ptr = recvBuf.data();
+                auto send_ptr =
+                    static_cast<std::complex<double> *>(sendBuf.data());
+                auto recv_ptr =
+                    static_cast<std::complex<double> *>(recvBuf.data());
                 mpi_manager.template Scatter<std::complex<double>>(
-                    send_ptr, recv_ptr, recvBuf.size(), root);
+                    send_ptr, recv_ptr,
+                    static_cast<std::size_t>(recvBuf.size()), root);
             },
             "MPI Scatter for complex double arrays.");
 }
