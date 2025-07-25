@@ -51,6 +51,7 @@ using namespace Pennylane::LightningKokkos::Measures;
 using namespace Pennylane::LightningKokkos::Observables;
 using Kokkos::InitializationSettings;
 using Pennylane::LightningKokkos::StateVectorKokkos;
+using Pennylane::LightningKokkos::Util::MPIManagerKokkos;
 using Pennylane::Util::exp2;
 } // namespace
 /// @endcond
