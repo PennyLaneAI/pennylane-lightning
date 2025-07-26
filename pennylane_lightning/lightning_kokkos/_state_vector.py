@@ -27,7 +27,7 @@ try:
 
     try:
         from pennylane_lightning.lightning_kokkos_nb import (
-            MPIManager,
+            MPIManagerKokkos,
             StateVectorMPIC64,
             StateVectorMPIC128,
         )
@@ -94,7 +94,7 @@ class LightningKokkosStateVector(LightningBaseStateVector):
         # Initialize the state vector
         sv_init_args = [self.num_wires]
         if mpi:
-            self._mpi_manager = MPIManager()
+            self._mpi_manager = MPIManagerKokkos()
             sv_init_args.insert(0, self._mpi_manager)
 
         if kokkos_args is not None:

@@ -51,8 +51,6 @@ using namespace Pennylane::LightningGPU::Observables;
 using namespace Pennylane::LightningGPU::Measures;
 using namespace Pennylane::LightningGPU::Util;
 
-using MPIManagerT = typename Pennylane::LightningGPU::Util::MPIManagerGPU;
-
 } // namespace
 /// @endcond
 
@@ -72,7 +70,6 @@ using namespace Pennylane::LightningKokkos::Observables;
 using namespace Pennylane::LightningKokkos::Measures;
 using namespace Pennylane::LightningKokkos::Util;
 
-using MPIManagerT = typename Pennylane::LightningKokkos::Util::MPIManagerKokkos;
 } // namespace
 /// @endcond
 
