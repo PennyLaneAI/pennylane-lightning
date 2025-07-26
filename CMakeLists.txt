@@ -231,7 +231,7 @@ if(ENABLE_PYTHON)
     endif()             
 
     # Remove nanobind's problematic flags that are incompatible with NVCC
-    target_compile_options("${PL_BACKEND}_nb" PRIVATE
+    target_compile_options("${PL_BACKEND}_nb" PRIVATE 
         -fno-function-sections
         -fno-data-sections
         -O2  # Override nanobind's -Os with -O2

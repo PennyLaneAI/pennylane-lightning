@@ -19,6 +19,10 @@
   - Lightning GPU Bindings:
   [(#1184)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1184)
 
+- Added Nanobind bindings for Lightning Kokkos.
+  [(#1213)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1213)
+  
+
 - Using `mcm_method="device"` on `lightning.qubit`, `lightning.kokkos` and `lightning.gpu`
   now resolves to the tree-traversal method.
   [(#1210)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1210)

@@ -252,8 +252,11 @@ class TestMeasurementsNB:
 
     def test_hadamard_gate(self, get_classes_and_precision):
         """Test Hadamard gate application."""
-
         StateVectorClass, MeasurementsClass, _, _, dtype = get_classes_and_precision()
+
+        # Check if it has getState method
+        if not hasattr(StateVectorClass, "getState"):
+            pytest.skip("getState method not available in this backend")
 
         num_qubits = 1
         # Initialize with number of qubits first

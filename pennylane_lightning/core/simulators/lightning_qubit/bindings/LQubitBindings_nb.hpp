@@ -190,6 +190,19 @@ void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
 
     pyclass.def(nb::init<std::size_t>(), "Initialize with number of qubits");
 
+    // Add updateData method for LQubit
+    pyclass.def(
+        "updateData",
+        [](StateVectorT &sv, const nb::ndarray<const std::complex<PrecisionT>,
+                                               nb::c_contig> &data) {
+            if (data.ndim() != 1) {
+                throw std::invalid_argument("Array must be 1-dimensional");
+            }
+            std::size_t size = data.shape(0);
+            sv.updateData(data.data(), size);
+        },
+        "Update the state vector data from an array.", nb::arg("data"));
+
     // Add Pauli rotation.
     pyclass.def(
         "applyPauliRot",
@@ -441,21 +454,21 @@ void registerBackendSpecificAlgorithms(nb::module_ &m) {
 }
 
 /**
- * @brief Provide backend information.
- */
-auto getBackendInfo() -> nb::dict {
-    nb::dict info;
-    info["NAME"] = "lightning.qubit";
-    return info;
-}
-
-/**
  * @brief Register bindings for backend-specific info.
  *
  * @param m Nanobind module.
  */
 void registerBackendSpecificInfo(nb::module_ &m) {
-    m.def("backend_info", &getBackendInfo, "Backend-specific information.");
-}
+    m.def(
+        "backend_info",
+        []() {
+            nb::dict info;
+
+            info["NAME"] = "lightning.qubit";
+
+            return info;
+        },
+        "Backend-specific information.");
+} // m
 
 } // namespace Pennylane::LightningQubit::NanoBindings

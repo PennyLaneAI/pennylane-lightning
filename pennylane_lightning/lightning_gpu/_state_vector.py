@@ -20,7 +20,7 @@ try:
     from pennylane_lightning.lightning_gpu_nb import StateVectorC64, StateVectorC128
 
     try:  # Try to import the MPI modules
-        from pennylane_lightning.lightning_gpu_ops import StateVectorMPIC64, StateVectorMPIC128
+        from pennylane_lightning.lightning_gpu_nb import StateVectorMPIC64, StateVectorMPIC128
 
         mpi_error = None
         MPI_SUPPORT = True

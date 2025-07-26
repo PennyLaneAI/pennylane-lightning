@@ -29,7 +29,7 @@ try:
     )
 
     try:
-        from pennylane_lightning.lightning_gpu_ops.algorithmsMPI import (
+        from pennylane_lightning.lightning_gpu_nb.algorithmsMPI import (
             AdjointJacobianMPIC64,
             AdjointJacobianMPIC128,
             create_ops_listMPIC64,
