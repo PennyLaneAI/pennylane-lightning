@@ -261,7 +261,9 @@ void registerBackendAgnosticMeasurementsMPI(PyClass &pyclass) {
                 std::size_t num_shots) {
                  return createNumpyArrayFromVector<std::size_t>(
                      M.generate_samples(num_shots), num_shots, num_wires);
-             });
+             })
+        .def("set_random_seed", [](MeasurementsMPI<StateVectorT> &M,
+                                   std::size_t seed) { M.setSeed(seed); });
 }
 
 /**
