@@ -107,8 +107,9 @@ class LightningBaseStateVector(ABC):
         # init the state vector to |00..0>
         self._qubit_state.resetStateVector()
 
+    @staticmethod
     @abstractmethod
-    def _operation_is_sparse(self, operation):
+    def _operation_is_sparse(operation):
         """Check if an operation is sparse.
 
         Args:
