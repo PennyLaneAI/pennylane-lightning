@@ -257,18 +257,6 @@ void registerControlledGates(PyClass &pyclass) {
 }
 
 /**
- * @brief Register array alignment functionality
- *
- * @param m Nanobind module
- */
-void registerArrayAlignmentBindings(nb::module_ &m) {
-    // Add allocate_aligned_array function
-    m.def("allocate_aligned_array", &allocateAlignedArray,
-          "Allocate aligned array with specified dtype", nb::arg("size"),
-          nb::arg("dtype"), nb::arg("zero_init") = false);
-}
-
-/**
  * @brief Return basic information of runtime environment
  */
 nb::dict getRuntimeInfo() {
