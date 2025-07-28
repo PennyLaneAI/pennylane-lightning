@@ -259,23 +259,39 @@ void registerBackendSpecificObservablesMPI(nb::module_ &m) {
     using ArrSparseIndT = nb::ndarray<SparseIndexT, nb::c_contig>;
 
     std::string class_name = "SparseHamiltonianC" + bitsize;
-    nb::class_<SparseHamiltonian<StateVectorT>>(m, class_name.c_str())
-        .def(nb::init<const ArrSparseIndT &, const ArrSparseIndT &,
-                      const ArrCT &, const std::vector<std::size_t> &>())
-        .def("__repr__", &SparseHamiltonian<StateVectorT>::getObsName)
-        .def("get_wires", &SparseHamiltonian<StateVectorT>::getWires,
-             "Get wires of observables")
-        .def(
-            "__eq__",
-            [](const SparseHamiltonian<StateVectorT> &self,
-               nb::handle other) -> bool {
-                if (!nb::isinstance<SparseHamiltonian<StateVectorT>>(other)) {
-                    return false;
-                }
-                auto other_cast = other.cast<SparseHamiltonian<StateVectorT>>();
-                return self == other_cast;
-            },
-            "Compare two observables");
+    auto sparse_hamiltonian_class =
+        nb::class_<SparseHamiltonian<StateVectorT>>(m, class_name.c_str());
+
+    sparse_hamiltonian_class.def(
+        "__init__", [](SparseHamiltonian<StateVectorT> *self, const ArrCT &data,
+                       const std::vector<std::size_t> &indices,
+                       const std::vector<std::size_t> &indptr,
+                       const std::vector<std::size_t> &wires) {
+            const ComplexT *data_ptr =
+                PL_reinterpret_cast<const ComplexT>(data.data());
+            std::vector<ComplexT> data_vec(data_ptr, data_ptr + data.size());
+            new (self) SparseHamiltonian<StateVectorT>(data_vec, indices,
+                                                       indptr, wires);
+        });
+
+    sparse_hamiltonian_class.def("__repr__",
+                                 &SparseHamiltonian<StateVectorT>::getObsName,
+                                 "Get the name of the observable");
+    sparse_hamiltonian_class.def("get_wires",
+                                 &SparseHamiltonian<StateVectorT>::getWires,
+                                 "Get wires of observables");
+
+    sparse_hamiltonian_class.def(
+        "__eq__",
+        [](const SparseHamiltonian<StateVectorT> &self,
+           nb::handle other) -> bool {
+            if (!nb::isinstance<SparseHamiltonian<StateVectorT>>(other)) {
+                return false;
+            }
+            auto other_cast = nb::cast<SparseHamiltonian<StateVectorT>>(other);
+            return self == other_cast;
+        },
+        "Compare two observables");
 }
 
 /**
