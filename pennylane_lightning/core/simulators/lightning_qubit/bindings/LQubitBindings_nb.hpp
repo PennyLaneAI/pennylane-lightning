@@ -52,9 +52,9 @@ using Pennylane::NanoBindings::Utils::createNumpyArrayFromVector;
 } // namespace
 /// @endcond
 
-namespace nb = nanobind;
-
 namespace Pennylane::LightningQubit::NanoBindings {
+
+namespace nb = nanobind;
 
 /**
  * @brief Define StateVector backends for lightning.qubit
@@ -188,6 +188,8 @@ void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
     // Register sparse matrix operators.
     registerSparseMatrixOperators<StateVectorT>(pyclass);
 
+    pyclass.def(nb::init<std::size_t>(), "Initialize with number of qubits");
+
     // Add updateData method for LQubit
     pyclass.def(
         "updateData",
@@ -210,9 +212,6 @@ void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
             sv.applyPauliRot(wires, inverse, params, word);
         },
         "Apply a Pauli rotation.");
-
-    // Fix constructor binding for nanobind.
-    pyclass.def(nb::init<std::size_t>(), "Initialize with number of qubits");
 
     // Collapse and normalize methods.
     pyclass.def(
@@ -455,21 +454,21 @@ void registerBackendSpecificAlgorithms(nb::module_ &m) {
 }
 
 /**
- * @brief Provide backend information.
- */
-auto getBackendInfo() -> nb::dict {
-    nb::dict info;
-    info["NAME"] = "lightning.qubit";
-    return info;
-}
-
-/**
  * @brief Register bindings for backend-specific info.
  *
  * @param m Nanobind module.
  */
 void registerBackendSpecificInfo(nb::module_ &m) {
-    m.def("backend_info", &getBackendInfo, "Backend-specific information.");
-}
+    m.def(
+        "backend_info",
+        []() {
+            nb::dict info;
+
+            info["NAME"] = "lightning.qubit";
+
+            return info;
+        },
+        "Backend-specific information.");
+} // m
 
 } // namespace Pennylane::LightningQubit::NanoBindings

@@ -37,6 +37,7 @@ namespace nb = nanobind;
 
 /// @cond DEV
 namespace {
+using namespace Pennylane::Util::NanoBindings;
 using namespace Pennylane::LightningGPU::Measures;
 using namespace Pennylane::LightningGPU::Observables;
 } // namespace
@@ -185,8 +186,6 @@ void registerBackendSpecificObservables(nb::module_ &m) {
                                const ArraySparseIndexT &indices,
                                const ArraySparseIndexT &offsets,
                                const std::vector<std::size_t> &wires) {
-        // TODO: We can probably avoid a copy here by not constructing
-        // a vector
         new (self) SparseHamiltonian<StateVectorT>{
             std::vector<ComplexT>({data.data(), data.data() + data.size()}),
             std::vector<IndexT>(
@@ -269,8 +268,6 @@ void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
         "setStateVector",
         [](StateVectorT &sv, const ArrayT &state,
            const std::vector<std::size_t> &wires, const bool async = false) {
-            // TODO: Check that adding in a default value for async here is
-            // a reasonable API change
             sv.setStateVector(state.data(), state.size(), wires, async);
         },
         nb::arg("state"), nb::arg("wires"), nb::arg("async") = false,
@@ -358,6 +355,6 @@ void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
             sv.CopyGpuDataToHost(state.data(), state.size());
         },
         "Copy state vector data to a numpy array.", nb::arg("state"));
-} // pyclass
+} // registerBackendSpecificStateVectorMethods
 
 } // namespace Pennylane::LightningGPU::NanoBindings

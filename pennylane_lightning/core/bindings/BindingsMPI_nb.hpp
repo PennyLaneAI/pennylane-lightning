@@ -51,8 +51,6 @@ using namespace Pennylane::LightningGPU::Observables;
 using namespace Pennylane::LightningGPU::Measures;
 using namespace Pennylane::LightningGPU::Util;
 
-using MPIManagerT = typename Pennylane::LightningGPU::Util::MPIManagerGPU;
-
 } // namespace
 /// @endcond
 
@@ -72,7 +70,6 @@ using namespace Pennylane::LightningKokkos::Observables;
 using namespace Pennylane::LightningKokkos::Measures;
 using namespace Pennylane::LightningKokkos::Util;
 
-using MPIManagerT = typename Pennylane::LightningKokkos::Util::MPIManagerKokkos;
 } // namespace
 /// @endcond
 
@@ -82,8 +79,9 @@ static_assert(false, "Backend not found.");
 
 #endif
 
-namespace nb = nanobind;
 namespace Pennylane::NanoBindings {
+
+namespace nb = nanobind;
 
 /**
  * @brief Register observable classes for MPI.
@@ -263,7 +261,9 @@ void registerBackendAgnosticMeasurementsMPI(PyClass &pyclass) {
                 std::size_t num_shots) {
                  return createNumpyArrayFromVector<std::size_t>(
                      M.generate_samples(num_shots), num_shots, num_wires);
-             });
+             })
+        .def("set_random_seed", [](MeasurementsMPI<StateVectorT> &M,
+                                   std::size_t seed) { M.setSeed(seed); });
 }
 
 /**
@@ -414,41 +414,8 @@ void registerBackendAgnosticAlgorithmsMPI(nb::module_ &m) {
  * @param m Nanobind module
  */
 inline void registerInfoMPI(nb::module_ &m) {
-    nb::class_<MPIManagerT>(m, "MPIManager")
-        .def(nb::init<>())
-        .def(nb::init<MPIManagerT &>())
-        .def("Barrier", &MPIManagerT::Barrier)
-        .def("getRank", &MPIManagerT::getRank)
-        .def("getSize", &MPIManagerT::getSize)
-        .def("getSizeNode", &MPIManagerT::getSizeNode)
-        .def("getTime", &MPIManagerT::getTime)
-        .def("getVendor", &MPIManagerT::getVendor)
-        .def("getVersion", &MPIManagerT::getVersion)
-        // Template version with explicit type constraints
-        .def(
-            "Scatter",
-            [](MPIManagerT &mpi_manager,
-               nb::ndarray<std::complex<float>, nb::c_contig> &sendBuf,
-               nb::ndarray<std::complex<float>, nb::c_contig> &recvBuf,
-               int root) {
-                auto send_ptr = sendBuf.data();
-                auto recv_ptr = recvBuf.data();
-                mpi_manager.template Scatter<std::complex<float>>(
-                    send_ptr, recv_ptr, recvBuf.size(), root);
-            },
-            "MPI Scatter for complex float arrays.")
-        .def(
-            "Scatter",
-            [](MPIManagerT &mpi_manager,
-               nb::ndarray<std::complex<double>, nb::c_contig> &sendBuf,
-               nb::ndarray<std::complex<double>, nb::c_contig> &recvBuf,
-               int root) {
-                auto send_ptr = sendBuf.data();
-                auto recv_ptr = recvBuf.data();
-                mpi_manager.template Scatter<std::complex<double>>(
-                    send_ptr, recv_ptr, recvBuf.size(), root);
-            },
-            "MPI Scatter for complex double arrays.");
+    // This function is now empty - MPI manager registration moved to
+    // backend-specific
 }
 
 /**
@@ -491,7 +458,7 @@ template <class StateVectorT> void lightningClassBindingsMPI(nb::module_ &m) {
     auto pyclass_measurements =
         nb::class_<MeasurementsMPI<StateVectorT>>(m, class_name.c_str());
 
-    pyclass_measurements.def(nb::init<const StateVectorT &>());
+    pyclass_measurements.def(nb::init<StateVectorT &>());
     registerBackendAgnosticMeasurementsMPI<StateVectorT>(pyclass_measurements);
     registerBackendSpecificMeasurementsMPI<StateVectorT>(pyclass_measurements);
 
@@ -511,8 +478,6 @@ void registerLightningClassBindingsMPI(nb::module_ &m) {
         using StateVectorT = typename TypeList::Type;
         lightningClassBindingsMPI<StateVectorT>(m);
         registerLightningClassBindingsMPI<typename TypeList::Next>(m);
-        nb::exception<Pennylane::Util::LightningException>(
-            m, "LightningExceptionMPI");
     }
 }
 

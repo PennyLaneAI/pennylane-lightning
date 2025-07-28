@@ -23,7 +23,7 @@ try:
     from pennylane_lightning.lightning_gpu_nb import MeasurementsC64, MeasurementsC128
 
     try:
-        from pennylane_lightning.lightning_gpu_ops import MeasurementsMPIC64, MeasurementsMPIC128
+        from pennylane_lightning.lightning_gpu_nb import MeasurementsMPIC64, MeasurementsMPIC128
 
         mpi_error = None
         MPI_SUPPORT = True

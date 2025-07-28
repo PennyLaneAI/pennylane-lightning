@@ -51,13 +51,14 @@ using namespace Pennylane::LightningKokkos::Measures;
 using namespace Pennylane::LightningKokkos::Observables;
 using Kokkos::InitializationSettings;
 using Pennylane::LightningKokkos::StateVectorKokkos;
+using Pennylane::LightningKokkos::Util::MPIManagerKokkos;
 using Pennylane::Util::exp2;
 } // namespace
 /// @endcond
 
-namespace nb = nanobind;
-
 namespace Pennylane::LightningKokkos::NanoBindings {
+
+namespace nb = nanobind;
 
 /**
  * @brief Define StateVector backends for lightning.kokkos MPI
@@ -82,7 +83,7 @@ void registerBackendClassSpecificBindingsMPI(PyClass &pyclass) {
 
     // Register gates for state vector
     registerGatesForStateVector<StateVectorT>(pyclass);
-    registerControlledGate<StateVectorT>(pyclass);
+    registerControlledGates<StateVectorT>(pyclass);
 
     pyclass.def(nb::init<std::size_t>());
     pyclass.def(nb::init<MPIManagerKokkos &, std::size_t>());
@@ -200,9 +201,43 @@ template <class StateVectorT, class PyClass>
 void registerBackendSpecificMeasurementsMPI(PyClass &pyclass) {
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
+    using ArrCT = nb::ndarray<std::complex<PrecisionT>, nb::c_contig>;
 
-    // Keep only Kokkos-specific measurement methods here
-    // Common methods have been moved to registerBackendAgnosticMeasurementsMPI
+    pyclass.def(
+        "expval",
+        [](MeasurementsMPI<StateVectorT> &M, const std::string &operation,
+           const std::vector<std::size_t> &wires) {
+            return M.expval(operation, wires);
+        },
+        "Expected value of an operation by name.");
+    pyclass.def(
+        "expval",
+        [](MeasurementsMPI<StateVectorT> &M, const ArrCT &matrix,
+           const std::vector<std::size_t> &wires) {
+            const std::size_t matrix_size = exp2(2 * wires.size());
+            auto matrix_data =
+                PL_reinterpret_cast<const ComplexT>(matrix.data());
+            std::vector<ComplexT> matrix_v{matrix_data,
+                                           matrix_data + matrix_size};
+            return M.expval(matrix_v, wires);
+        },
+        "Expected value of a Hermitian observable.");
+    pyclass.def(
+        "expval",
+        [](MeasurementsMPI<StateVectorT> &M,
+           const std::vector<std::string> &pauli_words,
+           const std::vector<std::vector<std::size_t>> &target_wires,
+           const std::vector<PrecisionT> &coeffs) {
+            return M.expval(pauli_words, target_wires, coeffs);
+        },
+        "Expected value of a Hamiltonian represented by Pauli words.");
+    pyclass.def(
+        "var",
+        [](MeasurementsMPI<StateVectorT> &M, const std::string &operation,
+           const std::vector<std::size_t> &wires) {
+            return M.var(operation, wires);
+        },
+        "Variance of an operation by name.");
 }
 
 /**
@@ -220,9 +255,43 @@ void registerBackendSpecificObservablesMPI(nb::module_ &m) {
         std::is_same_v<PrecisionT, float> ? "64" : "128";
 
     using ArrCT = nb::ndarray<std::complex<PrecisionT>, nb::c_contig>;
+    using SparseIndexT = std::size_t;
+    using ArrSparseIndT = nb::ndarray<SparseIndexT, nb::c_contig>;
 
-    // Register only Kokkos-specific observables here
-    // Common observables have been moved to registerBackendAgnosticObservables
+    std::string class_name = "SparseHamiltonianC" + bitsize;
+    auto sparse_hamiltonian_class =
+        nb::class_<SparseHamiltonian<StateVectorT>>(m, class_name.c_str());
+
+    sparse_hamiltonian_class.def(
+        "__init__", [](SparseHamiltonian<StateVectorT> *self, const ArrCT &data,
+                       const std::vector<std::size_t> &indices,
+                       const std::vector<std::size_t> &indptr,
+                       const std::vector<std::size_t> &wires) {
+            const ComplexT *data_ptr =
+                PL_reinterpret_cast<const ComplexT>(data.data());
+            std::vector<ComplexT> data_vec(data_ptr, data_ptr + data.size());
+            new (self) SparseHamiltonian<StateVectorT>(data_vec, indices,
+                                                       indptr, wires);
+        });
+
+    sparse_hamiltonian_class.def("__repr__",
+                                 &SparseHamiltonian<StateVectorT>::getObsName,
+                                 "Get the name of the observable");
+    sparse_hamiltonian_class.def("get_wires",
+                                 &SparseHamiltonian<StateVectorT>::getWires,
+                                 "Get wires of observables");
+
+    sparse_hamiltonian_class.def(
+        "__eq__",
+        [](const SparseHamiltonian<StateVectorT> &self,
+           nb::handle other) -> bool {
+            if (!nb::isinstance<SparseHamiltonian<StateVectorT>>(other)) {
+                return false;
+            }
+            auto other_cast = nb::cast<SparseHamiltonian<StateVectorT>>(other);
+            return self == other_cast;
+        },
+        "Compare two observables");
 }
 
 /**
@@ -243,9 +312,45 @@ void registerBackendSpecificAlgorithmsMPI(nb::module_ &m) {
  * @param m Nanobind module.
  */
 void registerBackendSpecificInfoMPI(nb::module_ &m) {
-    // This function is intentionally left empty as there are no
-    // backend-specific info for Kokkos MPI.
-    // registerInfoMPI was generalized as a template.
+    using ArrCT_f = nb::ndarray<std::complex<float>, nb::c_contig>;
+    using ArrCT_d = nb::ndarray<std::complex<double>, nb::c_contig>;
+
+    nb::class_<MPIManagerKokkos>(m, "MPIManagerKokkos")
+        .def(nb::init<>())
+        .def(nb::init<MPIManagerKokkos &>())
+        .def("Barrier", &MPIManagerKokkos::Barrier)
+        .def("getRank", &MPIManagerKokkos::getRank)
+        .def("getSize", &MPIManagerKokkos::getSize)
+        .def("getSizeNode", &MPIManagerKokkos::getSizeNode)
+        .def("getTime", &MPIManagerKokkos::getTime)
+        .def("getVendor", &MPIManagerKokkos::getVendor)
+        .def("getVersion", &MPIManagerKokkos::getVersion)
+        .def(
+            "Scatter",
+            [](MPIManagerKokkos &mpi_manager, ArrCT_f &sendBuf,
+               ArrCT_f &recvBuf, int root) {
+                auto send_ptr =
+                    static_cast<std::complex<float> *>(sendBuf.data());
+                auto recv_ptr =
+                    static_cast<std::complex<float> *>(recvBuf.data());
+                mpi_manager.template Scatter<std::complex<float>>(
+                    send_ptr, recv_ptr,
+                    static_cast<std::size_t>(recvBuf.size()), root);
+            },
+            "MPI Scatter for complex float arrays.")
+        .def(
+            "Scatter",
+            [](MPIManagerKokkos &mpi_manager, ArrCT_d &sendBuf,
+               ArrCT_d &recvBuf, int root) {
+                auto send_ptr =
+                    static_cast<std::complex<double> *>(sendBuf.data());
+                auto recv_ptr =
+                    static_cast<std::complex<double> *>(recvBuf.data());
+                mpi_manager.template Scatter<std::complex<double>>(
+                    send_ptr, recv_ptr,
+                    static_cast<std::size_t>(recvBuf.size()), root);
+            },
+            "MPI Scatter for complex double arrays.");
 }
 
 } // namespace Pennylane::LightningKokkos::NanoBindings

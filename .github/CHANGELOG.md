@@ -4,12 +4,29 @@
 
 <h3>Improvements 🛠</h3>
 
-- Added comprehensive tests for Python bindings.
+- Introduce Nanobind as a new framework for Python bindings, and enhance modularity and performance of binding code. 
+  This includes significant improvements to the build system and codebase simplification. 
+  [(#1176)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1176)
+
+  Specific nanobind features were integrated over various PRs:
+
+  - Improved zero-copy exchanges for measurements:
+  [(#1187)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1187)
+  - MPI and Adjoint Jacobian support
+  [(#1189)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1189)
+  - Lightning Qubit Bindings
   [(#1198)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1198)
+  - Lightning GPU Bindings:
+  [(#1184)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1184)
 
 - Added Nanobind bindings for Lightning Kokkos.
   [(#1213)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1213)
   
+
+- Using `mcm_method="device"` on `lightning.qubit`, `lightning.kokkos` and `lightning.gpu`
+  now resolves to the tree-traversal method.
+  [(#1210)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1210)
+
 - Skip Identity operation in Lightning Qubit and removed assert for applying Identity gate not equal to 1 wire.
   [(#1212)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1212)
 
@@ -22,6 +39,12 @@
 <h3>Bug fixes 🐛</h3>
 
 <h3>Internal changes ⚙️</h3>
+
+- Updated tests with `circuit(..., shots=...)` to use `qml.set_shots` to ensure compatibility with the latest version of PennyLane.
+  [(#1216)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1216)
+
+- Used `pennylane.exceptions` for custom PennyLane exceptions across Lightning Python code.
+  [(#1215)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1215)
 
 - Switched off the PLxPR integration tests by removing JAX dependency from requirements files.
   [(#1214)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1214)
@@ -42,10 +65,12 @@
 
 This release contains contributions from (in alphabetical order):
 
-Joseph Lee,
 Luis Alfredo Nuñez Meneses,
+Yushao Chen,
 Amintor Dusko,
-Jake Zaia
+Joseph Lee,
+Andrija Paurevic,
+Jake Zaia.
 
 ---
 
@@ -133,13 +158,6 @@ Jake Zaia
   
 - Enabled `AmplitudeEmbedding` Python tests for `lightning.kokkos` and `lightning.gpu` devices.
   [(#1192)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1192)
-  
-- Introduce Nanobind as a new framework for Python bindings, and enhance modularity and performance of binding code. 
-  This includes significant improvements to the build system and a first round of codebase simplification. 
-  Legacy PyBind11 code remains accessible for compatibility and will be incrementally phased out.
-  [(#1176)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1176)
-  [(#1187)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1187)
-  [(#1189)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1189)
 
 - Updated docker build CI for stable version to use v0.41.1.
   [(#1188)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1188)

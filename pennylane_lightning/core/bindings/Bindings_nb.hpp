@@ -123,8 +123,6 @@ using namespace Pennylane::LightningTensor::TNCuda::NanoBindings;
 static_assert(false, "Backend not found.");
 #endif
 
-namespace nb = nanobind;
-
 /// @cond DEV
 namespace {
 using Pennylane::NanoBindings::Utils::createNumpyArrayFromVector;
@@ -135,6 +133,9 @@ using Pennylane::Util::PL_reinterpret_cast;
 /// @endcond
 
 namespace Pennylane::NanoBindings {
+
+namespace nb = nanobind;
+
 /**
  * @brief Register applyMatrix
  */
@@ -254,6 +255,90 @@ void registerControlledGates(PyClass &pyclass) {
                         nb::arg("inverse") = false,
                         nb::arg("params") = std::vector<PrecisionT>{});
         });
+}
+
+/**
+ * @brief Create an aligned array for a given type, memory model and array size
+ *
+ * @tparam VectorT Datatype of array to create
+ * @param memory_model Memory model to use
+ * @param size Size of the array to create
+ * @param zeroInit Whether to initialize the array with zeros
+ * @return nb::ndarray<VectorT, nb::numpy, nb::c_contig>
+ */
+template <typename VectorT>
+auto alignedArray(CPUMemoryModel memory_model, std::size_t size, bool zeroInit)
+    -> nb::ndarray<VectorT, nb::numpy, nb::c_contig> {
+    using Pennylane::Util::alignedAlloc;
+    using Pennylane::Util::getAlignment;
+
+    // Allocate memory based on alignment requirements
+    void *ptr;
+    nb::capsule capsule;
+
+    if (getAlignment<VectorT>(memory_model) > alignof(std::max_align_t)) {
+        ptr = alignedAlloc(getAlignment<VectorT>(memory_model),
+                           sizeof(VectorT) * size, zeroInit);
+        capsule =
+            nb::capsule(ptr, [](void *p) noexcept { Util::alignedFree(p); });
+    } else {
+        if (zeroInit) {
+            ptr = new VectorT[size](); // Value-initialize (zero-init)
+        } else {
+            ptr = new VectorT[size]; // Default-initialize
+        }
+        capsule = nb::capsule(
+            ptr, [](void *p) noexcept { delete[] static_cast<VectorT *>(p); });
+    }
+
+    std::vector<size_t> shape{size};
+
+    // Return ndarray with custom allocated memory
+    return nb::ndarray<VectorT, nb::numpy, nb::c_contig>(ptr, shape.size(),
+                                                         shape.data(), capsule);
+}
+
+/**
+ * @brief Allocate aligned array with specified dtype
+ *
+ * @param size Size of the array to create
+ * @param dtype Python dtype object to create the array with
+ * @param zeroInit Whether to initialize the array with zeros
+ * @return nb::object a general nanobind object that can assume any of the types
+ * in the method.
+ */
+auto allocateAlignedArray(std::size_t size, const nb::object &dtype,
+                          bool zeroInit = false) -> nb::object {
+    auto memory_model = bestCPUMemoryModel();
+
+    // Convert dtype to string representation
+    std::string dtype_str = nb::cast<std::string>(dtype.attr("name"));
+
+    if (dtype_str == "complex64") {
+        return nb::cast(
+            alignedArray<std::complex<float>>(memory_model, size, zeroInit));
+    } else if (dtype_str == "complex128") {
+        return nb::cast(
+            alignedArray<std::complex<double>>(memory_model, size, zeroInit));
+    } else if (dtype_str == "float32") {
+        return nb::cast(alignedArray<float>(memory_model, size, zeroInit));
+    } else if (dtype_str == "float64") {
+        return nb::cast(alignedArray<double>(memory_model, size, zeroInit));
+    }
+
+    throw std::runtime_error("Unsupported dtype: " + dtype_str);
+}
+
+/**
+ * @brief Register array alignment functionality
+ *
+ * @param m Nanobind module
+ */
+void registerArrayAlignmentBindings(nb::module_ &m) {
+    // Add allocate_aligned_array function
+    m.def("allocate_aligned_array", &allocateAlignedArray,
+          "Allocate aligned array with specified dtype", nb::arg("size"),
+          nb::arg("dtype"), nb::arg("zero_init") = false);
 }
 
 /**
@@ -657,7 +742,7 @@ template <class StateVectorT> void registerAdjointJacobian(nb::module_ &m) {
     using PrecisionT = typename StateVectorT::PrecisionT;
 
     const std::string bitsize =
-        std::to_string(sizeof(std::complex<PrecisionT>) * 8);
+        std::is_same_v<PrecisionT, float> ? "64" : "128";
 
     std::string class_name = "AdjointJacobianC" + bitsize;
     auto adjoint_jacobian_class =
@@ -768,7 +853,7 @@ void registerBackendAgnosticAlgorithms(nb::module_ &m) {
         typename StateVectorT::ComplexT; // Statevector's complex type
 
     const std::string bitsize =
-        std::to_string(sizeof(std::complex<PrecisionT>) * 8);
+        std::is_same_v<PrecisionT, float> ? "64" : "128";
 
     std::string class_name;
 
@@ -883,7 +968,7 @@ template <class StateReprT> void lightningClassBindings(nb::module_ &m) {
     using PrecisionT = typename StateReprT::PrecisionT;
 
     const std::string bitsize =
-        std::to_string(sizeof(std::complex<PrecisionT>) * 8);
+        std::is_same_v<PrecisionT, float> ? "64" : "128";
 
 #ifdef _ENABLE_PLTENSOR
     std::string class_name =
@@ -936,8 +1021,8 @@ template <class StateReprT> void lightningClassBindings(nb::module_ &m) {
     auto pyclass_measurements =
         nb::class_<MeasurementsT>(m, class_name.c_str());
 
-#ifdef _ENABLE_PLGPU
-    pyclass_measurements.def(nb::init<StateReprT &>());
+#if defined(_ENABLE_PLGPU) || defined(_ENABLE_PLKOKKOS)
+    pyclass_measurements.def(nb::init<StateVectorT &>());
 #else
     pyclass_measurements.def(nb::init<const StateReprT &>());
 #endif

@@ -42,8 +42,6 @@
 #include "cuda_helpers.hpp"
 #include "tncuda_helpers.hpp"
 
-namespace nb = nanobind;
-
 /// @cond DEV
 namespace {
 using namespace Pennylane::LightningTensor::TNCuda;
@@ -54,6 +52,8 @@ using Pennylane::NanoBindings::Utils::createNumpyArrayFromVector;
 /// @endcond
 
 namespace Pennylane::LightningTensor::TNCuda::NanoBindings {
+
+namespace nb = nanobind;
 
 /**
  * @brief Define StateVector backends for lightning.tensor

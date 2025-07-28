@@ -1,7 +1,7 @@
 PYTHON := python3
 COMPILER_LAUNCHER ?= $(shell which ccache)
 COVERAGE := --cov=pennylane_lightning --cov-report term-missing --cov-report=html:coverage_html_report
-TESTRUNNER := -m pytest tests --tb=short -vvv -s
+TESTRUNNER := -m pytest tests --tb=short -vv -s
 
 PL_BACKEND ?= "$(if $(backend:-=),$(backend),lightning_qubit)"
 PL_DEVICE ?= $(if $(device:-=),$(device),lightning.qubit)
