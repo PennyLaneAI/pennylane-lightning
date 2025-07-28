@@ -65,10 +65,6 @@ NB_MODULE(LIGHTNING_TENSOR_MODULE_NAME, m) {
     registerBackendSpecificInfo(m);
 
     registerLightningClassBindings<TensorNetworkBackends>(m);
-
-    // TODO: Sanity check that this doesn't break exceptions
-    // Register exception types - using nanobind's approach
-    nb::exception<Pennylane::Util::LightningException>(m, "LightningException");
 }
 #endif
 } // namespace Pennylane::NanoBindings
