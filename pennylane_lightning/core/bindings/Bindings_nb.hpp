@@ -516,7 +516,7 @@ void registerBackendAgnosticObservables(nb::module_ &m) {
     using PrecisionT = typename StateReprT::PrecisionT;
     using ComplexT = typename StateReprT::ComplexT;
 
-    using nd_ArrCT = nb::ndarray<const std::complex<PrecisionT>, nb::c_contig>;
+    using ArrCT = nb::ndarray<const std::complex<PrecisionT>, nb::c_contig>;
 
     const std::string bitsize =
         std::is_same_v<PrecisionT, float> ? "64" : "128";
@@ -570,7 +570,7 @@ void registerBackendAgnosticObservables(nb::module_ &m) {
     auto hermitian_obs_class =
         nb::class_<HermitianObsT, ObservableT>(m, class_name.c_str());
     hermitian_obs_class.def(
-        "__init__", [](HermitianObsT *self, const nd_ArrCT &matrix,
+        "__init__", [](HermitianObsT *self, const ArrCT &matrix,
                        const std::vector<std::size_t> &wires) {
             const auto ptr = matrix.data();
             new (self) HermitianObsT(
