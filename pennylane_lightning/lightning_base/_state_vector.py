@@ -120,11 +120,12 @@ class LightningBaseStateVector(ABC):
         """
 
     @abstractmethod
-    def _apply_state_vector(self, state, device_wires: Wires, sync: Optional[bool] = None):
+    def _apply_state_vector(self, state, device_wires: Wires, **kwargs):
         """Initialize the internal state vector in a specified state.
         Args:
             state (Union[array[complex], scipy.SparseABC]): normalized input state of length ``2**len(wires)`` as a dense array or Scipy sparse array.
             device_wires (Wires): wires that get initialized in the state
+            **kwargs: Additional backend-specific parameters
         """
 
     def _apply_basis_state(self, state, wires):
