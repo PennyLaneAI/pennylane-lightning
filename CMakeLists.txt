@@ -222,16 +222,10 @@ if(ENABLE_PYTHON)
     message(STATUS "ENABLE_PYTHON is ON.")
     # Existing PyBind11 module
     pybind11_add_module("${PL_BACKEND}_ops" "pennylane_lightning/core/bindings/Bindings.cpp")
-    
-    # Add Nanobind module with _nb suffix
-    if("${PL_BACKEND}" STREQUAL "lightning_gpu" OR "${PL_BACKEND}" STREQUAL "lightning_tensor")
-    nanobind_add_module("${PL_BACKEND}_nb" "pennylane_lightning/core/bindings/Bindings_nb.cpp" "pennylane_lightning/core/bindings/BindingsCudaUtils_nb.cpp")
-    else()
     nanobind_add_module("${PL_BACKEND}_nb" "pennylane_lightning/core/bindings/Bindings_nb.cpp")
-    endif()             
 
     # Remove nanobind's problematic flags that are incompatible with NVCC
-    target_compile_options("${PL_BACKEND}_nb" PRIVATE 
+    target_compile_options("${PL_BACKEND}_nb" PRIVATE
         -fno-function-sections
         -fno-data-sections
         -O2  # Override nanobind's -Os with -O2
