@@ -20,6 +20,8 @@
   [(#1213)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1213)
   - Lightning GPU Bindings:
   [(#1184)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1184)
+  - Lightning Tensor Bindings:
+  [(#1206)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1206)
 
 - Using `mcm_method="device"` on `lightning.qubit`, `lightning.kokkos` and `lightning.gpu`
   now resolves to the tree-traversal method.
