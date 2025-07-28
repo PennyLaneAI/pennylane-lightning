@@ -77,7 +77,7 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
     using ComplexT =
         typename StateVectorT::ComplexT; // Statevector's complex type
 
-    using ArrayT = nb::ndarray<std::complex<PrecisionT>, nb::c_contig>;
+    using ArrayT = nb::ndarray<ComplexT, nb::c_contig>;
     using IndexT =
         typename std::conditional<std::is_same<PrecisionT, float>::value,
                                   int32_t, int64_t>::type;
@@ -117,7 +117,7 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
         [](Measurements<StateVectorT> &M,
            const std::vector<std::string> &pauli_words,
            const std::vector<std::vector<std::size_t>> &target_wires,
-           const std::vector<std::complex<PrecisionT>> &coeffs) {
+           const std::vector<ComplexT> &coeffs) {
             // Required to be able to accept `coeffs` as a python tuple
             return M.expval(pauli_words, target_wires, coeffs.data());
         },
@@ -167,10 +167,9 @@ void registerBackendSpecificObservables(nb::module_ &m) {
     using ComplexT =
         typename StateVectorT::ComplexT; // Statevector's complex type.
 
-    const std::string bitsize =
-        std::to_string(sizeof(std::complex<PrecisionT>) * 8);
+    const std::string bitsize = std::to_string(sizeof(ComplexT) * 8);
 
-    using ArrayT = nb::ndarray<std::complex<PrecisionT>, nb::c_contig>;
+    using ArrayT = nb::ndarray<ComplexT, nb::c_contig>;
 
     std::string class_name;
 
@@ -249,7 +248,8 @@ template <class StateVectorT, class PyClass>
 void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
     using PrecisionT =
         typename StateVectorT::PrecisionT; // Statevector's precision
-    using ArrayT = nb::ndarray<std::complex<PrecisionT>, nb::c_contig>;
+    using ComplexT = typename StateVectorT::ComplexT;
+    using ArrayT = nb::ndarray<ComplexT, nb::c_contig>;
 
     pyclass.def(nb::init<std::size_t>());              // qubits, device
     pyclass.def(nb::init<std::size_t, DevTag<int>>()); // qubits, dev-tag
@@ -279,11 +279,10 @@ void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
             sv.updateData(other, async);
         },
         "Synchronize data from another GPU device to current device.");
-    pyclass.def(
-        "DeviceToHost",
-        nb::overload_cast<std::complex<PrecisionT> *, std::size_t, bool>(
-            &StateVectorT::CopyGpuDataToHost, nb::const_),
-        "Synchronize data from the GPU device to host.");
+    pyclass.def("DeviceToHost",
+                nb::overload_cast<ComplexT *, std::size_t, bool>(
+                    &StateVectorT::CopyGpuDataToHost, nb::const_),
+                "Synchronize data from the GPU device to host.");
     pyclass.def(
         "DeviceToHost",
         [](const StateVectorT &gpu_sv, ArrayT &cpu_sv, bool) {
@@ -292,11 +291,10 @@ void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
             }
         },
         "Synchronize data from the GPU device to host.");
-    pyclass.def(
-        "HostToDevice",
-        nb::overload_cast<const std::complex<PrecisionT> *, std::size_t, bool>(
-            &StateVectorT::CopyHostDataToGpu),
-        "Synchronize data from the host device to GPU.");
+    pyclass.def("HostToDevice",
+                nb::overload_cast<const ComplexT *, std::size_t, bool>(
+                    &StateVectorT::CopyHostDataToGpu),
+                "Synchronize data from the host device to GPU.");
     pyclass.def(
         "HostToDevice",
         [](StateVectorT &gpu_sv, const ArrayT &cpu_sv, bool async) {
