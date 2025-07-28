@@ -82,7 +82,7 @@ void registerBackendClassSpecificBindingsMPI(PyClass &pyclass) {
     using ArrayComplexT = nb::ndarray<std::complex<PrecisionT>, nb::c_contig>;
 
     // Register gates for state vector
-    registerGatesForStateVector<StateVectorT>(pyclass);
+    registerGates<StateVectorT>(pyclass);
     registerControlledGates<StateVectorT>(pyclass);
 
     pyclass.def(nb::init<std::size_t>());
