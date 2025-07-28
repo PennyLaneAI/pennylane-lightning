@@ -139,13 +139,13 @@ namespace nb = nanobind;
 /**
  * @brief Register applyMatrix
  */
-template <class StateReprT>
+template <class StateT>
 void applyMatrix(
-    StateReprT &st,
-    const nb::ndarray<const std::complex<typename StateReprT::PrecisionT>,
+    StateT &st,
+    const nb::ndarray<const std::complex<typename StateT::PrecisionT>,
                       nb::c_contig> &matrix,
     const std::vector<std::size_t> &wires, bool inverse = false) {
-    using ComplexT = typename StateReprT::ComplexT;
+    using ComplexT = typename StateT::ComplexT;
 
     PL_ASSERT(matrix.size() == Util::exp2(2 * wires.size()));
 
@@ -157,15 +157,15 @@ void applyMatrix(
 /**
  * @brief Register controlled matrix kernel.
  */
-template <class StateReprT>
+template <class StateT>
 void applyControlledMatrix(
-    StateReprT &st,
-    const nb::ndarray<const std::complex<typename StateReprT::PrecisionT>,
+    StateT &st,
+    const nb::ndarray<const std::complex<typename StateT::PrecisionT>,
                       nb::c_contig> &matrix,
     const std::vector<std::size_t> &controlled_wires,
     const std::vector<bool> &controlled_values,
     const std::vector<std::size_t> &wires, bool inverse = false) {
-    using ComplexT = typename StateReprT::ComplexT;
+    using ComplexT = typename StateT::ComplexT;
 #ifdef _ENABLE_PLTENSOR
     std::vector<ComplexT> conv_matrix;
     if (matrix.size()) {
@@ -186,23 +186,22 @@ void applyControlledMatrix(
 /**
  * @brief Register gates for a given backend.
  *
- * @tparam StateReprT The type used to represent the state (statevector,
+ * @tparam StateT The type used to represent the state (statevector,
  * tensornet, etc.)
  * @tparam PyClass Nanobind's class object type
  *
  * @param pyclass Nanobind's class object to bind statevector
  */
-template <class StateReprT, class PyClass>
-void registerGates(PyClass &pyclass) {
-    using PrecisionT = typename StateReprT::PrecisionT; // State's precision
+template <class StateT, class PyClass> void registerGates(PyClass &pyclass) {
+    using PrecisionT = typename StateT::PrecisionT; // State's precision
 
     using Pennylane::Gates::GateOperation;
     using Pennylane::Util::for_each_enum;
     namespace Constant = Pennylane::Gates::Constant;
 
-    pyclass.def("applyMatrix", &applyMatrix<StateReprT>,
+    pyclass.def("applyMatrix", &applyMatrix<StateT>,
                 "Apply a given matrix to wires.");
-    pyclass.def("applyControlledMatrix", &applyControlledMatrix<StateReprT>,
+    pyclass.def("applyControlledMatrix", &applyControlledMatrix<StateT>,
                 "Apply controlled operation");
 
     for_each_enum<GateOperation>([&pyclass](GateOperation gate_op) {
@@ -211,7 +210,7 @@ void registerGates(PyClass &pyclass) {
             std::string(lookup(Constant::gate_names, gate_op));
         const std::string doc = "Apply the " + gate_name + " gate.";
         auto func =
-            [gate_name](StateReprT &st, const std::vector<std::size_t> &wires,
+            [gate_name](StateT &st, const std::vector<std::size_t> &wires,
                         bool inverse, const std::vector<PrecisionT> &params) {
                 st.applyOperation(gate_name, wires, inverse, params);
             };
@@ -222,13 +221,13 @@ void registerGates(PyClass &pyclass) {
 /**
  * @brief Register controlled gate operations for a statevector
  *
- * @tparam StateReprT State vector type
+ * @tparam StateT State vector type
  * @tparam PyClass Nanobind class type
  * @param pyclass Nanobind class to bind methods to
  */
-template <class StateReprT, class PyClass>
+template <class StateT, class PyClass>
 void registerControlledGates(PyClass &pyclass) {
-    using PrecisionT = typename StateReprT::PrecisionT;
+    using PrecisionT = typename StateT::PrecisionT;
 
     using Pennylane::Gates::ControlledGateOperation;
     using Pennylane::Util::for_each_enum;
@@ -241,7 +240,7 @@ void registerControlledGates(PyClass &pyclass) {
                 std::string(lookup(Constant::controlled_gate_names, gate_op));
             const std::string doc = "Apply the " + gate_name + " gate.";
             auto func = [gate_name = gate_name](
-                            StateReprT &st,
+                            StateT &st,
                             const std::vector<std::size_t> &controlled_wires,
                             const std::vector<bool> &controlled_values,
                             const std::vector<std::size_t> &wires, bool inverse,
@@ -436,13 +435,13 @@ void registerInfo(nb::module_ &m) {
 /**
  * @brief Register backend-agnostic observables
  *
- * @tparam StateReprT
+ * @tparam StateT
  * @param m Nanobind module
  */
-template <class StateReprT>
+template <class StateT>
 void registerBackendAgnosticObservables(nb::module_ &m) {
-    using PrecisionT = typename StateReprT::PrecisionT;
-    using ComplexT = typename StateReprT::ComplexT;
+    using PrecisionT = typename StateT::PrecisionT;
+    using ComplexT = typename StateT::ComplexT;
 
     using ArrayComplexT =
         nb::ndarray<const std::complex<PrecisionT>, nb::c_contig>;
@@ -451,19 +450,19 @@ void registerBackendAgnosticObservables(nb::module_ &m) {
         std::is_same_v<PrecisionT, float> ? "64" : "128";
 
 #ifdef _ENABLE_PLTENSOR
-    using ObservableT = ObservableTNCuda<StateReprT>;
-    using NamedObsT = NamedObsTNCuda<StateReprT>;
-    using HermitianObsT = HermitianObsTNCuda<StateReprT>;
-    using TensorProdObsT = TensorProdObsTNCuda<StateReprT>;
-    using HamiltonianT = HamiltonianTNCuda<StateReprT>;
+    using ObservableT = ObservableTNCuda<StateT>;
+    using NamedObsT = NamedObsTNCuda<StateT>;
+    using HermitianObsT = HermitianObsTNCuda<StateT>;
+    using TensorProdObsT = TensorProdObsTNCuda<StateT>;
+    using HamiltonianT = HamiltonianTNCuda<StateT>;
 
-    const std::string prefix = std::string(StateReprT::method);
+    const std::string prefix = std::string(StateT::method);
 #else
-    using ObservableT = Observable<StateReprT>;
-    using NamedObsT = NamedObs<StateReprT>;
-    using HermitianObsT = HermitianObs<StateReprT>;
-    using TensorProdObsT = TensorProdObs<StateReprT>;
-    using HamiltonianT = Hamiltonian<StateReprT>;
+    using ObservableT = Observable<StateT>;
+    using NamedObsT = NamedObs<StateT>;
+    using HermitianObsT = HermitianObs<StateT>;
+    using TensorProdObsT = TensorProdObs<StateT>;
+    using HamiltonianT = Hamiltonian<StateT>;
 
     const std::string prefix = "";
 #endif
@@ -890,33 +889,33 @@ void registerBackendAgnosticStateVectorMethods(PyClass &pyclass) {
 /**
  * @brief Templated class to build lightning class bindings.
  *
- * @tparam StateReprT State representation type (e.g., a StateVector, TensorNet)
+ * @tparam StateT State representation type (e.g., a StateVector, TensorNet)
  * @param m Nanobind module.
  */
-template <class StateReprT> void lightningClassBindings(nb::module_ &m) {
-    using PrecisionT = typename StateReprT::PrecisionT;
+template <class StateT> void lightningClassBindings(nb::module_ &m) {
+    using PrecisionT = typename StateT::PrecisionT;
 
     const std::string bitsize =
         std::is_same_v<PrecisionT, float> ? "64" : "128";
 
 #ifdef _ENABLE_PLTENSOR
     std::string class_name =
-        std::string(StateReprT::method) + "TensorNetC" + bitsize;
-    auto pyclass = nb::class_<StateReprT>(m, class_name.c_str());
+        std::string(StateT::method) + "TensorNetC" + bitsize;
+    auto pyclass = nb::class_<StateT>(m, class_name.c_str());
 #else
     // StateVector class
     std::string class_name = "StateVectorC" + bitsize;
-    auto pyclass = nb::class_<StateReprT>(m, class_name.c_str());
-    registerBackendAgnosticStateVectorMethods<StateReprT>(pyclass);
-    registerBackendSpecificStateVectorMethods<StateReprT>(pyclass);
+    auto pyclass = nb::class_<StateT>(m, class_name.c_str());
+    registerBackendAgnosticStateVectorMethods<StateT>(pyclass);
+    registerBackendSpecificStateVectorMethods<StateT>(pyclass);
 #endif
 
     // Register gates
-    registerGates<StateReprT>(pyclass);
-    registerControlledGates<StateReprT>(pyclass);
+    registerGates<StateT>(pyclass);
+    registerControlledGates<StateT>(pyclass);
 
     // Register backend specific bindings
-    registerBackendClassSpecificBindings<StateReprT>(pyclass);
+    registerBackendClassSpecificBindings<StateT>(pyclass);
 
     //***********************************************************************//
     //                              Observables
@@ -926,21 +925,21 @@ template <class StateReprT> void lightningClassBindings(nb::module_ &m) {
     nb::module_ obs_submodule =
         m.def_submodule("observables", "Submodule for observables classes.");
 
-    registerBackendAgnosticObservables<StateReprT>(obs_submodule);
-    registerBackendSpecificObservables<StateReprT>(obs_submodule);
+    registerBackendAgnosticObservables<StateT>(obs_submodule);
+    registerBackendSpecificObservables<StateT>(obs_submodule);
 
     //***********************************************************************//
     //                              Measurements
     //***********************************************************************//
 
 #ifdef _ENABLE_PLTENSOR
-    using MeasurementsT = MeasurementsTNCuda<StateReprT>;
-    using ObservableT = ObservableTNCuda<StateReprT>;
+    using MeasurementsT = MeasurementsTNCuda<StateT>;
+    using ObservableT = ObservableTNCuda<StateT>;
 
-    const std::string prefix = std::string(StateReprT::method);
+    const std::string prefix = std::string(StateT::method);
 #else
-    using MeasurementsT = Measurements<StateReprT>;
-    using ObservableT = Observable<StateReprT>;
+    using MeasurementsT = Measurements<StateT>;
+    using ObservableT = Observable<StateT>;
 
     const std::string prefix = "";
 #endif
@@ -953,11 +952,11 @@ template <class StateReprT> void lightningClassBindings(nb::module_ &m) {
 #if defined(_ENABLE_PLGPU) || defined(_ENABLE_PLKOKKOS)
     pyclass_measurements.def(nb::init<StateVectorT &>());
 #else
-    pyclass_measurements.def(nb::init<const StateReprT &>());
+    pyclass_measurements.def(nb::init<const StateT &>());
 #endif
     registerBackendAgnosticMeasurements<MeasurementsT, ObservableT>(
         pyclass_measurements);
-    registerBackendSpecificMeasurements<StateReprT>(pyclass_measurements);
+    registerBackendSpecificMeasurements<StateT>(pyclass_measurements);
 
     //***********************************************************************//
     //                              Algorithms
@@ -967,9 +966,9 @@ template <class StateReprT> void lightningClassBindings(nb::module_ &m) {
     nb::module_ alg_submodule = m.def_submodule(
         "algorithms", "Submodule for the algorithms functionality.");
 #ifndef _ENABLE_PLTENSOR
-    registerBackendAgnosticAlgorithms<StateReprT>(alg_submodule);
+    registerBackendAgnosticAlgorithms<StateT>(alg_submodule);
 #endif
-    registerBackendSpecificAlgorithms<StateReprT>(alg_submodule);
+    registerBackendSpecificAlgorithms<StateT>(alg_submodule);
 }
 
 /**
@@ -981,8 +980,8 @@ template <class StateReprT> void lightningClassBindings(nb::module_ &m) {
 template <typename TypeList>
 void registerLightningClassBindings(nb::module_ &m) {
     if constexpr (!std::is_same_v<TypeList, void>) {
-        using StateReprT = typename TypeList::Type;
-        lightningClassBindings<StateReprT>(m);
+        using StateT = typename TypeList::Type;
+        lightningClassBindings<StateT>(m);
         registerLightningClassBindings<typename TypeList::Next>(m);
     }
 }
