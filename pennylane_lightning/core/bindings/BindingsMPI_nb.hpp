@@ -98,7 +98,7 @@ template <class StateVectorT> void registerObservablesMPI(nb::module_ &m) {
     const std::string bitsize =
         std::is_same_v<PrecisionT, float> ? "64" : "128";
 
-    using ArrCT = nb::ndarray<std::complex<PrecisionT>, nb::c_contig>;
+    using ArrayComplexT = nb::ndarray<std::complex<PrecisionT>, nb::c_contig>;
     using ObservableT = Observable<StateVectorT>;
     using ObsPtr = std::shared_ptr<ObservableT>;
     using NamedObsT = NamedObsMPI<StateVectorT>;
@@ -133,7 +133,7 @@ template <class StateVectorT> void registerObservablesMPI(nb::module_ &m) {
     auto hermitian_obs_class =
         nb::class_<HermitianObsT, ObservableT>(m, class_name.c_str());
     hermitian_obs_class.def(
-        "__init__", [](HermitianObsT *self, const ArrCT &matrix,
+        "__init__", [](HermitianObsT *self, const ArrayComplexT &matrix,
                        const std::vector<std::size_t> &wires) {
             const auto ptr = matrix.data();
             new (self) HermitianObsT(
@@ -313,7 +313,7 @@ void registerBackendAgnosticAlgorithmsMPI(nb::module_ &m) {
     using ComplexT =
         typename StateVectorT::ComplexT; // Statevector's complex type
 
-    using ArrCT = nb::ndarray<std::complex<PrecisionT>, nb::c_contig>;
+    using ArrayComplexT = nb::ndarray<std::complex<PrecisionT>, nb::c_contig>;
 
     const std::string bitsize =
         std::is_same_v<PrecisionT, float> ? "64" : "128";
@@ -356,7 +356,7 @@ void registerBackendAgnosticAlgorithmsMPI(nb::module_ &m) {
            const std::vector<std::vector<PrecisionT>> &ops_params,
            const std::vector<std::vector<std::size_t>> &ops_wires,
            const std::vector<bool> &ops_inverses,
-           const std::vector<ArrCT> &ops_matrices,
+           const std::vector<ArrayComplexT> &ops_matrices,
            const std::vector<std::vector<std::size_t>> &ops_controlled_wires,
            const std::vector<std::vector<bool>> &ops_controlled_values) {
             std::vector<std::vector<ComplexT>> conv_matrices =
