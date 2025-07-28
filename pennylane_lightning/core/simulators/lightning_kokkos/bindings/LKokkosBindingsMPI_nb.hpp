@@ -201,9 +201,43 @@ template <class StateVectorT, class PyClass>
 void registerBackendSpecificMeasurementsMPI(PyClass &pyclass) {
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
+    using ArrCT = nb::ndarray<std::complex<PrecisionT>, nb::c_contig>;
 
-    // Keep only Kokkos-specific measurement methods here
-    // Common methods have been moved to registerBackendAgnosticMeasurementsMPI
+    pyclass.def(
+        "expval",
+        [](MeasurementsMPI<StateVectorT> &M, const std::string &operation,
+           const std::vector<std::size_t> &wires) {
+            return M.expval(operation, wires);
+        },
+        "Expected value of an operation by name.");
+    pyclass.def(
+        "expval",
+        [](MeasurementsMPI<StateVectorT> &M, const ArrCT &matrix,
+           const std::vector<std::size_t> &wires) {
+            const std::size_t matrix_size = exp2(2 * wires.size());
+            auto matrix_data =
+                PL_reinterpret_cast<const ComplexT>(matrix.data());
+            std::vector<ComplexT> matrix_v{matrix_data,
+                                           matrix_data + matrix_size};
+            return M.expval(matrix_v, wires);
+        },
+        "Expected value of a Hermitian observable.");
+    pyclass.def(
+        "expval",
+        [](MeasurementsMPI<StateVectorT> &M,
+           const std::vector<std::string> &pauli_words,
+           const std::vector<std::vector<std::size_t>> &target_wires,
+           const std::vector<PrecisionT> &coeffs) {
+            return M.expval(pauli_words, target_wires, coeffs);
+        },
+        "Expected value of a Hamiltonian represented by Pauli words.");
+    pyclass.def(
+        "var",
+        [](MeasurementsMPI<StateVectorT> &M, const std::string &operation,
+           const std::vector<std::size_t> &wires) {
+            return M.var(operation, wires);
+        },
+        "Variance of an operation by name.");
 }
 
 /**
@@ -221,9 +255,27 @@ void registerBackendSpecificObservablesMPI(nb::module_ &m) {
         std::is_same_v<PrecisionT, float> ? "64" : "128";
 
     using ArrCT = nb::ndarray<std::complex<PrecisionT>, nb::c_contig>;
+    using SparseIndexT = std::size_t;
+    using ArrSparseIndT = nb::ndarray<SparseIndexT, nb::c_contig>;
 
-    // Register only Kokkos-specific observables here
-    // Common observables have been moved to registerBackendAgnosticObservables
+    std::string class_name = "SparseHamiltonianC" + bitsize;
+    nb::class_<SparseHamiltonian<StateVectorT>>(m, class_name.c_str())
+        .def(nb::init<const ArrSparseIndT &, const ArrSparseIndT &,
+                      const ArrCT &, const std::vector<std::size_t> &>())
+        .def("__repr__", &SparseHamiltonian<StateVectorT>::getObsName)
+        .def("get_wires", &SparseHamiltonian<StateVectorT>::getWires,
+             "Get wires of observables")
+        .def(
+            "__eq__",
+            [](const SparseHamiltonian<StateVectorT> &self,
+               nb::handle other) -> bool {
+                if (!nb::isinstance<SparseHamiltonian<StateVectorT>>(other)) {
+                    return false;
+                }
+                auto other_cast = other.cast<SparseHamiltonian<StateVectorT>>();
+                return self == other_cast;
+            },
+            "Compare two observables");
 }
 
 /**
