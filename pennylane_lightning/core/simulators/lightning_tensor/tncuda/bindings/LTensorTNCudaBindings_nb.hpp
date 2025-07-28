@@ -94,15 +94,13 @@ void registerBackendClassSpecificBindingsMPS(PyClass &pyclass) {
             std::vector<std::vector<std::size_t>> MPS_shape_source;
             // TODO: Question for reviewers: these are actually pointers to
             // int64_t, not size_t. Do we anticipate this being an issue?
-            for (std::size_t idx = 0; idx < tensors.size(); idx++) {
-                std::vector<std::size_t> MPS_site_source(
-                    tensors[idx].shape_ptr(),
-                    tensors[idx].shape_ptr() + tensors[idx].ndim());
-                // TODO: Can probably do this without a for loop and emplace
-                // back
-                MPS_shape_source.emplace_back(std::move(MPS_site_source));
-            }
-
+            MPS_shape_source.resize(tensors.size());
+            std::transform(tensors.begin(), tensors.end(),
+                           MPS_shape_source.begin(), [](const ArrayT &tensor) {
+                               return std::vector<std::size_t>(
+                                   tensor.shape_ptr(),
+                                   tensor.shape_ptr() + tensor.ndim());
+                           });
             const auto &MPS_shape_dest = tensor_network.getSitesExtents();
             MPSShapeCheck(MPS_shape_dest, MPS_shape_source);
 
@@ -169,17 +167,16 @@ void registerBackendClassSpecificBindingsExactTNCuda(PyClass &pyclass) {
             tensor_network.setBasisState(basisState);
         },
         "Create Basis State on GPU.");
-    pyclass
-        .def(
-            "updateMPSSitesData",
-            [](TensorNetT &tensor_network, std::vector<ArrayT> &tensors) {
-                for (std::size_t idx = 0; idx < tensors.size(); idx++) {
-                    tensor_network.updateSiteData(idx, tensors[idx].data(),
-                                                  tensors[idx].size());
-                }
-            },
-            "Pass MPS site data to the C++ backend.")
-        .def("reset", &TensorNetT::reset, "Reset the statevector.");
+    pyclass.def(
+        "updateMPSSitesData",
+        [](TensorNetT &tensor_network, std::vector<ArrayT> &tensors) {
+            for (std::size_t idx = 0; idx < tensors.size(); idx++) {
+                tensor_network.updateSiteData(idx, tensors[idx].data(),
+                                              tensors[idx].size());
+            }
+        },
+        "Pass MPS site data to the C++ backend.");
+    pyclass.def("reset", &TensorNetT::reset, "Reset the statevector.");
 }
 
 /**
