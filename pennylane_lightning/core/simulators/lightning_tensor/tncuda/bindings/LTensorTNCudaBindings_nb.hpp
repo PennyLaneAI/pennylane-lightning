@@ -47,6 +47,7 @@ namespace {
 using namespace Pennylane::LightningTensor::TNCuda;
 using namespace Pennylane::LightningTensor::TNCuda::Observables;
 using namespace Pennylane::LightningTensor::TNCuda::Measures;
+using namespace Pennylane::Util::NanoBindings;
 using Pennylane::NanoBindings::Utils::createNumpyArrayFromVector;
 } // namespace
 /// @endcond
@@ -69,10 +70,11 @@ using TensorNetworkBackends =
  * @tparam PyClass
  * @param pyclass Nanobind's tensornet class to bind methods.
  */
-template <class TensorNet, class PyClass>
+template <class TensorNetT, class PyClass>
 void registerBackendClassSpecificBindingsMPS(PyClass &pyclass) {
-    using PrecisionT = typename TensorNet::PrecisionT; // TensorNet's precision
-    using ParamT = PrecisionT; // Parameter's data precision
+    using PrecisionT =
+        typename TensorNetT::PrecisionT; // TensorNetT's precision
+    using ParamT = PrecisionT;           // Parameter's data precision
     using ArrayT = nb::ndarray<std::complex<ParamT>, nb::c_contig>;
 
     pyclass.def(
@@ -81,26 +83,24 @@ void registerBackendClassSpecificBindingsMPS(PyClass &pyclass) {
                          DevTag<int>>()); // num_qubits, max_bond_dim, dev-tag
     pyclass.def(
         "getState",
-        [](TensorNet &tensor_network, ArrayT &state) {
+        [](TensorNetT &tensor_network, ArrayT &state) {
             tensor_network.getData(state.data(), state.size());
         },
         "Copy StateVector data into a Numpy array.");
     pyclass.def(
         "updateMPSSitesData",
-        [](TensorNet &tensor_network, std::vector<ArrayT> &tensors) {
+        [](TensorNetT &tensor_network, std::vector<ArrayT> &tensors) {
             // Extract the incoming MPS shape
             std::vector<std::vector<std::size_t>> MPS_shape_source;
             // TODO: Question for reviewers: these are actually pointers to
             // int64_t, not size_t. Do we anticipate this being an issue?
-            for (std::size_t idx = 0; idx < tensors.size(); idx++) {
-                std::vector<std::size_t> MPS_site_source(
-                    tensors[idx].shape_ptr(),
-                    tensors[idx].shape_ptr() + tensors[idx].ndim());
-                // TODO: Can probably do this without a for loop and emplace
-                // back
-                MPS_shape_source.emplace_back(std::move(MPS_site_source));
-            }
-
+            MPS_shape_source.resize(tensors.size());
+            std::transform(tensors.begin(), tensors.end(),
+                           MPS_shape_source.begin(), [](const ArrayT &tensor) {
+                               return std::vector<std::size_t>(
+                                   tensor.shape_ptr(),
+                                   tensor.shape_ptr() + tensor.ndim());
+                           });
             const auto &MPS_shape_dest = tensor_network.getSitesExtents();
             MPSShapeCheck(MPS_shape_dest, MPS_shape_source);
 
@@ -112,15 +112,15 @@ void registerBackendClassSpecificBindingsMPS(PyClass &pyclass) {
         "Pass MPS site data to the C++ backend.");
     pyclass.def(
         "setBasisState",
-        [](TensorNet &tensor_network, std::vector<std::size_t> &basisState) {
+        [](TensorNetT &tensor_network, std::vector<std::size_t> &basisState) {
             tensor_network.setBasisState(basisState);
         },
         "Create Basis State on GPU.");
     pyclass.def(
         "applyMPOOperation",
-        [](TensorNet &tensor_network, std::vector<ArrayT> &tensors,
+        [](TensorNetT &tensor_network, std::vector<ArrayT> &tensors,
            const std::vector<std::size_t> &wires, std::size_t MPOBondDims) {
-            using ComplexT = typename TensorNet::ComplexT;
+            using ComplexT = typename TensorNetT::ComplexT;
             std::vector<std::vector<ComplexT>> conv_tensors;
             for (const auto &tensor : tensors) {
                 conv_tensors.push_back(std::vector<ComplexT>{
@@ -131,12 +131,12 @@ void registerBackendClassSpecificBindingsMPS(PyClass &pyclass) {
         "Apply MPO to the tensor network graph.");
     pyclass.def(
         "appendMPSFinalState",
-        [](TensorNet &tensor_network, double cutoff,
+        [](TensorNetT &tensor_network, double cutoff,
            const std::string &cutoff_mode) {
             tensor_network.append_mps_final_state(cutoff, cutoff_mode);
         },
         "Get the final state.");
-    pyclass.def("reset", &TensorNet::reset, "Reset the statevector.");
+    pyclass.def("reset", &TensorNetT::reset, "Reset the statevector.");
 }
 
 /**
@@ -146,37 +146,37 @@ void registerBackendClassSpecificBindingsMPS(PyClass &pyclass) {
  * @tparam PyClass
  * @param pyclass Nanobind's tensornet class to bind methods.
  */
-template <class TensorNet, class PyClass>
+template <class TensorNetT, class PyClass>
 void registerBackendClassSpecificBindingsExactTNCuda(PyClass &pyclass) {
-    using PrecisionT = typename TensorNet::PrecisionT; // TensorNet's precision
-    using ParamT = PrecisionT; // Parameter's data precision
+    using PrecisionT =
+        typename TensorNetT::PrecisionT; // TensorNetT's precision
+    using ParamT = PrecisionT;           // Parameter's data precision
     using ArrayT = nb::ndarray<std::complex<ParamT>, nb::c_contig>;
 
     pyclass.def(nb::init<std::size_t>());              // num_qubits
     pyclass.def(nb::init<std::size_t, DevTag<int>>()); // num_qubits, dev-tag
     pyclass.def(
         "getState",
-        [](TensorNet &tensor_network, ArrayT &state) {
+        [](TensorNetT &tensor_network, ArrayT &state) {
             tensor_network.getData(state.data(), state.size());
         },
         "Copy StateVector data into a Numpy array.");
     pyclass.def(
         "setBasisState",
-        [](TensorNet &tensor_network, std::vector<std::size_t> &basisState) {
+        [](TensorNetT &tensor_network, std::vector<std::size_t> &basisState) {
             tensor_network.setBasisState(basisState);
         },
         "Create Basis State on GPU.");
-    pyclass
-        .def(
-            "updateMPSSitesData",
-            [](TensorNet &tensor_network, std::vector<ArrayT> &tensors) {
-                for (std::size_t idx = 0; idx < tensors.size(); idx++) {
-                    tensor_network.updateSiteData(idx, tensors[idx].data(),
-                                                  tensors[idx].size());
-                }
-            },
-            "Pass MPS site data to the C++ backend.")
-        .def("reset", &TensorNet::reset, "Reset the statevector.");
+    pyclass.def(
+        "updateMPSSitesData",
+        [](TensorNetT &tensor_network, std::vector<ArrayT> &tensors) {
+            for (std::size_t idx = 0; idx < tensors.size(); idx++) {
+                tensor_network.updateSiteData(idx, tensors[idx].data(),
+                                              tensors[idx].size());
+            }
+        },
+        "Pass MPS site data to the C++ backend.");
+    pyclass.def("reset", &TensorNetT::reset, "Reset the statevector.");
 }
 
 /**
@@ -185,15 +185,15 @@ void registerBackendClassSpecificBindingsExactTNCuda(PyClass &pyclass) {
  * @tparam PyClass
  * @param pyclass Nanobind's tensornet class to bind methods.
  */
-template <class TensorNet, class PyClass>
+template <class TensorNetT, class PyClass>
 void registerBackendClassSpecificBindings(PyClass &pyclass) {
-    if constexpr (std::is_same_v<TensorNet, MPSTNCuda<double>> ||
-                  std::is_same_v<TensorNet, MPSTNCuda<float>>) {
-        registerBackendClassSpecificBindingsMPS<TensorNet>(pyclass);
+    if constexpr (std::is_same_v<TensorNetT, MPSTNCuda<double>> ||
+                  std::is_same_v<TensorNetT, MPSTNCuda<float>>) {
+        registerBackendClassSpecificBindingsMPS<TensorNetT>(pyclass);
     }
-    if constexpr (std::is_same_v<TensorNet, ExactTNCuda<double>> ||
-                  std::is_same_v<TensorNet, ExactTNCuda<float>>) {
-        registerBackendClassSpecificBindingsExactTNCuda<TensorNet>(pyclass);
+    if constexpr (std::is_same_v<TensorNetT, ExactTNCuda<double>> ||
+                  std::is_same_v<TensorNetT, ExactTNCuda<float>>) {
+        registerBackendClassSpecificBindingsExactTNCuda<TensorNetT>(pyclass);
     }
 } // pyclass
 
@@ -256,7 +256,7 @@ void registerBackendSpecificInfo(nb::module_ &m) {
             return info;
         },
         "Backend-specific information.");
-    Pennylane::LightningGPU::Util::NanoBindings::registerCudaUtils(m);
+    registerCudaUtils(m);
 } // m
 
 } // namespace Pennylane::LightningTensor::TNCuda::NanoBindings
