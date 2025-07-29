@@ -72,13 +72,13 @@ class MeasurementsMPI final
     cudaDataType_t data_type_;
     MPIManagerGPU mpi_manager_;
     GateCache<PrecisionT> gate_cache_;
+    using BaseType =
+        MeasurementsBase<StateVectorT, MeasurementsMPI<StateVectorT>>;
+    using CFP_t = decltype(cuUtil::getCudaType(PrecisionT{}));
 
   public:
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
-    using BaseType =
-        MeasurementsBase<StateVectorT, MeasurementsMPI<StateVectorT>>;
-    using CFP_t = decltype(cuUtil::getCudaType(PrecisionT{}));
     explicit MeasurementsMPI(StateVectorT &statevector)
         : BaseType{statevector}, mpi_manager_(statevector.getMPIManager()),
           gate_cache_(true, statevector.getDataBuffer().getDevTag()) {
