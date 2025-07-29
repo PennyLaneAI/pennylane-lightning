@@ -71,7 +71,7 @@ class MeasurementsMPI final
   private:
     cudaDataType_t data_type_;
     MPIManagerGPU mpi_manager_;
-    GateCache<PrecisionT> gate_cache_;
+    GateCache<StateVectorT::PrecisionT> gate_cache_;
 
   public:
     using PrecisionT = typename StateVectorT::PrecisionT;
