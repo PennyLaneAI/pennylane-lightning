@@ -420,7 +420,7 @@ class LightningBase(Device):
             Tuple: The jacobian for each trainable parameter
         """
         if execution_config is None:
-            execution_config = ExecutionConfig()
+            execution_config = ExecutionConfig(gradient_method="adjoint")
 
         batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
 
@@ -449,7 +449,7 @@ class LightningBase(Device):
             Tuple: A numeric result of the computation and the gradient.
         """
         if execution_config is None:
-            execution_config = ExecutionConfig()
+            execution_config = ExecutionConfig(gradient_method="adjoint")
 
         batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
         results = tuple(
@@ -512,7 +512,7 @@ class LightningBase(Device):
           then the shape must be ``(batch_size,)``.
         """
         if execution_config is None:
-            execution_config = ExecutionConfig()
+            execution_config = ExecutionConfig(gradient_method="adjoint")
 
         batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
         return tuple(
@@ -543,7 +543,7 @@ class LightningBase(Device):
             Tuple, Tuple: the result of executing the scripts and the numeric result of computing the vector jacobian product
         """
         if execution_config is None:
-            execution_config = ExecutionConfig()
+            execution_config = ExecutionConfig(gradient_method="adjoint")
 
         batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
         results = tuple(
@@ -688,7 +688,7 @@ class LightningBase(Device):
             raise NotImplementedError("Wires must be specified for integration with plxpr capture.")
 
         if execution_config is None:
-            execution_config = ExecutionConfig()
+            execution_config = ExecutionConfig(gradient_method="adjoint")
         gradient_method = getattr(execution_config, "gradient_method", "adjoint")
 
         if gradient_method != "adjoint":
