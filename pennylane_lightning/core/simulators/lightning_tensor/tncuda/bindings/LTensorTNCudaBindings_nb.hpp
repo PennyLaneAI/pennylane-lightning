@@ -92,14 +92,17 @@ void registerBackendClassSpecificBindingsMPS(PyClass &pyclass) {
         [](TensorNetT &tensor_network, std::vector<ArrayT> &tensors) {
             // Extract the incoming MPS shape
             std::vector<std::vector<std::size_t>> MPS_shape_source;
-            // TODO: Question for reviewers: these are actually pointers to
-            // int64_t, not size_t. Do we anticipate this being an issue?
             MPS_shape_source.resize(tensors.size());
+            // Get shape of each tensor
             std::transform(tensors.begin(), tensors.end(),
                            MPS_shape_source.begin(), [](const ArrayT &tensor) {
-                               return std::vector<std::size_t>(
-                                   tensor.shape_ptr(),
-                                   tensor.shape_ptr() + tensor.ndim());
+                               std::vector<std::size_t> shape;
+                               shape.resize(tensor.ndim());
+                               // Fill the shape vector with tensor dimensions
+                               for (std::size_t i = 0; i < tensor.ndim(); i++) {
+                                   shape[i] = tensor.shape(i);
+                               }
+                               return shape;
                            });
             const auto &MPS_shape_dest = tensor_network.getSitesExtents();
             MPSShapeCheck(MPS_shape_dest, MPS_shape_source);
