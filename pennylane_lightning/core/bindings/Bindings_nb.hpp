@@ -950,7 +950,7 @@ template <class StateReprT> void lightningClassBindings(nb::module_ &m) {
         nb::class_<MeasurementsT>(m, class_name.c_str());
 
 #if defined(_ENABLE_PLGPU) || defined(_ENABLE_PLKOKKOS)
-    pyclass_measurements.def(nb::init<StateVectorT &>());
+    pyclass_measurements.def(nb::init<StateReprT &>());
 #else
     pyclass_measurements.def(nb::init<const StateReprT &>());
 #endif
