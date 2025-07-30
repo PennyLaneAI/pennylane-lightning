@@ -53,17 +53,6 @@ using StateVectorBackends =
                               StateVectorCudaManaged<double>, void>;
 
 /**
- * @brief Get a controlled matrix and kernel map for a statevector.
- * @tparam StateVectorT
- * @tparam PyClass
- * @param pyclass Nanobind's statevector class to bind methods.
- */
-template <class StateVectorT, class PyClass>
-void registerBackendClassSpecificBindings(PyClass &pyclass) {
-    registerBackendSpecificStateVectorMethods<StateVectorT>(pyclass);
-}
-
-/**
  * @brief Register backend specific measurements class functionalities.
  *
  * @tparam StateVectorT
@@ -153,6 +142,17 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
         "Variance of a sparse Hamiltonian.");
 
 } // pyclass
+
+/**
+ * @brief Get a controlled matrix and kernel map for a statevector.
+ * @tparam StateVectorT
+ * @tparam PyClass
+ * @param pyclass Nanobind's statevector class to bind methods.
+ */
+template <class StateVectorT, class PyClass>
+void registerBackendClassSpecificBindings(PyClass &pyclass) {
+    registerBackendSpecificStateVectorMethods<StateVectorT>(pyclass);
+}
 
 /**
  * @brief Register backend specific observables.
