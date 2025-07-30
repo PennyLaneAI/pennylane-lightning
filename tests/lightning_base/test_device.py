@@ -1008,11 +1008,16 @@ class TestDerivatives:
         return transf_fn(results), jac
 
     @staticmethod
-    def process_and_execute(device, tape, execute_and_derivatives=False, obs_batch=False):
+    def process_and_execute(
+        device, tape, execute_and_derivatives=False, obs_batch=False, use_default_config=False
+    ):
         program, config = device.preprocess(
             ExecutionConfig(gradient_method="adjoint", device_options={"batch_obs": obs_batch})
         )
         tapes, transf_fn = program([tape])
+
+        if use_default_config:
+            config = None
 
         if execute_and_derivatives:
             results, jac = device.execute_and_compute_derivatives(tapes, config)
@@ -1080,8 +1085,9 @@ class TestDerivatives:
         ],
     )
     @pytest.mark.parametrize("execute_and_derivatives", [True, False])
+    @pytest.mark.parametrize("use_default_config", [True, False])
     def test_derivatives_single_expval(
-        self, theta, phi, dev, obs, execute_and_derivatives, batch_obs
+        self, theta, phi, dev, obs, execute_and_derivatives, batch_obs, use_default_config
     ):
         """Test that the jacobian is correct when a tape has a single expectation value"""
         if isinstance(obs, qml.SparseHamiltonian) and dev.c_dtype == np.complex64:
@@ -1096,7 +1102,11 @@ class TestDerivatives:
         )
 
         res, jac = self.process_and_execute(
-            dev, qs, execute_and_derivatives=execute_and_derivatives, obs_batch=batch_obs
+            dev,
+            qs,
+            execute_and_derivatives=execute_and_derivatives,
+            obs_batch=batch_obs,
+            use_default_config=use_default_config,
         )
         if isinstance(obs, qml.Hamiltonian):
             qs = QuantumScript(
