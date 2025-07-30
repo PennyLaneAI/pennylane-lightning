@@ -43,9 +43,9 @@
 namespace {
 using namespace Pennylane;
 using namespace Pennylane::Bindings;
-using namespace Pennylane::LightningKokkos::Algorithms;
-using namespace Pennylane::LightningKokkos::Measures;
-using namespace Pennylane::LightningKokkos::Observables;
+using namespace Pennylane::LightningGPU::Algorithms;
+using namespace Pennylane::LightningGPU::Measures;
+using namespace Pennylane::LightningGPU::Observables;
 using Pennylane::LightningGPU::StateVectorCudaMPI;
 } // namespace
 /// @endcond
@@ -291,19 +291,19 @@ void registerBackendSpecificInfoMPI(py::module_ &m) {
     using ArrayComplexT_f = nb::ndarray<std::complex<float>, nb::c_contig>;
     using ArrayComplexT_d = nb::ndarray<std::complex<double>, nb::c_contig>;
 
-    nb::class_<MPIManagerKokkos>(m, "MPIManagerKokkos")
+    nb::class_<MPIManagerGPU>(m, "MPIManagerGPU")
         .def(nb::init<>())
-        .def(nb::init<MPIManagerKokkos &>())
-        .def("Barrier", &MPIManagerKokkos::Barrier)
-        .def("getRank", &MPIManagerKokkos::getRank)
-        .def("getSize", &MPIManagerKokkos::getSize)
-        .def("getSizeNode", &MPIManagerKokkos::getSizeNode)
-        .def("getTime", &MPIManagerKokkos::getTime)
-        .def("getVendor", &MPIManagerKokkos::getVendor)
-        .def("getVersion", &MPIManagerKokkos::getVersion)
+        .def(nb::init<MPIManagerGPU &>())
+        .def("Barrier", &MPIManagerGPU::Barrier)
+        .def("getRank", &MPIManagerGPU::getRank)
+        .def("getSize", &MPIManagerGPU::getSize)
+        .def("getSizeNode", &MPIManagerGPU::getSizeNode)
+        .def("getTime", &MPIManagerGPU::getTime)
+        .def("getVendor", &MPIManagerGPU::getVendor)
+        .def("getVersion", &MPIManagerGPU::getVersion)
         .def(
             "Scatter",
-            [](MPIManagerKokkos &mpi_manager, ArrayComplexT_f &sendBuf,
+            [](MPIManagerGPU &mpi_manager, ArrayComplexT_f &sendBuf,
                ArrayComplexT_f &recvBuf, int root) {
                 auto send_ptr =
                     static_cast<std::complex<float> *>(sendBuf.data());
@@ -316,7 +316,7 @@ void registerBackendSpecificInfoMPI(py::module_ &m) {
             "MPI Scatter for complex float arrays.")
         .def(
             "Scatter",
-            [](MPIManagerKokkos &mpi_manager, ArrayComplexT_d &sendBuf,
+            [](MPIManagerGPU &mpi_manager, ArrayComplexT_d &sendBuf,
                ArrayComplexT_d &recvBuf, int root) {
                 auto send_ptr =
                     static_cast<std::complex<double> *>(sendBuf.data());
