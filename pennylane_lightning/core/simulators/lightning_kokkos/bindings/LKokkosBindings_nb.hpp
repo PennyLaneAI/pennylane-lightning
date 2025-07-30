@@ -165,7 +165,7 @@ void registerBackendSpecificObservables(nb::module_ &m) {
     std::string class_name = "SparseHamiltonianC" + bitsize;
     auto sparse_hamiltonian_class =
         nb::class_<SparseHamiltonian<StateVectorT>, Observable<StateVectorT>>(
-            m, class_name.c_str(), nb::is_final());
+            m, class_name.c_str());
 
     sparse_hamiltonian_class.def(
         nb::init<std::vector<ComplexT>, std::vector<std::size_t>,
