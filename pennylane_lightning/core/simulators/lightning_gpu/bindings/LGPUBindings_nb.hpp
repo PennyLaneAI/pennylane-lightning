@@ -38,7 +38,6 @@ namespace nb = nanobind;
 /// @cond DEV
 namespace {
 using namespace Pennylane::Util::NanoBindings;
-using namespace Pennylane::LightningGPU::Util::NanoBindings;
 using namespace Pennylane::LightningGPU::Measures;
 using namespace Pennylane::LightningGPU::Observables;
 } // namespace

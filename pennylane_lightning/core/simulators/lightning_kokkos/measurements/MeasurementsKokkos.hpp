@@ -67,11 +67,11 @@ class Measurements final
         typename StateVectorT::UnmanagedConstSizeTHostView;
     using ScratchViewComplex = typename StateVectorT::ScratchViewComplex;
     using TeamPolicy = typename StateVectorT::TeamPolicy;
+    using BaseType = MeasurementsBase<StateVectorT, Measurements<StateVectorT>>;
 
   public:
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
-    using BaseType = MeasurementsBase<StateVectorT, Measurements<StateVectorT>>;
 #if _ENABLE_PLKOKKOS_MPI == 1
     explicit Measurements(StateVectorT &statevector) : BaseType{statevector} {
 #else
