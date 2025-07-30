@@ -1,9 +1,11 @@
 PYTHON := python3
 COMPILER_LAUNCHER ?= $(shell which ccache)
 COVERAGE := --cov=pennylane_lightning --cov-report term-missing --cov-report=html:coverage_html_report
-TESTRUNNER := -m pytest tests --tb=short
+TESTRUNNER := -m pytest tests --tb=short -vv -s
 
 PL_BACKEND ?= "$(if $(backend:-=),$(backend),lightning_qubit)"
+PL_DEVICE ?= $(if $(device:-=),$(device),lightning.qubit)
+PL_DEVICE_MPI ?= $(if $(filter lightning.qubit,$(PL_DEVICE)),lightning.gpu,$(PL_DEVICE))
 SCIPY_OPENBLAS :=$(shell $(PYTHON) -c "import scipy_openblas32; print(scipy_openblas32.get_lib_dir())")
 
 ifdef check
@@ -67,6 +69,7 @@ clean:
 	rm -rf build_*
 	rm -rf .coverage coverage_html_report/
 	rm -rf pennylane_lightning/*_ops*
+	rm -rf pennylane_lightning/*_nb*
 	rm -rf *.egg-info
 	rm -rf dist
 
@@ -86,10 +89,10 @@ wheel:
 
 .PHONY: coverage coverage-cpp
 coverage:
-	@echo "Generating coverage report for $(if $(device:-=),$(device),lightning.qubit) device:"
+	@echo "Generating coverage report for $(PL_DEVICE) device:"
 	$(PYTHON) $(TESTRUNNER) $(COVERAGE)
-	pl-device-test --device $(if $(device:-=),$(device),lightning.qubit) --skip-ops --shots=10000 $(COVERAGE) --cov-append
-	pl-device-test --device $(if $(device:-=),$(device),lightning.qubit) --shots=None --skip-ops $(COVERAGE) --cov-append
+	pl-device-test --device $(PL_DEVICE) --skip-ops --shots=10000 $(COVERAGE) --cov-append
+	pl-device-test --device $(PL_DEVICE) --shots=None --skip-ops $(COVERAGE) --cov-append
 
 coverage-cpp:
 	@echo "Generating cpp coverage report in BuildCov/out for $(PL_BACKEND) backend"
@@ -112,14 +115,14 @@ coverage-cpp:
 test-python: test-builtin test-suite
 
 test-builtin:
-	PL_DEVICE=$(if $(device:-=),$(device),lightning.qubit) $(PYTHON) -I $(TESTRUNNER)
+	PL_DEVICE=$(PL_DEVICE) $(PYTHON) -I $(TESTRUNNER)
 
 test-suite:
-	pl-device-test --device $(if $(device:-=),$(device),lightning.qubit) --skip-ops --shots=10000
-	pl-device-test --device $(if $(device:-=),$(device),lightning.qubit) --shots=None --skip-ops
+	pl-device-test --device $(PL_DEVICE) --skip-ops --shots=10000
+	pl-device-test --device $(PL_DEVICE) --shots=None --skip-ops
 
 test-python-mpi:
-	PL_DEVICE=$(if $(device:-=),$(device),lightning.gpu) mpirun -n 2 $(PYTHON) -I  -m pytest mpitests --tb=short
+	PL_DEVICE=$(PL_DEVICE_MPI) mpirun -n 2 $(PYTHON) -I  -m pytest mpitests --tb=short
 
 test-cpp:
 	rm -rf ./BuildTests

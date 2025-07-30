@@ -17,7 +17,7 @@ This module contains the :class:`~.LightningGPU_MPIHandler` class, a MPI handler
 
 try:
     # pylint: disable=no-name-in-module
-    from pennylane_lightning.lightning_gpu_ops import DevPool, DevTag, MPIManagerGPU
+    from pennylane_lightning.lightning_gpu_nb import DevPool, DevTag, MPIManagerGPU
 
     MPI_SUPPORT = True
 except ImportError:

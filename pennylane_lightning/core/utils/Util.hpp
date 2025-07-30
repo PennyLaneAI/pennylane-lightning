@@ -651,7 +651,7 @@ inline std::size_t getRevWireIndex(const std::vector<std::size_t> &wires,
 }
 
 /**
- * @brief Helper function to safely reinterpret data pointers
+ * @brief Helper function to safely reinterpret const data pointers
  *
  * This function assumes that DestType and SrcType have compatible memory
  * layouts
@@ -668,6 +668,26 @@ inline auto PL_reinterpret_cast(const SrcType *src_ptr) -> const DestType * {
     static_assert(alignof(DestType) == alignof(SrcType),
                   "Types must have the same alignment for reinterpretation");
     return reinterpret_cast<const DestType *>(src_ptr);
+}
+
+/**
+ * @brief Helper function to safely reinterpret non-const data pointers
+ *
+ * This function assumes that DestType and SrcType have compatible memory
+ * layouts
+ *
+ * @tparam DestType Destination type
+ * @tparam SrcType Source type
+ * @param src_ptr Pointer to source data
+ * @return DestType* Reinterpreted pointer to the same data
+ */
+template <typename DestType, typename SrcType>
+inline auto PL_reinterpret_cast(SrcType *src_ptr) -> DestType * {
+    static_assert(sizeof(DestType) == sizeof(SrcType),
+                  "Types must have the same size for reinterpretation");
+    static_assert(alignof(DestType) == alignof(SrcType),
+                  "Types must have the same alignment for reinterpretation");
+    return reinterpret_cast<DestType *>(src_ptr);
 }
 
 } // namespace Pennylane::Util
