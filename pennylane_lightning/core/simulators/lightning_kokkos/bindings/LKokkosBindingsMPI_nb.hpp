@@ -264,8 +264,8 @@ void registerBackendSpecificObservablesMPI(nb::module_ &m) {
 
     sparse_hamiltonian_class.def(
         "__init__", [](SparseHamiltonian<StateVectorT> *self, const ArrCT &data,
-                       const std::vector<std::size_t> &indices,
-                       const std::vector<std::size_t> &indptr,
+                       const std::vector<SparseIndexT> &indices,
+                       const std::vector<SparseIndexT> &indptr,
                        const std::vector<std::size_t> &wires) {
             const ComplexT *data_ptr =
                 PL_reinterpret_cast<const ComplexT>(data.data());
