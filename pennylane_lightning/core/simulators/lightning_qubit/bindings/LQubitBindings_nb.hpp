@@ -360,7 +360,7 @@ void registerBackendSpecificObservables(nb::module_ &m) {
 
     using SparseIndexT = std::size_t;
     using ArrayComplexT = nb::ndarray<std::complex<PrecisionT>, nb::c_contig>;
-    using ArraySparseIndT = nb::ndarray<SparseIndexT, nb::c_contig>;
+    using ArraySparseIndT = std::vector<std::size_t>;
 
     const std::string bitsize =
         std::is_same_v<PrecisionT, float> ? "64" : "128";
