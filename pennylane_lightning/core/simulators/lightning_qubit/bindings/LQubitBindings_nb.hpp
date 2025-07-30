@@ -360,7 +360,6 @@ void registerBackendSpecificObservables(nb::module_ &m) {
 
     using SparseIndexT = std::size_t;
     using ArrayComplexT = nb::ndarray<std::complex<PrecisionT>, nb::c_contig>;
-    using ArraySparseIndT = std::vector<std::size_t>;
 
     const std::string bitsize =
         std::is_same_v<PrecisionT, float> ? "64" : "128";
@@ -378,7 +377,8 @@ void registerBackendSpecificObservables(nb::module_ &m) {
     sparse_hamiltonian_class.def(
         "__init__",
         [](SparseHamiltonian<StateVectorT> *self, const ArrayComplexT &data,
-           const ArraySparseIndT &indices, const ArraySparseIndT &indptr,
+           const std::vector<SparseIndexT> &indices,
+           const std::vector<SparseIndexT> &indptr,
            const std::vector<std::size_t> &wires) {
             const ComplexT *data_ptr = data.data();
             std::vector<ComplexT> data_vec(data_ptr, data_ptr + data.size());
