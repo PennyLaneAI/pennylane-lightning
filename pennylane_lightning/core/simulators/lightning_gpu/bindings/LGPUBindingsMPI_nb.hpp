@@ -153,14 +153,20 @@ void registerBackendSpecificStateVectorMethodsMPI(PyClass &pyclass) {
            const std::vector<std::size_t> &wires, bool inv,
            const std::vector<std::vector<PrecisionT>> &params,
            const ArrayComplexT &gate_matrix) {
+            std::vector<ComplexT> conv_matrix;
+            if (gate_matrix.size() > 0) {
+                conv_matrix = std::vector<ComplexT>{gate_matrix.data(),
+                                                    gate_matrix.data() +
+                                                        gate_matrix.size()};
+            }
+
             if (params.empty()) {
                 sv.applyOperation(str, wires, inv, std::vector<PrecisionT>{},
-                                  gate_matrix.data(), gate_matrix.size());
+                                  conv_matrix);
             } else {
                 PL_ABORT_IF(params.size() != 1,
                             "params should be a List[List[float]].")
-                sv.applyOperation(str, wires, inv, params[0],
-                                  gate_matrix.data(), gate_matrix.size());
+                sv.applyOperation(str, wires, inv, params[0], conv_matrix);
             }
         },
         "Apply operation via the gate matrix");
