@@ -1396,12 +1396,17 @@ class TestVJP:
         return transf_fn(results), jac
 
     @staticmethod
-    def process_and_execute(device, tape, dy, execute_and_derivatives=False, obs_batch=False):
+    def process_and_execute(
+        device, tape, dy, execute_and_derivatives=False, obs_batch=False, use_default_config=False
+    ):
         program, config = device.preprocess(
             ExecutionConfig(gradient_method="adjoint", device_options={"batch_obs": obs_batch})
         )
         tapes, transf_fn = program([tape])
         dy = [dy]
+
+        if use_default_config:
+            config = None
 
         if execute_and_derivatives:
             results, jac = device.execute_and_compute_vjp(tapes, dy, config)
@@ -1473,7 +1478,10 @@ class TestVJP:
         ],
     )
     @pytest.mark.parametrize("execute_and_derivatives", [True, False])
-    def test_vjp_single_expval(self, theta, phi, dev, obs, execute_and_derivatives, batch_obs):
+    @pytest.mark.parametrize("use_default_config", [True, False])
+    def test_vjp_single_expval(
+        self, theta, phi, dev, obs, execute_and_derivatives, batch_obs, use_default_config
+    ):
         """Test that the VJP is correct when a tape has a single expectation value"""
 
         qs = QuantumScript(
@@ -1484,7 +1492,12 @@ class TestVJP:
 
         dy = 1.0
         res, jac = self.process_and_execute(
-            dev, qs, dy, execute_and_derivatives=execute_and_derivatives, obs_batch=batch_obs
+            dev,
+            qs,
+            dy,
+            execute_and_derivatives=execute_and_derivatives,
+            obs_batch=batch_obs,
+            use_default_config=use_default_config,
         )
         if isinstance(obs, qml.Hamiltonian):
             qs = QuantumScript(
