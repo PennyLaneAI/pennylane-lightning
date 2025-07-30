@@ -38,7 +38,7 @@
 
 #include "AdjointJacobianGPUMPI.hpp"
 #include "JacobianDataMPI.hpp"
-#include "LGPUBindingsMPI.hpp"
+#include "LGPUBindingsMPI_nb.hpp"
 #include "MPIManagerGPU.hpp"
 #include "MeasurementsGPUMPI.hpp"
 #include "ObservablesGPUMPI.hpp"

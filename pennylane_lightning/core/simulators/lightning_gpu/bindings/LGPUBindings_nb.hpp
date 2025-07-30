@@ -144,17 +144,6 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
 } // pyclass
 
 /**
- * @brief Get a controlled matrix and kernel map for a statevector.
- * @tparam StateVectorT
- * @tparam PyClass
- * @param pyclass Nanobind's statevector class to bind methods.
- */
-template <class StateVectorT, class PyClass>
-void registerBackendClassSpecificBindings(PyClass &pyclass) {
-    registerBackendSpecificStateVectorMethods<StateVectorT>(pyclass);
-}
-
-/**
  * @brief Register backend specific observables.
  *
  * @tparam StateVectorT
@@ -400,5 +389,16 @@ void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
         },
         "Copy state vector data to a numpy array.", nb::arg("state"));
 } // registerBackendSpecificStateVectorMethods
+
+/**
+ * @brief Get a controlled matrix and kernel map for a statevector.
+ * @tparam StateVectorT
+ * @tparam PyClass
+ * @param pyclass Nanobind's statevector class to bind methods.
+ */
+template <class StateVectorT, class PyClass>
+void registerBackendClassSpecificBindings(PyClass &pyclass) {
+    registerBackendSpecificStateVectorMethods<StateVectorT>(pyclass);
+}
 
 } // namespace Pennylane::LightningGPU::NanoBindings
