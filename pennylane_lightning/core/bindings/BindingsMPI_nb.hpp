@@ -440,11 +440,9 @@ template <class StateVectorT> void lightningClassBindingsMPI(nb::module_ &m) {
     //***********************************************************************//
     std::string class_name = "StateVectorMPIC" + bitsize;
     auto pyclass = nb::class_<StateVectorT>(m, class_name.c_str());
-    registerBackendAgnosticStateVectorMethods<StateVectorT>(pyclass);
-    registerBackendSpecificStateVectorMethods<StateVectorT>(pyclass);
 
     // Register backend specific bindings
-    registerBackendClassSpecificBindingsMPI<StateVectorT>(pyclass);
+    registerBackendSpecificStateVectorMethodsMPI<StateVectorT>(pyclass);
 
     //***********************************************************************//
     //                              Observables

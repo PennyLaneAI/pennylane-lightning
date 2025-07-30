@@ -191,17 +191,6 @@ void registerBackendSpecificStateVectorMethodsMPI(PyClass &pyclass) {
 }
 
 /**
- * @brief Get a controlled matrix and kernel map for a statevector.
- * @tparam StateVectorT
- * @tparam PyClass
- * @param pyclass Nanobind's statevector class to bind methods.
- */
-template <class StateVectorT, class PyClass>
-void registerBackendClassSpecificBindingsMPI(PyClass &pyclass) {
-    registerBackendSpecificStateVectorMethodsMPI<StateVectorT>(pyclass);
-}
-
-/**
  * @brief Register backend specific measurements class functionalities for MPI.
  *
  * @tparam StateVectorT
