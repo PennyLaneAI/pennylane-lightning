@@ -201,8 +201,6 @@ template <class StateT, class PyClass> void registerGates(PyClass &pyclass) {
 
     pyclass.def("applyMatrix", &applyMatrix<StateT>,
                 "Apply a given matrix to wires.");
-    pyclass.def("applyControlledMatrix", &applyControlledMatrix<StateT>,
-                "Apply controlled operation");
 
     for_each_enum<GateOperation>([&pyclass](GateOperation gate_op) {
         using Pennylane::Util::lookup;
@@ -232,6 +230,9 @@ void registerControlledGates(PyClass &pyclass) {
     using Pennylane::Gates::ControlledGateOperation;
     using Pennylane::Util::for_each_enum;
     namespace Constant = Pennylane::Gates::Constant;
+
+    pyclass.def("applyControlledMatrix", &applyControlledMatrix<StateT>,
+                "Apply controlled operation");
 
     for_each_enum<ControlledGateOperation>(
         [&pyclass](ControlledGateOperation gate_op) {
