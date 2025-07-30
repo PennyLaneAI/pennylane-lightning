@@ -78,23 +78,15 @@ void registerBackendSpecificStateVectorMethodsMPI(PyClass &pyclass) {
 
     // Register gates for state vector
     registerGates<StateVectorT>(pyclass);
-    registerControlledGates<StateVectorT>(pyclass);
 
+    pyclass.def(nb::init<MPIManagerGPU &, const DevTag<int> &, std::size_t,
+                         std::size_t, std::size_t>(),
+                "Constructor with MPI manager, device tag, buffer size, global "
+                "qubits, local qubits");
     pyclass.def(
-        nb::init([](MPIManagerGPU &mpi_manager, const DevTag<int> devtag_local,
-                    std::size_t mpi_buf_size, std::size_t num_global_qubits,
-                    std::size_t num_local_qubits) {
-            return new StateVectorT(mpi_manager, devtag_local, mpi_buf_size,
-                                    num_global_qubits, num_local_qubits);
-        }) // qubits, device
-    );
-    pyclass.def(nb::init(
-        [](const DevTag<int> devtag_local, std::size_t mpi_buf_size,
-           std::size_t num_global_qubits, std::size_t num_local_qubits) {
-            return new StateVectorT(devtag_local, mpi_buf_size,
-                                    num_global_qubits, num_local_qubits);
-        }) // qubits, device
-    );
+        nb::init<const DevTag<int> &, std::size_t, std::size_t, std::size_t>(),
+        "Constructor with device tag, buffer size, global qubits, local "
+        "qubits");
     pyclass.def(
         "setBasisState",
         [](StateVectorT &sv, const std::vector<std::size_t> &state,
