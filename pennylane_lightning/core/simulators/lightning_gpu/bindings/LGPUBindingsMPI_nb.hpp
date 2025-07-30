@@ -37,16 +37,19 @@
 #include "ObservablesGPUMPI.hpp"
 #include "StateVectorCudaMPI.hpp"
 #include "TypeList.hpp"
+#include "Util.hpp" // exp2
 #include "cuda_helpers.hpp"
 
 /// @cond DEV
 namespace {
 using namespace Pennylane;
-using namespace Pennylane::Bindings;
+using namespace Pennylane::NanoBindings;
 using namespace Pennylane::LightningGPU::Algorithms;
 using namespace Pennylane::LightningGPU::Measures;
 using namespace Pennylane::LightningGPU::Observables;
 using Pennylane::LightningGPU::StateVectorCudaMPI;
+using Pennylane::LightningGPU::Util::MPIManagerGPU;
+using Pennylane::Util::exp2;
 } // namespace
 /// @endcond
 
@@ -85,7 +88,7 @@ void registerBackendSpecificStateVectorMethodsMPI(PyClass &pyclass) {
                                     num_global_qubits, num_local_qubits);
         }) // qubits, device
     );
-    pyclass.def(py::init(
+    pyclass.def(nb::init(
         [](const DevTag<int> devtag_local, std::size_t mpi_buf_size,
            std::size_t num_global_qubits, std::size_t num_local_qubits) {
             return new StateVectorT(devtag_local, mpi_buf_size,
@@ -188,7 +191,7 @@ void registerBackendClassSpecificBindingsMPI(PyClass &pyclass) {
  *
  * @tparam StateVectorT
  * @tparam PyClass
- * @param pyclass Pybind11's measurements class to bind methods.
+ * @param pyclass Nanobind's measurements class to bind methods.
  */
 template <class StateVectorT, class PyClass>
 void registerBackendSpecificMeasurementsMPI(PyClass &pyclass) {
@@ -277,17 +280,17 @@ void registerBackendSpecificMeasurementsMPI(PyClass &pyclass) {
  * @brief Register backend specific adjoint Jacobian methods.
  *
  * @tparam StateVectorT
- * @param m Pybind module
+ * @param m Nanobind module
  */
 template <class StateVectorT>
-void registerBackendSpecificAlgorithmsMPI([[maybe_unused]] py::module_ &m) {}
+void registerBackendSpecificAlgorithmsMPI(nb::module_ &m) {}
 
 /**
  * @brief Register bindings for backend-specific info.
  *
- * @param m Pybind11 module.
+ * @param m Nanobind module.
  */
-void registerBackendSpecificInfoMPI(py::module_ &m) {
+void registerBackendSpecificInfoMPI(nb::module_ &m) {
     using ArrayComplexT_f = nb::ndarray<std::complex<float>, nb::c_contig>;
     using ArrayComplexT_d = nb::ndarray<std::complex<double>, nb::c_contig>;
 
