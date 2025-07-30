@@ -60,20 +60,12 @@ using StateVectorMPIBackends =
 /// @endcond
 
 /**
- * @brief Get a controlled matrix and kernel map for a statevector.
+ * @brief Register backend specific state vector methods for MPI.
+ *
  * @tparam StateVectorT
  * @tparam PyClass
- * @param pyclass Nanobind's statevector class to bind methods.
+ * @param pyclass Nanobind's state vector class to bind methods.
  */
-template <class StateVectorT, class PyClass>
-void registerBackendClassSpecificBindingsMPI(PyClass &pyclass) {
-    registerBackendSpecificStateVectorMethodsMPI<StateVectorT>(pyclass);
-}
-
-/**
- * @brief Get a gate kernel map for a statevector.
- */
-
 template <class StateVectorT, class PyClass>
 void registerBackendSpecificStateVectorMethodsMPI(PyClass &pyclass) {
     using PrecisionT = typename StateVectorT::PrecisionT;
@@ -85,20 +77,20 @@ void registerBackendSpecificStateVectorMethodsMPI(PyClass &pyclass) {
     registerGates<StateVectorT>(pyclass);
     registerControlledGates<StateVectorT>(pyclass);
 
-    pyclass.def(nb::init(
-        [](MPIManagerGPU &mpi_manager, const DevTag<int> devtag_local,
-           std::size_t mpi_buf_size, std::size_t num_global_qubits,
-           std::size_t num_local_qubits) {
-        return new StateVectorT(mpi_manager, devtag_local, mpi_buf_size,
-                                num_global_qubits, num_local_qubits);
-        })) // qubits, device
+    pyclass.def(
+        nb::init([](MPIManagerGPU &mpi_manager, const DevTag<int> devtag_local,
+                    std::size_t mpi_buf_size, std::size_t num_global_qubits,
+                    std::size_t num_local_qubits) {
+            return new StateVectorT(mpi_manager, devtag_local, mpi_buf_size,
+                                    num_global_qubits, num_local_qubits);
+        }) // qubits, device
     );
     pyclass.def(py::init(
         [](const DevTag<int> devtag_local, std::size_t mpi_buf_size,
-               std::size_t num_global_qubits, std::size_t num_local_qubits) {
-        return new StateVectorT(devtag_local, mpi_buf_size, num_global_qubits,
-                                num_local_qubits);
-            })) // qubits, device
+           std::size_t num_global_qubits, std::size_t num_local_qubits) {
+            return new StateVectorT(devtag_local, mpi_buf_size,
+                                    num_global_qubits, num_local_qubits);
+        }) // qubits, device
     );
     pyclass.def(
         "setBasisState",
@@ -177,6 +169,18 @@ void registerBackendSpecificStateVectorMethodsMPI(PyClass &pyclass) {
             }
         },
         "Apply operation via the gate matrix");
+}
+
+/**
+ * @brief Register backend class specific bindings for MPI.
+ *
+ * @tparam StateVectorT
+ * @tparam PyClass
+ * @param pyclass Nanobind's statevector class to bind methods.
+ */
+template <class StateVectorT, class PyClass>
+void registerBackendClassSpecificBindingsMPI(PyClass &pyclass) {
+    registerBackendSpecificStateVectorMethodsMPI<StateVectorT>(pyclass);
 }
 
 /**

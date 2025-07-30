@@ -68,17 +68,6 @@ using StateVectorMPIBackends =
                               StateVectorKokkosMPI<double>, void>;
 
 /**
- * @brief Get a controlled matrix and kernel map for a statevector.
- * @tparam StateVectorT
- * @tparam PyClass
- * @param pyclass Nanobind's statevector class to bind methods.
- */
-template <class StateVectorT, class PyClass>
-void registerBackendClassSpecificBindingsMPI(PyClass &pyclass) {
-    registerBackendSpecificStateVectorMethodsMPI<StateVectorT>(pyclass);
-}
-
-/**
  * @brief Register backend class specific bindings for MPI.
  *
  * @tparam StateVectorT
@@ -199,6 +188,17 @@ void registerBackendSpecificStateVectorMethodsMPI(PyClass &pyclass) {
         "reorderAllWires", [](StateVectorT &sv) { sv.reorderAllWires(); },
         "Reorder all wires so that global_wires_ = {0, 1, ...} and "
         "local_wires_ = {..., num_qubit-1}.");
+}
+
+/**
+ * @brief Get a controlled matrix and kernel map for a statevector.
+ * @tparam StateVectorT
+ * @tparam PyClass
+ * @param pyclass Nanobind's statevector class to bind methods.
+ */
+template <class StateVectorT, class PyClass>
+void registerBackendClassSpecificBindingsMPI(PyClass &pyclass) {
+    registerBackendSpecificStateVectorMethodsMPI<StateVectorT>(pyclass);
 }
 
 /**
