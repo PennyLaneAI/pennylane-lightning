@@ -68,6 +68,17 @@ using StateVectorMPIBackends =
                               StateVectorKokkosMPI<double>, void>;
 
 /**
+ * @brief Get a controlled matrix and kernel map for a statevector.
+ * @tparam StateVectorT
+ * @tparam PyClass
+ * @param pyclass Nanobind's statevector class to bind methods.
+ */
+template <class StateVectorT, class PyClass>
+void registerBackendClassSpecificBindingsMPI(PyClass &pyclass) {
+    registerBackendSpecificStateVectorMethodsMPI<StateVectorT>(pyclass);
+}
+
+/**
  * @brief Register backend class specific bindings for MPI.
  *
  * @tparam StateVectorT
@@ -75,7 +86,7 @@ using StateVectorMPIBackends =
  * @param pyclass Nanobind's state vector class to bind methods.
  */
 template <class StateVectorT, class PyClass>
-void registerBackendClassSpecificBindingsMPI(PyClass &pyclass) {
+void registerBackendSpecificStateVectorMethodsMPI(PyClass &pyclass) {
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
 
