@@ -628,7 +628,7 @@ void applyNCGlobalPhase(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
         }
     }
 
-    if (num_qubits) {
+    if (num_qubits) [[likely]] {
         auto core_function =
             KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
                           std::size_t i0, std::size_t i1) {
