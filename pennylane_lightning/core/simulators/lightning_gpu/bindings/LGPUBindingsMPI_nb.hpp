@@ -164,8 +164,17 @@ void registerBackendSpecificStateVectorMethodsMPI(PyClass &pyclass) {
                 sv.applyOperation(str, wires, inv, std::vector<PrecisionT>{},
                                   conv_matrix);
             } else {
-                PL_ABORT_IF(params.size() != 1,
-                            "params should be a List[List[float]].")
+                PL_ABORT_IF(
+                    params.size() != 1,
+                    "Invalid parameter structure for gate operation with "
+                    "custom matrix. "
+                    "Expected exactly one parameter list (List[List[float]] "
+                    "with size=1), "
+                    "but received " +
+                        std::to_string(params.size()) +
+                        " parameter lists. "
+                        "Each gate operation should provide its parameters as "
+                        "a single nested list, e.g., [[param1, param2, ...]].");
                 sv.applyOperation(str, wires, inv, params[0], conv_matrix);
             }
         },
