@@ -74,8 +74,7 @@ template <class TensorNetT, class PyClass>
 void registerBackendClassSpecificBindingsMPS(PyClass &pyclass) {
     using PrecisionT =
         typename TensorNetT::PrecisionT; // TensorNetT's precision
-    using ParamT = PrecisionT;           // Parameter's data precision
-    using ArrayT = nb::ndarray<std::complex<ParamT>, nb::c_contig>;
+    using ArrayT = nb::ndarray<std::complex<PrecisionT>, nb::c_contig>;
 
     pyclass.def(
         nb::init<std::size_t, std::size_t>()); // num_qubits, max_bond_dim
@@ -153,8 +152,7 @@ template <class TensorNetT, class PyClass>
 void registerBackendClassSpecificBindingsExactTNCuda(PyClass &pyclass) {
     using PrecisionT =
         typename TensorNetT::PrecisionT; // TensorNetT's precision
-    using ParamT = PrecisionT;           // Parameter's data precision
-    using ArrayT = nb::ndarray<std::complex<ParamT>, nb::c_contig>;
+    using ArrayT = nb::ndarray<std::complex<PrecisionT>, nb::c_contig>;
 
     pyclass.def(nb::init<std::size_t>());              // num_qubits
     pyclass.def(nb::init<std::size_t, DevTag<int>>()); // num_qubits, dev-tag
