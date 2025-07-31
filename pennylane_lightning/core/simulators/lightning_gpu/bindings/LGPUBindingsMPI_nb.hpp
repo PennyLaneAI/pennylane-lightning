@@ -286,8 +286,8 @@ void registerBackendSpecificAlgorithmsMPI(nb::module_ &m) {}
  * @param m Nanobind module.
  */
 void registerBackendSpecificInfoMPI(nb::module_ &m) {
-    using ArrayComplexT_f = nb::ndarray<std::complex<float>, nb::c_contig>;
-    using ArrayComplexT_d = nb::ndarray<std::complex<double>, nb::c_contig>;
+    using ArrayComplex64T = nb::ndarray<std::complex<float>, nb::c_contig>;
+    using ArrayComplex128T = nb::ndarray<std::complex<double>, nb::c_contig>;
 
     auto mpi_manager_class = nb::class_<MPIManagerGPU>(m, "MPIManagerGPU");
     mpi_manager_class.def(nb::init<>());
@@ -301,8 +301,8 @@ void registerBackendSpecificInfoMPI(nb::module_ &m) {
     mpi_manager_class.def("getVersion", &MPIManagerGPU::getVersion);
     mpi_manager_class.def(
         "Scatter",
-        [](MPIManagerGPU &mpi_manager, ArrayComplexT_f &sendBuf,
-           ArrayComplexT_f &recvBuf, int root) {
+        [](MPIManagerGPU &mpi_manager, ArrayComplex64T &sendBuf,
+           ArrayComplex64T &recvBuf, int root) {
             auto send_ptr = static_cast<std::complex<float> *>(sendBuf.data());
             auto recv_ptr = static_cast<std::complex<float> *>(recvBuf.data());
             mpi_manager.template Scatter<std::complex<float>>(
@@ -312,8 +312,8 @@ void registerBackendSpecificInfoMPI(nb::module_ &m) {
         "MPI Scatter for complex float arrays.");
     mpi_manager_class.def(
         "Scatter",
-        [](MPIManagerGPU &mpi_manager, ArrayComplexT_d &sendBuf,
-           ArrayComplexT_d &recvBuf, int root) {
+        [](MPIManagerGPU &mpi_manager, ArrayComplex128T &sendBuf,
+           ArrayComplex128T &recvBuf, int root) {
             auto send_ptr = static_cast<std::complex<double> *>(sendBuf.data());
             auto recv_ptr = static_cast<std::complex<double> *>(recvBuf.data());
             mpi_manager.template Scatter<std::complex<double>>(
