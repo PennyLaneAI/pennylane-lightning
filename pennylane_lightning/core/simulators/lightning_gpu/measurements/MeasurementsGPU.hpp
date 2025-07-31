@@ -69,7 +69,7 @@ class Measurements final
     GateCache<typename StateVectorT::PrecisionT> gate_cache_;
 
     using BaseType = MeasurementsBase<StateVectorT, Measurements<StateVectorT>>;
-    using CFP_t = decltype(cuUtil::getCudaType(PrecisionT{}));
+    using CFP_t = decltype(cuUtil::getCudaType(StateVectorT::PrecisionT{}));
 
   public:
     using PrecisionT = typename StateVectorT::PrecisionT;
