@@ -783,6 +783,14 @@ def test_controlled_globalphase(n_qubits, control_value, tol):
             assert np.allclose(circ(), circ_def(), tol)
 
 
+@pytest.mark.skipif(
+    (device_name == "lightning.kokkos" and sys.platform == "win32"),
+    reason="lightning.kokkos doesn't support zero wires on Windows.",
+)
+@pytest.mark.skipif(
+    device_name in ["lightning.gpu", "lightning.tensor"],
+    reason=device_name + " doesn't support zero wires.",
+)
 @pytest.mark.parametrize("control_value", [False, True])
 @pytest.mark.parametrize("n_qubits", list(range(2, 4)))
 def test_controlled_globalphase_zero_targetwire(n_qubits, control_value, tol):
