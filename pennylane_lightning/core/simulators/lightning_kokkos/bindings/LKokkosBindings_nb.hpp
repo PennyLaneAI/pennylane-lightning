@@ -174,10 +174,11 @@ void registerBackendSpecificObservables(nb::module_ &m) {
         "Initialize SparseHamiltonian with data, indices, indptr, and wires");
 
     sparse_hamiltonian_class.def(
-        "__init__", [](SparseHamiltonian<StateVectorT> *self, const ArrayComplexT &data,
-                       const std::vector<SparseIndexT> &indices,
-                       const std::vector<SparseIndexT> &indptr,
-                       const std::vector<std::size_t> &wires) {
+        "__init__",
+        [](SparseHamiltonian<StateVectorT> *self, const ArrayComplexT &data,
+           const std::vector<SparseIndexT> &indices,
+           const std::vector<SparseIndexT> &indptr,
+           const std::vector<std::size_t> &wires) {
             const ComplexT *data_ptr =
                 PL_reinterpret_cast<const ComplexT>(data.data());
             std::vector<ComplexT> data_vec(data_ptr, data_ptr + data.size());
