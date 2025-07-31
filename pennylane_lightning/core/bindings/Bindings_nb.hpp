@@ -884,7 +884,7 @@ void registerBackendAgnosticStateVectorMethods(PyClass &pyclass) {
         "Set the state vector to the data contained in 'state'.",
         nb::arg("state"), nb::arg("wires"), nb::arg("async") = false);
 }
-#endif
+#endif // ifndef _ENABLE_PLTENSOR
 
 /**
  * @brief Templated class to build lightning class bindings.
