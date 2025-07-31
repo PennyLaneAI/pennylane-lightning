@@ -332,6 +332,19 @@ nb::dict getCompileInfo() {
     return info;
 }
 
+/**
+ * @brief Register bindings for general info
+ *
+ * @param m Nanobind module
+ */
+void registerInfo(nb::module_ &m) {
+    // Add compile info
+    m.def("compile_info", &getCompileInfo, "Compiled binary information.");
+
+    // Add runtime info
+    m.def("runtime_info", &getRuntimeInfo, "Runtime information.");
+}
+
 #ifndef _ENABLE_PLTENSOR
 // These functions are used solely by the statevector simulators
 
@@ -419,19 +432,6 @@ void registerArrayAlignmentBindings(nb::module_ &m) {
           nb::arg("dtype"), nb::arg("zero_init") = false);
 }
 #endif // ifndef _ENABLE_PLTENSOR
-
-/**
- * @brief Register bindings for general info
- *
- * @param m Nanobind module
- */
-void registerInfo(nb::module_ &m) {
-    // Add compile info
-    m.def("compile_info", &getCompileInfo, "Compiled binary information.");
-
-    // Add runtime info
-    m.def("runtime_info", &getRuntimeInfo, "Runtime information.");
-}
 
 /**
  * @brief Register backend-agnostic observables

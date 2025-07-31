@@ -57,7 +57,7 @@ namespace Pennylane::LightningTensor::TNCuda::NanoBindings {
 namespace nb = nanobind;
 
 /**
- * @brief Define StateVector backends for lightning.tensor
+ * @brief Define TensorNet backends for lightning.tensor
  */
 using TensorNetworkBackends =
     Pennylane::Util::TypeList<MPSTNCuda<float>, MPSTNCuda<double>,
@@ -86,7 +86,7 @@ void registerBackendClassSpecificBindingsMPS(PyClass &pyclass) {
         [](TensorNetT &tensor_network, ArrayT &state) {
             tensor_network.getData(state.data(), state.size());
         },
-        "Copy StateVector data into a Numpy array.");
+        "Copy tensor network data into a Numpy array.");
     pyclass.def(
         "updateMPSSitesData",
         [](TensorNetT &tensor_network, std::vector<ArrayT> &tensors) {
@@ -139,7 +139,7 @@ void registerBackendClassSpecificBindingsMPS(PyClass &pyclass) {
             tensor_network.append_mps_final_state(cutoff, cutoff_mode);
         },
         "Get the final state.");
-    pyclass.def("reset", &TensorNetT::reset, "Reset the statevector.");
+    pyclass.def("reset", &TensorNetT::reset, "Reset the tensor network.");
 }
 
 /**
@@ -163,7 +163,7 @@ void registerBackendClassSpecificBindingsExactTNCuda(PyClass &pyclass) {
         [](TensorNetT &tensor_network, ArrayT &state) {
             tensor_network.getData(state.data(), state.size());
         },
-        "Copy StateVector data into a Numpy array.");
+        "Copy tensor network data into a Numpy array.");
     pyclass.def(
         "setBasisState",
         [](TensorNetT &tensor_network, std::vector<std::size_t> &basisState) {
@@ -179,12 +179,12 @@ void registerBackendClassSpecificBindingsExactTNCuda(PyClass &pyclass) {
             }
         },
         "Pass MPS site data to the C++ backend.");
-    pyclass.def("reset", &TensorNetT::reset, "Reset the statevector.");
+    pyclass.def("reset", &TensorNetT::reset, "Reset the tensor network.");
 }
 
 /**
- * @brief Get a controlled matrix and kernel map for a statevector.
- * @tparam TensorNet
+ * @brief Get a controlled matrix and kernel map for a tensor network.
+ * @tparam TensorNetT
  * @tparam PyClass
  * @param pyclass Nanobind's tensornet class to bind methods.
  */
@@ -203,7 +203,7 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
 /**
  * @brief Register backend specific measurements class functionalities.
  *
- * @tparam StateVectorT
+ * @tparam TensorNetT
  * @tparam PyClass
  * @param pyclass Nanobind's measurements class to bind methods.
  */
@@ -228,19 +228,19 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
 /**
  * @brief Register backend specific observables.
  *
- * @tparam StateVectorT
+ * @tparam TensorNetT
  * @param m Nanobind module
  */
-template <class StateVectorT>
+template <class TensorNetT>
 void registerBackendSpecificObservables(nb::module_ &) {} // m
 
 /**
  * @brief Register backend specific adjoint Jacobian methods.
  *
- * @tparam StateVectorT
+ * @tparam TensorNetT
  * @param m Nanobind module
  */
-template <class StateVectorT>
+template <class TensorNetT>
 void registerBackendSpecificAlgorithms(nb::module_ &) {} // m
 
 /**
