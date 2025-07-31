@@ -160,24 +160,24 @@ void registerBackendSpecificObservables(nb::module_ &m) {
         std::is_same_v<PrecisionT, float> ? "64" : "128";
 
     using ArrayComplexT = nb::ndarray<std::complex<PrecisionT>, nb::c_contig>;
+    using SparseIndexT = std::size_t;
 
     // Register Kokkos-specific observables
     std::string class_name = "SparseHamiltonianC" + bitsize;
     auto sparse_hamiltonian_class =
         nb::class_<SparseHamiltonian<StateVectorT>, Observable<StateVectorT>>(
-            m, class_name.c_str(), nb::is_final());
+            m, class_name.c_str());
 
     sparse_hamiltonian_class.def(
-        nb::init<std::vector<ComplexT>, std::vector<std::size_t>,
-                 std::vector<std::size_t>, std::vector<std::size_t>>(),
+        nb::init<std::vector<ComplexT>, std::vector<SparseIndexT>,
+                 std::vector<SparseIndexT>, std::vector<std::size_t>>(),
         "Initialize SparseHamiltonian with data, indices, indptr, and wires");
 
     sparse_hamiltonian_class.def(
-        "__init__",
-        [](SparseHamiltonian<StateVectorT> *self, const ArrayComplexT &data,
-           const std::vector<std::size_t> &indices,
-           const std::vector<std::size_t> &indptr,
-           const std::vector<std::size_t> &wires) {
+        "__init__", [](SparseHamiltonian<StateVectorT> *self, const ArrayComplexT &data,
+                       const std::vector<SparseIndexT> &indices,
+                       const std::vector<SparseIndexT> &indptr,
+                       const std::vector<std::size_t> &wires) {
             const ComplexT *data_ptr =
                 PL_reinterpret_cast<const ComplexT>(data.data());
             std::vector<ComplexT> data_vec(data_ptr, data_ptr + data.size());
