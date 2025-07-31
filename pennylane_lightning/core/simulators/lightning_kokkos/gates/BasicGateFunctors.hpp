@@ -148,7 +148,6 @@ class applyNC1Functor<PrecisionT, FuncT, false> {
           rev_wire_shift((static_cast<std::size_t>(1U) << rev_wire)),
           wire_parity(fillTrailingOnes(rev_wire)),
           wire_parity_inv(fillLeadingOnes(rev_wire + 1)) {
-
         Kokkos::parallel_for(
             Kokkos::RangePolicy<ExecutionSpace>(
                 0, num_qubits ? Pennylane::Util::exp2(num_qubits - 1) : 1),
