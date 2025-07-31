@@ -546,9 +546,7 @@ def test_shots_single_measure_obs(shots, measure_f, obs, n_wires, mcmc, kernel_n
     if device_name in ("lightning.gpu", "lightning.kokkos"):
         dev = qml.device(device_name, wires=n_wires, seed=seed)
     elif device_name == "lightning.qubit":
-        dev = qml.device(
-            device_name, wires=n_wires, shots=shots, mcmc=mcmc, kernel_name=kernel_name, seed=seed
-        )
+        dev = qml.device(device_name, wires=n_wires, mcmc=mcmc, kernel_name=kernel_name, seed=seed)
     else:
         dev = qml.device(device_name, wires=n_wires)
 

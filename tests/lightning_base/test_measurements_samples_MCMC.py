@@ -74,19 +74,27 @@ class TestMCMCSample:
         """Tests if the samples returned by sample have
         the correct values
         """
+        # Create device (should not fail at initialization)
+        dev = qml.device(
+            device_name,
+            wires=2,
+            shots=1000,
+            mcmc=True,
+            kernel_name=kernel,
+            num_burnin=100,
+        )
+
+        # Error should be raised during preprocess when validation runs
         with pytest.raises(
             NotImplementedError,
             match=f"The {kernel} is not supported and currently only 'Local' and 'NonZeroRandom' kernels are supported.",
         ):
-            dev = qml.device(
-                device_name,
-                wires=2,
-                shots=1000,
-                mcmc=True,
-                kernel_name=kernel,
-                num_burnin=100,
-            )
+            dev.preprocess()
 
     def test_wrong_num_burnin(self):
+        # Create device (should not fail at initialization)
+        dev = qml.device(device_name, wires=2, shots=1000, mcmc=True, num_burnin=1000)
+
+        # Error should be raised during preprocess when validation runs
         with pytest.raises(ValueError, match="Shots should be greater than num_burnin."):
-            dev = qml.device(device_name, wires=2, shots=1000, mcmc=True, num_burnin=1000)
+            dev.preprocess()

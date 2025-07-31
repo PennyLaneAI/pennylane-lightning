@@ -267,23 +267,8 @@ class LightningQubit(LightningBase):
 
         # Markov Chain Monte Carlo (MCMC) sampling method specific options
         self._mcmc = mcmc
-        if self._mcmc:
-            if kernel_name not in [
-                "Local",
-                "NonZeroRandom",
-            ]:
-                raise NotImplementedError(
-                    f"The {kernel_name} is not supported and currently "
-                    "only 'Local' and 'NonZeroRandom' kernels are supported."
-                )
-            shots = shots if isinstance(shots, Sequence) else [shots]
-            if any(num_burnin >= s for s in shots):
-                raise ValueError("Shots should be greater than num_burnin.")
-            self._kernel_name = kernel_name
-            self._num_burnin = num_burnin
-        else:
-            self._kernel_name = None
-            self._num_burnin = 0
+        self._kernel_name = kernel_name
+        self._num_burnin = num_burnin
 
         self.device_kwargs = {
             "mcmc": self._mcmc,
@@ -333,7 +318,37 @@ class LightningQubit(LightningBase):
         new_device_options = dict(config.device_options)
         for option in self._device_options:
             if option not in new_device_options:
-                new_device_options[option] = getattr(self, f"_{option}", None)
+                option_value = getattr(self, f"_{option}", None)
+                # Handle MCMC-specific options: when MCMC is disabled, use inactive values
+                if option in ("kernel_name", "num_burnin") and not new_device_options.get(
+                    "mcmc", getattr(self, "_mcmc", False)
+                ):
+                    option_value = None if option == "kernel_name" else 0
+                new_device_options[option] = option_value
+
+        # Validate MCMC options if MCMC is enabled
+        if new_device_options.get("mcmc", False):
+            kernel_name = new_device_options.get("kernel_name", "Local")
+            num_burnin = new_device_options.get("num_burnin", 0)
+
+            if kernel_name not in ["Local", "NonZeroRandom"]:
+                raise NotImplementedError(
+                    f"The {kernel_name} is not supported and currently "
+                    "only 'Local' and 'NonZeroRandom' kernels are supported."
+                )
+
+            # Validate shots vs num_burnin if shots are specified
+            shots = getattr(config, "shots", None) or getattr(self, "shots", None)
+            # Handle different shots types simply
+            if hasattr(shots, "__iter__") and not isinstance(shots, (str, int)):
+                shot_values = list(shots)
+            else:
+                shot_values = [shots]
+
+            # Filter out None values and check
+            shot_values = [s for s in shot_values if s is not None]
+            if shot_values and any(num_burnin >= s for s in shot_values):
+                raise ValueError("Shots should be greater than num_burnin.")
 
         updated_values["mcm_config"] = _resolve_mcm_method(config.mcm_config)
         return replace(config, **updated_values, device_options=new_device_options)

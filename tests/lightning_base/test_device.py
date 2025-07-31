@@ -495,8 +495,19 @@ class TestMCMCInitialization:
         n_shots = 10
         num_burnin = 11
 
+        # Create device (should not fail at initialization)
+        device = LightningDevice(wires=2, shots=n_shots, mcmc=True, num_burnin=num_burnin)
+
+        # Create a simple circuit tape
+        import pennylane as qml
+
+        with qml.tape.QuantumTape() as tape:
+            qml.X(0)
+            qml.expval(qml.Z(0))
+
+        # Error should be raised during preprocess when validation runs
         with pytest.raises(ValueError, match="Shots should be greater than num_burnin."):
-            _ = LightningDevice(wires=2, shots=n_shots, mcmc=True, num_burnin=num_burnin)
+            device.preprocess()
 
     def test_invalid_kernel_name(self):
         """Test that an error is raised when the kernel_name is not "Local" or "NonZeroRandom"."""
@@ -504,10 +515,14 @@ class TestMCMCInitialization:
         _ = LightningDevice(wires=2, shots=1000, mcmc=True, kernel_name="Local")
         _ = LightningDevice(wires=2, shots=1000, mcmc=True, kernel_name="NonZeroRandom")
 
+        # Create device with invalid kernel (should not fail at initialization)
+        device = LightningDevice(wires=2, shots=1000, mcmc=True, kernel_name="bleh")
+
+        # Error should be raised during preprocess when validation runs
         with pytest.raises(
             NotImplementedError, match="only 'Local' and 'NonZeroRandom' kernels are supported"
         ):
-            _ = LightningDevice(wires=2, shots=1000, mcmc=True, kernel_name="bleh")
+            device.preprocess()
 
 
 class TestExecution:
@@ -576,8 +591,8 @@ class TestExecution:
                         "c_dtype": np.complex64,
                         "batch_obs": False,
                         "mcmc": True,
-                        "kernel_name": None,
-                        "num_burnin": 0,
+                        "kernel_name": "Local",
+                        "num_burnin": 100,
                     },
                 ),
                 marks=pytest.mark.skipif(
