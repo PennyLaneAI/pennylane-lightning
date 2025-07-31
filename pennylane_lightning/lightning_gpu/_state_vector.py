@@ -214,7 +214,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
             device_wires (Wires): wires that get initialized in the state
         use_async(bool): indicates whether to use asynchronous memory copy from host to device or not.
         Note: This function only supports synchronized memory copy from host to device.
-        """```
+        """
         use_async = kwargs.get("use_async", False)
 
         if isinstance(state, self._qubit_state.__class__):
