@@ -2059,6 +2059,15 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                        bool inverse, ParamT angle) {
         const std::complex<PrecisionT> phase =
             std::exp(std::complex<PrecisionT>(0, inverse ? angle : -angle));
+
+        // This is a special case to preserve the behavior of the
+        // `applyNCGlobalPhase` function with PennyLane `default.qubit`
+        // for zero number of qubits.
+        if (!num_qubits) {
+            arr[0] *= phase;
+            return;
+        }
+
         auto core_function = [&phase](std::complex<PrecisionT> *arr,
                                       const std::size_t i0,
                                       const std::size_t i1) {
