@@ -316,42 +316,39 @@ void registerBackendSpecificInfoMPI(nb::module_ &m) {
     using ArrayComplexT_f = nb::ndarray<std::complex<float>, nb::c_contig>;
     using ArrayComplexT_d = nb::ndarray<std::complex<double>, nb::c_contig>;
 
-    nb::class_<MPIManagerKokkos>(m, "MPIManagerKokkos")
-        .def(nb::init<>())
-        .def(nb::init<MPIManagerKokkos &>())
-        .def("Barrier", &MPIManagerKokkos::Barrier)
-        .def("getRank", &MPIManagerKokkos::getRank)
-        .def("getSize", &MPIManagerKokkos::getSize)
-        .def("getSizeNode", &MPIManagerKokkos::getSizeNode)
-        .def("getTime", &MPIManagerKokkos::getTime)
-        .def("getVendor", &MPIManagerKokkos::getVendor)
-        .def("getVersion", &MPIManagerKokkos::getVersion)
-        .def(
-            "Scatter",
-            [](MPIManagerKokkos &mpi_manager, ArrayComplexT_f &sendBuf,
-               ArrayComplexT_f &recvBuf, int root) {
-                auto send_ptr =
-                    static_cast<std::complex<float> *>(sendBuf.data());
-                auto recv_ptr =
-                    static_cast<std::complex<float> *>(recvBuf.data());
-                mpi_manager.template Scatter<std::complex<float>>(
-                    send_ptr, recv_ptr,
-                    static_cast<std::size_t>(recvBuf.size()), root);
-            },
-            "MPI Scatter for complex float arrays.")
-        .def(
-            "Scatter",
-            [](MPIManagerKokkos &mpi_manager, ArrayComplexT_d &sendBuf,
-               ArrayComplexT_d &recvBuf, int root) {
-                auto send_ptr =
-                    static_cast<std::complex<double> *>(sendBuf.data());
-                auto recv_ptr =
-                    static_cast<std::complex<double> *>(recvBuf.data());
-                mpi_manager.template Scatter<std::complex<double>>(
-                    send_ptr, recv_ptr,
-                    static_cast<std::size_t>(recvBuf.size()), root);
-            },
-            "MPI Scatter for complex double arrays.");
+    auto mpi_manager_class =
+        nb::class_<MPIManagerKokkos>(m, "MPIManagerKokkos");
+    mpi_manager_class.def(nb::init<>());
+    mpi_manager_class.def(nb::init<MPIManagerKokkos &>());
+    mpi_manager_class.def("Barrier", &MPIManagerKokkos::Barrier);
+    mpi_manager_class.def("getRank", &MPIManagerKokkos::getRank);
+    mpi_manager_class.def("getSize", &MPIManagerKokkos::getSize);
+    mpi_manager_class.def("getSizeNode", &MPIManagerKokkos::getSizeNode);
+    mpi_manager_class.def("getTime", &MPIManagerKokkos::getTime);
+    mpi_manager_class.def("getVendor", &MPIManagerKokkos::getVendor);
+    mpi_manager_class.def("getVersion", &MPIManagerKokkos::getVersion);
+    mpi_manager_class.def(
+        "Scatter",
+        [](MPIManagerKokkos &mpi_manager, ArrayComplexT_f &sendBuf,
+           ArrayComplexT_f &recvBuf, int root) {
+            auto send_ptr = static_cast<std::complex<float> *>(sendBuf.data());
+            auto recv_ptr = static_cast<std::complex<float> *>(recvBuf.data());
+            mpi_manager.template Scatter<std::complex<float>>(
+                send_ptr, recv_ptr, static_cast<std::size_t>(recvBuf.size()),
+                root);
+        },
+        "MPI Scatter for complex float arrays.");
+    mpi_manager_class.def(
+        "Scatter",
+        [](MPIManagerKokkos &mpi_manager, ArrayComplexT_d &sendBuf,
+           ArrayComplexT_d &recvBuf, int root) {
+            auto send_ptr = static_cast<std::complex<double> *>(sendBuf.data());
+            auto recv_ptr = static_cast<std::complex<double> *>(recvBuf.data());
+            mpi_manager.template Scatter<std::complex<double>>(
+                send_ptr, recv_ptr, static_cast<std::size_t>(recvBuf.size()),
+                root);
+        },
+        "MPI Scatter for complex double arrays.");
 }
 
 } // namespace Pennylane::LightningKokkos::NanoBindings

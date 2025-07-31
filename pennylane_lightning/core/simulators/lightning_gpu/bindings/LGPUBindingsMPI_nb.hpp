@@ -289,42 +289,38 @@ void registerBackendSpecificInfoMPI(nb::module_ &m) {
     using ArrayComplexT_f = nb::ndarray<std::complex<float>, nb::c_contig>;
     using ArrayComplexT_d = nb::ndarray<std::complex<double>, nb::c_contig>;
 
-    nb::class_<MPIManagerGPU>(m, "MPIManagerGPU")
-        .def(nb::init<>())
-        .def(nb::init<MPIManagerGPU &>())
-        .def("Barrier", &MPIManagerGPU::Barrier)
-        .def("getRank", &MPIManagerGPU::getRank)
-        .def("getSize", &MPIManagerGPU::getSize)
-        .def("getSizeNode", &MPIManagerGPU::getSizeNode)
-        .def("getTime", &MPIManagerGPU::getTime)
-        .def("getVendor", &MPIManagerGPU::getVendor)
-        .def("getVersion", &MPIManagerGPU::getVersion)
-        .def(
-            "Scatter",
-            [](MPIManagerGPU &mpi_manager, ArrayComplexT_f &sendBuf,
-               ArrayComplexT_f &recvBuf, int root) {
-                auto send_ptr =
-                    static_cast<std::complex<float> *>(sendBuf.data());
-                auto recv_ptr =
-                    static_cast<std::complex<float> *>(recvBuf.data());
-                mpi_manager.template Scatter<std::complex<float>>(
-                    send_ptr, recv_ptr,
-                    static_cast<std::size_t>(recvBuf.size()), root);
-            },
-            "MPI Scatter for complex float arrays.")
-        .def(
-            "Scatter",
-            [](MPIManagerGPU &mpi_manager, ArrayComplexT_d &sendBuf,
-               ArrayComplexT_d &recvBuf, int root) {
-                auto send_ptr =
-                    static_cast<std::complex<double> *>(sendBuf.data());
-                auto recv_ptr =
-                    static_cast<std::complex<double> *>(recvBuf.data());
-                mpi_manager.template Scatter<std::complex<double>>(
-                    send_ptr, recv_ptr,
-                    static_cast<std::size_t>(recvBuf.size()), root);
-            },
-            "MPI Scatter for complex double arrays.");
+    auto mpi_manager_class = nb::class_<MPIManagerGPU>(m, "MPIManagerGPU");
+    mpi_manager_class.def(nb::init<>());
+    mpi_manager_class.def(nb::init<MPIManagerGPU &>());
+    mpi_manager_class.def("Barrier", &MPIManagerGPU::Barrier);
+    mpi_manager_class.def("getRank", &MPIManagerGPU::getRank);
+    mpi_manager_class.def("getSize", &MPIManagerGPU::getSize);
+    mpi_manager_class.def("getSizeNode", &MPIManagerGPU::getSizeNode);
+    mpi_manager_class.def("getTime", &MPIManagerGPU::getTime);
+    mpi_manager_class.def("getVendor", &MPIManagerGPU::getVendor);
+    mpi_manager_class.def("getVersion", &MPIManagerGPU::getVersion);
+    mpi_manager_class.def(
+        "Scatter",
+        [](MPIManagerGPU &mpi_manager, ArrayComplexT_f &sendBuf,
+           ArrayComplexT_f &recvBuf, int root) {
+            auto send_ptr = static_cast<std::complex<float> *>(sendBuf.data());
+            auto recv_ptr = static_cast<std::complex<float> *>(recvBuf.data());
+            mpi_manager.template Scatter<std::complex<float>>(
+                send_ptr, recv_ptr, static_cast<std::size_t>(recvBuf.size()),
+                root);
+        },
+        "MPI Scatter for complex float arrays.");
+    mpi_manager_class.def(
+        "Scatter",
+        [](MPIManagerGPU &mpi_manager, ArrayComplexT_d &sendBuf,
+           ArrayComplexT_d &recvBuf, int root) {
+            auto send_ptr = static_cast<std::complex<double> *>(sendBuf.data());
+            auto recv_ptr = static_cast<std::complex<double> *>(recvBuf.data());
+            mpi_manager.template Scatter<std::complex<double>>(
+                send_ptr, recv_ptr, static_cast<std::size_t>(recvBuf.size()),
+                root);
+        },
+        "MPI Scatter for complex double arrays.");
 }
 } // namespace Pennylane::LightningGPU::NanoBindings
 /// @endcond
