@@ -62,7 +62,7 @@ template <class PrecisionT> class TNCudaGateCache {
     TNCudaGateCache(const DevTag<int> device_tag)
         : device_tag_{device_tag}, total_alloc_bytes_{0} {}
 
-    ~TNCudaGateCache() {};
+    ~TNCudaGateCache(){};
 
     /**
      * @brief Add gate numerical value to the cache, indexed by the id of gate

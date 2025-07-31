@@ -220,7 +220,7 @@ class StateVectorCudaBase : public StateVectorBase<Precision, Derived> {
     StateVectorCudaBase(const StateVectorCudaBase &other) = delete;
     StateVectorCudaBase(StateVectorCudaBase &&other) = delete;
 
-    virtual ~StateVectorCudaBase() {};
+    virtual ~StateVectorCudaBase(){};
 
     /**
      * @brief Return the mapping of named gates to amount of control wires they

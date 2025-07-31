@@ -50,9 +50,7 @@ using namespace Pennylane::Util;
 
 #else
 #define PL_CUSTATEVEC_IS_SUCCESS(err)                                          \
-    {                                                                          \
-        static_cast<void>(err);                                                \
-    }
+    { static_cast<void>(err); }
 #endif
 namespace Pennylane::LightningGPU::Util {
 static const std::string
