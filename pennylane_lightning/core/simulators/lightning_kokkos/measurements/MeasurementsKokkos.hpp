@@ -55,6 +55,7 @@ template <class StateVectorT>
 class Measurements final
     : public MeasurementsBase<StateVectorT, Measurements<StateVectorT>> {
   private:
+    using BaseType = MeasurementsBase<StateVectorT, Measurements<StateVectorT>>;
     using KokkosExecSpace = typename StateVectorT::KokkosExecSpace;
     using HostExecSpace = typename StateVectorT::HostExecSpace;
     using KokkosVector = typename StateVectorT::KokkosVector;
@@ -67,7 +68,6 @@ class Measurements final
         typename StateVectorT::UnmanagedConstSizeTHostView;
     using ScratchViewComplex = typename StateVectorT::ScratchViewComplex;
     using TeamPolicy = typename StateVectorT::TeamPolicy;
-    using BaseType = MeasurementsBase<StateVectorT, Measurements<StateVectorT>>;
 
   public:
     using PrecisionT = typename StateVectorT::PrecisionT;
