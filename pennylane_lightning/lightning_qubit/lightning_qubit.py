@@ -306,15 +306,15 @@ class LightningQubit(LightningBase):
         if not mcmc_enabled:
             return
             
-        # Validate kernel name
-        if kernel_name not in ["Local", "NonZeroRandom"]:
+        # Validate kernel name (only if it's not None, which indicates MCMC is disabled)
+        if kernel_name is not None and kernel_name not in ["Local", "NonZeroRandom"]:
             raise NotImplementedError(
                 f"The {kernel_name} is not supported and currently "
                 "only 'Local' and 'NonZeroRandom' kernels are supported."
             )
 
         # Validate shots vs num_burnin if shots are specified
-        if shots is not None:
+        if shots is not None and num_burnin > 0:
             # Handle different shots types
             if hasattr(shots, "__iter__") and not isinstance(shots, (str, int)):
                 shot_values = list(shots)
@@ -354,13 +354,7 @@ class LightningQubit(LightningBase):
         new_device_options = dict(config.device_options)
         for option in self._device_options:
             if option not in new_device_options:
-                option_value = getattr(self, f"_{option}", None)
-                # Handle MCMC-specific options: when MCMC is disabled, use inactive values
-                if option in ("kernel_name", "num_burnin") and not new_device_options.get(
-                    "mcmc", getattr(self, "_mcmc", False)
-                ):
-                    option_value = None if option == "kernel_name" else 0
-                new_device_options[option] = option_value
+                new_device_options[option] = getattr(self, f"_{option}", None)
 
         # Validate MCMC options using the helper function
         mcmc_enabled = new_device_options.get("mcmc", False)
@@ -369,6 +363,12 @@ class LightningQubit(LightningBase):
         shots = getattr(config, "shots", None) or getattr(self, "shots", None)
         
         self._validate_mcmc_options(mcmc_enabled, kernel_name, num_burnin, shots)
+
+        # After validation, set MCMC options to inactive values if they weren't explicitly provided
+        # in the execution config (this is for display/API consistency)
+        for option in ("kernel_name", "num_burnin"):
+            if option not in config.device_options:
+                new_device_options[option] = None if option == "kernel_name" else 0
 
         updated_values["mcm_config"] = _resolve_mcm_method(config.mcm_config)
         return replace(config, **updated_values, device_options=new_device_options)
@@ -479,7 +479,7 @@ class LightningQubit(LightningBase):
         """
         if execution_config is None and circuit is None:
             return True
-        if execution_config is not None and execution_config.gradient_method not in {"adjoint", "best"}:
+        if execution_config.gradient_method not in {"adjoint", "best"}:
             return False
         if circuit is None:
             return True
