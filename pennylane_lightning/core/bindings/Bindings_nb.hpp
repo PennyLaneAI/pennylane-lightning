@@ -366,25 +366,25 @@ auto alignedArray(CPUMemoryModel memory_model, std::size_t size, bool zeroInit)
     // Allocate memory based on alignment requirements
     void *ptr;
     nb::capsule capsule;
+    uint32_t alignment = getAlignment<VectorT>(memory_model);
 
-    if (getAlignment<VectorT>(memory_model) > alignof(std::max_align_t)) {
-        ptr = alignedAlloc(getAlignment<VectorT>(memory_model),
-                           sizeof(VectorT) * size, zeroInit);
+    // Use aligned allocation for specific memory models.
+    if (memory_model == CPUMemoryModel::Aligned256 ||
+        memory_model == CPUMemoryModel::Aligned512) {
+        ptr = alignedAlloc(alignment, sizeof(VectorT) * size, zeroInit);
         capsule =
             nb::capsule(ptr, [](void *p) noexcept { Util::alignedFree(p); });
-    } else {
+    } else { // Otherwise, use standard allocation
         if (zeroInit) {
-            ptr = new VectorT[size](); // Value-initialize (zero-init)
+            ptr = new VectorT[size](); // Zero-initialize
         } else {
-            ptr = new VectorT[size]; // Default-initialize
+            ptr = new VectorT[size]; // Default initialization
         }
         capsule = nb::capsule(
             ptr, [](void *p) noexcept { delete[] static_cast<VectorT *>(p); });
     }
 
     std::vector<size_t> shape{size};
-
-    // Return ndarray with custom allocated memory
     return nb::ndarray<VectorT, nb::numpy, nb::c_contig>(ptr, shape.size(),
                                                          shape.data(), capsule);
 }
