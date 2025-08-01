@@ -498,13 +498,6 @@ class TestMCMCInitialization:
         # Create device (should not fail at initialization)
         device = LightningDevice(wires=2, shots=n_shots, mcmc=True, num_burnin=num_burnin)
 
-        # Create a simple circuit tape
-        import pennylane as qml
-
-        with qml.tape.QuantumTape() as tape:
-            qml.X(0)
-            qml.expval(qml.Z(0))
-
         # Error should be raised during preprocess when validation runs
         with pytest.raises(ValueError, match="Shots should be greater than num_burnin."):
             device.preprocess()
@@ -591,8 +584,8 @@ class TestExecution:
                         "c_dtype": np.complex64,
                         "batch_obs": False,
                         "mcmc": True,
-                        "kernel_name": "Local",
-                        "num_burnin": 100,
+                        "kernel_name": None,
+                        "num_burnin": 0,
                     },
                 ),
                 marks=pytest.mark.skipif(
