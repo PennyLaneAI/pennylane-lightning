@@ -1,7 +1,7 @@
 name: Wheel::Linux::ARM::CUDA
 
 # **What it does**: Builds python wheels for Linux (ubuntu-24.04) architecture ARM 64 and store it as artifacts.
-#                   Python versions: 3.10, 3.11, 3.12, 3.13.
+#                   Python versions: 3.11, 3.12, 3.13.
 # **Why we have it**: To build wheels for pennylane-lightning installation.
 # **Who does it impact**: Wheels to be uploaded to PyPI.
 
@@ -41,20 +41,20 @@ jobs:
         cibw_build: ${{ fromJson(needs.set_wheel_build_matrix.outputs.python_version_gpu) }}
         container_img: ["quay.io/pypa/manylinux_2_28_aarch64"]
     timeout-minutes: 60
-    name: ${{ matrix.os }}::${{ matrix.arch }} - ${{ matrix.pl_backend }} (Python ${{ fromJson('{ "cp310-*":"3.10","cp311-*":"3.11", "cp312-*":"3.12", "cp313-*":"3.13" }')[matrix.cibw_build] }})
+    name: ${{ matrix.os }}::${{ matrix.arch }} - ${{ matrix.pl_backend }} (Python ${{ fromJson('{ "cp311-*":"3.11", "cp312-*":"3.12", "cp313-*":"3.13" }')[matrix.cibw_build] }})
     runs-on: 
       - single-gpu-arm
     steps:
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
 
-      - name: Install Python 3.10
+      - name: Install Python 3.11
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.11'
 
       - name: Install cibuildwheel
-        run: python3.10 -m pip install cibuildwheel~=2.21.0 tomlkit
+        run: python3.11 -m pip install cibuildwheel~=2.21.0 tomlkit
 
       - name: Configure pyproject.toml file
         run: PL_BACKEND="${{ matrix.pl_backend }}" python scripts/configure_pyproject_toml.py

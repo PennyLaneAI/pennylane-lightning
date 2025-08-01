@@ -1,7 +1,7 @@
 name: Wheel::MacOS::Intel
 
 # **What it does**: Builds python wheels for MacOS (13.0) architecture x86_64 and store it as artifacts.
-#                   Python versions: 3.10, 3.11, 3.12, 3.13.
+#                   Python versions: 3.11, 3.12, 3.13.
 # **Why we have it**: To build wheels for pennylane-lightning installation.
 # **Who does it impact**: Wheels to be uploaded to PyPI.
 
@@ -69,7 +69,7 @@ jobs:
       - uses: actions/setup-python@v5
         name: Install Python
         with:
-          python-version: '3.10'
+          python-version: '3.11'
 
       - name: Build Kokkos core library
         if: steps.kokkos-cache.outputs.cache-hit != 'true'
@@ -104,7 +104,7 @@ jobs:
         exec_model: ${{ fromJson(needs.set_wheel_build_matrix.outputs.exec_model) }}
         kokkos_version: ${{ fromJson(needs.set_wheel_build_matrix.outputs.kokkos_version) }}
     timeout-minutes: 30
-    name: ${{ matrix.os }} - ${{ matrix.pl_backend }} (Python ${{ fromJson('{ "cp310-*":"3.10","cp311-*":"3.11","cp312-*":"3.12","cp313-*":"3.13" }')[matrix.cibw_build] }})
+    name: ${{ matrix.os }} - ${{ matrix.pl_backend }} (Python ${{ fromJson('{ "cp311-*":"3.11","cp312-*":"3.12","cp313-*":"3.13" }')[matrix.cibw_build] }})
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -126,7 +126,7 @@ jobs:
       - uses: actions/setup-python@v5
         name: Install Python
         with:
-          python-version: '3.10'
+          python-version: '3.11'
 
       - name: Install dependencies
         run: python -m pip install cibuildwheel~=2.21.0 tomlkit
