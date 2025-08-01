@@ -185,7 +185,18 @@ class TestAlignedArrayNB:
         size = 1024
         arr = current_module.allocate_aligned_array(size, np.dtype(np.complex128), False)
 
-        # Check array memory alignment
-        # The pointer address should be divisible by 32 (for AVX2) or 64 (for AVX512)
+        # Get the memory model being used
+        runtime_info = current_module.runtime_info()
         ptr_addr = arr.__array_interface__["data"][0]
-        assert ptr_addr % 32 == 0, "Memory not aligned to 32-byte boundary"
+
+        # Check alignment based on what the system actually supports
+        if runtime_info.get("AVX512F", False):
+            # Should be 64-byte aligned for AVX512
+            assert (
+                ptr_addr % 64 == 0
+            ), f"Memory not aligned to 64-byte boundary (AVX512), address: {ptr_addr}"
+        elif runtime_info.get("AVX2", False):
+            # Should be 32-byte aligned for AVX2
+            assert (
+                ptr_addr % 32 == 0
+            ), f"Memory not aligned to 32-byte boundary (AVX2), address: {ptr_addr}"
