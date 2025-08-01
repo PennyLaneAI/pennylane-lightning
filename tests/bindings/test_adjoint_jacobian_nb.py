@@ -332,7 +332,7 @@ class TestAdjointJacobianNanobind:
 
     @pytest.mark.parametrize("precision", ["64", "128"])
     def test_create_ops_list_function(self, current_nanobind_module, precision):
-        """Test the create_ops_list function has the same signature as pybind11 version."""
+        """Test the create_ops_list function has the right signature."""
         module = current_nanobind_module
 
         # Get the create_ops_list function

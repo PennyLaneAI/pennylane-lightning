@@ -42,21 +42,11 @@ def get_module_attributes(module):
 class TestNanobindBindings:
     """Tests for nanobind-based bindings."""
 
-    # Define the corresponding pybind module for comparison
-    pb_module_name = f"pennylane_lightning.{device_module_name}_ops"
-
     @pytest.fixture(autouse=True)
     def setup_module_attributes(self, current_nanobind_module):
         """Set up module attributes for all tests."""
         self.nb_module = current_nanobind_module
         self.nb_module_attr = get_module_attributes(self.nb_module)
-
-        try:
-            self.pb_module = importlib.import_module(self.pb_module_name)
-            self.pb_module_attr = get_module_attributes(self.pb_module)
-            self.pb_module_importable = True
-        except ImportError:
-            self.pb_module_importable = False
 
     def test_module_has_classes_and_functions(self):
         """Test if module has classes and functions."""
@@ -85,164 +75,6 @@ class TestNanobindBindings:
                 assert (
                     f"StateVectorC{precision}" in self.nb_module_attr["classes"]
                 ), f"StateVectorC{precision} not found in module"
-
-    @pytest.mark.xfail(reason="Expected to fail while we don't have backend-specific bindings.")
-    def test_api_parity_with_pybind(self):
-        """Test that nanobind modules have the same API as pybind modules."""
-        if not self.pb_module_importable:
-            pytest.skip(f"Pybind module {self.pb_module_name} not available")
-
-        # Check that all classes in pybind module exist in nanobind module
-        for cls in self.pb_module_attr["classes"]:
-            assert (
-                cls in self.nb_module_attr["classes"]
-            ), f"Class {cls} exists in pybind module but not in nanobind module"
-
-            # Get class objects
-            pb_class = getattr(self.pb_module, cls)
-            nb_class = getattr(self.nb_module, cls)
-
-            # Check methods of the class
-            pb_methods = [
-                name
-                for name in dir(pb_class)
-                if not name.startswith("__") and callable(getattr(pb_class, name))
-            ]
-
-            for method_name in pb_methods:
-                # Skip private methods and special methods
-                if method_name.startswith("_"):
-                    continue
-
-                assert hasattr(
-                    nb_class, method_name
-                ), f"Method {cls}.{method_name} exists in pybind module but not in nanobind module"
-
-                # Get method objects
-                pb_method = getattr(pb_class, method_name)
-                nb_method = getattr(nb_class, method_name)
-
-                # Check if both are callable
-                assert callable(pb_method), f"{cls}.{method_name} in pybind module is not callable"
-                assert callable(
-                    nb_method
-                ), f"{cls}.{method_name} in nanobind module is not callable"
-
-                # Try to get signatures if possible
-                try:
-                    pb_sig = inspect.signature(pb_method)
-                    nb_sig = inspect.signature(nb_method)
-
-                    # Compare parameter count
-                    pb_param_count = len(pb_sig.parameters)
-                    nb_param_count = len(nb_sig.parameters)
-
-                    assert pb_param_count == nb_param_count, (
-                        f"Method {cls}.{method_name} has {pb_param_count} parameters in pybind module "
-                        f"but {nb_param_count} parameters in nanobind module"
-                    )
-
-                    # Compare parameter names and kinds
-                    for pb_param_name, pb_param in pb_sig.parameters.items():
-                        assert pb_param_name in nb_sig.parameters, (
-                            f"Parameter '{pb_param_name}' of {cls}.{method_name} exists in pybind module "
-                            f"but not in nanobind module"
-                        )
-
-                        nb_param = nb_sig.parameters[pb_param_name]
-                        assert pb_param.kind == nb_param.kind, (
-                            f"Parameter '{pb_param_name}' of {cls}.{method_name} has kind {pb_param.kind} in pybind module "
-                            f"but kind {nb_param.kind} in nanobind module"
-                        )
-                except (ValueError, TypeError):
-                    # Skip signature comparison if it's not possible to get signatures
-                    pass
-
-        # Check that all functions in pybind module exist in nanobind module
-        for func in self.pb_module_attr["functions"]:
-            assert (
-                func in self.nb_module_attr["functions"]
-            ), f"Function {func} exists in pybind module but not in nanobind module"
-
-            # Get function objects
-            pb_func = getattr(self.pb_module, func)
-            nb_func = getattr(self.nb_module, func)
-
-            # Check if both are callable
-            assert callable(pb_func), f"{func} in pybind module is not callable"
-            assert callable(nb_func), f"{func} in nanobind module is not callable"
-
-            # Try to get signatures if possible
-            try:
-                pb_sig = inspect.signature(pb_func)
-                nb_sig = inspect.signature(nb_func)
-
-                # Compare parameter count
-                pb_param_count = len(pb_sig.parameters)
-                nb_param_count = len(nb_sig.parameters)
-
-                assert pb_param_count == nb_param_count, (
-                    f"Function {func} has {pb_param_count} parameters in pybind module "
-                    f"but {nb_param_count} parameters in nanobind module"
-                )
-
-                # Compare parameter names and kinds
-                for pb_param_name, pb_param in pb_sig.parameters.items():
-                    assert pb_param_name in nb_sig.parameters, (
-                        f"Parameter '{pb_param_name}' of function {func} exists in pybind module "
-                        f"but not in nanobind module"
-                    )
-
-                    nb_param = nb_sig.parameters[pb_param_name]
-                    assert pb_param.kind == nb_param.kind, (
-                        f"Parameter '{pb_param_name}' of function {func} has kind {pb_param.kind} in pybind module "
-                        f"but kind {nb_param.kind} in nanobind module"
-                    )
-
-                # Check return type annotation if available
-                if (
-                    pb_sig.return_annotation is not inspect.Signature.empty
-                    and nb_sig.return_annotation is not inspect.Signature.empty
-                ):
-                    assert pb_sig.return_annotation == nb_sig.return_annotation, (
-                        f"Function {func} has return type {pb_sig.return_annotation} in pybind module "
-                        f"but {nb_sig.return_annotation} in nanobind module"
-                    )
-            except (ValueError, TypeError):
-                # Skip signature comparison if it's not possible to get signatures
-                pass
-
-            # Test return type for array-returning functions
-            if func in ["probs", "expval", "var", "generate_samples"]:
-                try:
-                    # Create minimal test data to check return types
-                    if "StateVectorC64" in self.nb_module_attr["classes"]:
-                        sv_class = getattr(self.nb_module, "StateVectorC64")
-                        sv = sv_class(1)  # Create a 1-qubit state vector
-
-                        if func == "generate_samples":
-                            # For generate_samples, we need a Measurements object
-                            if "MeasurementsC64" in self.nb_module_attr["classes"]:
-                                meas_class = getattr(self.nb_module, "MeasurementsC64")
-                                meas = meas_class(sv)
-                                nb_result = getattr(meas, func)(10)  # Generate 10 samples
-                                assert isinstance(
-                                    nb_result, np.ndarray
-                                ), f"{func} in nanobind module should return numpy.ndarray"
-                        elif func in ["probs", "expval", "var"]:
-                            # For measurement functions, we need a Measurements object
-                            if "MeasurementsC64" in self.nb_module_attr["classes"]:
-                                meas_class = getattr(self.nb_module, "MeasurementsC64")
-                                meas = meas_class(sv)
-
-                                if func == "probs":
-                                    nb_result = meas.probs([0])
-                                    assert isinstance(
-                                        nb_result, np.ndarray
-                                    ), f"{func} in nanobind module should return numpy.ndarray"
-                except Exception:
-                    # Skip if we can't easily test the return type
-                    pass
 
     def test_observables_submodule_exists(self, precision):
         """Test that the observables submodule exists and contains expected classes."""

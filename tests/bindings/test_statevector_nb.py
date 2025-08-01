@@ -312,7 +312,6 @@ class TestStateVectorNB:
         )
 
         # Convert the capsule to a numpy array using numpy's array interface
-        # This approach works with both pybind11 and nanobind
         arr = np.asarray(capsule, dtype=dtype)
 
         # Set the first element to 1.0 to create a valid state
