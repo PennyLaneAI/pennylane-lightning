@@ -40,9 +40,9 @@ class TestLightningStateVectorBindings:
 
         return _get_class
 
-    def test_init(self, current_nanobind_module, precision, get_statevector_class):
+    def test_init(self, current_module, precision, get_statevector_class):
         """Test initialization of state vector."""
-        StateVectorClass = get_statevector_class(current_nanobind_module, precision)
+        StateVectorClass = get_statevector_class(current_module, precision)
         if not hasattr(StateVectorClass, "getState"):
             pytest.skip("getState method not available in this backend")
         num_qubits = 2
@@ -57,9 +57,9 @@ class TestLightningStateVectorBindings:
         expected[0] = 1.0
         assert np.allclose(state, expected)
 
-    def test_reset_state_vector(self, current_nanobind_module, precision, get_statevector_class):
+    def test_reset_state_vector(self, current_module, precision, get_statevector_class):
         """Test resetting state vector to |0...0>."""
-        StateVectorClass = get_statevector_class(current_nanobind_module, precision)
+        StateVectorClass = get_statevector_class(current_module, precision)
         if not hasattr(StateVectorClass, "getState"):
             pytest.skip("getState method not available in this backend")
         num_qubits = 2
@@ -77,9 +77,9 @@ class TestLightningStateVectorBindings:
         expected[0] = 1.0
         assert np.allclose(state, expected)
 
-    def test_set_basis_state(self, current_nanobind_module, precision, get_statevector_class):
+    def test_set_basis_state(self, current_module, precision, get_statevector_class):
         """Test setting state vector to a basis state."""
-        StateVectorClass = get_statevector_class(current_nanobind_module, precision)
+        StateVectorClass = get_statevector_class(current_module, precision)
         if not hasattr(StateVectorClass, "getState"):
             pytest.skip("getState method not available in this backend")
         num_qubits = 2
@@ -96,9 +96,9 @@ class TestLightningStateVectorBindings:
         expected[3] = 1.0
         assert np.allclose(state, expected)
 
-    def test_set_state_vector(self, current_nanobind_module, precision, get_statevector_class):
+    def test_set_state_vector(self, current_module, precision, get_statevector_class):
         """Test setting state vector to a custom state."""
-        StateVectorClass = get_statevector_class(current_nanobind_module, precision)
+        StateVectorClass = get_statevector_class(current_module, precision)
         if not hasattr(StateVectorClass, "getState"):
             pytest.skip("getState method not available in this backend")
         num_qubits = 2
@@ -115,10 +115,10 @@ class TestLightningStateVectorBindings:
         sv.getState(state)
         assert np.allclose(state, custom_state)
 
-    def test_update_data(self, current_nanobind_module, precision, get_statevector_class):
+    def test_update_data(self, current_module, precision, get_statevector_class):
         """Test updating state vector data."""
 
-        StateVectorClass = get_statevector_class(current_nanobind_module, precision)
+        StateVectorClass = get_statevector_class(current_module, precision)
         if not hasattr(StateVectorClass, "updateData"):
             pytest.skip("updateData method not available in this backend")
         if not hasattr(StateVectorClass, "getState"):
@@ -136,9 +136,9 @@ class TestLightningStateVectorBindings:
         sv.getState(state)
         assert np.allclose(state, custom_state)
 
-    def test_kernel_map(self, current_nanobind_module, precision, get_statevector_class):
+    def test_kernel_map(self, current_module, precision, get_statevector_class):
         """Test getting kernel map."""
-        StateVectorClass = get_statevector_class(current_nanobind_module, precision)
+        StateVectorClass = get_statevector_class(current_module, precision)
         if not hasattr(StateVectorClass, "kernel_map"):
             pytest.skip("kernel_map method not available in this backend")
 
@@ -150,11 +150,9 @@ class TestLightningStateVectorBindings:
         assert "Hadamard" in kernel_map
         assert "CNOT" in kernel_map
 
-    def test_normalize_state_vector(
-        self, current_nanobind_module, precision, get_statevector_class
-    ):
+    def test_normalize_state_vector(self, current_module, precision, get_statevector_class):
         """Test normalizing state vector works for both backends."""
-        StateVectorClass = get_statevector_class(current_nanobind_module, precision)
+        StateVectorClass = get_statevector_class(current_module, precision)
         if not hasattr(StateVectorClass, "getState"):
             pytest.skip("getState method not available in this backend")
         if not hasattr(StateVectorClass, "updateData"):
@@ -180,17 +178,17 @@ class TestLightningStateVectorBindings:
         expected[0] = 1.0
         assert np.allclose(state, expected)
 
-    def test_constructor_basic(self, current_nanobind_module, precision, get_statevector_class):
+    def test_constructor_basic(self, current_module, precision, get_statevector_class):
         """Test basic constructor of state vector works for both backends."""
-        StateVectorClass = get_statevector_class(current_nanobind_module, precision)
+        StateVectorClass = get_statevector_class(current_module, precision)
         num_qubits = 2
         sv = StateVectorClass(num_qubits)
         # Check that the object was created successfully
         assert sv is not None
 
-    def test_apply_basic_gates(self, current_nanobind_module, precision, get_statevector_class):
+    def test_apply_basic_gates(self, current_module, precision, get_statevector_class):
         """Test applying gates to state vector works for both backends."""
-        StateVectorClass = get_statevector_class(current_nanobind_module, precision)
+        StateVectorClass = get_statevector_class(current_module, precision)
         num_qubits = 2
         sv = StateVectorClass(num_qubits)
 
@@ -202,11 +200,9 @@ class TestLightningStateVectorBindings:
         # This test doesn't need getState so it works for both backends
         assert sv is not None
 
-    def test_reset_state_vector_basic(
-        self, current_nanobind_module, precision, get_statevector_class
-    ):
+    def test_reset_state_vector_basic(self, current_module, precision, get_statevector_class):
         """Test resetting state vector without checking state works for both backends."""
-        StateVectorClass = get_statevector_class(current_nanobind_module, precision)
+        StateVectorClass = get_statevector_class(current_module, precision)
         num_qubits = 2
         sv = StateVectorClass(num_qubits)
         # Apply X gate to first qubit to change state
@@ -216,9 +212,9 @@ class TestLightningStateVectorBindings:
         # Just verify the operation completes without error
         assert sv is not None
 
-    def test_set_basis_state_basic(self, current_nanobind_module, precision, get_statevector_class):
+    def test_set_basis_state_basic(self, current_module, precision, get_statevector_class):
         """Test setting basis state without checking result works for both backends."""
-        StateVectorClass = get_statevector_class(current_nanobind_module, precision)
+        StateVectorClass = get_statevector_class(current_module, precision)
         num_qubits = 2
         sv = StateVectorClass(num_qubits)
         # Set to |11>
@@ -227,9 +223,9 @@ class TestLightningStateVectorBindings:
         # Just verify the operation completes without error
         assert sv is not None
 
-    def test_parametric_gates(self, current_nanobind_module, precision, get_statevector_class):
+    def test_parametric_gates(self, current_module, precision, get_statevector_class):
         """Test applying parametric gates works for both backends."""
-        StateVectorClass = get_statevector_class(current_nanobind_module, precision)
+        StateVectorClass = get_statevector_class(current_module, precision)
         num_qubits = 2
         sv = StateVectorClass(num_qubits)
 
@@ -242,9 +238,9 @@ class TestLightningStateVectorBindings:
         # Just verify the operations complete without error
         assert sv is not None
 
-    def test_multi_qubit_gates(self, current_nanobind_module, precision, get_statevector_class):
+    def test_multi_qubit_gates(self, current_module, precision, get_statevector_class):
         """Test applying multi-qubit gates works for both backends."""
-        StateVectorClass = get_statevector_class(current_nanobind_module, precision)
+        StateVectorClass = get_statevector_class(current_module, precision)
         num_qubits = 3
         sv = StateVectorClass(num_qubits)
 
@@ -283,12 +279,12 @@ class TestLightningMeasurementsBindings:
 
         return _get_classes
 
-    def test_expval_named(self, current_nanobind_module, precision, get_classes):
+    def test_expval_named(self, current_module, precision, get_classes):
         """Test expected value calculation with named observable."""
         if device_name == "lightning.kokkos":
             pytest.skip("expval with named observable not available in lightning.kokkos")
 
-        StateVectorClass, MeasurementsClass = get_classes(current_nanobind_module, precision)
+        StateVectorClass, MeasurementsClass = get_classes(current_module, precision)
         num_qubits = 1
         sv = StateVectorClass(num_qubits)
         # Apply Hadamard
@@ -299,12 +295,12 @@ class TestLightningMeasurementsBindings:
         expval = meas.expval("PauliZ", [0])
         assert np.isclose(expval, 0.0)
 
-    def test_var_named(self, current_nanobind_module, precision, get_classes):
+    def test_var_named(self, current_module, precision, get_classes):
         """Test variance calculation with named observable."""
         if device_name == "lightning.kokkos":
             pytest.skip("var with named observable not available in lightning.kokkos")
 
-        StateVectorClass, MeasurementsClass = get_classes(current_nanobind_module, precision)
+        StateVectorClass, MeasurementsClass = get_classes(current_module, precision)
         num_qubits = 1
         sv = StateVectorClass(num_qubits)
         # Apply Hadamard
@@ -315,9 +311,9 @@ class TestLightningMeasurementsBindings:
         var = meas.var("PauliZ", [0])
         assert np.isclose(var, 1.0)
 
-    def test_generate_samples(self, current_nanobind_module, precision, get_classes):
+    def test_generate_samples(self, current_module, precision, get_classes):
         """Test generating samples."""
-        StateVectorClass, MeasurementsClass = get_classes(current_nanobind_module, precision)
+        StateVectorClass, MeasurementsClass = get_classes(current_module, precision)
         num_qubits = 2
         sv = StateVectorClass(num_qubits)
         # Apply Hadamard to both qubits
@@ -351,12 +347,12 @@ class TestLightningMeasurementsBindings:
         for outcome, count in counts.items():
             assert 150 <= count <= 350, f"Outcome {outcome} occurred {count} times, expected ~250"
 
-    def test_generate_mcmc_samples(self, current_nanobind_module, precision, get_classes):
+    def test_generate_mcmc_samples(self, current_module, precision, get_classes):
         """Test generating MCMC samples."""
         if device_name != "lightning.qubit":
             pytest.skip("generate_mcmc_samples only available in lightning.qubit")
 
-        StateVectorClass, MeasurementsClass = get_classes(current_nanobind_module, precision)
+        StateVectorClass, MeasurementsClass = get_classes(current_module, precision)
         num_qubits = 2
         sv = StateVectorClass(num_qubits)
         # Apply Hadamard to both qubits
@@ -393,9 +389,9 @@ class TestLightningSparseHamiltonianBindings:
 
         return _get_class
 
-    def test_init(self, current_nanobind_module, precision, get_sparse_hamiltonian_class):
+    def test_init(self, current_module, precision, get_sparse_hamiltonian_class):
         """Test initialization of SparseHamiltonian."""
-        SparseHamiltonianClass = get_sparse_hamiltonian_class(current_nanobind_module, precision)
+        SparseHamiltonianClass = get_sparse_hamiltonian_class(current_module, precision)
 
         # Create a simple sparse matrix for the Pauli-Z operator
         data = np.array([1.0, -1.0], dtype=np.complex64 if precision == "64" else np.complex128)
@@ -416,11 +412,11 @@ class TestLightningSparseHamiltonianBindings:
 class TestLightningVJPBindings:
     """Tests for Lightning-specific VectorJacobianProduct bindings."""
 
-    def test_vjp_init(self, current_nanobind_module, precision):
+    def test_vjp_init(self, current_module, precision):
         """Test VectorJacobianProduct initialization."""
         # VectorJacobianProduct is in the algorithms submodule
-        if hasattr(current_nanobind_module, "algorithms"):
-            algorithms_module = current_nanobind_module.algorithms
+        if hasattr(current_module, "algorithms"):
+            algorithms_module = current_module.algorithms
             vjp_class_name = f"VectorJacobianProductC{precision}"
             if hasattr(algorithms_module, vjp_class_name):
                 vjp_class = getattr(algorithms_module, vjp_class_name)
@@ -435,10 +431,10 @@ class TestLightningVJPBindings:
 class TestBackendInfoBindings:
     """Tests for backend info bindings."""
 
-    def test_backend_info(self, current_nanobind_module):
+    def test_backend_info(self, current_module):
         """Test getting backend info."""
-        if hasattr(current_nanobind_module, "backend_info"):
-            info = current_nanobind_module.backend_info()
+        if hasattr(current_module, "backend_info"):
+            info = current_module.backend_info()
             assert info["NAME"] == device_name
         else:
             pytest.skip("backend_info function not available in module")

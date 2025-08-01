@@ -357,7 +357,7 @@ def precision(request):
 
 
 @pytest.fixture(scope="session")
-def current_nanobind_module():
+def current_module():
     """Return the nanobind module for the current device."""
     try:
         return importlib.import_module(nanobind_module_name)

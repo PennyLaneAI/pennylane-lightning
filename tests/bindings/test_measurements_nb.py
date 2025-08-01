@@ -30,9 +30,9 @@ class TestMeasurementsNB:
     num_qubits = 2
 
     @pytest.fixture
-    def get_classes_and_precision(self, current_nanobind_module, precision):
+    def get_classes_and_precision(self, current_module, precision):
         """Get StateVector, Measurements, NamedObs, and HermitianObs classes from module based on precision."""
-        module = current_nanobind_module
+        module = current_module
 
         def _get_classes():
             # Get StateVector class

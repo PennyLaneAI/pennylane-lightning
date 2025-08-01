@@ -43,9 +43,9 @@ class TestNanobindBindings:
     """Tests for nanobind-based bindings."""
 
     @pytest.fixture(autouse=True)
-    def setup_module_attributes(self, current_nanobind_module):
+    def setup_module_attributes(self, current_module):
         """Set up module attributes for all tests."""
-        self.nb_module = current_nanobind_module
+        self.nb_module = current_module
         self.nb_module_attr = get_module_attributes(self.nb_module)
 
     def test_module_has_classes_and_functions(self):
@@ -154,36 +154,36 @@ class TestAlignedArrayNB:
     """Tests for allocate_aligned_array function in nanobind-based modules."""
 
     @pytest.mark.parametrize("dtype", [np.complex64, np.complex128, np.float32, np.float64])
-    def test_allocate_aligned_array_basic(self, current_nanobind_module, dtype):
+    def test_allocate_aligned_array_basic(self, current_module, dtype):
         """Test basic functionality of allocate_aligned_array."""
         size = 1024
-        arr = current_nanobind_module.allocate_aligned_array(size, np.dtype(dtype), False)
+        arr = current_module.allocate_aligned_array(size, np.dtype(dtype), False)
 
         # Check array properties
         assert arr.size == size
         assert arr.dtype == dtype
 
     @pytest.mark.parametrize("dtype", [np.complex64, np.complex128, np.float32, np.float64])
-    def test_allocate_aligned_array_zero_init(self, current_nanobind_module, dtype):
+    def test_allocate_aligned_array_zero_init(self, current_module, dtype):
         """Test zero initialization of allocate_aligned_array."""
         size = 1024
-        arr = current_nanobind_module.allocate_aligned_array(size, np.dtype(dtype), True)
+        arr = current_module.allocate_aligned_array(size, np.dtype(dtype), True)
 
         # Check array is zero-initialized
         assert arr.size == size
         assert arr.dtype == dtype
         assert np.all(arr == 0)
 
-    def test_allocate_aligned_array_invalid_dtype(self, current_nanobind_module):
+    def test_allocate_aligned_array_invalid_dtype(self, current_module):
         """Test allocate_aligned_array with invalid dtype raises an error."""
         size = 1024
         with pytest.raises((TypeError, RuntimeError)):
-            current_nanobind_module.allocate_aligned_array(size, np.dtype(np.int32), False)
+            current_module.allocate_aligned_array(size, np.dtype(np.int32), False)
 
-    def test_allocate_aligned_array_memory_alignment(self, current_nanobind_module):
+    def test_allocate_aligned_array_memory_alignment(self, current_module):
         """Test memory alignment of allocated array."""
         size = 1024
-        arr = current_nanobind_module.allocate_aligned_array(size, np.dtype(np.complex128), False)
+        arr = current_module.allocate_aligned_array(size, np.dtype(np.complex128), False)
 
         # Check array memory alignment
         # The pointer address should be divisible by 32 (for AVX2) or 64 (for AVX512)

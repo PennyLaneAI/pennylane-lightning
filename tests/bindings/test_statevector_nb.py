@@ -28,9 +28,9 @@ class TestStateVectorNB:
     """Tests for StateVectorC64 and StateVectorC128 classes in nanobind-based modules."""
 
     @pytest.fixture
-    def get_statevector_class_and_precision(self, precision, current_nanobind_module):
+    def get_statevector_class_and_precision(self, precision, current_module):
         """Get StateVectorC64/128 class from module based on precision."""
-        module = current_nanobind_module
+        module = current_module
 
         def _get_class():
             class_name = f"StateVectorC{precision}"
@@ -291,7 +291,7 @@ class TestStateVectorNB:
         assert np.allclose(result, state_data)
 
     def test_statevector_with_aligned_array(
-        self, get_statevector_class_and_precision, current_nanobind_module
+        self, get_statevector_class_and_precision, current_module
     ):
         """Test StateVector with aligned array."""
         StateVectorClass, dtype = get_statevector_class_and_precision
@@ -307,9 +307,7 @@ class TestStateVectorNB:
         sv = StateVectorClass(num_qubits)
 
         # Create an aligned array
-        capsule = current_nanobind_module.allocate_aligned_array(
-            2**num_qubits, np.dtype(dtype), True
-        )
+        capsule = current_module.allocate_aligned_array(2**num_qubits, np.dtype(dtype), True)
 
         # Convert the capsule to a numpy array using numpy's array interface
         arr = np.asarray(capsule, dtype=dtype)
