@@ -290,7 +290,7 @@ Andrija Paurevic,
 * Update TF, Keras and Torch versions in the CIs based on PennyLane's pinned versions.
   [(#1112)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1112)
 
-* Build Lightning-GPU and Lightning-Tensor wheels against Python 3.11 and 3.13 on non-release PRs.
+* Build Lightning-GPU and Lightning-Tensor wheels against Python 3.10 and 3.13 on non-release PRs.
   [(#1112)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1112)
 
 * Use cuQuantum API for calculating expectation value of Pauli sentences in Lightning-GPU.
@@ -2338,7 +2338,7 @@ Ali Asadi, Chae-Yeun Park, Lee James O'Riordan
 * Add C++ only benchmark for a given list of gates.
   [(#199)](https://github.com/PennyLaneAI/pennylane-lightning/pull/199)
 
-* Wheel-build support for Python 3.11.
+* Wheel-build support for Python 3.10.
   [(#186)](https://github.com/PennyLaneAI/pennylane-lightning/pull/186)
 
 * C++ support for probability, expectation value and variance calculations.
@@ -2456,7 +2456,7 @@ Lee J. O'Riordan
 
 ### New features since last release
 
-* Add wheel-builder support for Python 3.11.
+* Add wheel-builder support for Python 3.10.
   [(#186)](https://github.com/PennyLaneAI/pennylane-lightning/pull/186)
 
 * Add VJP support to PL-Lightning.
