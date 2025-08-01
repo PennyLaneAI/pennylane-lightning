@@ -290,6 +290,42 @@ class LightningQubit(LightningBase):
         self.LightningMeasurements = LightningMeasurements
         self.LightningAdjointJacobian = LightningAdjointJacobian
 
+    def _validate_mcmc_options(self, mcmc_enabled, kernel_name, num_burnin, shots):
+        """Validate MCMC-specific options when MCMC is enabled.
+        
+        Args:
+            mcmc_enabled (bool): Whether MCMC is enabled
+            kernel_name (str): The kernel name for MCMC
+            num_burnin (int): Number of burn-in steps
+            shots: The shots configuration (can be int, list, or None)
+            
+        Raises:
+            NotImplementedError: If kernel_name is not supported
+            ValueError: If num_burnin >= shots for any shot value
+        """
+        if not mcmc_enabled:
+            return
+            
+        # Validate kernel name
+        if kernel_name not in ["Local", "NonZeroRandom"]:
+            raise NotImplementedError(
+                f"The {kernel_name} is not supported and currently "
+                "only 'Local' and 'NonZeroRandom' kernels are supported."
+            )
+
+        # Validate shots vs num_burnin if shots are specified
+        if shots is not None:
+            # Handle different shots types
+            if hasattr(shots, "__iter__") and not isinstance(shots, (str, int)):
+                shot_values = list(shots)
+            else:
+                shot_values = [shots]
+
+            # Filter out None values and check
+            shot_values = [s for s in shot_values if s is not None]
+            if shot_values and any(num_burnin >= s for s in shot_values):
+                raise ValueError("Shots should be greater than num_burnin.")
+
     def _setup_execution_config(self, config):
         """
         Update the execution config with choices for how the device should be used and the device options.
@@ -326,29 +362,13 @@ class LightningQubit(LightningBase):
                     option_value = None if option == "kernel_name" else 0
                 new_device_options[option] = option_value
 
-        # Validate MCMC options if MCMC is enabled
-        if new_device_options.get("mcmc", False):
-            kernel_name = new_device_options.get("kernel_name", "Local")
-            num_burnin = new_device_options.get("num_burnin", 0)
-
-            if kernel_name not in ["Local", "NonZeroRandom"]:
-                raise NotImplementedError(
-                    f"The {kernel_name} is not supported and currently "
-                    "only 'Local' and 'NonZeroRandom' kernels are supported."
-                )
-
-            # Validate shots vs num_burnin if shots are specified
-            shots = getattr(config, "shots", None) or getattr(self, "shots", None)
-            # Handle different shots types simply
-            if hasattr(shots, "__iter__") and not isinstance(shots, (str, int)):
-                shot_values = list(shots)
-            else:
-                shot_values = [shots]
-
-            # Filter out None values and check
-            shot_values = [s for s in shot_values if s is not None]
-            if shot_values and any(num_burnin >= s for s in shot_values):
-                raise ValueError("Shots should be greater than num_burnin.")
+        # Validate MCMC options using the helper function
+        mcmc_enabled = new_device_options.get("mcmc", False)
+        kernel_name = new_device_options.get("kernel_name", "Local")
+        num_burnin = new_device_options.get("num_burnin", 0)
+        shots = getattr(config, "shots", None) or getattr(self, "shots", None)
+        
+        self._validate_mcmc_options(mcmc_enabled, kernel_name, num_burnin, shots)
 
         updated_values["mcm_config"] = _resolve_mcm_method(config.mcm_config)
         return replace(config, **updated_values, device_options=new_device_options)
@@ -459,7 +479,7 @@ class LightningQubit(LightningBase):
         """
         if execution_config is None and circuit is None:
             return True
-        if execution_config.gradient_method not in {"adjoint", "best"}:
+        if execution_config is not None and execution_config.gradient_method not in {"adjoint", "best"}:
             return False
         if circuit is None:
             return True
