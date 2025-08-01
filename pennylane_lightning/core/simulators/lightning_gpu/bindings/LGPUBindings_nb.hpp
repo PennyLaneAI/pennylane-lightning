@@ -155,11 +155,9 @@ void registerBackendSpecificObservables(nb::module_ &m) {
         typename StateVectorT::PrecisionT; // Statevector's precision.
     using ComplexT =
         typename StateVectorT::ComplexT; // Statevector's complex type.
-
-    const std::string bitsize = std::to_string(sizeof(ComplexT) * 8);
-
     using ArrayComplexT = nb::ndarray<ComplexT, nb::c_contig>;
 
+    const std::string bitsize = std::to_string(sizeof(ComplexT) * 8);
     std::string class_name;
 
     class_name = "SparseHamiltonianC" + bitsize;
