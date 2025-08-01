@@ -96,7 +96,6 @@ class TestAdjointJacobianNanobind:
 
         return _get_class
 
-    @pytest.mark.parametrize("precision", ["64", "128"])
     def test_adjoint_jacobian_call(
         self,
         get_statevector_class_and_precision,
@@ -143,7 +142,6 @@ class TestAdjointJacobianNanobind:
         assert result.shape == (1,)  # 1 observable * 1 parameter = 1 element
         assert np.isclose(result[0], -np.sin(self.param_value), atol=1e-7)
 
-    @pytest.mark.parametrize("precision", ["64", "128"])
     @pytest.mark.parametrize(
         "operation, expected_values",
         [
@@ -330,7 +328,6 @@ class TestAdjointJacobianNanobind:
 
         assert np.isclose(result[0], expected, atol=1e-7)
 
-    @pytest.mark.parametrize("precision", ["64", "128"])
     def test_create_ops_list_function(self, current_module, precision):
         """Test the create_ops_list function has the right signature."""
         module = current_module
