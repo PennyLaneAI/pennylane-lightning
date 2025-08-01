@@ -53,17 +53,6 @@ using StateVectorBackends =
                               StateVectorCudaManaged<double>, void>;
 
 /**
- * @brief Get a controlled matrix and kernel map for a statevector.
- * @tparam StateVectorT
- * @tparam PyClass
- * @param pyclass Nanobind's statevector class to bind methods.
- */
-template <class StateVectorT, class PyClass>
-void registerBackendClassSpecificBindings(PyClass &pyclass) {
-    registerBackendSpecificStateVectorMethods<StateVectorT>(pyclass);
-}
-
-/**
  * @brief Register backend specific measurements class functionalities.
  *
  * @tparam StateVectorT
@@ -77,11 +66,11 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
     using ComplexT =
         typename StateVectorT::ComplexT; // Statevector's complex type
 
-    using ArrayT = nb::ndarray<ComplexT, nb::c_contig>;
+    using ArrayComplexT = nb::ndarray<ComplexT, nb::c_contig>;
     using IndexT =
         typename std::conditional<std::is_same<PrecisionT, float>::value,
                                   int32_t, int64_t>::type;
-    using ArraySparseIndexT = nb::ndarray<IndexT, nb::c_contig>;
+    using ArrayIndexT = nb::ndarray<IndexT, nb::c_contig>;
 
     pyclass.def(
         "expval",
@@ -92,8 +81,8 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
         "Expected value of an operation by name.");
     pyclass.def(
         "expval",
-        [](Measurements<StateVectorT> &M, const ArraySparseIndexT &row_map,
-           const ArraySparseIndexT &entries, const ArrayT &values) {
+        [](Measurements<StateVectorT> &M, const ArrayIndexT &row_map,
+           const ArrayIndexT &entries, const ArrayComplexT &values) {
             return M.expval(
                 row_map.data(),
                 static_cast<int64_t>(
@@ -108,7 +97,7 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
         [](Measurements<StateVectorT> &M,
            const std::vector<std::string> &pauli_words,
            const std::vector<std::vector<std::size_t>> &target_wires,
-           const ArrayT &coeffs) {
+           const ArrayComplexT &coeffs) {
             return M.expval(pauli_words, target_wires, coeffs.data());
         },
         "Expected value of Hamiltonian represented by Pauli words.");
@@ -124,7 +113,7 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
         "Expected value of Hamiltonian represented by Pauli words.");
     pyclass.def(
         "expval",
-        [](Measurements<StateVectorT> &M, const ArrayT &matrix,
+        [](Measurements<StateVectorT> &M, const ArrayComplexT &matrix,
            const std::vector<std::size_t> &wires) {
             const std::size_t matrix_size = exp2(2 * wires.size());
             std::vector<ComplexT> matrix_v{matrix.data(),
@@ -144,8 +133,8 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
                 "Variance of an operation by name.");
     pyclass.def(
         "var",
-        [](Measurements<StateVectorT> &M, const ArraySparseIndexT &row_map,
-           const ArraySparseIndexT &entries, const ArrayT &values) {
+        [](Measurements<StateVectorT> &M, const ArrayIndexT &row_map,
+           const ArrayIndexT &entries, const ArrayComplexT &values) {
             return M.var(row_map.data(), static_cast<int64_t>(row_map.size()),
                          entries.data(), values.data(),
                          static_cast<int64_t>(values.size()));
@@ -169,21 +158,21 @@ void registerBackendSpecificObservables(nb::module_ &m) {
 
     const std::string bitsize = std::to_string(sizeof(ComplexT) * 8);
 
-    using ArrayT = nb::ndarray<ComplexT, nb::c_contig>;
+    using ArrayComplexT = nb::ndarray<ComplexT, nb::c_contig>;
 
     std::string class_name;
 
     class_name = "SparseHamiltonianC" + bitsize;
     using IndexT = typename SparseHamiltonian<StateVectorT>::IdxT;
-    using ArraySparseIndexT = nb::ndarray<IndexT, nb::c_contig>;
+    using ArrayIndexT = nb::ndarray<IndexT, nb::c_contig>;
 
     auto pyclass =
         nb::class_<SparseHamiltonian<StateVectorT>, Observable<StateVectorT>>(
             m, class_name.c_str());
     pyclass.def("__init__", [](SparseHamiltonian<StateVectorT> *self,
-                               const ArrayT &data,
-                               const ArraySparseIndexT &indices,
-                               const ArraySparseIndexT &offsets,
+                               const ArrayComplexT &data,
+                               const ArrayIndexT &indices,
+                               const ArrayIndexT &offsets,
                                const std::vector<std::size_t> &wires) {
         new (self) SparseHamiltonian<StateVectorT>{
             std::vector<ComplexT>({data.data(), data.data() + data.size()}),
@@ -292,11 +281,11 @@ void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
     using PrecisionT =
         typename StateVectorT::PrecisionT; // Statevector's precision
     using ComplexT = typename StateVectorT::ComplexT;
-    using ArrayT = nb::ndarray<ComplexT, nb::c_contig>;
+    using ArrayComplexT = nb::ndarray<ComplexT, nb::c_contig>;
 
     pyclass.def(nb::init<std::size_t>());              // qubits, device
     pyclass.def(nb::init<std::size_t, DevTag<int>>()); // qubits, dev-tag
-    pyclass.def("__init__", [](PyClass *self, const ArrayT &arr) {
+    pyclass.def("__init__", [](PyClass *self, const ArrayComplexT &arr) {
         new (self) StateVectorT(arr.data(), arr.size());
     });
     pyclass.def("updateData", &updateStateVectorData<StateVectorT>,
@@ -312,7 +301,7 @@ void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
         "Set the state vector to a basis state on GPU.");
     pyclass.def(
         "setStateVector",
-        [](StateVectorT &sv, const ArrayT &state,
+        [](StateVectorT &sv, const ArrayComplexT &state,
            const std::vector<std::size_t> &wires, const bool async = false) {
             sv.setStateVector(state.data(), state.size(), wires, async);
         },
@@ -331,7 +320,7 @@ void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
                 "Synchronize data from the GPU device to host.");
     pyclass.def(
         "DeviceToHost",
-        [](const StateVectorT &gpu_sv, ArrayT &cpu_sv, bool) {
+        [](const StateVectorT &gpu_sv, ArrayComplexT &cpu_sv, bool) {
             if (cpu_sv.size()) {
                 gpu_sv.CopyGpuDataToHost(cpu_sv.data(), cpu_sv.size());
             }
@@ -343,7 +332,7 @@ void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
                 "Synchronize data from the host device to GPU.");
     pyclass.def(
         "HostToDevice",
-        [](StateVectorT &gpu_sv, const ArrayT &cpu_sv, bool async) {
+        [](StateVectorT &gpu_sv, const ArrayComplexT &cpu_sv, bool async) {
             if (cpu_sv.size()) {
                 gpu_sv.CopyHostDataToGpu(cpu_sv.data(), cpu_sv.size(), async);
             }
@@ -381,13 +370,22 @@ void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
         [](StateVectorT &sv, const std::string &str,
            const std::vector<std::size_t> &wires, bool inv,
            const std::vector<std::vector<PrecisionT>> &params,
-           const ArrayT &gate_matrix) {
+           const ArrayComplexT &gate_matrix) {
             if (params.empty()) {
                 sv.applyOperation(str, wires, inv, std::vector<PrecisionT>{},
                                   gate_matrix.data(), gate_matrix.size());
             } else {
-                PL_ABORT_IF(params.size() != 1,
-                            "params should be a List[List[float]].")
+                PL_ABORT_IF(
+                    params.size() != 1,
+                    "Invalid parameter structure for gate operation with "
+                    "custom matrix. "
+                    "Expected exactly one parameter list (List[List[float]] "
+                    "with size=1), "
+                    "but received " +
+                        std::to_string(params.size()) +
+                        " parameter lists. "
+                        "Each gate operation should provide its parameters as "
+                        "a single nested list, e.g., [[param1, param2, ...]].");
                 sv.applyOperation(str, wires, inv, params[0],
                                   gate_matrix.data(), gate_matrix.size());
             }
@@ -395,10 +393,21 @@ void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
         "Apply operation via the gate matrix");
     pyclass.def(
         "getState",
-        [](const StateVectorT &sv, ArrayT &state) {
+        [](const StateVectorT &sv, ArrayComplexT &state) {
             sv.CopyGpuDataToHost(state.data(), state.size());
         },
         "Copy state vector data to a numpy array.", nb::arg("state"));
 } // registerBackendSpecificStateVectorMethods
+
+/**
+ * @brief Get a controlled matrix and kernel map for a statevector.
+ * @tparam StateVectorT
+ * @tparam PyClass
+ * @param pyclass Nanobind's statevector class to bind methods.
+ */
+template <class StateVectorT, class PyClass>
+void registerBackendClassSpecificBindings(PyClass &pyclass) {
+    registerBackendSpecificStateVectorMethods<StateVectorT>(pyclass);
+}
 
 } // namespace Pennylane::LightningGPU::NanoBindings

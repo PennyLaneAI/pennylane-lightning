@@ -38,7 +38,7 @@
 
 #include "AdjointJacobianGPUMPI.hpp"
 #include "JacobianDataMPI.hpp"
-#include "LGPUBindingsMPI.hpp"
+#include "LGPUBindingsMPI_nb.hpp"
 #include "MPIManagerGPU.hpp"
 #include "MeasurementsGPUMPI.hpp"
 #include "ObservablesGPUMPI.hpp"
@@ -98,9 +98,13 @@ template <class StateVectorT> void registerObservablesMPI(nb::module_ &m) {
     const std::string bitsize =
         std::is_same_v<PrecisionT, float> ? "64" : "128";
 
-    using ArrCT = nb::ndarray<std::complex<PrecisionT>, nb::c_contig>;
+    using ArrayComplexT = nb::ndarray<std::complex<PrecisionT>, nb::c_contig>;
     using ObservableT = Observable<StateVectorT>;
     using ObsPtr = std::shared_ptr<ObservableT>;
+    using NamedObsT = NamedObsMPI<StateVectorT>;
+    using HermitianObsT = HermitianObsMPI<StateVectorT>;
+    using TensorProdObsT = TensorProdObsMPI<StateVectorT>;
+    using HamiltonianT = HamiltonianMPI<StateVectorT>;
 
     std::string class_name;
 
@@ -110,85 +114,83 @@ template <class StateVectorT> void registerObservablesMPI(nb::module_ &m) {
 
     // Register NamedObsMPI class
     class_name = "NamedObsMPIC" + bitsize;
-    nb::class_<NamedObsMPI<StateVectorT>, ObservableT>(m, class_name.c_str())
-        .def(nb::init<const std::string &, const std::vector<std::size_t> &>())
-        .def("__repr__", &NamedObsMPI<StateVectorT>::getObsName)
-        .def("get_wires", &NamedObsMPI<StateVectorT>::getWires,
-             "Get wires of observables")
-        .def(
-            "__eq__",
-            [](const NamedObsMPI<StateVectorT> &self,
-               nb::handle other) -> bool {
-                if (!nb::isinstance<NamedObsMPI<StateVectorT>>(other)) {
-                    return false;
-                }
-                auto other_cast = nb::cast<NamedObsMPI<StateVectorT>>(other);
-                return self == other_cast;
-            },
-            "Compare two observables");
+    auto named_obs_class =
+        nb::class_<NamedObsT, ObservableT>(m, class_name.c_str());
+    named_obs_class.def(
+        nb::init<const std::string &, const std::vector<std::size_t> &>());
+    named_obs_class.def("__repr__", &NamedObsT::getObsName);
+    named_obs_class.def("get_wires", &NamedObsT::getWires,
+                        "Get wires of observables");
+    named_obs_class.def(
+        "__eq__",
+        [](const NamedObsT &self, const NamedObsT &other) -> bool {
+            return self == other;
+        },
+        "Compare two observables");
 
     // Register HermitianObsMPI class
     class_name = "HermitianObsMPIC" + bitsize;
-    nb::class_<HermitianObsMPI<StateVectorT>, ObservableT>(m,
-                                                           class_name.c_str())
-        .def(nb::init<const std::vector<ComplexT> &,
-                      const std::vector<std::size_t> &>())
-        .def("__repr__", &HermitianObsMPI<StateVectorT>::getObsName)
-        .def("get_wires", &HermitianObsMPI<StateVectorT>::getWires,
-             "Get wires of observables")
-        .def(
-            "__eq__",
-            [](const HermitianObsMPI<StateVectorT> &self,
-               nb::handle other) -> bool {
-                if (!nb::isinstance<HermitianObsMPI<StateVectorT>>(other)) {
-                    return false;
-                }
-                auto other_cast =
-                    nb::cast<HermitianObsMPI<StateVectorT>>(other);
-                return self == other_cast;
-            },
-            "Compare two observables");
+    auto hermitian_obs_class =
+        nb::class_<HermitianObsT, ObservableT>(m, class_name.c_str());
+    hermitian_obs_class.def(
+        "__init__", [](HermitianObsT *self, const ArrayComplexT &matrix,
+                       const std::vector<std::size_t> &wires) {
+            const auto ptr = matrix.data();
+            new (self) HermitianObsT(
+                std::vector<ComplexT>(ptr, ptr + matrix.size()), wires);
+        });
+    hermitian_obs_class.def("__repr__", &HermitianObsT::getObsName);
+    hermitian_obs_class.def("get_wires", &HermitianObsT::getWires,
+                            "Get wires of observables");
+    hermitian_obs_class.def(
+        "__eq__",
+        [](const HermitianObsT &self, const HermitianObsT &other) -> bool {
+            return self == other;
+        },
+        "Compare two observables");
 
     // Register TensorProdObsMPI class
     class_name = "TensorProdObsMPIC" + bitsize;
-    nb::class_<TensorProdObsMPI<StateVectorT>, ObservableT>(m,
-                                                            class_name.c_str())
-        .def(nb::init<const std::vector<ObsPtr> &>())
-        .def("__repr__", &TensorProdObsMPI<StateVectorT>::getObsName)
-        .def("get_wires", &TensorProdObsMPI<StateVectorT>::getWires,
-             "Get wires of observables")
-        .def(
-            "__eq__",
-            [](const TensorProdObsMPI<StateVectorT> &self,
-               nb::handle other) -> bool {
-                if (!nb::isinstance<TensorProdObsMPI<StateVectorT>>(other)) {
-                    return false;
-                }
-                auto other_cast =
-                    nb::cast<TensorProdObsMPI<StateVectorT>>(other);
-                return self == other_cast;
-            },
-            "Compare two observables");
+    auto tensor_prod_obs_class =
+        nb::class_<TensorProdObsT, ObservableT>(m, class_name.c_str());
+    tensor_prod_obs_class.def(nb::init<const std::vector<ObsPtr> &>());
+    tensor_prod_obs_class.def("__repr__", &TensorProdObsT::getObsName);
+    tensor_prod_obs_class.def("get_wires", &TensorProdObsT::getWires,
+                              "Get wires of observables");
+    tensor_prod_obs_class.def(
+        "__eq__",
+        [](const TensorProdObsT &self, const TensorProdObsT &other) -> bool {
+            return self == other;
+        },
+        "Compare two observables");
 
     // Register HamiltonianMPI class
     class_name = "HamiltonianMPIC" + bitsize;
-    nb::class_<HamiltonianMPI<StateVectorT>, ObservableT>(m, class_name.c_str())
-        .def(nb::init<const std::vector<PrecisionT> &,
-                      const std::vector<ObsPtr> &>())
-        .def("__repr__", &HamiltonianMPI<StateVectorT>::getObsName)
-        .def("get_wires", &HamiltonianMPI<StateVectorT>::getWires,
-             "Get wires of observables")
-        .def(
-            "__eq__",
-            [](const HamiltonianMPI<StateVectorT> &self,
-               nb::handle other) -> bool {
-                if (!nb::isinstance<HamiltonianMPI<StateVectorT>>(other)) {
-                    return false;
-                }
-                auto other_cast = nb::cast<HamiltonianMPI<StateVectorT>>(other);
-                return self == other_cast;
-            },
-            "Compare two observables");
+    auto hamiltonian_class =
+        nb::class_<HamiltonianT, ObservableT>(m, class_name.c_str());
+    hamiltonian_class.def(nb::init<const std::vector<PrecisionT> &,
+                                   const std::vector<ObsPtr> &>());
+    hamiltonian_class.def(
+        "__init__", [](HamiltonianT *self,
+                       const nb::ndarray<PrecisionT, nb::c_contig> &coeffs,
+                       const std::vector<ObsPtr> &obs) {
+            const auto ptr = coeffs.data();
+            new (self) HamiltonianT(
+                std::vector<PrecisionT>(ptr, ptr + coeffs.size()), obs);
+        });
+    hamiltonian_class.def("__repr__", &HamiltonianT::getObsName);
+    hamiltonian_class.def("get_wires", &HamiltonianT::getWires,
+                          "Get wires of observables");
+    hamiltonian_class.def("get_coeffs", &HamiltonianT::getCoeffs,
+                          "Get coefficients");
+    hamiltonian_class.def("get_ops", &HamiltonianT::getObs,
+                          "Get operations list");
+    hamiltonian_class.def(
+        "__eq__",
+        [](const HamiltonianT &self, const HamiltonianT &other) -> bool {
+            return self == other;
+        },
+        "Compare two observables");
 
 #if _ENABLE_PLGPU == 1
     using SparseIndexT =
@@ -197,28 +199,30 @@ template <class StateVectorT> void registerObservablesMPI(nb::module_ &m) {
 
     // Register SparseHamiltonianMPI class
     class_name = "SparseHamiltonianMPIC" + bitsize;
-    nb::class_<SparseHamiltonianMPI<StateVectorT>, ObservableT>(
-        m, class_name.c_str())
-        .def(nb::init<const std::vector<ComplexT> &,
-                      const std::vector<SparseIndexT> &,
-                      const std::vector<SparseIndexT> &,
-                      const std::vector<std::size_t> &>())
-        .def("__repr__", &SparseHamiltonianMPI<StateVectorT>::getObsName)
-        .def("get_wires", &SparseHamiltonianMPI<StateVectorT>::getWires,
-             "Get wires of observables")
-        .def(
-            "__eq__",
-            [](const SparseHamiltonianMPI<StateVectorT> &self,
-               nb::handle other) -> bool {
-                if (!nb::isinstance<SparseHamiltonianMPI<StateVectorT>>(
-                        other)) {
-                    return false;
-                }
-                auto other_cast =
-                    nb::cast<SparseHamiltonianMPI<StateVectorT>>(other);
-                return self == other_cast;
-            },
-            "Compare two observables");
+    auto sparse_hamiltonian_class =
+        nb::class_<SparseHamiltonianMPI<StateVectorT>, ObservableT>(
+            m, class_name.c_str());
+    sparse_hamiltonian_class.def(nb::init<const std::vector<ComplexT> &,
+                                          const std::vector<SparseIndexT> &,
+                                          const std::vector<SparseIndexT> &,
+                                          const std::vector<std::size_t> &>());
+    sparse_hamiltonian_class.def(
+        "__repr__", &SparseHamiltonianMPI<StateVectorT>::getObsName);
+    sparse_hamiltonian_class.def("get_wires",
+                                 &SparseHamiltonianMPI<StateVectorT>::getWires,
+                                 "Get wires of observables");
+    sparse_hamiltonian_class.def(
+        "__eq__",
+        [](const SparseHamiltonianMPI<StateVectorT> &self,
+           nb::handle other) -> bool {
+            if (!nb::isinstance<SparseHamiltonianMPI<StateVectorT>>(other)) {
+                return false;
+            }
+            auto other_cast =
+                nb::cast<SparseHamiltonianMPI<StateVectorT>>(other);
+            return self == other_cast;
+        },
+        "Compare two observables");
 #endif
 }
 
@@ -309,7 +313,7 @@ void registerBackendAgnosticAlgorithmsMPI(nb::module_ &m) {
     using ComplexT =
         typename StateVectorT::ComplexT; // Statevector's complex type
 
-    using ArrCT = nb::ndarray<std::complex<PrecisionT>, nb::c_contig>;
+    using ArrayComplexT = nb::ndarray<std::complex<PrecisionT>, nb::c_contig>;
 
     const std::string bitsize =
         std::is_same_v<PrecisionT, float> ? "64" : "128";
@@ -352,7 +356,7 @@ void registerBackendAgnosticAlgorithmsMPI(nb::module_ &m) {
            const std::vector<std::vector<PrecisionT>> &ops_params,
            const std::vector<std::vector<std::size_t>> &ops_wires,
            const std::vector<bool> &ops_inverses,
-           const std::vector<ArrCT> &ops_matrices,
+           const std::vector<ArrayComplexT> &ops_matrices,
            const std::vector<std::vector<std::size_t>> &ops_controlled_wires,
            const std::vector<std::vector<bool>> &ops_controlled_values) {
             std::vector<std::vector<ComplexT>> conv_matrices =
@@ -436,11 +440,9 @@ template <class StateVectorT> void lightningClassBindingsMPI(nb::module_ &m) {
     //***********************************************************************//
     std::string class_name = "StateVectorMPIC" + bitsize;
     auto pyclass = nb::class_<StateVectorT>(m, class_name.c_str());
-    registerBackendAgnosticStateVectorMethods<StateVectorT>(pyclass);
-    registerBackendSpecificStateVectorMethods<StateVectorT>(pyclass);
 
     // Register backend specific bindings
-    registerBackendClassSpecificBindingsMPI<StateVectorT>(pyclass);
+    registerBackendSpecificStateVectorMethodsMPI<StateVectorT>(pyclass);
 
     //***********************************************************************//
     //                              Observables

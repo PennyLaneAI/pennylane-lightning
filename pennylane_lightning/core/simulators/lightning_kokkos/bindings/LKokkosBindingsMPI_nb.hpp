@@ -75,14 +75,14 @@ using StateVectorMPIBackends =
  * @param pyclass Nanobind's state vector class to bind methods.
  */
 template <class StateVectorT, class PyClass>
-void registerBackendClassSpecificBindingsMPI(PyClass &pyclass) {
+void registerBackendSpecificStateVectorMethodsMPI(PyClass &pyclass) {
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
 
-    using ArrCT = nb::ndarray<std::complex<PrecisionT>, nb::c_contig>;
+    using ArrayComplexT = nb::ndarray<std::complex<PrecisionT>, nb::c_contig>;
 
     // Register gates for state vector
-    registerGatesForStateVector<StateVectorT>(pyclass);
+    registerGates<StateVectorT>(pyclass);
     registerControlledGates<StateVectorT>(pyclass);
 
     pyclass.def(nb::init<std::size_t>());
@@ -101,7 +101,7 @@ void registerBackendClassSpecificBindingsMPI(PyClass &pyclass) {
         "Set the state vector to a basis state.");
     pyclass.def(
         "setStateVector",
-        [](StateVectorT &sv, const ArrCT &state,
+        [](StateVectorT &sv, const ArrayComplexT &state,
            const std::vector<std::size_t> &wires) {
             sv.setStateVector(PL_reinterpret_cast<const ComplexT>(state.data()),
                               wires);
@@ -109,7 +109,7 @@ void registerBackendClassSpecificBindingsMPI(PyClass &pyclass) {
         "Set the state vector to the data contained in `state`.");
     pyclass.def(
         "DeviceToHost",
-        [](StateVectorT &device_sv, ArrCT &host_sv) {
+        [](StateVectorT &device_sv, ArrayComplexT &host_sv) {
             auto *data_ptr = PL_reinterpret_cast<ComplexT>(host_sv.data());
             if (host_sv.size()) {
                 device_sv.DeviceToHost(data_ptr, host_sv.size());
@@ -122,7 +122,7 @@ void registerBackendClassSpecificBindingsMPI(PyClass &pyclass) {
         "Synchronize data from the host device to Kokkos.");
     pyclass.def(
         "HostToDevice",
-        [](StateVectorT &device_sv, const ArrCT &host_sv) {
+        [](StateVectorT &device_sv, const ArrayComplexT &host_sv) {
             auto *data_ptr = const_cast<ComplexT *>(
                 PL_reinterpret_cast<ComplexT>(host_sv.data()));
             if (host_sv.size()) {
@@ -135,7 +135,7 @@ void registerBackendClassSpecificBindingsMPI(PyClass &pyclass) {
         [](StateVectorT &sv, const std::string &str,
            const std::vector<std::size_t> &wires, bool inv,
            [[maybe_unused]] const std::vector<std::vector<PrecisionT>> &params,
-           [[maybe_unused]] const ArrCT &gate_matrix) {
+           [[maybe_unused]] const ArrayComplexT &gate_matrix) {
             std::vector<ComplexT> conv_matrix;
             if (gate_matrix.size()) {
                 conv_matrix = std::vector<ComplexT>{gate_matrix.data(),
@@ -201,7 +201,7 @@ template <class StateVectorT, class PyClass>
 void registerBackendSpecificMeasurementsMPI(PyClass &pyclass) {
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
-    using ArrCT = nb::ndarray<std::complex<PrecisionT>, nb::c_contig>;
+    using ArrayComplexT = nb::ndarray<std::complex<PrecisionT>, nb::c_contig>;
 
     pyclass.def(
         "expval",
@@ -212,7 +212,7 @@ void registerBackendSpecificMeasurementsMPI(PyClass &pyclass) {
         "Expected value of an operation by name.");
     pyclass.def(
         "expval",
-        [](MeasurementsMPI<StateVectorT> &M, const ArrCT &matrix,
+        [](MeasurementsMPI<StateVectorT> &M, const ArrayComplexT &matrix,
            const std::vector<std::size_t> &wires) {
             const std::size_t matrix_size = exp2(2 * wires.size());
             auto matrix_data =
@@ -254,7 +254,7 @@ void registerBackendSpecificObservablesMPI(nb::module_ &m) {
     const std::string bitsize =
         std::is_same_v<PrecisionT, float> ? "64" : "128";
 
-    using ArrCT = nb::ndarray<std::complex<PrecisionT>, nb::c_contig>;
+    using ArrayComplexT = nb::ndarray<std::complex<PrecisionT>, nb::c_contig>;
     using SparseIndexT = std::size_t;
     using ArrSparseIndT = nb::ndarray<SparseIndexT, nb::c_contig>;
 
@@ -263,10 +263,11 @@ void registerBackendSpecificObservablesMPI(nb::module_ &m) {
         nb::class_<SparseHamiltonian<StateVectorT>>(m, class_name.c_str());
 
     sparse_hamiltonian_class.def(
-        "__init__", [](SparseHamiltonian<StateVectorT> *self, const ArrCT &data,
-                       const std::vector<SparseIndexT> &indices,
-                       const std::vector<SparseIndexT> &indptr,
-                       const std::vector<std::size_t> &wires) {
+        "__init__",
+        [](SparseHamiltonian<StateVectorT> *self, const ArrayComplexT &data,
+           const std::vector<std::size_t> &indices,
+           const std::vector<std::size_t> &indptr,
+           const std::vector<std::size_t> &wires) {
             const ComplexT *data_ptr =
                 PL_reinterpret_cast<const ComplexT>(data.data());
             std::vector<ComplexT> data_vec(data_ptr, data_ptr + data.size());
@@ -312,45 +313,42 @@ void registerBackendSpecificAlgorithmsMPI(nb::module_ &m) {
  * @param m Nanobind module.
  */
 void registerBackendSpecificInfoMPI(nb::module_ &m) {
-    using ArrCT_f = nb::ndarray<std::complex<float>, nb::c_contig>;
-    using ArrCT_d = nb::ndarray<std::complex<double>, nb::c_contig>;
+    using ArrayComplex64T = nb::ndarray<std::complex<float>, nb::c_contig>;
+    using ArrayComplex128T = nb::ndarray<std::complex<double>, nb::c_contig>;
 
-    nb::class_<MPIManagerKokkos>(m, "MPIManagerKokkos")
-        .def(nb::init<>())
-        .def(nb::init<MPIManagerKokkos &>())
-        .def("Barrier", &MPIManagerKokkos::Barrier)
-        .def("getRank", &MPIManagerKokkos::getRank)
-        .def("getSize", &MPIManagerKokkos::getSize)
-        .def("getSizeNode", &MPIManagerKokkos::getSizeNode)
-        .def("getTime", &MPIManagerKokkos::getTime)
-        .def("getVendor", &MPIManagerKokkos::getVendor)
-        .def("getVersion", &MPIManagerKokkos::getVersion)
-        .def(
-            "Scatter",
-            [](MPIManagerKokkos &mpi_manager, ArrCT_f &sendBuf,
-               ArrCT_f &recvBuf, int root) {
-                auto send_ptr =
-                    static_cast<std::complex<float> *>(sendBuf.data());
-                auto recv_ptr =
-                    static_cast<std::complex<float> *>(recvBuf.data());
-                mpi_manager.template Scatter<std::complex<float>>(
-                    send_ptr, recv_ptr,
-                    static_cast<std::size_t>(recvBuf.size()), root);
-            },
-            "MPI Scatter for complex float arrays.")
-        .def(
-            "Scatter",
-            [](MPIManagerKokkos &mpi_manager, ArrCT_d &sendBuf,
-               ArrCT_d &recvBuf, int root) {
-                auto send_ptr =
-                    static_cast<std::complex<double> *>(sendBuf.data());
-                auto recv_ptr =
-                    static_cast<std::complex<double> *>(recvBuf.data());
-                mpi_manager.template Scatter<std::complex<double>>(
-                    send_ptr, recv_ptr,
-                    static_cast<std::size_t>(recvBuf.size()), root);
-            },
-            "MPI Scatter for complex double arrays.");
+    auto mpi_manager_class =
+        nb::class_<MPIManagerKokkos>(m, "MPIManagerKokkos");
+    mpi_manager_class.def(nb::init<>());
+    mpi_manager_class.def(nb::init<MPIManagerKokkos &>());
+    mpi_manager_class.def("Barrier", &MPIManagerKokkos::Barrier);
+    mpi_manager_class.def("getRank", &MPIManagerKokkos::getRank);
+    mpi_manager_class.def("getSize", &MPIManagerKokkos::getSize);
+    mpi_manager_class.def("getSizeNode", &MPIManagerKokkos::getSizeNode);
+    mpi_manager_class.def("getTime", &MPIManagerKokkos::getTime);
+    mpi_manager_class.def("getVendor", &MPIManagerKokkos::getVendor);
+    mpi_manager_class.def("getVersion", &MPIManagerKokkos::getVersion);
+    mpi_manager_class.def(
+        "Scatter",
+        [](MPIManagerKokkos &mpi_manager, ArrayComplex64T &sendBuf,
+           ArrayComplex64T &recvBuf, int root) {
+            auto send_ptr = static_cast<std::complex<float> *>(sendBuf.data());
+            auto recv_ptr = static_cast<std::complex<float> *>(recvBuf.data());
+            mpi_manager.template Scatter<std::complex<float>>(
+                send_ptr, recv_ptr, static_cast<std::size_t>(recvBuf.size()),
+                root);
+        },
+        "MPI Scatter for complex float arrays.");
+    mpi_manager_class.def(
+        "Scatter",
+        [](MPIManagerKokkos &mpi_manager, ArrayComplex128T &sendBuf,
+           ArrayComplex128T &recvBuf, int root) {
+            auto send_ptr = static_cast<std::complex<double> *>(sendBuf.data());
+            auto recv_ptr = static_cast<std::complex<double> *>(recvBuf.data());
+            mpi_manager.template Scatter<std::complex<double>>(
+                send_ptr, recv_ptr, static_cast<std::size_t>(recvBuf.size()),
+                root);
+        },
+        "MPI Scatter for complex double arrays.");
 }
 
 } // namespace Pennylane::LightningKokkos::NanoBindings
