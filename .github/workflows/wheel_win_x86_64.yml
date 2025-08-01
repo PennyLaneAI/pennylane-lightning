@@ -133,7 +133,7 @@ jobs:
 
           # Python build settings
           CIBW_BEFORE_BUILD: |
-            python -m pip install pybind11 cmake build
+            python -m pip install cmake build
 
           CIBW_ENVIRONMENT: |
             CMAKE_ARGS="-DCMAKE_BUILD_TYPE=Release"

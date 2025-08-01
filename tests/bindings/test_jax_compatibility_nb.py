@@ -32,9 +32,9 @@ class TestJAXCompatibility:
     """Tests for JAX compatibility with nanobind-based bindings."""
 
     @pytest.fixture
-    def get_statevector_class_and_precision(self, precision, current_nanobind_module):
+    def get_statevector_class_and_precision(self, precision, current_module):
         """Get StateVectorC64/128 class from module based on precision."""
-        module = current_nanobind_module
+        module = current_module
         if JAX_AVAILABLE:
             if precision == "128":
                 jax.config.update("jax_enable_x64", True)
@@ -50,8 +50,8 @@ class TestJAXCompatibility:
         return _get_class(), dtype
 
     @pytest.fixture
-    def get_measurements_class(self, current_nanobind_module):
-        module = current_nanobind_module
+    def get_measurements_class(self, current_module):
+        module = current_module
 
         def _get_class(dtype):
             class_name = "MeasurementsC64" if dtype == np.complex64 else "MeasurementsC128"
@@ -62,9 +62,9 @@ class TestJAXCompatibility:
         return _get_class
 
     @pytest.fixture
-    def get_named_obs_class(self, current_nanobind_module):
+    def get_named_obs_class(self, current_module):
         """Get the NamedObs class from a module."""
-        module = current_nanobind_module.observables
+        module = current_module.observables
 
         def _get_class(dtype):
             class_name = "NamedObsC64" if dtype == np.complex64 else "NamedObsC128"
@@ -75,9 +75,9 @@ class TestJAXCompatibility:
         return _get_class
 
     @pytest.fixture
-    def get_ops_struct_class(self, current_nanobind_module):
+    def get_ops_struct_class(self, current_module):
         """Get the OpsStruct class from a module."""
-        module = current_nanobind_module.algorithms
+        module = current_module.algorithms
 
         def _get_class(dtype):
             class_name = "OpsStructC64" if dtype == np.complex64 else "OpsStructC128"
@@ -88,9 +88,9 @@ class TestJAXCompatibility:
         return _get_class
 
     @pytest.fixture
-    def get_adjoint_jacobian_class(self, current_nanobind_module):
+    def get_adjoint_jacobian_class(self, current_module):
         """Get the AdjointJacobian class from a module."""
-        module = current_nanobind_module.algorithms
+        module = current_module.algorithms
 
         def _get_class(dtype):
             class_name = "AdjointJacobianC64" if dtype == np.complex64 else "AdjointJacobianC128"

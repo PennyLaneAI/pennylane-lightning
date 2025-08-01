@@ -24,9 +24,9 @@ class TestAdjointJacobianNanobind:
     param_values = [0.5, 0.3]
 
     @pytest.fixture
-    def get_statevector_class_and_precision(self, precision, current_nanobind_module):
+    def get_statevector_class_and_precision(self, precision, current_module):
         """Get StateVectorC64/128 class from module based on precision."""
-        module = current_nanobind_module
+        module = current_module
 
         def _get_class():
             class_name = f"StateVectorC{precision}"
@@ -39,9 +39,9 @@ class TestAdjointJacobianNanobind:
         return _get_class(), dtype
 
     @pytest.fixture
-    def get_adjoint_jacobian_class(self, current_nanobind_module):
+    def get_adjoint_jacobian_class(self, current_module):
         """Get AdjointJacobian class from submodule algorithms based on precision."""
-        module = current_nanobind_module
+        module = current_module
 
         def _get_class(dtype):
             class_name = f"AdjointJacobianC64" if dtype == np.complex64 else "AdjointJacobianC128"
@@ -52,9 +52,9 @@ class TestAdjointJacobianNanobind:
         return _get_class
 
     @pytest.fixture
-    def get_observable_classes(self, current_nanobind_module):
+    def get_observable_classes(self, current_module):
         """Get observable classes from submodule observables based on precision."""
-        module = current_nanobind_module
+        module = current_module
 
         def _get_classes(dtype):
             # Check if observables submodule exists
@@ -84,9 +84,9 @@ class TestAdjointJacobianNanobind:
         return _get_classes
 
     @pytest.fixture
-    def get_ops_struct_class(self, current_nanobind_module):
+    def get_ops_struct_class(self, current_module):
         """Get OpsStruct class from submodule algorithms based on precision."""
-        module = current_nanobind_module
+        module = current_module
 
         def _get_class(dtype):
             class_name = f"OpsStructC64" if dtype == np.complex64 else "OpsStructC128"
@@ -96,7 +96,6 @@ class TestAdjointJacobianNanobind:
 
         return _get_class
 
-    @pytest.mark.parametrize("precision", ["64", "128"])
     def test_adjoint_jacobian_call(
         self,
         get_statevector_class_and_precision,
@@ -143,7 +142,6 @@ class TestAdjointJacobianNanobind:
         assert result.shape == (1,)  # 1 observable * 1 parameter = 1 element
         assert np.isclose(result[0], -np.sin(self.param_value), atol=1e-7)
 
-    @pytest.mark.parametrize("precision", ["64", "128"])
     @pytest.mark.parametrize(
         "operation, expected_values",
         [
@@ -330,10 +328,9 @@ class TestAdjointJacobianNanobind:
 
         assert np.isclose(result[0], expected, atol=1e-7)
 
-    @pytest.mark.parametrize("precision", ["64", "128"])
-    def test_create_ops_list_function(self, current_nanobind_module, precision):
-        """Test the create_ops_list function has the same signature as pybind11 version."""
-        module = current_nanobind_module
+    def test_create_ops_list_function(self, current_module, precision):
+        """Test the create_ops_list function has the right signature."""
+        module = current_module
 
         # Get the create_ops_list function
         create_ops_list_func_name = f"create_ops_listC{precision}"

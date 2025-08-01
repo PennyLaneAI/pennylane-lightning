@@ -93,11 +93,8 @@ def n_subsystems(request):
 
 # Looking for the device for testing.
 default_device = "lightning.qubit"
-supported_devices = {"lightning.kokkos", "lightning.qubit", "lightning.gpu", "lightning.tensor"}
 
-# Temporary, a list of devices which are ready to be tested, add to this list as new bindings are added
-# FIXME: Remove this before merging base nanobind branch to main
-SUPPORTED_DEVICES = ("lightning.qubit", "lightning.gpu", "lightning.kokkos", "lightning.tensor")
+supported_devices = {"lightning.kokkos", "lightning.qubit", "lightning.gpu", "lightning.tensor"}
 
 
 def get_device():
@@ -360,7 +357,7 @@ def precision(request):
 
 
 @pytest.fixture(scope="session")
-def current_nanobind_module():
+def current_module():
     """Return the nanobind module for the current device."""
     try:
         return importlib.import_module(nanobind_module_name)

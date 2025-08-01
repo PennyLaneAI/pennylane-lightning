@@ -1,7 +1,7 @@
 ---
 Checks:          '-*,clang-diagnostic-*,clang-analyzer-*,-llvmlibc-*,modernize-*,-modernize-use-trailing-return-type,clang-analyzer-cplusplus*,openmp-*,performance-*,portability-*,readability-*,-modernize-avoid-c-arrays,-readability-magic-numbers,hicpp-*,-hicpp-no-array-decay,-hicpp-avoid-c-arrays,bugprone-suspicious-*,llvm-namespace-comment,cppcoreguidelines-slicing,cppcoreguidelines-special-member-functions,-readability-identifier-length'
 WarningsAsErrors: '*'
-HeaderFilterRegex: '^(?!.*nanobind)(?!.*pybind11)(?!.*kokkos)(?!.*catalyst).*$'
+HeaderFilterRegex: '^(?!.*nanobind)(?!.*kokkos)(?!.*catalyst).*$'
 AnalyzeTemporaryDtors: false
 FormatStyle:     none
 InheritParentConfig: true
