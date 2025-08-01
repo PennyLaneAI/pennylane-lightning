@@ -20,6 +20,8 @@
   [(#1213)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1213)
   - Lightning GPU Bindings:
   [(#1184)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1184)
+  - Lightning Tensor Bindings:
+  [(#1206)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1206)
 - Added support for `GlobalPhase` with zero-qubit Lightning devices. Currently, only the `lightning.qubit` and `lightning.kokkos` backends support zero-qubit initialization.
   [(#1205)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1205)
 

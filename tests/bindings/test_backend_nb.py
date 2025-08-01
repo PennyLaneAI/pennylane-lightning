@@ -25,8 +25,8 @@ if device_name not in SUPPORTED_DEVICES:
     )
 
 
-class TestLQubitStateVectorBindings:
-    """Tests for LightningQubit-specific StateVector bindings."""
+class TestLightningStateVectorBindings:
+    """Tests for Lightning StateVector bindings."""
 
     @pytest.fixture
     def get_statevector_class(self):
@@ -159,6 +159,8 @@ class TestLQubitStateVectorBindings:
             pytest.skip("getState method not available in this backend")
         if not hasattr(StateVectorClass, "updateData"):
             pytest.skip("updateData method not available in this backend")
+        if not hasattr(StateVectorClass, "normalize"):
+            pytest.skip("normalize method not available in this backend")
         num_qubits = 2
         sv = StateVectorClass(num_qubits)
         # Create a non-normalized state
@@ -255,8 +257,8 @@ class TestLQubitStateVectorBindings:
         assert sv is not None
 
 
-class TestLQubitMeasurementsBindings:
-    """Tests for LightningQubit-specific Measurements bindings."""
+class TestLightningMeasurementsBindings:
+    """Tests for Lightning-specific Measurements bindings."""
 
     @pytest.fixture
     def get_classes(self):
@@ -326,12 +328,12 @@ class TestLQubitMeasurementsBindings:
         # Generate samples
         num_shots = 1000
 
-        if device_name == "lightning.kokkos":
-            # Lightning.kokkos has different generate_samples signature
-            samples = meas.generate_samples(num_qubits, num_shots)
-        else:
+        if device_name == "lightning.qubit":
             # Lightning.qubit allows specifying wires
             samples = meas.generate_samples([0, 1], num_shots)
+        else:
+            # Other devices have a different generate_samples signature
+            samples = meas.generate_samples(num_qubits, num_shots)
 
         # Check shape
         assert samples.shape == (num_shots, 2)
@@ -351,8 +353,8 @@ class TestLQubitMeasurementsBindings:
 
     def test_generate_mcmc_samples(self, current_nanobind_module, precision, get_classes):
         """Test generating MCMC samples."""
-        if device_name == "lightning.kokkos":
-            pytest.skip("generate_mcmc_samples not available in lightning.kokkos")
+        if device_name != "lightning.qubit":
+            pytest.skip("generate_mcmc_samples only available in lightning.qubit")
 
         StateVectorClass, MeasurementsClass = get_classes(current_nanobind_module, precision)
         num_qubits = 2
@@ -370,8 +372,8 @@ class TestLQubitMeasurementsBindings:
         assert samples.shape == (num_shots, num_qubits)
 
 
-class TestLQubitSparseHamiltonianBindings:
-    """Tests for LightningQubit-specific SparseHamiltonian bindings."""
+class TestLightningSparseHamiltonianBindings:
+    """Tests for Lightning-specific SparseHamiltonian bindings."""
 
     @pytest.fixture
     def get_sparse_hamiltonian_class(self):
@@ -411,8 +413,8 @@ class TestLQubitSparseHamiltonianBindings:
         assert "SparseHamiltonian" in sparse_ham.__repr__()
 
 
-class TestLQubitVJPBindings:
-    """Tests for LightningQubit-specific VectorJacobianProduct bindings."""
+class TestLightningVJPBindings:
+    """Tests for Lightning-specific VectorJacobianProduct bindings."""
 
     def test_vjp_init(self, current_nanobind_module, precision):
         """Test VectorJacobianProduct initialization."""

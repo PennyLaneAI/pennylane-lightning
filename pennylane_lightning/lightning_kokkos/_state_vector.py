@@ -205,7 +205,7 @@ class LightningKokkosStateVector(LightningBaseStateVector):
         # Currently there is not support for sparse matrices in the LightningKokkos device.
         return False
 
-    def _apply_state_vector(self, state, device_wires: Wires):
+    def _apply_state_vector(self, state, device_wires: Wires, **kwargs):
         """Initialize the internal state vector in a specified state.
         Args:
             state (Union[array[complex], scipy.SparseABC]): normalized input state of length ``2**len(wires)`` as a dense array or Scipy sparse array.

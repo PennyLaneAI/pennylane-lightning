@@ -76,7 +76,7 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
 
-    using ArrCT = nb::ndarray<std::complex<PrecisionT>, nb::c_contig>;
+    using ArrayComplexT = nb::ndarray<std::complex<PrecisionT>, nb::c_contig>;
     using SparseIndexT = std::size_t;
     using arr_sparse_ind = nb::ndarray<SparseIndexT, nb::c_contig>;
 
@@ -101,7 +101,7 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
     pyclass
         .def(
             "expval",
-            [](Measurements<StateVectorT> &M, const ArrCT &matrix,
+            [](Measurements<StateVectorT> &M, const ArrayComplexT &matrix,
                const std::vector<std::size_t> &wires) {
                 const std::size_t matrix_size = exp2(2 * wires.size());
                 auto matrix_data =
@@ -123,7 +123,7 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
         .def(
             "expval",
             [](Measurements<StateVectorT> &M, const arr_sparse_ind &row_map,
-               const arr_sparse_ind &entries, const ArrCT &values) {
+               const arr_sparse_ind &entries, const ArrayComplexT &values) {
                 return M.expval(
                     static_cast<SparseIndexT *>(row_map.data()),
                     static_cast<SparseIndexT>(row_map.size()),
@@ -135,7 +135,7 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
         .def(
             "var",
             [](Measurements<StateVectorT> &M, const arr_sparse_ind &row_map,
-               const arr_sparse_ind &entries, const ArrCT &values) {
+               const arr_sparse_ind &entries, const ArrayComplexT &values) {
                 return M.var(static_cast<SparseIndexT *>(row_map.data()),
                              static_cast<SparseIndexT>(row_map.size()),
                              static_cast<SparseIndexT *>(entries.data()),
@@ -159,7 +159,7 @@ void registerBackendSpecificObservables(nb::module_ &m) {
     const std::string bitsize =
         std::is_same_v<PrecisionT, float> ? "64" : "128";
 
-    using ArrCT = nb::ndarray<std::complex<PrecisionT>, nb::c_contig>;
+    using ArrayComplexT = nb::ndarray<std::complex<PrecisionT>, nb::c_contig>;
     using SparseIndexT = std::size_t;
 
     // Register Kokkos-specific observables
@@ -174,10 +174,11 @@ void registerBackendSpecificObservables(nb::module_ &m) {
         "Initialize SparseHamiltonian with data, indices, indptr, and wires");
 
     sparse_hamiltonian_class.def(
-        "__init__", [](SparseHamiltonian<StateVectorT> *self, const ArrCT &data,
-                       const std::vector<SparseIndexT> &indices,
-                       const std::vector<SparseIndexT> &indptr,
-                       const std::vector<std::size_t> &wires) {
+        "__init__",
+        [](SparseHamiltonian<StateVectorT> *self, const ArrayComplexT &data,
+           const std::vector<SparseIndexT> &indices,
+           const std::vector<SparseIndexT> &indptr,
+           const std::vector<std::size_t> &wires) {
             const ComplexT *data_ptr =
                 PL_reinterpret_cast<const ComplexT>(data.data());
             std::vector<ComplexT> data_vec(data_ptr, data_ptr + data.size());
@@ -344,7 +345,7 @@ void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
 
-    using ArrCT = nb::ndarray<std::complex<PrecisionT>, nb::c_contig>;
+    using ArrayComplexT = nb::ndarray<std::complex<PrecisionT>, nb::c_contig>;
 
     // Add Pauli rotation - Kokkos specific implementation
     pyclass.def(
@@ -385,7 +386,7 @@ void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
             "Set the state vector to a basis state.")
         .def(
             "setStateVector",
-            [](StateVectorT &sv, const ArrCT &state,
+            [](StateVectorT &sv, const ArrayComplexT &state,
                const std::vector<std::size_t> &wires) {
                 sv.setStateVector(
                     PL_reinterpret_cast<const ComplexT>(state.data()), wires);
@@ -393,7 +394,7 @@ void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
             "Set the state vector to the data contained in `state`.")
         .def(
             "DeviceToHost",
-            [](StateVectorT &device_sv, ArrCT &host_sv) {
+            [](StateVectorT &device_sv, ArrayComplexT &host_sv) {
                 auto *data_ptr = PL_reinterpret_cast<ComplexT>(host_sv.data());
                 if (host_sv.size()) {
                     device_sv.DeviceToHost(data_ptr, host_sv.size());
@@ -402,7 +403,7 @@ void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
             "Synchronize data from the Kokkos device to host.")
         .def(
             "HostToDevice",
-            [](StateVectorT &device_sv, const ArrCT &host_sv) {
+            [](StateVectorT &device_sv, const ArrayComplexT &host_sv) {
                 auto *data_ptr = const_cast<ComplexT *>(
                     PL_reinterpret_cast<ComplexT>(host_sv.data()));
                 if (host_sv.size()) {
@@ -417,7 +418,7 @@ void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
         [](StateVectorT &sv, const std::string &str,
            const std::vector<std::size_t> &wires, bool inv,
            [[maybe_unused]] const std::vector<std::vector<PrecisionT>> &params,
-           [[maybe_unused]] const ArrCT &gate_matrix) {
+           [[maybe_unused]] const ArrayComplexT &gate_matrix) {
             std::vector<ComplexT> conv_matrix;
             if (gate_matrix.size()) {
                 conv_matrix = std::vector<ComplexT>{gate_matrix.data(),
