@@ -18,12 +18,14 @@
   [(#1198)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1198)
   - Lightning GPU Bindings:
   [(#1184)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1184)
+- Added support for `GlobalPhase` with zero-qubit Lightning devices. Currently, only the `lightning.qubit` and `lightning.kokkos` backends support zero-qubit initialization.
+  [(#1205)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1205)
 
 - Using `mcm_method="device"` on `lightning.qubit`, `lightning.kokkos` and `lightning.gpu`
   now resolves to the tree-traversal method.
   [(#1210)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1210)
 
-- Skip Identity operation in Lightning Qubit and removed assert for applying Identity gate not equal to 1 wire.
+- Skipped Identity operation in Lightning Qubit and removed assert for applying Identity gate not equal to 1 wire.
   [(#1212)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1212)
 
 <h3>Breaking changes 💔</h3>
@@ -31,6 +33,9 @@
 <h3>Deprecations 👋</h3>
 
 <h3>Documentation 📝</h3>
+
+- Added missing `Kernel performance tuning` documentation page to the AVX2/AVX512 kernels index for improved discoverability.
+  [(#1217)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1217)
 
 <h3>Bug fixes 🐛</h3>
 
@@ -45,10 +50,10 @@
 - Switched off the PLxPR integration tests by removing JAX dependency from requirements files.
   [(#1214)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1214)
 
-- Update JAX version from 0.6.0 to 0.6.2, keeping the same version as PennyLane and Catalyst
+- Updated JAX version from 0.6.0 to 0.6.2, keeping the same version as PennyLane and Catalyst
   [(#1200)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1200)
 
-- Remove FIXMEs for pinning jax & catalyst 0.11.0 for CI testing stable version.
+- Removed FIXMEs for pinning jax & catalyst 0.11.0 for CI testing stable version.
   [(#1211)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1211)
 
 - Increased minimum version of `pytest` within requirements files to `8.4.1`.
