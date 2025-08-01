@@ -678,7 +678,7 @@ template <class StateVectorT> void registerAdjointJacobian(nb::module_ &m) {
         nb::class_<AdjointJacobian<StateVectorT>>(m, class_name.c_str());
     adjoint_jacobian_class.def(nb::init<>());
 
-    // Add the __call__ method with proper binding to match pybind11 behavior
+    // Add the __call__ method with proper binding
     adjoint_jacobian_class.def(
         "__call__",
         [](AdjointJacobian<StateVectorT> &adj, const StateVectorT &sv,
