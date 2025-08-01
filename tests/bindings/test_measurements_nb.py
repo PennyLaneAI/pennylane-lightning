@@ -15,11 +15,11 @@
 
 import numpy as np
 import pytest
-from conftest import SUPPORTED_DEVICES, device_name
+from conftest import device_name, supported_devices
 
-if device_name not in SUPPORTED_DEVICES:
+if device_name not in supported_devices:
     pytest.skip(
-        "Skipping tests for binaries other than one of {SUPPORTED_DEVICES}.",
+        "Skipping tests for binaries other than one of {supported_devices}.",
         allow_module_level=True,
     )
 

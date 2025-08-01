@@ -15,12 +15,12 @@
 
 import numpy as np
 import pytest
-from conftest import SUPPORTED_DEVICES, device_name
+from conftest import device_name, supported_devices
 
 # Skip all tests if not using lightning.qubit or lightning.kokkos
-if device_name not in SUPPORTED_DEVICES:
+if device_name not in supported_devices:
     pytest.skip(
-        f"Skipping tests for binaries other than {SUPPORTED_DEVICES}.",
+        f"Skipping tests for binaries other than {supported_devices}.",
         allow_module_level=True,
     )
 
