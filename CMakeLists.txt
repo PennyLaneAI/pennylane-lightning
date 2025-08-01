@@ -83,18 +83,9 @@ endforeach()
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/process_options.cmake")
 
-set(CMAKE_POLICY_DEFAULT_CMP0127 NEW) # To suppress pybind11 CMP0127 warning
-
 if(ENABLE_PYTHON)
-    # Add pybind11
+    # Add nanobind
     find_package(Python COMPONENTS Interpreter Development)
-
-    FetchContent_Declare(pybind11
-                        GIT_REPOSITORY https://github.com/pybind/pybind11.git
-                        GIT_TAG        v2.13.5
-    )
-    FetchContent_MakeAvailable(pybind11)
-
     message(STATUS "Enabling Nanobind Python bindings")
     
     # Ensure we have a valid Python executable
@@ -160,7 +151,7 @@ if(ENABLE_PYTHON)
 
     FetchContent_Declare(nanobind
                 GIT_REPOSITORY https://github.com/wjakob/nanobind.git
-                GIT_TAG        v2.7.0
+                GIT_TAG        v2.8.0
     )
     FetchContent_MakeAvailable(nanobind)
 
@@ -220,8 +211,7 @@ target_include_directories(pennylane_lightning  INTERFACE "$<INSTALL_INTERFACE:$
 #####################################################
 if(ENABLE_PYTHON)
     message(STATUS "ENABLE_PYTHON is ON.")
-    # Existing PyBind11 module
-    pybind11_add_module("${PL_BACKEND}_ops" "pennylane_lightning/core/bindings/Bindings.cpp")
+    # Only build Nanobind module
     nanobind_add_module("${PL_BACKEND}_nb" "pennylane_lightning/core/bindings/Bindings_nb.cpp")
 
     # Remove nanobind's problematic flags that are incompatible with NVCC
@@ -231,30 +221,17 @@ if(ENABLE_PYTHON)
         -O2  # Override nanobind's -Os with -O2
     )
 
-    # Set properties for both modules
+    # Set properties for nanobind module
     set(CMAKE_BUILD_RPATH_USE_ORIGIN ON)
     if("${PL_BACKEND}" STREQUAL "lightning_gpu" OR "${PL_BACKEND}" STREQUAL "lightning_tensor")
         # Allow pip installation of cuQuantum & CUDA 12 libs to be accessible without setting LD_LIBRARY_PATH for lightning_gpu
         # BUILD_RPATH only works for the last call
-        set_target_properties("${PL_BACKEND}_ops" PROPERTIES BUILD_RPATH "$ORIGIN/../cuquantum/lib:$ORIGIN/../nvidia/cuda_runtime/lib:$ORIGIN/../nvidia/nvjitlink/lib:$ORIGIN/../nvidia/cublas/lib:$ORIGIN/../nvidia/cusparse/lib:${SCIPY_OPENBLAS32_RUNTIME_LIB_PATH}:$ORIGIN")
         set_target_properties("${PL_BACKEND}_nb" PROPERTIES BUILD_RPATH "$ORIGIN/../cuquantum/lib:$ORIGIN/../nvidia/cuda_runtime/lib:$ORIGIN/../nvidia/nvjitlink/lib:$ORIGIN/../nvidia/cublas/lib:$ORIGIN/../nvidia/cusparse/lib:${SCIPY_OPENBLAS32_RUNTIME_LIB_PATH}:$ORIGIN")
     else()
-        set_target_properties("${PL_BACKEND}_ops" PROPERTIES BUILD_RPATH "${SCIPY_OPENBLAS32_RUNTIME_LIB_PATH}")
         set_target_properties("${PL_BACKEND}_nb" PROPERTIES BUILD_RPATH "${SCIPY_OPENBLAS32_RUNTIME_LIB_PATH}")
     endif()
     
-    # Link libraries for both modules
-    target_link_libraries("${PL_BACKEND}_ops" PRIVATE lightning_compile_options
-                                                    lightning_external_libs
-                                                    lightning_observables
-                                                    lightning_utils
-                                                    lightning_algorithms
-                                                    ${PL_BACKEND}
-                                                    "${PL_BACKEND}_observables"
-                                                    "${PL_BACKEND}_bindings"
-                                                    "${PL_BACKEND}_measurements"
-                                                    )
-                                                    
+    # Link library
     target_link_libraries("${PL_BACKEND}_nb" PRIVATE lightning_compile_options
                                                     lightning_external_libs
                                                     lightning_observables
@@ -267,13 +244,10 @@ if(ENABLE_PYTHON)
                                                    )
     
     if(NOT DEFINED PL_TENSOR)
-        target_link_libraries("${PL_BACKEND}_ops" PRIVATE "${PL_BACKEND}_algorithms")
         target_link_libraries("${PL_BACKEND}_nb" PRIVATE "${PL_BACKEND}_algorithms")
     endif()
     
-    set_target_properties("${PL_BACKEND}_ops" PROPERTIES CXX_VISIBILITY_PRESET hidden)
     set_target_properties("${PL_BACKEND}_nb" PROPERTIES CXX_VISIBILITY_PRESET hidden)
-    target_compile_definitions("${PL_BACKEND}_ops" PRIVATE VERSION_INFO=${VERSION_STRING})
     target_compile_definitions("${PL_BACKEND}_nb" PRIVATE VERSION_INFO=${VERSION_STRING})
 endif()
 
