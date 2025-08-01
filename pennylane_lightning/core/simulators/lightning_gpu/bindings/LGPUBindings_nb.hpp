@@ -238,6 +238,49 @@ void registerBackendSpecificInfo(nb::module_ &m) {
 } // m
 
 /**
+ * @brief Update state vector data from an array
+ *
+ * This function accepts any array-like object that follows the buffer protocol,
+ * including NumPy arrays and JAX arrays (for example).
+ *
+ * Example with JAX:
+ * ```python
+ * import jax.numpy as jnp
+ * import pennylane_lightning.lightning_qubit_nb as plq
+ *
+ * # Create a JAX array
+ * jax_data = jnp.zeros(2**3, dtype=jnp.complex64)
+ * jax_data = jax_data.at[0].set(1.0)  # Set to |000⟩ state
+ *
+ * # Create a state vector and update with JAX data
+ * sv = plq.StateVectorC64(3)  # 3 qubits
+ * sv.updateData(jax_data)     # Works with JAX arrays!
+ * ```
+ *
+ * @tparam StateVectorT State vector type
+ * @param sv State vector to update
+ * @param data Array with new data
+ */
+template <class StateVectorT>
+void updateStateVectorData(
+    StateVectorT &sv,
+    const nb::ndarray<typename StateVectorT::ComplexT, nb::c_contig> &data) {
+    using ComplexT = typename StateVectorT::ComplexT;
+
+    // Check dimensions
+    if (data.ndim() != 1) {
+        throw std::invalid_argument("Array must be 1-dimensional");
+    }
+
+    // Get data pointer and size
+    const ComplexT *data_ptr = static_cast<const ComplexT *>(data.data());
+    std::size_t size = data.shape(0);
+
+    // Update the state vector data
+    sv.updateData(data_ptr, size);
+}
+
+/**
  * @brief Register backend specific state vector methods.
  *
  * @tparam StateVectorT
@@ -256,6 +299,9 @@ void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
     pyclass.def("__init__", [](PyClass *self, const ArrayT &arr) {
         new (self) StateVectorT(arr.data(), arr.size());
     });
+    pyclass.def("updateData", &updateStateVectorData<StateVectorT>,
+                "Update the state vector data from an array.",
+                nb::arg("state"));
     pyclass.def(
         "setBasisState",
         [](StateVectorT &sv, const std::vector<std::size_t> &state,

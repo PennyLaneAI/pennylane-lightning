@@ -14,8 +14,10 @@
   [(#1187)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1187)
   - MPI and Adjoint Jacobian support
   [(#1189)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1189)
-  - Lightning Qubit Bindings
+  - Lightning Qubit Bindings:
   [(#1198)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1198)
+  - Lightning Kokkos Bindings:
+  [(#1213)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1213)
   - Lightning GPU Bindings:
   [(#1184)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1184)
 - Added support for `GlobalPhase` with zero-qubit Lightning devices. Currently, only the `lightning.qubit` and `lightning.kokkos` backends support zero-qubit initialization.

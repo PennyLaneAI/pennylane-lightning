@@ -46,6 +46,10 @@ class TestStateVectorNB:
         """Test initialization of StateVectorC64/128 classes."""
         StateVectorClass, dtype = get_statevector_class_and_precision
 
+        # Check if it has getState method
+        if not hasattr(StateVectorClass, "getState"):
+            pytest.skip("getState method not available in this backend")
+
         # Test initialization with number of qubits
         num_qubits = 3
 
@@ -104,6 +108,10 @@ class TestStateVectorNB:
         """Test matrix application on StateVectorC64/128 classes."""
         StateVectorClass, dtype = get_statevector_class_and_precision
 
+        # Check if it has getState method
+        if not hasattr(StateVectorClass, "getState"):
+            pytest.skip("getState method not available in this backend")
+
         num_qubits = 1
         # Initialize with number of qubits - already in |0⟩ state
         sv = StateVectorClass(num_qubits)
@@ -131,6 +139,10 @@ class TestStateVectorNB:
         """Test resetStateVector method on StateVectorC64/128 classes."""
         StateVectorClass, dtype = get_statevector_class_and_precision
 
+        # Check if it has getState method
+        if not hasattr(StateVectorClass, "getState"):
+            pytest.skip("getState method not available in this backend")
+
         num_qubits = 2
         # Initialize with number of qubits - already in |0⟩ state
         sv = StateVectorClass(num_qubits)
@@ -154,6 +166,10 @@ class TestStateVectorNB:
     def test_statevector_set_basis_state(self, get_statevector_class_and_precision):
         """Test setBasisState method on StateVectorC64/128 classes."""
         StateVectorClass, dtype = get_statevector_class_and_precision
+
+        # Check if it has getState method
+        if not hasattr(StateVectorClass, "getState"):
+            pytest.skip("getState method not available in this backend")
 
         num_qubits = 3
         # Initialize with number of qubits
@@ -190,6 +206,10 @@ class TestStateVectorNB:
     def test_statevector_set_state_vector(self, get_statevector_class_and_precision):
         """Test setStateVector method on StateVectorC64/128 classes."""
         StateVectorClass, dtype = get_statevector_class_and_precision
+
+        # Check if it has the getState method.
+        if not hasattr(StateVectorClass, "getState"):
+            pytest.skip("getState method not available in this backend")
 
         num_qubits = 2
         # Initialize with number of qubits
@@ -250,6 +270,12 @@ class TestStateVectorNB:
         """Test updateData method with non-trivial state vectors."""
         StateVectorClass, dtype = get_statevector_class_and_precision
 
+        # Check if it has getState and updateData methods
+        if not hasattr(StateVectorClass, "getState"):
+            pytest.skip("getState method not available in this backend")
+        if not hasattr(StateVectorClass, "updateData"):
+            pytest.skip("updateData method not available in this backend")
+
         num_qubits = 2
         # Initialize with number of qubits
         sv = StateVectorClass(num_qubits)
@@ -269,6 +295,12 @@ class TestStateVectorNB:
     ):
         """Test StateVector with aligned array."""
         StateVectorClass, dtype = get_statevector_class_and_precision
+
+        # Check if it has getState and updateData methods
+        if not hasattr(StateVectorClass, "getState"):
+            pytest.skip("getState method not available in this backend")
+        if not hasattr(StateVectorClass, "updateData"):
+            pytest.skip("updateData method not available in this backend")
 
         # Create a state vector
         num_qubits = 2
