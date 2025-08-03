@@ -292,20 +292,20 @@ class LightningQubit(LightningBase):
 
     def _validate_mcmc_options(self, mcmc_enabled, kernel_name, num_burnin, shots):
         """Validate MCMC-specific options when MCMC is enabled.
-        
+
         Args:
             mcmc_enabled (bool): Whether MCMC is enabled
             kernel_name (str): The kernel name for MCMC
             num_burnin (int): Number of burn-in steps
             shots: The shots configuration (can be int, list, or None)
-            
+
         Raises:
             NotImplementedError: If kernel_name is not supported
             ValueError: If num_burnin >= shots for any shot value
         """
         if not mcmc_enabled:
             return
-            
+
         # Validate kernel name (only if it's not None, which indicates MCMC is disabled)
         if kernel_name is not None and kernel_name not in ["Local", "NonZeroRandom"]:
             raise NotImplementedError(
@@ -361,7 +361,7 @@ class LightningQubit(LightningBase):
         kernel_name = new_device_options.get("kernel_name", "Local")
         num_burnin = new_device_options.get("num_burnin", 0)
         shots = getattr(config, "shots", None) or getattr(self, "shots", None)
-        
+
         self._validate_mcmc_options(mcmc_enabled, kernel_name, num_burnin, shots)
 
         # After validation, set MCMC options to inactive values if they weren't explicitly provided
