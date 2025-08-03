@@ -315,14 +315,10 @@ class LightningQubit(LightningBase):
 
         # Validate shots vs num_burnin if shots are specified
         if shots is not None and num_burnin > 0:
-            # Handle different shots types
-            if hasattr(shots, "__iter__") and not isinstance(shots, (str, int)):
-                shot_values = list(shots)
-            else:
-                shot_values = [shots]
+            shots = shots if isinstance(shots, Sequence) else [shots]
 
             # Filter out None values and check
-            shot_values = [s for s in shot_values if s is not None]
+            shot_values = [s for s in shots if s is not None]
             if shot_values and any(num_burnin >= s for s in shot_values):
                 raise ValueError("Shots should be greater than num_burnin.")
 
