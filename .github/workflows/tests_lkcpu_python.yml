@@ -93,7 +93,7 @@ jobs:
       - uses: actions/setup-python@v5
         name: Install Python
         with:
-          python-version: '3.10'
+          python-version: '3.11'
 
       - name: Restoring cached dependencies
         id: kokkos-cache
@@ -165,7 +165,7 @@ jobs:
       - uses: actions/setup-python@v5
         name: Install Python
         with:
-          python-version: '3.10'
+          python-version: '3.11'
 
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
@@ -308,7 +308,7 @@ jobs:
       - uses: actions/setup-python@v5
         name: Install Python
         with:
-          python-version: '3.10'
+          python-version: '3.11'
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -324,7 +324,7 @@ jobs:
       - name: Combine coverage files
         run: |
           # Update .coveragerc to include sources for combining equivalent paths
-          wheelpath=$Python_ROOT_DIR/lib/python3.10/site-packages
+          wheelpath=$Python_ROOT_DIR/lib/python3.11/site-packages
           echo "" >> .coveragerc
           echo "[paths]" >> .coveragerc
           echo "source =" >> .coveragerc
