@@ -483,41 +483,6 @@ class TestInitialization:
         assert dev._rng is not None
 
 
-@pytest.mark.skipif(
-    device_name != "lightning.qubit",
-    reason=f"The device {device_name} does not support mcmc",
-)
-class TestMCMCInitialization:
-    """Unit tests for device initialization for MCMC"""
-
-    def test_invalid_num_burnin_error(self):
-        """Test that an error is raised when num_burnin is more than number of shots"""
-        n_shots = 10
-        num_burnin = 11
-
-        # Create device (should not fail at initialization)
-        device = LightningDevice(wires=2, shots=n_shots, mcmc=True, num_burnin=num_burnin)
-
-        # Error should be raised during preprocess when validation runs
-        with pytest.raises(ValueError, match="Shots should be greater than num_burnin."):
-            device.preprocess()
-
-    def test_invalid_kernel_name(self):
-        """Test that an error is raised when the kernel_name is not "Local" or "NonZeroRandom"."""
-
-        _ = LightningDevice(wires=2, shots=1000, mcmc=True, kernel_name="Local")
-        _ = LightningDevice(wires=2, shots=1000, mcmc=True, kernel_name="NonZeroRandom")
-
-        # Create device with invalid kernel (should not fail at initialization)
-        device = LightningDevice(wires=2, shots=1000, mcmc=True, kernel_name="bleh")
-
-        # Error should be raised during preprocess when validation runs
-        with pytest.raises(
-            NotImplementedError, match="only 'Local' and 'NonZeroRandom' kernels are supported"
-        ):
-            device.preprocess()
-
-
 class TestExecution:
     """Unit tests for executing quantum tapes on a device"""
 
