@@ -478,18 +478,11 @@ class TestInitialization:
     @pytest.mark.skipif(
         device_name == "lightning.tensor", reason="lightning.tensor does not support seeding"
     )
-    @pytest.mark.parametrize("shots", [None, 10])
     @pytest.mark.parametrize("n_wires", [None, 3])
     @pytest.mark.parametrize("seed", ["global", None, 42, [42, 43, 44]])
-    def test_device_seed(self, shots, n_wires, seed):
+    def test_device_seed(self, n_wires, seed):
         """Test that seeding the lightning device works correctly"""
-        if shots:
-            with pytest.warns(
-                qml.exceptions.PennyLaneDeprecationWarning, match="shots on device is deprecated"
-            ):
-                dev = LightningDevice(wires=n_wires, shots=shots, seed=seed)
-        else:
-            dev = LightningDevice(wires=n_wires, seed=seed)
+        dev = LightningDevice(wires=n_wires, seed=seed)
         assert dev._rng is not None
 
 
