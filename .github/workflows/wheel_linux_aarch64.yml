@@ -1,7 +1,7 @@
 name: Wheel::Linux::ARM
 
 # **What it does**: Builds python wheels for Linux (ubuntu-24.04) architecture ARM 64 and store it as artifacts.
-#                   Python versions: 3.10, 3.11, 3.12, 3.13.
+#                   Python versions: 3.11, 3.12, 3.13.
 # **Why we have it**: To build wheels for pennylane-lightning installation.
 # **Who does it impact**: Wheels to be uploaded to PyPI.
 
@@ -83,8 +83,8 @@ jobs:
             -i ${{ matrix.container_img }} \
             bash -c "git config --global --add safe.directory /io && \
             cd /io && \
-            python3.10 -m pip install ninja && \
-            ln -s /opt/python/cp310-cp310/bin/ninja /usr/bin/ninja && \
+            python3.11 -m pip install ninja && \
+            ln -s /opt/python/cp311-cp311/bin/ninja /usr/bin/ninja && \
             cmake -BBuild . -DCMAKE_INSTALL_PREFIX=/install \
                             -DKokkos_ENABLE_COMPLEX_ALIGN=OFF \
                             -DKokkos_ENABLE_SERIAL=ON \
@@ -110,7 +110,7 @@ jobs:
         kokkos_version: ${{ fromJson(needs.set_wheel_build_matrix.outputs.kokkos_version) }}
         container_img: ["quay.io/pypa/manylinux_2_28_aarch64"]
     timeout-minutes: 45
-    name: ${{ matrix.os }}::${{ matrix.arch }} - ${{ matrix.pl_backend }} (Python ${{ fromJson('{ "cp310-*":"3.10","cp311-*":"3.11", "cp312-*":"3.12", "cp313-*":"3.13" }')[matrix.cibw_build] }})
+    name: ${{ matrix.os }}::${{ matrix.arch }} - ${{ matrix.pl_backend }} (Python ${{ fromJson('{ "cp311-*":"3.11", "cp312-*":"3.12", "cp313-*":"3.13" }')[matrix.cibw_build] }})
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -131,16 +131,16 @@ jobs:
           mkdir Kokkos
           cp -rf ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
 
-      - name: Install Python 3.10
+      - name: Install Python 3.11
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.11'
 
       - name: Install dependencies
-        run: python3.10 -m pip install cibuildwheel~=2.21.0 tomlkit
+        run: python3.11 -m pip install cibuildwheel~=2.21.0 tomlkit
 
       - name: Configure pyproject.toml file
-        run: PL_BACKEND="${{ matrix.pl_backend }}" python3.10 scripts/configure_pyproject_toml.py
+        run: PL_BACKEND="${{ matrix.pl_backend }}" python3.11 scripts/configure_pyproject_toml.py
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -190,12 +190,12 @@ jobs:
             ls
             pl-device-test --device=${DEVICENAME} --skip-ops -x --tb=short
 
-        run: python3.10 -m cibuildwheel --output-dir wheelhouse
+        run: python3.11 -m cibuildwheel --output-dir wheelhouse
 
       - name: Validate wheels
         run: |
-         python3.10 -m pip install twine
-         python3.10 -m twine check ./wheelhouse/*.whl
+         python3.11 -m pip install twine
+         python3.11 -m twine check ./wheelhouse/*.whl
 
       - uses: actions-ecosystem/action-regex-match@main
         id: rc_build
@@ -209,7 +209,7 @@ jobs:
           github.event_name == 'workflow_dispatch' ||
           github.ref == 'refs/heads/master'
         with:
-          name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ fromJson('{ "cp310-*":"py310","cp311-*":"py311","cp312-*":"py312", "cp313-*":"py313" }')[matrix.cibw_build] }}-${{ matrix.arch }}.zip
+          name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ fromJson('{ "cp311-*":"py311","cp312-*":"py312", "cp313-*":"py313" }')[matrix.cibw_build] }}-${{ matrix.arch }}.zip
           path: ./wheelhouse/*.whl
           retention-days: 1
           include-hidden-files: true
@@ -231,7 +231,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ fromJson('{ "cp310-*":"py310","cp311-*":"py311","cp312-*":"py312", "cp313-*":"py313" }')[matrix.cibw_build] }}-${{ matrix.arch }}.zip
+          name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ fromJson('{ "cp311-*":"py311","cp312-*":"py312", "cp313-*":"py313" }')[matrix.cibw_build] }}-${{ matrix.arch }}.zip
           path: dist
 
       - name: Upload wheels to TestPyPI

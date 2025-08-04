@@ -169,7 +169,7 @@ ENV VIRTUAL_ENV=/opt/venv
 RUN python3 -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 RUN pip install --no-cache-dir custatevec-cu12
-ENV LD_LIBRARY_PATH="$VIRTUAL_ENV/lib/python3.10/site-packages/cuquantum/lib:$LD_LIBRARY_PATH"
+ENV LD_LIBRARY_PATH="$VIRTUAL_ENV/lib/python3.11/site-packages/cuquantum/lib:$LD_LIBRARY_PATH"
 COPY --from=build-wheel-lightning-gpu /opt/pennylane-lightning/dist/ /
 COPY --from=build-wheel-lightning-qubit /opt/pennylane-lightning/dist/ /
 RUN pip install --no-cache-dir --force-reinstall pennylane_lightning*.whl && rm pennylane_lightning*.whl
