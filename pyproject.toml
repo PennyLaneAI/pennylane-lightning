@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "pennylane_lightning"
 description = "PennyLane-Lightning plugin"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 license = "Apache-2.0"
 classifiers = [ 
     "Development Status :: 4 - Beta", 
