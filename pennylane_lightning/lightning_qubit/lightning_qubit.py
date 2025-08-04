@@ -321,9 +321,9 @@ class LightningQubit(LightningBase):
                 new_device_options[option] = getattr(self, f"_{option}", None)
 
         # Validate MCMC options using the helper function
-        mcmc_enabled = new_device_options.get("mcmc", False)
-        kernel_name = new_device_options.get("kernel_name", "Local")
-        num_burnin = new_device_options.get("num_burnin", 0)
+        mcmc_enabled = new_device_options["mcmc"]
+        kernel_name = new_device_options["kernel_name"]
+        num_burnin = new_device_options["num_burnin"]
         shots = getattr(config, "shots", None) or getattr(self, "shots", None)
 
         _validate_mcmc_options(mcmc_enabled, kernel_name, num_burnin, shots)
