@@ -307,7 +307,7 @@ class LightningQubit(LightningBase):
             return
 
         # Validate kernel name (only if it's not None, which indicates MCMC is disabled)
-        if kernel_name is not None and kernel_name not in ["Local", "NonZeroRandom"]:
+        if kernel_name not in [None, "Local", "NonZeroRandom"]:
             raise NotImplementedError(
                 f"The {kernel_name} is not supported and currently "
                 "only 'Local' and 'NonZeroRandom' kernels are supported."
