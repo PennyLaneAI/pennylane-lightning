@@ -38,7 +38,7 @@ from pennylane.devices.preprocess import (
     validate_observables,
 )
 from pennylane.exceptions import DecompositionUndefinedError, DeviceError
-from pennylane.measurements import MidMeasureMP
+from pennylane.measurements import MidMeasureMP, ShotsLike
 from pennylane.operation import Operator
 from pennylane.ops import Conditional, PauliRot, Prod, SProd, Sum
 from pennylane.transforms.core import TransformProgram
@@ -290,36 +290,6 @@ class LightningQubit(LightningBase):
         self.LightningMeasurements = LightningMeasurements
         self.LightningAdjointJacobian = LightningAdjointJacobian
 
-    def _validate_mcmc_options(self, mcmc_enabled, kernel_name, num_burnin, shots):
-        """Validate MCMC-specific options when MCMC is enabled.
-
-        Args:
-            mcmc_enabled (bool): Whether MCMC is enabled
-            kernel_name (str): The kernel name for MCMC
-            num_burnin (int): Number of burn-in steps
-            shots: The shots configuration (can be int, list, or None)
-
-        Raises:
-            NotImplementedError: If kernel_name is not supported
-            ValueError: If num_burnin >= shots for any shot value
-        """
-        if not mcmc_enabled:
-            return
-
-        # Validate kernel name (only if it's not None, which indicates MCMC is disabled)
-        if kernel_name not in [None, "Local", "NonZeroRandom"]:
-            raise NotImplementedError(
-                f"The {kernel_name} is not supported and currently "
-                "only 'Local' and 'NonZeroRandom' kernels are supported."
-            )
-
-        # Validate shots vs num_burnin if shots are specified
-        if shots and num_burnin > 0:
-            # Filter out None values and check
-            shot_values = [s for s in shots if s is not None]
-            if shot_values and any(num_burnin >= s for s in shot_values):
-                raise ValueError("Shots should be greater than num_burnin.")
-
     def _setup_execution_config(self, config):
         """
         Update the execution config with choices for how the device should be used and the device options.
@@ -356,7 +326,7 @@ class LightningQubit(LightningBase):
         num_burnin = new_device_options.get("num_burnin", 0)
         shots = getattr(config, "shots", None) or getattr(self, "shots", None)
 
-        self._validate_mcmc_options(mcmc_enabled, kernel_name, num_burnin, shots)
+        _validate_mcmc_options(mcmc_enabled, kernel_name, num_burnin, shots)
 
         # After validation, set MCMC options to inactive values if they weren't explicitly provided
         # in the execution config (this is for display/API consistency)
@@ -520,6 +490,36 @@ def _resolve_mcm_method(mcm_config: MCMConfig):
         mcm_config = replace(mcm_config, **mcm_updated_values)
 
     return mcm_config
+
+def _validate_mcmc_options(mcmc_enabled: bool, kernel_name: Optional[str], num_burnin: int, shots: Optional[ShotsLike]) -> None:
+    """Validate MCMC-specific options when MCMC is enabled.
+
+    Args:
+        mcmc_enabled (bool): Whether MCMC is enabled
+        kernel_name (str): The kernel name for MCMC
+        num_burnin (int): Number of burn-in steps
+        shots: The shots configuration (can be int, list, or None)
+
+    Raises:
+        NotImplementedError: If kernel_name is not supported
+        ValueError: If num_burnin >= shots for any shot value
+    """
+    if not mcmc_enabled:
+        return
+
+    # Validate kernel name (only if it's not None, which indicates MCMC is disabled)
+    if kernel_name not in [None, "Local", "NonZeroRandom"]:
+        raise NotImplementedError(
+            f"The {kernel_name} is not supported and currently "
+            "only 'Local' and 'NonZeroRandom' kernels are supported."
+        )
+
+    # Validate shots vs num_burnin if shots are specified
+    if shots and num_burnin > 0:
+        # Filter out None values and check
+        shot_values = [s for s in shots if s is not None]
+        if shot_values and any(num_burnin >= s for s in shot_values):
+            raise ValueError("Shots should be greater than num_burnin.")
 
 
 _supports_operation = LightningQubit.capabilities.supports_operation
