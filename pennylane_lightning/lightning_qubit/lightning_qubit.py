@@ -266,10 +266,14 @@ class LightningQubit(LightningBase):
         self._set_lightning_classes()
 
         # Markov Chain Monte Carlo (MCMC) sampling method specific options
+        self._mcmc = mcmc
+        self._kernel_name = kernel_name
+        self._num_burnin = num_burnin
+
         self.device_kwargs = {
-            "mcmc": _mcmc,
-            "num_burnin": _num_burnin,
-            "kernel_name": _kernel_name,
+            "mcmc": self._mcmc,
+            "num_burnin": self._num_burnin,
+            "kernel_name": self._kernel_name,
         }
 
         self._statevector = None
