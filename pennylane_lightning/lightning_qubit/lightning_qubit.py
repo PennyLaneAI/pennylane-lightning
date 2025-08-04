@@ -50,7 +50,7 @@ from pennylane_lightning.lightning_base.lightning_base import (
 )
 
 try:
-    from pennylane_lightning.lightning_qubit_ops import backend_info
+    from pennylane_lightning.lightning_qubit_nb import backend_info
 
     LQ_CPP_BINARY_AVAILABLE = True
 except ImportError as ex:

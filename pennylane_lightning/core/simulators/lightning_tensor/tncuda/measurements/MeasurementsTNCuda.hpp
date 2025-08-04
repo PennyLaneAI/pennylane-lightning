@@ -66,13 +66,13 @@ extern void normalizeProbs_CUDA(double *probs, const int data_size,
  */
 template <class TensorNetT> class MeasurementsTNCuda {
   private:
+    const TensorNetT &tensor_network_;
+
+  public:
     using PrecisionT = typename TensorNetT::PrecisionT;
     using ComplexT = typename TensorNetT::ComplexT;
     using CFP_t = typename TensorNetT::CFP_t;
 
-    const TensorNetT &tensor_network_;
-
-  public:
     explicit MeasurementsTNCuda(const TensorNetT &tensor_network)
         : tensor_network_(tensor_network) {};
 

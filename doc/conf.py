@@ -63,8 +63,8 @@ class Mock(MagicMock):
         return MagicMock()
 
 
-MOCK_MODULES = ["pennylane_lightning.lightning_qubit_ops",
-                "pennylane_lightning.lightning_qubit_ops.algorithms"]
+MOCK_MODULES = ["pennylane_lightning.lightning_qubit_nb",
+                "pennylane_lightning.lightning_qubit_nb.algorithms"]
 
 mock = Mock()
 for mod_name in MOCK_MODULES:

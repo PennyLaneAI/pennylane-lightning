@@ -401,7 +401,7 @@ class TestHelpers:
         """Test that dynamic_wires_from_circuit sets the state with the correct device init kwargs"""
 
         if device_name == "lightning.kokkos":
-            from pennylane_lightning.lightning_kokkos_ops import InitializationSettings
+            from pennylane_lightning.lightning_kokkos_nb import InitializationSettings
 
             sv_init_kwargs = {"kokkos_args": InitializationSettings().set_num_threads(2)}
         if device_name == "lightning.gpu":

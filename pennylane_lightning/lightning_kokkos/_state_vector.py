@@ -17,7 +17,7 @@ Class implementation for lightning_kokkos state-vector manipulation.
 from warnings import warn
 
 try:
-    from pennylane_lightning.lightning_kokkos_ops import (
+    from pennylane_lightning.lightning_kokkos_nb import (
         InitializationSettings,
         StateVectorC64,
         StateVectorC128,
@@ -26,7 +26,7 @@ try:
     )
 
     try:
-        from pennylane_lightning.lightning_kokkos_ops import (
+        from pennylane_lightning.lightning_kokkos_nb import (
             MPIManagerKokkos,
             StateVectorMPIC64,
             StateVectorMPIC128,
@@ -92,7 +92,6 @@ class LightningKokkosStateVector(LightningBaseStateVector):
         self._mpi = mpi
 
         # Initialize the state vector
-
         sv_init_args = [self.num_wires]
         if mpi:
             self._mpi_manager = MPIManagerKokkos()
@@ -206,7 +205,7 @@ class LightningKokkosStateVector(LightningBaseStateVector):
         # Currently there is not support for sparse matrices in the LightningKokkos device.
         return False
 
-    def _apply_state_vector(self, state, device_wires: Wires):
+    def _apply_state_vector(self, state, device_wires: Wires, **kwargs):
         """Initialize the internal state vector in a specified state.
         Args:
             state (Union[array[complex], scipy.SparseABC]): normalized input state of length ``2**len(wires)`` as a dense array or Scipy sparse array.
@@ -217,9 +216,13 @@ class LightningKokkosStateVector(LightningBaseStateVector):
             state = state.toarray().flatten()
 
         if isinstance(state, self._qubit_state.__class__):
-            state_data = allocate_aligned_array(state.size, np.dtype(self.dtype), True)
+            state_data = allocate_aligned_array(state.size(), np.dtype(self.dtype), True)
             state.DeviceToHost(state_data)
             state = state_data
+
+        # Convert PennyLane tensor to NumPy array if needed
+        if hasattr(state, "numpy"):
+            state = state.numpy()
 
         if len(device_wires) == self._num_wires and Wires(sorted(device_wires)) == device_wires:
             # Initialize the entire device state with the input state

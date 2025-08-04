@@ -17,10 +17,10 @@ Class implementation for lightning_gpu state-vector manipulation.
 from warnings import warn
 
 try:
-    from pennylane_lightning.lightning_gpu_ops import StateVectorC64, StateVectorC128
+    from pennylane_lightning.lightning_gpu_nb import StateVectorC64, StateVectorC128
 
     try:  # Try to import the MPI modules
-        from pennylane_lightning.lightning_gpu_ops import StateVectorMPIC64, StateVectorMPIC128
+        from pennylane_lightning.lightning_gpu_nb import StateVectorMPIC64, StateVectorMPIC128
 
         mpi_error = None
         MPI_SUPPORT = True
@@ -108,7 +108,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
                 self._mpi_handler.num_local_wires,
             )
         else:  # without MPI
-            self._qubit_state = self._state_dtype()(self.num_wires)
+            self._qubit_state = self._state_dtype()(num_wires)
 
     def _state_dtype(self):
         """Binding to Lightning Managed state vector C++ class.
@@ -207,15 +207,15 @@ class LightningGPUStateVector(LightningBaseStateVector):
         # Currently there is not support for sparse matrices in the LightningGPU device.
         return False
 
-    def _apply_state_vector(self, state, device_wires, use_async: bool = False):
-        """Initialize the state vector on GPU with a specified state on host.
-        Note that any use of this method will introduce host-overheads.
+    def _apply_state_vector(self, state, device_wires: Wires, **kwargs):
+        """Initialize the internal state vector in a specified state.
         Args:
-        state (Union[array[complex], scipy.SparseABC]): normalized input state of length ``2**len(wires)`` as a dense array or Scipy sparse array.
-        device_wires (Wires): wires that get initialized in the state
+            state (Union[array[complex], scipy.SparseABC]): normalized input state of length ``2**len(wires)`` as a dense array or Scipy sparse array.
+            device_wires (Wires): wires that get initialized in the state
         use_async(bool): indicates whether to use asynchronous memory copy from host to device or not.
         Note: This function only supports synchronized memory copy from host to device.
         """
+        use_async = kwargs.get("use_async", False)
 
         if isinstance(state, self._qubit_state.__class__):
             raise DeviceError("LightningGPU does not support allocate external state_vector.")

@@ -72,28 +72,28 @@ class QuantumScriptSerializer:
         self.split_obs = split_obs
         if device_name == "lightning.qubit":
             try:
-                import pennylane_lightning.lightning_qubit_ops as lightning_ops
+                import pennylane_lightning.lightning_qubit_nb as lightning_ops
             except ImportError as exception:
                 raise ImportError(
                     f"Pre-compiled binaries for {device_name} are not available."
                 ) from exception
         elif device_name == "lightning.kokkos":
             try:
-                import pennylane_lightning.lightning_kokkos_ops as lightning_ops
+                import pennylane_lightning.lightning_kokkos_nb as lightning_ops
             except ImportError as exception:
                 raise ImportError(
                     f"Pre-compiled binaries for {device_name} are not available."
                 ) from exception
         elif device_name == "lightning.gpu":
             try:
-                import pennylane_lightning.lightning_gpu_ops as lightning_ops
+                import pennylane_lightning.lightning_gpu_nb as lightning_ops
             except ImportError as exception:
                 raise ImportError(
                     f"Pre-compiled binaries for {device_name} are not available."
                 ) from exception
         elif device_name == "lightning.tensor":
             try:
-                import pennylane_lightning.lightning_tensor_ops as lightning_ops
+                import pennylane_lightning.lightning_tensor_nb as lightning_ops
             except ImportError as exception:
                 raise ImportError(
                     f"Pre-compiled binaries for {device_name} are not available."
@@ -541,7 +541,7 @@ class QuantumScriptSerializer:
                 else:
                     if hasattr(self.sv_type, name):
                         params.append(single_op_base.parameters)
-                        mats.append([])
+                        mats.append(np.array([]))
                     else:
                         params.append([])
                         mats.append(matrix(single_op_base))
