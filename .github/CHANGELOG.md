@@ -20,7 +20,7 @@
   [(#1224)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1224)
 
 - Drop testing support for `tensorflow` interface after deprecation in Pennylane. 
-  [(#)]()
+  [(#1225)](github.com/PennyLaneAI/pennylane-lightning/pull/1225)
 
 <h3>Deprecations 👋</h3>
 
