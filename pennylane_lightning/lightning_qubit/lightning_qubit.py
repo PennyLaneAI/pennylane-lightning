@@ -330,9 +330,8 @@ class LightningQubit(LightningBase):
 
         # After validation, set MCMC options to inactive values if they weren't explicitly provided
         # in the execution config (this is for display/API consistency)
-        for option in ("kernel_name", "num_burnin"):
-            if option not in config.device_options:
-                new_device_options[option] = None if option == "kernel_name" else 0
+        new_device_options["kernel_name"] = config.device_options.get("kernel_name", "Local")  
+        new_device_options["num_burnin"] = config.device_options.get("num_burnin", 100)
 
         updated_values["mcm_config"] = _resolve_mcm_method(config.mcm_config)
         return replace(config, **updated_values, device_options=new_device_options)
