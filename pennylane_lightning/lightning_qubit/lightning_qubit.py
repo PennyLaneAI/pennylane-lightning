@@ -314,12 +314,10 @@ class LightningQubit(LightningBase):
             )
 
         # Validate shots vs num_burnin if shots are specified
-        if shots is not None and num_burnin > 0:
-            shots = shots if isinstance(shots, Sequence) else [shots]
-
+        if shots and num_burnin > 0:
             # Filter out None values and check
             shot_values = [s for s in shots if s is not None]
-            if shot_values and any(num_burnin >= s for s in shot_values):
+            if shot_values and any(num_burnin >= s.total_shots for s in shot_values):
                 raise ValueError("Shots should be greater than num_burnin.")
 
     def _setup_execution_config(self, config):
