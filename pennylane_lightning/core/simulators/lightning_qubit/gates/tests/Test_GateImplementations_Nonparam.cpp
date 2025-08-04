@@ -51,11 +51,11 @@ using namespace Pennylane::Util;
         constexpr static bool value = false;                                   \
     };                                                                         \
     template <typename PrecisionT, class GateImplementation>                   \
-    struct Apply##GATE_NAME##                                                  \
-        IsDefined<PrecisionT, GateImplementation,                              \
-                  std::enable_if_t<std::is_pointer_v<                          \
-                      decltype(&GateImplementation::template apply##GATE_NAME< \
-                               PrecisionT>)>>> {                               \
+    struct Apply##GATE_NAME##IsDefined<                                        \
+        PrecisionT, GateImplementation,                                        \
+        std::enable_if_t<std::is_pointer_v<                                    \
+            decltype(&GateImplementation::template apply##GATE_NAME<           \
+                     PrecisionT>)>>> {                                         \
         constexpr static bool value = true;                                    \
     };                                                                         \
     template <typename PrecisionT, typename TypeList>                          \
@@ -834,9 +834,10 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::applyOperation non-param "
                               LightningException);
         }
     }
-    DYNAMIC_SECTION("N-controlled S - " << "controls = {" << control << "} "
-                                        << ", wires = {" << wire << "} - "
-                                        << PrecisionToName<PrecisionT>::value) {
+    DYNAMIC_SECTION("N-controlled S - "
+                    << "controls = {" << control << "} "
+                    << ", wires = {" << wire << "} - "
+                    << PrecisionToName<PrecisionT>::value) {
         if (control != wire) {
             auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
             sv0.updateData(st0);
@@ -855,9 +856,10 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::applyOperation non-param "
         }
     }
 
-    DYNAMIC_SECTION("N-controlled T - " << "controls = {" << control << "} "
-                                        << ", wires = {" << wire << "} - "
-                                        << PrecisionToName<PrecisionT>::value) {
+    DYNAMIC_SECTION("N-controlled T - "
+                    << "controls = {" << control << "} "
+                    << ", wires = {" << wire << "} - "
+                    << PrecisionToName<PrecisionT>::value) {
         if (control != wire) {
             auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
             sv0.updateData(st0);

@@ -74,7 +74,7 @@ template <class TensorNetT> class MeasurementsTNCuda {
 
   public:
     explicit MeasurementsTNCuda(const TensorNetT &tensor_network)
-        : tensor_network_(tensor_network) {};
+        : tensor_network_(tensor_network){};
 
     /**
      * @brief Probabilities for a subset of the full system.

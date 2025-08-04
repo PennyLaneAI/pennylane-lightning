@@ -75,8 +75,8 @@ template <class StateVectorT> class OpsData {
             std::vector<std::vector<bool>> ops_controlled_values)
         : num_par_ops_{0}, ops_name_{std::move(ops_name)},
           ops_params_{ops_params}, ops_wires_{std::move(ops_wires)},
-          ops_inverses_{std::move(ops_inverses)},
-          ops_matrices_{std::move(ops_matrices)},
+          ops_inverses_{std::move(ops_inverses)}, ops_matrices_{std::move(
+                                                      ops_matrices)},
           ops_controlled_wires_{std::move(ops_controlled_wires)},
           ops_controlled_values_{std::move(ops_controlled_values)} {
         for (const auto &p : ops_params) {
@@ -104,8 +104,8 @@ template <class StateVectorT> class OpsData {
             std::vector<std::vector<ComplexT>> ops_matrices)
         : num_par_ops_{0}, ops_name_{std::move(ops_name)},
           ops_params_{ops_params}, ops_wires_{std::move(ops_wires)},
-          ops_inverses_{std::move(ops_inverses)},
-          ops_matrices_{std::move(ops_matrices)},
+          ops_inverses_{std::move(ops_inverses)}, ops_matrices_{std::move(
+                                                      ops_matrices)},
           ops_controlled_wires_(ops_name.size()),
           ops_controlled_values_(ops_name.size()) {
         for (const auto &p : ops_params) {
@@ -129,8 +129,8 @@ template <class StateVectorT> class OpsData {
             std::vector<std::vector<std::size_t>> ops_wires,
             std::vector<bool> ops_inverses)
         : num_par_ops_{0}, ops_name_{ops_name}, ops_params_{ops_params},
-          ops_wires_{std::move(ops_wires)},
-          ops_inverses_{std::move(ops_inverses)},
+          ops_wires_{std::move(ops_wires)}, ops_inverses_{std::move(
+                                                ops_inverses)},
           ops_matrices_(ops_name.size()),
           ops_controlled_wires_(ops_name.size()),
           ops_controlled_values_(ops_name.size()) {

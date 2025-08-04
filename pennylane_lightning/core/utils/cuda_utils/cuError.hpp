@@ -54,17 +54,11 @@ using namespace Pennylane::Util;
 
 #else
 #define PL_CUDA_IS_SUCCESS(err)                                                \
-    {                                                                          \
-        static_cast<void>(err);                                                \
-    }
+    { static_cast<void>(err); }
 #define PL_CUBLAS_IS_SUCCESS(err)                                              \
-    {                                                                          \
-        static_cast<void>(err);                                                \
-    }
+    { static_cast<void>(err); }
 #define PL_CUSPARSE_IS_SUCCESS(err)                                            \
-    {                                                                          \
-        static_cast<void>(err);                                                \
-    }
+    { static_cast<void>(err); }
 #endif
 
 namespace Pennylane::LightningGPU::Util {

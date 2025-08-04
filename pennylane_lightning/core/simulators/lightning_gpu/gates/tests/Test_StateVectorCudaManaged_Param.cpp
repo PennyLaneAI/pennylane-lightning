@@ -1448,7 +1448,8 @@ TEMPLATE_TEST_CASE("LightningGPU::applyPCPhase", "[LightningGPU_Param]", float,
 
     std::vector<cp_t> expected_results(1 << num_qubits, expected_value);
 
-    DYNAMIC_SECTION("PCPhase 0.27 1,2" << " inverse = " << inverse) {
+    DYNAMIC_SECTION("PCPhase 0.27 1,2"
+                    << " inverse = " << inverse) {
         StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
                                                    init_state.size()};
 
@@ -1463,7 +1464,8 @@ TEMPLATE_TEST_CASE("LightningGPU::applyPCPhase", "[LightningGPU_Param]", float,
         CHECK(sv_direct.getDataVector() ==
               Pennylane::Util::approx(expected_results));
     }
-    DYNAMIC_SECTION("PCPhase 0.27 0,2" << " inverse = " << inverse) {
+    DYNAMIC_SECTION("PCPhase 0.27 0,2"
+                    << " inverse = " << inverse) {
         StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
                                                    init_state.size()};
         sv_direct.applyOperation("PCPhase", {0, 2}, inverse, params);

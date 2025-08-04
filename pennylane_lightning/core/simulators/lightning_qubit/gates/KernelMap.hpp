@@ -138,7 +138,7 @@ class PriorityDispatchSet {
     PriorityDispatchSet() = default;
     explicit PriorityDispatchSet(
         const std::vector<DispatchElement> &ordered_vec)
-        : ordered_vec_(ordered_vec) {};
+        : ordered_vec_(ordered_vec){};
     PriorityDispatchSet(const PriorityDispatchSet &other) = default;
     PriorityDispatchSet(PriorityDispatchSet &&other) = default;
     PriorityDispatchSet &operator=(const PriorityDispatchSet &other) = default;

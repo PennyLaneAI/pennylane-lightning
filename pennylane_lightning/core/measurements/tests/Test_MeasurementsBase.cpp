@@ -654,11 +654,13 @@ template <typename TypeList> void testHermitianObsExpvalShot() {
     }
 }
 
+#ifdef SCIPY_OPENBLAS_ENABLED
 TEST_CASE("Expval Shot - HermitianObs ", "[MeasurementsBase][Observables]") {
     if constexpr (BACKEND_FOUND) {
         testHermitianObsExpvalShot<TestStateVectorBackends>();
     }
 }
+#endif // SCIPY_OPENBLAS_ENABLED
 
 template <typename TypeList> void testHermitianObsExpval() {
     if constexpr (!std::is_same_v<TypeList, void>) {
@@ -849,11 +851,13 @@ template <typename TypeList> void testTensorProdObsExpvalShot() {
     }
 }
 
+#ifdef SCIPY_OPENBLAS_ENABLED
 TEST_CASE("Expval Shot- TensorProdObs", "[MeasurementsBase][Observables]") {
     if constexpr (BACKEND_FOUND) {
         testTensorProdObsExpvalShot<TestStateVectorBackends>();
     }
 }
+#endif // SCIPY_OPENBLAS_ENABLED
 
 template <typename TypeList> void testNamedObsVar() {
     if constexpr (!std::is_same_v<TypeList, void>) {
@@ -1073,11 +1077,13 @@ template <typename TypeList> void testHermitianObsShotVar() {
     }
 }
 
+#ifdef SCIPY_OPENBLAS_ENABLED
 TEST_CASE("Var - HermitianObs Shot", "[MeasurementsBase][Observables]") {
     if constexpr (BACKEND_FOUND) {
         testHermitianObsShotVar<TestStateVectorBackends>();
     }
 }
+#endif // SCIPY_OPENBLAS_ENABLED
 
 template <typename TypeList> void testTensorProdObsVarShot() {
     if constexpr (!std::is_same_v<TypeList, void>) {
@@ -1221,11 +1227,13 @@ template <typename TypeList> void testTensorProdObsVarShot() {
     }
 }
 
+#ifdef SCIPY_OPENBLAS_ENABLED
 TEST_CASE("Var Shot- TensorProdObs", "[MeasurementsBase][Observables]") {
     if constexpr (BACKEND_FOUND) {
         testTensorProdObsVarShot<TestStateVectorBackends>();
     }
 }
+#endif // SCIPY_OPENBLAS_ENABLED
 
 template <typename TypeList>
 void testSamples(const std::optional<std::size_t> &seed = std::nullopt) {
@@ -1569,11 +1577,13 @@ template <typename TypeList> void testHamiltonianObsExpvalShot() {
     }
 }
 
+#ifdef SCIPY_OPENBLAS_ENABLED
 TEST_CASE("Expval Shot - HamiltonianObs ", "[MeasurementsBase][Observables]") {
     if constexpr (BACKEND_FOUND) {
         testHamiltonianObsExpvalShot<TestStateVectorBackends>();
     }
 }
+#endif // SCIPY_OPENBLAS_ENABLED
 
 template <typename TypeList> void testHamiltonianObsVarShot() {
     if constexpr (!std::is_same_v<TypeList, void>) {
@@ -1656,11 +1666,13 @@ template <typename TypeList> void testHamiltonianObsVarShot() {
     }
 }
 
+#ifdef SCIPY_OPENBLAS_ENABLED
 TEST_CASE("Var Shot - HamiltonianObs ", "[MeasurementsBase][Observables]") {
     if constexpr (BACKEND_FOUND) {
         testHamiltonianObsVarShot<TestStateVectorBackends>();
     }
 }
+#endif // SCIPY_OPENBLAS_ENABLED
 
 template <typename TypeList> void testSparseHObsMeasureShot() {
     if constexpr (!std::is_same_v<TypeList, void>) {
