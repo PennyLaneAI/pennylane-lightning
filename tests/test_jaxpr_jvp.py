@@ -193,11 +193,14 @@ class TestErrors:
         args = (0.5,)
         jaxpr = jax.make_jaxpr(circuit)(*args)
 
-        with pytest.raises(
-            NotImplementedError,
-            match="LightningBase does not support finite shots for ``jaxpr_jvp``",
+        with pytest.warns(
+            qml.exceptions.PennyLaneDeprecationWarning, match="shots on device is deprecated"
         ):
-            qml.device(device_name, wires=1, shots=100).jaxpr_jvp(jaxpr.jaxpr, args, (0.5,))
+            with pytest.raises(
+                NotImplementedError,
+                match="LightningBase does not support finite shots for ``jaxpr_jvp``",
+            ):
+                qml.device(device_name, wires=1, shots=100).jaxpr_jvp(jaxpr.jaxpr, args, (0.5,))
 
 
 class TestCorrectResults:

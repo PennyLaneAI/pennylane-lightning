@@ -58,9 +58,7 @@ class TestMCMCSample:
         """Tests if the samples returned by sample have
         the correct values
         """
-        dev = qml.device(
-            device_name, wires=2, mcmc=True, kernel_name=kernel, num_burnin=100
-        )
+        dev = qml.device(device_name, wires=2, mcmc=True, kernel_name=kernel, num_burnin=100)
         ops = [qml.RX(1.5708, wires=[0])]
         tape = qml.tape.QuantumScript(ops, [qml.sample(op=qml.PauliZ(0))], shots=1000)
         s1 = dev.execute(tape)
@@ -75,8 +73,7 @@ class TestMCMCSample:
         the correct values
         """
         with pytest.warns(
-            qml.exceptions.PennyLaneDeprecationWarning,
-            match="shots on device is deprecated"
+            qml.exceptions.PennyLaneDeprecationWarning, match="shots on device is deprecated"
         ):
             with pytest.raises(
                 NotImplementedError,
@@ -93,8 +90,7 @@ class TestMCMCSample:
 
     def test_wrong_num_burnin(self):
         with pytest.warns(
-            qml.exceptions.PennyLaneDeprecationWarning,
-            match="shots on device is deprecated"
+            qml.exceptions.PennyLaneDeprecationWarning, match="shots on device is deprecated"
         ):
             with pytest.raises(ValueError, match="Shots should be greater than num_burnin."):
                 dev = qml.device(device_name, wires=2, shots=1000, mcmc=True, num_burnin=1000)
