@@ -34,7 +34,7 @@ class TestMCMCSample:
 
     @pytest.fixture(params=[np.complex64, np.complex128])
     def dev(self, request):
-        return qml.device(device_name, wires=2, shots=1000, mcmc=True, c_dtype=request.param)
+        return qml.device(device_name, wires=2, mcmc=True, c_dtype=request.param)
 
     test_data_no_parameters = [
         (100, [0], qml.PauliZ(wires=[0]), 100),
@@ -59,7 +59,7 @@ class TestMCMCSample:
         the correct values
         """
         dev = qml.device(
-            device_name, wires=2, shots=1000, mcmc=True, kernel_name=kernel, num_burnin=100
+            device_name, wires=2, mcmc=True, kernel_name=kernel, num_burnin=100
         )
         ops = [qml.RX(1.5708, wires=[0])]
         tape = qml.tape.QuantumScript(ops, [qml.sample(op=qml.PauliZ(0))], shots=1000)
@@ -74,19 +74,27 @@ class TestMCMCSample:
         """Tests if the samples returned by sample have
         the correct values
         """
-        with pytest.raises(
-            NotImplementedError,
-            match=f"The {kernel} is not supported and currently only 'Local' and 'NonZeroRandom' kernels are supported.",
+        with pytest.warns(
+            qml.exceptions.PennyLaneDeprecationWarning,
+            match="shots on device is deprecated"
         ):
-            dev = qml.device(
-                device_name,
-                wires=2,
-                shots=1000,
-                mcmc=True,
-                kernel_name=kernel,
-                num_burnin=100,
-            )
+            with pytest.raises(
+                NotImplementedError,
+                match=f"The {kernel} is not supported and currently only 'Local' and 'NonZeroRandom' kernels are supported.",
+            ):
+                dev = qml.device(
+                    device_name,
+                    wires=2,
+                    shots=1000,
+                    mcmc=True,
+                    kernel_name=kernel,
+                    num_burnin=100,
+                )
 
     def test_wrong_num_burnin(self):
-        with pytest.raises(ValueError, match="Shots should be greater than num_burnin."):
-            dev = qml.device(device_name, wires=2, shots=1000, mcmc=True, num_burnin=1000)
+        with pytest.warns(
+            qml.exceptions.PennyLaneDeprecationWarning,
+            match="shots on device is deprecated"
+        ):
+            with pytest.raises(ValueError, match="Shots should be greater than num_burnin."):
+                dev = qml.device(device_name, wires=2, shots=1000, mcmc=True, num_burnin=1000)
