@@ -144,13 +144,14 @@ class applyNC1Functor<PrecisionT, FuncT, false> {
                     KokkosComplexVector arr_, std::size_t num_qubits,
                     const std::vector<std::size_t> &wires, FuncT core_function_)
         : arr(arr_), core_function(core_function_),
-          rev_wire(num_qubits - wires[0] - 1),
+          rev_wire(num_qubits ? num_qubits - wires[0] - 1 : 0),
           rev_wire_shift((static_cast<std::size_t>(1U) << rev_wire)),
           wire_parity(fillTrailingOnes(rev_wire)),
           wire_parity_inv(fillLeadingOnes(rev_wire + 1)) {
-        Kokkos::parallel_for(Kokkos::RangePolicy<ExecutionSpace>(
-                                 0, Pennylane::Util::exp2(num_qubits - 1)),
-                             *this);
+        Kokkos::parallel_for(
+            Kokkos::RangePolicy<ExecutionSpace>(
+                0, num_qubits ? Pennylane::Util::exp2(num_qubits - 1) : 1),
+            *this);
     }
     KOKKOS_FUNCTION void operator()(std::size_t k) const {
         std::size_t i0 = ((k << 1U) & wire_parity_inv) | (wire_parity & k);
@@ -615,12 +616,7 @@ void applyNCGlobalPhase(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                         const std::vector<PrecisionT> &params = {}) {
     const Kokkos::complex<PrecisionT> phase = Kokkos::exp(
         Kokkos::complex<PrecisionT>{0, (inverse) ? params[0] : -params[0]});
-    auto core_function =
-        KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
-                      std::size_t i0, std::size_t i1) {
-        arr(i1) *= phase;
-        arr(i0) *= phase;
-    };
+
     std::size_t target{0U};
     if (!controlled_wires.empty()) {
         for (std::size_t i = 0; i < num_qubits; i++) {
@@ -631,13 +627,38 @@ void applyNCGlobalPhase(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
             }
         }
     }
-    if (controlled_wires.empty()) {
-        applyNC1Functor<PrecisionT, decltype(core_function), false>(
-            ExecutionSpace{}, arr_, num_qubits, {target}, core_function);
+
+    if (num_qubits) [[likely]] {
+        auto core_function =
+            KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
+                          std::size_t i0, std::size_t i1) {
+            arr(i1) *= phase;
+            arr(i0) *= phase;
+        };
+
+        if (controlled_wires.empty()) {
+            applyNC1Functor<PrecisionT, decltype(core_function), false>(
+                ExecutionSpace{}, arr_, num_qubits, {target}, core_function);
+        } else {
+            applyNC1Functor<PrecisionT, decltype(core_function), true>(
+                ExecutionSpace{}, arr_, num_qubits, controlled_wires,
+                controlled_values, {target}, core_function);
+        }
     } else {
-        applyNC1Functor<PrecisionT, decltype(core_function), true>(
-            ExecutionSpace{}, arr_, num_qubits, controlled_wires,
-            controlled_values, {target}, core_function);
+        auto core_function =
+            KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
+                          std::size_t i0, [[maybe_unused]] std::size_t i1) {
+            arr(i0) *= phase;
+        };
+
+        if (controlled_wires.empty()) {
+            applyNC1Functor<PrecisionT, decltype(core_function), false>(
+                ExecutionSpace{}, arr_, num_qubits, {target}, core_function);
+        } else {
+            applyNC1Functor<PrecisionT, decltype(core_function), true>(
+                ExecutionSpace{}, arr_, num_qubits, controlled_wires,
+                controlled_values, {target}, core_function);
+        }
     }
 }
 
