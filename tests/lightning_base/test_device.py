@@ -582,6 +582,58 @@ class TestExecution:
                     reason=f"The device {device_name} does not support mcmc",
                 ),
             ),
+            pytest.param(
+                ExecutionConfig(
+                    device_options={
+                        "c_dtype": np.complex64,
+                        "mcmc": True,
+                        "kernel_name": "Local",
+                        "num_burnin": 100,
+                    }
+                ),
+                ExecutionConfig(
+                    grad_on_execution=None,
+                    use_device_gradient=False,
+                    use_device_jacobian_product=False,
+                    device_options={
+                        "c_dtype": np.complex64,
+                        "batch_obs": False,
+                        "mcmc": True,
+                        "kernel_name": "Local",
+                        "num_burnin": 100,
+                    },
+                ),
+                marks=pytest.mark.skipif(
+                    device_name != "lightning.qubit",
+                    reason=f"The device {device_name} does not support mcmc",
+                ),
+            ),
+            pytest.param(
+                ExecutionConfig(
+                    device_options={
+                        "c_dtype": np.complex64,
+                        "mcmc": True,
+                        "kernel_name": "NonZeroRandom",
+                        "num_burnin": 100,
+                    }
+                ),
+                ExecutionConfig(
+                    grad_on_execution=None,
+                    use_device_gradient=False,
+                    use_device_jacobian_product=False,
+                    device_options={
+                        "c_dtype": np.complex64,
+                        "batch_obs": False,
+                        "mcmc": True,
+                        "kernel_name": "NonZeroRandom",
+                        "num_burnin": 100,
+                    },
+                ),
+                marks=pytest.mark.skipif(
+                    device_name != "lightning.qubit",
+                    reason=f"The device {device_name} does not support mcmc",
+                ),
+            ),
             (
                 ExecutionConfig(
                     gradient_method="backprop",
