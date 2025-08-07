@@ -114,7 +114,7 @@ class TestMCMCSample:
             dev.preprocess()
 
     @pytest.mark.parametrize(["shots", "num_burnin"], [(10, 0), (1000, -1)])
-    def test_wrong_num_burnin(self, shots, num_burnin):
+    def test_unacceptable_num_burnin(self, shots, num_burnin):
         # Create device (should not fail at initialization)
         dev = qml.device(
             device_name,
