@@ -1504,6 +1504,7 @@ class TestVJP:
         ],
     )
     @pytest.mark.parametrize("execute_and_derivatives", [True, False])
+    @pytest.mark.parametrize("use_default_config", [True, False])
     def test_vjp_single_expval(
         self, theta, phi, dev, obs, execute_and_derivatives, batch_obs, use_default_config
     ):
