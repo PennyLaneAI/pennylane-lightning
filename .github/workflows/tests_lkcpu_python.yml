@@ -31,8 +31,6 @@ on:
       - master
 
 env:
-  TF_VERSION: 2.19.0
-  KERAS_VERSION: 3.9.0
   TORCH_VERSION: 2.5.1
   COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing -p no:warnings --tb=native"
   GCC_VERSION: 11
