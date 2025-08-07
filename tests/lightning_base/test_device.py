@@ -31,7 +31,6 @@ from conftest import (
     LightningStateVector,
     device_name,
 )
-
 from pennylane.devices import DefaultQubit, ExecutionConfig, MCMConfig
 from pennylane.devices.default_qubit import adjoint_ops
 from pennylane.exceptions import DeviceError, QuantumFunctionError
@@ -202,9 +201,7 @@ class TestHelpers:
             name=name,
             skip_initial_state_prep=False,
         )
-        expected_program.add_transform(
-            validate_observables, accepted_observables, name=name
-        )
+        expected_program.add_transform(validate_observables, accepted_observables, name=name)
         expected_program.add_transform(
             validate_measurements,
             analytic_measurements=adjoint_measurements,
@@ -227,9 +224,7 @@ class TestHelpers:
             (QuantumScript([], [qml.state()]), False),
             (QuantumScript([qml.RX(1.23, 0)], [qml.expval(qml.Z(0))]), True),
             (
-                QuantumScript(
-                    [qml.CRot(1.23, 4.56, 7.89, [0, 1])], [qml.expval(qml.Z(0))]
-                ),
+                QuantumScript([qml.CRot(1.23, 4.56, 7.89, [0, 1])], [qml.expval(qml.Z(0))]),
                 True,
             ),
             (QuantumScript([qml.Rot(1.23, 4.56, 7.89, 1)], [qml.var(qml.X(0))]), False),
@@ -296,9 +291,7 @@ class TestHelpers:
             ),
         ],
     )
-    def test_dynamic_wires_from_circuit(
-        self, circuit_in, n_wires, expected_circuit_out
-    ):
+    def test_dynamic_wires_from_circuit(self, circuit_in, n_wires, expected_circuit_out):
         """Test that dynamic_wires_from_circuit returns correct circuit and creates state-vectors properly"""
         device = LightningDevice(wires=None)
 
@@ -344,9 +337,7 @@ class TestHelpers:
             ),
         ],
     )
-    def test_dynamic_wires_from_circuit_fixed_wires(
-        self, circuit_in, n_wires, wires_list
-    ):
+    def test_dynamic_wires_from_circuit_fixed_wires(self, circuit_in, n_wires, wires_list):
         """Test that dynamic_wires_from_circuit does not alter the circuit if wires are fixed and state-vector is created properly"""
         device = LightningDevice(wires=n_wires)
 
@@ -423,17 +414,13 @@ class TestHelpers:
         if device_name == "lightning.kokkos":
             from pennylane_lightning.lightning_kokkos_ops import InitializationSettings
 
-            sv_init_kwargs = {
-                "kokkos_args": InitializationSettings().set_num_threads(2)
-            }
+            sv_init_kwargs = {"kokkos_args": InitializationSettings().set_num_threads(2)}
         if device_name == "lightning.gpu":
             sv_init_kwargs = {"use_async": True}
 
         device = LightningDevice(wires=None, shots=shots, **sv_init_kwargs)
 
-        circuit = QuantumScript(
-            [qml.RX(0.1, 0), qml.RX(0.1, 2)], [qml.expval(qml.Z(1))]
-        )
+        circuit = QuantumScript([qml.RX(0.1, 0), qml.RX(0.1, 2)], [qml.expval(qml.Z(1))])
         circuit_num_wires = 3
 
         device.dynamic_wires_from_circuit(circuit)
@@ -454,14 +441,10 @@ class TestHelpers:
         else:
             bad_init_kwargs = {"XXX": True}
 
-        circuit = QuantumScript(
-            [qml.RX(0.1, 0), qml.RX(0.1, 2)], [qml.expval(qml.Z(1))]
-        )
+        circuit = QuantumScript([qml.RX(0.1, 0), qml.RX(0.1, 2)], [qml.expval(qml.Z(1))])
 
         if device_name == "lightning.kokkos":
-            with pytest.raises(
-                TypeError, match="Argument kokkos_args must be of type "
-            ):
+            with pytest.raises(TypeError, match="Argument kokkos_args must be of type "):
                 device = LightningDevice(wires=n_wires, shots=shots, **bad_init_kwargs)
                 device.dynamic_wires_from_circuit(circuit)
         else:
@@ -695,9 +678,7 @@ class TestExecution:
         assert program[1].transform == qml.transforms.decompose._transform
 
         # mcm_method="single-branch-statistics"
-        config = ExecutionConfig(
-            mcm_config=MCMConfig(mcm_method="single-branch-statistics")
-        )
+        config = ExecutionConfig(mcm_config=MCMConfig(mcm_method="single-branch-statistics"))
         program, _ = dev.preprocess(execution_config=config)
         assert len(program) == 1
         # pylint: disable=protected-access
@@ -714,15 +695,11 @@ class TestExecution:
 
         expected_program = qml.transforms.core.TransformProgram()
         expected_program.add_transform(validate_measurements, name=device.name)
-        expected_program.add_transform(
-            validate_observables, accepted_observables, name=device.name
-        )
+        expected_program.add_transform(validate_observables, accepted_observables, name=device.name)
         expected_program.add_transform(
             mid_circuit_measurements, device=device, mcm_config=MCMConfig()
         )
-        expected_program.add_transform(
-            validate_device_wires, device.wires, name=device.name
-        )
+        expected_program.add_transform(validate_device_wires, device.wires, name=device.name)
         expected_program.add_transform(
             decompose,
             stopping_condition=stopping_condition,
@@ -743,9 +720,7 @@ class TestExecution:
                 name=name,
                 skip_initial_state_prep=False,
             )
-            expected_program.add_transform(
-                validate_observables, accepted_observables, name=name
-            )
+            expected_program.add_transform(validate_observables, accepted_observables, name=name)
             expected_program.add_transform(
                 validate_measurements,
                 analytic_measurements=adjoint_measurements,
@@ -764,9 +739,7 @@ class TestExecution:
             [
                 (qml.StatePrep([1 / np.sqrt(2), 1 / np.sqrt(2)], wires=0), False),
                 (
-                    qml.StatePrep(
-                        qml.numpy.array([1 / np.sqrt(2), 1 / np.sqrt(2)]), wires=0
-                    ),
+                    qml.StatePrep(qml.numpy.array([1 / np.sqrt(2), 1 / np.sqrt(2)]), wires=0),
                     True,
                 ),
                 (qml.StatePrep(np.array([1, 0]), wires=0), False),
@@ -781,9 +754,7 @@ class TestExecution:
         if device_name == "lightning.tensor" and is_trainable:
             pytest.skip("StatePrep trainable not supported in lightning.tensor")
 
-        tape = qml.tape.QuantumScript(
-            [op, qml.RX(1.23, wires=0)], [qml.expval(qml.PauliZ(0))]
-        )
+        tape = qml.tape.QuantumScript([op, qml.RX(1.23, wires=0)], [qml.expval(qml.PauliZ(0))])
         device = LightningDevice(wires=3)
 
         if is_trainable:
@@ -796,9 +767,7 @@ class TestExecution:
         config = ExecutionConfig(gradient_method="best" if is_trainable else None)
         program, _ = device.preprocess(config)
         [new_tape], _ = program([tape])
-        expected_tape = qml.tape.QuantumScript(
-            [*decomp, qml.RX(1.23, wires=0)], tape.measurements
-        )
+        expected_tape = qml.tape.QuantumScript([*decomp, qml.RX(1.23, wires=0)], tape.measurements)
         assert qml.equal(new_tape, expected_tape)
 
     @pytest.mark.parametrize(
@@ -822,11 +791,7 @@ class TestExecution:
         )
         device = LightningDevice(wires=3)
 
-        op = (
-            op.decomposition()[0]
-            if decomp_depth and len(op.decomposition()) == 1
-            else op
-        )
+        op = op.decomposition()[0] if decomp_depth and len(op.decomposition()) == 1 else op
         decomp = op.decomposition()
 
         program, _ = device.preprocess()
@@ -852,9 +817,9 @@ class TestExecution:
                 qml.expval(qml.prod(qml.Z(0), qml.X(1))),
                 qml.expval(
                     qml.SparseHamiltonian(
-                        qml.Hamiltonian(
-                            [-1.0, 1.5], [qml.Z(1), qml.X(1)]
-                        ).sparse_matrix(wire_order=[0, 1, 2]),
+                        qml.Hamiltonian([-1.0, 1.5], [qml.Z(1), qml.X(1)]).sparse_matrix(
+                            wire_order=[0, 1, 2]
+                        ),
                         wires=[0, 1, 2],
                     )
                 ),
@@ -865,12 +830,8 @@ class TestExecution:
     def test_execute_single_measurement(self, theta, phi, mp, dev):
         """Test that execute returns the correct results with a single measurement."""
         if device_name == "lightning.tensor":
-            if isinstance(mp.obs, qml.SparseHamiltonian) or isinstance(
-                mp.obs, qml.Projector
-            ):
-                pytest.skip(
-                    "SparseHamiltonian/Projector obs not supported in lightning.tensor"
-                )
+            if isinstance(mp.obs, qml.SparseHamiltonian) or isinstance(mp.obs, qml.Projector):
+                pytest.skip("SparseHamiltonian/Projector obs not supported in lightning.tensor")
 
         if isinstance(mp.obs, qml.SparseHamiltonian) and dev.c_dtype == np.complex64:
             pytest.skip(
@@ -909,9 +870,7 @@ class TestExecution:
                 qml.probs(op=qml.X(2)),
                 qml.expval(qml.Y(2)),
                 qml.var(qml.Y(2)),
-                qml.expval(
-                    qml.Hamiltonian([-0.5, 1.5, -1.1], [qml.Y(1), qml.X(1), qml.Z(0)])
-                ),
+                qml.expval(qml.Hamiltonian([-0.5, 1.5, -1.1], [qml.Y(1), qml.X(1), qml.Z(0)])),
             ]
         ),
     )
@@ -1050,9 +1009,7 @@ class TestDerivatives:
         device, tape, execute_and_derivatives=False, obs_batch=False, use_default_config=False
     ):
         program, config = device.preprocess(
-            ExecutionConfig(
-                gradient_method="adjoint", device_options={"batch_obs": obs_batch}
-            )
+            ExecutionConfig(gradient_method="adjoint", device_options={"batch_obs": obs_batch})
         )
         tapes, transf_fn = program([tape])
 
@@ -1236,9 +1193,7 @@ class TestDerivatives:
         assert np.allclose(jac, expected_jac, atol=tol, rtol=0)
 
     @pytest.mark.parametrize("execute_and_derivatives", [True, False])
-    def test_derivatives_no_trainable_params(
-        self, dev, execute_and_derivatives, batch_obs
-    ):
+    def test_derivatives_no_trainable_params(self, dev, execute_and_derivatives, batch_obs):
         """Test that the derivatives are empty with there are no trainable parameters."""
         qs = QuantumScript(
             [qml.Hadamard(0), qml.CNOT([0, 1]), qml.S(1), qml.T(1)],
@@ -1250,9 +1205,7 @@ class TestDerivatives:
             execute_and_derivatives=execute_and_derivatives,
             obs_batch=batch_obs,
         )
-        expected, _ = self.calculate_reference(
-            qs, execute_and_derivatives=execute_and_derivatives
-        )
+        expected, _ = self.calculate_reference(qs, execute_and_derivatives=execute_and_derivatives)
 
         tol = 1e-5 if dev.c_dtype == np.complex64 else 1e-7
         assert np.allclose(res, expected, atol=tol, rtol=0)
@@ -1293,9 +1246,7 @@ class TestDerivatives:
             [qml.expval(qml.PauliZ(1))],
         )
 
-        config = ExecutionConfig(
-            gradient_method="adjoint", device_options={"batch_obs": batch_obs}
-        )
+        config = ExecutionConfig(gradient_method="adjoint", device_options={"batch_obs": batch_obs})
         program, new_config = dev.preprocess(config)
         tapes, fn = program([qs])
         tapes[0].trainable_params = trainable_params
@@ -1314,9 +1265,7 @@ class TestDerivatives:
         tapes, fn = program([qs])
         tapes[0].trainable_params = trainable_params
         if execute_and_derivatives:
-            expected, expected_jac = dev_ref.execute_and_compute_derivatives(
-                tapes, new_config
-            )
+            expected, expected_jac = dev_ref.execute_and_compute_derivatives(tapes, new_config)
             expected = fn(expected)
         else:
             expected, expected_jac = (
@@ -1331,9 +1280,7 @@ class TestDerivatives:
     def test_state_jacobian_not_supported(self, dev, batch_obs):
         """Test that an error is raised if derivatives are requested for state measurement"""
         qs = QuantumScript([qml.RX(1.23, 0)], [qml.state()], trainable_params=[0])
-        config = ExecutionConfig(
-            gradient_method="adjoint", device_options={"batch_obs": batch_obs}
-        )
+        config = ExecutionConfig(gradient_method="adjoint", device_options={"batch_obs": batch_obs})
 
         with pytest.raises(
             QuantumFunctionError,
@@ -1352,9 +1299,7 @@ class TestDerivatives:
         qs = QuantumScript(
             [qml.RX(1.23, 0)], [qml.expval(qml.Z(0))], shots=10, trainable_params=[0]
         )
-        config = ExecutionConfig(
-            gradient_method="adjoint", device_options={"batch_obs": batch_obs}
-        )
+        config = ExecutionConfig(gradient_method="adjoint", device_options={"batch_obs": batch_obs})
         program, _ = dev.preprocess(config)
 
         with pytest.raises(DeviceError, match="Finite shots are not supported"):
@@ -1363,9 +1308,7 @@ class TestDerivatives:
     @pytest.mark.parametrize("device_wires", [None, 4])
     @pytest.mark.parametrize("phi", PHI)
     @pytest.mark.parametrize("execute_and_derivatives", [True, False])
-    def test_derivatives_tape_batch(
-        self, device_wires, phi, execute_and_derivatives, batch_obs
-    ):
+    def test_derivatives_tape_batch(self, device_wires, phi, execute_and_derivatives, batch_obs):
         """Test that results are correct when we execute and compute derivatives for a batch of
         tapes with and without dynamic wires."""
 
@@ -1387,9 +1330,7 @@ class TestDerivatives:
         )
 
         ops = [qml.Hadamard(0), qml.IsingXX(phi, wires=(0, 1))]
-        qs2 = QuantumScript(
-            ops, [qml.expval(qml.prod(qml.Z(0), qml.Z(1)))], trainable_params=[0]
-        )
+        qs2 = QuantumScript(ops, [qml.expval(qml.prod(qml.Z(0), qml.Z(1)))], trainable_params=[0])
 
         if execute_and_derivatives:
             results, jacs = device.execute_and_compute_derivatives((qs1, qs2))
@@ -1485,9 +1426,7 @@ class TestVJP:
         device, tape, dy, execute_and_derivatives=False, obs_batch=False, use_default_config=False
     ):
         program, config = device.preprocess(
-            ExecutionConfig(
-                gradient_method="adjoint", device_options={"batch_obs": obs_batch}
-            )
+            ExecutionConfig(gradient_method="adjoint", device_options={"batch_obs": obs_batch})
         )
         tapes, transf_fn = program([tape])
         dy = [dy]
@@ -1735,9 +1674,7 @@ class TestVJP:
         )
         dy = [1.0]
 
-        config = ExecutionConfig(
-            gradient_method="adjoint", device_options={"batch_obs": batch_obs}
-        )
+        config = ExecutionConfig(gradient_method="adjoint", device_options={"batch_obs": batch_obs})
         program, new_config = dev.preprocess(config)
         tapes, fn = program([qs])
         tapes[0].trainable_params = trainable_params
@@ -1756,9 +1693,7 @@ class TestVJP:
         tapes, fn = program([qs])
         tapes[0].trainable_params = trainable_params
         if execute_and_derivatives:
-            expected, expected_jac = dev_ref.execute_and_compute_vjp(
-                tapes, dy, new_config
-            )
+            expected, expected_jac = dev_ref.execute_and_compute_vjp(tapes, dy, new_config)
             expected = fn(expected)
         else:
             expected, expected_jac = (
@@ -1773,9 +1708,7 @@ class TestVJP:
     def test_state_vjp_not_supported(self, dev, batch_obs):
         """Test that an error is raised if VJP are requested for state measurement"""
         qs = QuantumScript([qml.RX(1.23, 0)], [qml.state()], trainable_params=[0])
-        config = ExecutionConfig(
-            gradient_method="adjoint", device_options={"batch_obs": batch_obs}
-        )
+        config = ExecutionConfig(gradient_method="adjoint", device_options={"batch_obs": batch_obs})
         dy = 1.0
 
         with pytest.raises(
@@ -1793,9 +1726,7 @@ class TestVJP:
     @pytest.mark.parametrize("device_wires", [None, 4])
     @pytest.mark.parametrize("phi", PHI)
     @pytest.mark.parametrize("execute_and_derivatives", [True, False])
-    def test_vjp_tape_batch(
-        self, device_wires, phi, execute_and_derivatives, batch_obs
-    ):
+    def test_vjp_tape_batch(self, device_wires, phi, execute_and_derivatives, batch_obs):
         """Test that results are correct when we execute and compute vjp for a batch of
         tapes with and without dynamic wires."""
 
@@ -1820,9 +1751,7 @@ class TestVJP:
         )
 
         ops = [qml.Hadamard(0), qml.IsingXX(phi, wires=(0, 1))]
-        qs2 = QuantumScript(
-            ops, [qml.expval(qml.prod(qml.Z(0), qml.Z(1)))], trainable_params=[0]
-        )
+        qs2 = QuantumScript(ops, [qml.expval(qml.prod(qml.Z(0), qml.Z(1)))], trainable_params=[0])
         dy = [(1.5, 2.5), 1.0]
 
         if execute_and_derivatives:
@@ -1859,9 +1788,7 @@ class TestVJP:
     @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
     @pytest.mark.parametrize("execute_and_derivatives", [True, False])
     @pytest.mark.parametrize("wires", (["a", "b", -3], [0, "target", "other_target"]))
-    def test_vjp_custom_wires(
-        self, theta, phi, dev, wires, execute_and_derivatives, batch_obs
-    ):
+    def test_vjp_custom_wires(self, theta, phi, dev, wires, execute_and_derivatives, batch_obs):
         """Test that the VJP is correct when set a custom wires"""
 
         device = LightningDevice(wires=wires)

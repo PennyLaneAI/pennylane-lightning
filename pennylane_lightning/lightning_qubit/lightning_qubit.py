@@ -100,9 +100,7 @@ def stopping_condition(op: Operator) -> bool:
 def stopping_condition_shots(op: Operator) -> bool:
     """A function that determines whether or not an operation is supported by ``lightning.qubit``
     with finite shots."""
-    return stopping_condition(op) or isinstance(
-        op, (MidMeasureMP, qml.ops.op_math.Conditional)
-    )
+    return stopping_condition(op) or isinstance(op, (MidMeasureMP, qml.ops.op_math.Conditional))
 
 
 def accepted_observables(obs: Operator) -> bool:
@@ -250,9 +248,7 @@ class LightningQubit(LightningBase):
         c_dtype: Union[np.complex128, np.complex64] = np.complex128,
         shots: Union[int, List] = None,
         batch_obs: bool = False,
-        seed: Union[
-            str, None, int, ArrayLike, SeedSequence, BitGenerator, Generator
-        ] = "global",
+        seed: Union[str, None, int, ArrayLike, SeedSequence, BitGenerator, Generator] = "global",
         # Markov Chain Monte Carlo (MCMC) sampling method arguments
         mcmc: bool = False,
         kernel_name: str = None,
@@ -375,15 +371,11 @@ class LightningQubit(LightningBase):
             if exec_config.mcm_config.mcm_method == "deferred":
                 program.add_transform(qml.defer_measurements, num_wires=len(self.wires))
             # Using stopping_condition_shots because we don't want to decompose Conditionals or MCMs
-            program.add_transform(
-                qml.transforms.decompose, gate_set=stopping_condition_shots
-            )
+            program.add_transform(qml.transforms.decompose, gate_set=stopping_condition_shots)
             return program, exec_config
 
         program.add_transform(validate_measurements, name=self.name)
-        program.add_transform(
-            validate_observables, accepted_observables, name=self.name
-        )
+        program.add_transform(validate_observables, accepted_observables, name=self.name)
         program.add_transform(
             mid_circuit_measurements, device=self, mcm_config=exec_config.mcm_config
         )
@@ -474,9 +466,7 @@ class LightningQubit(LightningBase):
         the location to the shared object with the C/C++ device implementation.
         """
 
-        return LightningBase.get_c_interface_impl(
-            "LightningSimulator", "lightning_qubit"
-        )
+        return LightningBase.get_c_interface_impl("LightningSimulator", "lightning_qubit")
 
 
 def _resolve_mcm_method(mcm_config: MCMConfig):
@@ -489,9 +479,7 @@ def _resolve_mcm_method(mcm_config: MCMConfig):
     )
 
     if (mcm_method := mcm_config.mcm_method) not in mcm_supported_methods:
-        raise DeviceError(
-            f"mcm_method='{mcm_method}' is not supported with lightning.qubit"
-        )
+        raise DeviceError(f"mcm_method='{mcm_method}' is not supported with lightning.qubit")
 
     if mcm_config.mcm_method == "device":
         mcm_config = replace(mcm_config, mcm_method="tree-traversal")
@@ -500,10 +488,7 @@ def _resolve_mcm_method(mcm_config: MCMConfig):
 
         mcm_updated_values = {}
 
-        if (
-            mcm_method == "single-branch-statistics"
-            and mcm_config.postselect_mode is not None
-        ):
+        if mcm_method == "single-branch-statistics" and mcm_config.postselect_mode is not None:
             warn(
                 "Setting 'postselect_mode' is not supported with mcm_method='single-branch-"
                 "statistics'. 'postselect_mode' will be ignored.",
