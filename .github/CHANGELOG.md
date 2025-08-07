@@ -19,7 +19,7 @@
 - Dropped support for Python 3.10. Supported Python versions are now 3.11, 3.12 and 3.13.
   [(#1224)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1224)
 
-- Drop testing support for `tensorflow` interface after deprecation in Pennylane. 
+- Dropped testing support for `tensorflow` interface after deprecation in Pennylane. 
   [(#1225)](github.com/PennyLaneAI/pennylane-lightning/pull/1225)
 
 <h3>Deprecations 👋</h3>
