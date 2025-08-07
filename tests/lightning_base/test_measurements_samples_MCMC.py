@@ -113,6 +113,22 @@ class TestMCMCSample:
         with pytest.raises(ValueError, match="Shots should be greater than num_burnin."):
             dev.preprocess()
 
+    @pytest.mark.parametrize(["shots", "num_burnin"], [(10, 0), (1000, -1)])
+    def test_wrong_num_burnin(self, shots, num_burnin):
+        # Create device (should not fail at initialization)
+        dev = qml.device(
+            device_name,
+            wires=2,
+            shots=shots,
+            mcmc=True,
+            kernel_name="Local",
+            num_burnin=num_burnin,
+        )
+
+        # Error should be raised during preprocess when validation runs
+        with pytest.raises(ValueError, match="num_burnin must be greater than 0"):
+            dev.preprocess()
+
     def test_invalid_kernel_name(self):
         """Test that an error is raised when the kernel_name is not "Local" or "NonZeroRandom"."""
 
