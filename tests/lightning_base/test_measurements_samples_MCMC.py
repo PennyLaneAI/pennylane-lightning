@@ -35,7 +35,9 @@ class TestMCMCSample:
 
     @pytest.fixture(params=[np.complex64, np.complex128])
     def dev(self, request):
-        return qml.device(device_name, wires=2, shots=1000, mcmc=True, c_dtype=request.param)
+        return qml.device(
+            device_name, wires=2, shots=1000, mcmc=True, c_dtype=request.param
+        )
 
     test_data_no_parameters = [
         (100, [0], qml.PauliZ(wires=[0]), 100),
@@ -43,8 +45,12 @@ class TestMCMCSample:
         (120, [0, 1], qml.PauliX(0) @ qml.PauliZ(1), 120),
     ]
 
-    @pytest.mark.parametrize("num_shots,measured_wires,operation,shape", test_data_no_parameters)
-    def test_mcmc_sample_dimensions(self, dev, num_shots, measured_wires, operation, shape):
+    @pytest.mark.parametrize(
+        "num_shots,measured_wires,operation,shape", test_data_no_parameters
+    )
+    def test_mcmc_sample_dimensions(
+        self, dev, num_shots, measured_wires, operation, shape
+    ):
         """Tests if the samples returned by sample have
         the correct dimensions
         """
@@ -100,17 +106,30 @@ class TestMCMCSample:
     @pytest.mark.parametrize(["shots", "num_burnin"], [(10, 11), (1000, 1000)])
     def test_wrong_num_burnin(self, shots, num_burnin):
         # Create device (should not fail at initialization)
-        dev = qml.device(device_name, wires=2, shots=shots, mcmc=True, num_burnin=num_burnin)
+        dev = qml.device(
+            device_name,
+            wires=2,
+            shots=shots,
+            mcmc=True,
+            kernel_name="Local",
+            num_burnin=num_burnin,
+        )
 
         # Error should be raised during preprocess when validation runs
-        with pytest.raises(ValueError, match="Shots should be greater than num_burnin."):
+        with pytest.raises(
+            ValueError, match="Shots should be greater than num_burnin."
+        ):
             dev.preprocess()
 
     def test_invalid_kernel_name(self):
         """Test that an error is raised when the kernel_name is not "Local" or "NonZeroRandom"."""
 
-        ld(wires=2, shots=1000, mcmc=True, kernel_name="Local").preprocess()
-        ld(wires=2, shots=1000, mcmc=True, kernel_name="NonZeroRandom").preprocess()
+        ld(
+            wires=2, shots=1000, mcmc=True, kernel_name="Local", num_burnin=100
+        ).preprocess()
+        ld(
+            wires=2, shots=1000, mcmc=True, kernel_name="NonZeroRandom", num_burnin=100
+        ).preprocess()
 
         with pytest.raises(
             NotImplementedError,

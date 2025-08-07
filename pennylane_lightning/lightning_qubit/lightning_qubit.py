@@ -100,7 +100,9 @@ def stopping_condition(op: Operator) -> bool:
 def stopping_condition_shots(op: Operator) -> bool:
     """A function that determines whether or not an operation is supported by ``lightning.qubit``
     with finite shots."""
-    return stopping_condition(op) or isinstance(op, (MidMeasureMP, qml.ops.op_math.Conditional))
+    return stopping_condition(op) or isinstance(
+        op, (MidMeasureMP, qml.ops.op_math.Conditional)
+    )
 
 
 def accepted_observables(obs: Operator) -> bool:
@@ -221,7 +223,14 @@ class LightningQubit(LightningBase):
     # pylint: disable=too-many-instance-attributes
 
     # General device options
-    _device_options = ("rng", "c_dtype", "batch_obs", "mcmc", "kernel_name", "num_burnin")
+    _device_options = (
+        "rng",
+        "c_dtype",
+        "batch_obs",
+        "mcmc",
+        "kernel_name",
+        "num_burnin",
+    )
     # Device specific options
     _CPP_BINARY_AVAILABLE = LQ_CPP_BINARY_AVAILABLE
     _backend_info = backend_info if LQ_CPP_BINARY_AVAILABLE else None
@@ -241,11 +250,13 @@ class LightningQubit(LightningBase):
         c_dtype: Union[np.complex128, np.complex64] = np.complex128,
         shots: Union[int, List] = None,
         batch_obs: bool = False,
-        seed: Union[str, None, int, ArrayLike, SeedSequence, BitGenerator, Generator] = "global",
+        seed: Union[
+            str, None, int, ArrayLike, SeedSequence, BitGenerator, Generator
+        ] = "global",
         # Markov Chain Monte Carlo (MCMC) sampling method arguments
         mcmc: bool = False,
-        kernel_name: str = "Local",
-        num_burnin: int = 100,
+        kernel_name: str = None,
+        num_burnin: int = 0,
     ):
         if not self._CPP_BINARY_AVAILABLE:
             raise ImportError(
@@ -307,7 +318,10 @@ class LightningQubit(LightningBase):
                 "adjoint",
             )
         if config.use_device_gradient is None:
-            updated_values["use_device_gradient"] = config.gradient_method in ("best", "adjoint")
+            updated_values["use_device_gradient"] = config.gradient_method in (
+                "best",
+                "adjoint",
+            )
         if (
             config.use_device_gradient
             or updated_values.get("use_device_gradient", False)
@@ -327,11 +341,6 @@ class LightningQubit(LightningBase):
         shots = getattr(config, "shots", None) or getattr(self, "shots", None)
 
         _validate_mcmc_options(mcmc_enabled, kernel_name, num_burnin, shots)
-
-        # After validation, set MCMC options to inactive values if they weren't explicitly provided
-        # in the execution config (this is for display/API consistency)
-        new_device_options["kernel_name"] = config.device_options.get("kernel_name", None)
-        new_device_options["num_burnin"] = config.device_options.get("num_burnin", 0)
 
         updated_values["mcm_config"] = _resolve_mcm_method(config.mcm_config)
         return replace(config, **updated_values, device_options=new_device_options)
@@ -364,11 +373,15 @@ class LightningQubit(LightningBase):
             if exec_config.mcm_config.mcm_method == "deferred":
                 program.add_transform(qml.defer_measurements, num_wires=len(self.wires))
             # Using stopping_condition_shots because we don't want to decompose Conditionals or MCMs
-            program.add_transform(qml.transforms.decompose, gate_set=stopping_condition_shots)
+            program.add_transform(
+                qml.transforms.decompose, gate_set=stopping_condition_shots
+            )
             return program, exec_config
 
         program.add_transform(validate_measurements, name=self.name)
-        program.add_transform(validate_observables, accepted_observables, name=self.name)
+        program.add_transform(
+            validate_observables, accepted_observables, name=self.name
+        )
         program.add_transform(
             mid_circuit_measurements, device=self, mcm_config=exec_config.mcm_config
         )
@@ -454,7 +467,9 @@ class LightningQubit(LightningBase):
         the location to the shared object with the C/C++ device implementation.
         """
 
-        return LightningBase.get_c_interface_impl("LightningSimulator", "lightning_qubit")
+        return LightningBase.get_c_interface_impl(
+            "LightningSimulator", "lightning_qubit"
+        )
 
 
 def _resolve_mcm_method(mcm_config: MCMConfig):
@@ -467,7 +482,9 @@ def _resolve_mcm_method(mcm_config: MCMConfig):
     )
 
     if (mcm_method := mcm_config.mcm_method) not in mcm_supported_methods:
-        raise DeviceError(f"mcm_method='{mcm_method}' is not supported with lightning.qubit")
+        raise DeviceError(
+            f"mcm_method='{mcm_method}' is not supported with lightning.qubit"
+        )
 
     if mcm_config.mcm_method == "device":
         mcm_config = replace(mcm_config, mcm_method="tree-traversal")
@@ -476,7 +493,10 @@ def _resolve_mcm_method(mcm_config: MCMConfig):
 
         mcm_updated_values = {}
 
-        if mcm_method == "single-branch-statistics" and mcm_config.postselect_mode is not None:
+        if (
+            mcm_method == "single-branch-statistics"
+            and mcm_config.postselect_mode is not None
+        ):
             warn(
                 "Setting 'postselect_mode' is not supported with mcm_method='single-branch-"
                 "statistics'. 'postselect_mode' will be ignored.",
@@ -492,7 +512,10 @@ def _resolve_mcm_method(mcm_config: MCMConfig):
 
 
 def _validate_mcmc_options(
-    mcmc_enabled: bool, kernel_name: Optional[str], num_burnin: int, shots: Optional[ShotsLike]
+    mcmc_enabled: bool,
+    kernel_name: Optional[str],
+    num_burnin: int,
+    shots: Optional[ShotsLike],
 ) -> None:
     """Validate MCMC-specific options when MCMC is enabled.
 
@@ -510,13 +533,15 @@ def _validate_mcmc_options(
         return
 
     # Validate kernel name (only if it's not None, which indicates MCMC is disabled)
-    if kernel_name not in [None, "Local", "NonZeroRandom"]:
+    if kernel_name not in ["Local", "NonZeroRandom"]:
         raise NotImplementedError(
             f"The {kernel_name} is not supported and currently "
             "only 'Local' and 'NonZeroRandom' kernels are supported."
         )
 
     # Validate shots vs num_burnin if shots are specified
+    if num_burnin <= 0:
+        raise ValueError("num_burnin must be greater than 0.")
     if shots and num_burnin > 0:
         # Filter out None values and check
         shot_values = [s for s in shots if s is not None]

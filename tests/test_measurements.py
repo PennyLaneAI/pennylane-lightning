@@ -22,7 +22,12 @@ import numpy as np
 import pennylane as qml
 import pytest
 from conftest import LightningDevice as ld
-from conftest import LightningException, device_name, lightning_ops, validate_measurements
+from conftest import (
+    LightningException,
+    device_name,
+    lightning_ops,
+    validate_measurements,
+)
 from pennylane.exceptions import DeviceError, QuantumFunctionError
 from pennylane.measurements import ExpectationMP, Shots, VarianceMP
 from pennylane.wires import Wires
@@ -41,7 +46,9 @@ def test_no_measure():
         qml.RX(x, wires=0)
         return qml.PauliY(0)
 
-    with pytest.raises(QuantumFunctionError, match="must return either a single measurement"):
+    with pytest.raises(
+        QuantumFunctionError, match="must return either a single measurement"
+    ):
         circuit(0.65)
 
 
@@ -129,7 +136,9 @@ class TestProbs:
             and (isinstance(cases[0], int) or len(cases[0]) < 2)
             and dev.num_wires is None
         ):
-            with pytest.raises(ValueError, match="Number of wires must be greater than 1"):
+            with pytest.raises(
+                ValueError, match="Number of wires must be greater than 1"
+            ):
                 circuit()
         else:
             assert np.allclose(circuit(), cases[1], atol=tol, rtol=0)
@@ -226,7 +235,9 @@ class TestProbs:
             qml.RY(-0.2, wires=[0])
             return qml.probs(op=qml.PauliZ(0), wires=[0])
 
-        with pytest.raises(QuantumFunctionError, match="Cannot specify the wires to probs"):
+        with pytest.raises(
+            QuantumFunctionError, match="Cannot specify the wires to probs"
+        ):
             circuit()
 
 
@@ -372,7 +383,9 @@ class TestVar:
             and cases[0].wires.tolist() == [0]
             and dev.num_wires is None
         ):
-            with pytest.raises(ValueError, match="Number of wires must be greater than 1"):
+            with pytest.raises(
+                ValueError, match="Number of wires must be greater than 1"
+            ):
                 circuit()
         else:
             assert np.allclose(circuit(), cases[1], atol=tol, rtol=0)
@@ -509,7 +522,9 @@ class TestSample:
 
 @pytest.mark.local_salt(42)
 @pytest.mark.parametrize("shots", [None, 100000, [100000, 111111]])
-@pytest.mark.parametrize("measure_f", [qml.counts, qml.expval, qml.probs, qml.sample, qml.var])
+@pytest.mark.parametrize(
+    "measure_f", [qml.counts, qml.expval, qml.probs, qml.sample, qml.var]
+)
 @pytest.mark.parametrize(
     "obs",
     [
@@ -526,11 +541,14 @@ class TestSample:
 @pytest.mark.parametrize("mcmc", [False, True])
 @pytest.mark.parametrize("n_wires", [None, 3])
 @pytest.mark.parametrize("kernel_name", ["Local", "NonZeroRandom"])
-def test_shots_single_measure_obs(shots, measure_f, obs, n_wires, mcmc, kernel_name, seed):
+def test_shots_single_measure_obs(
+    shots, measure_f, obs, n_wires, mcmc, kernel_name, seed
+):
     """Tests that Lightning handles shots in a circuit where a single measurement of a common observable is performed at the end."""
 
     if (
-        shots is None or device_name in ("lightning.gpu", "lightning.kokkos", "lightning.tensor")
+        shots is None
+        or device_name in ("lightning.gpu", "lightning.kokkos", "lightning.tensor")
     ) and (mcmc or kernel_name != "Local"):
         pytest.skip(f"Device {device_name} does not have an mcmc option.")
 
@@ -546,7 +564,14 @@ def test_shots_single_measure_obs(shots, measure_f, obs, n_wires, mcmc, kernel_n
     if device_name in ("lightning.gpu", "lightning.kokkos"):
         dev = qml.device(device_name, wires=n_wires, seed=seed)
     elif device_name == "lightning.qubit":
-        dev = qml.device(device_name, wires=n_wires, mcmc=mcmc, kernel_name=kernel_name, seed=seed)
+        dev = qml.device(
+            device_name,
+            wires=n_wires,
+            mcmc=mcmc,
+            kernel_name=kernel_name,
+            num_burnin=100,
+            seed=seed,
+        )
     else:
         dev = qml.device(device_name, wires=n_wires)
 
