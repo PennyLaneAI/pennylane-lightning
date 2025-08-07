@@ -19,7 +19,7 @@ from functools import partial
 import pennylane as qml
 import pytest
 from conftest import LightningDevice, device_name
-from pennylane.devices import DefaultExecutionConfig
+from pennylane.devices import ExecutionConfig
 
 jax = pytest.importorskip("jax")
 jnp = pytest.importorskip("jax.numpy")
@@ -52,8 +52,7 @@ class TestErrors:
         args = (0.5,)
         jaxpr = jax.make_jaxpr(circuit)(*args)
 
-        execution_config = DefaultExecutionConfig
-        execution_config.gradient_method = "backprop"
+        execution_config = ExecutionConfig(gradient_method="backprop")
 
         with pytest.raises(
             NotImplementedError, match="LightningQubit does not support gradient_method"
