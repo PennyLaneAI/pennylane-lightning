@@ -276,9 +276,10 @@ class LightningQubit(LightningBase):
                     f"The {kernel_name} is not supported and currently "
                     "only 'Local' and 'NonZeroRandom' kernels are supported."
                 )
-            shots = shots if isinstance(shots, Sequence) else [shots]
-            if any(num_burnin >= s for s in shots):
-                raise ValueError("Shots should be greater than num_burnin.")
+            if shots is not None:
+                shots_list = shots if isinstance(shots, Sequence) else [shots]
+                if any(num_burnin >= s for s in shots_list):
+                    raise ValueError("Shots should be greater than num_burnin.")
             self._kernel_name = kernel_name
             self._num_burnin = num_burnin
         else:

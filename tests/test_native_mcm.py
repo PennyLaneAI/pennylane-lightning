@@ -641,8 +641,8 @@ class TestExecutionMCM:
             pytest.skip("Skip test for postselection with deferred measurements")
 
         wires = 4 if mcm_method == "deferred" else 2
-        dev_1 = get_device(wires=wires, shots=shots, seed=123)
-        dev_2 = get_device(wires=wires, shots=shots, seed=123)
+        dev_1 = get_device(wires=wires, seed=123)
+        dev_2 = get_device(wires=wires, seed=123)
         params = [np.pi / 2.5, np.pi / 3, -np.pi / 3.5]
 
         def func(x, y, z):
@@ -656,8 +656,12 @@ class TestExecutionMCM:
             measurement_value = mid_measure if isinstance(measure_obj, str) else measure_obj
             return measure_f(**{measurement_key: measurement_value})
 
-        results1 = qml.QNode(func, dev_1, mcm_method=mcm_method)(*params)
-        results2 = qml.QNode(func, dev_2, mcm_method=mcm_method)(*params)
+        results1 = qml.set_shots(qml.QNode(func, dev_1, mcm_method=mcm_method), shots=shots)(
+            *params
+        )
+        results2 = qml.set_shots(qml.QNode(func, dev_2, mcm_method=mcm_method), shots=shots)(
+            *params
+        )
 
         if measure_f is qml.counts:
             validate_counts(shots, results1, results2, rtol=0, atol=0)

@@ -56,7 +56,11 @@ def test_accept_execution_config():
 def test_no_partitioned_shots():
     """Test that an error is raised if partitioned shots is requested."""
 
-    dev = qml.device(device_name, wires=1, shots=(100, 100, 100))
+    with pytest.warns(
+        qml.exceptions.PennyLaneDeprecationWarning,
+        match="shots on device is deprecated",
+    ):
+        dev = qml.device(device_name, wires=1, shots=(100, 100, 100))
     jaxpr = jax.make_jaxpr(lambda x: x + 1)(0.1)
 
     with pytest.raises(NotImplementedError, match="does not support partitioned shots"):
@@ -106,7 +110,11 @@ def test_simple_execution(use_jit, x64):
 def test_capture_remains_enabled_if_measurement_error():
     """Test that capture remains enabled if there is a measurement error."""
 
-    dev = qml.device(device_name, wires=1, shots=1)
+    with pytest.warns(
+        qml.exceptions.PennyLaneDeprecationWarning,
+        match="shots on device is deprecated",
+    ):
+        dev = qml.device(device_name, wires=1, shots=1)
 
     def g():
         return qml.state()
@@ -166,7 +174,11 @@ class TestSampling:
                 qml.X(0)
                 return qml.sample(wires=(0, 1))
 
-            dev = qml.device(device_name, wires=2, shots=10)
+            with pytest.warns(
+                qml.exceptions.PennyLaneDeprecationWarning,
+                match="shots on device is deprecated",
+            ):
+                dev = qml.device(device_name, wires=2, shots=10)
             jaxpr = jax.make_jaxpr(sampler)()
 
             if use_jit:
@@ -200,9 +212,14 @@ class TestSampling:
                 qml.Hadamard(0)
                 return qml.sample(wires=0)
 
-            dev1 = qml.device(device_name, wires=2, shots=10, seed=123)
-            dev2 = qml.device(device_name, wires=2, shots=10, seed=123)
-            dev3 = qml.device(device_name, wires=2, shots=10, seed=321)
+            with pytest.warns(
+                qml.exceptions.PennyLaneDeprecationWarning,
+                match="shots on device is deprecated",
+            ):
+
+                dev1 = qml.device(device_name, wires=2, shots=10, seed=123)
+                dev2 = qml.device(device_name, wires=2, shots=10, seed=123)
+                dev3 = qml.device(device_name, wires=2, shots=10, seed=321)
             jaxpr = jax.make_jaxpr(sampler)()
 
             if use_jit:
@@ -261,7 +278,11 @@ class TestSampling:
                 return mp_type(op=m0)
             return mp_type(m0)
 
-        dev = qml.device(device_name, wires=1, shots=2)
+        with pytest.warns(
+            qml.exceptions.PennyLaneDeprecationWarning,
+            match="shots on device is deprecated",
+        ):
+            dev = qml.device(device_name, wires=1, shots=2)
         jaxpr = jax.make_jaxpr(f)()
 
         with pytest.raises(jax.errors.JaxRuntimeError):
@@ -815,8 +836,11 @@ class TestDeferMeasurements:
 
     def test_shots(self):
         """Tests that defer measurements executes correctly with shots."""
-
-        dev = qml.device(device_name, wires=5, shots=100)
+        with pytest.warns(
+            qml.exceptions.PennyLaneDeprecationWarning,
+            match="shots on device is deprecated",
+        ):
+            dev = qml.device(device_name, wires=5, shots=100)
 
         @DeferMeasurementsInterpreter(num_wires=5)
         def f(x):
