@@ -25,7 +25,7 @@ import numpy as np
 import pennylane as qml
 from numpy.random import BitGenerator, Generator, SeedSequence
 from numpy.typing import ArrayLike
-from pennylane.devices import DefaultExecutionConfig, ExecutionConfig, MCMConfig
+from pennylane.devices import ExecutionConfig, MCMConfig
 from pennylane.devices.capabilities import OperatorProperties
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
 from pennylane.devices.preprocess import (
@@ -345,7 +345,7 @@ class LightningQubit(LightningBase):
         updated_values["mcm_config"] = _resolve_mcm_method(config.mcm_config)
         return replace(config, **updated_values, device_options=new_device_options)
 
-    def preprocess(self, execution_config: ExecutionConfig = DefaultExecutionConfig):
+    def preprocess(self, execution_config: ExecutionConfig | None = None):
         """This function defines the device transform program to be applied and an updated device configuration.
 
         Args:
@@ -364,6 +364,8 @@ class LightningQubit(LightningBase):
         * Currently does not intrinsically support parameter broadcasting
 
         """
+        if execution_config is None:
+            execution_config = ExecutionConfig()
 
         exec_config = self._setup_execution_config(execution_config)
         program = TransformProgram()
@@ -404,7 +406,7 @@ class LightningQubit(LightningBase):
     def execute(
         self,
         circuits: QuantumTape_or_Batch,
-        execution_config: ExecutionConfig = DefaultExecutionConfig,
+        execution_config: ExecutionConfig | None = None,
     ) -> Result_or_ResultBatch:
         """Execute a circuit or a batch of circuits and turn it into results.
 
@@ -415,6 +417,9 @@ class LightningQubit(LightningBase):
         Returns:
             TensorLike, tuple[TensorLike], tuple[tuple[TensorLike]]: A numeric result of the computation.
         """
+        if execution_config is None:
+            execution_config = ExecutionConfig()
+
         mcmc = {
             "mcmc": self._mcmc,
             "kernel_name": self._kernel_name,
@@ -438,7 +443,7 @@ class LightningQubit(LightningBase):
 
     def supports_derivatives(
         self,
-        execution_config: Optional[ExecutionConfig] = None,
+        execution_config: ExecutionConfig | None = None,
         circuit: Optional[qml.tape.QuantumTape] = None,
     ) -> bool:
         """Check whether or not derivatives are available for a given configuration and circuit.
@@ -455,11 +460,13 @@ class LightningQubit(LightningBase):
         """
         if execution_config is None and circuit is None:
             return True
-        if execution_config.gradient_method not in {"adjoint", "best"}:
-            return False
-        if circuit is None:
-            return True
-        return _supports_adjoint(circuit=circuit)
+
+        if execution_config and execution_config.gradient_method in {"adjoint", "best"}:
+            if circuit is None:
+                return True
+            return _supports_adjoint(circuit=circuit)
+
+        return False
 
     @staticmethod
     def get_c_interface():

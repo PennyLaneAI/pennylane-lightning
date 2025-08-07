@@ -31,12 +31,8 @@ from conftest import (
     LightningStateVector,
     device_name,
 )
-from pennylane.devices import (
-    DefaultExecutionConfig,
-    DefaultQubit,
-    ExecutionConfig,
-    MCMConfig,
-)
+
+from pennylane.devices import DefaultQubit, ExecutionConfig, MCMConfig
 from pennylane.devices.default_qubit import adjoint_ops
 from pennylane.exceptions import DeviceError, QuantumFunctionError
 from pennylane.measurements import ProbabilityMP
@@ -552,7 +548,16 @@ class TestExecution:
         "config, expected_config",
         [
             (
-                DefaultExecutionConfig,
+                ExecutionConfig(),
+                ExecutionConfig(
+                    grad_on_execution=None,
+                    use_device_gradient=False,
+                    use_device_jacobian_product=False,
+                    device_options=_default_device_options,
+                ),
+            ),
+            (
+                None,
                 ExecutionConfig(
                     grad_on_execution=None,
                     use_device_gradient=False,
@@ -1042,7 +1047,7 @@ class TestDerivatives:
 
     @staticmethod
     def process_and_execute(
-        device, tape, execute_and_derivatives=False, obs_batch=False
+        device, tape, execute_and_derivatives=False, obs_batch=False, use_default_config=False
     ):
         program, config = device.preprocess(
             ExecutionConfig(
@@ -1050,6 +1055,9 @@ class TestDerivatives:
             )
         )
         tapes, transf_fn = program([tape])
+
+        if use_default_config:
+            config = None
 
         if execute_and_derivatives:
             results, jac = device.execute_and_compute_derivatives(tapes, config)
@@ -1062,7 +1070,7 @@ class TestDerivatives:
         "config, tape, expected",
         [
             (None, None, True),
-            (DefaultExecutionConfig, None, False),
+            (ExecutionConfig(), None, False),
             (ExecutionConfig(gradient_method="backprop"), None, False),
             (
                 ExecutionConfig(gradient_method="backprop"),
@@ -1117,8 +1125,9 @@ class TestDerivatives:
         ],
     )
     @pytest.mark.parametrize("execute_and_derivatives", [True, False])
+    @pytest.mark.parametrize("use_default_config", [True, False])
     def test_derivatives_single_expval(
-        self, theta, phi, dev, obs, execute_and_derivatives, batch_obs
+        self, theta, phi, dev, obs, execute_and_derivatives, batch_obs, use_default_config
     ):
         """Test that the jacobian is correct when a tape has a single expectation value"""
         if isinstance(obs, qml.SparseHamiltonian) and dev.c_dtype == np.complex64:
@@ -1137,6 +1146,7 @@ class TestDerivatives:
             qs,
             execute_and_derivatives=execute_and_derivatives,
             obs_batch=batch_obs,
+            use_default_config=use_default_config,
         )
         if isinstance(obs, qml.Hamiltonian):
             qs = QuantumScript(
@@ -1472,7 +1482,7 @@ class TestVJP:
 
     @staticmethod
     def process_and_execute(
-        device, tape, dy, execute_and_derivatives=False, obs_batch=False
+        device, tape, dy, execute_and_derivatives=False, obs_batch=False, use_default_config=False
     ):
         program, config = device.preprocess(
             ExecutionConfig(
@@ -1481,6 +1491,9 @@ class TestVJP:
         )
         tapes, transf_fn = program([tape])
         dy = [dy]
+
+        if use_default_config:
+            config = None
 
         if execute_and_derivatives:
             results, jac = device.execute_and_compute_vjp(tapes, dy, config)
@@ -1493,7 +1506,17 @@ class TestVJP:
         "config, tape, expected",
         [
             (None, None, True),
-            (DefaultExecutionConfig, None, False),
+            (ExecutionConfig(), None, False),
+            (
+                None,
+                QuantumScript([qml.RX(0.123, 0)], [qml.expval(qml.Z(0))]),
+                False,
+            ),
+            (
+                None,
+                QuantumScript([qml.RX(0.123, 0)], [qml.var(qml.Z(0))]),
+                False,
+            ),
             (ExecutionConfig(gradient_method="backprop"), None, False),
             (
                 ExecutionConfig(gradient_method="backprop"),
@@ -1543,7 +1566,7 @@ class TestVJP:
     )
     @pytest.mark.parametrize("execute_and_derivatives", [True, False])
     def test_vjp_single_expval(
-        self, theta, phi, dev, obs, execute_and_derivatives, batch_obs
+        self, theta, phi, dev, obs, execute_and_derivatives, batch_obs, use_default_config
     ):
         """Test that the VJP is correct when a tape has a single expectation value"""
 
@@ -1560,6 +1583,7 @@ class TestVJP:
             dy,
             execute_and_derivatives=execute_and_derivatives,
             obs_batch=batch_obs,
+            use_default_config=use_default_config,
         )
         if isinstance(obs, qml.Hamiltonian):
             qs = QuantumScript(
