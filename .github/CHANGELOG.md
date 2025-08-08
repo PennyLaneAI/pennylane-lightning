@@ -33,6 +33,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Adjust where the MCMC config validation occurs, from initialization to preprocess.
+  [(#1222)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1222)
+
 - Replace `DefaultExecutionConfig` with `ExecutionConfig()` across the Lightning Python device APIs.
   [(#1185)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1185)
 

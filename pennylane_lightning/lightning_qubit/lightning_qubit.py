@@ -18,7 +18,7 @@ interfaces with C++ for fast linear algebra calculations.
 from dataclasses import replace
 from functools import reduce
 from pathlib import Path
-from typing import List, Optional, Sequence, Union
+from typing import List, Optional, Union
 from warnings import warn
 
 import numpy as np
@@ -38,7 +38,7 @@ from pennylane.devices.preprocess import (
     validate_observables,
 )
 from pennylane.exceptions import DecompositionUndefinedError, DeviceError
-from pennylane.measurements import MidMeasureMP
+from pennylane.measurements import MidMeasureMP, ShotsLike
 from pennylane.operation import Operator
 from pennylane.ops import Conditional, PauliRot, Prod, SProd, Sum
 from pennylane.transforms.core import TransformProgram
@@ -221,7 +221,14 @@ class LightningQubit(LightningBase):
     # pylint: disable=too-many-instance-attributes
 
     # General device options
-    _device_options = ("rng", "c_dtype", "batch_obs", "mcmc", "kernel_name", "num_burnin")
+    _device_options = (
+        "rng",
+        "c_dtype",
+        "batch_obs",
+        "mcmc",
+        "kernel_name",
+        "num_burnin",
+    )
     # Device specific options
     _CPP_BINARY_AVAILABLE = LQ_CPP_BINARY_AVAILABLE
     _backend_info = backend_info if LQ_CPP_BINARY_AVAILABLE else None
@@ -244,8 +251,8 @@ class LightningQubit(LightningBase):
         seed: Union[str, None, int, ArrayLike, SeedSequence, BitGenerator, Generator] = "global",
         # Markov Chain Monte Carlo (MCMC) sampling method arguments
         mcmc: bool = False,
-        kernel_name: str = "Local",
-        num_burnin: int = 100,
+        kernel_name: str = None,
+        num_burnin: int = 0,
     ):
         if not self._CPP_BINARY_AVAILABLE:
             raise ImportError(
@@ -267,23 +274,8 @@ class LightningQubit(LightningBase):
 
         # Markov Chain Monte Carlo (MCMC) sampling method specific options
         self._mcmc = mcmc
-        if self._mcmc:
-            if kernel_name not in [
-                "Local",
-                "NonZeroRandom",
-            ]:
-                raise NotImplementedError(
-                    f"The {kernel_name} is not supported and currently "
-                    "only 'Local' and 'NonZeroRandom' kernels are supported."
-                )
-            shots = shots if isinstance(shots, Sequence) else [shots]
-            if any(num_burnin >= s for s in shots):
-                raise ValueError("Shots should be greater than num_burnin.")
-            self._kernel_name = kernel_name
-            self._num_burnin = num_burnin
-        else:
-            self._kernel_name = None
-            self._num_burnin = 0
+        self._kernel_name = kernel_name
+        self._num_burnin = num_burnin
 
         self.device_kwargs = {
             "mcmc": self._mcmc,
@@ -322,7 +314,10 @@ class LightningQubit(LightningBase):
                 "adjoint",
             )
         if config.use_device_gradient is None:
-            updated_values["use_device_gradient"] = config.gradient_method in ("best", "adjoint")
+            updated_values["use_device_gradient"] = config.gradient_method in (
+                "best",
+                "adjoint",
+            )
         if (
             config.use_device_gradient
             or updated_values.get("use_device_gradient", False)
@@ -334,6 +329,14 @@ class LightningQubit(LightningBase):
         for option in self._device_options:
             if option not in new_device_options:
                 new_device_options[option] = getattr(self, f"_{option}", None)
+
+        # Validate MCMC options using the helper function
+        mcmc_enabled = new_device_options["mcmc"]
+        kernel_name = new_device_options["kernel_name"]
+        num_burnin = new_device_options["num_burnin"]
+        shots = getattr(config, "shots", None) or getattr(self, "shots", None)
+
+        _validate_mcmc_options(mcmc_enabled, kernel_name, num_burnin, shots)
 
         updated_values["mcm_config"] = _resolve_mcm_method(config.mcm_config)
         return replace(config, **updated_values, device_options=new_device_options)
@@ -498,6 +501,44 @@ def _resolve_mcm_method(mcm_config: MCMConfig):
         mcm_config = replace(mcm_config, **mcm_updated_values)
 
     return mcm_config
+
+
+def _validate_mcmc_options(
+    mcmc_enabled: bool,
+    kernel_name: Optional[str],
+    num_burnin: int,
+    shots: Optional[ShotsLike],
+) -> None:
+    """Validate MCMC-specific options when MCMC is enabled.
+
+    Args:
+        mcmc_enabled (bool): Whether MCMC is enabled
+        kernel_name (str): The kernel name for MCMC
+        num_burnin (int): Number of burn-in steps
+        shots: The shots configuration (can be int, list, or None)
+
+    Raises:
+        NotImplementedError: If kernel_name is not supported
+        ValueError: If num_burnin >= shots for any shot value
+    """
+    if not mcmc_enabled:
+        return
+
+    # Validate kernel name (only if it's not None, which indicates MCMC is disabled)
+    if kernel_name not in ["Local", "NonZeroRandom"]:
+        raise NotImplementedError(
+            f"The {kernel_name} is not supported and currently "
+            "only 'Local' and 'NonZeroRandom' kernels are supported."
+        )
+
+    # Validate shots vs num_burnin if shots are specified
+    if num_burnin <= 0:
+        raise ValueError("num_burnin must be greater than 0.")
+    if shots and num_burnin > 0:
+        # Filter out None values and check
+        shot_values = [s for s in shots if s is not None]
+        if shot_values and any(num_burnin >= s for s in shot_values):
+            raise ValueError("Shots should be greater than num_burnin.")
 
 
 _supports_operation = LightningQubit.capabilities.supports_operation
