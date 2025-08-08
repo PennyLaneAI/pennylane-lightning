@@ -10,6 +10,12 @@ NEW_VERSION=0.44.0
 
 dry_run="--dry-run"
 
+branch_name(){
+    version=$1
+    suffix=$2
+    echo "test_v${version}_${suffix}_test"
+}
+
 rreplace(){
    grep -rl "$1" . | xargs sed -i "s|$1|$2|g"
 }
@@ -23,10 +29,10 @@ create_lightning_rc_branch() {
 
     # create branches 
     for branch in base docs rc; do
-        git checkout -b v${RELEASE_VERSION}_${branch}
-        git push --set-upstream origin v${RELEASE_VERSION}_${branch}
+        git checkout -b $(branch_name ${RELEASE_VERSION} ${branch})
+        git push --set-upstream origin $(branch_name ${RELEASE_VERSION} ${branch})
     done
-    git checkout v${RELEASE_VERSION}_rc
+    git checkout $(branch_name ${RELEASE_VERSION} rc)
 
     # update lightning version
     sed -i "/${STABLE_VERSION}/d" pennylane_lightning/core/_version.py
@@ -56,30 +62,30 @@ create_lightning_rc_branch() {
     git add tests/pytest.ini
     git commit -m "Set rng_salt to v${RELEASE_VERSION} in tests/pytest.ini."
 
-    git push --set-upstream origin v${RELEASE_VERSION}_rc
+    git push --set-upstream origin $(branch_name ${RELEASE_VERSION} rc)
 }
 
 create_lightning_rc_PR(){
 
     # create PR
-    git checkout v${RELEASE_VERSION}_rc
+    git checkout $(branch_name ${RELEASE_VERSION} rc)
     gh pr create  $dry_run \
         --title "Create v${RELEASE_VERSION} RC branch" \
         --body "v${RELEASE_VERSION} RC branch." \
-        --head v${RELEASE_VERSION}_rc \
-        --base v${RELEASE_VERSION}_base \
+        --head $(branch_name ${RELEASE_VERSION} rc) \
+        --base $(branch_name ${RELEASE_VERSION} base) \
         --label 'do not merge','ci:build_wheels','ci:use-multi-gpu-runner','ci:use-gpu-runner','urgent'
 }
 
 create_lightning_docs_PR(){
 
     # create PR
-    git checkout v${RELEASE_VERSION}_docs
+    git checkout $(branch_name ${RELEASE_VERSION} docs)
     gh pr create $dry_run \
         --title "Create v${RELEASE_VERSION} Doc branch" \
         --body "v${RELEASE_VERSION} Doc branch." \
-        --head v${RELEASE_VERSION}_docs \
-        --base v${RELEASE_VERSION}_rc \
+        --head $(branch_name ${RELEASE_VERSION} docs) \
+        --base $(branch_name ${RELEASE_VERSION} rc) \
         --draft \
         --label 'do not merge','documentation'
 }
@@ -88,18 +94,18 @@ create_lightning_docker_PR(){
 
     # create PR
     git checkout master
-    git checkout -b v${RELEASE_VERSION}_docker_rc
+    git checkout -b $(branch_name ${RELEASE_VERSION} docker)
 
     rreplace "v${STABLE_VERSION}" "v${RELEASE_VERSION}" .github/workflows/compat-docker-release.yml
 
     git add .github/workflows/compat-docker-release.yml
     git commit -m "Update compat-docker-release.yml to use v${RELEASE_VERSION}"
-    git push --set-upstream origin v${RELEASE_VERSION}_docker_rc
+    git push --set-upstream origin $(branch_name ${RELEASE_VERSION} docker)
 
     gh pr create $dry_run \
         --title "Docker test for v${RELEASE_VERSION} RC branch" \
         --body "Docker test for v${RELEASE_VERSION} RC branch." \
-        --head v${RELEASE_VERSION}_docker_rc \
+        --head $(branch_name ${RELEASE_VERSION} docker) \
         --base master \
         --label 'urgent'
 }
@@ -140,7 +146,7 @@ create_lightning_version_bump_PR(){
 
     # create PR
     git checkout master
-    git checkout -b v${RELEASE_VERSION}_bump
+    git checkout -b $(branch_name ${RELEASE_VERSION} bump)
 
     # Update CHANGELOG with new_changelog_entry
     {
@@ -153,12 +159,12 @@ create_lightning_version_bump_PR(){
     git add pennylane_lightning/core/_version.py
     git commit -m "Bump version to v${RELEASE_VERSION}."
 
-    git push --set-upstream origin v${RELEASE_VERSION}_version_bump
+    git push --set-upstream origin $(branch_name ${RELEASE_VERSION} bump)
 
     gh pr create $dry_run \
         --title "Bump version to v${RELEASE_VERSION}" \
         --body "Bump version to v${RELEASE_VERSION}." \
-        --head v${RELEASE_VERSION}_version_bump \
+        --head $(branch_name ${RELEASE_VERSION} bump) \
         --base master \
         --label 'do not merge','urgent'
 }
@@ -174,7 +180,20 @@ test_install_lightning(){
     done
 
     # Test import
-    python -c "import pennylane as qml; qml.about(); exit()"
+    python -c "import pennylane as qml; qml.about(); exit()" | grep -- '- lightning' | grep -v "${RELEASE_VERSION}" && echo "Error" || echo "Everything fine"
+
+    # Test installation of lightning custom compiles
+
+    # Lightning Kokkos with CUDA and MPI
+    pip uninstall pennylane_lightning_kokkos
+    PL_BACKEND="lightning_kokkos" python scripts/configure_pyproject_toml.py
+    CMAKE_ARGS="-DENABLE_MPI=ON -DKokkos_ENABLE_CUDA=ON" python -m pip install -e . --config-settings editable_mode=compat -v
+    python -c "import pennylane as qml; qml.about(); exit()" | grep -- '- lightning' | grep -v "0.43.0" && echo "Error" || echo "Everything fine"
+
+    # Lightning GPU with MPI
+    pip uninstall pennylane_lightning_gpu
+    PL_BACKEND="lightning_gpu" python scripts/configure_pyproject_toml.py
+    CMAKE_ARGS="-DENABLE_MPI=ON" python -m pip install -e . --config-settings editable_mode=compat -v
 }
 
 # Main script
@@ -182,8 +201,10 @@ test_install_lightning(){
 # create_lightning_rc_branch
 # create_lightning_rc_PR
 # create_lightning_docs_PR
-create_lightning_docker_PR
+# create_lightning_docker_PR
 # create_lightning_version_bump_PR
+
+test_install_lightning
 
 # # upload wheel artifacts
 # pushd .github/workflows
