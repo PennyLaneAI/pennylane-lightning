@@ -42,6 +42,8 @@ if device_name == "lightning.qubit":
         _add_adjoint_transforms,
         _adjoint_ops,
         _supports_adjoint,
+        _validate_mcmc_options,
+        _validate_mcmc_options_transform,
         accepted_observables,
         adjoint_measurements,
         adjoint_observables,
@@ -752,6 +754,13 @@ class TestExecution:
             mid_circuit_measurements, device=device, mcm_config=MCMConfig()
         )
         expected_program.add_transform(validate_device_wires, device.wires, name=device.name)
+
+        # Add MCMC validation transform only for lightning.qubit
+        if device_name == "lightning.qubit":
+            expected_program.add_transform(
+                _validate_mcmc_options_transform, mcmc_enabled=False, kernel_name=None, num_burnin=0
+            )
+
         expected_program.add_transform(
             decompose,
             stopping_condition=stopping_condition,
@@ -1873,3 +1882,192 @@ class TestVJP:
         assert len(res) == len(jac) == 1
         assert np.allclose(res, expected, atol=tol, rtol=0)
         assert np.allclose(jac, expected_jac, atol=tol, rtol=0)
+
+
+class TestMCMCValidationTransform:
+    """Tests for MCMC validation transform to ensure it properly validates device options during QNode execution."""
+
+    def test_mcmc_validation_transform_kernel_names(self):
+        """Test that the validation transform properly validates kernel names during QNode execution."""
+        # Test valid kernel names work without error
+        for kernel_name in ["Local", "NonZeroRandom"]:
+            dev = qml.device(
+                device_name,
+                wires=2,
+                shots=1000,
+                mcmc=True,
+                kernel_name=kernel_name,
+                num_burnin=100,
+            )
+
+            @qml.qnode(dev)
+            def circuit():
+                qml.RX(1.5708, wires=0)
+                return qml.sample(op=qml.PauliZ(0))
+
+            # Should execute without error
+            result = circuit()
+            assert len(result) == 1000
+
+        # Test invalid kernel names raise errors during execution
+        for invalid_kernel in ["invalid", "Global", "local", "Random"]:
+            dev = qml.device(
+                device_name,
+                wires=2,
+                shots=1000,
+                mcmc=True,
+                kernel_name=invalid_kernel,
+                num_burnin=100,
+            )
+
+            @qml.qnode(dev)
+            def circuit():
+                qml.RX(1.5708, wires=0)
+                return qml.sample(op=qml.PauliZ(0))
+
+            with pytest.raises(
+                NotImplementedError,
+                match=f"The {invalid_kernel} is not supported and currently only 'Local' and 'NonZeroRandom' kernels are supported.",
+            ):
+                circuit()
+
+    def test_mcmc_validation_transform_num_burnin(self):
+        """Test that the validation transform properly validates num_burnin during QNode execution."""
+        # Test valid num_burnin values work
+        valid_configs = [
+            (1000, 100),
+            (500, 50),
+            (100, 1),
+            (1000, 999),
+        ]
+
+        for shots, num_burnin in valid_configs:
+            dev = qml.device(
+                device_name,
+                wires=2,
+                shots=shots,
+                mcmc=True,
+                kernel_name="Local",
+                num_burnin=num_burnin,
+            )
+
+            @qml.qnode(dev)
+            def circuit():
+                qml.RX(1.5708, wires=0)
+                return qml.sample(op=qml.PauliZ(0))
+
+            # Should execute without error
+            result = circuit()
+            assert len(result) == shots
+
+        # Test num_burnin >= shots raises error
+        invalid_configs = [
+            (100, 100),  # equal
+            (100, 101),  # greater
+            (500, 500),  # equal
+            (10, 15),  # much greater
+        ]
+
+        for shots, num_burnin in invalid_configs:
+            dev = qml.device(
+                device_name,
+                wires=2,
+                shots=shots,
+                mcmc=True,
+                kernel_name="Local",
+                num_burnin=num_burnin,
+            )
+
+            @qml.qnode(dev)
+            def circuit():
+                qml.RX(1.5708, wires=0)
+                return qml.sample(op=qml.PauliZ(0))
+
+            with pytest.raises(ValueError, match="Shots should be greater than num_burnin."):
+                circuit()
+
+        # Test num_burnin <= 0 raises error
+        invalid_burnin_values = [0, -1, -10]
+
+        for num_burnin in invalid_burnin_values:
+            dev = qml.device(
+                device_name,
+                wires=2,
+                shots=1000,
+                mcmc=True,
+                kernel_name="Local",
+                num_burnin=num_burnin,
+            )
+
+            @qml.qnode(dev)
+            def circuit():
+                qml.RX(1.5708, wires=0)
+                return qml.sample(op=qml.PauliZ(0))
+
+            with pytest.raises(ValueError, match="num_burnin must be greater than 0"):
+                circuit()
+
+    def test_mcmc_validation_transform_no_mcmc_config(self):
+        """Test that devices without MCMC configuration work normally."""
+        # Device without mcmc=True should work without any validation
+        dev = qml.device(device_name, wires=2, shots=1000)
+
+        @qml.qnode(dev)
+        def circuit():
+            qml.RX(1.5708, wires=0)
+            return qml.sample(op=qml.PauliZ(0))
+
+        # Should execute without error
+        result = circuit()
+        assert len(result) == 1000
+
+    def test_mcmc_validation_transform_with_multiple_measurements(self):
+        """Test MCMC validation with circuits that have multiple measurements."""
+        dev = qml.device(
+            device_name,
+            wires=3,
+            shots=1000,
+            mcmc=True,
+            kernel_name="Local",
+            num_burnin=100,
+        )
+
+        @qml.qnode(dev)
+        def circuit():
+            qml.RX(1.5708, wires=0)
+            qml.RY(1.5708, wires=1)
+            qml.RZ(1.5708, wires=2)
+            return [
+                qml.sample(op=qml.PauliZ(0)),
+                qml.sample(op=qml.PauliX(1)),
+                qml.sample(op=qml.PauliY(2)),
+            ]
+
+        # Should execute without error
+        results = circuit()
+        assert len(results) == 3
+        assert all(len(result) == 1000 for result in results)
+
+    def test_mcmc_validation_transform_preserves_device_functionality(self):
+        """Test that the validation transform doesn't interfere with normal MCMC device functionality."""
+        dev = qml.device(
+            device_name,
+            wires=2,
+            shots=1000,
+            mcmc=True,
+            kernel_name="NonZeroRandom",
+            num_burnin=50,
+        )
+
+        @qml.qnode(dev)
+        def circuit(angle):
+            qml.RX(angle, wires=0)
+            qml.CNOT(wires=[0, 1])
+            return qml.sample(op=qml.PauliZ(0) @ qml.PauliZ(1))
+
+        # Test with different parameter values
+        for angle in [0, np.pi / 4, np.pi / 2, np.pi]:
+            result = circuit(angle)
+            assert len(result) == 1000
+            # Results should be +1 or -1
+            assert np.all(np.isin(result, [-1, 1]))

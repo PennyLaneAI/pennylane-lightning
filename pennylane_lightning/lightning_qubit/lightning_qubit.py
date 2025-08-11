@@ -380,6 +380,12 @@ class LightningQubit(LightningBase):
             mid_circuit_measurements, device=self, mcm_config=exec_config.mcm_config
         )
         program.add_transform(validate_device_wires, self.wires, name=self.name)
+        program.add_transform(
+            _validate_mcmc_options_transform,
+            mcmc_enabled=exec_config.device_options.get("mcmc", False),
+            kernel_name=exec_config.device_options.get("kernel_name", None),
+            num_burnin=exec_config.device_options.get("num_burnin", 0),
+        )
 
         program.add_transform(
             decompose,
@@ -501,6 +507,23 @@ def _resolve_mcm_method(mcm_config: MCMConfig):
         mcm_config = replace(mcm_config, **mcm_updated_values)
 
     return mcm_config
+
+
+def null_postprocess(results):
+    return results[0]
+
+
+@qml.transform
+def _validate_mcmc_options_transform(tape, mcmc_enabled=False, kernel_name=None, num_burnin=0):
+
+    _validate_mcmc_options(
+        mcmc_enabled=mcmc_enabled,
+        kernel_name=kernel_name,
+        num_burnin=num_burnin,
+        shots=tape.shots,
+    )
+
+    return (tape,), null_postprocess
 
 
 def _validate_mcmc_options(
