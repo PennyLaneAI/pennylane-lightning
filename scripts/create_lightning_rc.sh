@@ -4,7 +4,7 @@
 # This script should be run from the pennylane-lightning repository root.
 
 STABLE_VERSION=0.42.0
-RELEASE_VERSION=0.43.0
+RELEASE_VERSION=0.42.0
 NEW_VERSION=0.44.0
 
 
@@ -247,8 +247,35 @@ test_install_lightning(){
     echo "$is_installed_gpu_mpi"
 }
 
-download_artifacs_gh(){
-    
+download_artifacts_gh(){
+    wheels_runners=$(gh run list --branch $(branch_name ${RELEASE_VERSION} rc) --json status,workflowName,workflowDatabaseId | jq '.[] | select(.workflowName | contains("Wheel"))')
+
+    completed_runners=$(echo "$wheels_runners" | jq -r '. | select(.status == "completed") | .workflowDatabaseId')
+
+    incomplete_runners=$(echo "$wheels_runners" | jq -r '. | select(.status != "completed") ')
+
+    mkdir -p Wheels
+
+    for runner in $completed_runners; do
+        echo "Downloading artifacts for runner: $runner"
+        gh run download --dir Wheels $runner
+    done
+
+    echo "Incomplete runner found: $incomplete_runners"
+}
+
+test_wheels_for_unwanted_libraries(){
+
+    cd Wheels
+
+    # Unzip all wheel files
+    for wheel in *.zip; do
+        unzip -o -q "$wheel"
+    done
+
+    python ../scripts/validate_attrs.py
+
+    cd ..
 }
 
 # Main script
@@ -259,8 +286,11 @@ download_artifacs_gh(){
 # create_lightning_docker_PR
 # create_lightning_version_bump_PR
 
-test_install_lightning
+# test_install_lightning
 # test_pennylane_version
+
+# download_artifacts_gh
+# test_wheels_for_unwanted_libraries
 
 # # upload wheel artifacts
 # pushd .github/workflows
