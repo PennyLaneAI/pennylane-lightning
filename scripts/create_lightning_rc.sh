@@ -62,6 +62,9 @@ create_lightning_rc_branch() {
     git add tests/pytest.ini
     git commit -m "Set rng_salt to v${RELEASE_VERSION} in tests/pytest.ini."
 
+    # Enable to upload the wheels to TestPyPI and GitHub Artifacs
+    sed -i "s|event_name == 'release'|event_name == 'pull_request'|g" .github/workflows/wheel_*
+
     git push --set-upstream origin $(branch_name ${RELEASE_VERSION} rc)
 }
 
@@ -169,6 +172,41 @@ create_lightning_version_bump_PR(){
         --label 'do not merge','urgent'
 }
 
+test_pennylane_version(){
+
+    backends=(
+        "lightning.qubit"
+        "lightning.gpu"
+        "lightning.kokkos"
+        "lightning.tensor"
+    )
+
+    while IFS= read -r line; do
+        backend=$(echo "$line" | awk '{print $2}')
+        if [[ " ${backends[*]} " == *" $backend "* ]]; then
+            # Check the version using the RELEASE_VERSION
+            # echo "RELEASE_VERSION: $RELEASE_VERSION"
+            # echo "LINE: $line"
+            # echo "BACKEND: $backend"
+            if [[ "$line" == *"$RELEASE_VERSION"* ]]; then
+                echo "Correct version for backend: $backend"
+            else
+                echo "Wrong version for backend: $backend"
+            fi
+            # Remove backend from list
+            backends=("${backends[@]/$backend}")
+            backends=($(printf "%s\n" "${backends[@]}" | grep -v '^$'))
+        else
+            echo "Unknown backend: $backend"
+            continue
+        fi
+    done <<< $(python -c "import pennylane as qml; qml.about(); exit()"  | grep -- '- lightning')
+
+    # If list is not empty, print remaining backends
+    if [[ ${#backends[@]} -gt 0 ]]; then
+        echo "Missing backends: ${backends[@]}"
+    fi
+}
 
 test_install_lightning(){
 
@@ -176,24 +214,41 @@ test_install_lightning(){
     pip install -r requirements-dev.txt
     for backend in qubit gpu kokkos tensor; do
         PL_BACKEND=lightning_${backend} python scripts/configure_pyproject_toml.py
-        PL_BACKEND=lightning_${backend} python setup.py install
+        PL_BACKEND=lightning_${backend} python -m pip install . -v
     done
 
     # Test import
-    python -c "import pennylane as qml; qml.about(); exit()" | grep -- '- lightning' | grep -v "${RELEASE_VERSION}" && echo "Error" || echo "Everything fine"
+    is_installed_backend=$(test_pennylane_version)
 
-    # Test installation of lightning custom compiles
+    # Test installation of lightning custom compiles options
 
     # Lightning Kokkos with CUDA and MPI
-    pip uninstall pennylane_lightning_kokkos
+    pip uninstall -y pennylane_lightning_kokkos
     PL_BACKEND="lightning_kokkos" python scripts/configure_pyproject_toml.py
-    CMAKE_ARGS="-DENABLE_MPI=ON -DKokkos_ENABLE_CUDA=ON" python -m pip install -e . --config-settings editable_mode=compat -v
-    python -c "import pennylane as qml; qml.about(); exit()" | grep -- '- lightning' | grep -v "0.43.0" && echo "Error" || echo "Everything fine"
+    CMAKE_ARGS="-DENABLE_MPI=ON -DKokkos_ENABLE_OPENMP=ON" python -m pip install . -v
+
+    # Test import
+    is_installed_kokkos_mpi=$(test_pennylane_version | grep lightning.kokkos)
 
     # Lightning GPU with MPI
-    pip uninstall pennylane_lightning_gpu
+    pip uninstall -y pennylane_lightning_gpu
     PL_BACKEND="lightning_gpu" python scripts/configure_pyproject_toml.py
-    CMAKE_ARGS="-DENABLE_MPI=ON" python -m pip install -e . --config-settings editable_mode=compat -v
+    CMAKE_ARGS="-DENABLE_MPI=ON" python -m pip install . -v
+
+    # Test import
+    is_installed_gpu_mpi=$(test_pennylane_version| grep lightning.gpu)
+
+    echo "Installed backends:"
+    echo "- Lightning Default:"
+    echo "$is_installed_backend"
+    echo "- Lightning Kokkos (MPI):" 
+    echo "$is_installed_kokkos_mpi"
+    echo "- Lightning GPU (MPI):" 
+    echo "$is_installed_gpu_mpi"
+}
+
+download_artifacs_gh(){
+    
 }
 
 # Main script
@@ -205,6 +260,7 @@ test_install_lightning(){
 # create_lightning_version_bump_PR
 
 test_install_lightning
+# test_pennylane_version
 
 # # upload wheel artifacts
 # pushd .github/workflows
