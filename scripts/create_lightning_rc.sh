@@ -107,7 +107,6 @@ create_release_notes(){
     sed -n "1,${changelog_lower_bound}p" $CHANGELOG_FILE | sed ':a;N;$!ba;s/\.\n *\[(#/\. \[(#/g' > release_notes.md
 }
 
-
 # Release functions
 
 create_release_candidate_branch() {
@@ -250,6 +249,8 @@ create_version_bump_PR(){
         echo ""
         cat .github/CHANGELOG.md
     } > temp_changelog.md && mv temp_changelog.md .github/CHANGELOG.md
+    git add .github/CHANGELOG.md
+    git commit -m "Update CHANGELOG.md with new version entry."
 
     # Update lightning version
     sed -i "/${RELEASE_VERSION}/d" pennylane_lightning/core/_version.py
