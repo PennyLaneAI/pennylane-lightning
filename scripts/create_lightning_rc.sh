@@ -66,10 +66,6 @@ branch_name(){
     echo $branch
 }
 
-rreplace(){
-   grep -rl "$1" . | xargs sed -i "s|$1|$2|g"
-}
-
 test_pennylane_version(){
     # Test if the Pennylane Lightning version is correct
 
@@ -202,8 +198,7 @@ create_docker_PR(){
     git status
     sleep 3
 
-    # rreplace "v${STABLE_VERSION}" "v${RELEASE_VERSION}" .github/workflows/compat-docker-release.yml
-    echo "Test FDX" >> .github/workflows/compat-docker-release.yml
+    sed -i "s|v${STABLE_VERSION}|v${RELEASE_VERSION}|g" .github/workflows/compat-docker-release.yml
 
     git add .github/workflows/compat-docker-release.yml
     git commit -m "Update compat-docker-release.yml to use v${RELEASE_VERSION}"
@@ -462,7 +457,7 @@ create_merge_branch(){
     git commit -m "Restore Catalyst GIT_TAG to main"
 
     for i in release stable; do
-        rreplace "v${RELEASE_VERSION}" "v${NEW_VERSION}" .github/workflows/compat-docker-${i}.yml
+        sed -i "s|v${RELEASE_VERSION}|v${NEW_VERSION}|g" .github/workflows/compat-docker-${i}.yml
         git add .github/workflows/compat-docker-${i}.yml
     done
     git commit -m "Update Docker workflows for new release version"
