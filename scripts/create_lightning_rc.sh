@@ -390,6 +390,8 @@ upload_release_assets_gh(){
 }
 
 create_merge_branch(){
+    # Create the merge branch to merge the RC into master and bump the version with NEW_VERSION-dev
+
     git checkout $(branch_name ${RELEASE_VERSION} "release")
     git checkout -b $(branch_name ${RELEASE_VERSION} "rc_merge")
 
