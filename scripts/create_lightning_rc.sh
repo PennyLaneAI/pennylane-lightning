@@ -4,17 +4,36 @@
 
 # Set version numbers
 STABLE_VERSION=0.42.0
-RELEASE_VERSION=0.42.0
+RELEASE_VERSION=0.43.0
 NEW_VERSION=0.44.0
 
 IS_TEST=true
 
 # Check if gh CLI is installed
-if ! command -v gh &> /dev/null
-then
+if ! command -v gh &> /dev/null; then
     echo "gh CLI could not be found"
     exit
 fi
+
+# --------------------------------------------------------------------------------------------------
+# Script functions
+# --------------------------------------------------------------------------------------------------
+help(){
+
+    echo "Usage: create_lightning_rc.sh [OPTIONS]"
+    echo ""
+    echo "Options:"
+    echo "  -s, --stable_version [version]    Specify the stable version. Default $STABLE_VERSION"
+    echo "  -r, --release_version [version]   Specify the release version. Default $RELEASE_VERSION"
+    echo "  -n, --new_version [version]       Specify the new version. Default $NEW_VERSION"
+    echo "  -t, --test                        Run on test version, gh pr create with --dry-run. Default $IS_TEST"
+    echo "  --create_rc                       Create a release candidate"
+    echo "  --lightning_test                  Run Lightning tests"
+    echo "  --release                         Perform release actions on GitHub"
+    echo "  --release_assets                  Handle release assets to upload"
+    echo "  -h, --help                        Show this help message"
+}
+
 
 # Utils functions
 use_dry_run(){
@@ -35,7 +54,7 @@ branch_name(){
     branch=$(echo "v${version}_${suffix}" | tr '[:upper:]' '[:lower:]')
 
     if [ "$IS_TEST" == "true" ]; then
-         branch="test_v${version}_${suffix}_test"
+         branch="test_v${version}_${suffix}_test0"
     fi
     
     echo $branch
@@ -44,6 +63,49 @@ branch_name(){
 rreplace(){
    grep -rl "$1" . | xargs sed -i "s|$1|$2|g"
 }
+
+test_pennylane_version(){
+    # Test if the Pennylane Lightning version is correct
+
+    backends=(
+        "lightning.qubit"
+        "lightning.gpu"
+        "lightning.kokkos"
+        "lightning.tensor"
+    )
+
+    while IFS= read -r line; do
+        backend=$(echo "$line" | awk '{print $2}')
+        if [[ " ${backends[*]} " == *" $backend "* ]]; then
+            if [[ "$line" == *"$RELEASE_VERSION"* ]]; then
+                echo "✅  Correct version for backend: $backend"
+            else
+                echo "❌  Wrong version for backend: $backend"
+            fi
+            # Remove backend from list
+            backends=("${backends[@]/$backend}")
+            backends=($(printf "%s\n" "${backends[@]}" | grep -v '^$'))
+        else
+            echo "Unknown backend: $backend"
+            continue
+        fi
+    done <<< $(python -c "import pennylane as qml; qml.about(); exit()"  | grep -- '- lightning')
+
+    # If list is not empty, print remaining backends
+    if [[ ${#backends[@]} -gt 0 ]]; then
+        echo "⚠️  Missing backends: ${backends[@]}"
+    fi
+}
+
+create_release_notes(){
+    # Create the release notes for the release
+    CHANGELOG_FILE=".github/CHANGELOG.md"
+    changelog_lower_bound=$(grep -n -- "---" "${CHANGELOG_FILE}" | head -n 1 | cut -d: -f1)
+    sed -n "1,${changelog_lower_bound}p" $CHANGELOG_FILE | sed ':a;N;$!ba;s/\.\n *\[(#/\. \[(#/g' > release_notes.md
+}
+
+
+# Release functions
 
 create_release_candidate_branch() {
     # Create a new branch for the release candidate
@@ -130,7 +192,7 @@ create_docker_PR(){
     git commit -m "Update compat-docker-release.yml to use v${RELEASE_VERSION}"
     git push --set-upstream origin $(branch_name ${RELEASE_VERSION} docker)
 
-    gh pr create $dry_run \
+    gh pr create $(use_dry_run) \
         --title "Docker test for v${RELEASE_VERSION} RC branch" \
         --body "Docker test for v${RELEASE_VERSION} RC branch." \
         --head $(branch_name ${RELEASE_VERSION} docker) \
@@ -192,45 +254,12 @@ create_version_bump_PR(){
 
     git push --set-upstream origin $(branch_name ${RELEASE_VERSION} bump)
 
-    gh pr create $dry_run \
+    gh pr create $(use_dry_run) \
         --title "Bump version to v${NEW_VERSION}-dev" \
         --body "Bump version to v${NEW_VERSION}-dev." \
         --head $(branch_name ${RELEASE_VERSION} bump) \
         --base master \
         --label 'urgent'
-}
-
-test_pennylane_version(){
-    # Test if the Pennylane Lightning version is correct
-
-    backends=(
-        "lightning.qubit"
-        "lightning.gpu"
-        "lightning.kokkos"
-        "lightning.tensor"
-    )
-
-    while IFS= read -r line; do
-        backend=$(echo "$line" | awk '{print $2}')
-        if [[ " ${backends[*]} " == *" $backend "* ]]; then
-            if [[ "$line" == *"$RELEASE_VERSION"* ]]; then
-                echo "✅  Correct version for backend: $backend"
-            else
-                echo "❌  Wrong version for backend: $backend"
-            fi
-            # Remove backend from list
-            backends=("${backends[@]/$backend}")
-            backends=($(printf "%s\n" "${backends[@]}" | grep -v '^$'))
-        else
-            echo "Unknown backend: $backend"
-            continue
-        fi
-    done <<< $(python -c "import pennylane as qml; qml.about(); exit()"  | grep -- '- lightning')
-
-    # If list is not empty, print remaining backends
-    if [[ ${#backends[@]} -gt 0 ]]; then
-        echo "⚠️  Missing backends: ${backends[@]}"
-    fi
 }
 
 test_install_lightning(){
@@ -276,7 +305,8 @@ test_install_lightning(){
 download_artifacts_gh(){
     # Download the artifacts from the GitHub Actions runs
 
-    wheels_runners=$(gh run list --branch $(branch_name ${RELEASE_VERSION} rc) --json status,workflowName,workflowDatabaseId | jq '.[] | select(.workflowName | contains("Wheel"))')
+    wheels_runners=$(gh run list --branch $(branch_name ${RELEASE_VERSION} rc) \
+        --json status,workflowName,workflowDatabaseId | jq '.[] | select(.workflowName | contains("Wheel"))')
 
     completed_runners=$(echo "$wheels_runners" | jq -r '. | select(.status == "completed") | .workflowDatabaseId')
 
@@ -347,16 +377,10 @@ create_GitHub_release(){
         --draft --latest
 }
 
-create_changelog_for_release(){
-    # Create the release notes for the release
-    CHANGELOG_FILE=".github/CHANGELOG.md"
-    changelog_lower_bound=$(grep -n -- "---" "${CHANGELOG_FILE}" | head -n 1 | cut -d: -f1)
-    sed -n "1,${changelog_lower_bound}p" $CHANGELOG_FILE | sed ':a;N;$!ba;s/\.\n *\[(#/\. \[(#/g' > release_notes.md
-}
-
 download_release_artifacts_gh(){
     # Download the artifacts from the GitHub Actions runs
-    wheels_runners=$(gh run list --event release --branch $(branch_name ${RELEASE_VERSION}) --json status,workflowName,workflowDatabaseId | jq '.[] | select(.workflowName | contains("Wheel"))')
+    wheels_runners=$(gh run list --event release --branch $(branch_name ${RELEASE_VERSION}) \
+        --json status,workflowName,workflowDatabaseId | jq '.[] | select(.workflowName | contains("Wheel"))')
 
      completed_runners=$(echo "$wheels_runners" | jq -r '. | select(.status == "completed") | .workflowDatabaseId')
      incomplete_runners=$(echo "$wheels_runners" | jq -r '. | select(.status != "completed") ')
@@ -420,9 +444,10 @@ create_merge_branch(){
 }
 
 create_merge_PR(){
+    # Create a PR to merge the RC into master and bump the version with NEW_VERSION-dev
     git checkout $(branch_name ${RELEASE_VERSION} "rc_merge")
 
-    gh pr create $dry_run \
+    gh pr create $(use_dry_run) \
     --title "Merge RC v${RELEASE_VERSION}_rc to v${NEW_VERSION}-dev" \
     --body "v${RELEASE_VERSION} RC merge branch." \
     --head $(branch_name ${RELEASE_VERSION} "rc_merge") \
@@ -431,4 +456,109 @@ create_merge_PR(){
 }
 
 
+# --------------------------------------------------------------------------------------------------
+# Script body
+# --------------------------------------------------------------------------------------------------
 
+POSITIONAL_ARGS=()
+
+CREATE_RC="false"
+LIGHTNING_TEST="false"
+RELEASE_ACTION="false"
+RELEASE_ASSETS="false"
+
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    -h|--help)
+      help
+      exit 0
+      ;;
+    -s|--stable_version)
+      STABLE_VERSION="$2"
+      shift # past argument
+      shift # past value
+      ;;
+    -r|--release_version)
+      RELEASE_VERSION="$2"
+      shift # past argument
+      shift # past value
+      ;;
+    -n|--new_version)
+      NEW_VERSION="$2"
+      shift # past argument
+      shift # past value
+      ;;
+    -t|--test)
+      IS_TEST="$2"
+      shift # past argument
+      shift # past value
+      ;;
+    --create_rc)
+      CREATE_RC="true"
+      shift # past argument
+      ;;
+    --lightning_test)
+      LIGHTNING_TEST="true"
+      shift # past argument
+      ;;
+    --release)
+      RELEASE_ACTION="true"
+      shift # past argument
+      ;;
+    --release_assets)
+      RELEASE_ASSETS="true"
+      shift # past argument
+      ;;
+    -*|--*)
+      echo "Unknown option $1"
+      echo "Use the option --help' for more information."
+      exit 1
+      ;;
+    *)
+      POSITIONAL_ARGS+=("$1") # save positional arg
+      shift # past argument
+      ;;
+  esac
+done
+
+set -- "${POSITIONAL_ARGS[@]}" # restore positional parameters
+
+
+echo "STABLE_VERSION: $STABLE_VERSION"
+echo "RELEASE_VERSION: $RELEASE_VERSION"
+echo "NEW_VERSION: $NEW_VERSION"
+echo "IS_TEST: $IS_TEST"
+echo "CREATE_RC: $CREATE_RC"
+echo "LIGHTNING_TEST: $LIGHTNING_TEST"
+echo "RELEASE_ACTION: $RELEASE_ACTION"
+echo "RELEASE_ASSETS: $RELEASE_ASSETS"
+
+
+if [ "$CREATE_RC" == "true" ]; then
+    create_release_candidate_branch
+    create_release_candidate_PR
+    create_docs_review_PR
+    create_docker_PR
+    create_version_bump_PR
+fi
+
+exit 1
+
+if [ "$LIGHTNING_TEST" == "true" ]; then
+    test_install_lightning
+    download_artifacts_gh
+    test_wheels_for_unwanted_libraries
+fi
+
+if [ "$RELEASE_ACTION" == "true" ]; then
+    create_release_branch
+    create_GitHub_release
+    create_merge_branch
+    create_merge_PR
+fi
+
+if [ "$RELEASE_ASSETS" == "true" ]; then
+    download_release_artifacts_gh
+    create_sdist
+    upload_release_assets_gh
+fi
