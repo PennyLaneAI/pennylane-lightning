@@ -193,17 +193,26 @@ create_docker_PR(){
 
 
     git checkout master
+    echo "FDX 01"
     git status
-    sleep 5
+    sleep 3
     git checkout -b $(branch_name ${RELEASE_VERSION} docker)
+
+    echo "FDX 02"
+    git status
+    sleep 3
 
     rreplace "v${STABLE_VERSION}" "v${RELEASE_VERSION}" .github/workflows/compat-docker-release.yml
 
     git add .github/workflows/compat-docker-release.yml
     git commit -m "Update compat-docker-release.yml to use v${RELEASE_VERSION}"
 
+    echo "FDX 03"
     git status
-    sleep 5
+    sleep 3
+
+    echo "FDX finish"
+
     # git push --set-upstream origin $(branch_name ${RELEASE_VERSION} docker)
 
     # gh pr create $(use_dry_run) \
