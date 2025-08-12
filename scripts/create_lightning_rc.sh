@@ -125,7 +125,7 @@ create_release_candidate_branch() {
     git checkout $(branch_name ${RELEASE_VERSION} rc)
 
     # Update lightning version
-    sed -i "/${STABLE_VERSION}/d" pennylane_lightning/core/_version.py
+    sed -i "/${RELEASE_VERSION}/d" pennylane_lightning/core/_version.py
     echo '__version__ = "'${RELEASE_VERSION}'-rc0"' >> pennylane_lightning/core/_version.py
     sed -i "s|Release ${RELEASE_VERSION}-dev (development release)|Release ${RELEASE_VERSION}|g" .github/CHANGELOG.md
 
@@ -156,7 +156,7 @@ create_release_candidate_branch() {
     git add .github/workflows/wheel_*
     git commit -m "Update wheel workflows for pull request"
 
-    # git push --set-upstream origin $(branch_name ${RELEASE_VERSION} rc)
+    git push --set-upstream origin $(branch_name ${RELEASE_VERSION} rc)
 }
 
 create_release_candidate_PR(){
@@ -187,36 +187,22 @@ create_docs_review_PR(){
 create_docker_PR(){
     # Create a PR for the Docker test in PTM
 
-
     git checkout master
-    echo "FDX 01"
-    git status
-    sleep 3
     git checkout -b $(branch_name ${RELEASE_VERSION} docker)
-
-    echo "FDX 02"
-    git status
-    sleep 3
 
     sed -i "s|v${STABLE_VERSION}|v${RELEASE_VERSION}|g" .github/workflows/compat-docker-release.yml
 
     git add .github/workflows/compat-docker-release.yml
     git commit -m "Update compat-docker-release.yml to use v${RELEASE_VERSION}"
 
-    echo "FDX 03"
-    git status
-    sleep 3
+    git push --set-upstream origin $(branch_name ${RELEASE_VERSION} docker)
 
-    echo "FDX finish"
-
-    # git push --set-upstream origin $(branch_name ${RELEASE_VERSION} docker)
-
-    # gh pr create $(use_dry_run) \
-    #     --title "Docker test for v${RELEASE_VERSION} RC branch" \
-    #     --body "Docker test for v${RELEASE_VERSION} RC branch." \
-    #     --head $(branch_name ${RELEASE_VERSION} docker) \
-    #     --base master \
-    #     --label 'urgent'
+    gh pr create $(use_dry_run) \
+        --title "Docker test for v${RELEASE_VERSION} RC branch" \
+        --body "Docker test for v${RELEASE_VERSION} RC branch." \
+        --head $(branch_name ${RELEASE_VERSION} docker) \
+        --base master \
+        --label 'urgent'
 }
 
 new_changelog_entry=$(
@@ -263,6 +249,9 @@ create_version_bump_PR(){
         echo ""
         cat .github/CHANGELOG.md
     } > temp_changelog.md && mv temp_changelog.md .github/CHANGELOG.md
+
+    sed -i "s|Release ${RELEASE_VERSION}-dev (development release)|Release ${RELEASE_VERSION}|g" .github/CHANGELOG.md
+
     git add .github/CHANGELOG.md
     git commit -m "Update CHANGELOG.md with new version entry."
 
@@ -273,18 +262,20 @@ create_version_bump_PR(){
     git add pennylane_lightning/core/_version.py
     git commit -m "Bump version to v${NEW_VERSION}."
 
-    # git push --set-upstream origin $(branch_name ${RELEASE_VERSION} bump)
+    git push --set-upstream origin $(branch_name ${RELEASE_VERSION} bump)
 
-    # gh pr create $(use_dry_run) \
-    #     --title "Bump version to v${NEW_VERSION}-dev" \
-    #     --body "Bump version to v${NEW_VERSION}-dev." \
-    #     --head $(branch_name ${RELEASE_VERSION} bump) \
-    #     --base master \
-    #     --label 'urgent'
+    gh pr create $(use_dry_run) \
+        --title "Bump version to v${NEW_VERSION}-dev" \
+        --body "Bump version to v${NEW_VERSION}-dev." \
+        --head $(branch_name ${RELEASE_VERSION} bump) \
+        --base master \
+        --label 'urgent'
 }
 
 test_install_lightning(){
     # Test Lightning installation 
+
+    git checkout $(branch_name ${RELEASE_VERSION} rc)
 
     # Test installation of lightning default backends
     pip install -r requirements-dev.txt
@@ -379,7 +370,7 @@ create_release_branch(){
     git add pennylane_lightning/core/_version.py
     git add .github/workflows/wheel_*
     git commit -m "Pre-release updates"
-    # git push --set-upstream origin $(branch_name ${RELEASE_VERSION} release)
+    git push --set-upstream origin $(branch_name ${RELEASE_VERSION} release)
 }
 
 create_GitHub_release(){
@@ -389,14 +380,14 @@ create_GitHub_release(){
     create_release_notes
 
     # Create tag
-    # # git tag -a "$(branch_name ${RELEASE_VERSION})" -m "Release ${RELEASE_VERSION}"
-    # # git push origin "$(branch_name ${RELEASE_VERSION})"
+    git tag -a "$(branch_name ${RELEASE_VERSION})" -m "Release ${RELEASE_VERSION}"
+    git push origin "$(branch_name ${RELEASE_VERSION})"
 
-    # gh release create $(branch_name ${RELEASE_VERSION}) \
-    #     --target $(branch_name ${RELEASE_VERSION} release) \
-    #     --title "Release ${RELEASE_VERSION}" \
-    #     --notes-file release_notes.md \
-    #     --draft --latest
+    gh release create $(branch_name ${RELEASE_VERSION}) \
+        --target $(branch_name ${RELEASE_VERSION} release) \
+        --title "Release ${RELEASE_VERSION}" \
+        --notes-file release_notes.md \
+        --draft --latest
 }
 
 download_release_artifacts_gh(){
@@ -448,9 +439,9 @@ create_merge_branch(){
     git commit -m "Target PennyLane master in requirements-[dev|tests].txt."
 
     sed -i "/${RELEASE_VERSION}/d" pennylane_lightning/core/_version.py
-    echo '__version__ = "'${RELEASE_VERSION}'-rc0"' >> pennylane_lightning/core/_version.py
+    echo '__version__ = "'${NEW_VERSION}'-dev0"' >> pennylane_lightning/core/_version.py
     git add pennylane_lightning/core/_version.py
-    git commit -m "Bump version to ${RELEASE_VERSION}-rc0"
+    git commit -m "Bump version to ${NEW_VERSION}-dev0"
 
     sed -i 's/set(CATALYST_GIT_TAG *"[^"]*" *CACHE STRING "GIT_TAG value to build Catalyst")/set(CATALYST_GIT_TAG "main" CACHE STRING "GIT_TAG value to build Catalyst")/' cmake/support_catalyst.cmake
     git add cmake/support_catalyst.cmake
@@ -462,7 +453,7 @@ create_merge_branch(){
     done
     git commit -m "Update Docker workflows for new release version"
 
-#    git push --set-upstream origin $(branch_name ${RELEASE_VERSION} "rc_merge")
+   git push --set-upstream origin $(branch_name ${RELEASE_VERSION} "rc_merge")
 }
 
 create_merge_PR(){
@@ -558,8 +549,8 @@ echo "RELEASE_ASSETS: $RELEASE_ASSETS"
 
 if [ "$CREATE_RC" == "true" ]; then
     create_release_candidate_branch
-    # create_release_candidate_PR
-    # create_docs_review_PR
+    create_release_candidate_PR
+    create_docs_review_PR
     create_docker_PR
     create_version_bump_PR
     git checkout master
