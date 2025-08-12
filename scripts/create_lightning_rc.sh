@@ -550,7 +550,7 @@ if [ "$CREATE_RC" == "true" ]; then
     # create_release_candidate_PR
     # create_docs_review_PR
     create_docker_PR
-    create_version_bump_PR
+    # create_version_bump_PR
 fi
 
 exit 1
