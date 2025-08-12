@@ -21,6 +21,9 @@
 
 <h3>Deprecations 👋</h3>
 
+- Specifying `shots` at `qml.device` initialization is deprecated. Instead, use `qml.set_shots` to configure shots for a specific QNode.
+   [(#1221)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1221)
+
 <h3>Documentation 📝</h3>
 
 - Added missing `Kernel performance tuning` documentation page to the AVX2/AVX512 kernels index for improved discoverability.
