@@ -362,7 +362,8 @@ create_release_branch(){
     # Disable to upload the wheels to TestPyPI and GitHub Artifacts
     sed -i "s|event_name == 'pull_request'|event_name == 'release'|g" .github/workflows/wheel_*
 
-    git add -u .
+    git add pennylane_lightning/core/_version.py
+    git add .github/workflows/wheel_*
     git commit -m "Pre-release updates"
     git push --set-upstream origin $(branch_name ${RELEASE_VERSION} release)
 }
