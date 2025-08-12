@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# Exit immediately if a command exits with a non-zero status
+set -e
+
 # This script creates a release candidate branch for PennyLane-Lightning
 
 # Set version numbers
