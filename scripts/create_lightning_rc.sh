@@ -202,7 +202,8 @@ create_docker_PR(){
     git status
     sleep 3
 
-    rreplace "v${STABLE_VERSION}" "v${RELEASE_VERSION}" .github/workflows/compat-docker-release.yml
+    # rreplace "v${STABLE_VERSION}" "v${RELEASE_VERSION}" .github/workflows/compat-docker-release.yml
+    echo "Test FDX" >> .github/workflows/compat-docker-release.yml
 
     git add .github/workflows/compat-docker-release.yml
     git commit -m "Update compat-docker-release.yml to use v${RELEASE_VERSION}"
