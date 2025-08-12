@@ -557,6 +557,7 @@ if [ "$CREATE_RC" == "true" ]; then
     # create_docs_review_PR
     create_docker_PR
     # create_version_bump_PR
+    git checkout master
 fi
 
 exit 1
