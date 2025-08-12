@@ -54,8 +54,11 @@ branch_name(){
     branch=$(echo "v${version}_${suffix}" | tr '[:upper:]' '[:lower:]')
 
     if [ "$IS_TEST" == "true" ]; then
-         branch="test_v${version}_${suffix}_test0"
+        branch="test_v${version}_${suffix}_test0"
     fi
+
+    echo "Warning: delete the following line before merging"
+    branch="test_v${version}_${suffix}_test0"
     
     echo $branch
 }
@@ -152,6 +155,8 @@ create_release_candidate_branch() {
 
     # Enable to upload the wheels to TestPyPI and GitHub Artifacts
     sed -i "s|event_name == 'release'|event_name == 'pull_request'|g" .github/workflows/wheel_*
+    git add .github/workflows/wheel_*
+    git commit -m "Update wheel workflows for pull request"
 
     git push --set-upstream origin $(branch_name ${RELEASE_VERSION} rc)
 }
