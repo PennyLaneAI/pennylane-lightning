@@ -115,8 +115,8 @@ create_release_candidate_branch() {
     echo "Warning: uncomment the following lines before merge master"
     # clean up and checkout master
     # git reset --hard
-    # git checkout master
-    # git pull origin master
+    git checkout master
+    git pull origin master
 
     # Create branches 
     for branch in base docs rc; do
