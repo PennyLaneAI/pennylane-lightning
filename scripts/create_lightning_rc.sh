@@ -191,13 +191,19 @@ create_docs_review_PR(){
 create_docker_PR(){
     # Create a PR for the Docker test in PTM
 
+
     git checkout master
+    git status
+    sleep 5
     git checkout -b $(branch_name ${RELEASE_VERSION} docker)
 
     rreplace "v${STABLE_VERSION}" "v${RELEASE_VERSION}" .github/workflows/compat-docker-release.yml
 
     git add .github/workflows/compat-docker-release.yml
     git commit -m "Update compat-docker-release.yml to use v${RELEASE_VERSION}"
+
+    git status
+    sleep 5
     # git push --set-upstream origin $(branch_name ${RELEASE_VERSION} docker)
 
     # gh pr create $(use_dry_run) \
@@ -549,7 +555,7 @@ if [ "$CREATE_RC" == "true" ]; then
     create_release_candidate_branch
     # create_release_candidate_PR
     # create_docs_review_PR
-    # create_docker_PR
+    create_docker_PR
     # create_version_bump_PR
 fi
 
