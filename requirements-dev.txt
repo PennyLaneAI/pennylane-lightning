@@ -6,7 +6,7 @@ cmake
 scipy-openblas32>=0.3.26
 custatevec-cu12; sys_platform == "linux"
 cutensornet-cu12; sys_platform == "linux"
-git+https://github.com/PennyLaneAI/pennylane.git@v0.43.0-rc0
+git+https://github.com/PennyLaneAI/pennylane.git@master
 
 # Testing Dependencies
 pytest>=8.4.1
