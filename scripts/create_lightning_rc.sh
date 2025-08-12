@@ -121,7 +121,7 @@ create_release_candidate_branch() {
     # Create branches 
     for branch in base docs rc; do
         git checkout -b $(branch_name ${RELEASE_VERSION} ${branch})
-        git push --set-upstream origin $(branch_name ${RELEASE_VERSION} ${branch})
+        # git push --set-upstream origin $(branch_name ${RELEASE_VERSION} ${branch})
     done
     git checkout $(branch_name ${RELEASE_VERSION} rc)
 
@@ -157,7 +157,7 @@ create_release_candidate_branch() {
     git add .github/workflows/wheel_*
     git commit -m "Update wheel workflows for pull request"
 
-    git push --set-upstream origin $(branch_name ${RELEASE_VERSION} rc)
+    # git push --set-upstream origin $(branch_name ${RELEASE_VERSION} rc)
 }
 
 create_release_candidate_PR(){
@@ -195,14 +195,14 @@ create_docker_PR(){
 
     git add .github/workflows/compat-docker-release.yml
     git commit -m "Update compat-docker-release.yml to use v${RELEASE_VERSION}"
-    git push --set-upstream origin $(branch_name ${RELEASE_VERSION} docker)
+    # git push --set-upstream origin $(branch_name ${RELEASE_VERSION} docker)
 
-    gh pr create $(use_dry_run) \
-        --title "Docker test for v${RELEASE_VERSION} RC branch" \
-        --body "Docker test for v${RELEASE_VERSION} RC branch." \
-        --head $(branch_name ${RELEASE_VERSION} docker) \
-        --base master \
-        --label 'urgent'
+    # gh pr create $(use_dry_run) \
+    #     --title "Docker test for v${RELEASE_VERSION} RC branch" \
+    #     --body "Docker test for v${RELEASE_VERSION} RC branch." \
+    #     --head $(branch_name ${RELEASE_VERSION} docker) \
+    #     --base master \
+    #     --label 'urgent'
 }
 
 new_changelog_entry=$(
@@ -259,14 +259,14 @@ create_version_bump_PR(){
     git add pennylane_lightning/core/_version.py
     git commit -m "Bump version to v${NEW_VERSION}."
 
-    git push --set-upstream origin $(branch_name ${RELEASE_VERSION} bump)
+    # git push --set-upstream origin $(branch_name ${RELEASE_VERSION} bump)
 
-    gh pr create $(use_dry_run) \
-        --title "Bump version to v${NEW_VERSION}-dev" \
-        --body "Bump version to v${NEW_VERSION}-dev." \
-        --head $(branch_name ${RELEASE_VERSION} bump) \
-        --base master \
-        --label 'urgent'
+    # gh pr create $(use_dry_run) \
+    #     --title "Bump version to v${NEW_VERSION}-dev" \
+    #     --body "Bump version to v${NEW_VERSION}-dev." \
+    #     --head $(branch_name ${RELEASE_VERSION} bump) \
+    #     --base master \
+    #     --label 'urgent'
 }
 
 test_install_lightning(){
@@ -365,7 +365,7 @@ create_release_branch(){
     git add pennylane_lightning/core/_version.py
     git add .github/workflows/wheel_*
     git commit -m "Pre-release updates"
-    git push --set-upstream origin $(branch_name ${RELEASE_VERSION} release)
+    # git push --set-upstream origin $(branch_name ${RELEASE_VERSION} release)
 }
 
 create_GitHub_release(){
@@ -375,14 +375,14 @@ create_GitHub_release(){
     create_release_notes
 
     # Create tag
-    git tag -a "$(branch_name ${RELEASE_VERSION})" -m "Release ${RELEASE_VERSION}"
-    git push origin "$(branch_name ${RELEASE_VERSION})"
+    # # git tag -a "$(branch_name ${RELEASE_VERSION})" -m "Release ${RELEASE_VERSION}"
+    # # git push origin "$(branch_name ${RELEASE_VERSION})"
 
-    gh release create $(branch_name ${RELEASE_VERSION}) \
-        --target $(branch_name ${RELEASE_VERSION} release) \
-        --title "Release ${RELEASE_VERSION}" \
-        --notes-file release_notes.md \
-        --draft --latest
+    # gh release create $(branch_name ${RELEASE_VERSION}) \
+    #     --target $(branch_name ${RELEASE_VERSION} release) \
+    #     --title "Release ${RELEASE_VERSION}" \
+    #     --notes-file release_notes.md \
+    #     --draft --latest
 }
 
 download_release_artifacts_gh(){
@@ -448,7 +448,7 @@ create_merge_branch(){
     done
     git commit -m "Update Docker workflows for new release version"
 
-   git push --set-upstream origin $(branch_name ${RELEASE_VERSION} "rc_merge")
+#    git push --set-upstream origin $(branch_name ${RELEASE_VERSION} "rc_merge")
 }
 
 create_merge_PR(){
