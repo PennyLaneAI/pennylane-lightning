@@ -57,7 +57,7 @@ branch_name(){
         branch="test_v${version}_${suffix}_test0"
     fi
 
-    echo "Warning: delete the following line before merging"
+    # Warning: delete the following line before merging
     branch="test_v${version}_${suffix}_test0"
     
     echo $branch
