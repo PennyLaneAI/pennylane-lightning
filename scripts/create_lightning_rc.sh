@@ -110,6 +110,7 @@ create_release_notes(){
 create_release_candidate_branch() {
     # Create a new branch for the release candidate
 
+    echo "Warning: uncomment the following lines before merge master"
     # clean up and checkout master
     # git reset --hard
     # git checkout master
@@ -543,6 +544,7 @@ if [ "$CREATE_RC" == "true" ]; then
 fi
 
 exit 1
+
 
 if [ "$LIGHTNING_TEST" == "true" ]; then
     test_install_lightning
