@@ -384,9 +384,11 @@ create_release_branch(){
 
     git checkout $(branch_name ${RELEASE_VERSION} rc)
 
+    if [ "$LOCAL_TEST" == "false" ]; then
     gh pr comment $(branch_name ${RELEASE_VERSION} rc) \
         --body "Forked as v${RELEASE_VERSION}_release to be released with tag v${RELEASE_VERSION}"
-
+    fi
+    
     # Create the release branch
     git checkout -b $(branch_name ${RELEASE_VERSION} release)
 
