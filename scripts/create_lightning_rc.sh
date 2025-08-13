@@ -315,7 +315,7 @@ test_install_lightning(){
     # Lightning Kokkos with CUDA and MPI
     pip uninstall -y pennylane_lightning_kokkos
     PL_BACKEND="lightning_kokkos" python scripts/configure_pyproject_toml.py
-    CMAKE_ARGS="-DENABLE_MPI=ON -DKokkos_ENABLE_OPENMP=ON" python -m pip install . -v
+    CMAKE_ARGS="-DENABLE_MPI=ON -DKokkos_ENABLE_CUDA=OFF -DKokkos_ENABLE_OPENMP=ON" python -m pip install . -v
 
     # Test import
     is_installed_kokkos_mpi=$(test_pennylane_version | grep lightning.kokkos)
