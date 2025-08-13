@@ -63,8 +63,8 @@ branch_name(){
     fi
 
     # Warning: delete the following line before merging
-    branch="test_v${version}_abc_${suffix}"
-    
+    branch="test_v${version}_${suffix}_alpha"
+
     echo $branch
 }
 
