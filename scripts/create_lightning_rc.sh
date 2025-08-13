@@ -14,6 +14,8 @@ IS_TEST=true
 
 LOCAL_TEST=false
 
+PUSH_TESTPYPI=false
+
 # Check if gh CLI is installed
 if ! command -v gh &> /dev/null; then
     echo "gh CLI could not be found"
@@ -160,9 +162,11 @@ create_release_candidate_branch() {
     git commit -m "Set rng_salt to v${RELEASE_VERSION} in tests/pytest.ini."
 
     # Enable to upload the wheels to TestPyPI and GitHub Artifacts
+    if [ "$PUSH_TESTPYPI" == "true" ]; then
     sed -i "s|event_name == 'release'|event_name == 'pull_request'|g" .github/workflows/wheel_*
     git add .github/workflows/wheel_*
     git commit -m "Update wheel workflows for pull request"
+    fi
 
     if [ "$LOCAL_TEST" == "false" ]; then
     git push --set-upstream origin $(branch_name ${RELEASE_VERSION} rc)
@@ -392,10 +396,11 @@ create_release_branch(){
     fi
 
     
-
+    if [ "$PUSH_TESTPYPI" == "true" ]; then
     # Disable to upload the wheels to TestPyPI and GitHub Artifacts
     sed -i "s|event_name == 'pull_request'|event_name == 'release'|g" .github/workflows/wheel_*
-
+    fi
+    
     git add pennylane_lightning/core/_version.py
     git add .github/workflows/wheel_*
     git commit -m "Pre-release updates"
