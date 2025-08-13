@@ -59,11 +59,11 @@ branch_name(){
     branch=$(echo "v${version}_${suffix}" | tr '[:upper:]' '[:lower:]')
 
     if [ "$IS_TEST" == "true" ]; then
-        branch="test_v${version}_${suffix}_test0"
+        branch="v${version}_${suffix}_test0"
     fi
 
     # Warning: delete the following line before merging
-    branch="test_v${version}_${suffix}_test0"
+    branch="test_v${version}_abc_${suffix}"
     
     echo $branch
 }
