@@ -45,7 +45,7 @@ use_dry_run(){
     # Check if the script is running for testing. If so, use the --dry-run flag.
     dry_run="--draft"
 
-    if [ "$IS_TEST" == "true" ]; then
+    if [ "$LOCAL_TEST" == "true" ]; then
         dry_run="--dry-run"
     fi
     
