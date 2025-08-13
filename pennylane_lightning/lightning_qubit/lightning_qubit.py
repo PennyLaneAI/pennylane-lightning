@@ -510,6 +510,7 @@ def _resolve_mcm_method(mcm_config: MCMConfig):
 
 
 def null_postprocess(results):
+    """ do nothing """
     return results[0]
 
 
