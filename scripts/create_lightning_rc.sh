@@ -65,7 +65,7 @@ branch_name(){
     fi
 
     # Warning: delete the following line before merging
-    branch="v${version}_${suffix}_alpha"
+    branch="test_v${version}_${suffix}_alpha"
 
     echo $branch
 }
@@ -191,6 +191,9 @@ create_docs_review_PR(){
     # Create a PR for the docs review
 
     git checkout $(branch_name ${RELEASE_VERSION} docs)
+
+    git commit -m "Modify docs for v${RELEASE_VERSION}" --allow-empty
+
     if [ "$LOCAL_TEST" == "false" ]; then
     gh pr create $(use_dry_run) \
         --title "Create v${RELEASE_VERSION} Doc branch" \
