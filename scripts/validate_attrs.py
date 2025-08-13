@@ -1,7 +1,7 @@
-import re
 import pprint
-from zipfile import ZipFile
+import re
 from pathlib import Path
+from zipfile import ZipFile
 
 paths = Path().glob("**/*.whl")
 for path in paths:
@@ -10,30 +10,31 @@ for path in paths:
     for name in names:
 
         # Development files
-        if  (".cpp" in name or ".hpp" in name or ".cu" in name or ".py" in name):
+        if ".cpp" in name or ".hpp" in name or ".cu" in name or ".py" in name:
             continue
         # Documentation files
-        if (".txt" in name or ".md" in name or ".dist-info/" in name):
+        if ".txt" in name or ".md" in name or ".dist-info/" in name:
             continue
         # Additional files
-        if (".clang-tidy" in name or "toml" in name):
+        if ".clang-tidy" in name or "toml" in name:
             continue
 
         # Specific libraries
         if re.match(r".*libgomp.*\.so.*", name) or re.match(r".*libomp.*\.dylib.*", name):
             continue
-        if ("catalyst.so" in name or "catalyst.dylib" in name or "catalyst.dll" in name):
+        if "catalyst.so" in name or "catalyst.dylib" in name or "catalyst.dll" in name:
             continue
-        if ( re.match(r"pennylane_lightning/lightning_.*_ops.cpython-3.?.?-.*-linux-gnu\.so", name)
+        if (
+            re.match(r"pennylane_lightning/lightning_.*_ops.cpython-3.?.?-.*-linux-gnu\.so", name)
             or re.match(r"pennylane_lightning/lightning_.*_ops.cpython-3.?.?-darwin\.so", name)
             or re.match(r"pennylane_lightning/lightning_.*_ops.pdb", name)
         ):
             continue
-        
+
         # Directories paths
         if name.endswith("/"):
             continue
-        
+
         additional_packages.append(name)
 
     if additional_packages:
