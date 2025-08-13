@@ -129,7 +129,7 @@ create_release_candidate_branch() {
     git checkout $(branch_name ${RELEASE_VERSION} rc)
 
     # Update lightning version
-    sed -i "/${RELEASE_VERSION}/d" pennylane_lightning/core/_version.py
+    sed -i "/__version__/d" pennylane_lightning/core/_version.py
     if [ "$IS_TEST" == "true" ]; then
         echo '__version__ = "'${RELEASE_VERSION}'-rc0-dev99"' >> pennylane_lightning/core/_version.py
     else
@@ -272,7 +272,7 @@ create_version_bump_PR(){
     git commit -m "Update CHANGELOG.md with new version entry."
 
     # Update lightning version
-    sed -i "/${RELEASE_VERSION}/d" pennylane_lightning/core/_version.py
+    sed -i "/__version__/d" pennylane_lightning/core/_version.py
     if [ "$IS_TEST" == "true" ]; then
         echo '__version__ = "'${NEW_VERSION}'-alpha1-dev0"' >> pennylane_lightning/core/_version.py
     else
@@ -384,7 +384,7 @@ create_release_branch(){
     git checkout -b $(branch_name ${RELEASE_VERSION} release)
 
     # Update version
-    sed -i "/${RELEASE_VERSION}/d" pennylane_lightning/core/_version.py
+    sed -i "/__version__/d" pennylane_lightning/core/_version.py
     if [ "$IS_TEST" == "true" ]; then
         echo '__version__ = "'${RELEASE_VERSION}'-alpha"' >> pennylane_lightning/core/_version.py
     else
@@ -471,7 +471,7 @@ create_merge_branch(){
     done
     git commit -m "Target PennyLane master in requirements-[dev|tests].txt."
 
-    sed -i "/${RELEASE_VERSION}/d" pennylane_lightning/core/_version.py
+    sed -i "/__version__/d" pennylane_lightning/core/_version.py
     if [ "$IS_TEST" == "true" ]; then
         echo '__version__ = "'${NEW_VERSION}'-alpha1-dev0"' >> pennylane_lightning/core/_version.py
     else
