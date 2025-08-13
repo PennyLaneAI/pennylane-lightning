@@ -126,7 +126,11 @@ create_release_candidate_branch() {
 
     # Update lightning version
     sed -i "/${RELEASE_VERSION}/d" pennylane_lightning/core/_version.py
-    echo '__version__ = "'${RELEASE_VERSION}'-rc0"' >> pennylane_lightning/core/_version.py
+    if [ "$IS_TEST" == "true" ]; then
+        echo '__version__ = test."'${RELEASE_VERSION}'-rc0-test0"' >> pennylane_lightning/core/_version.py
+    else
+        echo '__version__ = "'${RELEASE_VERSION}'-rc0"' >> pennylane_lightning/core/_version.py
+    fi
     sed -i "s|Release ${RELEASE_VERSION}-dev (development release)|Release ${RELEASE_VERSION}|g" .github/CHANGELOG.md
 
     git add pennylane_lightning/core/_version.py .github/CHANGELOG.md
@@ -156,7 +160,7 @@ create_release_candidate_branch() {
     git add .github/workflows/wheel_*
     git commit -m "Update wheel workflows for pull request"
 
-    git push --set-upstream origin $(branch_name ${RELEASE_VERSION} rc)
+    # git push --set-upstream origin $(branch_name ${RELEASE_VERSION} rc)
 }
 
 create_release_candidate_PR(){
@@ -195,14 +199,14 @@ create_docker_PR(){
     git add .github/workflows/compat-docker-release.yml
     git commit -m "Update compat-docker-release.yml to use v${RELEASE_VERSION}"
 
-    git push --set-upstream origin $(branch_name ${RELEASE_VERSION} docker)
+    # git push --set-upstream origin $(branch_name ${RELEASE_VERSION} docker)
 
-    gh pr create $(use_dry_run) \
-        --title "Docker test for v${RELEASE_VERSION} RC branch" \
-        --body "Docker test for v${RELEASE_VERSION} RC branch." \
-        --head $(branch_name ${RELEASE_VERSION} docker) \
-        --base master \
-        --label 'urgent'
+    # gh pr create $(use_dry_run) \
+    #     --title "Docker test for v${RELEASE_VERSION} RC branch" \
+    #     --body "Docker test for v${RELEASE_VERSION} RC branch." \
+    #     --head $(branch_name ${RELEASE_VERSION} docker) \
+    #     --base master \
+    #     --label 'urgent'
 }
 
 new_changelog_entry=$(
@@ -257,19 +261,23 @@ create_version_bump_PR(){
 
     # Update lightning version
     sed -i "/${RELEASE_VERSION}/d" pennylane_lightning/core/_version.py
-    echo '__version__ = "'${NEW_VERSION}'-dev0"' >> pennylane_lightning/core/_version.py
+    if [ "$IS_TEST" == "true" ]; then
+        echo '__version__ = test."'${NEW_VERSION}'-dev0-test0"' >> pennylane_lightning/core/_version.py
+    else
+        echo '__version__ = "'${NEW_VERSION}'-dev0"' >> pennylane_lightning/core/_version.py
+    fi
 
     git add pennylane_lightning/core/_version.py
     git commit -m "Bump version to v${NEW_VERSION}."
 
-    git push --set-upstream origin $(branch_name ${RELEASE_VERSION} bump)
+    # git push --set-upstream origin $(branch_name ${RELEASE_VERSION} bump)
 
-    gh pr create $(use_dry_run) \
-        --title "Bump version to v${NEW_VERSION}-dev" \
-        --body "Bump version to v${NEW_VERSION}-dev." \
-        --head $(branch_name ${RELEASE_VERSION} bump) \
-        --base master \
-        --label 'urgent'
+    # gh pr create $(use_dry_run) \
+    #     --title "Bump version to v${NEW_VERSION}-dev" \
+    #     --body "Bump version to v${NEW_VERSION}-dev." \
+    #     --head $(branch_name ${RELEASE_VERSION} bump) \
+    #     --base master \
+    #     --label 'urgent'
 }
 
 test_install_lightning(){
@@ -361,8 +369,14 @@ create_release_branch(){
     git checkout -b $(branch_name ${RELEASE_VERSION} release)
 
     # Update version
-    sed -i "/$RELEASE_VERSION/d" pennylane_lightning/core/_version.py
-    echo '__version__ = "'${RELEASE_VERSION}'"' >> pennylane_lightning/core/_version.py
+    sed -i "/${RELEASE_VERSION}/d" pennylane_lightning/core/_version.py
+    if [ "$IS_TEST" == "true" ]; then
+        echo '__version__ = test."'${RELEASE_VERSION}'-test0"' >> pennylane_lightning/core/_version.py
+    else
+        echo '__version__ = "'${RELEASE_VERSION}'"' >> pennylane_lightning/core/_version.py
+    fi
+
+    
 
     # Disable to upload the wheels to TestPyPI and GitHub Artifacts
     sed -i "s|event_name == 'pull_request'|event_name == 'release'|g" .github/workflows/wheel_*
@@ -370,7 +384,7 @@ create_release_branch(){
     git add pennylane_lightning/core/_version.py
     git add .github/workflows/wheel_*
     git commit -m "Pre-release updates"
-    git push --set-upstream origin $(branch_name ${RELEASE_VERSION} release)
+    # git push --set-upstream origin $(branch_name ${RELEASE_VERSION} release)
 }
 
 create_GitHub_release(){
@@ -381,7 +395,7 @@ create_GitHub_release(){
 
     # Create tag
     git tag -a "$(branch_name ${RELEASE_VERSION})" -m "Release ${RELEASE_VERSION}"
-    git push origin "$(branch_name ${RELEASE_VERSION})"
+    # git push origin "$(branch_name ${RELEASE_VERSION})"
 
     gh release create $(branch_name ${RELEASE_VERSION}) \
         --target $(branch_name ${RELEASE_VERSION} release) \
@@ -439,7 +453,11 @@ create_merge_branch(){
     git commit -m "Target PennyLane master in requirements-[dev|tests].txt."
 
     sed -i "/${RELEASE_VERSION}/d" pennylane_lightning/core/_version.py
-    echo '__version__ = "'${NEW_VERSION}'-dev0"' >> pennylane_lightning/core/_version.py
+    if [ "$IS_TEST" == "true" ]; then
+        echo '__version__ = test."'${NEW_VERSION}'-dev0-test0"' >> pennylane_lightning/core/_version.py
+    else
+        echo '__version__ = "'${NEW_VERSION}'-dev0"' >> pennylane_lightning/core/_version.py
+    fi
     git add pennylane_lightning/core/_version.py
     git commit -m "Bump version to ${NEW_VERSION}-dev0"
 
@@ -453,7 +471,7 @@ create_merge_branch(){
     done
     git commit -m "Update Docker workflows for new release version"
 
-   git push --set-upstream origin $(branch_name ${RELEASE_VERSION} "rc_merge")
+#    git push --set-upstream origin $(branch_name ${RELEASE_VERSION} "rc_merge")
 }
 
 create_merge_PR(){
