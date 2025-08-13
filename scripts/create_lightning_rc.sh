@@ -4,6 +4,16 @@
 set -e
 
 # This script creates a release candidate branch for PennyLane-Lightning
+# How to use:
+# 1. Make sure you have the latest changes from the main branch
+# 2. Run the script with the desired options. For example:
+#
+#    bash scripts/create_lightning_rc.sh -s 0.42.0 -r 0.43.99 -n 0.44.99 --create_rc
+#    bash scripts/create_lightning_rc.sh -s 0.42.0 -r 0.43.99 -n 0.44.99 --lightning_test
+#    bash scripts/create_lightning_rc.sh -s 0.42.0 -r 0.43.99 -n 0.44.99 --release
+#    bash scripts/create_lightning_rc.sh -s 0.42.0 -r 0.43.99 -n 0.44.99 --release_assets
+#
+# Use the --help option to see all available options.
 
 # Set version numbers
 STABLE_VERSION=0.42.0
@@ -12,14 +22,22 @@ NEW_VERSION=0.44.0
 
 IS_TEST=true
 
+# Debug option
+# To avoid pushing any branch or PR to GitHub. Set to true
 LOCAL_TEST=true
-
+# To avoid publishing to TestPyPI. Set to false
 PUSH_TESTPYPI=false
 
 # Check if gh CLI is installed
 if ! command -v gh &> /dev/null; then
     echo "gh CLI could not be found"
     exit
+fi
+
+# If not a test run
+if [ "$IS_TEST" == "false" ]; then
+    LOCAL_TEST=false
+    PUSH_TESTPYPI=true
 fi
 
 # --------------------------------------------------------------------------------------------------
@@ -61,11 +79,8 @@ branch_name(){
     branch=$(echo "v${version}_${suffix}" | tr '[:upper:]' '[:lower:]')
 
     if [ "$IS_TEST" == "true" ]; then
-        branch="v${version}_${suffix}_alpha"
+        branch="test_v${version}_${suffix}_alpha"
     fi
-
-    # Warning: delete the following line before merging
-    branch="test_v${version}_${suffix}_alpha"
 
     echo $branch
 }
@@ -431,6 +446,7 @@ create_GitHub_release(){
         --notes-file release_notes.md \
         --draft --latest
     fi
+    rm release_notes.md
 }
 
 download_release_artifacts_gh(){
