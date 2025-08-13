@@ -595,8 +595,6 @@ if [ "$CREATE_RC" == "true" ]; then
     git checkout master
 fi
 
-exit 1
-
 
 if [ "$LIGHTNING_TEST" == "true" ]; then
     test_install_lightning
