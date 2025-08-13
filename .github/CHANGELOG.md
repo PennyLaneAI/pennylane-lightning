@@ -30,6 +30,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Added script to automate the release process.
+  [(#1231)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1231)
+
 - Adjust where the MCMC config validation occurs, from initialization to preprocess.
   [(#1222)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1222)
 
