@@ -12,7 +12,7 @@ NEW_VERSION=0.44.0
 
 IS_TEST=true
 
-LOCAL_TEST=false
+LOCAL_TEST=true
 
 PUSH_TESTPYPI=false
 
@@ -403,7 +403,7 @@ create_release_branch(){
     # Disable to upload the wheels to TestPyPI and GitHub Artifacts
     sed -i "s|event_name == 'pull_request'|event_name == 'release'|g" .github/workflows/wheel_*
     fi
-    
+
     git add pennylane_lightning/core/_version.py
     git add .github/workflows/wheel_*
     git commit -m "Pre-release updates"
