@@ -282,7 +282,7 @@ create_version_bump_PR(){
     git add pennylane_lightning/core/_version.py
     git commit -m "Bump version to v${NEW_VERSION}."
 
-    if [ "$LOCAL_TEST" == "true" ]; then
+    if [ "$LOCAL_TEST" == "false" ]; then
     git push --set-upstream origin $(branch_name ${RELEASE_VERSION} bump)
 
     gh pr create $(use_dry_run) \
