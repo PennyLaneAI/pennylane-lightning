@@ -505,6 +505,7 @@ create_merge_branch(){
 
 create_merge_PR(){
     # Create a PR to merge the RC into master and bump the version with NEW_VERSION-dev
+    if [ "$LOCAL_TEST" == "false" ]; then
     git checkout $(branch_name ${RELEASE_VERSION} "rc_merge")
 
     gh pr create $(use_dry_run) \
@@ -513,6 +514,7 @@ create_merge_PR(){
     --head $(branch_name ${RELEASE_VERSION} "rc_merge") \
     --base master \
     --label 'ci:build_wheels','ci:use-multi-gpu-runner','ci:use-gpu-runner','urgent'
+    fi
 }
 
 
