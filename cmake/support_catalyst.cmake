@@ -26,7 +26,7 @@ macro(FindCatalyst target_name)
 
     else()
         if(NOT CATALYST_GIT_TAG)
-            set(CATALYST_GIT_TAG "main" CACHE STRING "GIT_TAG value to build Catalyst")
+            set(CATALYST_GIT_TAG "a0622ace74f4c44f7833dedf8bed89b05c1c1980" CACHE STRING "GIT_TAG value to build Catalyst")
         endif()
         message(INFO " Building against Catalyst GIT TAG ${CATALYST_GIT_TAG}")
 
