@@ -12,7 +12,7 @@ NEW_VERSION=0.44.0
 
 IS_TEST=true
 
-LOCAL_TEST=true
+LOCAL_TEST=false
 
 # Check if gh CLI is installed
 if ! command -v gh &> /dev/null; then
