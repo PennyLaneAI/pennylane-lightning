@@ -114,7 +114,7 @@ test_pennylane_version(){
 
     # If list is not empty, print remaining backends
     if [[ ${#backends[@]} -gt 0 ]]; then
-        echo "⚠️  Missing backends: ${backends[@]}"
+        echo "⚠️  Missing backends: " "${backends[@]}"
     fi
 }
 
