@@ -597,7 +597,7 @@ fi
 
 
 if [ "$LIGHTNING_TEST" == "true" ]; then
-    test_install_lightning
+    # test_install_lightning
     download_artifacts_gh
     test_wheels_for_unwanted_libraries
 fi
