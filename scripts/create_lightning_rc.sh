@@ -59,11 +59,11 @@ branch_name(){
     branch=$(echo "v${version}_${suffix}" | tr '[:upper:]' '[:lower:]')
 
     if [ "$IS_TEST" == "true" ]; then
-        branch="v${version}_${suffix}_test0"
+        branch="v${version}_${suffix}_alpha"
     fi
 
     # Warning: delete the following line before merging
-    branch="test_v${version}_${suffix}_alpha"
+    branch="v${version}_${suffix}_alpha"
 
     echo $branch
 }
@@ -131,7 +131,7 @@ create_release_candidate_branch() {
     # Update lightning version
     sed -i "/${RELEASE_VERSION}/d" pennylane_lightning/core/_version.py
     if [ "$IS_TEST" == "true" ]; then
-        echo '__version__ = "test.'${RELEASE_VERSION}'-rc0-test0"' >> pennylane_lightning/core/_version.py
+        echo '__version__ = "'${RELEASE_VERSION}'-rc0-alpha"' >> pennylane_lightning/core/_version.py
     else
         echo '__version__ = "'${RELEASE_VERSION}'-rc0"' >> pennylane_lightning/core/_version.py
     fi
@@ -274,7 +274,7 @@ create_version_bump_PR(){
     # Update lightning version
     sed -i "/${RELEASE_VERSION}/d" pennylane_lightning/core/_version.py
     if [ "$IS_TEST" == "true" ]; then
-        echo '__version__ = "test.'${NEW_VERSION}'-dev0-test0"' >> pennylane_lightning/core/_version.py
+        echo '__version__ = "'${NEW_VERSION}'-dev0-alpha"' >> pennylane_lightning/core/_version.py
     else
         echo '__version__ = "'${NEW_VERSION}'-dev0"' >> pennylane_lightning/core/_version.py
     fi
@@ -386,7 +386,7 @@ create_release_branch(){
     # Update version
     sed -i "/${RELEASE_VERSION}/d" pennylane_lightning/core/_version.py
     if [ "$IS_TEST" == "true" ]; then
-        echo '__version__ = "test.'${RELEASE_VERSION}'-test0"' >> pennylane_lightning/core/_version.py
+        echo '__version__ = "'${RELEASE_VERSION}'-alpha"' >> pennylane_lightning/core/_version.py
     else
         echo '__version__ = "'${RELEASE_VERSION}'"' >> pennylane_lightning/core/_version.py
     fi
@@ -473,7 +473,7 @@ create_merge_branch(){
 
     sed -i "/${RELEASE_VERSION}/d" pennylane_lightning/core/_version.py
     if [ "$IS_TEST" == "true" ]; then
-        echo '__version__ = "test.'${NEW_VERSION}'-dev0-test0"' >> pennylane_lightning/core/_version.py
+        echo '__version__ = "'${NEW_VERSION}'-dev0-alpha"' >> pennylane_lightning/core/_version.py
     else
         echo '__version__ = "'${NEW_VERSION}'-dev0"' >> pennylane_lightning/core/_version.py
     fi
