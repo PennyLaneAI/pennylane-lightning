@@ -12,6 +12,8 @@ NEW_VERSION=0.44.0
 
 IS_TEST=true
 
+LOCAL_TEST=true
+
 # Check if gh CLI is installed
 if ! command -v gh &> /dev/null; then
     echo "gh CLI could not be found"
@@ -120,7 +122,9 @@ create_release_candidate_branch() {
     # Create branches 
     for branch in base docs rc; do
         git checkout -b $(branch_name ${RELEASE_VERSION} ${branch})
+        if [ "$LOCAL_TEST" == "false" ]; then
         git push --set-upstream origin $(branch_name ${RELEASE_VERSION} ${branch})
+        fi
     done
     git checkout $(branch_name ${RELEASE_VERSION} rc)
 
@@ -160,25 +164,30 @@ create_release_candidate_branch() {
     git add .github/workflows/wheel_*
     git commit -m "Update wheel workflows for pull request"
 
+    if [ "$LOCAL_TEST" == "false" ]; then
     git push --set-upstream origin $(branch_name ${RELEASE_VERSION} rc)
+    fi
 }
 
 create_release_candidate_PR(){
     # Create a PR for the release candidate branch
 
     git checkout $(branch_name ${RELEASE_VERSION} rc)
+    if [ "$LOCAL_TEST" == "false" ]; then
     gh pr create $(use_dry_run) \
         --title "Create v${RELEASE_VERSION} RC branch" \
         --body "v${RELEASE_VERSION} RC branch." \
         --head $(branch_name ${RELEASE_VERSION} rc) \
         --base $(branch_name ${RELEASE_VERSION} base) \
         --label 'do not merge','ci:build_wheels','ci:use-multi-gpu-runner','ci:use-gpu-runner','urgent'
+    fi
 }
 
 create_docs_review_PR(){
     # Create a PR for the docs review
 
     git checkout $(branch_name ${RELEASE_VERSION} docs)
+    if [ "$LOCAL_TEST" == "false" ]; then
     gh pr create $(use_dry_run) \
         --title "Create v${RELEASE_VERSION} Doc branch" \
         --body "v${RELEASE_VERSION} Doc branch." \
@@ -186,6 +195,7 @@ create_docs_review_PR(){
         --base $(branch_name ${RELEASE_VERSION} rc) \
         --draft \
         --label 'do not merge','documentation'
+    fi
 }
 
 create_docker_PR(){
@@ -199,6 +209,7 @@ create_docker_PR(){
     git add .github/workflows/compat-docker-release.yml
     git commit -m "Update compat-docker-release.yml to use v${RELEASE_VERSION}"
 
+    if [ "$LOCAL_TEST" == "false" ]; then
     git push --set-upstream origin $(branch_name ${RELEASE_VERSION} docker)
 
     gh pr create $(use_dry_run) \
@@ -207,6 +218,7 @@ create_docker_PR(){
         --head $(branch_name ${RELEASE_VERSION} docker) \
         --base master \
         --label 'urgent'
+    fi
 }
 
 new_changelog_entry=$(
@@ -270,6 +282,7 @@ create_version_bump_PR(){
     git add pennylane_lightning/core/_version.py
     git commit -m "Bump version to v${NEW_VERSION}."
 
+    if [ "$LOCAL_TEST" == "true" ]; then
     git push --set-upstream origin $(branch_name ${RELEASE_VERSION} bump)
 
     gh pr create $(use_dry_run) \
@@ -278,11 +291,13 @@ create_version_bump_PR(){
         --head $(branch_name ${RELEASE_VERSION} bump) \
         --base master \
         --label 'urgent'
+    fi
 }
 
 test_install_lightning(){
     # Test Lightning installation 
 
+    git checkout master
     git checkout $(branch_name ${RELEASE_VERSION} rc)
 
     # Test installation of lightning default backends
@@ -384,7 +399,9 @@ create_release_branch(){
     git add pennylane_lightning/core/_version.py
     git add .github/workflows/wheel_*
     git commit -m "Pre-release updates"
+    if [ "$LOCAL_TEST" == "false" ]; then
     git push --set-upstream origin $(branch_name ${RELEASE_VERSION} release)
+    fi
 }
 
 create_GitHub_release(){
@@ -395,6 +412,7 @@ create_GitHub_release(){
 
     # Create tag
     git tag -a "$(branch_name ${RELEASE_VERSION})" -m "Release ${RELEASE_VERSION}"
+    if [ "$LOCAL_TEST" == "false" ]; then
     git push origin "$(branch_name ${RELEASE_VERSION})"
 
     gh release create $(branch_name ${RELEASE_VERSION}) \
@@ -402,6 +420,7 @@ create_GitHub_release(){
         --title "Release ${RELEASE_VERSION}" \
         --notes-file release_notes.md \
         --draft --latest
+    fi
 }
 
 download_release_artifacts_gh(){
@@ -471,7 +490,9 @@ create_merge_branch(){
     done
     git commit -m "Update Docker workflows for new release version"
 
+    if [ "$LOCAL_TEST" == "false" ]; then
     git push --set-upstream origin $(branch_name ${RELEASE_VERSION} "rc_merge")
+    fi
 }
 
 create_merge_PR(){
