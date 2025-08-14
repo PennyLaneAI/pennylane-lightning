@@ -16,6 +16,11 @@
 
 <h3>Breaking changes 💔</h3>
 
+- No longer squeezes out singleton dimensions from samples in accordance with a breaking change in
+  pennylane. See PennyLane PR [(#7944)](https://github.com/PennyLaneAI/pennylane/pull/7944) for
+  more information.
+  [(#1226)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1226)
+
 - Dropped support for Python 3.10. Supported Python versions are now 3.11, 3.12 and 3.13.
   [(#1224)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1224)
 
@@ -66,6 +71,7 @@ This release contains contributions from (in alphabetical order):
 
 Ali Asadi,
 Yushao Chen,
+Christina Lee,
 Joseph Lee,
 Luis Alfredo Nuñez Meneses,
 Andrija Paurevic,
