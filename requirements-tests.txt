@@ -7,4 +7,4 @@ pytest-rng
 pytest-xdist>=2.5.0
 pytest-split
 flaky>=3.7.0 # For pl-device-test
-git+https://github.com/PennyLaneAI/pennylane.git@shots-decopuling/deprecate_device_shots2
+git+https://github.com/PennyLaneAI/pennylane.git@master
