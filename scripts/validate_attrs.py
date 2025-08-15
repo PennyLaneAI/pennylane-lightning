@@ -25,15 +25,8 @@ for path in paths:
     names = ZipFile(path).namelist()
     for name in names:
 
-        # Development files
-        if ".cpp" in name or ".hpp" in name or ".cu" in name or ".py" in name:
-            continue
-        # Documentation files
-        if ".txt" in name or ".md" in name or ".dist-info/" in name:
-            continue
-        # Additional files
-        if ".clang-tidy" in name or "toml" in name:
-            continue
+        if name.endswith((".cpp", ".hpp", ".cu", ".py", ".txt", ".md", ".toml")) or ".dist-info/" in name or ".clang-tidy" in name:
+                continue
 
         # Specific libraries
         if re.match(r".*libgomp.*\.so.*", name) or re.match(r".*libomp.*\.dylib.*", name):
