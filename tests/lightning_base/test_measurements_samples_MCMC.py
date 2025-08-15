@@ -35,7 +35,7 @@ class TestMCMCSample:
 
     @pytest.fixture(params=[np.complex64, np.complex128])
     def dev(self, request):
-        return qml.device(device_name, wires=2, shots=1000, mcmc=True, c_dtype=request.param)
+        return qml.device(device_name, wires=2, mcmc=True, c_dtype=request.param)
 
     test_data_no_parameters = [
         (100, [0], qml.PauliZ(wires=[0]), 100),
@@ -59,14 +59,17 @@ class TestMCMCSample:
         """Tests if the samples returned by sample have
         the correct values
         """
-        dev = qml.device(
-            device_name,
-            wires=2,
-            shots=1000,
-            mcmc=True,
-            kernel_name=kernel,
-            num_burnin=100,
-        )
+        with pytest.warns(
+            qml.exceptions.PennyLaneDeprecationWarning, match="shots on device is deprecated"
+        ):
+            dev = qml.device(
+                device_name,
+                wires=2,
+                shots=1000,
+                mcmc=True,
+                kernel_name=kernel,
+                num_burnin=100,
+            )
         ops = [qml.RX(1.5708, wires=[0])]
         tape = qml.tape.QuantumScript(ops, [qml.sample(op=qml.PauliZ(0))], shots=1000)
         s1 = dev.execute(tape)
@@ -80,15 +83,18 @@ class TestMCMCSample:
         """Tests if the samples returned by sample have
         the correct values
         """
-        # Create device (should not fail at initialization)
-        dev = qml.device(
-            device_name,
-            wires=2,
-            shots=1000,
-            mcmc=True,
-            kernel_name=kernel,
-            num_burnin=100,
-        )
+        with pytest.warns(
+            qml.exceptions.PennyLaneDeprecationWarning, match="shots on device is deprecated"
+        ):
+            # Create device (should not fail at initialization)
+            dev = qml.device(
+                device_name,
+                wires=2,
+                shots=1000,
+                mcmc=True,
+                kernel_name=kernel,
+                num_burnin=100,
+            )
 
         # Error should be raised during preprocess when validation runs
         with pytest.raises(
@@ -99,15 +105,18 @@ class TestMCMCSample:
 
     @pytest.mark.parametrize(["shots", "num_burnin"], [(10, 11), (1000, 1000)])
     def test_wrong_num_burnin(self, shots, num_burnin):
-        # Create device (should not fail at initialization)
-        dev = qml.device(
-            device_name,
-            wires=2,
-            shots=shots,
-            mcmc=True,
-            kernel_name="Local",
-            num_burnin=num_burnin,
-        )
+        with pytest.warns(
+            qml.exceptions.PennyLaneDeprecationWarning, match="shots on device is deprecated"
+        ):
+            # Create device (should not fail at initialization)
+            dev = qml.device(
+                device_name,
+                wires=2,
+                shots=shots,
+                mcmc=True,
+                kernel_name="Local",
+                num_burnin=num_burnin,
+            )
 
         # Error should be raised during preprocess when validation runs
         with pytest.raises(ValueError, match="Shots should be greater than num_burnin."):
@@ -115,15 +124,18 @@ class TestMCMCSample:
 
     @pytest.mark.parametrize(["shots", "num_burnin"], [(10, 0), (1000, -1)])
     def test_unacceptable_num_burnin(self, shots, num_burnin):
-        # Create device (should not fail at initialization)
-        dev = qml.device(
-            device_name,
-            wires=2,
-            shots=shots,
-            mcmc=True,
-            kernel_name="Local",
-            num_burnin=num_burnin,
-        )
+        with pytest.warns(
+            qml.exceptions.PennyLaneDeprecationWarning, match="shots on device is deprecated"
+        ):
+            # Create device (should not fail at initialization)
+            dev = qml.device(
+                device_name,
+                wires=2,
+                shots=shots,
+                mcmc=True,
+                kernel_name="Local",
+                num_burnin=num_burnin,
+            )
 
         # Error should be raised during preprocess when validation runs
         with pytest.raises(ValueError, match="num_burnin must be greater than 0"):
@@ -132,11 +144,16 @@ class TestMCMCSample:
     def test_invalid_kernel_name(self):
         """Test that an error is raised when the kernel_name is not "Local" or "NonZeroRandom"."""
 
-        ld(wires=2, shots=1000, mcmc=True, kernel_name="Local", num_burnin=100).preprocess()
-        ld(wires=2, shots=1000, mcmc=True, kernel_name="NonZeroRandom", num_burnin=100).preprocess()
-
-        with pytest.raises(
-            NotImplementedError,
-            match="only 'Local' and 'NonZeroRandom' kernels are supported",
+        with pytest.warns(
+            qml.exceptions.PennyLaneDeprecationWarning, match="shots on device is deprecated"
         ):
-            ld(wires=2, shots=1000, mcmc=True, kernel_name="bleh").preprocess()
+            ld(wires=2, shots=1000, mcmc=True, kernel_name="Local", num_burnin=100).preprocess()
+            ld(
+                wires=2, shots=1000, mcmc=True, kernel_name="NonZeroRandom", num_burnin=100
+            ).preprocess()
+
+            with pytest.raises(
+                NotImplementedError,
+                match="only 'Local' and 'NonZeroRandom' kernels are supported",
+            ):
+                ld(wires=2, shots=1000, mcmc=True, kernel_name="bleh").preprocess()
