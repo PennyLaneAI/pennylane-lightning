@@ -42,6 +42,7 @@ if device_name == "lightning.qubit":
         _add_adjoint_transforms,
         _adjoint_ops,
         _supports_adjoint,
+        _validate_mcmc_options_transform,
         accepted_observables,
         adjoint_measurements,
         adjoint_observables,
@@ -755,6 +756,13 @@ class TestExecution:
             mid_circuit_measurements, device=device, mcm_config=MCMConfig()
         )
         expected_program.add_transform(validate_device_wires, device.wires, name=device.name)
+
+        # Add MCMC validation transform only for lightning.qubit
+        if device_name == "lightning.qubit":
+            expected_program.add_transform(
+                _validate_mcmc_options_transform, mcmc_enabled=False, kernel_name=None, num_burnin=0
+            )
+
         expected_program.add_transform(
             decompose,
             stopping_condition=stopping_condition,
@@ -1876,3 +1884,186 @@ class TestVJP:
         assert len(res) == len(jac) == 1
         assert np.allclose(res, expected, atol=tol, rtol=0)
         assert np.allclose(jac, expected_jac, atol=tol, rtol=0)
+
+
+class TestMCMCValidationTransform:
+    """Parametrized tests for the MCMC validation transform."""
+
+    @pytest.mark.parametrize(
+        "mcmc_enabled,kernel_name,num_burnin,shots,should_pass,expected_exception,match_pattern",
+        [
+            (True, "Local", 100, 1000, True, None, None),
+            (True, "NonZeroRandom", 50, 500, True, None, None),
+            (False, "invalid", 2000, 1000, True, None, None),
+            (
+                True,
+                "invalid",
+                100,
+                1000,
+                False,
+                NotImplementedError,
+                "The invalid is not supported",
+            ),
+            (
+                True,
+                "Local",
+                1000,
+                1000,
+                False,
+                ValueError,
+                "Shots should be greater than num_burnin",
+            ),
+            (
+                True,
+                "Local",
+                1001,
+                1000,
+                False,
+                ValueError,
+                "Shots should be greater than num_burnin",
+            ),
+            (True, "Local", 0, 1000, False, ValueError, "num_burnin must be greater than 0"),
+            (True, "Local", -1, 1000, False, ValueError, "num_burnin must be greater than 0"),
+        ],
+    )
+    def test_validate_mcmc_options_transform_unit(
+        self,
+        mcmc_enabled,
+        kernel_name,
+        num_burnin,
+        shots,
+        should_pass,
+        expected_exception,
+        match_pattern,
+    ):
+        """Unit test for _validate_mcmc_options_transform function directly.
+
+        Tests that the transform function correctly validates parameters and returns
+        the tape unchanged with a null postprocess function when validation passes,
+        or raises appropriate exceptions when validation fails.
+        """
+        tape = qml.tape.QuantumScript([qml.RX(0.5, 0)], [qml.sample(qml.PauliZ(0))], shots=shots)
+
+        if should_pass:
+            tapes, postprocess_fn = _validate_mcmc_options_transform(
+                tape, mcmc_enabled=mcmc_enabled, kernel_name=kernel_name, num_burnin=num_burnin
+            )
+            assert len(tapes) == 1
+            assert tapes[0] is tape
+            assert callable(postprocess_fn)
+        else:
+            with pytest.raises(expected_exception, match=match_pattern):
+                _validate_mcmc_options_transform(
+                    tape, mcmc_enabled=mcmc_enabled, kernel_name=kernel_name, num_burnin=num_burnin
+                )
+
+    @pytest.mark.parametrize(
+        "kernel,shots,should_pass",
+        [
+            ("Local", 1000, True),
+            ("NonZeroRandom", 1000, True),
+            ("invalid", 1000, False),
+            ("Global", 1000, False),
+            ("local", 1000, False),
+            ("Random", 1000, False),
+        ],
+    )
+    def test_kernel_name_validation(self, kernel, shots, should_pass):
+        """Test that MCMC validation transform correctly validates kernel names.
+
+        Valid kernels ("Local", "NonZeroRandom") should execute successfully,
+        while invalid kernels should raise NotImplementedError during QNode execution.
+        """
+        dev = qml.device(device_name, wires=2, mcmc=True, kernel_name=kernel, num_burnin=100)
+
+        @qml.set_shots(shots)
+        @qml.qnode(dev)
+        def circuit():
+            qml.RX(1.5708, wires=0)
+            return qml.sample(op=qml.PauliZ(0))
+
+        if should_pass:
+            result = circuit()
+            assert len(result) == shots
+        else:
+            with pytest.raises(
+                NotImplementedError,
+                match=(
+                    f"The {kernel} is not supported and currently only "
+                    "'Local' and 'NonZeroRandom' kernels are supported."
+                ),
+            ):
+                circuit()
+
+    @pytest.mark.parametrize(
+        "shots,num_burnin,exception,match",
+        [
+            (1000, 100, None, None),
+            (500, 50, None, None),
+            (100, 1, None, None),
+            (1000, 999, None, None),
+            (100, 100, ValueError, "Shots should be greater than num_burnin."),
+            (100, 101, ValueError, "Shots should be greater than num_burnin."),
+            (500, 500, ValueError, "Shots should be greater than num_burnin."),
+            (10, 15, ValueError, "Shots should be greater than num_burnin."),
+            (1000, 0, ValueError, "num_burnin must be greater than 0"),
+            (1000, -1, ValueError, "num_burnin must be greater than 0"),
+        ],
+    )
+    def test_num_burnin_validation(self, shots, num_burnin, exception, match):
+        """Test that MCMC validation transform correctly validates num_burnin parameter.
+
+        Valid configurations (num_burnin > 0 and num_burnin < shots) should execute
+        successfully, while invalid configurations should raise ValueError during
+        QNode execution with appropriate error messages.
+        """
+        dev = qml.device(
+            device_name, wires=2, mcmc=True, kernel_name="Local", num_burnin=num_burnin
+        )
+
+        @qml.set_shots(shots)
+        @qml.qnode(dev)
+        def circuit():
+            qml.RX(1.5708, wires=0)
+            return qml.sample(op=qml.PauliZ(0))
+
+        if exception is None:
+            result = circuit()
+            assert len(result) == shots
+        else:
+            with pytest.raises(exception, match=match):
+                circuit()
+
+    @pytest.mark.parametrize(
+        "wires,shots,kernel,num_burnin",
+        [
+            (3, 1000, "Local", 100),
+            (3, 500, "Local", 50),
+        ],
+    )
+    def test_multiple_samples_and_functionality(self, wires, shots, kernel, num_burnin):
+        """Test MCMC validation with multiple measurements and device functionality.
+
+        Ensures that the validation transform doesn't interfere with normal MCMC
+        device operation when measuring multiple observables simultaneously, and
+        that all measurements return the expected number of samples.
+        """
+        dev = qml.device(
+            device_name, wires=wires, mcmc=True, kernel_name=kernel, num_burnin=num_burnin
+        )
+
+        @qml.set_shots(shots)
+        @qml.qnode(dev)
+        def circuit():
+            qml.RX(1.5708, wires=0)
+            qml.RY(1.5708, wires=1)
+            qml.RZ(1.5708, wires=2)
+            return [
+                qml.sample(op=qml.PauliZ(0)),
+                qml.sample(op=qml.PauliX(1)),
+                qml.sample(op=qml.PauliY(2)),
+            ]
+
+        results = circuit()
+        assert isinstance(results, list)
+        assert all(len(r) == shots for r in results)
