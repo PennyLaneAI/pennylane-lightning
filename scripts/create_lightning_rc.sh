@@ -18,7 +18,7 @@ set -e
 # Set version numbers
 STABLE_VERSION=0.42.0
 RELEASE_VERSION=0.43.0
-NEW_VERSION=0.44.0
+NEXT_VERSION=0.44.0
 
 IS_TEST=true
 
@@ -50,7 +50,7 @@ help(){
     echo "Options:"
     echo "  -s, --stable_version [version]    Specify the stable version. Default $STABLE_VERSION"
     echo "  -r, --release_version [version]   Specify the release version. Default $RELEASE_VERSION"
-    echo "  -n, --new_version [version]       Specify the new version. Default $NEW_VERSION"
+    echo "  -n, --next_version [version]       Specify the new version. Default $NEXT_VERSION"
     echo "  -t, --test                        Run on test version, gh pr create with --dry-run. Default $IS_TEST"
     echo "  --create_rc                       Create a release candidate"
     echo "  --lightning_test                  Run Lightning tests"
@@ -244,7 +244,7 @@ create_docker_PR(){
 
 new_changelog_entry=$(
 cat <<EOF
-# Release ${NEW_VERSION}-dev (development release)
+# Release ${NEXT_VERSION}-dev (development release)
 
 <h3>New features since last release</h3>
 
@@ -295,20 +295,20 @@ create_version_bump_PR(){
     # Update lightning version
     sed -i "/__version__/d" pennylane_lightning/core/_version.py
     if [ "$IS_TEST" == "true" ]; then
-        echo '__version__ = "'${NEW_VERSION}'-alpha1-dev0"' >> pennylane_lightning/core/_version.py
+        echo '__version__ = "'${NEXT_VERSION}'-alpha1-dev0"' >> pennylane_lightning/core/_version.py
     else
-        echo '__version__ = "'${NEW_VERSION}'-dev0"' >> pennylane_lightning/core/_version.py
+        echo '__version__ = "'${NEXT_VERSION}'-dev0"' >> pennylane_lightning/core/_version.py
     fi
 
     git add pennylane_lightning/core/_version.py
-    git commit -m "Bump version to v${NEW_VERSION}."
+    git commit -m "Bump version to v${NEXT_VERSION}."
 
     if [ "$LOCAL_TEST" == "false" ]; then
     git push --set-upstream origin $(branch_name ${RELEASE_VERSION} bump)
 
     gh pr create $(use_dry_run) \
-        --title "Bump version to v${NEW_VERSION}-dev" \
-        --body "Bump version to v${NEW_VERSION}-dev." \
+        --title "Bump version to v${NEXT_VERSION}-dev" \
+        --body "Bump version to v${NEXT_VERSION}-dev." \
         --head $(branch_name ${RELEASE_VERSION} bump) \
         --base master \
         --label 'urgent'
@@ -485,7 +485,7 @@ upload_release_assets_gh(){
 }
 
 create_merge_branch(){
-    # Create the merge branch to merge the RC into master and bump the version with NEW_VERSION-dev
+    # Create the merge branch to merge the RC into master and bump the version with NEXT_VERSION-dev
 
     git checkout $(branch_name ${RELEASE_VERSION} "release")
     git checkout -b $(branch_name ${RELEASE_VERSION} "rc_merge")
@@ -498,19 +498,19 @@ create_merge_branch(){
 
     sed -i "/__version__/d" pennylane_lightning/core/_version.py
     if [ "$IS_TEST" == "true" ]; then
-        echo '__version__ = "'${NEW_VERSION}'-alpha1-dev0"' >> pennylane_lightning/core/_version.py
+        echo '__version__ = "'${NEXT_VERSION}'-alpha1-dev0"' >> pennylane_lightning/core/_version.py
     else
-        echo '__version__ = "'${NEW_VERSION}'-dev0"' >> pennylane_lightning/core/_version.py
+        echo '__version__ = "'${NEXT_VERSION}'-dev0"' >> pennylane_lightning/core/_version.py
     fi
     git add pennylane_lightning/core/_version.py
-    git commit -m "Bump version to ${NEW_VERSION}-dev0"
+    git commit -m "Bump version to ${NEXT_VERSION}-dev0"
 
     sed -i 's/set(CATALYST_GIT_TAG *"[^"]*" *CACHE STRING "GIT_TAG value to build Catalyst")/set(CATALYST_GIT_TAG "main" CACHE STRING "GIT_TAG value to build Catalyst")/' cmake/support_catalyst.cmake
     git add cmake/support_catalyst.cmake
     git commit -m "Restore Catalyst GIT_TAG to main"
 
     for i in release stable; do
-        sed -i "s|v${RELEASE_VERSION}|v${NEW_VERSION}|g" .github/workflows/compat-docker-${i}.yml
+        sed -i "s|v${RELEASE_VERSION}|v${NEXT_VERSION}|g" .github/workflows/compat-docker-${i}.yml
         git add .github/workflows/compat-docker-${i}.yml
     done
     git commit -m "Update Docker workflows for new release version"
@@ -521,12 +521,12 @@ create_merge_branch(){
 }
 
 create_merge_PR(){
-    # Create a PR to merge the RC into master and bump the version with NEW_VERSION-dev
+    # Create a PR to merge the RC into master and bump the version with NEXT_VERSION-dev
     if [ "$LOCAL_TEST" == "false" ]; then
     git checkout $(branch_name ${RELEASE_VERSION} "rc_merge")
 
     gh pr create $(use_dry_run) \
-    --title "Merge RC v${RELEASE_VERSION}_rc to v${NEW_VERSION}-dev" \
+    --title "Merge RC v${RELEASE_VERSION}_rc to v${NEXT_VERSION}-dev" \
     --body "v${RELEASE_VERSION} RC merge branch." \
     --head $(branch_name ${RELEASE_VERSION} "rc_merge") \
     --base master \
@@ -562,8 +562,8 @@ while [[ $# -gt 0 ]]; do
       shift # past argument
       shift # past value
       ;;
-    -n|--new_version)
-      NEW_VERSION="$2"
+    -n|--next_version)
+      NEXT_VERSION="$2"
       shift # past argument
       shift # past value
       ;;
@@ -605,7 +605,7 @@ set -- "${POSITIONAL_ARGS[@]}" # restore positional parameters
 
 echo "STABLE_VERSION: $STABLE_VERSION"
 echo "RELEASE_VERSION: $RELEASE_VERSION"
-echo "NEW_VERSION: $NEW_VERSION"
+echo "NEXT_VERSION: $NEXT_VERSION"
 echo "IS_TEST: $IS_TEST"
 echo "CREATE_RC: $CREATE_RC"
 echo "LIGHTNING_TEST: $LIGHTNING_TEST"
