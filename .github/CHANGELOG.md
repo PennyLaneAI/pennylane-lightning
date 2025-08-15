@@ -17,7 +17,7 @@
 <h3>Breaking changes 💔</h3>
 
 - No longer squeezes out singleton dimensions from samples in accordance with a breaking change in
-  pennylane. See PennyLane PR [(#7944)](https://github.com/PennyLaneAI/pennylane/pull/7944) for
+  PennyLane. See PennyLane PR [(#7944)](https://github.com/PennyLaneAI/pennylane/pull/7944) for
   more information.
   [(#1226)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1226)
 
