@@ -390,16 +390,16 @@ class TestHelpers:
         self, circuit_0, n_wires_0, circuit_1, n_wires_1, shots, dtype
     ):
         """Test that dynamic_wires_from_circuit resets state when reusing or initializing new state vector"""
-        device = LightningDevice(wires=None, c_dtype=dtype, shots=shots)
+        device = LightningDevice(wires=None, c_dtype=dtype)
 
         # Initialize statevector and apply a state
-        device.dynamic_wires_from_circuit(circuit_0)
+        device.dynamic_wires_from_circuit(circuit_0.copy(shots=shots))
         state = np.zeros(2**n_wires_0)
         state[-1] = 1.0
         device._statevector._apply_state_vector(state, range(n_wires_0))
 
         # Dynamic wires again will reset the state
-        device.dynamic_wires_from_circuit(circuit_1)
+        device.dynamic_wires_from_circuit(circuit_1.copy(shots=shots))
         expected_state = np.zeros(2**n_wires_1)
         expected_state[0] = 1.0
         assert np.allclose(device._statevector.state, expected_state)
@@ -419,9 +419,11 @@ class TestHelpers:
         if device_name == "lightning.gpu":
             sv_init_kwargs = {"use_async": True}
 
-        device = LightningDevice(wires=None, shots=shots, **sv_init_kwargs)
+        device = LightningDevice(wires=None, **sv_init_kwargs)
 
-        circuit = QuantumScript([qml.RX(0.1, 0), qml.RX(0.1, 2)], [qml.expval(qml.Z(1))])
+        circuit = QuantumScript(
+            [qml.RX(0.1, 0), qml.RX(0.1, 2)], [qml.expval(qml.Z(1))], shots=shots
+        )
         circuit_num_wires = 3
 
         device.dynamic_wires_from_circuit(circuit)
@@ -442,18 +444,20 @@ class TestHelpers:
         else:
             bad_init_kwargs = {"XXX": True}
 
-        circuit = QuantumScript([qml.RX(0.1, 0), qml.RX(0.1, 2)], [qml.expval(qml.Z(1))])
+        circuit = QuantumScript(
+            [qml.RX(0.1, 0), qml.RX(0.1, 2)], [qml.expval(qml.Z(1))], shots=shots
+        )
 
         if device_name == "lightning.kokkos":
             with pytest.raises(TypeError, match="Argument kokkos_args must be of type "):
-                device = LightningDevice(wires=n_wires, shots=shots, **bad_init_kwargs)
+                device = LightningDevice(wires=n_wires, **bad_init_kwargs)
                 device.dynamic_wires_from_circuit(circuit)
         else:
             with pytest.raises(
                 TypeError,
                 match=r"got an unexpected keyword argument|Unexpected argument",
             ):
-                device = LightningDevice(wires=n_wires, shots=shots, **bad_init_kwargs)
+                device = LightningDevice(wires=n_wires, **bad_init_kwargs)
                 device.dynamic_wires_from_circuit(circuit)
 
 
@@ -489,12 +493,11 @@ class TestInitialization:
         device_name == "lightning.tensor",
         reason="lightning.tensor does not support seeding",
     )
-    @pytest.mark.parametrize("shots", [None, 10])
     @pytest.mark.parametrize("n_wires", [None, 3])
     @pytest.mark.parametrize("seed", ["global", None, 42, [42, 43, 44]])
-    def test_device_seed(self, shots, n_wires, seed):
+    def test_device_seed(self, n_wires, seed):
         """Test that seeding the lightning device works correctly"""
-        dev = LightningDevice(wires=n_wires, shots=shots, seed=seed)
+        dev = LightningDevice(wires=n_wires, seed=seed)
         assert dev._rng is not None
 
 
