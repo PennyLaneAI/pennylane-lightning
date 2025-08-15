@@ -148,9 +148,9 @@ The ``lightning.qubit`` device allows users to use the Markov Chain Monte Carlo 
 .. code-block:: python
 
     import pennylane as qml
-    dev = qml.device("lightning.qubit", wires=2, shots=1000, mcmc=True)
+    dev = qml.device("lightning.qubit", wires=2, shots=1000, mcmc=True, kernel_name="Local", num_burnin=100)
 
-By default, the ``kernel_name`` is ``"Local"`` and ``num_burnin`` is ``100``. The local kernel conducts a bit-flip local transition between states. The local kernel generates a random qubit site and then generates a random number to determine  the new bit at that qubit site.
+By default, ``mcmc=False``, the ``kernel_name`` is ``None`` and ``num_burnin`` is ``0``. The ``Local`` kernel conducts a bit-flip local transition between states. The local kernel generates a random qubit site and then generates a random number to determine  the new bit at that qubit site.
 
 The ``lightning.qubit`` device also supports a ``"NonZeroRandom"`` kernel. This kernel randomly transits between states that have nonzero probability. It can be enabled by initializing the device as:
 
