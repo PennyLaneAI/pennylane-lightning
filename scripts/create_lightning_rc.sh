@@ -50,7 +50,7 @@ help(){
     echo "Options:"
     echo "  -s, --stable_version [version]    Specify the stable version. Default $STABLE_VERSION"
     echo "  -r, --release_version [version]   Specify the release version. Default $RELEASE_VERSION"
-    echo "  -n, --next_version [version]       Specify the new version. Default $NEXT_VERSION"
+    echo "  -n, --next_version [version]      Specify the new version. Default $NEXT_VERSION"
     echo "  -t, --test                        Run on test version, gh pr create with --dry-run. Default $IS_TEST"
     echo "  --create_rc                       Create a release candidate"
     echo "  --lightning_test                  Run Lightning tests"
@@ -123,6 +123,7 @@ create_release_notes(){
     CHANGELOG_FILE=".github/CHANGELOG.md"
     changelog_lower_bound=$(grep -n -- "---" "${CHANGELOG_FILE}" | head -n 1 | cut -d: -f1)
     sed -n "1,${changelog_lower_bound}p" $CHANGELOG_FILE | sed ':a;N;$!ba;s/\.\n *\[(#/\. \[(#/g' > release_notes.md
+    sed -i 's|^- |* |' release_notes.md 
 }
 
 # Release functions
@@ -624,7 +625,7 @@ fi
 
 
 if [ "$LIGHTNING_TEST" == "true" ]; then
-    # test_install_lightning
+    test_install_lightning
     download_artifacts_gh
     test_wheels_for_unwanted_libraries
 fi
