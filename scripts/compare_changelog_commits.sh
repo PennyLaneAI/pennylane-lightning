@@ -8,8 +8,8 @@
 # Run the script with 
 # bash compare_changelog_commits.sh 
 
-# Last release date
-LAST_RELEASE_DATE="2025-05-05"
+# Last release date YYYY-MM-DD
+LAST_RELEASE_DATE="2025-07-14"
 
 # Path to ChangeLog
 CHANGELOG_FILE="../.github/CHANGELOG.md"
