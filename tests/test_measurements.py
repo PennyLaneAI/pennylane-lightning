@@ -492,13 +492,10 @@ class TestSample:
         tape = qml.tape.QuantumScript(ops, [qml.sample(wires=wires)], shots=shots)
         tape_exact = qml.tape.QuantumScript(ops, [qml.probs(wires=wires)])
 
-        def reshape_samples(samples):
-            return np.atleast_3d(samples) if len(wires) == 1 else np.atleast_2d(samples)
-
         dev = qubit_device(wires=n_qubits)
         samples = dev.execute(tape)
         probs = qml.measurements.ProbabilityMP(wires=wires).process_samples(
-            reshape_samples(samples), wire_order=wires
+            np.atleast_2d(samples), wire_order=wires
         )
 
         dev_ref = qml.device("default.qubit", wires=n_qubits)
