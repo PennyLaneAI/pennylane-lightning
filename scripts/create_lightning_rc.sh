@@ -613,6 +613,10 @@ echo "LIGHTNING_TEST: $LIGHTNING_TEST"
 echo "RELEASE_ACTION: $RELEASE_ACTION"
 echo "RELEASE_ASSETS: $RELEASE_ASSETS"
 
+test_wheels_for_unwanted_libraries
+
+exit 1
+
 
 if [ "$CREATE_RC" == "true" ]; then
     create_release_candidate_branch

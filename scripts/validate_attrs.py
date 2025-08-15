@@ -22,33 +22,48 @@ from zipfile import ZipFile
 paths = Path().glob("**/*.whl")
 for path in paths:
     additional_packages = []
-    names = ZipFile(path).namelist()
-    for name in names:
 
-        if name.endswith((".cpp", ".hpp", ".cu", ".py", ".txt", ".md", ".toml")) or ".dist-info/" in name or ".clang-tidy" in name:
+    with ZipFile(path, mode="r") as zf:
+        names = zf.namelist()
+        for name in names:
+
+            # Skip development and documentation files
+            if (
+                name.endswith((".cpp", ".hpp", ".cu", ".py", ".txt", ".md", ".toml"))
+                or ".dist-info/" in name
+                or ".clang-tidy" in name
+            ):
                 continue
 
-        # Specific libraries
-        if re.match(r".*libgomp.*\.so.*", name) or re.match(r".*libomp.*\.dylib.*", name):
-            continue
-        if "catalyst.so" in name or "catalyst.dylib" in name or "catalyst.dll" in name:
-            continue
-        if (
-            re.match(r"pennylane_lightning/lightning_.*_ops.cpython-3.?.?-.*-linux-gnu\.so", name)
-            or re.match(r"pennylane_lightning/lightning_.*_ops.cpython-3.?.?-darwin\.so", name)
-            or re.match(r"pennylane_lightning/lightning_.*_ops.pdb", name)
-        ):
-            continue
+            # Specific libraries
 
-        # Directories paths
-        if name.endswith("/"):
-            continue
+            # Skip OpenMP libraries
+            if re.match(r".*libgomp.*\.so.*", name) or re.match(r".*libomp.*\.dylib.*", name):
+                continue
+            # Skip Catalyst libraries
+            if "catalyst.so" in name or "catalyst.dylib" in name or "catalyst.dll" in name:
+                continue
+            # Skip Lightning libraries
+            if (
+                re.match(
+                    r"pennylane_lightning/lightning_.*_ops.cpython-3.?.?-.*-linux-gnu\.so", name
+                )
+                or re.match(r"pennylane_lightning/lightning_.*_ops.cpython-3.?.?-darwin\.so", name)
+                or re.match(r"pennylane_lightning/lightning_.*_ops.pdb", name)
+            ):
+                continue
 
-        additional_packages.append(name)
+            # Skip directories paths
+            if name.endswith("/"):
+                continue
+
+            additional_packages.append(name)
+    # end with ZipFile
 
     if additional_packages:
         print(f"❌ Additional packages in {path.name}")
+        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
         pprint.pprint(additional_packages)
-        print("=================================================")
+        print("===================================================================================")
     else:
         print(f"✅ No additional packages in {path.name}")
