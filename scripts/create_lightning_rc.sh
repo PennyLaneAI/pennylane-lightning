@@ -16,9 +16,9 @@ set -e
 # Use the --help option to see all available options.
 
 # Set version numbers
-STABLE_VERSION=0.42.0
-RELEASE_VERSION=0.43.0
-NEXT_VERSION=0.44.0
+STABLE_VERSION=0.42.0     # Current stable version | https://github.com/PennyLaneAI/pennylane-lightning/releases
+RELEASE_VERSION=0.43.0    # Upcoming release version | https://test.pypi.org/project/pennylane-lightning/#history
+NEXT_VERSION=0.44.0       # Next version to be developed | RELEASE_VERSION + 1
 
 IS_TEST=true
 
