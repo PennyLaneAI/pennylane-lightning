@@ -41,6 +41,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Stopped the wheels creation for no arch if the PR is draft.
+  [(#1233)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1233)
+
 - Adjust where the MCMC config validation occurs, from initialization to preprocess.
   [(#1222)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1222)
 
