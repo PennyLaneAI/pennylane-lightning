@@ -13,7 +13,7 @@
 // limitations under the License.
 
 /**
- * @file BindingsMPI_nb.hpp
+ * @file BindingsMPI.hpp
  * Defines device-agnostic operations to export to Python and other utility
  * functions interfacing with Nanobind.
  */
@@ -31,14 +31,14 @@
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/vector.h>
 
-#include "BindingsUtils_nb.hpp"
+#include "BindingsUtils.hpp"
 #include "JacobianData.hpp"
 
 #if _ENABLE_PLGPU == 1
 
 #include "AdjointJacobianGPUMPI.hpp"
 #include "JacobianDataMPI.hpp"
-#include "LGPUBindingsMPI_nb.hpp"
+#include "LGPUBindingsMPI.hpp"
 #include "MPIManagerGPU.hpp"
 #include "MeasurementsGPUMPI.hpp"
 #include "ObservablesGPUMPI.hpp"
@@ -57,7 +57,7 @@ using namespace Pennylane::LightningGPU::Util;
 #elif _ENABLE_PLKOKKOS == 1
 
 #include "AdjointJacobianKokkosMPI.hpp"
-#include "LKokkosBindingsMPI_nb.hpp"
+#include "LKokkosBindingsMPI.hpp"
 #include "MPIManagerKokkos.hpp"
 #include "MeasurementsKokkosMPI.hpp"
 #include "ObservablesKokkosMPI.hpp"

@@ -25,8 +25,8 @@
 
 #include "cuda.h"
 
-#include "BindingsUtils_nb.hpp"
-#include "Bindings_nb.hpp"
+#include "Bindings.hpp"
+#include "BindingsUtils.hpp"
 #include "Constant.hpp"
 #include "ConstantUtil.hpp" // lookup
 #include "DevTag.hpp"

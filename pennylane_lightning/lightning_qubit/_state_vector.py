@@ -17,7 +17,7 @@ Class implementation for lightning_qubit state-vector manipulation.
 from warnings import warn
 
 try:
-    from pennylane_lightning.lightning_qubit_nb import (
+    from pennylane_lightning.lightning_qubit_ops import (
         StateVectorC64,
         StateVectorC128,
         allocate_aligned_array,

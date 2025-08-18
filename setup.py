@@ -185,7 +185,7 @@ info = {
     "include_package_data": True,
     "ext_modules": (
         [] if os.environ.get("SKIP_COMPILATION", False) else [
-            CMakeExtension(f"{backend}_nb")
+            CMakeExtension(f"{backend}_ops")
         ]
     ),
     "cmdclass": {"build_ext": CMakeBuild},

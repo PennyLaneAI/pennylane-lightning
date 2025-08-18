@@ -68,7 +68,7 @@ clean:
 	rm -rf build Build BuildTests BuildTidy
 	rm -rf build_*
 	rm -rf .coverage coverage_html_report/
-	rm -rf pennylane_lightning/*_nb*
+	rm -rf pennylane_lightning/*_ops*
 	rm -rf *.egg-info
 	rm -rf dist
 

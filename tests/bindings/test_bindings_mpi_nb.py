@@ -34,7 +34,7 @@ if MPI_AVAILABLE:
 
 # Try to import the MPI module
 try:
-    module_name = f"pennylane_lightning.{device_module_name}_nb"
+    module_name = f"pennylane_lightning.{device_module_name}_ops"
     mpi_module = importlib.import_module(module_name)
 except ImportError:
     mpi_module = None

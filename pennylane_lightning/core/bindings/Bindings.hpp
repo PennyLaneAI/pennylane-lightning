@@ -13,7 +13,7 @@
 // limitations under the License.
 
 /**
- * @file Bindings_nb.hpp
+ * @file Bindings.hpp
  * Defines device-agnostic operations to export to Python and other utility
  * functions interfacing with Nanobind.
  */
@@ -35,7 +35,7 @@
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/vector.h>
 
-#include "BindingsUtils_nb.hpp"
+#include "BindingsUtils.hpp"
 #include "CPUMemoryModel.hpp" // CPUMemoryModel, bestCPUMemoryModel
 #include "Constant.hpp"
 #include "ConstantUtil.hpp" // lookup
@@ -49,11 +49,11 @@
 // Include backend-specific headers and define macros based on compile flags
 #ifdef _ENABLE_PLQUBIT
 #include "AdjointJacobianLQubit.hpp"
-#include "LQubitBindings_nb.hpp"
+#include "LQubitBindings.hpp"
 #include "MeasurementsLQubit.hpp"
 #include "ObservablesLQubit.hpp"
 
-#define LIGHTNING_MODULE_NAME lightning_qubit_nb
+#define LIGHTNING_MODULE_NAME lightning_qubit_ops
 
 /// @cond DEV
 namespace {
@@ -67,11 +67,11 @@ using namespace Pennylane::LightningQubit::NanoBindings;
 
 #elif _ENABLE_PLKOKKOS == 1
 #include "AdjointJacobianKokkos.hpp"
-#include "LKokkosBindings_nb.hpp"
+#include "LKokkosBindings.hpp"
 #include "MeasurementsKokkos.hpp"
 #include "ObservablesKokkos.hpp"
 
-#define LIGHTNING_MODULE_NAME lightning_kokkos_nb
+#define LIGHTNING_MODULE_NAME lightning_kokkos_ops
 
 /// @cond DEV
 namespace {
@@ -85,12 +85,12 @@ using namespace Pennylane::LightningKokkos::NanoBindings;
 
 #elif _ENABLE_PLGPU == 1
 #include "AdjointJacobianGPU.hpp"
-#include "BindingsCudaUtils_nb.hpp"
-#include "LGPUBindings_nb.hpp"
+#include "BindingsCudaUtils.hpp"
+#include "LGPUBindings.hpp"
 #include "MeasurementsGPU.hpp"
 #include "ObservablesGPU.hpp"
 
-#define LIGHTNING_MODULE_NAME lightning_gpu_nb
+#define LIGHTNING_MODULE_NAME lightning_gpu_ops
 
 /// @cond DEV
 namespace {
@@ -103,12 +103,12 @@ using namespace Pennylane::LightningGPU::NanoBindings;
 /// @endcond
 
 #elif _ENABLE_PLTENSOR == 1
-#include "BindingsCudaUtils_nb.hpp"
-#include "LTensorTNCudaBindings_nb.hpp"
+#include "BindingsCudaUtils.hpp"
+#include "LTensorTNCudaBindings.hpp"
 #include "MeasurementsTNCuda.hpp"
 #include "ObservablesTNCuda.hpp"
 
-#define LIGHTNING_TENSOR_MODULE_NAME lightning_tensor_nb
+#define LIGHTNING_TENSOR_MODULE_NAME lightning_tensor_ops
 
 /// @cond DEV
 namespace {

@@ -17,7 +17,7 @@ Class implementation for lightning_kokkos state-vector manipulation.
 from warnings import warn
 
 try:
-    from pennylane_lightning.lightning_kokkos_nb import (
+    from pennylane_lightning.lightning_kokkos_ops import (
         InitializationSettings,
         StateVectorC64,
         StateVectorC128,
@@ -26,7 +26,7 @@ try:
     )
 
     try:
-        from pennylane_lightning.lightning_kokkos_nb import (
+        from pennylane_lightning.lightning_kokkos_ops import (
             MPIManagerKokkos,
             StateVectorMPIC64,
             StateVectorMPIC128,

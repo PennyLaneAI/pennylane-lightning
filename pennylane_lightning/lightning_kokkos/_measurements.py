@@ -20,10 +20,10 @@ from __future__ import annotations
 from warnings import warn
 
 try:
-    from pennylane_lightning.lightning_kokkos_nb import MeasurementsC64, MeasurementsC128
+    from pennylane_lightning.lightning_kokkos_ops import MeasurementsC64, MeasurementsC128
 
     try:
-        from pennylane_lightning.lightning_kokkos_nb import MeasurementsMPIC64, MeasurementsMPIC128
+        from pennylane_lightning.lightning_kokkos_ops import MeasurementsMPIC64, MeasurementsMPIC128
 
         mpi_error = None
         MPI_SUPPORT = True

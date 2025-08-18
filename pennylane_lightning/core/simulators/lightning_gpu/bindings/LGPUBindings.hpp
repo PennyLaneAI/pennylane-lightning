@@ -13,7 +13,7 @@
 // limitations under the License.
 
 /**
- * @file LGPUBindings_nb.hpp
+ * @file LGPUBindings.hpp
  * Defines lightning.gpu specific operations to export to Python using Nanobind.
  */
 
@@ -233,7 +233,7 @@ void registerBackendSpecificInfo(nb::module_ &m) {
  * Example with JAX:
  * ```python
  * import jax.numpy as jnp
- * import pennylane_lightning.lightning_qubit_nb as plq
+ * import pennylane_lightning.lightning_qubit_ops as plq
  *
  * # Create a JAX array
  * jax_data = jnp.zeros(2**3, dtype=jnp.complex64)

@@ -29,7 +29,7 @@ if not LightningDevice._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
 if device_name == "lightning.kokkos":
-    from pennylane_lightning.lightning_kokkos_nb.observables import (
+    from pennylane_lightning.lightning_kokkos_ops.observables import (
         HamiltonianC64,
         HamiltonianC128,
         HermitianObsC64,
@@ -42,7 +42,7 @@ if device_name == "lightning.kokkos":
         TensorProdObsC128,
     )
 elif device_name == "lightning.gpu":
-    from pennylane_lightning.lightning_gpu_nb.observables import (
+    from pennylane_lightning.lightning_gpu_ops.observables import (
         HamiltonianC64,
         HamiltonianC128,
         HermitianObsC64,
@@ -60,7 +60,7 @@ elif device_name == "lightning.tensor":
         allow_module_level=True,
     )
 else:
-    from pennylane_lightning.lightning_qubit_nb.observables import (
+    from pennylane_lightning.lightning_qubit_ops.observables import (
         HamiltonianC64,
         HamiltonianC128,
         HermitianObsC64,

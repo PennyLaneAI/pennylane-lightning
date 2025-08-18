@@ -13,7 +13,7 @@
 // limitations under the License.
 
 /**
- * @file LKokkosBindingsMPI_nb.hpp
+ * @file LKokkosBindingsMPI.hpp
  * Defines lightning.kokkos specific MPI operations to export to Python using
  * Nanobind.
  */
@@ -30,8 +30,8 @@
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/vector.h>
 
-#include "BindingsUtils_nb.hpp"
-#include "Bindings_nb.hpp"
+#include "Bindings.hpp"
+#include "BindingsUtils.hpp"
 #include "Constant.hpp"
 #include "ConstantUtil.hpp" // lookup
 #include "GateOperation.hpp"

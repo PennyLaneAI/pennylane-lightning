@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include "BindingsUtils_nb.hpp"
+#include "BindingsUtils.hpp"
 #include "DevTag.hpp"
 #include "DevicePool.hpp"
 #include "cuda_helpers.hpp"

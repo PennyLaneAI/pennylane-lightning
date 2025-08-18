@@ -13,7 +13,7 @@
 // limitations under the License.
 
 /**
- * @file LQubitBindings_nb.hpp
+ * @file LQubitBindings.hpp
  * Defines lightning.qubit specific operations to export to Python using
  * Nanobind.
  */
@@ -30,7 +30,7 @@
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/vector.h>
 
-#include "BindingsUtils_nb.hpp"
+#include "BindingsUtils.hpp"
 #include "Constant.hpp"
 #include "ConstantUtil.hpp" // lookup
 #include "DynamicDispatcher.hpp"

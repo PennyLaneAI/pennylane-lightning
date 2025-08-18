@@ -212,10 +212,10 @@ target_include_directories(pennylane_lightning  INTERFACE "$<INSTALL_INTERFACE:$
 if(ENABLE_PYTHON)
     message(STATUS "ENABLE_PYTHON is ON.")
     # Only build Nanobind module
-    nanobind_add_module("${PL_BACKEND}_nb" "pennylane_lightning/core/bindings/Bindings_nb.cpp")
+    nanobind_add_module("${PL_BACKEND}_ops" "pennylane_lightning/core/bindings/Bindings.cpp")
 
     # Remove nanobind's problematic flags that are incompatible with NVCC
-    target_compile_options("${PL_BACKEND}_nb" PRIVATE
+    target_compile_options("${PL_BACKEND}_ops" PRIVATE
         -fno-function-sections
         -fno-data-sections
         -O2  # Override nanobind's -Os with -O2
@@ -226,13 +226,13 @@ if(ENABLE_PYTHON)
     if("${PL_BACKEND}" STREQUAL "lightning_gpu" OR "${PL_BACKEND}" STREQUAL "lightning_tensor")
         # Allow pip installation of cuQuantum & CUDA 12 libs to be accessible without setting LD_LIBRARY_PATH for lightning_gpu
         # BUILD_RPATH only works for the last call
-        set_target_properties("${PL_BACKEND}_nb" PROPERTIES BUILD_RPATH "$ORIGIN/../cuquantum/lib:$ORIGIN/../nvidia/cuda_runtime/lib:$ORIGIN/../nvidia/nvjitlink/lib:$ORIGIN/../nvidia/cublas/lib:$ORIGIN/../nvidia/cusparse/lib:${SCIPY_OPENBLAS32_RUNTIME_LIB_PATH}:$ORIGIN")
+        set_target_properties("${PL_BACKEND}_ops" PROPERTIES BUILD_RPATH "$ORIGIN/../cuquantum/lib:$ORIGIN/../nvidia/cuda_runtime/lib:$ORIGIN/../nvidia/nvjitlink/lib:$ORIGIN/../nvidia/cublas/lib:$ORIGIN/../nvidia/cusparse/lib:${SCIPY_OPENBLAS32_RUNTIME_LIB_PATH}:$ORIGIN")
     else()
-        set_target_properties("${PL_BACKEND}_nb" PROPERTIES BUILD_RPATH "${SCIPY_OPENBLAS32_RUNTIME_LIB_PATH}")
+        set_target_properties("${PL_BACKEND}_ops" PROPERTIES BUILD_RPATH "${SCIPY_OPENBLAS32_RUNTIME_LIB_PATH}")
     endif()
     
     # Link library
-    target_link_libraries("${PL_BACKEND}_nb" PRIVATE lightning_compile_options
+    target_link_libraries("${PL_BACKEND}_ops" PRIVATE lightning_compile_options
                                                     lightning_external_libs
                                                     lightning_observables
                                                     lightning_utils
@@ -244,11 +244,11 @@ if(ENABLE_PYTHON)
                                                    )
     
     if(NOT DEFINED PL_TENSOR)
-        target_link_libraries("${PL_BACKEND}_nb" PRIVATE "${PL_BACKEND}_algorithms")
+        target_link_libraries("${PL_BACKEND}_ops" PRIVATE "${PL_BACKEND}_algorithms")
     endif()
     
-    set_target_properties("${PL_BACKEND}_nb" PROPERTIES CXX_VISIBILITY_PRESET hidden)
-    target_compile_definitions("${PL_BACKEND}_nb" PRIVATE VERSION_INFO=${VERSION_STRING})
+    set_target_properties("${PL_BACKEND}_ops" PROPERTIES CXX_VISIBILITY_PRESET hidden)
+    target_compile_definitions("${PL_BACKEND}_ops" PRIVATE VERSION_INFO=${VERSION_STRING})
 endif()
 
 install(TARGETS pennylane_lightning

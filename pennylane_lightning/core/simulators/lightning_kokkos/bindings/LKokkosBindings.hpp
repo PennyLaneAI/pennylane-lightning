@@ -13,7 +13,7 @@
 // limitations under the License.
 
 /**
- * @file LKokkosBindings_nb.hpp
+ * @file LKokkosBindings.hpp
  * Defines lightning.kokkos specific operations to export to Python using
  * Nanobind.
  */
@@ -30,7 +30,7 @@
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/vector.h>
 
-#include "BindingsUtils_nb.hpp"
+#include "BindingsUtils.hpp"
 #include "Constant.hpp"
 #include "ConstantUtil.hpp" // lookup
 #include "GateOperation.hpp"

@@ -129,7 +129,7 @@ import importlib
 lightning_ops = None
 
 # Define nanobind module name based on current device
-nanobind_module_name = f"pennylane_lightning.{device_module_name}_nb"
+nanobind_module_name = f"pennylane_lightning.{device_module_name}_ops"
 
 # Handle lightning.tensor separately since it has different class structure
 if device_name == "lightning.tensor":
@@ -143,8 +143,8 @@ if device_name == "lightning.tensor":
 
     LightningAdjointJacobian = None
 
-    if hasattr(pennylane_lightning, "lightning_tensor_nb"):
-        import pennylane_lightning.lightning_tensor_nb as lightning_ops
+    if hasattr(pennylane_lightning, "lightning_tensor_ops"):
+        import pennylane_lightning.lightning_tensor_ops as lightning_ops
 else:
     # General case for lightning.qubit, lightning.kokkos, and lightning.gpu
     # Capitalize device name for class names
@@ -175,9 +175,9 @@ else:
     LightningStateVector = getattr(state_vector_module, f"Lightning{backend_cap}StateVector")
 
     # Try to import ops module
-    ops_module_path = f"pennylane_lightning.{device_module_name}_nb"
+    ops_module_path = f"pennylane_lightning.{device_module_name}_ops"
     print(ops_module_path)
-    if hasattr(pennylane_lightning, f"{device_module_name}_nb"):
+    if hasattr(pennylane_lightning, f"{device_module_name}_ops"):
         lightning_ops = importlib.import_module(ops_module_path)
     else:
         print("no ops")

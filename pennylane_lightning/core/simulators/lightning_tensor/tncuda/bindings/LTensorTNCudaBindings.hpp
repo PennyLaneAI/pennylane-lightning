@@ -13,7 +13,7 @@
 // limitations under the License.
 
 /**
- * @file LTensorTNCudaBindings_nb.hpp
+ * @file LTensorTNCudaBindings.hpp
  * Defines lightning.tensor specific operations to export to Python using
  * Nanobind.
  */
@@ -30,7 +30,7 @@
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/vector.h>
 
-#include "BindingsUtils_nb.hpp"
+#include "BindingsUtils.hpp"
 #include "DevTag.hpp"
 #include "Error.hpp"
 #include "ExactTNCuda.cpp"

@@ -17,9 +17,9 @@
  * Implements device-agnostic operations to export to Python using Nanobind.
  */
 
-#include "Bindings_nb.hpp"
+#include "Bindings.hpp"
 #ifdef _ENABLE_MPI
-#include "BindingsMPI_nb.hpp"
+#include "BindingsMPI.hpp"
 #endif
 #include "CPUMemoryModel.hpp"
 #include "Memory.hpp"
