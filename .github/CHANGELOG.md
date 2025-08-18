@@ -20,6 +20,7 @@
   PennyLane. See PennyLane PR [(#7944)](https://github.com/PennyLaneAI/pennylane/pull/7944) for
   more information.
   [(#1226)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1226)
+  [(#1236)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1236)
 
 - Dropped support for Python 3.10. Supported Python versions are now 3.11, 3.12 and 3.13.
   [(#1224)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1224)
