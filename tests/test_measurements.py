@@ -453,7 +453,7 @@ class TestSample:
         """Tests if the samples returned by the sample function have
         the correct dimensions
         """
-        dev = qubit_device(wires=2, shots=shots)
+        dev = qubit_device(wires=2)
         ops = [qml.RX(1.5708, wires=[0]), qml.RX(1.5708, wires=[1])]
         obs = qml.PauliZ(wires=[0])
         tape = qml.tape.QuantumScript(ops, [qml.sample(op=obs)], shots=shots)
@@ -465,7 +465,7 @@ class TestSample:
         the correct values
         """
         shots = 1000
-        dev = qubit_device(wires=2, shots=shots)
+        dev = qubit_device(wires=2)
         ops = [qml.RX(1.5708, wires=[0])]
         obs = qml.PauliZ(0)
         tape = qml.tape.QuantumScript(ops, [qml.sample(op=obs)], shots=shots)
@@ -491,13 +491,10 @@ class TestSample:
         tape = qml.tape.QuantumScript(ops, [qml.sample(wires=wires)], shots=shots)
         tape_exact = qml.tape.QuantumScript(ops, [qml.probs(wires=wires)])
 
-        def reshape_samples(samples):
-            return np.atleast_3d(samples) if len(wires) == 1 else np.atleast_2d(samples)
-
-        dev = qubit_device(wires=n_qubits, shots=shots)
+        dev = qubit_device(wires=n_qubits)
         samples = dev.execute(tape)
         probs = qml.measurements.ProbabilityMP(wires=wires).process_samples(
-            reshape_samples(samples), wire_order=wires
+            np.atleast_2d(samples), wire_order=wires
         )
 
         dev_ref = qml.device("default.qubit", wires=n_qubits)
@@ -546,7 +543,12 @@ def test_shots_single_measure_obs(shots, measure_f, obs, n_wires, mcmc, kernel_n
         dev = qml.device(device_name, wires=n_wires, seed=seed)
     elif device_name == "lightning.qubit":
         dev = qml.device(
-            device_name, wires=n_wires, shots=shots, mcmc=mcmc, kernel_name=kernel_name, seed=seed
+            device_name,
+            wires=n_wires,
+            mcmc=mcmc,
+            kernel_name=kernel_name,
+            num_burnin=100,
+            seed=seed,
         )
     else:
         dev = qml.device(device_name, wires=n_wires)
@@ -588,13 +590,13 @@ def test_shots_single_measure_obs(shots, measure_f, obs, n_wires, mcmc, kernel_n
 def test_shots_bins(shots, qubit_device, seed):
     """Tests that Lightning handles multiple shots."""
 
-    dev = qubit_device(wires=1, shots=shots, seed=seed)
+    dev = qubit_device(wires=1, seed=seed)
 
+    @qml.set_shots(shots)
     @qml.qnode(dev)
     def circuit():
         return qml.expval(qml.PauliZ(wires=0))
 
-    if dev.name == "lightning.qubit":
-        assert np.sum(shots) == circuit.device.shots.total_shots
+    assert np.sum(shots) == circuit._shots.total_shots
 
     assert np.allclose(circuit(), 1.0)
