@@ -19,7 +19,7 @@ from functools import partial
 import pennylane as qml
 import pytest
 from conftest import LightningDevice, device_name
-from pennylane.devices import DefaultExecutionConfig
+from pennylane.devices import ExecutionConfig
 
 jax = pytest.importorskip("jax")
 jnp = pytest.importorskip("jax.numpy")
@@ -52,8 +52,7 @@ class TestErrors:
         args = (0.5,)
         jaxpr = jax.make_jaxpr(circuit)(*args)
 
-        execution_config = DefaultExecutionConfig
-        execution_config.gradient_method = "backprop"
+        execution_config = ExecutionConfig(gradient_method="backprop")
 
         with pytest.raises(
             NotImplementedError, match="LightningQubit does not support gradient_method"
@@ -193,11 +192,14 @@ class TestErrors:
         args = (0.5,)
         jaxpr = jax.make_jaxpr(circuit)(*args)
 
-        with pytest.raises(
-            NotImplementedError,
-            match="LightningBase does not support finite shots for ``jaxpr_jvp``",
+        with pytest.warns(
+            qml.exceptions.PennyLaneDeprecationWarning, match="shots on device is deprecated"
         ):
-            qml.device(device_name, wires=1, shots=100).jaxpr_jvp(jaxpr.jaxpr, args, (0.5,))
+            with pytest.raises(
+                NotImplementedError,
+                match="LightningBase does not support finite shots for ``jaxpr_jvp``",
+            ):
+                qml.device(device_name, wires=1, shots=100).jaxpr_jvp(jaxpr.jaxpr, args, (0.5,))
 
 
 class TestCorrectResults:

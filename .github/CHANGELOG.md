@@ -34,7 +34,21 @@
 
 <h3>Breaking changes 💔</h3>
 
+- No longer squeezes out singleton dimensions from samples in accordance with a breaking change in
+  PennyLane. See PennyLane PR [(#7944)](https://github.com/PennyLaneAI/pennylane/pull/7944) for
+  more information.
+  [(#1226)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1226)
+
+- Dropped support for Python 3.10. Supported Python versions are now 3.11, 3.12 and 3.13.
+  [(#1224)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1224)
+
+- Dropped testing support for `tensorflow` interface after deprecation in Pennylane. 
+  [(#1225)](github.com/PennyLaneAI/pennylane-lightning/pull/1225)
+
 <h3>Deprecations 👋</h3>
+
+- Specifying `shots` at `qml.device` initialization is deprecated. Instead, use `qml.set_shots` to configure shots for a specific QNode.
+   [(#1221)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1221)
 
 <h3>Documentation 📝</h3>
 
@@ -44,6 +58,12 @@
 <h3>Bug fixes 🐛</h3>
 
 <h3>Internal changes ⚙️</h3>
+
+- Adjust where the MCMC config validation occurs, from initialization to preprocess.
+  [(#1222)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1222)
+
+- Replace `DefaultExecutionConfig` with `ExecutionConfig()` across the Lightning Python device APIs.
+  [(#1185)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1185)
 
 - Updated tests with `circuit(..., shots=...)` to use `qml.set_shots` to ensure compatibility with the latest version of PennyLane.
   [(#1216)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1216)
@@ -70,10 +90,12 @@
 
 This release contains contributions from (in alphabetical order):
 
-Luis Alfredo Nuñez Meneses,
+Ali Asadi,
 Yushao Chen,
 Amintor Dusko,
+Christina Lee,
 Joseph Lee,
+Luis Alfredo Nuñez Meneses,
 Andrija Paurevic,
 Jake Zaia.
 

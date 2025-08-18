@@ -666,44 +666,6 @@ class TestAdjointJacobianQNode:
         # the different methods agree
         assert np.allclose(grad_D, grad_F, atol=tol, rtol=0)
 
-    def test_interface_tf(self, dev):
-        """Test if gradients agree between the adjoint and finite-diff methods when using the
-        TensorFlow interface"""
-
-        tf = pytest.importorskip("tensorflow")
-
-        def f(params1, params2):
-            qml.RX(0.4, wires=[0])
-            qml.RZ(params1 * tf.sqrt(params2), wires=[0])
-            qml.RY(tf.cos(params2), wires=[0])
-            return qml.expval(qml.PauliZ(0))
-
-        if dev.r_dtype == np.float32:
-            tf_r_dtype = tf.float32
-        else:
-            tf_r_dtype = tf.float64
-
-        params1 = tf.Variable(0.3, dtype=tf_r_dtype)
-        params2 = tf.Variable(0.4, dtype=tf_r_dtype)
-
-        h = self.tol_for_allclose(dev.c_dtype)
-        tol = self.tol_for_allclose(dev.c_dtype)
-
-        qnode1 = QNode(f, dev, interface="tf", diff_method="adjoint")
-        qnode2 = QNode(f, dev, interface="tf", diff_method="finite-diff", gradient_kwargs={"h": h})
-
-        with tf.GradientTape() as tape:
-            res1 = qnode1(params1, params2)
-
-        g1 = tape.gradient(res1, [params1, params2])
-
-        with tf.GradientTape() as tape:
-            res2 = qnode2(params1, params2)
-
-        g2 = tape.gradient(res2, [params1, params2])
-
-        assert np.allclose(g1, g2, atol=tol)
-
     def test_interface_torch(self, dev):
         """Test if gradients agree between the adjoint and finite-diff methods when using the
         Torch interface"""
