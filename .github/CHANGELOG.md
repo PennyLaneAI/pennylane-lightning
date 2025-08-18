@@ -98,7 +98,6 @@ Joseph Lee,
 Luis Alfredo Nuñez Meneses,
 Andrija Paurevic,
 Jake Zaia.
-
 ---
 
 # Release 0.42.0
