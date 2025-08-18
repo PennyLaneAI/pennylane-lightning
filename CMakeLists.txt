@@ -211,7 +211,7 @@ target_include_directories(pennylane_lightning  INTERFACE "$<INSTALL_INTERFACE:$
 #####################################################
 if(ENABLE_PYTHON)
     message(STATUS "ENABLE_PYTHON is ON.")
-    # Only build Nanobind module
+    # Build Nanobind module
     nanobind_add_module("${PL_BACKEND}_ops" "pennylane_lightning/core/bindings/Bindings.cpp")
 
     # Remove nanobind's problematic flags that are incompatible with NVCC
