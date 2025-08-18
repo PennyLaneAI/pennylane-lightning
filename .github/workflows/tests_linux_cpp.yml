@@ -27,7 +27,7 @@ on:
       - master
 
 env:
-  COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --no-flaky-report -p no:warnings --tb=native"
+  COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing -p no:warnings --tb=native"
   GCC_VERSION: 13
   OMP_NUM_THREADS: "2"
   OMP_PROC_BIND: "false"
@@ -55,10 +55,16 @@ jobs:
       - uses: actions/setup-python@v5
         name: Install Python
         with:
-          python-version: '3.10'
+          python-version: '3.11'
 
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
+
+      - name: Checkout Catalyst
+        uses: actions/checkout@v4
+        with:
+          repository: PennyLaneAI/catalyst
+          path: ${{ github.workspace}}/catalyst
 
       - name: Install dependencies
         run: |
@@ -76,7 +82,8 @@ jobs:
               -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
               -DENABLE_COVERAGE=ON \
               -DLQ_ENABLE_KERNEL_AVX_STREAMING=${{ matrix.enable_kernel_avx_streaming }} \
-              -DLQ_ENABLE_KERNEL_OMP=${{ matrix.enable_kernel_omp }}
+              -DLQ_ENABLE_KERNEL_OMP=${{ matrix.enable_kernel_omp }} \
+              -DLIGHTNING_CATALYST_SRC_PATH=${{ github.workspace }}/catalyst
 
             cmake --build ./Build
 
@@ -126,10 +133,16 @@ jobs:
       - uses: actions/setup-python@v5
         name: Install Python
         with:
-          python-version: '3.10'
+          python-version: '3.11'
 
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
+
+      - name: Checkout Catalyst
+        uses: actions/checkout@v4
+        with:
+          repository: PennyLaneAI/catalyst
+          path: ${{ github.workspace}}/catalyst
 
       - name: Install dependencies
         run: |
@@ -146,7 +159,8 @@ jobs:
               -DSCIPY_OPENBLAS=$(python -c "import scipy_openblas32; print(scipy_openblas32.get_lib_dir())") \
               -DBUILD_TESTS=ON \
               -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
-              -DENABLE_COVERAGE=ON
+              -DENABLE_COVERAGE=ON \
+              -DLIGHTNING_CATALYST_SRC_PATH=${{ github.workspace }}/catalyst
             cmake --build ./Build
             cd ./Build
             mkdir -p ./tests/results
@@ -186,14 +200,14 @@ jobs:
     uses: ./.github/workflows/build_and_cache_Kokkos_linux.yml
     with:
       runs_on: pl-4-core-large-runner
-      os: ubuntu-latest
+      os: ubuntu-24.04
 
   cpptestswithKokkos:
     if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
     needs: [build_and_cache_Kokkos]
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-24.04]
         pl_backend: ["lightning_kokkos"]
         exec_model: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.exec_model) }}
         kokkos_version: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.kokkos_version) }}
@@ -205,10 +219,16 @@ jobs:
       - uses: actions/setup-python@v5
         name: Install Python
         with:
-          python-version: '3.10'
+          python-version: '3.11'
 
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
+
+      - name: Checkout Catalyst
+        uses: actions/checkout@v4
+        with:
+          repository: PennyLaneAI/catalyst
+          path: ${{ github.workspace}}/catalyst
 
       - name: Restoring cached dependencies
         id: kokkos-cache
@@ -239,7 +259,8 @@ jobs:
               -DPL_BACKEND=${{ matrix.pl_backend }} \
               -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
               -DSCIPY_OPENBLAS=$(python -c "import scipy_openblas32; print(scipy_openblas32.get_lib_dir())") \
-              -DENABLE_COVERAGE=ON
+              -DENABLE_COVERAGE=ON \
+              -DLIGHTNING_CATALYST_SRC_PATH=${{ github.workspace }}/catalyst
             cmake --build ./Build
             cd ./Build
             mkdir -p ./tests/results-${{ github.job }}-${{ matrix.pl_backend }}
@@ -278,7 +299,7 @@ jobs:
   upload-to-codecov-linux-cpp:
     needs: [cpptests, cpptestswithOpenBLAS, cpptestswithKokkos]
     name: Upload cpp coverage data to codecov
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -303,7 +324,7 @@ jobs:
     needs: [build_and_cache_Kokkos]
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-24.04]
         exec_model: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.exec_model) }}
         kokkos_version: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.kokkos_version) }}
     timeout-minutes: 60
@@ -314,10 +335,16 @@ jobs:
       - uses: actions/setup-python@v5
         name: Install Python
         with:
-          python-version: '3.10'
+          python-version: '3.11'
 
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
+
+      - name: Checkout Catalyst
+        uses: actions/checkout@v4
+        with:
+          repository: PennyLaneAI/catalyst
+          path: ${{ github.workspace}}/catalyst
 
       - name: Restoring cached dependencies
         id: kokkos-cache
@@ -347,7 +374,8 @@ jobs:
               -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos \
               -DPL_BACKEND="lightning_qubit;lightning_kokkos" \
               -DSCIPY_OPENBLAS=$(python -c "import scipy_openblas32; print(scipy_openblas32.get_lib_dir())") \
-              -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)
+              -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
+              -DLIGHTNING_CATALYST_SRC_PATH=${{ github.workspace }}/catalyst
             cmake --build ./Build
             cd ./Build
             mkdir -p ./tests/results_multiple_backends

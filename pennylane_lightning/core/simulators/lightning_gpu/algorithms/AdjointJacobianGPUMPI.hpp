@@ -29,7 +29,7 @@
 #include "JacobianDataMPI.hpp"
 #include "LinearAlg.hpp"
 #include "MPILinearAlg.hpp"
-#include "MPIManager.hpp"
+#include "MPIManagerGPU.hpp"
 #include "ObservablesGPUMPI.hpp"
 
 /// @cond DEV
@@ -113,7 +113,7 @@ class AdjointJacobianMPI final
         if (!jd.hasTrainableParams()) {
             return;
         }
-        MPIManager mpi_manager_(jd.getMPIManager());
+        MPIManagerGPU mpi_manager_(jd.getMPIManager());
         DevTag<int> dt_local(jd.getDevTag());
 
         const OpsData<StateVectorT> &ops = jd.getOperations();

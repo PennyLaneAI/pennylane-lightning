@@ -14,7 +14,7 @@
 
 #include "CSRMatrix.hpp"
 #include "LinearAlg.hpp"
-#include "MPIManager.hpp"
+#include "MPIManagerGPU.hpp"
 
 using namespace Pennylane::LightningGPU::MPI;
 
@@ -42,13 +42,12 @@ namespace Pennylane::LightningGPU::Util {
  * @param handle cuSparse handle.
  */
 template <class IndexT, class Precision, class CFP_t, class DevTypeID = int>
-inline void
-SparseMV_cuSparseMPI(MPIManager &mpi_manager, const std::size_t &length_local,
-                     const IndexT *csrOffsets_ptr,
-                     const int64_t csrOffsets_size, const IndexT *columns_ptr,
-                     const std::complex<Precision> *values_ptr, CFP_t *X,
-                     CFP_t *Y, DevTypeID device_id, cudaStream_t stream_id,
-                     cusparseHandle_t handle) {
+inline void SparseMV_cuSparseMPI(
+    MPIManagerGPU &mpi_manager, const std::size_t &length_local,
+    const IndexT *csrOffsets_ptr, const int64_t csrOffsets_size,
+    const IndexT *columns_ptr, const std::complex<Precision> *values_ptr,
+    CFP_t *X, CFP_t *Y, DevTypeID device_id, cudaStream_t stream_id,
+    cusparseHandle_t handle) {
     std::vector<std::vector<CSRMatrix<Precision, IndexT>>> csrmatrix_blocks;
     if (mpi_manager.getRank() == 0) {
         csrmatrix_blocks = splitCSRMatrix<Precision, IndexT>(
@@ -56,7 +55,6 @@ SparseMV_cuSparseMPI(MPIManager &mpi_manager, const std::size_t &length_local,
             csrOffsets_ptr, columns_ptr, values_ptr);
     }
     mpi_manager.Barrier();
-
     std::vector<CSRMatrix<Precision, IndexT>> localCSRMatVector;
     for (std::size_t i = 0; i < mpi_manager.getSize(); i++) {
         auto localCSRMat = scatterCSRMatrix<Precision, IndexT>(

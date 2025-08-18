@@ -449,17 +449,7 @@ void registerBackendAgnosticMeasurements(PyClass &pyclass) {
     using PrecisionT =
         typename StateVectorT::PrecisionT; // Statevector's precision.
     using ParamT = PrecisionT;             // Parameter's data precision
-
     pyclass
-        .def("probs",
-             [](Measurements<StateVectorT> &M,
-                const std::vector<std::size_t> &wires) {
-                 return py::array_t<ParamT>(py::cast(M.probs(wires)));
-             })
-        .def("probs",
-             [](Measurements<StateVectorT> &M) {
-                 return py::array_t<ParamT>(py::cast(M.probs()));
-             })
         .def(
             "expval",
             [](Measurements<StateVectorT> &M,
@@ -474,24 +464,36 @@ void registerBackendAgnosticMeasurements(PyClass &pyclass) {
                 return M.var(*ob);
             },
             "Variance of an observable object.")
-        .def("generate_samples", [](Measurements<StateVectorT> &M,
-                                    std::size_t num_wires,
-                                    std::size_t num_shots) {
-            auto &&result = M.generate_samples(num_shots);
-            const std::size_t ndim = 2;
-            const std::vector<std::size_t> shape{num_shots, num_wires};
-            constexpr auto sz = sizeof(std::size_t);
-            const std::vector<std::size_t> strides{sz * num_wires, sz};
-            // return 2-D NumPy array
-            return py::array(py::buffer_info(
-                result.data(), /* data as contiguous array  */
-                sz,            /* size of one scalar        */
-                py::format_descriptor<std::size_t>::format(), /* data type */
-                ndim,   /* number of dimensions      */
-                shape,  /* shape of the matrix       */
-                strides /* strides for each axis     */
-                ));
-        });
+        .def("probs",
+             [](Measurements<StateVectorT> &M,
+                const std::vector<std::size_t> &wires) {
+                 return py::array_t<ParamT>(py::cast(M.probs(wires)));
+             })
+        .def("probs",
+             [](Measurements<StateVectorT> &M) {
+                 return py::array_t<ParamT>(py::cast(M.probs()));
+             })
+        .def("generate_samples",
+             [](Measurements<StateVectorT> &M, std::size_t num_wires,
+                std::size_t num_shots) {
+                 auto &&result = M.generate_samples(num_shots);
+                 const std::size_t ndim = 2;
+                 const std::vector<std::size_t> shape{num_shots, num_wires};
+                 constexpr auto sz = sizeof(std::size_t);
+                 const std::vector<std::size_t> strides{sz * num_wires, sz};
+                 // return 2-D NumPy array
+                 return py::array(py::buffer_info(
+                     result.data(), /* data as contiguous array  */
+                     sz,            /* size of one scalar        */
+                     py::format_descriptor<std::size_t>::format(), /* data type
+                                                                    */
+                     ndim,   /* number of dimensions      */
+                     shape,  /* shape of the matrix       */
+                     strides /* strides for each axis     */
+                     ));
+             })
+        .def("set_random_seed", [](Measurements<StateVectorT> &M,
+                                   std::size_t seed) { M.setSeed(seed); });
 }
 
 /**
@@ -686,7 +688,7 @@ template <class StateVectorT> void lightningClassBindings(py::module_ &m) {
     auto pyclass_measurements = py::class_<Measurements<StateVectorT>>(
         m, class_name.c_str(), py::module_local());
 
-#ifdef _ENABLE_PLGPU
+#if defined(_ENABLE_PLGPU) || defined(_ENABLE_PLKOKKOS)
     pyclass_measurements.def(py::init<StateVectorT &>());
 #else
     pyclass_measurements.def(py::init<const StateVectorT &>());

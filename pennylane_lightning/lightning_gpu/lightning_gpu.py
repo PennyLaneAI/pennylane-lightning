@@ -27,7 +27,9 @@ from warnings import warn
 
 import numpy as np
 import pennylane as qml
-from pennylane.devices import DefaultExecutionConfig, ExecutionConfig
+from numpy.random import BitGenerator, Generator, SeedSequence
+from numpy.typing import ArrayLike
+from pennylane.devices import ExecutionConfig, MCMConfig
 from pennylane.devices.capabilities import OperatorProperties
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
 from pennylane.devices.preprocess import (
@@ -39,13 +41,11 @@ from pennylane.devices.preprocess import (
     validate_measurements,
     validate_observables,
 )
-from pennylane.exceptions import DeviceError
+from pennylane.exceptions import DecompositionUndefinedError, DeviceError
 from pennylane.measurements import MidMeasureMP
-from pennylane.operation import DecompositionUndefinedError, Operator
+from pennylane.operation import Operator
 from pennylane.ops import Conditional, PauliRot, Prod, SProd, Sum
-from pennylane.tape import QuantumScript
 from pennylane.transforms.core import TransformProgram
-from pennylane.typing import Result
 
 from pennylane_lightning.lightning_base.lightning_base import (
     LightningBase,
@@ -91,6 +91,13 @@ def stopping_condition(op: Operator) -> bool:
     """A function that determines whether or not an operation is supported by ``lightning.gpu``."""
     if op.name in ("C(SProd)", "C(Exp)"):
         return True
+
+    if (isinstance(op, Conditional) and stopping_condition(op.base)) or isinstance(
+        op, MidMeasureMP
+    ):
+        # Conditional and MidMeasureMP should not be decomposed
+        return True
+
     return _supports_operation(op.name)
 
 
@@ -162,6 +169,7 @@ def _add_adjoint_transforms(program: TransformProgram) -> None:
 
     name = "adjoint + lightning.gpu"
     program.add_transform(no_sampling, name=name)
+    program.add_transform(qml.transforms.broadcast_expand)
     program.add_transform(
         decompose,
         stopping_condition=_adjoint_ops,
@@ -173,7 +181,6 @@ def _add_adjoint_transforms(program: TransformProgram) -> None:
     program.add_transform(
         validate_measurements, analytic_measurements=adjoint_measurements, name=name
     )
-    program.add_transform(qml.transforms.broadcast_expand)
     program.add_transform(validate_adjoint_trainable_params)
 
 
@@ -214,6 +221,11 @@ class LightningGPU(LightningBase):
         batch_obs (bool): Determine whether we process observables in parallel when
             computing the jacobian. This value is only relevant when the lightning.gpu
             is built with MPI. Default is False.
+        seed (Union[str, None, int, array_like[int], SeedSequence, BitGenerator, Generator]): A
+            seed-like parameter matching that of ``seed`` for ``numpy.random.default_rng``, or
+            a request to seed from numpy's global random number generator.
+            The default, ``seed="global"`` pulls a seed from NumPy's global generator. ``seed=None``
+            will pull a seed from the OS entropy.
         mpi (bool): declare if the device will use the MPI support.
         mpi_buf_size (int): size of GPU memory (in MiB) set for MPI operation and its default value is 64 MiB.
         use_async (bool): is host-device data copy asynchronized or not.
@@ -243,6 +255,7 @@ class LightningGPU(LightningBase):
         c_dtype: Union[np.complex128, np.complex64] = np.complex128,
         shots: Union[int, List] = None,
         batch_obs: bool = False,
+        seed: Union[str, None, int, ArrayLike, SeedSequence, BitGenerator, Generator] = "global",
         # GPU and MPI arguments
         mpi: bool = False,
         mpi_buf_size: int = 0,
@@ -261,6 +274,7 @@ class LightningGPU(LightningBase):
             wires=wires,
             c_dtype=c_dtype,
             shots=shots,
+            seed=seed,
             batch_obs=batch_obs,
         )
 
@@ -271,6 +285,7 @@ class LightningGPU(LightningBase):
         self._dp = DevPool()
 
         # Create the state vector only for MPI, otherwise created dynamically before execution
+        self._mpi = mpi
         if mpi:
             if wires is None:
                 raise DeviceError("Lightning-GPU-MPI does not support dynamic wires allocation.")
@@ -280,6 +295,7 @@ class LightningGPU(LightningBase):
                 dtype=c_dtype,
                 mpi_handler=self._mpi_handler,
                 use_async=use_async,
+                rng=self._rng,
             )
         else:
             self._statevector = None
@@ -333,33 +349,10 @@ class LightningGPU(LightningBase):
 
         new_device_options.update(mcmc_default)
 
-        if qml.capture.enabled():
-            mcm_config = config.mcm_config
-            mcm_updated_values = {}
-            if (mcm_method := mcm_config.mcm_method) not in (
-                "deferred",
-                "single-branch-statistics",
-                None,
-            ):
-                raise DeviceError(
-                    f"mcm_method='{mcm_method}' is not supported with lightning.qubit "
-                    "when program capture is enabled."
-                )
-
-            if mcm_method == "single-branch-statistics" and mcm_config.postselect_mode is not None:
-                warn(
-                    "Setting 'postselect_mode' is not supported with mcm_method='single-branch-"
-                    "statistics'. 'postselect_mode' will be ignored.",
-                    UserWarning,
-                )
-                mcm_updated_values["postselect_mode"] = None
-            if mcm_method is None:
-                mcm_updated_values["mcm_method"] = "deferred"
-            updated_values["mcm_config"] = replace(mcm_config, **mcm_updated_values)
-
+        updated_values["mcm_config"] = _resolve_mcm_method(config.mcm_config)
         return replace(config, **updated_values, device_options=new_device_options)
 
-    def preprocess(self, execution_config: ExecutionConfig = DefaultExecutionConfig):
+    def preprocess(self, execution_config: ExecutionConfig | None = None):
         """This function defines the device transform program to be applied and an updated device configuration.
 
         Args:
@@ -378,6 +371,9 @@ class LightningGPU(LightningBase):
         * Currently does not intrinsically support parameter broadcasting
 
         """
+        if execution_config is None:
+            execution_config = ExecutionConfig()
+
         exec_config = self._setup_execution_config(execution_config)
         program = TransformProgram()
 
@@ -413,7 +409,7 @@ class LightningGPU(LightningBase):
     def execute(
         self,
         circuits: QuantumTape_or_Batch,
-        execution_config: ExecutionConfig = DefaultExecutionConfig,
+        execution_config: ExecutionConfig | None = None,
     ) -> Result_or_ResultBatch:
         """Execute a circuit or a batch of circuits and turn it into results.
 
@@ -424,6 +420,9 @@ class LightningGPU(LightningBase):
         Returns:
             TensorLike, tuple[TensorLike], tuple[tuple[TensorLike]]: A numeric result of the computation.
         """
+        if execution_config is None:
+            execution_config = ExecutionConfig()
+
         results = []
         for circuit in circuits:
             if self._wire_map is not None:
@@ -433,6 +432,7 @@ class LightningGPU(LightningBase):
                     self.dynamic_wires_from_circuit(circuit),
                     self._statevector,
                     postselect_mode=execution_config.mcm_config.postselect_mode,
+                    mcm_method=execution_config.mcm_config.mcm_method,
                 )
             )
 
@@ -440,7 +440,7 @@ class LightningGPU(LightningBase):
 
     def supports_derivatives(
         self,
-        execution_config: Optional[ExecutionConfig] = None,
+        execution_config: ExecutionConfig | None = None,
         circuit: Optional[qml.tape.QuantumTape] = None,
     ) -> bool:
         """Check whether or not derivatives are available for a given configuration and circuit.
@@ -457,41 +457,13 @@ class LightningGPU(LightningBase):
         """
         if execution_config is None and circuit is None:
             return True
-        if execution_config.gradient_method not in {"adjoint", "best"}:
-            return False
-        if circuit is None:
-            return True
-        return _supports_adjoint(circuit=circuit)
 
-    def simulate(
-        self,
-        circuit: QuantumScript,
-        state: LightningGPUStateVector,
-        postselect_mode: Optional[str] = None,
-    ) -> Result:
-        """Simulate a single quantum script.
+        if execution_config and execution_config.gradient_method in {"adjoint", "best"}:
+            if circuit is None:
+                return True
+            return _supports_adjoint(circuit=circuit)
 
-        Args:
-            circuit (QuantumTape): The single circuit to simulate
-            state (LightningGPUStateVector): handle to Lightning state vector
-            postselect_mode (str): Configuration for handling shots with mid-circuit measurement
-                postselection. Use ``"hw-like"`` to discard invalid shots and ``"fill-shots"`` to
-                keep the same number of shots. Default is ``None``.
-
-        Returns:
-            Tuple[TensorLike]: The results of the simulation
-
-        Note that this function can return measurements for non-commuting observables simultaneously.
-        """
-        if circuit.shots and (any(isinstance(op, MidMeasureMP) for op in circuit.operations)):
-            if self._mpi_handler and self._mpi_handler.use_mpi:
-                raise DeviceError("Lightning-GPU-MPI does not support Mid-circuit measurements.")
-
-        return super().simulate(
-            circuit,
-            state,
-            postselect_mode=postselect_mode,
-        )
+        return False
 
     @staticmethod
     def get_c_interface():
@@ -500,6 +472,40 @@ class LightningGPU(LightningBase):
         """
 
         return LightningBase.get_c_interface_impl("LightningGPUSimulator", "lightning_gpu")
+
+
+def _resolve_mcm_method(mcm_config: MCMConfig):
+    """Resolve the mcm config for the LightningGPU device."""
+
+    mcm_supported_methods = (
+        ("device", "deferred", "tree-traversal", "one-shot", None)
+        if not qml.capture.enabled()
+        else ("deferred", "single-branch-statistics", None)
+    )
+
+    if (mcm_method := mcm_config.mcm_method) not in mcm_supported_methods:
+        raise DeviceError(f"mcm_method='{mcm_method}' is not supported with lightning.gpu.")
+
+    if mcm_config.mcm_method == "device":
+        mcm_config = replace(mcm_config, mcm_method="tree-traversal")
+
+    if qml.capture.enabled():
+
+        mcm_updated_values = {}
+
+        if mcm_method == "single-branch-statistics" and mcm_config.postselect_mode is not None:
+            warn(
+                "Setting 'postselect_mode' is not supported with mcm_method='single-branch-"
+                "statistics'. 'postselect_mode' will be ignored.",
+                UserWarning,
+            )
+            mcm_updated_values["postselect_mode"] = None
+        elif mcm_method is None:
+            mcm_updated_values["mcm_method"] = "deferred"
+
+        mcm_config = replace(mcm_config, **mcm_updated_values)
+
+    return mcm_config
 
 
 _supports_operation = LightningGPU.capabilities.supports_operation

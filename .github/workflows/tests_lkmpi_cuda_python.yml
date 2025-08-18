@@ -1,0 +1,243 @@
+name: Testing::x86_64::LK-MPI-CUDA::Python
+on:
+  workflow_call:
+    inputs:
+      lightning-version:
+        type: string
+        required: true
+        description: The version of lightning to use. Valid values are either 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
+      pennylane-version:
+        type: string
+        required: true
+        description: The version of PennyLane to use. Valid values are either 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
+  push:
+    branches:
+      - master
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+    paths-ignore:
+      - .github/**
+      - '!.github/workflows/tests_lkmpi_cuda_python.yml'
+      - pennylane_lightning/core/_version.py
+      - pennylane_lightning/core/simulators/lightning_gpu/**
+      - pennylane_lightning/core/simulators/lightning_qubit/**
+      - pennylane_lightning/lightning_gpu/**
+      - pennylane_lightning/lightning_qubit/**
+env:
+  COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:./coverage.xml -p no:warnings --tb=native"
+  GCC_VERSION: 11
+  OMP_NUM_THREADS: "2"
+  CI_CUDA_ARCH: 86
+
+concurrency:
+  group: tests_lkmpi_cuda_python-${{ github.ref }}-${{ github.event_name }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
+  cancel-in-progress: true
+
+jobs:
+
+  python_tests:
+    if: ${{ github.event.pull_request.draft == false && (contains(github.event.pull_request.labels.*.name, 'ci:use-multi-gpu-runner') || contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name)) }}
+    runs-on:
+      - multi-gpu-x64
+
+    strategy:
+      max-parallel: 1
+      matrix:
+        mpilib: ["mpich", "openmpi"]
+        kokkos_version: ["4.5.00"]
+        exec_model: ["CUDA"]
+        cuda_version_maj: ["12"]
+        cuda_version_min: ["2"]
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout pennyLane-lightning
+        uses: actions/checkout@v4
+        with:
+          fetch-tags: true
+
+      - name: Checkout Catalyst
+        uses: actions/checkout@v4
+        with:
+          repository: PennyLaneAI/catalyst
+          path: ${{ github.workspace}}/catalyst
+
+      - name: Switch to release build of Lightning
+        if: inputs.lightning-version == 'release'
+        run: |
+          git fetch --all
+          git checkout $(git branch -a --list "origin/v0.*rc*" | sort | tail -1)
+
+      - name: Switch to stable build of Lightning
+        if: inputs.lightning-version == 'stable'
+        run: |
+          git fetch --tags --force
+          git checkout latest_release
+          
+      - uses: actions/setup-python@v5
+        id: setup_python
+        name: Install Python
+        with:
+          python-version: '3.11'
+
+      # Since the self-hosted runner can be re-used. It is best to set up all package
+      # installations in a virtual environment that gets cleaned at the end of each workflow run
+      - name: Setup Python virtual environment
+        id: setup_venv
+        env:
+          VENV_NAME: ${{ github.workspace }}/venv_${{ steps.setup_python.outputs.python-version }}_${{ github.sha }}
+        run: |
+          # Clear any pre-existing venvs
+          rm -rf venv_*
+
+          # Create new venv for this workflow_run
+          python --version
+          python -m venv ${{ env.VENV_NAME }}
+
+          # Add the venv to PATH for subsequent steps
+          echo ${{ env.VENV_NAME }}/bin >> $GITHUB_PATH
+
+          # Adding venv name as an output for subsequent steps to reference if needed
+          source ${{ env.VENV_NAME }}/bin/activate
+          echo "venv_name=${{ env.VENV_NAME }}" >> $GITHUB_OUTPUT
+          echo "Python_ROOT_DIR=${{ env.VENV_NAME }}" >> $GITHUB_ENV
+          echo "Python3_ROOT_DIR=${{ env.VENV_NAME }}" >> $GITHUB_ENV
+
+
+      - name: Display Python-Path
+        id: python_path
+        run: |
+          py_path=$(which python)
+          echo "Python Interpreter Path => $py_path"
+          echo "python=$py_path" >> $GITHUB_OUTPUT
+
+          pip_path=$(which python)
+          echo "PIP Path => $pip_path"
+          echo "pip=$pip_path" >> $GITHUB_OUTPUT
+
+      - name: Install required packages
+        env:
+          PL_BACKEND: lightning_qubit
+        run: |
+          source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}
+          python -m pip install -r requirements-tests.txt
+          python -m pip install mpi4py openfermionpyscf
+          python scripts/configure_pyproject_toml.py || true
+          python -m pip install . -vv
+
+      - name: Clone Kokkos repository
+        run: |
+          rm -rf kokkos_${{ matrix.exec_model }}
+          git clone --branch ${{ matrix.kokkos_version }} https://github.com/kokkos/kokkos.git kokkos_${{ matrix.exec_model }}
+          pushd . &> /dev/null
+
+      - name: Build Kokkos core library (Ubuntu)
+        run: |
+          source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}
+          rm -rf ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
+          mkdir -p ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
+          cd kokkos_${{ matrix.exec_model }}
+          cmake -BBuild . -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }} \
+                          -DKokkos_ENABLE_COMPLEX_ALIGN=OFF \
+                          -DKokkos_ENABLE_SERIAL=ON \
+                          -DKokkos_ENABLE_${{ matrix.exec_model }}=ON \
+                          -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
+                          -DCMAKE_CXX_COMPILER=mpicxx \
+                          -DCMAKE_CXX_STANDARD=20 \
+                          -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+                          -G Ninja
+          cmake --build ./Build --verbose
+          cmake --install ./Build
+          cd -
+
+      - name: Checkout PennyLane for release or latest build
+        if: inputs.pennylane-version == 'release' || inputs.pennylane-version == 'latest'
+        uses: actions/checkout@v4
+        with:
+          path: pennylane
+          repository: PennyLaneAI/pennylane
+
+      - name: Switch to latest build of PennyLane
+        if: inputs.pennylane-version == 'latest'
+        run: |
+          cd pennylane
+          git checkout master
+          python -m pip uninstall -y pennylane && python -m pip install . -vv --no-deps
+
+      - name: Switch to release build of PennyLane
+        if: inputs.pennylane-version == 'release'
+        run: |
+          cd pennylane
+          git fetch --all
+          git checkout $(git branch -a --list "origin/v0.*rc*" | sort | tail -1)
+          python -m pip uninstall -y pennylane && python -m pip install . -vv --no-deps
+
+      - name: Build and install package
+        env:
+          PL_BACKEND: lightning_kokkos
+        run: |
+          source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}
+          python scripts/configure_pyproject_toml.py || true
+          CMAKE_ARGS="-DCMAKE_C_COMPILER=mpicc -DCMAKE_CXX_COMPILER=mpicxx -DENABLE_MPI=ON -DPython_EXECUTABLE=${{ steps.python_path.outputs.python }} -DLIGHTNING_CATALYST_SRC_PATH=${{ github.workspace }}/catalyst -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}" \
+          python -m pip install . -vv
+
+      # There are issues running py-cov with MPI. A solution is to use coverage as reported
+      # [here](https://github.com/pytest-dev/pytest-cov/issues/237#issuecomment-544824228)
+      - name: Run unit tests for MPI-enabled lightning.kokkos device
+        run: |
+          source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}
+          PL_DEVICE=lightning.kokkos mpirun -np 2 \
+          coverage run --rcfile=.coveragerc --source=pennylane_lightning -p -m mpi4py -m pytest ./mpitests --tb=native
+          coverage combine
+          coverage xml -o coverage-${{ github.job }}-lightning_kokkos_mpi_cuda_${{ matrix.mpilib }}_cu${{ matrix.cuda_version_maj }}-main.xml
+
+      - name: Upload code coverage results
+        uses: actions/upload-artifact@v4
+        with:
+          name: ubuntu-codecov-results-python-${{ matrix.mpilib }}
+          path: coverage-${{ github.job }}-lightning_kokkos_mpi_cuda_${{ matrix.mpilib }}_cu${{ matrix.cuda_version_maj }}-*.xml
+          retention-days: 1
+          if-no-files-found: error
+          include-hidden-files: true
+
+      - name: Cleanup
+        if: always()
+        run: |
+          rm -rf ${{ steps.setup_venv.outputs.venv_name }}
+          rm -rf ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
+          rm -rf kokkos_${{ matrix.exec_model }}
+          rm -rf * .git .gitignore .github
+          pip cache purge
+
+  upload-to-codecov-linux-python:
+    needs: ["python_tests"]
+    name: Upload coverage data to codecov
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download coverage reports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: ubuntu-codecov-*
+          merge-multiple: true
+
+      - name: Upload to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          fail_ci_if_error: true
+          verbose: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+          flags: unit_tests
+
+      - name: Cleanup
+        if: always()
+        run: |
+          rm -rf ${{ steps.setup_venv.outputs.venv_name }}
+          rm -rf * .git .gitignore .github
+          pip cache purge

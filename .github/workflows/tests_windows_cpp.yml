@@ -32,11 +32,17 @@ jobs:
   win-set-matrix-x86:
     if: github.event.pull_request.draft == false
     name: Set builder matrix
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
+
+      - name: Checkout Catalyst
+        uses: actions/checkout@v4
+        with:
+          repository: PennyLaneAI/catalyst
+          path: ${{ github.workspace}}/catalyst
 
       - name: Kokkos execution strategy
         id: exec_model
@@ -98,7 +104,8 @@ jobs:
                           -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF `
                           -DCMAKE_CXX_STANDARD=20 `
                           -DCMAKE_POSITION_INDEPENDENT_CODE=ON `
-                          -DCMAKE_BUILD_TYPE=Debug `
+                          -DCMAKE_BUILD_TYPE=Debug 
+                          -DLIGHTNING_CATALYST_SRC_PATH=${{ github.workspace }}/catalyst`
                           -T clangcl
           cmake --build ./Build --config Debug --verbose
           cmake --install ./Build --config Debug --verbose
@@ -117,7 +124,7 @@ jobs:
       - uses: actions/setup-python@v4
         name: Install Python
         with:
-          python-version: '3.10'
+          python-version: '3.11'
 
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
@@ -197,7 +204,7 @@ jobs:
       - uses: actions/setup-python@v4
         name: Install Python
         with:
-          python-version: '3.10'
+          python-version: '3.11'
 
       - name: Restoring cached Kokkos
         id: kokkos-cache
@@ -282,7 +289,7 @@ jobs:
   upload-to-codecov-windows:
     needs: [cpptests, cpptestswithkokkos]
     name: Upload coverage data to codecov
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4

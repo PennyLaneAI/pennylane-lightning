@@ -51,11 +51,11 @@ using namespace Pennylane::Util;
         constexpr static bool value = false;                                   \
     };                                                                         \
     template <typename PrecisionT, class GateImplementation>                   \
-    struct Apply##GATE_NAME##IsDefined<                                        \
-        PrecisionT, GateImplementation,                                        \
-        std::enable_if_t<std::is_pointer_v<                                    \
-            decltype(&GateImplementation::template apply##GATE_NAME<           \
-                     PrecisionT>)>>> {                                         \
+    struct Apply##GATE_NAME##                                                  \
+        IsDefined<PrecisionT, GateImplementation,                              \
+                  std::enable_if_t<std::is_pointer_v<                          \
+                      decltype(&GateImplementation::template apply##GATE_NAME< \
+                               PrecisionT>)>>> {                               \
         constexpr static bool value = true;                                    \
     };                                                                         \
     template <typename PrecisionT, typename TypeList>                          \
@@ -82,7 +82,7 @@ using namespace Pennylane::Util;
     static_assert(true, "Require semicolon")
 
 /*******************************************************************************
- * Single-qubit gates
+ * Identity
  ******************************************************************************/
 template <typename PrecisionT, class GateImplementation>
 void testApplyIdentity() {
@@ -96,6 +96,21 @@ void testApplyIdentity() {
                                           false);
         CHECK(std::equal(st_pre.begin(), st_pre.end(), st_post.begin()));
     }
+
+    // Apply Identity on 0 qubit
+    for (std::size_t index = 0; index < num_qubits; index++) {
+        auto st_pre = createZeroState<ComplexT>(num_qubits);
+        auto st_post = createZeroState<ComplexT>(num_qubits);
+        GateImplementation::applyHadamard(st_pre.data(), num_qubits, {index},
+                                          false);
+        GateImplementation::applyHadamard(st_post.data(), num_qubits, {index},
+                                          false);
+
+        GateImplementation::applyIdentity(st_pre.data(), num_qubits, {}, false);
+        CHECK(std::equal(st_pre.begin(), st_pre.end(), st_post.begin()));
+    }
+
+    // Apply Identity on 1 qubit
     for (std::size_t index = 0; index < num_qubits; index++) {
         auto st_pre = createZeroState<ComplexT>(num_qubits);
         auto st_post = createZeroState<ComplexT>(num_qubits);
@@ -108,9 +123,26 @@ void testApplyIdentity() {
                                           false);
         CHECK(std::equal(st_pre.begin(), st_pre.end(), st_post.begin()));
     }
+
+    // Apply Identity on 2 qubits
+    for (std::size_t index = 0; index < (num_qubits - 1); index++) {
+        auto st_pre = createZeroState<ComplexT>(num_qubits);
+        auto st_post = createZeroState<ComplexT>(num_qubits);
+        GateImplementation::applyHadamard(st_pre.data(), num_qubits, {index},
+                                          false);
+        GateImplementation::applyHadamard(st_post.data(), num_qubits, {index},
+                                          false);
+
+        GateImplementation::applyIdentity(st_pre.data(), num_qubits,
+                                          {index, index + 1}, false);
+        CHECK(std::equal(st_pre.begin(), st_pre.end(), st_post.begin()));
+    }
 }
 PENNYLANE_RUN_TEST(Identity);
 
+/*******************************************************************************
+ * Single-qubit gates
+ ******************************************************************************/
 template <typename PrecisionT, class GateImplementation>
 void testApplyPauliX() {
     using ComplexT = std::complex<PrecisionT>;
@@ -802,10 +834,9 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::applyOperation non-param "
                               LightningException);
         }
     }
-    DYNAMIC_SECTION("N-controlled S - "
-                    << "controls = {" << control << "} "
-                    << ", wires = {" << wire << "} - "
-                    << PrecisionToName<PrecisionT>::value) {
+    DYNAMIC_SECTION("N-controlled S - " << "controls = {" << control << "} "
+                                        << ", wires = {" << wire << "} - "
+                                        << PrecisionToName<PrecisionT>::value) {
         if (control != wire) {
             auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
             sv0.updateData(st0);
@@ -824,10 +855,9 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::applyOperation non-param "
         }
     }
 
-    DYNAMIC_SECTION("N-controlled T - "
-                    << "controls = {" << control << "} "
-                    << ", wires = {" << wire << "} - "
-                    << PrecisionToName<PrecisionT>::value) {
+    DYNAMIC_SECTION("N-controlled T - " << "controls = {" << control << "} "
+                                        << ", wires = {" << wire << "} - "
+                                        << PrecisionToName<PrecisionT>::value) {
         if (control != wire) {
             auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
             sv0.updateData(st0);

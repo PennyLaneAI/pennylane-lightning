@@ -22,7 +22,7 @@ from warnings import warn
 
 import numpy as np
 import pennylane as qml
-from pennylane.devices import DefaultExecutionConfig, Device, ExecutionConfig
+from pennylane.devices import Device, ExecutionConfig
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
 from pennylane.devices.preprocess import (
     decompose,
@@ -402,14 +402,11 @@ class LightningTensor(Device):
 
     dtype = c_dtype
 
-    def _setup_execution_config(
-        self, config: Optional[ExecutionConfig] = DefaultExecutionConfig
-    ) -> ExecutionConfig:
+    def _setup_execution_config(self, config: ExecutionConfig | None = None) -> ExecutionConfig:
         """
         Update the execution config with choices for how the device should be used and the device options.
         """
         # TODO: add options for gradients next quarter
-
         updated_values = {}
 
         new_device_options = dict(config.device_options)
@@ -433,7 +430,7 @@ class LightningTensor(Device):
 
     def preprocess(
         self,
-        execution_config: ExecutionConfig = DefaultExecutionConfig,
+        execution_config: ExecutionConfig | None = None,
     ):
         """This function defines the device transform program to be applied and an updated device configuration.
 
@@ -451,6 +448,8 @@ class LightningTensor(Device):
         * Does not support derivatives.
         * Does not support vector-Jacobian products.
         """
+        if execution_config is None:
+            execution_config = ExecutionConfig()
 
         config = self._setup_execution_config(execution_config)
 
@@ -472,7 +471,7 @@ class LightningTensor(Device):
     def execute(
         self,
         circuits: QuantumTape_or_Batch,
-        execution_config: ExecutionConfig = DefaultExecutionConfig,
+        execution_config: ExecutionConfig | None = None,
     ) -> Result_or_ResultBatch:
         """Execute a circuit or a batch of circuits and turn it into results.
 
@@ -503,7 +502,7 @@ class LightningTensor(Device):
     # pylint: disable=unused-argument
     def supports_derivatives(
         self,
-        execution_config: Optional[ExecutionConfig] = None,
+        execution_config: ExecutionConfig | None = None,
         circuit: Optional[qml.tape.QuantumTape] = None,
     ) -> bool:
         """Check whether or not derivatives are available for a given configuration and circuit.
@@ -521,7 +520,7 @@ class LightningTensor(Device):
     def compute_derivatives(
         self,
         circuits: QuantumTape_or_Batch,
-        execution_config: ExecutionConfig = DefaultExecutionConfig,
+        execution_config: ExecutionConfig | None = None,
     ):
         """Calculate the Jacobian of either a single or a batch of circuits on the device.
 
@@ -539,7 +538,7 @@ class LightningTensor(Device):
     def execute_and_compute_derivatives(
         self,
         circuits: QuantumTape_or_Batch,
-        execution_config: ExecutionConfig = DefaultExecutionConfig,
+        execution_config: ExecutionConfig | None = None,
     ):
         """Compute the results and Jacobians of circuits at the same time.
 
@@ -557,7 +556,7 @@ class LightningTensor(Device):
     # pylint: disable=unused-argument
     def supports_vjp(
         self,
-        execution_config: Optional[ExecutionConfig] = None,
+        execution_config: ExecutionConfig | None = None,
         circuit: Optional[QuantumTape] = None,
     ) -> bool:
         """Whether or not this device defines a custom vector-Jacobian product.
@@ -575,7 +574,7 @@ class LightningTensor(Device):
         self,
         circuits: QuantumTape_or_Batch,
         cotangents: Tuple[Number],
-        execution_config: ExecutionConfig = DefaultExecutionConfig,
+        execution_config: ExecutionConfig | None = None,
     ):
         r"""The vector-Jacobian product used in reverse-mode differentiation.
 
@@ -597,7 +596,7 @@ class LightningTensor(Device):
         self,
         circuits: QuantumTape_or_Batch,
         cotangents: Tuple[Number],
-        execution_config: ExecutionConfig = DefaultExecutionConfig,
+        execution_config: ExecutionConfig | None = None,
     ):
         """Calculate both the results and the vector-Jacobian product used in reverse-mode differentiation.
 

@@ -12,7 +12,7 @@ concurrency:
 jobs:
   update-dev-version:
     name: Update version for development branches
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
 
       - name: Checkout PennyLane-Lightning master
@@ -35,7 +35,7 @@ jobs:
       - uses: actions/setup-python@v5
         name: Install Python
         with:
-          python-version: '3.10'
+          python-version: '3.11'
 
       - name: Install Python Dependencies
         run: pip install semver

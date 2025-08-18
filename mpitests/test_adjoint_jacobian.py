@@ -12,16 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Unit tests for the :mod:`pennylane_lightning_gpu.LightningGPU` device (MPI).
+Unit tests for adjoint Jacobian on :mod:`pennylane_lightning` MPI-enabled devices.
 """
 # pylint: disable=protected-access,cell-var-from-loop,c-extension-no-member
 import itertools
 import math
+from functools import partial
 
 import pennylane as qml
 import pytest
 from conftest import LightningDevice as ld
-from conftest import device_name
+from conftest import LightningException, device_name
 from mpi4py import MPI
 from pennylane import QNode
 from pennylane import numpy as np
@@ -30,8 +31,6 @@ from pennylane.devices import ExecutionConfig
 from pennylane.exceptions import QuantumFunctionError
 from pennylane.tape import QuantumScript
 from scipy.stats import unitary_group
-
-from pennylane_lightning.lightning_gpu_ops import LightningException
 
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
@@ -56,6 +55,18 @@ def fixture_dev(request):
         c_dtype=request.param[0],
         batch_obs=request.param[1],
     )
+
+
+def create_random_init_state(numWires, c_dtype, seed=None):
+    """Returns a random normalized state of c_dtype with 2**numWires elements."""
+    rng = np.random.default_rng(seed)
+    r_dtype = np.float64 if c_dtype == np.complex128 else np.float32
+
+    num_elements = 2**numWires
+    init_state = rng.random(num_elements).astype(r_dtype) + 1j * rng.random(num_elements).astype(
+        r_dtype
+    )
+    return init_state / np.linalg.norm(init_state)
 
 
 class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
@@ -498,13 +509,14 @@ class TestAdjointJacobianQNode:
     def test_finite_shots_error(self):
         """Tests that an error is raised when computing the adjoint diff on a device with finite shots"""
 
-        dev = qml.device(device_name, wires=8, mpi=True, shots=1)
+        dev = qml.device(device_name, wires=8, mpi=True)
 
         with pytest.raises(
             QuantumFunctionError,
             match="does not support adjoint with requested circuit.",
         ):
 
+            @partial(qml.set_shots, shots=1)
             @qml.qnode(dev, diff_method="adjoint")
             def circ(x):
                 qml.RX(x, wires=0)
@@ -653,44 +665,6 @@ class TestAdjointJacobianQNode:
 
         # the different methods agree
         assert np.allclose(grad_D, grad_F, atol=tol, rtol=0)
-
-    def test_interface_tf(self, dev):
-        """Test if gradients agree between the adjoint and finite-diff methods when using the
-        TensorFlow interface"""
-
-        tf = pytest.importorskip("tensorflow")
-
-        def f(params1, params2):
-            qml.RX(0.4, wires=[0])
-            qml.RZ(params1 * tf.sqrt(params2), wires=[0])
-            qml.RY(tf.cos(params2), wires=[0])
-            return qml.expval(qml.PauliZ(0))
-
-        if dev.r_dtype == np.float32:
-            tf_r_dtype = tf.float32
-        else:
-            tf_r_dtype = tf.float64
-
-        params1 = tf.Variable(0.3, dtype=tf_r_dtype)
-        params2 = tf.Variable(0.4, dtype=tf_r_dtype)
-
-        h = self.tol_for_allclose(dev.c_dtype)
-        tol = self.tol_for_allclose(dev.c_dtype)
-
-        qnode1 = QNode(f, dev, interface="tf", diff_method="adjoint")
-        qnode2 = QNode(f, dev, interface="tf", diff_method="finite-diff", gradient_kwargs={"h": h})
-
-        with tf.GradientTape() as tape:
-            res1 = qnode1(params1, params2)
-
-        g1 = tape.gradient(res1, [params1, params2])
-
-        with tf.GradientTape() as tape:
-            res2 = qnode2(params1, params2)
-
-        g2 = tape.gradient(res2, [params1, params2])
-
-        assert np.allclose(g1, g2, atol=tol)
 
     def test_interface_torch(self, dev):
         """Test if gradients agree between the adjoint and finite-diff methods when using the
@@ -895,6 +869,7 @@ def test_integration_custom_wires(returns):
     assert np.allclose(j_def, j_lightning)
 
 
+@pytest.mark.local_salt(42)
 @pytest.mark.parametrize(
     "returns",
     [
@@ -921,26 +896,26 @@ def test_integration_custom_wires(returns):
         ),
     ],
 )
-def test_integration_custom_wires_batching(returns):
+def test_integration_custom_wires_batching(returns, seed):
     """Integration tests that compare to default.qubit for a large circuit containing parametrized
     operations and when using custom wire labels"""
 
     dev_def = qml.device("default.qubit", wires=custom_wires)
-    dev_gpu = qml.device("lightning.gpu", wires=custom_wires, mpi=True, batch_obs=True)
+    dev_mpi = qml.device(device_name, wires=custom_wires, mpi=True, batch_obs=True)
 
     def circuit(params):
         circuit_ansatz(params, wires=custom_wires)
         return [qml.expval(r) for r in returns] + [qml.expval(qml.PauliY(custom_wires[1]))]
 
     n_params = 30
-    np.random.seed(1337)
-    params = np.random.rand(n_params)
+    rng = np.random.default_rng(seed)
+    params = rng.random(n_params)
 
-    qnode_gpu = qml.QNode(circuit, dev_gpu, diff_method="adjoint")
+    qnode_mpi = qml.QNode(circuit, dev_mpi, diff_method="adjoint")
     qnode_def = qml.QNode(circuit, dev_def)
 
     def convert_to_array_gpu(params):
-        return np.hstack(qnode_gpu(params))
+        return np.hstack(qnode_mpi(params))
 
     def convert_to_array_def(params):
         return np.hstack(qnode_def(params))
@@ -951,6 +926,7 @@ def test_integration_custom_wires_batching(returns):
     assert np.allclose(j_gpu, j_def, atol=1e-7)
 
 
+@pytest.mark.local_salt(42)
 @pytest.mark.parametrize(
     "returns",
     [
@@ -982,29 +958,29 @@ def test_integration_custom_wires_batching(returns):
         ),
     ],
 )
-def test_batching_H(returns):
+def test_batching_H(returns, seed):
     """Integration tests that compare to default.qubit for a large circuit containing parametrized
     operations and when using custom wire labels"""
 
     dev_cpu = qml.device("default.qubit", wires=custom_wires + [10, 72])
-    dev_gpu = qml.device(device_name, wires=custom_wires + [10, 72], batch_obs=True)
-    dev_gpu_default = qml.device(device_name, wires=custom_wires + [10, 72], batch_obs=False)
+    dev_mpi = qml.device(device_name, wires=custom_wires + [10, 72], batch_obs=True)
+    dev_mpi_default = qml.device(device_name, wires=custom_wires + [10, 72], batch_obs=False)
 
     def circuit(params):
         circuit_ansatz(params, wires=custom_wires)
         return qml.math.hstack([qml.expval(r) for r in returns])
 
     n_params = 30
-    np.random.seed(1337)
-    params = np.random.rand(n_params)
+    rng = np.random.default_rng(seed)
+    params = rng.random(n_params)
 
     qnode_cpu = qml.QNode(circuit, dev_cpu, diff_method="parameter-shift")
-    qnode_gpu = qml.QNode(circuit, dev_gpu, diff_method="adjoint")
-    qnode_gpu_default = qml.QNode(circuit, dev_gpu_default, diff_method="adjoint")
+    qnode_mpi = qml.QNode(circuit, dev_mpi, diff_method="adjoint")
+    qnode_mpi_default = qml.QNode(circuit, dev_mpi_default, diff_method="adjoint")
 
     j_cpu = qml.jacobian(qnode_cpu)(params)
-    j_gpu = qml.jacobian(qnode_gpu)(params)
-    j_gpu_default = qml.jacobian(qnode_gpu_default)(params)
+    j_gpu = qml.jacobian(qnode_mpi)(params)
+    j_gpu_default = qml.jacobian(qnode_mpi_default)(params)
 
     assert np.allclose(j_cpu, j_gpu)
     assert np.allclose(j_gpu, j_gpu_default)
@@ -1098,6 +1074,10 @@ def test_integration_H2_Hamiltonian(
     assert np.allclose(jacs, jacs_comp)
 
 
+@pytest.mark.local_salt(42)
+@pytest.mark.skipif(
+    device_name == "lightning.kokkos", reason="Kokkos MPI does not support SparseHamiltonian"
+)
 @pytest.mark.parametrize(
     "returns",
     [
@@ -1127,12 +1107,12 @@ def test_integration_H2_Hamiltonian(
         ),
     ],
 )
-def test_adjoint_SparseHamiltonian_custom_wires(returns):
+def test_adjoint_SparseHamiltonian_custom_wires(returns, seed):
     """Integration tests that compare to default.qubit for a large circuit containing parametrized
     operations and when using custom wire labels"""
 
     comm = MPI.COMM_WORLD
-    dev_gpu = qml.device("lightning.gpu", wires=custom_wires, mpi=True)
+    dev_mpi = qml.device(device_name, wires=custom_wires, mpi=True)
     dev_cpu = qml.device("default.qubit", wires=custom_wires)
 
     def circuit(params):
@@ -1141,17 +1121,17 @@ def test_adjoint_SparseHamiltonian_custom_wires(returns):
 
     if comm.Get_rank() == 0:
         n_params = 30
-        np.random.seed(1337)
-        params = np.random.rand(n_params)
+        rng = np.random.default_rng(seed)
+        params = rng.random(n_params)
     else:
         params = None
 
     params = comm.bcast(params, root=0)
 
-    qnode_gpu = qml.QNode(circuit, dev_gpu, diff_method="adjoint")
+    qnode_mpi = qml.QNode(circuit, dev_mpi, diff_method="adjoint")
     qnode_cpu = qml.QNode(circuit, dev_cpu, diff_method="parameter-shift")
 
-    j_gpu = qml.jacobian(qnode_gpu)(params)
+    j_gpu = qml.jacobian(qnode_mpi)(params)
     j_cpu = qml.jacobian(qnode_cpu)(params)
 
     comm.Barrier()
@@ -1159,6 +1139,10 @@ def test_adjoint_SparseHamiltonian_custom_wires(returns):
     assert np.allclose(j_cpu, j_gpu)
 
 
+@pytest.mark.skipif(
+    device_name == "lightning.kokkos", reason="Kokkos MPI does not support SparseHamiltonian"
+)
+@pytest.mark.local_salt(42)
 @pytest.mark.parametrize(
     "returns",
     [
@@ -1217,12 +1201,12 @@ def test_adjoint_SparseHamiltonian_custom_wires(returns):
         ),
     ],
 )
-def test_adjoint_SparseHamiltonian(returns):
+def test_adjoint_SparseHamiltonian(returns, seed):
     """Integration tests that compare to default.qubit for a large circuit containing parametrized
     operations and when using custom wire labels"""
 
     comm = MPI.COMM_WORLD
-    dev_gpu = qml.device("lightning.gpu", wires=len(custom_wires), mpi=True)
+    dev_mpi = qml.device(device_name, wires=len(custom_wires), mpi=True)
     dev_cpu = qml.device("default.qubit", wires=len(custom_wires))
 
     def circuit(params):
@@ -1231,17 +1215,17 @@ def test_adjoint_SparseHamiltonian(returns):
 
     if comm.Get_rank() == 0:
         n_params = 30
-        np.random.seed(1337)
-        params = np.random.rand(n_params)
+        rng = np.random.default_rng(seed)
+        params = rng.random(n_params)
     else:
         params = None
 
     params = comm.bcast(params, root=0)
 
-    qnode_gpu = qml.QNode(circuit, dev_gpu, diff_method="adjoint")
+    qnode_mpi = qml.QNode(circuit, dev_mpi, diff_method="adjoint")
     qnode_cpu = qml.QNode(circuit, dev_cpu, diff_method="parameter-shift")
 
-    j_gpu = qml.jacobian(qnode_gpu)(params)
+    j_gpu = qml.jacobian(qnode_mpi)(params)
     j_cpu = qml.jacobian(qnode_cpu)(params)
 
     comm.Barrier()
@@ -1249,20 +1233,20 @@ def test_adjoint_SparseHamiltonian(returns):
     assert np.allclose(j_cpu, j_gpu)
 
 
+@pytest.mark.local_salt(42)
 @pytest.mark.parametrize("n_targets", range(1, 5))
-def test_qubit_unitary(dev, n_targets):
+def test_qubit_unitary(dev, n_targets, seed):
     """Tests that ``qml.QubitUnitary`` can be included in circuits differentiated with the adjoint method."""
     n_wires = len(dev.wires)
     dev_def = qml.device("default.qubit", wires=n_wires)
     h = 1e-3 if dev.c_dtype == np.complex64 else 1e-7
     c_dtype = dev.c_dtype
 
-    np.random.seed(1337)
-    par = 2 * np.pi * np.random.rand(n_wires)
-    U = np.random.rand(2**n_targets, 2**n_targets) + 1j * np.random.rand(2**n_targets, 2**n_targets)
+    rng = np.random.default_rng(seed)
+    par = 2 * np.pi * rng.random(n_wires)
+    U = rng.random((2**n_targets, 2**n_targets)) + 1j * rng.random((2**n_targets, 2**n_targets))
     U, _ = np.linalg.qr(U)
-    init_state = np.random.rand(2**n_wires) + 1j * np.random.rand(2**n_wires)
-    init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+    init_state = create_random_init_state(n_wires, dev.c_dtype, seed)
 
     comm = MPI.COMM_WORLD
     par = comm.bcast(par, root=0)
@@ -1297,20 +1281,20 @@ def test_qubit_unitary(dev, n_targets):
     assert np.allclose(jac, jac_def, atol=h, rtol=0)
 
 
+@pytest.mark.local_salt(42)
 @pytest.mark.parametrize("n_targets", [1, 2])
-def test_diff_qubit_unitary(dev, n_targets):
+def test_diff_qubit_unitary(dev, n_targets, seed):
     """Tests that ``qml.QubitUnitary`` can be differentiated with the adjoint method."""
     n_wires = len(dev.wires)
     dev_def = qml.device("default.qubit", wires=n_wires)
     h = 1e-3 if dev.c_dtype == np.complex64 else 1e-7
     c_dtype = dev.c_dtype
 
-    np.random.seed(1337)
-    par = 2 * np.pi * np.random.rand(n_wires)
-    U = np.random.rand(2**n_targets, 2**n_targets) + 1j * np.random.rand(2**n_targets, 2**n_targets)
+    rng = np.random.default_rng(seed)
+    par = 2 * np.pi * rng.random(n_wires)
+    U = rng.random((2**n_targets, 2**n_targets)) + 1j * rng.random((2**n_targets, 2**n_targets))
     U, _ = np.linalg.qr(U)
-    init_state = np.random.rand(2**n_wires) + 1j * np.random.rand(2**n_wires)
-    init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+    init_state = create_random_init_state(n_wires, dev.c_dtype, seed)
 
     comm = MPI.COMM_WORLD
     par = comm.bcast(par, root=0)

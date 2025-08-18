@@ -24,26 +24,20 @@ from conftest import (  # tested device
     THETA,
     LightningDevice,
     LightningMeasurements,
+    LightningStateVector,
     device_name,
+    get_hermitian_matrix,
+    get_random_normalized_state,
+    get_sparse_hermitian_matrix,
+    validate_counts,
+    validate_others,
+    validate_samples,
 )
-from flaky import flaky
 from pennylane.devices import DefaultQubit
 from pennylane.measurements import VarianceMP
-from scipy.sparse import csr_matrix, random_array
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
-
-
-def get_hermitian_matrix(n):
-    H = np.random.rand(n, n) + 1.0j * np.random.rand(n, n)
-    return H + np.conj(H).T
-
-
-def get_sparse_hermitian_matrix(n):
-    H = random_array((n, n), density=0.15)
-    H = H + 1.0j * random_array((n, n), density=0.15)
-    return csr_matrix(H + H.conj().T)
 
 
 class CustomStateMeasurement(qml.measurements.StateMeasurement):
@@ -514,18 +508,19 @@ class TestSparseMeasurements:
         m = LightningMeasurements(statevector)
         return measure_final_state(m, tape)
 
+    @pytest.mark.local_salt(42)
     @pytest.mark.parametrize("measurement", [qml.expval, qml.var])
     @pytest.mark.parametrize(
         "observable",
         sparse_observables,
     )
-    def test_single_return_value(self, measurement, observable, lightning_sv, tol):
+    def test_single_return_value(self, measurement, observable, lightning_sv, tol, seed):
         n_qubits = 4
         observable = observable(get_sparse_hermitian_matrix(2**n_qubits), wires=range(n_qubits))
 
         n_layers = 1
-        np.random.seed(0)
-        weights = np.random.rand(n_layers, n_qubits, 3)
+        rng = np.random.default_rng(seed)
+        weights = rng.random((n_layers, n_qubits, 3))
         ops = [qml.Hadamard(i) for i in range(n_qubits)] + [
             qml.StronglyEntanglingLayers(weights, wires=range(n_qubits))
         ]
@@ -551,6 +546,7 @@ class TestSparseMeasurements:
             1e-6 if statevector.dtype == np.complex64 else 1e-8,
         )
 
+    @pytest.mark.local_salt(42)
     @pytest.mark.parametrize("measurement", [qml.expval, qml.var])
     @pytest.mark.parametrize(
         "obs0_",
@@ -560,14 +556,14 @@ class TestSparseMeasurements:
         "obs1_",
         sparse_observables,
     )
-    def test_double_return_value(self, measurement, obs0_, obs1_, lightning_sv, tol):
+    def test_double_return_value(self, measurement, obs0_, obs1_, lightning_sv, tol, seed):
         n_qubits = 4
         obs0_ = obs0_(get_sparse_hermitian_matrix(2**4), wires=range(n_qubits))
         obs1_ = obs1_(get_sparse_hermitian_matrix(2**4), wires=range(n_qubits))
 
         n_layers = 1
-        np.random.seed(0)
-        weights = np.random.rand(n_layers, n_qubits, 3)
+        rng = np.random.default_rng(seed)
+        weights = rng.random((n_layers, n_qubits, 3))
         ops = [qml.Hadamard(i) for i in range(n_qubits)] + [
             qml.StronglyEntanglingLayers(weights, wires=range(n_qubits))
         ]
@@ -606,7 +602,7 @@ class TestMeasurements:
                 continue
             new_meas.append(m)
         if use_default:
-            dev = DefaultQubit(max_workers=1)
+            dev = DefaultQubit()
             program, _ = dev.preprocess()
             tapes, transf_fn = program([tape])
             results = dev.execute(tapes)
@@ -618,7 +614,7 @@ class TestMeasurements:
         m = LightningMeasurements(statevector)
         return measure_final_state(m, tape)
 
-    @flaky(max_runs=5)
+    @pytest.mark.local_salt(42)
     @pytest.mark.parametrize("shots", [None, 500_000, [500_000, 500_000]])
     @pytest.mark.parametrize("measurement", [qml.expval, qml.probs, qml.var])
     @pytest.mark.parametrize(
@@ -641,7 +637,7 @@ class TestMeasurements:
             ),
         ),
     )
-    def test_single_return_value(self, shots, measurement, observable, lightning_sv, tol):
+    def test_single_return_value(self, shots, measurement, observable, lightning_sv, tol, seed):
         if obs_not_supported_in_ltensor(observable):
             pytest.skip("Observable not supported in lightning.tensor.")
 
@@ -670,8 +666,8 @@ class TestMeasurements:
 
         n_qubits = 4
         n_layers = 1
-        np.random.seed(0)
-        weights = np.random.rand(n_layers, n_qubits, 3)
+        rng = np.random.default_rng(seed)
+        weights = rng.random((n_layers, n_qubits, 3))
         ops = [qml.Hadamard(i) for i in range(n_qubits)]
         if device_name != "lightning.tensor":
             ops += [qml.StronglyEntanglingLayers(weights, wires=range(n_qubits))]
@@ -682,7 +678,7 @@ class TestMeasurements:
         )
         tape = qml.tape.QuantumScript(ops, measurements, shots=shots)
 
-        statevector = lightning_sv(n_qubits)
+        statevector = lightning_sv(n_qubits, seed=seed)
         statevector = get_final_state(statevector, tape)
         m = LightningMeasurements(statevector)
 
@@ -708,11 +704,11 @@ class TestMeasurements:
             )
         else:
             # TODO Set better atol and rtol
-            dtol = max(tol, 1.0e-2)
+            dtol = max(tol, 2.0e-2)
             # allclose -> absolute(a - b) <= (atol + rtol * absolute(b))
             assert np.allclose(result, expected, rtol=dtol, atol=dtol)
 
-    @flaky(max_runs=5)
+    @pytest.mark.local_salt(42)
     @pytest.mark.parametrize("shots", [None, 400_000, (400_000, 400_000)])
     @pytest.mark.parametrize("measurement", [qml.expval, qml.probs, qml.var])
     @pytest.mark.parametrize(
@@ -749,7 +745,7 @@ class TestMeasurements:
             ),
         ),
     )
-    def test_double_return_value(self, shots, measurement, obs0_, obs1_, lightning_sv, tol):
+    def test_double_return_value(self, shots, measurement, obs0_, obs1_, lightning_sv, tol, seed):
         if obs_not_supported_in_ltensor(obs0_) or obs_not_supported_in_ltensor(obs1_):
             pytest.skip("Observable not supported in lightning.tensor.")
 
@@ -775,15 +771,15 @@ class TestMeasurements:
 
         n_qubits = 4
         n_layers = 1
-        np.random.seed(0)
-        weights = np.random.rand(n_layers, n_qubits, 3)
+        rng = np.random.default_rng(seed)
+        weights = rng.random((n_layers, n_qubits, 3))
         ops = [qml.Hadamard(i) for i in range(n_qubits)]
         if device_name != "lightning.tensor":
             ops += [qml.StronglyEntanglingLayers(weights, wires=range(n_qubits))]
         measurements = [measurement(op=obs0_), measurement(op=obs1_)]
         tape = qml.tape.QuantumScript(ops, measurements, shots=shots)
 
-        statevector = lightning_sv(n_qubits)
+        statevector = lightning_sv(n_qubits, seed=seed)
         statevector = get_final_state(statevector, tape)
         m = LightningMeasurements(statevector)
 
@@ -808,11 +804,18 @@ class TestMeasurements:
 
         assert isinstance(result, Sequence)
         assert len(result) == len(expected)
+
         # a few tests may fail in single precision, and hence we increase the tolerance
-        dtol = tol if shots is None else max(tol, 1.0e-2)
+        dtol = tol if shots is None else max(tol, 2.0e-2)
+
+        # var has larger error
+        if measurement is qml.var:
+            dtol = max(dtol, 1.0e-4)
+
         if device_name == "lightning.tensor" and statevector.dtype == np.complex64:
             dtol = max(dtol, 1.0e-4)
-        # TODO Set better atol and rtol
+
+        # TODO Might need to update atol/rtol
         for r, e in zip(result, expected):
             if isinstance(shots, tuple) and isinstance(r[0], np.ndarray):
                 r = np.concatenate(r)
@@ -847,18 +850,124 @@ class TestMeasurements:
         results = qml.QNode(circuit, dev)()
         assert np.allclose(expected, results, tol)
 
+    @pytest.mark.skipif(
+        device_name in ("lightning.tensor"),
+        reason=f"{device_name} does not support seeding device.",
+    )
+    @pytest.mark.parametrize("dtype", [np.complex64, np.complex128])
+    def test_seeded_measurement_rngstate(self, dtype):
+        """Test that seeded measurement uses identical rng state"""
+
+        n_qubits = 4
+
+        rng_1 = np.random.default_rng(123)
+        rng_2 = np.random.default_rng(123)
+        rng_3 = np.random.default_rng(321)
+
+        statevector1 = LightningStateVector(n_qubits, dtype, rng=rng_1)
+        statevector2 = LightningStateVector(n_qubits, dtype, rng=rng_2)
+        statevector3 = LightningStateVector(n_qubits, dtype, rng=rng_3)
+        LightningMeasurements(statevector1)
+        LightningMeasurements(statevector2)
+        LightningMeasurements(statevector3)
+
+        assert statevector1._rng.bit_generator.state == statevector2._rng.bit_generator.state
+        assert statevector1._rng.bit_generator.state != statevector3._rng.bit_generator.state
+
+    @pytest.mark.local_salt(42)
+    @pytest.mark.skipif(
+        device_name in ("lightning.tensor"),
+        reason=f"{device_name} does not support seeding device.",
+    )
+    @pytest.mark.parametrize("dtype", [np.complex64, np.complex128])
+    @pytest.mark.parametrize("shots", [10, [10, 10]])
+    @pytest.mark.parametrize(
+        "measurement", [qml.expval, qml.probs, qml.var, qml.sample, qml.counts]
+    )
+    @pytest.mark.parametrize(
+        "observable",
+        (
+            [0],
+            [0, 1],
+            [0, 1, 2],
+            [0, 1, 2, 3],
+            qml.PauliX(0),
+            qml.PauliY(1),
+            qml.PauliZ(2),
+            qml.sum(qml.PauliX(0), qml.PauliY(0)),
+            qml.prod(qml.PauliX(0), qml.PauliY(1)),
+            qml.s_prod(2.0, qml.PauliX(0)),
+            qml.Hermitian(get_hermitian_matrix(2**2), wires=[0, 1]),
+            qml.Hermitian(get_hermitian_matrix(2**2), wires=[2, 3]),
+            qml.Hamiltonian(
+                [1.0, 2.0, 3.0],
+                [qml.PauliX(0), qml.PauliY(1), qml.PauliZ(2) @ qml.PauliZ(3)],
+            ),
+        ),
+    )
+    def test_seeded_shots_measurement(self, dtype, shots, measurement, observable, tol, seed):
+        """Test that seeded measurements with shots return same results with same seed."""
+        if measurement is qml.probs and isinstance(
+            observable,
+            (
+                qml.ops.Sum,
+                qml.ops.SProd,
+                qml.ops.Prod,
+            ),
+        ):
+            pytest.skip(
+                f"Observable of type {type(observable).__name__} is not supported for rotating probabilities."
+            )
+
+        if measurement in (qml.expval, qml.var) and isinstance(observable, Sequence):
+            pytest.skip("qml.expval, qml.var do not take wire arguments.")
+        n_qubits = 4
+        n_layers = 1
+        rng = np.random.default_rng(seed)
+        weights = rng.random((n_layers, n_qubits, 3))
+        ops = [qml.Hadamard(i) for i in range(n_qubits)]
+        ops += [qml.StronglyEntanglingLayers(weights, wires=range(n_qubits))]
+        measurements = (
+            [measurement(wires=observable)]
+            if isinstance(observable, list)
+            else [measurement(op=observable)]
+        )
+        tape = qml.tape.QuantumScript(ops, measurements, shots=shots)
+
+        skip_list = (qml.ops.Sum,)
+        do_skip = measurement is qml.var and isinstance(observable, skip_list)
+        if not do_skip:
+            rng_1 = np.random.default_rng(123)
+            rng_2 = np.random.default_rng(123)
+            statevector1 = LightningStateVector(n_qubits, dtype, rng=rng_1)
+            statevector1 = get_final_state(statevector1, tape)
+            statevector2 = LightningStateVector(n_qubits, dtype, rng=rng_2)
+            statevector2 = get_final_state(statevector2, tape)
+            m_1 = LightningMeasurements(statevector1)
+            m_2 = LightningMeasurements(statevector2)
+            result_1 = measure_final_state(m_1, tape)
+            result_2 = measure_final_state(m_2, tape)
+
+            if measurement is qml.sample:
+                validate_samples(shots, result_1, result_2, rtol=0.0, atol=0.0)
+            elif measurement is qml.counts:
+                validate_counts(shots, result_1, result_2, rtol=0.0, atol=0.0)
+            else:
+                validate_others(shots, result_1, result_2, rtol=0.0, atol=0.0)
+
 
 class TestControlledOps:
     """Tests for controlled operations"""
 
     @staticmethod
     def calculate_reference(tape):
-        dev = DefaultQubit(max_workers=1)
+        dev = DefaultQubit()
         program, _ = dev.preprocess()
         tapes, transf_fn = program([tape])
         results = dev.execute(tapes)
         return transf_fn(results)
 
+    @pytest.mark.local_salt(42)
     @pytest.mark.parametrize(
         "operation",
         [
@@ -891,11 +1000,13 @@ class TestControlledOps:
     )
     @pytest.mark.parametrize("control_value", [False, True])
     @pytest.mark.parametrize("n_qubits", list(range(2, 5)))
-    def test_controlled_qubit_gates(self, operation, n_qubits, control_value, tol, lightning_sv):
+    def test_controlled_qubit_gates(
+        self, operation, n_qubits, control_value, tol, lightning_sv, seed
+    ):
         """Test that multi-controlled gates are correctly applied to a state"""
         threshold = 250 if device_name != "lightning.tensor" else 5
         num_wires = max(operation.num_wires, 1) if operation.num_wires else 1
-        np.random.seed(0)
+        rng = np.random.default_rng(seed)
 
         if device_name not in ["lightning.qubit", "lightning.gpu"] and operation == qml.PCPhase:
             pytest.skip("PCPhase only supported on lightning.qubit and lightning.gpu.")
@@ -908,7 +1019,7 @@ class TestControlledOps:
             for all_wires in wire_lists:
                 target_wires = all_wires[0:num_wires]
                 control_wires = all_wires[num_wires:]
-                init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
+                init_state = rng.random(2**n_qubits) + 1.0j * rng.random(2**n_qubits)
                 init_state /= np.linalg.norm(init_state)
 
                 if operation.num_params == 0:
@@ -930,8 +1041,6 @@ class TestControlledOps:
                             control_wires,
                             control_values=(
                                 [control_value or bool(i % 2) for i, _ in enumerate(control_wires)]
-                                if device_name != "lightning.tensor"
-                                else [control_value for _ in control_wires]
                             ),
                         ),
                     ]
@@ -942,8 +1051,6 @@ class TestControlledOps:
                             control_wires,
                             control_values=(
                                 [control_value or bool(i % 2) for i, _ in enumerate(control_wires)]
-                                if device_name != "lightning.tensor"
-                                else [control_value for _ in control_wires]
                             ),
                         ),
                     ]
@@ -992,9 +1099,7 @@ class TestControlledOps:
         target_wires = [target_wires]
         wires = control_wires + target_wires
         U = qml.matrix(qml.PauliX(target_wires))
-        np.random.seed(0)
-        init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
-        init_state /= np.linalg.norm(init_state)
+        init_state = get_random_normalized_state(2**n_qubits)
 
         tape = qml.tape.QuantumScript(
             [
@@ -1029,6 +1134,7 @@ class TestControlledOps:
         threshold = 250 if device_name != "lightning.tensor" else 5
         operation = qml.GlobalPhase
         num_wires = max(operation.num_wires, 1) if operation.num_wires else 1
+
         for n_wires in range(num_wires + 1, num_wires + 4):
             wire_lists = list(itertools.permutations(range(0, n_qubits), n_wires))
             n_perms = len(wire_lists) * n_wires
@@ -1037,8 +1143,7 @@ class TestControlledOps:
             for all_wires in wire_lists:
                 target_wires = all_wires[0:num_wires]
                 control_wires = all_wires[num_wires:]
-                init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
-                init_state /= np.linalg.norm(init_state)
+                init_state = get_random_normalized_state(2**n_qubits)
 
                 tape = qml.tape.QuantumScript(
                     [
@@ -1048,8 +1153,6 @@ class TestControlledOps:
                             control_wires,
                             control_values=(
                                 [control_value or bool(i % 2) for i, _ in enumerate(control_wires)]
-                                if device_name != "lightning.tensor"
-                                else [control_value for _ in control_wires]
                             ),
                         ),
                     ],

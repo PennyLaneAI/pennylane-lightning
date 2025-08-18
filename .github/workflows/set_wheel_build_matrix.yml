@@ -1,7 +1,7 @@
 name: Set wheel build matrix
 
 env:
-  PYTHON3_MIN_VERSION: "10"
+  PYTHON3_MIN_VERSION: "11"
   PYTHON3_MAX_VERSION: "13"
 
 on:
@@ -30,7 +30,7 @@ concurrency:
 
 jobs:
   set-builder-matrix:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout PennyLane-Lightning

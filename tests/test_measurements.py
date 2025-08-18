@@ -23,7 +23,6 @@ import pennylane as qml
 import pytest
 from conftest import LightningDevice as ld
 from conftest import LightningException, device_name, lightning_ops, validate_measurements
-from flaky import flaky
 from pennylane.exceptions import DeviceError, QuantumFunctionError
 from pennylane.measurements import ExpectationMP, Shots, VarianceMP
 from pennylane.wires import Wires
@@ -455,7 +454,7 @@ class TestSample:
         """Tests if the samples returned by the sample function have
         the correct dimensions
         """
-        dev = qubit_device(wires=2, shots=shots)
+        dev = qubit_device(wires=2)
         ops = [qml.RX(1.5708, wires=[0]), qml.RX(1.5708, wires=[1])]
         obs = qml.PauliZ(wires=[0])
         tape = qml.tape.QuantumScript(ops, [qml.sample(op=obs)], shots=shots)
@@ -467,7 +466,7 @@ class TestSample:
         the correct values
         """
         shots = 1000
-        dev = qubit_device(wires=2, shots=shots)
+        dev = qubit_device(wires=2)
         ops = [qml.RX(1.5708, wires=[0])]
         obs = qml.PauliZ(0)
         tape = qml.tape.QuantumScript(ops, [qml.sample(op=obs)], shots=shots)
@@ -483,22 +482,20 @@ class TestSample:
         """Tests if `sample(wires)` returns correct statistics."""
         shots = 200000
         n_qubits = max(5, nwires + 1)
-        np.random.seed(seed)
-        wires = qml.wires.Wires(np.random.permutation(nwires))
-        state = np.random.rand(2**n_qubits) + 1j * np.random.rand(2**n_qubits)
-        state[np.random.randint(0, 2**n_qubits, 1)] += state.size / 10
+
+        rng = np.random.default_rng(seed)
+        wires = qml.wires.Wires(rng.permutation(nwires))
+        state = rng.random(2**n_qubits) + 1j * rng.random(2**n_qubits)
+        state[rng.integers(0, 2**n_qubits, 1)] += state.size / 10
         state /= np.linalg.norm(state)
         ops = [qml.StatePrep(state, wires=range(n_qubits))]
         tape = qml.tape.QuantumScript(ops, [qml.sample(wires=wires)], shots=shots)
         tape_exact = qml.tape.QuantumScript(ops, [qml.probs(wires=wires)])
 
-        def reshape_samples(samples):
-            return np.atleast_3d(samples) if len(wires) == 1 else np.atleast_2d(samples)
-
-        dev = qubit_device(wires=n_qubits, shots=shots)
+        dev = qubit_device(wires=n_qubits)
         samples = dev.execute(tape)
         probs = qml.measurements.ProbabilityMP(wires=wires).process_samples(
-            reshape_samples(samples), wire_order=wires
+            np.atleast_2d(samples), wire_order=wires
         )
 
         dev_ref = qml.device("default.qubit", wires=n_qubits)
@@ -507,6 +504,7 @@ class TestSample:
         assert np.allclose(probs, probs_ref, atol=2.0e-2, rtol=1.0e-4)
 
 
+@pytest.mark.local_salt(42)
 @pytest.mark.parametrize("shots", [None, 100000, [100000, 111111]])
 @pytest.mark.parametrize("measure_f", [qml.counts, qml.expval, qml.probs, qml.sample, qml.var])
 @pytest.mark.parametrize(
@@ -525,7 +523,7 @@ class TestSample:
 @pytest.mark.parametrize("mcmc", [False, True])
 @pytest.mark.parametrize("n_wires", [None, 3])
 @pytest.mark.parametrize("kernel_name", ["Local", "NonZeroRandom"])
-def test_shots_single_measure_obs(shots, measure_f, obs, n_wires, mcmc, kernel_name):
+def test_shots_single_measure_obs(shots, measure_f, obs, n_wires, mcmc, kernel_name, seed):
     """Tests that Lightning handles shots in a circuit where a single measurement of a common observable is performed at the end."""
 
     if (
@@ -542,13 +540,21 @@ def test_shots_single_measure_obs(shots, measure_f, obs, n_wires, mcmc, kernel_n
     if measure_f in (qml.expval, qml.var) and obs is None:
         pytest.skip("qml.expval, qml.var requires observable.")
 
-    if device_name in ("lightning.gpu", "lightning.kokkos", "lightning.tensor"):
-        dev = qml.device(device_name, wires=n_wires, shots=shots)
-    else:
+    if device_name in ("lightning.gpu", "lightning.kokkos"):
+        dev = qml.device(device_name, wires=n_wires, seed=seed)
+    elif device_name == "lightning.qubit":
         dev = qml.device(
-            device_name, wires=n_wires, shots=shots, mcmc=mcmc, kernel_name=kernel_name
+            device_name,
+            wires=n_wires,
+            mcmc=mcmc,
+            kernel_name=kernel_name,
+            num_burnin=100,
+            seed=seed,
         )
-    dq = qml.device("default.qubit", wires=n_wires, shots=shots)
+    else:
+        dev = qml.device(device_name, wires=n_wires)
+
+    dq = qml.device("default.qubit", wires=n_wires, seed=seed)
     params = [np.pi / 4, -np.pi / 4]
 
     def func(x, y):
@@ -560,33 +566,38 @@ def test_shots_single_measure_obs(shots, measure_f, obs, n_wires, mcmc, kernel_n
 
     if obs == []:
         with pytest.raises(ValueError, match="Cannot set an empty list of wires"):
-            qml.QNode(func, dev)(*params)
+            qn = qml.QNode(func, dev)
+            qn = qml.set_shots(qn, shots=shots)
+            qn(*params)
     else:
         func1 = qml.QNode(func, dev)
+        func1 = qml.set_shots(func1, shots=shots)
         results1 = func1(*params)
 
         func2 = qml.QNode(func, dq)
+        func2 = qml.set_shots(func2, shots=shots)
         results2 = func2(*params)
 
         validate_measurements(measure_f, shots, results1, results2)
 
 
 # TODO: Add LT after extending the support for shots_vector
+@pytest.mark.local_salt(42)
 @pytest.mark.skipif(
     device_name == "lightning.tensor",
     reason="lightning.tensor does not support single-wire devices.",
 )
 @pytest.mark.parametrize("shots", ((1, 10), (1, 10, 100), (1, 10, 10, 100, 100, 100)))
-def test_shots_bins(shots, qubit_device):
+def test_shots_bins(shots, qubit_device, seed):
     """Tests that Lightning handles multiple shots."""
 
-    dev = qubit_device(wires=1, shots=shots)
+    dev = qubit_device(wires=1, seed=seed)
 
+    @qml.set_shots(shots)
     @qml.qnode(dev)
     def circuit():
         return qml.expval(qml.PauliZ(wires=0))
 
-    if dev.name == "lightning.qubit":
-        assert np.sum(shots) == circuit.device.shots.total_shots
+    assert np.sum(shots) == circuit._shots.total_shots
 
     assert np.allclose(circuit(), 1.0)

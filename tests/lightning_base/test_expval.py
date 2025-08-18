@@ -20,7 +20,7 @@ import itertools
 import numpy as np
 import pennylane as qml
 import pytest
-from conftest import PHI, THETA, VARPHI, LightningDevice, device_name
+from conftest import PHI, THETA, VARPHI, LightningDevice, device_name, get_hermitian_matrix
 from pennylane.devices import DefaultQubit
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-access
@@ -33,7 +33,7 @@ def dev(request):
 
 
 def calculate_reference(tape):
-    dev = DefaultQubit(max_workers=1)
+    dev = DefaultQubit()
     program, _ = dev.preprocess()
     tapes, transf_fn = program([tape])
     results = dev.execute(tapes)
@@ -174,6 +174,7 @@ class TestExpval:
 
         assert np.allclose(calculated_val, reference_val, tol)
 
+    @pytest.mark.local_salt(42)
     @pytest.mark.parametrize(
         "n_op_wires, wires",
         [
@@ -188,7 +189,9 @@ class TestExpval:
         ],
     )
     @pytest.mark.parametrize("dtype", [np.complex64, np.complex128])
-    def test_hermitian_arbitrary_size_expectation(self, dtype, theta, phi, n_op_wires, wires, tol):
+    def test_hermitian_arbitrary_size_expectation(
+        self, dtype, theta, phi, n_op_wires, wires, tol, seed
+    ):
         """Tests the expectation value of an arbitrary size Hermitian matrix."""
         if device_name == "lightning.tensor" and n_op_wires > 1:
             pytest.skip(
@@ -196,10 +199,8 @@ class TestExpval:
             )
         n_qubits = 8
         dev = LightningDevice(wires=n_qubits, c_dtype=dtype)
-        mat = np.random.rand(2**n_op_wires, 2**n_op_wires) + 1j * np.random.rand(
-            2**n_op_wires, 2**n_op_wires
-        )
-        mat = mat + mat.conj().T
+
+        mat = get_hermitian_matrix(2**n_op_wires)
 
         tape = qml.tape.QuantumScript(
             [

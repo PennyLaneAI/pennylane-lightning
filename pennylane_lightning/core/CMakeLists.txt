@@ -25,4 +25,5 @@ if (BUILD_TESTS)
     FetchAndIncludeCatch()
 
     include(CTest)
+    enable_testing()
 endif()

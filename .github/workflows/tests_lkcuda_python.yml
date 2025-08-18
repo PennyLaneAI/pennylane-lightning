@@ -33,10 +33,8 @@ on:
 env:
   GCC_VERSION: 11
   CI_CUDA_ARCH: 86
-  TF_VERSION: 2.16.2
-  KERAS_VERSION: 3.9.0
   TORCH_VERSION: 2.5.1
-  COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:./coverage.xml --no-flaky-report -p no:warnings --tb=native"
+  COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:./coverage.xml -p no:warnings --tb=native"
 
 concurrency:
   group: tests_lkcuda_python-${{ github.ref }}-${{ github.event_name }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
@@ -51,7 +49,7 @@ jobs:
     strategy:
       max-parallel: 1
       matrix:
-        os: [ubuntu-22.04]
+        os: [ubuntu-24.04]
         kokkos_version: ["4.5.00"]
         exec_model: ["CUDA"]
         cuda_version_maj: ["12"]
@@ -114,7 +112,7 @@ jobs:
     needs: [builddeps]
     strategy:
       matrix:
-        os: [ubuntu-22.04]
+        os: [ubuntu-24.04]
         pl_backend: ["lightning_kokkos", "all"]
         kokkos_version: ["4.5.00"]
         exec_model: ["CUDA"]
@@ -176,7 +174,7 @@ jobs:
         id: setup_python
         name: Install Python
         with:
-          python-version: '3.10'
+          python-version: '3.11'
 
       # Since the self-hosted runner can be re-used. It is best to set up all package
       # installations in a virtual environment that gets cleaned at the end of each workflow run
@@ -212,7 +210,7 @@ jobs:
         run: |
           cd main
           python -m pip install -r requirements-tests.txt
-          python -m pip install "jax[cpu]==0.4.28; python_version<='3.12'" openfermionpyscf
+          python -m pip install openfermionpyscf
 
       - name: Checkout PennyLane for release or latest build
         if: inputs.pennylane-version == 'release' || inputs.pennylane-version == 'latest'
@@ -242,10 +240,15 @@ jobs:
           cd main
           python -m pip uninstall -y pennylane && python -m pip install -U pennylane
 
+      - name: Checkout Catalyst
+        uses: actions/checkout@v4
+        with:
+          repository: PennyLaneAI/catalyst
+          path: ${{ github.workspace}}/catalyst
+
       - name: Install ML libraries for interfaces
         run: |
           python -m pip install --upgrade torch==$TORCH_VERSION --index-url https://download.pytorch.org/whl/cpu
-          python -m pip install --upgrade tensorflow~=$TF_VERSION keras~=$KERAS_VERSION
 
       - name: Install backend device
         if: ${{ matrix.pl_backend != 'all'}}
@@ -257,7 +260,7 @@ jobs:
           PL_BACKEND=lightning_qubit SKIP_COMPILATION=True python -m pip install . -vv
 
           PL_BACKEND=${{ matrix.pl_backend }} python scripts/configure_pyproject_toml.py || true
-          PL_BACKEND=${{ matrix.pl_backend }} CMAKE_ARGS="-DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos" \
+          PL_BACKEND=${{ matrix.pl_backend }} CMAKE_ARGS="-DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DLIGHTNING_CATALYST_SRC_PATH=${{ github.workspace }}/catalyst" \
           python -m pip install . -vv
 
       - name: Run PennyLane-Lightning integration tests

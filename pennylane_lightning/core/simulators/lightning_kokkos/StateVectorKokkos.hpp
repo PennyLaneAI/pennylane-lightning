@@ -303,6 +303,18 @@ class StateVectorKokkos final
         : StateVectorKokkos(hostdata_.data(), hostdata_.size(), kokkos_args) {}
 
     /**
+     * @brief Create a new state vector from data on the host.
+     *
+     * @param hostdata_ Host vector for state vector
+     * @param kokkos_args Arguments for Kokkos initialization
+     */
+    template <class complex>
+    StateVectorKokkos(std::vector<complex> hostdata_,
+                      const Kokkos::InitializationSettings &kokkos_args = {})
+        : StateVectorKokkos(reinterpret_cast<ComplexT *>(hostdata_.data()),
+                            hostdata_.size(), kokkos_args) {}
+
+    /**
      * @brief Copy constructor
      *
      * @param other Another state vector
@@ -803,7 +815,7 @@ class StateVectorKokkos final
         PrecisionT squaredNorm = 0.0;
         Kokkos::parallel_reduce(
             sv_view.size(),
-            KOKKOS_LAMBDA(std::size_t i, PrecisionT & sum) {
+            KOKKOS_LAMBDA(std::size_t i, PrecisionT &sum) {
                 const PrecisionT norm = Kokkos::abs(sv_view(i));
                 sum += norm * norm;
             },

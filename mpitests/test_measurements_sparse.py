@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Unit tests for Sparse Measurements Lightning devices.
+Unit tests for sparse measurements on :mod:`pennylane_lightning` MPI-enabled devices.
 """
 # pylint: disable=protected-access,too-few-public-methods,unused-import,missing-function-docstring,too-many-arguments
 
@@ -26,6 +26,9 @@ from pennylane import qchem
 
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
+
+if device_name != "lightning.gpu":
+    pytest.skip("Kokkos MPI does not yet support Sparse.", allow_module_level=True)
 
 
 class TestSparseExpval:

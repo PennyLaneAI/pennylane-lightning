@@ -1,8 +1,10 @@
-pytest>=7.1.2
+# Testing Dependencies
+pytest>=8.4.1
 pytest-benchmark
 pytest-cov>=3.0.0
 pytest-mock>=3.7.0
+pytest-rng
 pytest-xdist>=2.5.0
 pytest-split
-flaky>=3.7.0
+flaky>=3.7.0 # For pl-device-test
 git+https://github.com/PennyLaneAI/pennylane.git@master

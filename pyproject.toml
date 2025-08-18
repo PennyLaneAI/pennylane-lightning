@@ -1,12 +1,12 @@
 [build-system]
-requires = ["cmake~=3.27.0", "ninja; platform_system!='Windows'", "setuptools>=42", "tomli"]
+requires = ["cmake", "ninja; platform_system!='Windows'", "setuptools>=75.8.1", "tomli"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "PennyLane_Lightning"
+name = "pennylane_lightning"
 description = "PennyLane-Lightning plugin"
-readme = "README.rst"
-requires-python = ">=3.10"
+readme = "README.md"
+requires-python = ">=3.11"
 license = "Apache-2.0"
 classifiers = [ 
     "Development Status :: 4 - Beta", 
@@ -20,7 +20,6 @@ classifiers = [
     "Programming Language :: Python", 
     "Programming Language :: Python :: 3", 
     "Programming Language :: Python :: 3 :: Only", 
-    "Programming Language :: Python :: 3.10", 
     "Programming Language :: Python :: 3.11", 
     "Programming Language :: Python :: 3.12", 
     "Programming Language :: Python :: 3.13", 
