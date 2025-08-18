@@ -13,7 +13,7 @@
 // limitations under the License.
 
 /**
- * @file Bindings_nb.cpp
+ * @file Bindings.cpp
  * Implements device-agnostic operations to export to Python using Nanobind.
  */
 
