@@ -12,7 +12,7 @@ The Lightning plugin ecosystem provides fast state-vector and tensor-network sim
 
 `PennyLane <https://docs.pennylane.ai>`_ is a cross-platform Python library for quantum machine
 learning, automatic differentiation, and optimization of hybrid quantum-classical computations.
-PennyLane supports Python 3.10 and above.
+PennyLane supports Python 3.11 and above.
 
 Backends
 ********

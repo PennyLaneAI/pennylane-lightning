@@ -21,8 +21,6 @@ on:
       - master
 
 env:
-  TF_VERSION: 2.19.0
-  KERAS_VERSION: 3.9.0
   TORCH_VERSION: 2.5.1
   COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing -p no:warnings --tb=native"
   GCC_VERSION: 13
@@ -55,7 +53,7 @@ jobs:
       - uses: actions/setup-python@v5
         name: Install Python
         with:
-          python-version: '3.10'
+          python-version: '3.11'
 
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
@@ -135,7 +133,7 @@ jobs:
       - uses: actions/setup-python@v5
         name: Install Python
         with:
-          python-version: '3.10'
+          python-version: '3.11'
 
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
@@ -194,7 +192,6 @@ jobs:
       - name: Install ML libraries for interfaces
         run: |
           python -m pip install --upgrade torch==$TORCH_VERSION --index-url https://download.pytorch.org/whl/cpu
-          python -m pip install --upgrade tensorflow~=$TF_VERSION keras~=$KERAS_VERSION
 
       - name: Switch to stable tag of Lightning
         if: inputs.lightning-version == 'stable'
@@ -256,7 +253,7 @@ jobs:
       - uses: actions/setup-python@v5
         name: Install Python
         with:
-          python-version: '3.10'
+          python-version: '3.11'
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -272,7 +269,7 @@ jobs:
       - name: Combine coverage files
         run: |
           # Update .coveragerc to include sources for combining equivalent paths
-          wheelpath=$Python_ROOT_DIR/lib/python3.10/site-packages
+          wheelpath=$Python_ROOT_DIR/lib/python3.11/site-packages
           echo "" >> .coveragerc
           echo "[paths]" >> .coveragerc
           echo "source =" >> .coveragerc
