@@ -20,6 +20,7 @@ from functools import reduce
 from pathlib import Path
 from typing import List, Optional, Union
 from warnings import warn
+import time
 
 import numpy as np
 import pennylane as qml
@@ -285,6 +286,8 @@ class LightningQubit(LightningBase):
 
         self._statevector = None
         self._sv_init_kwargs = {}
+        
+#        time.sleep(2.0)
 
     @property
     def name(self):
