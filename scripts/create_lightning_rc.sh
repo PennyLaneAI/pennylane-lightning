@@ -304,8 +304,13 @@ create_version_bump_PR(){
         --label 'urgent'
     fi
 
-    PR_number=$(gh pr view --json number --jq .number)
-    PR_author=$(gh pr view --json author --jq '.author.login')
+    if [ "$LOCAL_TEST" == "true" ]; then
+        PR_number="0000"
+        PR_author="PennyLaneAI"
+    else
+        PR_author=$(gh pr view --json author --jq '.author.login')
+        PR_number=$(gh pr view --json number --jq .number)
+    fi
 
     new_changelog_text=$(new_changelog_entry "${PR_number}" "${PR_author}")
 
