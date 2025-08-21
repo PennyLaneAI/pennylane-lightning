@@ -142,7 +142,8 @@ create_release_candidate_branch() {
     # Update lightning version
     sed -i "/__version__/d" pennylane_lightning/core/_version.py
     if [ "$IS_TEST" == "true" ]; then
-        echo '__version__ = "'${RELEASE_VERSION}'-rc0-dev99"' >> pennylane_lightning/core/_version.py
+        dev_number=$(git show master:pennylane_lightning/core/_version.py | grep "version" | grep -oP 'dev\K[0-9]+')
+        echo '__version__ = "'${RELEASE_VERSION}'-rc0-dev'${dev_number}'"' >> pennylane_lightning/core/_version.py
     else
         echo '__version__ = "'${RELEASE_VERSION}'-rc0"' >> pennylane_lightning/core/_version.py
     fi
