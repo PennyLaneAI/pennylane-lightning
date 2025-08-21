@@ -625,6 +625,10 @@ echo "LIGHTNING_TEST: $LIGHTNING_TEST"
 echo "RELEASE_ACTION: $RELEASE_ACTION"
 echo "RELEASE_ASSETS: $RELEASE_ASSETS"
 
+create_version_bump_PR
+
+exit 0
+
 if [ "$CREATE_RC" == "true" ]; then
     create_release_candidate_branch
     create_release_candidate_PR
