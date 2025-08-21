@@ -53,8 +53,15 @@ help(){
     echo "  -h, --help                        Show this help message"
 }
 
-CHANGELOG_FILE=".github/CHANGELOG.md"
-PL_VERSION_FILE="pennylane_lightning/core/_version.py"
+ROOT_DIR="$(pwd)"
+
+if [ ! -d "${ROOT_DIR}/.git" ]; then
+    echo "You should to run the script on the root directory of the repository"
+    exit 1
+fi
+
+CHANGELOG_FILE="$ROOT_DIR/.github/CHANGELOG.md"
+PL_VERSION_FILE="$ROOT_DIR/pennylane_lightning/core/_version.py"
 
 # Utils functions
 use_dry_run(){
@@ -117,8 +124,8 @@ test_pennylane_version(){
 create_release_notes(){
     # Create the release notes for the release
     changelog_lower_bound=$(grep -n -- "---" "${CHANGELOG_FILE}" | head -n 1 | cut -d: -f1)
-    sed -n "1,${changelog_lower_bound}p" $CHANGELOG_FILE | sed ':a;N;$!ba;s/\.\n *\[(#/\. \[(#/g' > release_notes.md
-    sed -i 's|^- |* |' release_notes.md 
+    sed -n "1,${changelog_lower_bound}p" $CHANGELOG_FILE | sed ':a;N;$!ba;s/\.\n *\[(#/\. \[(#/g' > ${ROOT_DIR}/release_notes.md
+    sed -i 's|^- |* |' ${ROOT_DIR}/release_notes.md
 }
 
 # Release functions
@@ -154,28 +161,30 @@ create_release_candidate_branch() {
     git commit -m "Create v${RELEASE_VERSION} RC branch."
 
     # Update PennyLane dependency
+    pushd $ROOT_DIR
     for file in requirements-dev.txt requirements-tests.txt; do
         sed -i "s|pennylane.git@master|pennylane.git@v${RELEASE_VERSION}-rc0|g" $file
         git add $file
     done
+    popd
     git commit -m "Target PennyLane v${RELEASE_VERSION}-rc0 in requirements-[dev|tests].txt."
 
     # Update Catalyst dependency
     last_catalyst_commit=$(git ls-remote git@github.com:PennyLaneAI/catalyst.git HEAD | cut -f 1)
-    sed -i 's|CATALYST_GIT_TAG "main"|CATALYST_GIT_TAG "'${last_catalyst_commit}'"|g' cmake/support_catalyst.cmake
-    git add cmake/support_catalyst.cmake
+    sed -i 's|CATALYST_GIT_TAG "main"|CATALYST_GIT_TAG "'${last_catalyst_commit}'"|g' ${ROOT_DIR}/cmake/support_catalyst.cmake
+    git add ${ROOT_DIR}/cmake/support_catalyst.cmake
     git commit -m "Set Catalyst dependency in cmake to commit ${last_catalyst_commit}."
 
     # Update RNG salt
-    sed -i "/rng_salt = /d" tests/pytest.ini
-    echo "rng_salt = v${RELEASE_VERSION}" >> tests/pytest.ini
-    git add tests/pytest.ini
+    sed -i "/rng_salt = /d" ${ROOT_DIR}/tests/pytest.ini
+    echo "rng_salt = v${RELEASE_VERSION}" >> ${ROOT_DIR}/tests/pytest.ini
+    git add ${ROOT_DIR}/tests/pytest.ini
     git commit -m "Set rng_salt to v${RELEASE_VERSION} in tests/pytest.ini."
 
     # Enable to upload the wheels to TestPyPI and GitHub Artifacts
     if [ "$PUSH_TESTPYPI" == "true" ]; then
-    sed -i "s|event_name == 'release'|event_name == 'pull_request'|g" .github/workflows/wheel_*
-    git add .github/workflows/wheel_*
+    sed -i "s|event_name == 'release'|event_name == 'pull_request'|g" ${ROOT_DIR}/.github/workflows/wheel_*
+    git add ${ROOT_DIR}/.github/workflows/wheel_*
     git commit -m "Update wheel workflows for pull request"
     fi
 
@@ -222,9 +231,9 @@ create_docker_PR(){
     git checkout master
     git checkout -b $(branch_name ${RELEASE_VERSION} docker)
 
-    sed -i "s|v${STABLE_VERSION}|v${RELEASE_VERSION}|g" .github/workflows/compat-docker-release.yml
+    sed -i "s|v${STABLE_VERSION}|v${RELEASE_VERSION}|g" ${ROOT_DIR}/.github/workflows/compat-docker-release.yml
 
-    git add .github/workflows/compat-docker-release.yml
+    git add ${ROOT_DIR}/.github/workflows/compat-docker-release.yml
     git commit -m "Update compat-docker-release.yml to use v${RELEASE_VERSION}"
 
     if [ "$LOCAL_TEST" == "false" ]; then
@@ -321,7 +330,7 @@ create_version_bump_PR(){
         echo "$new_changelog_text"
         echo ""
         cat $CHANGELOG_FILE
-    } > temp_changelog.md && mv temp_changelog.md $CHANGELOG_FILE
+    } > ${ROOT_DIR}/temp_changelog.md && mv ${ROOT_DIR}/temp_changelog.md $CHANGELOG_FILE
 
     sed -i "s|Release ${RELEASE_VERSION}-dev (development release)|Release ${RELEASE_VERSION}|g" $CHANGELOG_FILE
 
@@ -339,7 +348,7 @@ test_install_lightning(){
     # Test installation of lightning default backends
     pip install -r requirements-dev.txt
     for backend in qubit gpu kokkos tensor; do
-        PL_BACKEND=lightning_${backend} python scripts/configure_pyproject_toml.py
+        PL_BACKEND=lightning_${backend} python ${ROOT_DIR}/scripts/configure_pyproject_toml.py
         PL_BACKEND=lightning_${backend} python -m pip install . -v
     done
 
@@ -350,7 +359,7 @@ test_install_lightning(){
 
     # Lightning Kokkos with CUDA and MPI
     pip uninstall -y pennylane_lightning_kokkos
-    PL_BACKEND="lightning_kokkos" python scripts/configure_pyproject_toml.py
+    PL_BACKEND="lightning_kokkos" python ${ROOT_DIR}/scripts/configure_pyproject_toml.py
     CMAKE_ARGS="-DENABLE_MPI=ON -DKokkos_ENABLE_CUDA=OFF -DKokkos_ENABLE_OPENMP=ON" python -m pip install . -v
 
     # Test import
@@ -358,7 +367,7 @@ test_install_lightning(){
 
     # Lightning GPU with MPI
     pip uninstall -y pennylane_lightning_gpu
-    PL_BACKEND="lightning_gpu" python scripts/configure_pyproject_toml.py
+    PL_BACKEND="lightning_gpu" python ${ROOT_DIR}/scripts/configure_pyproject_toml.py
     CMAKE_ARGS="-DENABLE_MPI=ON" python -m pip install . -v
 
     # Test import
@@ -383,11 +392,11 @@ download_artifacts_gh(){
 
     incomplete_runners=$(echo "$wheels_runners" | jq -r '. | select(.status != "completed") ')
 
-    mkdir -p Wheels
+    mkdir -p ${ROOT_DIR}/Wheels
 
     for runner in $completed_runners; do
         echo "Downloading artifacts for runner: $runner"
-        gh run download --dir Wheels $runner
+        gh run download --dir ${ROOT_DIR}/Wheels $runner
     done
 
     echo "Incomplete runner found:"
@@ -403,7 +412,7 @@ test_wheels_for_unwanted_libraries(){
         unzip -o -q "$wheel"
     done
 
-    python ../scripts/validate_attrs.py
+    python ${ROOT_DIR}/scripts/validate_attrs.py
 
     popd
 }
@@ -431,11 +440,11 @@ create_release_branch(){
 
     if [ "$PUSH_TESTPYPI" == "true" ]; then
     # Disable to upload the wheels to TestPyPI and GitHub Artifacts
-    sed -i "s|event_name == 'pull_request'|event_name == 'release'|g" .github/workflows/wheel_*
+    sed -i "s|event_name == 'pull_request'|event_name == 'release'|g" ${ROOT_DIR}/.github/workflows/wheel_*
     fi
 
     git add $PL_VERSION_FILE
-    git add .github/workflows/wheel_*
+    git add ${ROOT_DIR}/.github/workflows/wheel_*
     git commit -m "Pre-release updates"
     if [ "$LOCAL_TEST" == "false" ]; then
     git push --set-upstream origin $(branch_name ${RELEASE_VERSION} release)
@@ -456,10 +465,10 @@ create_GitHub_release(){
     gh release create $(branch_name ${RELEASE_VERSION}) \
         --target $(branch_name ${RELEASE_VERSION} release) \
         --title "Release ${RELEASE_VERSION}" \
-        --notes-file release_notes.md \
+        --notes-file ${ROOT_DIR}/release_notes.md \
         --draft --latest
     fi
-    rm release_notes.md
+    rm ${ROOT_DIR}/release_notes.md
 }
 
 download_release_artifacts_gh(){
@@ -470,11 +479,11 @@ download_release_artifacts_gh(){
      completed_runners=$(echo "$wheels_runners" | jq -r '. | select(.status == "completed") | .workflowDatabaseId')
      incomplete_runners=$(echo "$wheels_runners" | jq -r '. | select(.status != "completed") ')
 
-     mkdir -p Release_Assets
+     mkdir -p ${ROOT_DIR}/Release_Assets
 
      for runner in $completed_runners; do
          echo "Downloading artifacts for runner: $runner"
-         gh run download --dir Release_Assets $runner
+         gh run download --dir ${ROOT_DIR}/Release_Assets $runner
      done
 
      echo "Incomplete runner found:"
@@ -485,17 +494,17 @@ create_sdist(){
     # Create the source distribution
 
     git checkout $(branch_name ${RELEASE_VERSION} "release")
-    PL_BACKEND=lightning_qubit python ./scripts/configure_pyproject_toml.py 
+    PL_BACKEND=lightning_qubit python ${ROOT_DIR}/scripts/configure_pyproject_toml.py
     python setup.py sdist
 
-    mkdir -p Release_Assets
-    cp dist/*.tar.gz Release_Assets/
+    mkdir -p ${ROOT_DIR}/Release_Assets
+    cp dist/*.tar.gz ${ROOT_DIR}/Release_Assets/
 }
 
 upload_release_assets_gh(){
     # Upload the release assets
-    gh release upload $(branch_name ${RELEASE_VERSION} "0") Release_Assets/*.whl --clobber
-    gh release upload $(branch_name ${RELEASE_VERSION} "0") Release_Assets/*.tar.gz --clobber
+    gh release upload $(branch_name ${RELEASE_VERSION} "0") ${ROOT_DIR}/Release_Assets/*.whl --clobber
+    gh release upload $(branch_name ${RELEASE_VERSION} "0") ${ROOT_DIR}/Release_Assets/*.tar.gz --clobber
 }
 
 create_merge_branch(){
@@ -504,10 +513,12 @@ create_merge_branch(){
     git checkout $(branch_name ${RELEASE_VERSION} "release")
     git checkout -b $(branch_name ${RELEASE_VERSION} "rc_merge")
 
+    pushd $ROOT_DIR
     for file in requirements-dev.txt requirements-tests.txt; do
         sed -i "s|pennylane.git@v${RELEASE_VERSION}-rc0|pennylane.git@master|g" $file
         git add $file
     done
+    popd
     git commit -m "Target PennyLane master in requirements-[dev|tests].txt."
 
     sed -i "/__version__/d" $PL_VERSION_FILE
@@ -519,13 +530,13 @@ create_merge_branch(){
     git add $PL_VERSION_FILE
     git commit -m "Bump version to ${NEXT_VERSION}-dev0"
 
-    sed -i 's/set(CATALYST_GIT_TAG *"[^"]*" *CACHE STRING "GIT_TAG value to build Catalyst")/set(CATALYST_GIT_TAG "main" CACHE STRING "GIT_TAG value to build Catalyst")/' cmake/support_catalyst.cmake
-    git add cmake/support_catalyst.cmake
+    sed -i 's/set(CATALYST_GIT_TAG *"[^"]*" *CACHE STRING "GIT_TAG value to build Catalyst")/set(CATALYST_GIT_TAG "main" CACHE STRING "GIT_TAG value to build Catalyst")/' ${ROOT_DIR}/cmake/support_catalyst.cmake
+    git add ${ROOT_DIR}/cmake/support_catalyst.cmake
     git commit -m "Restore Catalyst GIT_TAG to main"
 
     for i in release stable; do
-        sed -i "s|v${RELEASE_VERSION}|v${NEXT_VERSION}|g" .github/workflows/compat-docker-${i}.yml
-        git add .github/workflows/compat-docker-${i}.yml
+        sed -i "s|v${RELEASE_VERSION}|v${NEXT_VERSION}|g" ${ROOT_DIR}/.github/workflows/compat-docker-${i}.yml
+        git add ${ROOT_DIR}/.github/workflows/compat-docker-${i}.yml
     done
     git commit -m "Update Docker workflows for new release version"
 
