@@ -19,7 +19,7 @@ import re
 from pathlib import Path
 from zipfile import ZipFile
 
-paths = Path().glob("**/*.whl")
+paths = Path().glob("*.whl")
 for path in paths:
     additional_packages = []
 
