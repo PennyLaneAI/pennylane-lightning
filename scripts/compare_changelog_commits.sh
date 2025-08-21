@@ -14,8 +14,7 @@ ROOT_DIR="."
 # Script body
 # --------------------------------------------------------------------------------------------------
 
-tmp_root_dir=$(pwd)
-ROOT_DIR="$tmp_root_dir/$ROOT_DIR"
+ROOT_DIR="$(pwd)/$ROOT_DIR"
 
 # Path to ChangeLog
 CHANGELOG_FILE="$ROOT_DIR/.github/CHANGELOG.md"

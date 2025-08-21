@@ -53,6 +53,8 @@ help(){
     echo "  -h, --help                        Show this help message"
 }
 
+CHANGELOG_FILE=".github/CHANGELOG.md"
+PL_VERSION_FILE="pennylane_lightning/core/_version.py"
 
 # Utils functions
 use_dry_run(){
@@ -114,7 +116,6 @@ test_pennylane_version(){
 
 create_release_notes(){
     # Create the release notes for the release
-    CHANGELOG_FILE=".github/CHANGELOG.md"
     changelog_lower_bound=$(grep -n -- "---" "${CHANGELOG_FILE}" | head -n 1 | cut -d: -f1)
     sed -n "1,${changelog_lower_bound}p" $CHANGELOG_FILE | sed ':a;N;$!ba;s/\.\n *\[(#/\. \[(#/g' > release_notes.md
     sed -i 's|^- |* |' release_notes.md 
@@ -140,16 +141,16 @@ create_release_candidate_branch() {
     git checkout $(branch_name ${RELEASE_VERSION} rc)
 
     # Update lightning version
-    sed -i "/__version__/d" pennylane_lightning/core/_version.py
+    sed -i "/__version__/d" $PL_VERSION_FILE
     if [ "$IS_TEST" == "true" ]; then
-        dev_number=$(git show master:pennylane_lightning/core/_version.py | grep "version" | grep -oP 'dev\K[0-9]+')
-        echo '__version__ = "'${RELEASE_VERSION}'-rc0-dev'${dev_number}'"' >> pennylane_lightning/core/_version.py
+        dev_number=$(git show master:$PL_VERSION_FILE | grep "version" | grep -oP 'dev\K[0-9]+')
+        echo '__version__ = "'${RELEASE_VERSION}'-rc0-dev'${dev_number}'"' >> $PL_VERSION_FILE
     else
-        echo '__version__ = "'${RELEASE_VERSION}'-rc0"' >> pennylane_lightning/core/_version.py
+        echo '__version__ = "'${RELEASE_VERSION}'-rc0"' >> $PL_VERSION_FILE
     fi
-    sed -i "s|Release ${RELEASE_VERSION}-dev (development release)|Release ${RELEASE_VERSION}|g" .github/CHANGELOG.md
+    sed -i "s|Release ${RELEASE_VERSION}-dev (development release)|Release ${RELEASE_VERSION}|g" $CHANGELOG_FILE
 
-    git add pennylane_lightning/core/_version.py .github/CHANGELOG.md
+    git add $PL_VERSION_FILE $CHANGELOG_FILE
     git commit -m "Create v${RELEASE_VERSION} RC branch."
 
     # Update PennyLane dependency
@@ -284,14 +285,14 @@ create_version_bump_PR(){
     git checkout -b $(branch_name ${RELEASE_VERSION} bump)
 
     # Update lightning version
-    sed -i "/__version__/d" pennylane_lightning/core/_version.py
+    sed -i "/__version__/d" $PL_VERSION_FILE
     if [ "$IS_TEST" == "true" ]; then
-        echo '__version__ = "'${NEXT_VERSION}'-alpha1-dev0"' >> pennylane_lightning/core/_version.py
+        echo '__version__ = "'${NEXT_VERSION}'-alpha1-dev0"' >> $PL_VERSION_FILE
     else
-        echo '__version__ = "'${NEXT_VERSION}'-dev0"' >> pennylane_lightning/core/_version.py
+        echo '__version__ = "'${NEXT_VERSION}'-dev0"' >> $PL_VERSION_FILE
     fi
 
-    git add pennylane_lightning/core/_version.py
+    git add $PL_VERSION_FILE
     git commit -m "Bump version to v${NEXT_VERSION}."
 
     if [ "$LOCAL_TEST" == "false" ]; then
@@ -319,12 +320,12 @@ create_version_bump_PR(){
     {
         echo "$new_changelog_text"
         echo ""
-        cat .github/CHANGELOG.md
-    } > temp_changelog.md && mv temp_changelog.md .github/CHANGELOG.md
+        cat $CHANGELOG_FILE
+    } > temp_changelog.md && mv temp_changelog.md $CHANGELOG_FILE
 
-    sed -i "s|Release ${RELEASE_VERSION}-dev (development release)|Release ${RELEASE_VERSION}|g" .github/CHANGELOG.md
+    sed -i "s|Release ${RELEASE_VERSION}-dev (development release)|Release ${RELEASE_VERSION}|g" $CHANGELOG_FILE
 
-    git add .github/CHANGELOG.md
+    git add $CHANGELOG_FILE
     git commit -m "Update CHANGELOG.md with new version entry."
 
 }
@@ -421,20 +422,19 @@ create_release_branch(){
     git checkout -b $(branch_name ${RELEASE_VERSION} release)
 
     # Update version
-    sed -i "/__version__/d" pennylane_lightning/core/_version.py
+    sed -i "/__version__/d" $PL_VERSION_FILE
     if [ "$IS_TEST" == "true" ]; then
-        echo '__version__ = "'${RELEASE_VERSION}'-alpha"' >> pennylane_lightning/core/_version.py
+        echo '__version__ = "'${RELEASE_VERSION}'-alpha"' >> $PL_VERSION_FILE
     else
-        echo '__version__ = "'${RELEASE_VERSION}'"' >> pennylane_lightning/core/_version.py
+        echo '__version__ = "'${RELEASE_VERSION}'"' >> $PL_VERSION_FILE
     fi
 
-    
     if [ "$PUSH_TESTPYPI" == "true" ]; then
     # Disable to upload the wheels to TestPyPI and GitHub Artifacts
     sed -i "s|event_name == 'pull_request'|event_name == 'release'|g" .github/workflows/wheel_*
     fi
 
-    git add pennylane_lightning/core/_version.py
+    git add $PL_VERSION_FILE
     git add .github/workflows/wheel_*
     git commit -m "Pre-release updates"
     if [ "$LOCAL_TEST" == "false" ]; then
@@ -510,13 +510,13 @@ create_merge_branch(){
     done
     git commit -m "Target PennyLane master in requirements-[dev|tests].txt."
 
-    sed -i "/__version__/d" pennylane_lightning/core/_version.py
+    sed -i "/__version__/d" $PL_VERSION_FILE
     if [ "$IS_TEST" == "true" ]; then
-        echo '__version__ = "'${NEXT_VERSION}'-alpha1-dev0"' >> pennylane_lightning/core/_version.py
+        echo '__version__ = "'${NEXT_VERSION}'-alpha1-dev0"' >> $PL_VERSION_FILE
     else
-        echo '__version__ = "'${NEXT_VERSION}'-dev0"' >> pennylane_lightning/core/_version.py
+        echo '__version__ = "'${NEXT_VERSION}'-dev0"' >> $PL_VERSION_FILE
     fi
-    git add pennylane_lightning/core/_version.py
+    git add $PL_VERSION_FILE
     git commit -m "Bump version to ${NEXT_VERSION}-dev0"
 
     sed -i 's/set(CATALYST_GIT_TAG *"[^"]*" *CACHE STRING "GIT_TAG value to build Catalyst")/set(CATALYST_GIT_TAG "main" CACHE STRING "GIT_TAG value to build Catalyst")/' cmake/support_catalyst.cmake
@@ -631,9 +631,6 @@ echo "LIGHTNING_TEST: $LIGHTNING_TEST"
 echo "RELEASE_ACTION: $RELEASE_ACTION"
 echo "RELEASE_ASSETS: $RELEASE_ASSETS"
 
-create_version_bump_PR
-
-exit 0
 
 if [ "$CREATE_RC" == "true" ]; then
     create_release_candidate_branch
