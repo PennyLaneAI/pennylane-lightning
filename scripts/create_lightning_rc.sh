@@ -34,12 +34,6 @@ if ! command -v gh &> /dev/null; then
     exit
 fi
 
-# If not a test run
-if [ "$IS_TEST" == "false" ]; then
-    LOCAL_TEST=false
-    PUSH_TESTPYPI=true
-fi
-
 # --------------------------------------------------------------------------------------------------
 # Script functions
 # --------------------------------------------------------------------------------------------------
@@ -243,7 +237,12 @@ create_docker_PR(){
     fi
 }
 
-new_changelog_entry=$(
+new_changelog_entry(){
+
+PR_number=$1
+PR_author=$2
+
+new_changelog_text=$(
 cat <<EOF
 # Release ${NEXT_VERSION}-dev (development release)
 
@@ -262,36 +261,26 @@ cat <<EOF
 <h3>Internal changes ⚙️</h3>
 
 - Bumped the version.
-    [(#xyz)](https://github.com/PennyLaneAI/pennylane-lightning/pull/xyz)
+    [(#${PR_number})](https://github.com/PennyLaneAI/pennylane-lightning/pull/${PR_number})
 
 <h3>Contributors ✍️</h3>
 
 This release contains contributions from (in alphabetical order):
 
-{Release Manager Name}
+${PR_author}
 
 ---
 
 EOF
 )
+echo "$new_changelog_text"
+}
 
 create_version_bump_PR(){
     # Create a PR for the new version 
 
     git checkout master
     git checkout -b $(branch_name ${RELEASE_VERSION} bump)
-
-    # Update CHANGELOG with new_changelog_entry
-    {
-        echo "$new_changelog_entry"
-        echo ""
-        cat .github/CHANGELOG.md
-    } > temp_changelog.md && mv temp_changelog.md .github/CHANGELOG.md
-
-    sed -i "s|Release ${RELEASE_VERSION}-dev (development release)|Release ${RELEASE_VERSION}|g" .github/CHANGELOG.md
-
-    git add .github/CHANGELOG.md
-    git commit -m "Update CHANGELOG.md with new version entry."
 
     # Update lightning version
     sed -i "/__version__/d" pennylane_lightning/core/_version.py
@@ -314,6 +303,24 @@ create_version_bump_PR(){
         --base master \
         --label 'urgent'
     fi
+
+    PR_number=$(gh pr view --json number --jq .number)
+    PR_author=$(gh pr view --json author --jq '.author.login')
+
+    new_changelog_text=$(new_changelog_entry "${PR_number}" "${PR_author}")
+
+    # Update CHANGELOG with new_changelog_entry
+    {
+        echo "$new_changelog_text"
+        echo ""
+        cat .github/CHANGELOG.md
+    } > temp_changelog.md && mv temp_changelog.md .github/CHANGELOG.md
+
+    sed -i "s|Release ${RELEASE_VERSION}-dev (development release)|Release ${RELEASE_VERSION}|g" .github/CHANGELOG.md
+
+    git add .github/CHANGELOG.md
+    git commit -m "Update CHANGELOG.md with new version entry."
+
 }
 
 test_install_lightning(){
@@ -603,6 +610,11 @@ done
 
 set -- "${POSITIONAL_ARGS[@]}" # restore positional parameters
 
+# If not a test run
+if [ "$IS_TEST" == "false" ]; then
+    LOCAL_TEST=false
+    PUSH_TESTPYPI=true
+fi
 
 echo "STABLE_VERSION: $STABLE_VERSION"
 echo "RELEASE_VERSION: $RELEASE_VERSION"
@@ -613,11 +625,6 @@ echo "LIGHTNING_TEST: $LIGHTNING_TEST"
 echo "RELEASE_ACTION: $RELEASE_ACTION"
 echo "RELEASE_ASSETS: $RELEASE_ASSETS"
 
-test_wheels_for_unwanted_libraries
-
-exit 1
-
-
 if [ "$CREATE_RC" == "true" ]; then
     create_release_candidate_branch
     create_release_candidate_PR
@@ -626,7 +633,6 @@ if [ "$CREATE_RC" == "true" ]; then
     create_version_bump_PR
     git checkout master
 fi
-
 
 if [ "$LIGHTNING_TEST" == "true" ]; then
     test_install_lightning

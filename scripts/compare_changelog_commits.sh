@@ -4,12 +4,9 @@
 # It prints the authors of the merged PRs and the PRs in the CHANGELOG, and highlights any discrepancies.
 
 # Usage:
-# Edit the variable LAST_RELEASE_DATE with the date from https://github.com/PennyLaneAI/pennylane-lightning/releases
 # Run the script with 
 # bash compare_changelog_commits.sh 
 
-# Last release date YYYY-MM-DD
-LAST_RELEASE_DATE="2025-07-14"
 
 # Path to ChangeLog
 CHANGELOG_FILE="../.github/CHANGELOG.md"
@@ -29,6 +26,9 @@ if ! command -v gh &> /dev/null; then
     echo "gh CLI is not installed. Please install it to run this script."
     exit 1
 fi
+
+# Last release date YYYY-MM-DD
+LAST_RELEASE_DATE=$(gh release view --json publishedAt | jq -r '.publishedAt | split("T")[0]')
 
 # Find the end of the current version section in the CHANGELOG
 changelog_lower_bound=$(grep -n -- "---" "${CHANGELOG_FILE}" | head -n 1 | cut -d: -f1)
