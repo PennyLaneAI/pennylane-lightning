@@ -39,6 +39,9 @@
 
 <h3>Bug fixes 🐛</h3>
 
+- Setup the correct PL version for stable-stable test with `lightning.gpu` with MPI.
+  [(#1237)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1237)
+
 <h3>Internal changes ⚙️</h3>
 
 - Stopped the wheels creation for no arch if the PR is draft.
