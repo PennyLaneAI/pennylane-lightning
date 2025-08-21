@@ -396,7 +396,7 @@ download_artifacts_gh(){
 test_wheels_for_unwanted_libraries(){
     # Test for unwanted libraries in the wheels
 
-    cd Wheels
+    pushd Wheels
 
     for wheel in *.zip; do
         unzip -o -q "$wheel"
@@ -404,7 +404,7 @@ test_wheels_for_unwanted_libraries(){
 
     python ../scripts/validate_attrs.py
 
-    cd ..
+    popd
 }
 
 create_release_branch(){
