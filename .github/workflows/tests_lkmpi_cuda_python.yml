@@ -176,6 +176,11 @@ jobs:
           git checkout $(git branch -a --list "origin/v0.*rc*" | sort | tail -1)
           python -m pip uninstall -y pennylane && python -m pip install . -vv --no-deps
 
+      - name: Install Stable PennyLane
+        if: inputs.pennylane-version == 'stable'
+        run: |
+          python -m pip uninstall -y pennylane && python -m pip install -U pennylane
+
       - name: Build and install package
         env:
           PL_BACKEND: lightning_kokkos
