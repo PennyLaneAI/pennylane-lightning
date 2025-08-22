@@ -39,7 +39,7 @@
 
 <h3>Bug fixes 🐛</h3>
 
-- Update stopping condition for `qml.ops.op_math.SProd` and `qml.ops.op_math.Exp` after breaking changes upstream.
+- Update stopping condition for `qml.ops.op_math.SProd` and `qml.ops.op_math.Exp`, in all devices, after breaking changes upstream.
   [(#1239)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1239)
 
 - Setup the correct PL version for stable-stable test with `lightning.gpu` with MPI.
