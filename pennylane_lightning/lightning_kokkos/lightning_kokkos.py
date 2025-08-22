@@ -78,7 +78,7 @@ _to_matrix_ops = {
 
 def stopping_condition(op: Operator) -> bool:
     """A function that determines whether or not an operation is supported by ``lightning.kokkos``."""
-    if base_stopping_condition:
+    if base_stopping_condition(op):
         return True
 
     if isinstance(op, qml.PauliRot):

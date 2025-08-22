@@ -78,7 +78,7 @@ _to_matrix_ops = {
 def stopping_condition(op: Operator) -> bool:
     """A function that determines whether or not an operation is supported by ``lightning.qubit``."""
 
-    if base_stopping_condition:
+    if base_stopping_condition(op):
         return True
 
     # As ControlledQubitUnitary == C(QubitUnitrary), it can be removed from `_operations` to keep consistency with `lightning_qubit.toml`
