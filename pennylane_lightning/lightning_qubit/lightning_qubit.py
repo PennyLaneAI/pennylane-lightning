@@ -47,6 +47,7 @@ from pennylane_lightning.lightning_base.lightning_base import (
     LightningBase,
     QuantumTape_or_Batch,
     Result_or_ResultBatch,
+    base_stopping_condition,
 )
 
 try:
@@ -76,17 +77,17 @@ _to_matrix_ops = {
 
 def stopping_condition(op: Operator) -> bool:
     """A function that determines whether or not an operation is supported by ``lightning.qubit``."""
-    # As ControlledQubitUnitary == C(QubitUnitrary),
-    # it can be removed from `_operations` to keep
-    # consistency with `lightning_qubit.toml`
+
+    if base_stopping_condition:
+        return True
+
+    # As ControlledQubitUnitary == C(QubitUnitrary), it can be removed from `_operations` to keep consistency with `lightning_qubit.toml`
     if isinstance(op, qml.ControlledQubitUnitary):
         return True
     if isinstance(op, qml.PauliRot):
         word = op._hyperparameters["pauli_word"]  # pylint: disable=protected-access
         # decomposes to IsingXX, etc. for n <= 2
         return reduce(lambda x, y: x + (y != "I"), word, 0) > 2
-    if op.name in ("C(SProd)", "C(Exp)"):
-        return True
 
     if (isinstance(op, Conditional) and stopping_condition(op.base)) or isinstance(
         op, MidMeasureMP
