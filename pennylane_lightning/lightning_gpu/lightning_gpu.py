@@ -51,6 +51,7 @@ from pennylane_lightning.lightning_base.lightning_base import (
     LightningBase,
     QuantumTape_or_Batch,
     Result_or_ResultBatch,
+    base_stopping_condition,
 )
 
 try:
@@ -89,7 +90,7 @@ _to_matrix_ops = {
 
 def stopping_condition(op: Operator) -> bool:
     """A function that determines whether or not an operation is supported by ``lightning.gpu``."""
-    if op.name in ("C(SProd)", "C(Exp)"):
+    if base_stopping_condition:
         return True
 
     if (isinstance(op, Conditional) and stopping_condition(op.base)) or isinstance(
