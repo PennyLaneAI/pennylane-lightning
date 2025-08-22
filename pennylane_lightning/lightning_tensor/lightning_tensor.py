@@ -17,7 +17,7 @@ It is a device to perform tensor network simulations of quantum circuits using `
 """
 from dataclasses import replace
 from numbers import Number
-from typing import Callable, Optional, Sequence, Tuple, Union
+from typing import Optional, Tuple
 from warnings import warn
 
 import numpy as np
