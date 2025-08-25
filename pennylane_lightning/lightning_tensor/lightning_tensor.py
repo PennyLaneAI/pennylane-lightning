@@ -171,7 +171,7 @@ def stopping_condition(op: Operator) -> bool:
     if base_stopping_condition(op):
         return True
 
-    if isinstance(op, qml.ControlledQubitUnitary):
+    if isinstance(op, (qml.ControlledQubitUnitary, qml.ops.op_math.Exp)):
         return True
 
     if isinstance(op, qml.MPSPrep):

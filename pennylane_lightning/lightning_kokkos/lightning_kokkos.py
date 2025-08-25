@@ -81,6 +81,9 @@ def stopping_condition(op: Operator) -> bool:
     if base_stopping_condition(op):
         return True
 
+    if isinstance(op, qml.ops.op_math.Exp):
+        return True
+
     if isinstance(op, qml.PauliRot):
         word = op._hyperparameters["pauli_word"]  # pylint: disable=protected-access
         # decomposes to IsingXX, etc. for n <= 2
