@@ -39,7 +39,7 @@
 
 <h3>Bug fixes 🐛</h3>
 
-- Limit the update in [(#1239)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1239) to `lightning.qubit` only .
+- Adjust the update in [(#1239)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1239) to sensible backends.
   [(#1240)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1240)
 
 - Update stopping condition for `qml.ops.op_math.SProd` and `qml.ops.op_math.Exp`, in all devices, after breaking changes upstream.
