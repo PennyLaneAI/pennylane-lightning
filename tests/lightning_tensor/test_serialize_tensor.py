@@ -32,13 +32,13 @@ if device_name != "lightning.tensor":
     pytest.skip("Skipping tests for the LightningTensor class.", allow_module_level=True)
 
 if device_name == "lightning.tensor":
-    from pennylane_lightning.lightning_tensor_nb import (
+    from pennylane_lightning.lightning_tensor_ops import (
         exactTensorNetC64,
         exactTensorNetC128,
         mpsTensorNetC64,
         mpsTensorNetC128,
     )
-    from pennylane_lightning.lightning_tensor_nb.observables import (
+    from pennylane_lightning.lightning_tensor_ops.observables import (
         exactHamiltonianC64,
         exactHamiltonianC128,
         exactHermitianObsC64,

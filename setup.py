@@ -97,7 +97,6 @@ class CMakeBuild(build_ext):
             if platform.system() != "Darwin"
             else [f"-DPython_EXECUTABLE={sys.executable}"]
         )
-        configure_args += ["-DPYBIND11_FINDPYTHON=ON"]
 
         if platform.system() == "Windows":
             # As Ninja does not support long path for windows yet:
@@ -186,8 +185,7 @@ info = {
     "include_package_data": True,
     "ext_modules": (
         [] if os.environ.get("SKIP_COMPILATION", False) else [
-            CMakeExtension(f"{backend}_ops"),
-            CMakeExtension(f"{backend}_nb")
+            CMakeExtension(f"{backend}_ops")
         ]
     ),
     "cmdclass": {"build_ext": CMakeBuild},

@@ -63,8 +63,8 @@ class Mock(MagicMock):
         return MagicMock()
 
 
-MOCK_MODULES = ["pennylane_lightning.lightning_qubit_nb",
-                "pennylane_lightning.lightning_qubit_nb.algorithms"]
+MOCK_MODULES = ["pennylane_lightning.lightning_qubit_ops",
+                "pennylane_lightning.lightning_qubit_ops.algorithms"]
 
 mock = Mock()
 for mod_name in MOCK_MODULES:
@@ -139,7 +139,7 @@ exhale_args = {
     "exhaleDoxygenStdin": ("INPUT = " + " ".join(CPP_FILES) + "\nEXCLUDE_SYMBOLS = std::* "),
     "afterTitleDescription": inspect.cleandoc(
         """
-        The Pennylane Lightning C++ API is intended to be called from Python through Pybind11. Direct use of the C++ API is currently unsupported and is provided for reference only.
+        The Pennylane Lightning C++ API is intended to be called from Python through Nanobind. Direct use of the C++ API is currently unsupported and is provided for reference only.
         """
     ),
 }

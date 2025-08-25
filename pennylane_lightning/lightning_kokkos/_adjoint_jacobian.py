@@ -20,7 +20,7 @@ from __future__ import annotations
 from warnings import warn
 
 try:
-    from pennylane_lightning.lightning_kokkos_nb.algorithms import (
+    from pennylane_lightning.lightning_kokkos_ops.algorithms import (
         AdjointJacobianC64,
         AdjointJacobianC128,
         create_ops_listC64,
@@ -28,7 +28,7 @@ try:
     )
 
     try:
-        from pennylane_lightning.lightning_kokkos_nb.algorithmsMPI import (
+        from pennylane_lightning.lightning_kokkos_ops.algorithmsMPI import (
             AdjointJacobianMPIC64,
             AdjointJacobianMPIC128,
             create_ops_listMPIC64,

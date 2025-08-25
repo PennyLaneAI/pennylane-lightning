@@ -15,11 +15,11 @@
 
 import numpy as np
 import pytest
-from conftest import SUPPORTED_DEVICES, device_name
+from conftest import device_name, supported_devices
 
-if device_name not in SUPPORTED_DEVICES:
+if device_name not in supported_devices:
     pytest.skip(
-        "Skipping tests for binaries other than one of {SUPPORTED_DEVICES}.",
+        "Skipping tests for binaries other than one of {supported_devices}.",
         allow_module_level=True,
     )
 
@@ -30,9 +30,9 @@ class TestMeasurementsNB:
     num_qubits = 2
 
     @pytest.fixture
-    def get_classes_and_precision(self, current_nanobind_module, precision):
+    def get_classes_and_precision(self, current_module, precision):
         """Get StateVector, Measurements, NamedObs, and HermitianObs classes from module based on precision."""
-        module = current_nanobind_module
+        module = current_module
 
         def _get_classes():
             # Get StateVector class

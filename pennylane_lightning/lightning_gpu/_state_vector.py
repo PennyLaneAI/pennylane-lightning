@@ -17,10 +17,10 @@ Class implementation for lightning_gpu state-vector manipulation.
 from warnings import warn
 
 try:
-    from pennylane_lightning.lightning_gpu_nb import StateVectorC64, StateVectorC128
+    from pennylane_lightning.lightning_gpu_ops import StateVectorC64, StateVectorC128
 
     try:  # Try to import the MPI modules
-        from pennylane_lightning.lightning_gpu_nb import StateVectorMPIC64, StateVectorMPIC128
+        from pennylane_lightning.lightning_gpu_ops import StateVectorMPIC64, StateVectorMPIC128
 
         mpi_error = None
         MPI_SUPPORT = True
@@ -212,7 +212,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
         Args:
             state (Union[array[complex], scipy.SparseABC]): normalized input state of length ``2**len(wires)`` as a dense array or Scipy sparse array.
             device_wires (Wires): wires that get initialized in the state
-        use_async(bool): indicates whether to use asynchronous memory copy from host to device or not.
+            use_async(bool): indicates whether to use asynchronous memory copy from host to device or not.
         Note: This function only supports synchronized memory copy from host to device.
         """
         use_async = kwargs.get("use_async", False)

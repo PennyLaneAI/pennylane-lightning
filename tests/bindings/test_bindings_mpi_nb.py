@@ -34,7 +34,7 @@ if MPI_AVAILABLE:
 
 # Try to import the MPI module
 try:
-    module_name = f"pennylane_lightning.{device_module_name}_nb"
+    module_name = f"pennylane_lightning.{device_module_name}_ops"
     mpi_module = importlib.import_module(module_name)
 except ImportError:
     mpi_module = None
@@ -88,7 +88,6 @@ class TestMPINanobindBindings:
             class_name = f"StateVectorMPIC{precision}"
             assert class_name in mpi_module_attributes["classes"], f"{class_name} not found"
 
-    @pytest.mark.parametrize("precision", ["64", "128"])
     def test_measurements_mpi(self, precision):
         """Test MeasurementsMPI class."""
         # Skip if the classes don't exist
@@ -119,7 +118,6 @@ class TestMPINanobindBindings:
         assert np.isclose(probs[0], 0.5, atol=1e-6)
         assert np.isclose(probs[1], 0.5, atol=1e-6)
 
-    @pytest.mark.parametrize("precision", ["64", "128"])
     def test_adjoint_jacobian_mpi(self, precision):
         """Test AdjointJacobianMPI class."""
         # Skip if the classes don't exist
