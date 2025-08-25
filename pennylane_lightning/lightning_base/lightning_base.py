@@ -51,9 +51,6 @@ PostprocessingFn = Callable[[ResultBatch], Result_or_ResultBatch]
 def base_stopping_condition(op: Operator) -> bool:
     """A function that determines whether or not an operation is supported by ``lightning.qubit``."""
 
-    if isinstance(op, (qml.ops.op_math.SProd, qml.ops.op_math.Exp)):
-        return True
-
     if op.name in ("C(SProd)", "C(Exp)"):
         return True
     return False

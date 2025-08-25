@@ -81,6 +81,9 @@ def stopping_condition(op: Operator) -> bool:
     if base_stopping_condition(op):
         return True
 
+    if isinstance(op, (qml.ops.op_math.SProd, qml.ops.op_math.Exp)):
+        return True
+
     # As ControlledQubitUnitary == C(QubitUnitrary), it can be removed from `_operations` to keep consistency with `lightning_qubit.toml`
     if isinstance(op, qml.ControlledQubitUnitary):
         return True
