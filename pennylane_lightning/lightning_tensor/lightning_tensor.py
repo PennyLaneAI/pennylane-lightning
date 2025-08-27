@@ -17,7 +17,7 @@ It is a device to perform tensor network simulations of quantum circuits using `
 """
 from dataclasses import replace
 from numbers import Number
-from typing import Callable, Optional, Sequence, Tuple, Union
+from typing import Optional, Tuple
 from warnings import warn
 
 import numpy as np
@@ -33,9 +33,14 @@ from pennylane.devices.preprocess import (
 from pennylane.operation import Operator
 from pennylane.tape import QuantumScript, QuantumTape
 from pennylane.transforms.core import TransformProgram
-from pennylane.typing import Result, ResultBatch
+from pennylane.typing import Result
 
 from pennylane_lightning.core._version import __version__
+from pennylane_lightning.lightning_base.lightning_base import (
+    QuantumTape_or_Batch,
+    Result_or_ResultBatch,
+    base_stopping_condition,
+)
 
 from ._measurements import LightningTensorMeasurements
 from ._tensornet import LightningTensorNet
@@ -52,12 +57,6 @@ try:
 except ImportError as ex:
     warn(str(ex), UserWarning)
     LT_CPP_BINARY_AVAILABLE = False
-
-Result_or_ResultBatch = Union[Result, ResultBatch]
-QuantumTapeBatch = Sequence[QuantumTape]
-QuantumTape_or_Batch = Union[QuantumTape, QuantumTapeBatch]
-PostprocessingFn = Callable[[ResultBatch], Result_or_ResultBatch]
-
 
 _backends = frozenset({"cutensornet"})
 # The set of supported backends.
@@ -165,13 +164,13 @@ _observables = frozenset(
 
 def stopping_condition(op: Operator) -> bool:
     """A function that determines whether or not an operation is supported by ``lightning.tensor``."""
+    if base_stopping_condition(op):
+        return True
+
     if isinstance(op, qml.ControlledQubitUnitary):
         return True
 
     if isinstance(op, qml.MPSPrep):
-        return True
-
-    if op.name in ("C(SProd)", "C(Exp)"):
         return True
 
     return op.has_matrix and op.name in _operations
@@ -286,8 +285,6 @@ class LightningTensor(Device):
     """
 
     # pylint: disable=too-many-instance-attributes
-    pennylane_requires = ">=0.41"
-    version = __version__
 
     _device_options = {
         "mps": ("backend", "max_bond_dim", "cutoff", "cutoff_mode"),

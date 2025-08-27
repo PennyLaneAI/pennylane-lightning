@@ -57,11 +57,17 @@
 
 <h3>Bug fixes 🐛</h3>
 
+- Update stopping condition for `qml.ops.op_math.SProd` and `qml.ops.op_math.Exp`, in all devices, after breaking changes upstream.
+  [(#1239)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1239)
+
 - Setup the correct PL version for stable-stable test with `lightning.gpu` with MPI.
   [(#1237)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1237)
 
 <h3>Internal changes ⚙️</h3>
 
+- Added script to automate the release process.
+  [(#1231)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1231)
+  
 - Stopped the wheels creation for no arch if the PR is draft.
   [(#1233)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1233)
 
