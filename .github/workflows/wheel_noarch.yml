@@ -34,7 +34,7 @@ jobs:
         pl_backend: ["lightning_qubit"]
     timeout-minutes: 30
     name: Linux - Pure Python wheels - ${{ matrix.pl_backend }} (Python 3.11)
-    runs-on: pl-4-core-large-runner
+    runs-on: blacksmith-4vcpu-ubuntu-2404
 
     steps:
       - name: Checkout PennyLane-Lightning
