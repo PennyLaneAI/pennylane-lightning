@@ -29,7 +29,7 @@ from scipy.sparse import coo_matrix, csc_matrix, csr_matrix
 
 if device_name == "lightning.kokkos":
     try:
-        from pennylane_lightning.lightning_kokkos_nb import InitializationSettings
+        from pennylane_lightning.lightning_kokkos_ops import InitializationSettings
     except ImportError:
         pass
 

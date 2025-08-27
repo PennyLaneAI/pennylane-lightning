@@ -17,7 +17,7 @@ Class implementation for lightning_qubit state-vector manipulation.
 from warnings import warn
 
 try:
-    from pennylane_lightning.lightning_qubit_nb import (
+    from pennylane_lightning.lightning_qubit_ops import (
         StateVectorC64,
         StateVectorC128,
         allocate_aligned_array,
@@ -106,7 +106,7 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
         """Initialize the internal state vector in a specified state.
         Args:
             state (Union[array[complex], scipy.SparseABC]): normalized input state of length ``2**len(wires)`` as a dense array or Scipy sparse array.
-            device_wires (Wires): wires that get initialized in the state
+            device_wires (Wires): wires that get initialized in the state.
         """
 
         if sp.sparse.issparse(state):

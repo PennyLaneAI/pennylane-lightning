@@ -21,7 +21,7 @@ from __future__ import annotations
 from warnings import warn
 
 try:
-    from pennylane_lightning.lightning_qubit_nb import MeasurementsC64, MeasurementsC128
+    from pennylane_lightning.lightning_qubit_ops import MeasurementsC64, MeasurementsC128
 except ImportError as ex:
     warn(str(ex), UserWarning)
 

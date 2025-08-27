@@ -55,7 +55,7 @@ from pennylane_lightning.lightning_base.lightning_base import (
 )
 
 try:
-    from pennylane_lightning.lightning_gpu_nb import (
+    from pennylane_lightning.lightning_gpu_ops import (
         DevPool,
         backend_info,
         get_gpu_arch,

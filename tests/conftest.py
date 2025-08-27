@@ -93,11 +93,8 @@ def n_subsystems(request):
 
 # Looking for the device for testing.
 default_device = "lightning.qubit"
-supported_devices = {"lightning.kokkos", "lightning.qubit", "lightning.gpu", "lightning.tensor"}
 
-# Temporary, a list of devices which are ready to be tested, add to this list as new bindings are added
-# FIXME: Remove this before merging base nanobind branch to main
-SUPPORTED_DEVICES = ("lightning.qubit", "lightning.gpu", "lightning.kokkos", "lightning.tensor")
+supported_devices = {"lightning.kokkos", "lightning.qubit", "lightning.gpu", "lightning.tensor"}
 
 
 def get_device():
@@ -132,7 +129,7 @@ import importlib
 lightning_ops = None
 
 # Define nanobind module name based on current device
-nanobind_module_name = f"pennylane_lightning.{device_module_name}_nb"
+nanobind_module_name = f"pennylane_lightning.{device_module_name}_ops"
 
 # Handle lightning.tensor separately since it has different class structure
 if device_name == "lightning.tensor":
@@ -146,8 +143,8 @@ if device_name == "lightning.tensor":
 
     LightningAdjointJacobian = None
 
-    if hasattr(pennylane_lightning, "lightning_tensor_nb"):
-        import pennylane_lightning.lightning_tensor_nb as lightning_ops
+    if hasattr(pennylane_lightning, "lightning_tensor_ops"):
+        import pennylane_lightning.lightning_tensor_ops as lightning_ops
 else:
     # General case for lightning.qubit, lightning.kokkos, and lightning.gpu
     # Capitalize device name for class names
@@ -178,9 +175,9 @@ else:
     LightningStateVector = getattr(state_vector_module, f"Lightning{backend_cap}StateVector")
 
     # Try to import ops module
-    ops_module_path = f"pennylane_lightning.{device_module_name}_nb"
+    ops_module_path = f"pennylane_lightning.{device_module_name}_ops"
     print(ops_module_path)
-    if hasattr(pennylane_lightning, f"{device_module_name}_nb"):
+    if hasattr(pennylane_lightning, f"{device_module_name}_ops"):
         lightning_ops = importlib.import_module(ops_module_path)
     else:
         print("no ops")
@@ -360,7 +357,7 @@ def precision(request):
 
 
 @pytest.fixture(scope="session")
-def current_nanobind_module():
+def current_module():
     """Return the nanobind module for the current device."""
     try:
         return importlib.import_module(nanobind_module_name)

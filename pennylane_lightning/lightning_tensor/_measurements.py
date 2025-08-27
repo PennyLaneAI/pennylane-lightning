@@ -17,7 +17,7 @@ Class implementation for tensornet measurements.
 
 # pylint: disable=import-error, no-name-in-module, ungrouped-imports
 try:
-    from pennylane_lightning.lightning_tensor_nb import (
+    from pennylane_lightning.lightning_tensor_ops import (
         exactMeasurementsC64,
         exactMeasurementsC128,
         mpsMeasurementsC64,

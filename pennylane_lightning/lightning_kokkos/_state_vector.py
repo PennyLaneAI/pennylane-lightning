@@ -17,7 +17,7 @@ Class implementation for lightning_kokkos state-vector manipulation.
 from warnings import warn
 
 try:
-    from pennylane_lightning.lightning_kokkos_nb import (
+    from pennylane_lightning.lightning_kokkos_ops import (
         InitializationSettings,
         StateVectorC64,
         StateVectorC128,
@@ -26,7 +26,7 @@ try:
     )
 
     try:
-        from pennylane_lightning.lightning_kokkos_nb import (
+        from pennylane_lightning.lightning_kokkos_ops import (
             MPIManagerKokkos,
             StateVectorMPIC64,
             StateVectorMPIC128,
@@ -209,7 +209,7 @@ class LightningKokkosStateVector(LightningBaseStateVector):
         """Initialize the internal state vector in a specified state.
         Args:
             state (Union[array[complex], scipy.SparseABC]): normalized input state of length ``2**len(wires)`` as a dense array or Scipy sparse array.
-            device_wires (Wires): wires that get initialized in the state
+            device_wires (Wires): wires that get initialized in the state.
         """
 
         if sp.sparse.issparse(state):
