@@ -289,8 +289,6 @@ class LightningTensor(Device):
     """
 
     # pylint: disable=too-many-instance-attributes
-    pennylane_requires = ">=0.41"
-    version = __version__
 
     _device_options = {
         "mps": ("backend", "max_bond_dim", "cutoff", "cutoff_mode"),

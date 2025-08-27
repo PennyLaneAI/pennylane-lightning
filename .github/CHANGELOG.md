@@ -50,6 +50,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Added script to automate the release process.
+  [(#1231)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1231)
+  
 - Stopped the wheels creation for no arch if the PR is draft.
   [(#1233)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1233)
 
