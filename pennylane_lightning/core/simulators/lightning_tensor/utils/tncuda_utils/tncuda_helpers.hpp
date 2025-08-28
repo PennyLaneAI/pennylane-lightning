@@ -77,7 +77,7 @@ getWorkSpaceMemorySize(const cutensornetHandle_t &tncuda_handle,
         /* const cutensornetHandle_t */ tncuda_handle,
         /* cutensornetWorkspaceDescriptor_t */ workDesc,
         /* cutensornetWorksizePref_t */
-        CUTENSORNET_WORKSIZE_PREF_RECOMMENDED,
+        CUTENSORNET_WORKSIZE_PREF_MAX,
         /* cutensornetMemspace_t*/ CUTENSORNET_MEMSPACE_DEVICE,
         /* cutensornetWorkspaceKind_t */ CUTENSORNET_WORKSPACE_SCRATCH,
         /*  int64_t * */ &worksize));
