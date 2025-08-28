@@ -102,7 +102,7 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
         """
         return operation.has_sparse_matrix and not operation.has_matrix
 
-    def _apply_state_vector(self, state, device_wires: Wires, **kwargs):
+    def _apply_state_vector(self, state, device_wires: Wires):
         """Initialize the internal state vector in a specified state.
         Args:
             state (Union[array[complex], scipy.SparseABC]): normalized input state of length ``2**len(wires)`` as a dense array or Scipy sparse array.
