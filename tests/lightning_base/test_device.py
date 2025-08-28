@@ -17,6 +17,7 @@ This module contains unit tests for new device API Lightning classes.
 # pylint: disable=too-many-arguments, unused-argument
 
 import itertools
+from dataclasses import replace
 
 import numpy as np
 import pennylane as qml
@@ -657,7 +658,11 @@ class TestExecution:
         """Test that the execution config is set up correctly in preprocess"""
         device = LightningDevice(wires=2)
         _, new_config = device.preprocess(config)
-        del new_config.device_options["rng"]
+
+        # Update the device options to be able to compare
+        device_options = new_config.device_options.copy()
+        device_options.pop("rng", None)
+        new_config = replace(new_config, device_options=device_options)
 
         assert new_config == expected_config
 
