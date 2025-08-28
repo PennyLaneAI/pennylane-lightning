@@ -237,8 +237,8 @@ This release contains contributions from (in alphabetical order):
 
 Runor Agbaire,
 Ali Asadi,
-Amintor Dusko
 Yushao Chen,
+Amintor Dusko
 Christina Lee,
 Joseph Lee,
 Mehrdad Malekmohammadi,
