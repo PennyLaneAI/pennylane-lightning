@@ -56,12 +56,14 @@ namespace Pennylane::LightningTensor::TNCuda::NanoBindings {
 
 namespace nb = nanobind;
 
+/// @cond DEV
 /**
  * @brief Define TensorNet backends for lightning.tensor
  */
 using TensorNetworkBackends =
     Pennylane::Util::TypeList<MPSTNCuda<float>, MPSTNCuda<double>,
                               ExactTNCuda<float>, ExactTNCuda<double>, void>;
+/// @endcond
 
 /**
  * @brief Get a gate kernel map for a tensor network using MPS.

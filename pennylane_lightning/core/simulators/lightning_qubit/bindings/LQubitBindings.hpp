@@ -56,12 +56,14 @@ namespace Pennylane::LightningQubit::NanoBindings {
 
 namespace nb = nanobind;
 
+/// @cond DEV
 /**
  * @brief Define StateVector backends for lightning.qubit
  */
 using StateVectorBackends =
     Pennylane::Util::TypeList<StateVectorLQubitManaged<float>,
                               StateVectorLQubitManaged<double>, void>;
+/// @endcond
 
 /**
  * @brief Update state vector data from an array

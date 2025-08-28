@@ -60,19 +60,21 @@ namespace Pennylane::LightningKokkos::NanoBindings {
 
 namespace nb = nanobind;
 
+/// @cond DEV
 /**
  * @brief Define StateVector backends for lightning.kokkos MPI
  */
 using StateVectorMPIBackends =
     Pennylane::Util::TypeList<StateVectorKokkosMPI<float>,
                               StateVectorKokkosMPI<double>, void>;
+/// @endcond
 
 /**
  * @brief Register backend class specific bindings for MPI.
  *
- * @tparam StateVectorT
- * @tparam PyClass
- * @param pyclass Nanobind's state vector class to bind methods.
+ * @tparam StateVectorT The type of the state vector.
+ * @tparam PyClass Nanobind's class to bind methods.
+ * @param pyclass Nanobind's class to bind methods.
  */
 template <class StateVectorT, class PyClass>
 void registerBackendSpecificStateVectorMethodsMPI(PyClass &pyclass) {

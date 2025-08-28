@@ -45,12 +45,14 @@ using namespace Pennylane::LightningGPU::Observables;
 
 namespace Pennylane::LightningGPU::NanoBindings {
 
+///
 /**
  * @brief Define StateVector backends for lightning.gpu
  */
 using StateVectorBackends =
     Pennylane::Util::TypeList<StateVectorCudaManaged<float>,
                               StateVectorCudaManaged<double>, void>;
+/// @endcond
 
 /**
  * @brief Register backend specific measurements class functionalities.
@@ -399,8 +401,9 @@ void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
 
 /**
  * @brief Get a controlled matrix and kernel map for a statevector.
- * @tparam StateVectorT
- * @tparam PyClass
+ *
+ * @tparam StateVectorT The type of the state vector.
+ * @tparam PyClass Nanobind's class to bind methods.
  * @param pyclass Nanobind's statevector class to bind methods.
  */
 template <class StateVectorT, class PyClass>

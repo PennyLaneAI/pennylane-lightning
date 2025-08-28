@@ -57,12 +57,14 @@ namespace Pennylane::LightningKokkos::NanoBindings {
 
 namespace nb = nanobind;
 
+/// @cond DEV
 /**
  * @brief Define StateVector backends for lightning.kokkos
  */
 using StateVectorBackends =
     Pennylane::Util::TypeList<StateVectorKokkos<float>,
                               StateVectorKokkos<double>, void>;
+/// @endcond
 
 /**
  * @brief Register backend specific measurements class functionalities.

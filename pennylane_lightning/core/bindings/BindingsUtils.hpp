@@ -15,7 +15,8 @@ namespace Pennylane::NanoBindings::Utils {
 namespace nb = nanobind;
 
 /**
- * @brief Create an ndarray from a vector of data with proper ownership transfer.
+ * @brief Create an ndarray from a vector of data with proper ownership
+ * transfer.
  *
  * @tparam VectorT Data type of the vector elements
  * @param data Vector containing the data to transfer
