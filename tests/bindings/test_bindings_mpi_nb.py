@@ -24,19 +24,22 @@ try:
     from mpi4py import MPI
 
     MPI_AVAILABLE = True
-    if MPI.COMM_WORLD.Get_size() < 2:
-        pytest.skip("Skipping MPI tests. Run with at least 2 processes.", allow_module_level=True)
 except ImportError:
     MPI_AVAILABLE = False
 
-# Try to import the Lightning MPI module
+# Skip if not running with MPI
+if MPI_AVAILABLE:
+    if MPI.COMM_WORLD.Get_size() < 2:
+        pytest.skip("Skipping MPI tests. Run with at least 2 processes.", allow_module_level=True)
+
+# Try to import the MPI module
 try:
     module_name = f"pennylane_lightning.{device_module_name}_ops"
     mpi_module = importlib.import_module(module_name)
 except ImportError:
     mpi_module = None
 
-# Skip all tests if module is not available
+# Skip all tests if MPI module is not available
 pytestmark = pytest.mark.skipif(
     not MPI_AVAILABLE or mpi_module is None, reason="MPI module not available"
 )
