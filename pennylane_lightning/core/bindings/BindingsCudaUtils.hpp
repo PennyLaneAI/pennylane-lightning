@@ -27,35 +27,44 @@
 
 #include <nanobind/nanobind.h>
 
+/// @cond DEV
 namespace {
 using namespace Pennylane::LightningGPU;
 using namespace Pennylane::LightningGPU::Util;
 } // namespace
-
+/// @endcond
 namespace Pennylane::Util::NanoBindings {
 namespace nb = nanobind;
 
 /**
  * @brief Register bindings for CUDA utils.
  *
+ * Register the device_reset and allToAllAccess functions to the given module.
+ *
  * @param m Nanobind module.
  */
 void registerCudaUtils(nb::module_ &m) {
+    /* device_reset function */
     m.def("device_reset", &deviceReset, "Reset all GPU devices and contexts.");
+
+    /* allToAllAccess function */
     m.def("allToAllAccess", []() {
         for (int i = 0; i < static_cast<int>(getGPUCount()); i++) {
             cudaDeviceEnablePeerAccess(i, 0);
         }
     });
 
+    /* is_gpu_supported function */
     m.def("is_gpu_supported", &isCuQuantumSupported,
           nb::arg("device_number") = 0,
           "Checks if the given GPU device meets the minimum architecture "
           "support for the PennyLane-Lightning-GPU device.");
 
+    /* get_gpu_arch function */
     m.def("get_gpu_arch", &getGPUArch, nb::arg("device_number") = 0,
           "Returns the given GPU major and minor GPU support.");
 
+    /* DevicePool class */
     auto pyclass_devpool = nb::class_<DevicePool<int>>(m, "DevPool");
     pyclass_devpool.def(nb::init<>());
     pyclass_devpool.def("getActiveDevices", &DevicePool<int>::getActiveDevices);
@@ -84,6 +93,7 @@ void registerCudaUtils(nb::module_ &m) {
         new (&self) DevicePool<int>(); // Reconstruct the object
     });
 
+    /* DevTag class */
     auto pyclass_devtag = nb::class_<DevTag<int>>(m, "DevTag");
     pyclass_devtag.def(nb::init<>());
     pyclass_devtag.def(nb::init<int>());
