@@ -138,6 +138,12 @@ namespace nb = nanobind;
 
 /**
  * @brief Register applyMatrix
+ * Register the applyMatrix function to the given state.
+ * @tparam StateT The type of the state.
+ * @param st The state to apply the matrix to.
+ * @param matrix The matrix to apply.
+ * @param wires The wires to apply the matrix to.
+ * @param inverse Whether to apply the matrix in the inverse direction.
  */
 template <class StateT>
 void applyMatrix(
@@ -156,6 +162,12 @@ void applyMatrix(
 
 /**
  * @brief Register controlled matrix kernel.
+ * Register the applyControlledMatrix function to the given state.
+ * @tparam StateT The type of the state.
+ * @param st The state to apply the matrix to.
+ * @param matrix The matrix to apply.
+ * @param controlled_wires The wires to apply the matrix to.
+ * @param controlled_values The values to apply the matrix to.
  */
 template <class StateT>
 void applyControlledMatrix(
@@ -185,6 +197,8 @@ void applyControlledMatrix(
 
 /**
  * @brief Register gates for a given backend.
+ * Register the applyMatrix and applyControlledMatrix functions to the given
+ * state.
  *
  * @tparam StateT The type used to represent the state (statevector,
  * tensornet, etc.)
@@ -217,7 +231,8 @@ template <class StateT, class PyClass> void registerGates(PyClass &pyclass) {
 }
 
 /**
- * @brief Register controlled gate operations for a statevector
+ * @brief Register controlled gate operations for a statevector.
+ * Register the applyControlledMatrix function to the given state.
  *
  * @tparam StateT State vector type
  * @tparam PyClass Nanobind class type
@@ -258,7 +273,9 @@ void registerControlledGates(PyClass &pyclass) {
 }
 
 /**
- * @brief Return basic information of runtime environment
+ * @brief Return basic information of runtime environment.
+ *
+ * @return Dictionary with runtime information
  */
 nb::dict getRuntimeInfo() {
     using Pennylane::Util::RuntimeInfo;
@@ -273,7 +290,7 @@ nb::dict getRuntimeInfo() {
 }
 
 /**
- * @brief Get compile information as a dictionary
+ * @brief Get compile information as a dictionary.
  *
  * @return Dictionary with compile information
  */
@@ -333,7 +350,7 @@ nb::dict getCompileInfo() {
 }
 
 /**
- * @brief Register bindings for general info
+ * @brief Register bindings for general info.
  *
  * @param m Nanobind module
  */
@@ -349,7 +366,7 @@ void registerInfo(nb::module_ &m) {
 // These functions are used solely by the statevector simulators
 
 /**
- * @brief Create an aligned array for a given type, memory model and array size
+ * @brief Create an aligned array for a given type, memory model and array size.
  *
  * @tparam VectorT Datatype of array to create
  * @param memory_model Memory model to use
@@ -421,7 +438,9 @@ auto allocateAlignedArray(std::size_t size, const nb::object &dtype,
 }
 
 /**
- * @brief Register array alignment functionality
+ * @brief Register array alignment functionality.
+ *
+ * Register the allocateAlignedArray function to the given module.
  *
  * @param m Nanobind module
  */
@@ -434,9 +453,11 @@ void registerArrayAlignmentBindings(nb::module_ &m) {
 #endif // ifndef _ENABLE_PLTENSOR
 
 /**
- * @brief Register backend-agnostic observables
+ * @brief Register backend-agnostic observables.
  *
- * @tparam StateT
+ * Register the registerBackendAgnosticObservables function to the given module.
+ *
+ * @tparam StateT The type of the state.
  * @param m Nanobind module
  */
 template <class StateT>
@@ -451,6 +472,7 @@ void registerBackendAgnosticObservables(nb::module_ &m) {
         std::is_same_v<PrecisionT, float> ? "64" : "128";
 
 #ifdef _ENABLE_PLTENSOR
+    // These classes are specific to the statevector simulator.
     using ObservableT = ObservableTNCuda<StateT>;
     using NamedObsT = NamedObsTNCuda<StateT>;
     using HermitianObsT = HermitianObsTNCuda<StateT>;
@@ -459,6 +481,7 @@ void registerBackendAgnosticObservables(nb::module_ &m) {
 
     const std::string prefix = std::string(StateT::method);
 #else
+    // These classes are specific to the statevector simulators.
     using ObservableT = Observable<StateT>;
     using NamedObsT = NamedObs<StateT>;
     using HermitianObsT = HermitianObs<StateT>;
@@ -624,7 +647,7 @@ template <class MeasurementsT, class ObservableT, class PyClass>
 void registerBackendAgnosticMeasurements(PyClass &pyclass) {
     // These functions are common to all *statevector* simulators
 #ifndef _ENABLE_PLTENSOR
-    // Set random seed
+    // Set random seed.
     pyclass.def("set_random_seed",
                 [](MeasurementsT &M, std::size_t seed) { M.setSeed(seed); });
 
@@ -637,11 +660,11 @@ void registerBackendAgnosticMeasurements(PyClass &pyclass) {
                 "Generate samples for all wires.");
 #endif
 
-    // Add probs method for specific wires
+    // Add probs method for specific wires.
     pyclass.def("probs", &probsForWires<MeasurementsT>,
                 "Calculate probabilities for specific wires.");
 
-    // Add expval method for observable
+    // Add expval method for observable.
     pyclass.def(
         "expval",
         [](MeasurementsT &M, const std::shared_ptr<ObservableT> &ob) {
@@ -663,6 +686,7 @@ void registerBackendAgnosticMeasurements(PyClass &pyclass) {
 #ifndef _ENABLE_PLTENSOR
 /**
  * @brief Register AdjointJacobian class.
+ * Register the registerAdjointJacobian function to the given module.
  *
  * @tparam StateVectorT State vector class.
  * @param m Nanobind module.
@@ -727,7 +751,9 @@ template <class StateVectorT> void registerAdjointJacobian(nb::module_ &m) {
 }
 
 /**
- * @brief Create operations list from data
+ * @brief Create operations list from data.
+ *
+ * Create the operations list from the given data.
  *
  * @tparam StateVectorT State vector type
  * @param ops_name Operation names
@@ -771,8 +797,10 @@ createOpsList(const std::vector<std::string> &ops_name,
 /**
  * @brief Register agnostic algorithms for statevector simulators.
  *
- * @tparam StateVectorT
- * @param m Nanobind module
+ * Register the registerBackendAgnosticAlgorithms function to the given module.
+ *
+ * @tparam StateVectorT The type of the state vector.
+ * @param m Nanobind module.
  */
 template <class StateVectorT>
 void registerBackendAgnosticAlgorithms(nb::module_ &m) {
@@ -828,9 +856,12 @@ void registerBackendAgnosticAlgorithms(nb::module_ &m) {
 /**
  * @brief Register backend agnostic state vector methods.
  *
- * @tparam StateVectorT
- * @tparam PyClass
- * @param pyclass Nanobind's state vector class to bind methods.
+ * Register the registerBackendAgnosticStateVectorMethods function to the given
+ * class.
+ *
+ * @tparam StateVectorT The type of the state vector.
+ * @tparam PyClass Nanobind's class to bind methods type.
+ * @param pyclass Nanobind's class to bind methods.
  */
 template <class StateVectorT, class PyClass>
 void registerBackendAgnosticStateVectorMethods(PyClass &pyclass) {
@@ -890,7 +921,9 @@ void registerBackendAgnosticStateVectorMethods(PyClass &pyclass) {
 /**
  * @brief Templated class to build lightning class bindings.
  *
- * @tparam StateT State representation type (e.g., a StateVector, TensorNet)
+ * Build the lightning class bindings for the given state.
+ *
+ * @tparam StateT State representation type (e.g., a StateVector, TensorNet).
  * @param m Nanobind module.
  */
 template <class StateT> void lightningClassBindings(nb::module_ &m) {
@@ -975,6 +1008,7 @@ template <class StateT> void lightningClassBindings(nb::module_ &m) {
 /**
  * @brief Register lightning class bindings for all backends.
  *
+ * Register the registerLightningClassBindings function to the given module.
  * @tparam TypeList List of backend types
  * @param m Nanobind module
  */
