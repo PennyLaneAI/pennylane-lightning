@@ -14,7 +14,7 @@
 - Skipped Identity operation in Lightning Qubit and removed assert for applying Identity gate not equal to 1 wire.
   [(#1212)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1212)
 
-- Update `test_device.py` to no longer delete entries in an execution config's `device_options`.
+- Update `test_device.py` to no longer mutate an execution configuration for testing.
   [(#1242)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1242)
 
 <h3>Breaking changes 💔</h3>
