@@ -85,9 +85,11 @@ namespace nb = nanobind;
 
 /**
  * @brief Register observable classes for MPI.
- *
- * @tparam StateVectorT
- * @param m Nanobind module
+ * 
+ * Register Observable implementations for MPI.
+ * 
+ * @tparam StateVectorT The type of the state vector.
+ * @param m Nanobind module.
  */
 template <class StateVectorT> void registerObservablesMPI(nb::module_ &m) {
     using PrecisionT =
@@ -272,6 +274,14 @@ void registerBackendAgnosticMeasurementsMPI(PyClass &pyclass) {
 
 /**
  * @brief Register the adjoint Jacobian method.
+ * 
+ * Register the adjoint Jacobian method for the given state vector.
+ * 
+ * @tparam StateVectorT The type of the state vector.
+ * @param adjoint_jacobian The adjoint Jacobian object.
+ * @param sv The state vector.
+ * @param observables The observables.
+ * @param operations The operations.
  */
 template <class StateVectorT>
 auto registerAdjointJacobianMPI(
