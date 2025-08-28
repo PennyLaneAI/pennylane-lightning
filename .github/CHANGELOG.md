@@ -4,24 +4,23 @@
 
 <h3>Improvements 🛠</h3>
 
-- Introduce Nanobind as a new framework for Python bindings, and enhance modularity and performance of binding code. 
-  This includes significant improvements to the build system and codebase simplification. 
+- **Migrated to Nanobind for Python bindings**, replacing pybind11 to enhance performance, modularity, and build system efficiency.
   [(#1176)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1176)
 
-  Specific nanobind features were integrated over various PRs:
+  This migration includes comprehensive updates across all Lightning backends:
 
-  - Improved zero-copy exchanges for measurements:
-  [(#1187)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1187)
-  - MPI and Adjoint Jacobian support
-  [(#1189)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1189)
-  - Lightning Qubit Bindings:
-  [(#1198)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1198)
-  - Lightning Kokkos Bindings:
-  [(#1213)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1213)
-  - Lightning GPU Bindings:
-  [(#1184)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1184)
-  - Lightning Tensor Bindings:
-  [(#1206)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1206)
+  - **Zero-copy measurement exchanges** for improved memory efficiency
+    [(#1187)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1187)
+  - **MPI and Adjoint Jacobian support** for distributed computing
+    [(#1189)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1189)
+  - **Lightning Qubit bindings** with enhanced performance
+    [(#1198)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1198)
+  - **Lightning Kokkos bindings** for heterogeneous computing
+    [(#1213)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1213)
+  - **Lightning GPU bindings** with CUDA optimization
+    [(#1184)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1184)
+  - **Lightning Tensor bindings** for tensor network simulations
+    [(#1206)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1206)
 - Added support for `GlobalPhase` with zero-qubit Lightning devices. Currently, only the `lightning.qubit` and `lightning.kokkos` backends support zero-qubit initialization.
   [(#1205)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1205)
 
