@@ -142,7 +142,6 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
                          static_cast<int64_t>(values.size()));
         },
         "Variance of a sparse Hamiltonian.");
-
 } // pyclass
 
 /**
