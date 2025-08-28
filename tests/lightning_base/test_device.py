@@ -661,11 +661,7 @@ class TestExecution:
 
         # Update the device options to be able to compare
         device_options = new_config.device_options.copy()
-        device_options.update(
-            {
-                "rng": 0,
-            }
-        )
+        device_options.pop("rng", None)
         new_config = replace(new_config, device_options=device_options)
 
         assert new_config == expected_config
