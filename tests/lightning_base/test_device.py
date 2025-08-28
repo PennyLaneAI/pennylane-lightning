@@ -659,6 +659,7 @@ class TestExecution:
         device = LightningDevice(wires=2)
         _, new_config = device.preprocess(config)
 
+        # Update the device options to be able to compare
         device_options = new_config.device_options.copy()
         device_options.update(
             {
