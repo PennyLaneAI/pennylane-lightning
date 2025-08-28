@@ -187,9 +187,6 @@ Jake Zaia.
 
 <h3>Internal changes ⚙️</h3>
 
-- Added Nanobind-based Python bindings for Lightning Qubit as an alternative to PyBind11.
-  [(#1198)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1198)
-
 - Updated tests with `device(..., shots=...)` to use `qml.set_shots` to ensure compatibility with the latest version of PennyLane.
   [(#1173)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1173)
   
