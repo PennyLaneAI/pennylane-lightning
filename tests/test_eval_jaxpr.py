@@ -871,3 +871,108 @@ class TestDeferMeasurements:
         res = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, True)
         # Assert that the result is a mix of 0s and 1s
         assert not qml.math.allclose(res, 0) and not qml.math.allclose(res, 1)
+
+
+@pytest.mark.parametrize("shots", [None, 100, 1000])
+def test_eval_jaxpr_with_shots_parameter(shots):
+    """Test that eval_jaxpr accepts and respects the shots parameter."""
+
+    def f(x):
+        qml.RX(x, 0)
+        return qml.expval(qml.Z(0)) if shots is None else qml.sample(qml.Z(0))
+
+    dev = qml.device(device_name, wires=1)
+    jaxpr = jax.make_jaxpr(f)(0.5)
+
+    result = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, 0.5, shots=shots)
+
+    if shots is None:
+        # For analytic mode, result should be a single expectation value
+        assert qml.math.allclose(result[0], jax.numpy.cos(0.5))
+    else:
+        # For finite shots, result should be a sample array of the specified length
+        assert len(result[0]) == shots
+        assert all(sample in [-1, 1] for sample in result[0])
+
+
+def test_eval_jaxpr_shots_parameter_overrides_device_shots():
+    """Test that shots parameter overrides device-level shots setting."""
+
+    # Create device with device-level shots
+    with pytest.warns(
+        qml.exceptions.PennyLaneDeprecationWarning,
+        match="shots on device is deprecated",
+    ):
+        dev = qml.device(device_name, wires=1, shots=500)
+
+    def f():
+        qml.RX(0.5, 0)
+        return qml.sample(qml.Z(0))
+
+    jaxpr = jax.make_jaxpr(f)()
+
+    # Test with different shots parameter - should override device shots
+    result_100 = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, shots=100)
+    assert len(result_100[0]) == 100
+
+    result_1000 = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, shots=1000)
+    assert len(result_1000[0]) == 1000
+
+    # Test with None shots - should work in analytic mode
+    def f_expval():
+        qml.RX(0.5, 0)
+        return qml.expval(qml.Z(0))
+
+    jaxpr_expval = jax.make_jaxpr(f_expval)()
+    result_analytic = dev.eval_jaxpr(jaxpr_expval.jaxpr, jaxpr_expval.consts, shots=None)
+    assert qml.math.allclose(result_analytic[0], jax.numpy.cos(0.5))
+
+
+@pytest.mark.parametrize("shots", [50, 200, 1000])
+def test_eval_jaxpr_multiple_measurements_with_shots(shots):
+    """Test eval_jaxpr with multiple measurements and shots parameter."""
+
+    def f():
+        qml.RX(0.5, 0)
+        qml.RY(0.3, 1)
+        return [qml.sample(qml.Z(0)), qml.sample(qml.Z(1))]
+
+    dev = qml.device(device_name, wires=2)
+    jaxpr = jax.make_jaxpr(f)()
+
+    result = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, shots=shots)
+
+    # Should have two sample arrays, each with the correct number of shots
+    assert len(result) == 2
+    assert len(result[0]) == shots
+    assert len(result[1]) == shots
+
+    # All samples should be valid measurement outcomes
+    assert all(sample in [-1, 1] for sample in result[0])
+    assert all(sample in [-1, 1] for sample in result[1])
+
+
+def test_eval_jaxpr_shots_with_probs():
+    """Test eval_jaxpr with shots parameter for probability measurements."""
+
+    def f():
+        qml.RX(0.5, 0)
+        return qml.probs(wires=0)
+
+    dev = qml.device(device_name, wires=1)
+    jaxpr = jax.make_jaxpr(f)()
+
+    # Test with finite shots
+    result_shots = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, shots=1000)
+    probs_shots = result_shots[0]
+
+    # Should return probabilities that sum to 1
+    assert qml.math.allclose(jax.numpy.sum(probs_shots), 1.0, atol=1e-2)
+    assert len(probs_shots) == 2  # Two outcomes for single qubit
+
+    # Test with analytic mode
+    result_analytic = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, shots=None)
+    probs_analytic = result_analytic[0]
+
+    # Analytic and finite-shot results should be close
+    assert qml.math.allclose(probs_shots, probs_analytic, atol=0.1)
