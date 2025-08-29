@@ -50,6 +50,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Remove `--no-deps` for Lightning Qubit CI tests for stable version.
+  [(#1245)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1245)
+
 - Ported Linux based GitHub Actions workflows from using the GitHub 4vcpu large runner to blacksmith 4vcpu runner.
   [(#1241)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1241)
 
