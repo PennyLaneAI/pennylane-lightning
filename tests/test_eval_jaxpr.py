@@ -626,13 +626,19 @@ def test_vmap_integration(use_jit):
 def test_vmap_in_axes(in_axis, out_axis):
     """Test that vmap works with specified in_axes and out_axes."""
 
-    @qml.qnode(qml.device(device_name, wires=1))
+    # Get the current x64 setting to determine which dtype to use
+    x64_enabled = jax.config.jax_enable_x64
+    c_dtype = jax.numpy.complex128 if x64_enabled else jax.numpy.complex64
+
+    @qml.qnode(qml.device(device_name, wires=1, c_dtype=c_dtype))
     def circuit(mat):
         qml.QubitUnitary(mat, 0)
         return qml.expval(qml.Z(0)), qml.state()
 
     mats = jax.numpy.stack(
-        [qml.X.compute_matrix(), qml.Y.compute_matrix(), qml.Z.compute_matrix()], axis=in_axis
+        [qml.X.compute_matrix(), qml.Y.compute_matrix(), qml.Z.compute_matrix()],
+        axis=in_axis,
+        dtype=c_dtype,
     )
     expval, state = jax.vmap(circuit, in_axes=in_axis, out_axes=(0, out_axis))(mats)
 

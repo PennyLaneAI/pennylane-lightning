@@ -16,7 +16,7 @@ Class implementation for state-vector manipulation.
 """
 
 from abc import ABC, abstractmethod
-from typing import Optional, Union
+from typing import Union
 
 import numpy as np
 import pennylane as qml
@@ -107,8 +107,9 @@ class LightningBaseStateVector(ABC):
         # init the state vector to |00..0>
         self._qubit_state.resetStateVector()
 
+    @staticmethod
     @abstractmethod
-    def _operation_is_sparse(self, operation):
+    def _operation_is_sparse(operation):
         """Check if an operation is sparse.
 
         Args:
@@ -119,11 +120,11 @@ class LightningBaseStateVector(ABC):
         """
 
     @abstractmethod
-    def _apply_state_vector(self, state, device_wires: Wires, sync: Optional[bool] = None):
+    def _apply_state_vector(self, state, device_wires: Wires):
         """Initialize the internal state vector in a specified state.
         Args:
             state (Union[array[complex], scipy.SparseABC]): normalized input state of length ``2**len(wires)`` as a dense array or Scipy sparse array.
-            device_wires (Wires): wires that get initialized in the state
+            device_wires (Wires): wires that get initialized in the state.
         """
 
     def _apply_basis_state(self, state, wires):
@@ -134,7 +135,6 @@ class LightningBaseStateVector(ABC):
                 consisting of 0s and 1s.
             wires (Wires): wires that the provided computational state should be
                 initialized on
-            use_async(Optional[bool]): immediately sync with host-sv after applying operation.
 
         Note: This function does not support broadcasted inputs yet.
         """

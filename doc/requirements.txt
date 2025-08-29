@@ -1,7 +1,6 @@
 # Build Dependencies
 build
 wheel
-pybind11
 tomlkit
 custatevec-cu12; sys_platform == "linux"
 cutensornet-cu12; sys_platform == "linux"
