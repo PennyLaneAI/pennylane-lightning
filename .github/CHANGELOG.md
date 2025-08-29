@@ -19,6 +19,9 @@
 
 <h3>Breaking changes 💔</h3>
 
+- `LightningBase.eval_jaxpr` no longer uses `self.shots`; instead, it takes a keyword argument `shots`.
+  [(#1243)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1243)
+
 - No longer squeezes out singleton dimensions from samples in accordance with a breaking change in
   PennyLane. See PennyLane PR [(#7944)](https://github.com/PennyLaneAI/pennylane/pull/7944) for
   more information.
