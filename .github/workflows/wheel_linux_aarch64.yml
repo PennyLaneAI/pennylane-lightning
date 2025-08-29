@@ -40,7 +40,7 @@ jobs:
     needs: [set_wheel_build_matrix]
     strategy:
       matrix:
-        os: [pl-4-core-large-runner]
+        os: [blacksmith-4vcpu-ubuntu-2404]
         arch: [aarch64]
         exec_model: ${{ fromJson(needs.set_wheel_build_matrix.outputs.exec_model) }}
         kokkos_version: ${{ fromJson(needs.set_wheel_build_matrix.outputs.kokkos_version) }}
@@ -102,7 +102,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [pl-4-core-large-runner]
+        os: [blacksmith-4vcpu-ubuntu-2404]
         arch: [aarch64]
         pl_backend: ["lightning_kokkos", "lightning_qubit"]
         cibw_build: ${{ fromJson(needs.set_wheel_build_matrix.outputs.python_version) }}

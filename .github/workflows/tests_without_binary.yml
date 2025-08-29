@@ -32,7 +32,7 @@ concurrency:
 jobs:
   pythontests:
     timeout-minutes: 30
-    runs-on: pl-4-core-large-runner
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     strategy:
       matrix:
         pl_backend: ["lightning_qubit", "lightning_kokkos", "lightning_gpu", "lightning_tensor"]
