@@ -49,7 +49,7 @@ jobs:
           enable_kernel_avx_streaming: ON
     timeout-minutes: 60
     name: C++ Tests (${{ matrix.pl_backend }}, ENABLE_KERNEL_OMP=${{ matrix.enable_kernel_omp }}, ENABLE_KERNEL_AVX_STREAMING=${{ matrix.enable_kernel_avx_streaming }})
-    runs-on: pl-4-core-large-runner
+    runs-on: blacksmith-4vcpu-ubuntu-2404
 
     steps:
       - uses: actions/setup-python@v5
@@ -127,7 +127,7 @@ jobs:
         pl_backend: ["lightning_qubit"]
     timeout-minutes: 60
     name: C++ Tests (${{ matrix.pl_backend }}, blas-ON)
-    runs-on: pl-4-core-large-runner
+    runs-on: blacksmith-4vcpu-ubuntu-2404
 
     steps:
       - uses: actions/setup-python@v5
@@ -199,7 +199,7 @@ jobs:
     name: "Build and cache Kokkos"
     uses: ./.github/workflows/build_and_cache_Kokkos_linux.yml
     with:
-      runs_on: pl-4-core-large-runner
+      runs_on: blacksmith-4vcpu-ubuntu-2404
       os: ubuntu-24.04
 
   cpptestswithKokkos:
@@ -213,7 +213,7 @@ jobs:
         kokkos_version: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.kokkos_version) }}
     timeout-minutes: 60
     name: C++ Tests (${{ matrix.pl_backend }}, kokkos-${{ matrix.kokkos_version }}, model-${{ matrix.exec_model }})
-    runs-on: pl-4-core-large-runner
+    runs-on: blacksmith-4vcpu-ubuntu-2404
 
     steps:
       - uses: actions/setup-python@v5
@@ -329,7 +329,7 @@ jobs:
         kokkos_version: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.kokkos_version) }}
     timeout-minutes: 60
     name: C++ Tests (multiple-backends, kokkos-${{ matrix.kokkos_version }}, model-${{ matrix.exec_model }})
-    runs-on: pl-4-core-large-runner
+    runs-on: blacksmith-4vcpu-ubuntu-2404
 
     steps:
       - uses: actions/setup-python@v5
