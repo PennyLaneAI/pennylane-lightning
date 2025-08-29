@@ -51,7 +51,7 @@
 <h3>Internal changes ⚙️</h3>
 
 - Remove Pennylane master branch from requirements-tests.txt.
-  [(#XXXX)](https://github.com/PennyLaneAI/pennylane-lightning/pull/XXXX)
+  [(#1244)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1244)
 
 - Ported Linux based GitHub Actions workflows from using the GitHub 4vcpu large runner to blacksmith 4vcpu runner.
   [(#1241)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1241)
