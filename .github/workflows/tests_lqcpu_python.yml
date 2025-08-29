@@ -187,7 +187,7 @@ jobs:
       - name: Install Stable PennyLane
         if: inputs.pennylane-version == 'stable'
         run: |
-          python -m pip uninstall -y pennylane && python -m pip install -U pennylane --no-deps
+          python -m pip uninstall -y pennylane && python -m pip install -U pennylane
 
       - name: Install ML libraries for interfaces
         run: |
