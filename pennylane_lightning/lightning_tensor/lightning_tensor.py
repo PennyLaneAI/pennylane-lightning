@@ -17,7 +17,7 @@ It is a device to perform tensor network simulations of quantum circuits using `
 """
 from dataclasses import replace
 from numbers import Number
-from typing import Callable, Optional, Sequence, Tuple, Union
+from typing import Callable, Optional, Sequence, Tuple
 from warnings import warn
 
 import numpy as np
@@ -59,7 +59,7 @@ except ImportError as ex:
 
 Result_or_ResultBatch = Union[Result, ResultBatch]
 QuantumTapeBatch = Sequence[QuantumTape]
-QuantumTape_or_Batch = Union[QuantumTape, QuantumTapeBatch]
+QuantumTape_or_Batch = QuantumTape | QuantumTapeBatch
 PostprocessingFn = Callable[[ResultBatch], Result_or_ResultBatch]
 
 

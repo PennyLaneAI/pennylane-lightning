@@ -372,7 +372,7 @@ class LightningTensorMeasurements:
         wires = reduce(sum, (mp.wires for mp in mps))
 
         def _process_single_shot(samples):
-            return [mp.process_samples(samples, wires) for mp in mps]
+            return tuple(mp.process_samples(samples, wires) for mp in mps)
 
         try:
             samples = self._measurement_lightning.generate_samples(
