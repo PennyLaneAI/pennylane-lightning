@@ -19,6 +19,9 @@
 
 <h3>Breaking changes 💔</h3>
 
+- `LightningBase.eval_jaxpr` no longer uses `self.shots`; instead, it takes a keyword argument `shots`.
+  [(#1243)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1243)
+
 - No longer squeezes out singleton dimensions from samples in accordance with a breaking change in
   PennyLane. See PennyLane PR [(#7944)](https://github.com/PennyLaneAI/pennylane/pull/7944) for
   more information.
@@ -50,6 +53,9 @@
   [(#1237)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1237)
 
 <h3>Internal changes ⚙️</h3>
+
+- Remove `--no-deps` for Lightning Qubit CI tests for stable version.
+  [(#1245)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1245)
 
 - Ported Linux based GitHub Actions workflows from using the GitHub 4vcpu large runner to blacksmith 4vcpu runner.
   [(#1241)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1241)
