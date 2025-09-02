@@ -57,7 +57,7 @@ except ImportError as ex:
     warn(str(ex), UserWarning)
     LT_CPP_BINARY_AVAILABLE = False
 
-Result_or_ResultBatch = Union[Result, ResultBatch]
+Result_or_ResultBatch = Result | ResultBatch
 QuantumTapeBatch = Sequence[QuantumTape]
 QuantumTape_or_Batch = QuantumTape | QuantumTapeBatch
 PostprocessingFn = Callable[[ResultBatch], Result_or_ResultBatch]
