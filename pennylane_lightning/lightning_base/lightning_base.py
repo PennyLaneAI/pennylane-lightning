@@ -32,7 +32,6 @@ from pennylane.devices import Device, ExecutionConfig
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
 from pennylane.exceptions import DeviceError
 from pennylane.measurements import MidMeasureMP, Shots, ShotsLike
-from pennylane.operation import Operator
 from pennylane.tape import QuantumScript, QuantumTape
 from pennylane.typing import Result, ResultBatch, TensorLike
 
