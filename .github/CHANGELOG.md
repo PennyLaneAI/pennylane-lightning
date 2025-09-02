@@ -48,7 +48,7 @@
 
 - **CHANGE REVERTED:** Update stopping condition for `qml.ops.op_math.SProd` and `qml.ops.op_math.Exp`, in all devices, after breaking changes upstream. Was instead fixed in PennyLane and change was reverted.
   [(#1239)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1239)
-  [(#126)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1246)
+  [(#1246)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1246)
 
 - Setup the correct PL version for stable-stable test with `lightning.gpu` with MPI.
   [(#1237)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1237)
