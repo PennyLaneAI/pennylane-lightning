@@ -31,7 +31,7 @@ on:
       - master
 
 env:
-  GCC_VERSION: 11
+  GCC_VERSION: 13
   CI_CUDA_ARCH: 86
   TORCH_VERSION: 2.5.1
   COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:./coverage.xml -p no:warnings --tb=native"
