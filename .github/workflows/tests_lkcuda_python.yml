@@ -72,6 +72,10 @@ jobs:
           git clone --branch ${{ matrix.kokkos_version }} https://github.com/kokkos/kokkos.git kokkos_${{ matrix.exec_model }}
           pushd . &> /dev/null
 
+      - name: Install dependencies (GCC)
+        run: |
+          sudo apt-get update && sudo apt-get -y -q install gcc-$GCC_VERSION g++-$GCC_VERSION
+
       - name: Build Kokkos core library (Ubuntu)
         run: |
           rm -rf ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
