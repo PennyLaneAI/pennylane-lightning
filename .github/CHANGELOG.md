@@ -47,7 +47,7 @@
 <h3>Bug fixes 🐛</h3>
 
 - Setting device with seed now produces deterministic measurement for MCMC.
-  [(#XXXX)](https://github.com/PennyLaneAI/pennylane-lightning/pull/XXXX)
+  [(#1252)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1252)
 
 - **CHANGE REVERTED:** Update stopping condition for `qml.ops.op_math.SProd` and `qml.ops.op_math.Exp`, in all devices, after breaking changes upstream. Was instead fixed in PennyLane and change was reverted.
   [(#1239)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1239)
