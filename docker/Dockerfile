@@ -26,10 +26,13 @@ ARG GCC_VERSION=11
 ARG LIGHTNING_VERSION=master
 ARG PENNYLANE_VERSION
 ARG ROCM_INSTALLER=https://repo.radeon.com/amdgpu-install/6.2.4/ubuntu/jammy/amdgpu-install_6.2.60204-1_all.deb
-RUN add-apt-repository ppa:deadsnakes/ppa \
-    && apt-get update \
+RUN apt-get update \
     && apt-get install --no-install-recommends -y \
     apt-utils \
+    software-properties-common \
+    && add-apt-repository ppa:deadsnakes/ppa \
+    && apt-get update \
+    && apt-get install --no-install-recommends -y \
     ca-certificates \
     git \
     libgomp1 \
@@ -126,7 +129,10 @@ RUN CMAKE_ARGS="-DKokkos_ENABLE_SERIAL:BOOL=ON -DKokkos_ENABLE_OPENMP:BOOL=ON -D
 # Install lightning-kokkos CUDA backend
 FROM nvidia/cuda:12.2.0-base-ubuntu22.04 AS wheel-lightning-kokkos-cuda
 ARG PENNYLANE_VERSION
-RUN add-apt-repository ppa:deadsnakes/ppa \
+RUN apt-get update \
+    && apt-get install --no-install-recommends -y \
+    software-properties-common \
+    && add-apt-repository ppa:deadsnakes/ppa \
     && apt-get update \
     && apt-get install --no-install-recommends -y \
     libgomp1 \
@@ -158,7 +164,10 @@ RUN CUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}
 # Install lightning-kokkos CUDA backend
 FROM nvidia/cuda:12.2.0-runtime-ubuntu22.04 AS wheel-lightning-gpu
 ARG PENNYLANE_VERSION
-RUN add-apt-repository ppa:deadsnakes/ppa \
+RUN apt-get update \
+    && apt-get install --no-install-recommends -y \
+    software-properties-common \
+    && add-apt-repository ppa:deadsnakes/ppa \
     && apt-get update \
     && apt-get install --no-install-recommends -y \
     git \
@@ -201,7 +210,10 @@ RUN CMAKE_ARGS="-DKokkos_ENABLE_SERIAL:BOOL=ON -DKokkos_ENABLE_OPENMP:BOOL=ON -D
 # Install lightning-kokkos HIP backend
 FROM rocm/dev-ubuntu-22.04:6.2.4 AS wheel-lightning-kokkos-rocm
 ARG PENNYLANE_VERSION
-RUN add-apt-repository ppa:deadsnakes/ppa \
+RUN apt-get update \
+    && apt-get install --no-install-recommends -y \
+    software-properties-common \
+    && add-apt-repository ppa:deadsnakes/ppa \
     && apt-get update \
     && apt-get install --no-install-recommends -y \
     git \
