@@ -56,7 +56,7 @@
 <h3>Internal changes ⚙️</h3>
 
 - Use Python 3.12 for CI.
-  [(#XXXX)](https://github.com/PennyLaneAI/pennylane-lightning/pull/XXXX)
+  [(#1248)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1248)
 
 - Remove `--no-deps` for Lightning Qubit CI tests for stable version.
   [(#1245)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1245)
