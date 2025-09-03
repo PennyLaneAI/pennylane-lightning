@@ -68,14 +68,13 @@ template <typename fp_t>
 class LocalTransitionKernel : public TransitionKernel<fp_t> {
   private:
     std::size_t num_qubits_;
-    std::random_device rd_;
-    std::mt19937 gen_;
+    std::mt19937& gen_;
     std::uniform_int_distribution<std::size_t> distrib_num_qubits_;
     std::uniform_int_distribution<std::size_t> distrib_binary_;
 
   public:
-    explicit LocalTransitionKernel(std::size_t num_qubits)
-        : num_qubits_(num_qubits), gen_(std::mt19937(rd_())),
+    explicit LocalTransitionKernel(std::size_t num_qubits, std::mt19937& gen)
+        : num_qubits_(num_qubits), gen_(gen),
           distrib_num_qubits_(
               std::uniform_int_distribution<std::size_t>(0, num_qubits - 1)),
           distrib_binary_(std::uniform_int_distribution<std::size_t>(0, 1)) {}
@@ -110,15 +109,14 @@ class LocalTransitionKernel : public TransitionKernel<fp_t> {
 template <typename fp_t>
 class NonZeroRandomTransitionKernel : public TransitionKernel<fp_t> {
   private:
-    std::random_device rd_;
-    std::mt19937 gen_;
+    std::mt19937& gen_;
     std::uniform_int_distribution<std::size_t> distrib_;
     std::size_t sv_length_;
     std::vector<std::size_t> non_zeros_;
 
   public:
     NonZeroRandomTransitionKernel(const std::complex<fp_t> *sv,
-                                  std::size_t sv_length, fp_t min_error) {
+                                  std::size_t sv_length, fp_t min_error, std::mt19937& gen) : gen_(gen) {
         auto data = sv;
         sv_length_ = sv_length;
         // find nonzero candidates
@@ -127,7 +125,6 @@ class NonZeroRandomTransitionKernel : public TransitionKernel<fp_t> {
                 non_zeros_.push_back(i);
             }
         }
-        gen_ = std::mt19937(rd_());
         distrib_ = std::uniform_int_distribution<std::size_t>(
             0, non_zeros_.size() - 1);
     }
@@ -150,14 +147,14 @@ class NonZeroRandomTransitionKernel : public TransitionKernel<fp_t> {
 template <typename fp_t>
 std::unique_ptr<TransitionKernel<fp_t>>
 kernel_factory(const TransitionKernelType kernel_type,
-               const std::complex<fp_t> *sv, std::size_t num_qubits) {
+               const std::complex<fp_t> *sv, std::size_t num_qubits, std::mt19937& gen) {
     auto sv_length = Pennylane::Util::exp2(num_qubits);
     if (kernel_type == TransitionKernelType::Local) {
         return std::unique_ptr<TransitionKernel<fp_t>>(
             new NonZeroRandomTransitionKernel<fp_t>(
-                sv, sv_length, std::numeric_limits<fp_t>::epsilon()));
+                sv, sv_length, std::numeric_limits<fp_t>::epsilon(), gen));
     }
     return std::unique_ptr<TransitionKernel<fp_t>>(
-        new LocalTransitionKernel<fp_t>(num_qubits));
+        new LocalTransitionKernel<fp_t>(num_qubits, gen));
 }
 } // namespace Pennylane::LightningQubit::Measures
