@@ -53,6 +53,9 @@
 - Setup the correct PL version for stable-stable test with `lightning.gpu` with MPI.
   [(#1237)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1237)
 
+- Change the default setting of the `cuTensorNet` worksize preference in order to make simulation with `lightning.tensor` more stable. 
+  [(#1238)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1238)
+
 <h3>Internal changes ⚙️</h3>
 
 - Remove `--no-deps` for Lightning Qubit CI tests for stable version.
@@ -104,6 +107,7 @@ Christina Lee,
 Joseph Lee,
 Luis Alfredo Nuñez Meneses,
 Andrija Paurevic,
+Marc Vandelle,
 Jake Zaia.
 
 ---

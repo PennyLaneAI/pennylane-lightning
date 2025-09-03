@@ -63,8 +63,8 @@ class TNCuda : public TNCudaBase<PrecisionT, Derived> {
   public:
     TNCuda() = delete;
 
-    explicit TNCuda(std::size_t numQubits, std::size_t maxBondDim = 1)
-        : BaseType(numQubits), maxBondDim_(maxBondDim),
+    explicit TNCuda(std::size_t numQubits, std::size_t maxBondDim = 1, cutensornetWorksizePref_t worksizePref = CUTENSORNET_WORKSIZE_PREF_RECOMMENDED)
+        : BaseType(numQubits, 0, 0, worksizePref), maxBondDim_(maxBondDim),
           bondDims_(setBondDims_()), sitesModes_(setSitesModes_()),
           sitesExtents_(setSitesExtents_()),
           sitesExtents_int64_(setSitesExtents_int64_()),
@@ -80,8 +80,8 @@ class TNCuda : public TNCudaBase<PrecisionT, Derived> {
     }
 
     explicit TNCuda(const std::size_t numQubits, DevTag<int> dev_tag,
-                    const std::size_t maxBondDim = 1)
-        : BaseType(numQubits, dev_tag.getDeviceID(), dev_tag.getStreamID()),
+                    const std::size_t maxBondDim = 1, cutensornetWorksizePref_t worksizePref = CUTENSORNET_WORKSIZE_PREF_RECOMMENDED)
+        : BaseType(numQubits, dev_tag.getDeviceID(), dev_tag.getStreamID(), worksizePref),
           maxBondDim_(maxBondDim), bondDims_(setBondDims_()),
           sitesModes_(setSitesModes_()), sitesExtents_(setSitesExtents_()),
           sitesExtents_int64_(setSitesExtents_int64_()),
@@ -545,7 +545,7 @@ class TNCuda : public TNCudaBase<PrecisionT, Derived> {
             /*  cudaStream_t unused as of v24.03*/ 0x0));
 
         std::size_t worksize =
-            getWorkSpaceMemorySize(BaseType::getTNCudaHandle(), workDesc);
+            getWorkSpaceMemorySize(BaseType::getTNCudaHandle(), workDesc, BaseType::getWorksizePref());
 
         PL_ABORT_IF(worksize > scratchSize,
                     "Insufficient workspace size on Device!");
@@ -639,7 +639,7 @@ class TNCuda : public TNCudaBase<PrecisionT, Derived> {
 
         // Allocate workspace buffer
         std::size_t worksize =
-            getWorkSpaceMemorySize(BaseType::getTNCudaHandle(), workDesc);
+            getWorkSpaceMemorySize(BaseType::getTNCudaHandle(), workDesc, BaseType::getWorksizePref());
 
         PL_ABORT_IF(worksize > scratchSize,
                     "Insufficient workspace size on Device!");

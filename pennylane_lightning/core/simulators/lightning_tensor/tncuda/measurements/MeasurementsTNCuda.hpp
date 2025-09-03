@@ -269,7 +269,7 @@ template <class TensorNetT> class MeasurementsTNCuda {
             /* cudaStream_t unused as of v24.08 */ 0x0));
 
         std::size_t worksize =
-            getWorkSpaceMemorySize(tensor_network_.getTNCudaHandle(), workDesc);
+            getWorkSpaceMemorySize(tensor_network_.getTNCudaHandle(), workDesc, tensor_network_.getWorksizePref());
 
         PL_ABORT_IF(worksize > scratchSize,
                     "Insufficient workspace size on Device.\n");
@@ -396,7 +396,7 @@ template <class TensorNetT> class MeasurementsTNCuda {
             /* cudaStream_t [unused] */ 0x0));
 
         std::size_t worksize =
-            getWorkSpaceMemorySize(tensor_network_.getTNCudaHandle(), workDesc);
+            getWorkSpaceMemorySize(tensor_network_.getTNCudaHandle(), workDesc, tensor_network_.getWorksizePref());
 
         PL_ABORT_IF(worksize > scratchSize,
                     "Insufficient workspace size on Device.\n");

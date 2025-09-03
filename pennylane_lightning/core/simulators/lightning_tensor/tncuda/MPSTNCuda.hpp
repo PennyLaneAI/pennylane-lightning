@@ -77,12 +77,12 @@ class MPSTNCuda final : public TNCuda<Precision, MPSTNCuda<Precision>> {
     MPSTNCuda() = delete;
 
     explicit MPSTNCuda(const std::size_t numQubits,
-                       const std::size_t maxBondDim)
-        : BaseType(numQubits, maxBondDim) {}
+                       const std::size_t maxBondDim, cutensornetWorksizePref_t worksizePref)
+        : BaseType(numQubits, maxBondDim, worksizePref) {}
 
     explicit MPSTNCuda(const std::size_t numQubits,
-                       const std::size_t maxBondDim, DevTag<int> dev_tag)
-        : BaseType(numQubits, dev_tag, maxBondDim) {}
+                       const std::size_t maxBondDim, DevTag<int> dev_tag, cutensornetWorksizePref_t worksizePref)
+        : BaseType(numQubits, dev_tag, maxBondDim, worksizePref) {}
 
     ~MPSTNCuda() = default;
 
