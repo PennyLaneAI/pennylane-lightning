@@ -56,7 +56,7 @@
 <h3>Internal changes ⚙️</h3>
 
 - Updated decomposition stopping condition to no longer convert `C(SProd)` and `C(Exp)` to Qubit Unitary, since PennyLane can decompose these operators after [PR 8133](https://github.com/PennyLaneAI/pennylane/pull/8133). 
-  [(#XXXX)](https://github.com/PennyLaneAI/pennylane-lightning/pull/XXXX)
+  [(#1247)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1247)
 
 - Remove `--no-deps` for Lightning Qubit CI tests for stable version.
   [(#1245)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1245)
