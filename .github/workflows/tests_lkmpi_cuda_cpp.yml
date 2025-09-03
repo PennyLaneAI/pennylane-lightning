@@ -76,6 +76,10 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Install dependencies (GCC)
+        run: |
+          sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test && sudo apt-get update && sudo apt-get -y -q install gcc-$GCC_VERSION g++-$GCC_VERSION
+
       # Since the self-hosted runner can be re-used. It is best to set up all package
       # installations in a virtual environment that gets cleaned at the end of each workflow run
       - name: Setup Python virtual environment

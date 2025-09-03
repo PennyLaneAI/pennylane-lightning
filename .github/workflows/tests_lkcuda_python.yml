@@ -74,7 +74,7 @@ jobs:
 
       - name: Install dependencies (GCC)
         run: |
-          sudo apt-get update && sudo apt-get -y -q install gcc-$GCC_VERSION g++-$GCC_VERSION
+          sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test && sudo apt-get update && sudo apt-get -y -q install gcc-$GCC_VERSION g++-$GCC_VERSION
 
       - name: Build Kokkos core library (Ubuntu)
         run: |
