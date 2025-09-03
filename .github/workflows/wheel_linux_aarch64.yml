@@ -137,7 +137,7 @@ jobs:
           python-version: '3.12'
 
       - name: Install dependencies
-        run: python3.12 -m pip install cibuildwheel~=2.21.0 tomlkit
+        run: python3.12 -m pip install cibuildwheel~=3.1.4 tomlkit
 
       - name: Configure pyproject.toml file
         run: PL_BACKEND="${{ matrix.pl_backend }}" python3.12 scripts/configure_pyproject_toml.py
