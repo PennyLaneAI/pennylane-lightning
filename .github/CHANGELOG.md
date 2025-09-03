@@ -55,6 +55,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Fix CI OS label for Lightning Kokkos CUDA CI.
+  [(#XXXX)](https://github.com/PennyLaneAI/pennylane-lightning/pull/XXXX)
+
 - Remove `--no-deps` for Lightning Qubit CI tests for stable version.
   [(#1245)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1245)
 

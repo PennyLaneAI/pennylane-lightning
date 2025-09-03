@@ -49,7 +49,7 @@ jobs:
     strategy:
       max-parallel: 1
       matrix:
-        os: [ubuntu-24.04]
+        os: [ubuntu-22.04]
         kokkos_version: ["4.5.00"]
         exec_model: ["CUDA"]
         cuda_version_maj: ["12"]
@@ -112,7 +112,7 @@ jobs:
     needs: [builddeps]
     strategy:
       matrix:
-        os: [ubuntu-24.04]
+        os: [ubuntu-22.04]
         pl_backend: ["lightning_kokkos", "all"]
         kokkos_version: ["4.5.00"]
         exec_model: ["CUDA"]
