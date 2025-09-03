@@ -121,10 +121,16 @@ void registerBackendClassSpecificBindingsMPS(PyClass &pyclass) {
     using np_arr_c = py::array_t<std::complex<ParamT>,
                                  py::array::c_style | py::array::forcecast>;
 
+    py::enum_<cutensornetWorksizePref_t>(pyclass, "WorksizePref")
+        .value("MIN", CUTENSORNET_WORKSIZE_PREF_MIN)
+        .value("RECOMMENDED", CUTENSORNET_WORKSIZE_PREF_RECOMMENDED)
+        .value("MAX", CUTENSORNET_WORKSIZE_PREF_MAX)
+        .export_values();
+
     pyclass
-        .def(py::init<std::size_t, std::size_t, bool>()) // num_qubits, max_bond_dim, workspace_pref
-        .def(py::init<std::size_t, std::size_t, bool,
-                      DevTag<int>>()) // num_qubits, max_bond_dim, workspace_pref, dev-tag
+        .def(py::init<std::size_t, std::size_t, cutensornetWorksizePref_t>()) // num_qubits, max_bond_dim, workspace_pref
+        .def(py::init<std::size_t, std::size_t,
+                      DevTag<int>, cutensornetWorksizePref_t>()) // num_qubits, max_bond_dim, dev-tag, workspace_pref
         .def(
             "getState",
             [](TensorNet &tensor_network, np_arr_c &state) {
@@ -210,9 +216,15 @@ void registerBackendClassSpecificBindingsExactTNCuda(PyClass &pyclass) {
     using np_arr_c = py::array_t<std::complex<ParamT>,
                                  py::array::c_style | py::array::forcecast>;
 
+    py::enum_<cutensornetWorksizePref_t>(pyclass, "WorksizePref")
+        .value("MIN", CUTENSORNET_WORKSIZE_PREF_MIN)
+        .value("RECOMMENDED", CUTENSORNET_WORKSIZE_PREF_RECOMMENDED)
+        .value("MAX", CUTENSORNET_WORKSIZE_PREF_MAX)
+        .export_values();
+
     pyclass
-        .def(py::init<std::size_t, bool>())              // num_qubits, workspace_pref
-        .def(py::init<std::size_t, bool, DevTag<int>>()) // num_qubits, workspace_pref, dev-tag
+        .def(py::init<std::size_t, cutensornetWorksizePref_t>())              // num_qubits, workspace_pref
+        .def(py::init<std::size_t, DevTag<int>, cutensornetWorksizePref_t>()) // num_qubits, dev-tag, workspace_pref
         .def(
             "getState",
             [](TensorNet &tensor_network, np_arr_c &state) {

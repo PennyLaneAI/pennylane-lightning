@@ -430,7 +430,11 @@ class LightningTensorNet:
 
         self._wires = Wires(range(num_wires))
         
-        self._workspace_pref = kwargs.get("workspace_pref", "recommended")
+        workspace_pref = kwargs.get("workspace_pref", "recommended")
+        workspace_dict = {"recommended": self._tensornet_dtype().RECOMMENDED, 
+                          "max": self._tensornet_dtype().MAX,
+                          "min": self._tensornet_dtype().MIN}
+        self._workspace_pref = workspace_dict[workspace_pref]
         if self._method == "mps":
             self._max_bond_dim = kwargs.get("max_bond_dim", 128)
             self._cutoff = kwargs.get("cutoff", 0)
