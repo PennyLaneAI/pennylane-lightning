@@ -31,8 +31,7 @@ from numpy.typing import ArrayLike
 from pennylane.devices import Device, ExecutionConfig
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
 from pennylane.exceptions import DeviceError
-from pennylane.measurements import MidMeasureMP
-from pennylane.operation import Operator
+from pennylane.measurements import MidMeasureMP, Shots, ShotsLike
 from pennylane.tape import QuantumScript, QuantumTape
 from pennylane.typing import Result, ResultBatch, TensorLike
 
@@ -46,17 +45,6 @@ Result_or_ResultBatch = Union[Result, ResultBatch]
 QuantumTapeBatch = Sequence[QuantumTape]
 QuantumTape_or_Batch = Union[QuantumTape, QuantumTapeBatch]
 PostprocessingFn = Callable[[ResultBatch], Result_or_ResultBatch]
-
-
-def base_stopping_condition(op: Operator) -> bool:
-    """A function that determines whether or not an operation is supported by ``lightning.qubit``."""
-
-    if isinstance(op, (qml.ops.op_math.SProd, qml.ops.op_math.Exp)):
-        return True
-
-    if op.name in ("C(SProd)", "C(Exp)"):
-        return True
-    return False
 
 
 @simulator_tracking
@@ -577,6 +565,7 @@ class LightningBase(Device):
         consts: list[TensorLike],
         *args: TensorLike,
         execution_config: ExecutionConfig | None = None,
+        shots: ShotsLike = None,
     ) -> list[TensorLike]:
         """Execute pennylane variant jaxpr using C++ simulation tools.
 
@@ -637,19 +626,20 @@ class LightningBase(Device):
             num_wires=len(self.wires), dtype=self._c_dtype, rng=self._rng
         )
 
+        shots = Shots(shots)
         interpreter = LightningInterpreter(
-            self._statevector, self.LightningMeasurements, shots=self.shots
+            self._statevector, self.LightningMeasurements, shots=shots
         )
         evaluator = partial(interpreter.eval, jaxpr)
 
-        def shape(var):
+        def shape(var, shots):
             if isinstance(var.aval, AbstractMeasurement):
-                shots = self.shots.total_shots
+                shots = shots.total_shots
                 s, dtype = var.aval.abstract_eval(num_device_wires=len(self.wires), shots=shots)
                 return jax.core.ShapedArray(s, dtype_map[dtype])
             return var.aval
 
-        shapes = [shape(var) for var in jaxpr.outvars]
+        shapes = [shape(var, shots) for var in jaxpr.outvars]
         return jax.pure_callback(evaluator, shapes, consts, *args, vmap_method="sequential")
 
     def jaxpr_jvp(

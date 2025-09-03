@@ -85,7 +85,7 @@ class TestComparison:
             basis state"""
             qml.BasisState(np.array(basis_state), wires=0)
             one_qubit_block(wires=0)
-            return measurement() if callable(measurement) else measurement
+            return measurement() if callable(measurement) else qml.apply(measurement)
 
         dev_l = lightning_dev_version(wires)
         dev_d = default_qubit_dev(wires)
@@ -134,7 +134,7 @@ class TestComparison:
             one_qubit_block(wires=1)
             qml.CRZ(0.02, wires=[0, 1])
             qml.CRot(0.2, 0.3, 0.7, wires=[0, 1])
-            return measurement() if callable(measurement) else measurement
+            return measurement() if callable(measurement) else qml.apply(measurement)
 
         dev_l = lightning_dev_version(wires)
         dev_d = default_qubit_dev(wires)
@@ -190,7 +190,7 @@ class TestComparison:
             qml.CRot(0.2, 0.3, 0.7, wires=[2, 1])
             qml.RZ(0.4, wires=0)
             qml.Toffoli(wires=[2, 1, 0])
-            return measurement() if callable(measurement) else measurement
+            return measurement() if callable(measurement) else qml.apply(measurement)
 
         dev_l = lightning_dev_version(wires)
         dev_d = default_qubit_dev(wires)
@@ -251,7 +251,7 @@ class TestComparison:
             qml.CRot(0.2, 0.3, 0.7, wires=[2, 1])
             qml.RZ(0.4, wires=0)
             qml.Toffoli(wires=[2, 1, 0])
-            return measurement() if callable(measurement) else measurement
+            return measurement() if callable(measurement) else qml.apply(measurement)
 
         dev_l = lightning_dev_version(wires)
         dev_d = default_qubit_dev(wires)
@@ -291,7 +291,7 @@ class TestComparison:
             and concludes with a simple PauliZ measurement"""
             qml.StatePrep(vec, wires=range(wires))
             qml.StronglyEntanglingLayers(w, wires=range(wires))
-            return measurement() if callable(measurement) else measurement
+            return measurement() if callable(measurement) else qml.apply(measurement)
 
         dev_l = lightning_dev_version(wires)
         dev_d = default_qubit_dev(wires)
