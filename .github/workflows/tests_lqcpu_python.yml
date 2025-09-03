@@ -39,7 +39,7 @@ jobs:
         blas: ["OFF", "ON"]
     timeout-minutes: 60
     name: Build (${{ matrix.pl_backend }}, blas-${{ matrix.blas }})
-    runs-on: pl-4-core-large-runner
+    runs-on: blacksmith-4vcpu-ubuntu-2404
 
     steps:
       - name: Make disk space
@@ -127,7 +127,7 @@ jobs:
         group: [1, 2, 3, 4]
     timeout-minutes: 60
     name: Python Tests (${{ matrix.pl_backend }}, blas-${{ matrix.blas }}, test-group-${{ matrix.group }})
-    runs-on: pl-4-core-large-runner
+    runs-on: blacksmith-4vcpu-ubuntu-2404
 
     steps:
       - uses: actions/setup-python@v5
@@ -187,7 +187,7 @@ jobs:
       - name: Install Stable PennyLane
         if: inputs.pennylane-version == 'stable'
         run: |
-          python -m pip uninstall -y pennylane && python -m pip install -U pennylane --no-deps
+          python -m pip uninstall -y pennylane && python -m pip install -U pennylane
 
       - name: Install ML libraries for interfaces
         run: |

@@ -14,12 +14,19 @@
 - Skipped Identity operation in Lightning Qubit and removed assert for applying Identity gate not equal to 1 wire.
   [(#1212)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1212)
 
+- Update `test_device.py` to no longer mutate an execution configuration for testing.
+  [(#1242)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1242)
+
 <h3>Breaking changes 💔</h3>
+
+- `LightningBase.eval_jaxpr` no longer uses `self.shots`; instead, it takes a keyword argument `shots`.
+  [(#1243)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1243)
 
 - No longer squeezes out singleton dimensions from samples in accordance with a breaking change in
   PennyLane. See PennyLane PR [(#7944)](https://github.com/PennyLaneAI/pennylane/pull/7944) for
   more information.
   [(#1226)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1226)
+  [(#1246)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1246)
 
 - Dropped support for Python 3.10. Supported Python versions are now 3.11, 3.12 and 3.13.
   [(#1224)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1224)
@@ -39,8 +46,9 @@
 
 <h3>Bug fixes 🐛</h3>
 
-- Update stopping condition for `qml.ops.op_math.SProd` and `qml.ops.op_math.Exp`, in all devices, after breaking changes upstream.
+- **CHANGE REVERTED:** Update stopping condition for `qml.ops.op_math.SProd` and `qml.ops.op_math.Exp`, in all devices, after breaking changes upstream. Was instead fixed in PennyLane and change was reverted.
   [(#1239)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1239)
+  [(#1246)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1246)
 
 - Setup the correct PL version for stable-stable test with `lightning.gpu` with MPI.
   [(#1237)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1237)
@@ -49,6 +57,12 @@
   [(#1238)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1238)
 
 <h3>Internal changes ⚙️</h3>
+
+- Remove `--no-deps` for Lightning Qubit CI tests for stable version.
+  [(#1245)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1245)
+
+- Ported Linux based GitHub Actions workflows from using the GitHub 4vcpu large runner to blacksmith 4vcpu runner.
+  [(#1241)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1241)
 
 - Added script to automate the release process.
   [(#1231)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1231)

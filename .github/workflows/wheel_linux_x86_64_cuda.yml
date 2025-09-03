@@ -44,7 +44,7 @@ jobs:
         container_img: ["quay.io/pypa/manylinux_2_28_x86_64"]
     timeout-minutes: 30
     name: Linux::${{ matrix.arch }} - ${{ matrix.pl_backend }} CUDA ${{ matrix.cuda_version }} (Python ${{ fromJson('{"cp311-*":"3.11","cp312-*":"3.12","cp313-*":"3.13" }')[matrix.cibw_build] }})
-    runs-on: pl-4-core-large-runner
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     container:
       image: ${{ matrix.container_img }}
       options: --privileged
