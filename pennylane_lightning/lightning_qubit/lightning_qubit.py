@@ -172,6 +172,7 @@ def _add_adjoint_transforms(program: TransformProgram) -> None:
         stopping_condition_shots=stopping_condition_shots,
         name=name,
         skip_initial_state_prep=False,
+        gate_set=LightningQubit.capabilities.gate_set,
     )
     program.add_transform(validate_observables, accepted_observables, name=name)
     program.add_transform(
@@ -387,6 +388,7 @@ class LightningQubit(LightningBase):
             stopping_condition_shots=stopping_condition_shots,
             skip_initial_state_prep=True,
             name=self.name,
+            gate_set=LightningQubit.capabilities.gate_set,
         )
         program.add_transform(qml.transforms.broadcast_expand)
 
