@@ -30,6 +30,7 @@ RUN apt-get update \
     && apt-get install --no-install-recommends -y \
     apt-utils \
     software-properties-common \
+    gnupg \
     && add-apt-repository ppa:deadsnakes/ppa \
     && apt-get update \
     && apt-get install --no-install-recommends -y \
@@ -132,6 +133,7 @@ ARG PENNYLANE_VERSION
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
     software-properties-common \
+    gnupg \
     && add-apt-repository ppa:deadsnakes/ppa \
     && apt-get update \
     && apt-get install --no-install-recommends -y \
@@ -167,6 +169,7 @@ ARG PENNYLANE_VERSION
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
     software-properties-common \
+    gnupg \
     && add-apt-repository ppa:deadsnakes/ppa \
     && apt-get update \
     && apt-get install --no-install-recommends -y \
@@ -213,6 +216,7 @@ ARG PENNYLANE_VERSION
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
     software-properties-common \
+    gnupg \
     && add-apt-repository ppa:deadsnakes/ppa \
     && apt-get update \
     && apt-get install --no-install-recommends -y \
