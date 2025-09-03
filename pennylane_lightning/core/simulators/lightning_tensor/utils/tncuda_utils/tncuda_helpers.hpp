@@ -70,14 +70,14 @@ inline SharedTNCudaHandle make_shared_tncuda_handle() {
  */
 inline std::size_t
 getWorkSpaceMemorySize(const cutensornetHandle_t &tncuda_handle,
-                       cutensornetWorkspaceDescriptor_t &workDesc) {
+                       cutensornetWorkspaceDescriptor_t &workDesc, bool maxWorksize = false) {
     int64_t worksize{0};
 
     PL_CUTENSORNET_IS_SUCCESS(cutensornetWorkspaceGetMemorySize(
         /* const cutensornetHandle_t */ tncuda_handle,
         /* cutensornetWorkspaceDescriptor_t */ workDesc,
         /* cutensornetWorksizePref_t */
-        CUTENSORNET_WORKSIZE_PREF_MAX,
+        maxWorksize ? CUTENSORNET_WORKSIZE_PREF_MAX : CUTENSORNET_WORKSIZE_PREF_RECOMMENDED,
         /* cutensornetMemspace_t*/ CUTENSORNET_MEMSPACE_DEVICE,
         /* cutensornetWorkspaceKind_t */ CUTENSORNET_WORKSPACE_SCRATCH,
         /*  int64_t * */ &worksize));

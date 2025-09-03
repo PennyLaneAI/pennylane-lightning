@@ -405,6 +405,7 @@ class LightningTensorNet:
         cutoff_mode (str): Singular value truncation mode for MPS tensors can be done either by
             considering the absolute values of the singular values (``"abs"``) or by considering
             the relative values of the singular values (``"rel"``). Default is ``"abs"``.
+        workspace_pref (str): Preference for workspace for cutensornet backend. The options are ``recommended`` and ``max``. Default is ``recommended``.
     """
 
     # pylint: disable=too-many-arguments, too-many-positional-arguments
@@ -428,14 +429,15 @@ class LightningTensorNet:
         self._device_name = device_name
 
         self._wires = Wires(range(num_wires))
-
+        
+        self._workspace_pref = kwargs.get("workspace_pref", "recommended")
         if self._method == "mps":
             self._max_bond_dim = kwargs.get("max_bond_dim", 128)
             self._cutoff = kwargs.get("cutoff", 0)
             self._cutoff_mode = kwargs.get("cutoff_mode", "abs")
-            self._tensornet = self._tensornet_dtype()(self._num_wires, self._max_bond_dim)
+            self._tensornet = self._tensornet_dtype()(self._num_wires, self._max_bond_dim, self._workspace_pref)
         elif self._method == "tn":
-            self._tensornet = self._tensornet_dtype()(self._num_wires)
+            self._tensornet = self._tensornet_dtype()(self._num_wires, self._workspace_pref)
         else:
             raise DeviceError(f"The method {self._method} is not supported.")
 

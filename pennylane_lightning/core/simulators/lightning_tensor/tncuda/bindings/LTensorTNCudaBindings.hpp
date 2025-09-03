@@ -122,9 +122,9 @@ void registerBackendClassSpecificBindingsMPS(PyClass &pyclass) {
                                  py::array::c_style | py::array::forcecast>;
 
     pyclass
-        .def(py::init<std::size_t, std::size_t>()) // num_qubits, max_bond_dim
-        .def(py::init<std::size_t, std::size_t,
-                      DevTag<int>>()) // num_qubits, max_bond_dim, dev-tag
+        .def(py::init<std::size_t, std::size_t, bool>()) // num_qubits, max_bond_dim, workspace_pref
+        .def(py::init<std::size_t, std::size_t, bool,
+                      DevTag<int>>()) // num_qubits, max_bond_dim, workspace_pref, dev-tag
         .def(
             "getState",
             [](TensorNet &tensor_network, np_arr_c &state) {
@@ -211,8 +211,8 @@ void registerBackendClassSpecificBindingsExactTNCuda(PyClass &pyclass) {
                                  py::array::c_style | py::array::forcecast>;
 
     pyclass
-        .def(py::init<std::size_t>())              // num_qubits
-        .def(py::init<std::size_t, DevTag<int>>()) // num_qubits, dev-tag
+        .def(py::init<std::size_t, bool>())              // num_qubits, workspace_pref
+        .def(py::init<std::size_t, bool, DevTag<int>>()) // num_qubits, workspace_pref, dev-tag
         .def(
             "getState",
             [](TensorNet &tensor_network, np_arr_c &state) {
