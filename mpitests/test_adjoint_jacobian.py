@@ -22,7 +22,7 @@ from functools import partial
 import pennylane as qml
 import pytest
 from conftest import LightningDevice as ld
-from conftest import LightningException, device_name
+from conftest import device_name
 from mpi4py import MPI
 from pennylane import QNode
 from pennylane import numpy as np
@@ -132,7 +132,7 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
         config = ExecutionConfig(gradient_method="adjoint", device_options={"batch_obs": batch_obs})
 
         with pytest.raises(
-            LightningException,
+            RuntimeError,
             match="The operation is not supported using the adjoint differentiation method",
         ):
             dev.compute_derivatives(qs, config)

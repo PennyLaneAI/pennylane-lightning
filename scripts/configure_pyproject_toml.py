@@ -94,6 +94,11 @@ if __name__ == "__main__":
         "setuptools>=75.8.1",
         "tomli",
     ]
+
+    # Add nanobind if enabled
+    if os.environ.get("ENABLE_NANOBIND", "0") == "1":
+        requires.append("nanobind>=2.7.0")
+
     if backend == "lightning_gpu":
         requires.append("custatevec-cu12")
     if backend == "lightning_tensor":
