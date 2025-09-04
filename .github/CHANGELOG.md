@@ -78,6 +78,9 @@
 - Use Python 3.12 for CI.
   [(#1248)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1248)
 
+- Updated decomposition stopping condition to no longer convert `C(SProd)` and `C(Exp)` to Qubit Unitary, since PennyLane can decompose these operators after [PR 8133](https://github.com/PennyLaneAI/pennylane/pull/8133). 
+  [(#1247)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1247)
+
 - Remove `--no-deps` for Lightning Qubit CI tests for stable version.
   [(#1245)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1245)
 
