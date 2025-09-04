@@ -215,11 +215,12 @@ RUN CMAKE_ARGS="-DKokkos_ENABLE_SERIAL:BOOL=ON -DKokkos_ENABLE_OPENMP:BOOL=ON -D
 # Install lightning-kokkos HIP backend
 FROM rocm/dev-ubuntu-22.04:6.2.4 AS wheel-lightning-kokkos-rocm
 ARG PENNYLANE_VERSION
+ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
     software-properties-common \
     gnupg \
-    && add-apt-repository ppa:deadsnakes/ppa \
+    && add-apt-repository ppa:deadsnakes/ppa -y \
     && apt-get update \
     && apt-get install --no-install-recommends -y \
     git \
