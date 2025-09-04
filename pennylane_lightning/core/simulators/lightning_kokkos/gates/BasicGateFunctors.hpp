@@ -648,7 +648,6 @@ void applyNCGlobalPhase(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
         auto core_function =
             KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
                           std::size_t i0, std::size_t i1) {
-
             [[maybe_unused]] const auto i1_ = i1;
             arr(i0) *= phase;
         };
