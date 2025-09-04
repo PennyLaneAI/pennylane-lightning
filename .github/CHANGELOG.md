@@ -4,6 +4,23 @@
 
 <h3>Improvements 🛠</h3>
 
+- **Migrated to Nanobind for Python bindings**, replacing pybind11 to enhance performance, modularity, and build system efficiency.
+  [(#1176)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1176)
+
+  This migration includes comprehensive updates across all Lightning backends:
+
+  - **Zero-copy measurement exchanges** for improved memory efficiency
+    [(#1187)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1187)
+  - **MPI and Adjoint Jacobian support** for distributed computing
+    [(#1189)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1189)
+  - **Lightning Qubit bindings** with enhanced performance
+    [(#1198)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1198)
+  - **Lightning Kokkos bindings** for heterogeneous computing
+    [(#1213)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1213)
+  - **Lightning GPU bindings** with CUDA optimization
+    [(#1184)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1184)
+  - **Lightning Tensor bindings** for tensor network simulations
+    [(#1206)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1206)
 - Added support for `GlobalPhase` with zero-qubit Lightning devices. Currently, only the `lightning.qubit` and `lightning.kokkos` backends support zero-qubit initialization.
   [(#1205)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1205)
 
@@ -81,7 +98,7 @@
 
 - Used `pennylane.exceptions` for custom PennyLane exceptions across Lightning Python code.
   [(#1215)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1215)
-  
+
 - Switched off the PLxPR integration tests by removing JAX dependency from requirements files.
   [(#1214)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1214)
 
@@ -103,6 +120,7 @@ This release contains contributions from (in alphabetical order):
 
 Ali Asadi,
 Yushao Chen,
+Amintor Dusko,
 Christina Lee,
 Joseph Lee,
 Luis Alfredo Nuñez Meneses,
@@ -192,7 +210,7 @@ Jake Zaia.
   
 - Enabled `AmplitudeEmbedding` Python tests for `lightning.kokkos` and `lightning.gpu` devices.
   [(#1192)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1192)
-  
+
 - Updated docker build CI for stable version to use v0.41.1.
   [(#1188)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1188)
 
@@ -235,6 +253,7 @@ This release contains contributions from (in alphabetical order):
 Runor Agbaire,
 Ali Asadi,
 Yushao Chen,
+Amintor Dusko
 Christina Lee,
 Joseph Lee,
 Mehrdad Malekmohammadi,
@@ -243,7 +262,7 @@ Luis Alfredo Nuñez Meneses,
 Mudit Pandey,
 Shuli Shu,
 Marc Vandelle,
-Jake Zaia 
+Jake Zaia
 
 ---
 

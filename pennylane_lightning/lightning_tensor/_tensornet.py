@@ -648,6 +648,8 @@ class LightningTensorNet:
             gate_matrix, wires, max_mpo_bond_dim, self._c_dtype
         )
 
+        # Convert to C-contiguous arrays for C++ bindings
+        mpos = [np.ascontiguousarray(mpo) for mpo in mpos]
         self._tensornet.applyMPOOperation(mpos, sorted_wires, max_mpo_bond_dim)
 
     # pylint: disable=too-many-branches

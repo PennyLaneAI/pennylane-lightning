@@ -28,6 +28,7 @@ try:
 except ImportError as ex:
     warn(str(ex), UserWarning)
 
+
 from os import getenv
 
 import numpy as np
