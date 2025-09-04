@@ -73,11 +73,11 @@ template <class StateVectorT>
 class Measurements final
     : public MeasurementsBase<StateVectorT, Measurements<StateVectorT>> {
   private:
-    using PrecisionT = typename StateVectorT::PrecisionT;
-    using ComplexT = typename StateVectorT::ComplexT;
     using BaseType = MeasurementsBase<StateVectorT, Measurements<StateVectorT>>;
 
   public:
+    using PrecisionT = typename StateVectorT::PrecisionT;
+    using ComplexT = typename StateVectorT::ComplexT;
     explicit Measurements(const StateVectorT &statevector)
         : BaseType{statevector} {};
 
@@ -555,7 +555,7 @@ class Measurements final
         std::uniform_real_distribution<PrecisionT> distrib(0.0, 1.0);
         std::vector<std::size_t> samples(num_samples * num_qubits, 0);
         std::unordered_map<std::size_t, std::size_t> cache;
-        this->setRandomSeed();
+        this->setSeed(this->_deviceseed);
 
         TransitionKernelType transition_kernel = TransitionKernelType::Local;
         if (kernelname == "NonZeroRandom") {
@@ -564,7 +564,7 @@ class Measurements final
 
         auto tk =
             kernel_factory(transition_kernel, this->_statevector.getData(),
-                           this->_statevector.getNumQubits());
+                           this->_statevector.getNumQubits(), this->_rng);
         std::size_t idx = 0;
 
         // Burn In
