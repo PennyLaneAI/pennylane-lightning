@@ -130,6 +130,7 @@ RUN CMAKE_ARGS="-DKokkos_ENABLE_SERIAL:BOOL=ON -DKokkos_ENABLE_OPENMP:BOOL=ON -D
 # Install lightning-kokkos CUDA backend
 FROM nvidia/cuda:12.2.0-base-ubuntu22.04 AS wheel-lightning-kokkos-cuda
 ARG PENNYLANE_VERSION
+ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
     software-properties-common \
@@ -166,6 +167,7 @@ RUN CUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}
 # Install lightning-kokkos CUDA backend
 FROM nvidia/cuda:12.2.0-runtime-ubuntu22.04 AS wheel-lightning-gpu
 ARG PENNYLANE_VERSION
+ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
     software-properties-common \
