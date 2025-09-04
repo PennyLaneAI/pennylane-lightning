@@ -541,7 +541,7 @@ class QuantumScriptSerializer:
                 else:
                     if hasattr(self.sv_type, name):
                         params.append(single_op_base.parameters)
-                        mats.append([])
+                        mats.append(np.array([]))
                     else:
                         params.append([])
                         mats.append(matrix(single_op_base))

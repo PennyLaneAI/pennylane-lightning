@@ -78,7 +78,7 @@ RUN python3.12 -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 RUN rm -rf tmp && git clone --depth 1 --branch ${LIGHTNING_VERSION} https://github.com/PennyLaneAI/pennylane-lightning.git tmp\
     && mv tmp/* /opt/pennylane-lightning && rm -rf tmp
-RUN pip install --no-cache-dir build cmake ninja pybind11 toml wheel setuptools>=75.8.1
+RUN pip install --no-cache-dir build cmake ninja toml wheel setuptools>=75.8.1
 
 # Download Lightning release and build lightning-qubit backend
 FROM base-build-python AS build-wheel-lightning-qubit
