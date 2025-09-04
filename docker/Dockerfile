@@ -134,7 +134,7 @@ RUN apt-get update \
     && apt-get install --no-install-recommends -y \
     software-properties-common \
     gnupg \
-    && add-apt-repository ppa:deadsnakes/ppa \
+    && add-apt-repository ppa:deadsnakes/ppa -y \
     && apt-get update \
     && apt-get install --no-install-recommends -y \
     libgomp1 \
@@ -170,7 +170,7 @@ RUN apt-get update \
     && apt-get install --no-install-recommends -y \
     software-properties-common \
     gnupg \
-    && add-apt-repository ppa:deadsnakes/ppa \
+    && add-apt-repository ppa:deadsnakes/ppa -y \
     && apt-get update \
     && apt-get install --no-install-recommends -y \
     git \
