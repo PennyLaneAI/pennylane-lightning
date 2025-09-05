@@ -28,7 +28,7 @@ on:
 env:
   CI_CUDA_ARCH: 86
   COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:./coverage.xml -p no:warnings --tb=native"
-  GCC_VERSION: 13
+  GCC_VERSION: 11
 
 concurrency:
   group: tests_lkcuda_cpp-${{ github.ref }}-${{ github.event_name }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
@@ -65,10 +65,6 @@ jobs:
           rm -rf kokkos_${{ matrix.exec_model }}
           git clone --branch ${{ matrix.kokkos_version }} https://github.com/kokkos/kokkos.git kokkos_${{ matrix.exec_model }}
           pushd . &> /dev/null
-
-      - name: Install dependencies (GCC)
-        run: |
-          sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test && sudo apt-get update && sudo apt-get -y -q install gcc-$GCC_VERSION g++-$GCC_VERSION
 
       - name: Build Kokkos core library (Ubuntu)
         run: |
