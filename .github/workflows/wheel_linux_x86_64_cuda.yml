@@ -59,10 +59,10 @@ jobs:
           dnf update -y && dnf install -y podman
 
       - name: Install dependencies
-        run: python3.11 -m pip install cibuildwheel~=2.21.0 tomlkit
+        run: python3.12 -m pip install cibuildwheel~=3.1.4 tomlkit
 
       - name: Configure pyproject.toml file
-        run: PL_BACKEND="${{ matrix.pl_backend }}" python3.11 scripts/configure_pyproject_toml.py
+        run: PL_BACKEND="${{ matrix.pl_backend }}" python3.12 scripts/configure_pyproject_toml.py
 
       - name: Build wheels
         env:
@@ -96,12 +96,12 @@ jobs:
 
           CIBW_BUILD_VERBOSITY: 3
 
-        run: python3.11 -m cibuildwheel --output-dir wheelhouse
+        run: python3.12 -m cibuildwheel --output-dir wheelhouse
 
       - name: Validate wheels
         run: |
-          python3.11 -m pip install twine
-          python3.11 -m twine check ./wheelhouse/*.whl
+          python3.12 -m pip install twine
+          python3.12 -m twine check ./wheelhouse/*.whl
 
       - uses: actions-ecosystem/action-regex-match@main
         id: rc_build

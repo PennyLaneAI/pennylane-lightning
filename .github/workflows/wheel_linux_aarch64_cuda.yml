@@ -48,13 +48,13 @@ jobs:
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
 
-      - name: Install Python 3.11
+      - name: Install Python 3.12
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.12'
 
       - name: Install cibuildwheel
-        run: python3.11 -m pip install cibuildwheel~=2.21.0 tomlkit
+        run: python3.12 -m pip install cibuildwheel~=3.1.4 tomlkit
 
       - name: Configure pyproject.toml file
         run: PL_BACKEND="${{ matrix.pl_backend }}" python scripts/configure_pyproject_toml.py
