@@ -15,6 +15,9 @@ on:
     branches:
       - master
 
+env:
+  GCC_VERSION: 13
+
 concurrency:
   group: tidy-${{ github.ref }}
   cancel-in-progress: true
@@ -40,7 +43,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: sudo apt update && sudo apt -y install cmake gcc-11 g++-11 ninja-build libomp-14-dev && python -m pip install -r requirements-dev.txt
+        run: sudo apt update && sudo apt -y install cmake gcc-$GCC_VERSION g++-$GCC_VERSION ninja-build libomp-14-dev && python -m pip install -r requirements-dev.txt
         env:
           DEBIAN_FRONTEND: noninteractive
 
@@ -53,6 +56,6 @@ jobs:
             -DENABLE_WARNINGS=ON \
             -DSCIPY_OPENBLAS=$(python -c "import scipy_openblas32; print(scipy_openblas32.get_lib_dir())") \
             -DPL_BACKEND=${{ matrix.pl_backend }} \
-            -DCMAKE_CXX_COMPILER="$(which g++-11)" \
-            -DCMAKE_C_COMPILER="$(which gcc-11)"
+            -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)" \
+            -DCMAKE_C_COMPILER="$(which gcc-$GCC_VERSION)"
           cmake --build ./Build

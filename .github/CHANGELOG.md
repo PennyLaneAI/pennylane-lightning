@@ -75,6 +75,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Use GCC 13 for CI.
+  [(#XXXX)](https://github.com/PennyLaneAI/pennylane-lightning/pull/XXXX)
+  
 - Updated decomposition stopping condition to no longer convert `C(SProd)` and `C(Exp)` to Qubit Unitary, since PennyLane can decompose these operators after [PR 8133](https://github.com/PennyLaneAI/pennylane/pull/8133). 
   [(#1247)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1247)
 

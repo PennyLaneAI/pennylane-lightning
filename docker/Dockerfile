@@ -22,7 +22,7 @@ ARG AMD_ARCH=AMD_GFX90A
 ARG CUDA_ARCH=AMPERE80
 ARG CUDA_INSTALLER=https://developer.download.nvidia.com/compute/cuda/12.2.2/local_installers/cuda_12.2.2_535.104.05_linux.run
 ARG DEBIAN_FRONTEND=noninteractive
-ARG GCC_VERSION=11
+ARG GCC_VERSION=13
 ARG LIGHTNING_VERSION=master
 ARG PENNYLANE_VERSION
 ARG ROCM_INSTALLER=https://repo.radeon.com/amdgpu-install/6.2.4/ubuntu/jammy/amdgpu-install_6.2.60204-1_all.deb
@@ -193,7 +193,7 @@ ENV CXX=hipcc
 ENV PL_BACKEND=lightning_kokkos
 RUN pip uninstall -y pennylane-lightning
 RUN python scripts/configure_pyproject_toml.py || true
-RUN CMAKE_ARGS="-DKokkos_ENABLE_SERIAL:BOOL=ON -DKokkos_ENABLE_OPENMP:BOOL=ON -DKokkos_ENABLE_HIP:BOOL=ON -DKokkos_ARCH_${AMD_ARCH}=ON -DCMAKE_CXX_FLAGS='--gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/11/'" python -m build --wheel
+RUN CMAKE_ARGS="-DKokkos_ENABLE_SERIAL:BOOL=ON -DKokkos_ENABLE_OPENMP:BOOL=ON -DKokkos_ENABLE_HIP:BOOL=ON -DKokkos_ARCH_${AMD_ARCH}=ON -DCMAKE_CXX_FLAGS='--gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/13/'" python -m build --wheel
 
 # Install lightning-kokkos HIP backend
 FROM rocm/dev-ubuntu-22.04:6.2.4 AS wheel-lightning-kokkos-rocm
