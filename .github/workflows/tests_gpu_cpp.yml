@@ -154,6 +154,8 @@ jobs:
             -DPL_BACKEND=${{ matrix.pl_backend }} \
             -DSCIPY_OPENBLAS=$(python -c "import scipy_openblas32; print(scipy_openblas32.get_lib_dir())") \
             -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
+            -DCMAKE_C_COMPILER=$(which gcc-$GCC_VERSION) \
+            -DCMAKE_CUDA_HOST_COMPILER=/usr/bin/gcc-13 \
             -DENABLE_COVERAGE=ON \
             -G Ninja \
             -DLIGHTNING_CATALYST_SRC_PATH=${{ github.workspace }}/catalyst
