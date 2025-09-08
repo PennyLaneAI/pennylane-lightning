@@ -78,6 +78,9 @@
 - Use GCC 13 for CI.
   [(#XXXX)](https://github.com/PennyLaneAI/pennylane-lightning/pull/XXXX)
   
+- Update Python to 3.12 and CIBuildWheel to 3.1.4 for CI.
+  [(#1248)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1248)
+
 - Updated decomposition stopping condition to no longer convert `C(SProd)` and `C(Exp)` to Qubit Unitary, since PennyLane can decompose these operators after [PR 8133](https://github.com/PennyLaneAI/pennylane/pull/8133). 
   [(#1247)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1247)
 

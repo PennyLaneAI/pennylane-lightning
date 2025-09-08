@@ -40,7 +40,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.12'
 
       - name: Install dependencies
         run: sudo apt update && sudo apt -y install cmake gcc-$GCC_VERSION g++-$GCC_VERSION ninja-build libomp-14-dev && python -m pip install -r requirements-dev.txt
