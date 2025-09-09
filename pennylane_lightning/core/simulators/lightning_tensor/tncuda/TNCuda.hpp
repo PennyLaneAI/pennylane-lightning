@@ -174,7 +174,7 @@ class TNCuda : public TNCudaBase<PrecisionT, Derived> {
             worksize_pref_ = CUTENSORNET_WORKSIZE_PREF_MIN;
         } else {
             PL_ABORT("Invalid workspace preference. Please choose from "
-                        "'recommended', 'max', or 'min'.");
+                     "'recommended', 'max', or 'min'.");
         }
     }
 
@@ -656,7 +656,7 @@ class TNCuda : public TNCudaBase<PrecisionT, Derived> {
     std::vector<TensorCuda<PrecisionT>> tensors_;
     std::vector<TensorCuda<PrecisionT>> tensors_out_;
 
-    cutensornetWorksizePref_t worksize_pref_ = 
+    cutensornetWorksizePref_t worksize_pref_ =
         CUTENSORNET_WORKSIZE_PREF_RECOMMENDED;
 
     /**

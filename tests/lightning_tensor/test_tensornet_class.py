@@ -88,18 +88,21 @@ def test_wrong_method_name():
     with pytest.raises(DeviceError, match="The method "):
         LightningTensorNet(3, max_bond_dim=5, device_name="lightning.tensor", method="spider_web")
 
+
 def test_wrong_worksize_pref():
     """Test an invalid worksize preference"""
     with pytest.raises(ValueError, match="Worksize preference"):
         LightningTensorNet(3, max_bond_dim=5, method="tn", worksize_pref="medium")
-        
+
+
 def test_wrong_worksize_setting_after_init():
     """Test setting worksize preference after initialization"""
     tensornet = LightningTensorNet(3, max_bond_dim=5, method="tn")
-    
+
     with pytest.raises(ValueError, match="Worksize preference"):
         tensornet.set_worksize_pref("medium")
-    
+
+
 @pytest.mark.parametrize("tn_backend", ["mps", "tn"])
 def test_errors_basis_state(tn_backend):
     """Test that errors are raised when applying a BasisState operation."""
