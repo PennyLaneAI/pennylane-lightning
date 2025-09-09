@@ -7,4 +7,4 @@ pytest-rng
 pytest-xdist>=2.5.0
 pytest-split
 flaky>=3.7.0 # For pl-device-test
-git+https://github.com/PennyLaneAI/pennylane.git@master
+git+https://github.com/PennyLaneAI/pennylane.git@new-decomp-integration/preprocess-clean
