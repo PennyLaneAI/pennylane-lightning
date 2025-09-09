@@ -122,9 +122,6 @@ def enable_disable_plxpr():
     qml.capture.disable()
 
 
-qml.decomposition.enable_graph()
-
-
 class TestHelpers:
     """Unit tests for helper functions"""
 
