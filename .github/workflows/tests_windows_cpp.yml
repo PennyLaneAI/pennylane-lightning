@@ -104,8 +104,8 @@ jobs:
                           -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF `
                           -DCMAKE_CXX_STANDARD=20 `
                           -DCMAKE_POSITION_INDEPENDENT_CODE=ON `
-                          -DCMAKE_BUILD_TYPE=Debug 
-                          -DLIGHTNING_CATALYST_SRC_PATH=${{ github.workspace }}/catalyst`
+                          -DCMAKE_BUILD_TYPE=Debug `
+                          -DLIGHTNING_CATALYST_SRC_PATH=${{ github.workspace }}/catalyst `
                           -T clangcl
           cmake --build ./Build --config Debug --verbose
           cmake --install ./Build --config Debug --verbose
@@ -124,7 +124,7 @@ jobs:
       - uses: actions/setup-python@v4
         name: Install Python
         with:
-          python-version: '3.11'
+          python-version: '3.12'
 
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
@@ -204,7 +204,7 @@ jobs:
       - uses: actions/setup-python@v4
         name: Install Python
         with:
-          python-version: '3.11'
+          python-version: '3.12'
 
       - name: Restoring cached Kokkos
         id: kokkos-cache

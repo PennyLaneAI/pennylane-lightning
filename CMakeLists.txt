@@ -16,6 +16,8 @@ project(pennylane_lightning
     LANGUAGES CXX
 )
 
+include(FetchContent)
+
 # Read and set pennylane_lightning version
 function(set_pennylane_lightning_version VERSION_FILE_PATH)
     file(STRINGS ${VERSION_FILE_PATH} VERSION_FILE_STR)
@@ -81,17 +83,79 @@ endforeach()
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/process_options.cmake")
 
-set(CMAKE_POLICY_DEFAULT_CMP0127 NEW) # To suppress pybind11 CMP0127 warning
-# Add pybind11
-include(FetchContent)
-
 if(ENABLE_PYTHON)
+    # Add nanobind
     find_package(Python COMPONENTS Interpreter Development)
-    FetchContent_Declare(pybind11
-                        GIT_REPOSITORY https://github.com/pybind/pybind11.git
-                        GIT_TAG        v2.13.5
+    message(STATUS "Enabling Nanobind Python bindings")
+    
+    # Ensure we have a valid Python executable
+    if(NOT Python_EXECUTABLE)
+        if(DEFINED PYTHON_EXECUTABLE)
+            set(Python_EXECUTABLE ${PYTHON_EXECUTABLE})
+        else()
+            # Try to find Python executable directly
+            find_program(Python_EXECUTABLE NAMES python3 python)
+        endif()
+    endif()
+    
+    message(STATUS "Using Python executable: ${Python_EXECUTABLE}")
+    
+    # Get Python include directory explicitly
+    execute_process(
+        COMMAND ${Python_EXECUTABLE} -c "import sysconfig; print(sysconfig.get_path('include'))"
+        OUTPUT_VARIABLE PYTHON_INCLUDE_DIR
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        RESULT_VARIABLE PY_INCLUDE_RESULT
     )
-    FetchContent_MakeAvailable(pybind11)
+    
+    if(PY_INCLUDE_RESULT EQUAL 0 AND PYTHON_INCLUDE_DIR)
+        message(STATUS "Setting Python include directory: ${PYTHON_INCLUDE_DIR}")
+        set(Python_INCLUDE_DIRS ${PYTHON_INCLUDE_DIR})
+        set(_Python_INCLUDE_DIR ${PYTHON_INCLUDE_DIR})
+        include_directories(${PYTHON_INCLUDE_DIR})
+    else()
+        message(WARNING "Failed to get Python include directory")
+    endif()
+    
+    # Ensure nanobind can find Python extension suffix - try multiple methods
+    execute_process(
+        COMMAND ${Python_EXECUTABLE} -c "import sysconfig; print(sysconfig.get_config_var('EXT_SUFFIX') or '.so')"
+        OUTPUT_VARIABLE NANOBIND_EXT_SUFFIX
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        RESULT_VARIABLE PY_RESULT
+    )
+    
+    if(NOT PY_RESULT EQUAL 0 OR NOT NANOBIND_EXT_SUFFIX)
+        message(WARNING "Failed to get Python extension suffix. Falling back to default '.so'")
+        # Fallback method
+        execute_process(
+            COMMAND ${Python_EXECUTABLE} -c "import importlib.machinery; print(importlib.machinery.EXTENSION_SUFFIXES[0] if importlib.machinery.EXTENSION_SUFFIXES else '.so')"
+            OUTPUT_VARIABLE NANOBIND_EXT_SUFFIX
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+            RESULT_VARIABLE PY_RESULT2
+        )
+        if(NOT PY_RESULT2 EQUAL 0 OR NOT NANOBIND_EXT_SUFFIX)
+            message(FATAL_ERROR "Failed to get Python extension suffix")
+        endif()
+
+    endif()
+    
+    message(STATUS "Setting NANOBIND_EXT_SUFFIX to: ${NANOBIND_EXT_SUFFIX}")
+    set(ENV{NANOBIND_EXT_SUFFIX} ${NANOBIND_EXT_SUFFIX})
+    
+    # Also set it as a CMake variable that nanobind can access
+    set(NANOBIND_EXT_SUFFIX ${NANOBIND_EXT_SUFFIX} CACHE STRING "Python extension suffix")
+    
+    # Print nanobind include directory
+    message(STATUS "Nanobind include directory: ${nanobind_SOURCE_DIR}/include")
+
+    FetchContent_Declare(nanobind
+                GIT_REPOSITORY https://github.com/wjakob/nanobind.git
+                GIT_TAG        v2.8.0
+    )
+    FetchContent_MakeAvailable(nanobind)
+
+
 endif()
 
 # Print Python site-packages directory for reference
@@ -147,8 +211,17 @@ target_include_directories(pennylane_lightning  INTERFACE "$<INSTALL_INTERFACE:$
 #####################################################
 if(ENABLE_PYTHON)
     message(STATUS "ENABLE_PYTHON is ON.")
-    pybind11_add_module("${PL_BACKEND}_ops" "pennylane_lightning/core/bindings/Bindings.cpp")
+    # Build Nanobind module
+    nanobind_add_module("${PL_BACKEND}_ops" "pennylane_lightning/core/bindings/Bindings.cpp")
 
+    # Remove nanobind's problematic flags that are incompatible with NVCC
+    target_compile_options("${PL_BACKEND}_ops" PRIVATE
+        -fno-function-sections
+        -fno-data-sections
+        -O2  # Override nanobind's -Os with -O2
+    )
+
+    # Set properties for nanobind module
     set(CMAKE_BUILD_RPATH_USE_ORIGIN ON)
     if("${PL_BACKEND}" STREQUAL "lightning_gpu" OR "${PL_BACKEND}" STREQUAL "lightning_tensor")
         # Allow pip installation of cuQuantum & CUDA 12 libs to be accessible without setting LD_LIBRARY_PATH for lightning_gpu
@@ -157,26 +230,23 @@ if(ENABLE_PYTHON)
     else()
         set_target_properties("${PL_BACKEND}_ops" PROPERTIES BUILD_RPATH "${SCIPY_OPENBLAS32_RUNTIME_LIB_PATH}")
     endif()
-
-    target_link_libraries("${PL_BACKEND}_ops" PRIVATE   lightning_compile_options
-                                                        lightning_external_libs
-                                                        )
-
-    target_link_libraries("${PL_BACKEND}_ops" PRIVATE   lightning_observables
-                                                        lightning_utils
-                                                        lightning_algorithms
-                                                        )
-
-    target_link_libraries("${PL_BACKEND}_ops" PRIVATE   ${PL_BACKEND} #simulator
-                                                        "${PL_BACKEND}_observables"
-                                                        "${PL_BACKEND}_bindings"
-                                                        "${PL_BACKEND}_measurements"
-                                                        )
-
+    
+    # Link library
+    target_link_libraries("${PL_BACKEND}_ops" PRIVATE lightning_compile_options
+                                                    lightning_external_libs
+                                                    lightning_observables
+                                                    lightning_utils
+                                                    lightning_algorithms
+                                                    ${PL_BACKEND}
+                                                    "${PL_BACKEND}_observables"
+                                                    "${PL_BACKEND}_bindings"
+                                                    "${PL_BACKEND}_measurements"
+                                                   )
+    
     if(NOT DEFINED PL_TENSOR)
         target_link_libraries("${PL_BACKEND}_ops" PRIVATE "${PL_BACKEND}_algorithms")
     endif()
-
+    
     set_target_properties("${PL_BACKEND}_ops" PROPERTIES CXX_VISIBILITY_PRESET hidden)
     target_compile_definitions("${PL_BACKEND}_ops" PRIVATE VERSION_INFO=${VERSION_STRING})
 endif()
