@@ -90,7 +90,7 @@ jobs:
         id: setup_python
         name: Setup Python
         with:
-          python-version: '3.11'
+          python-version: '3.12'
 
       - name: Setup Python virtual environment
         id: setup_venv

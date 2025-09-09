@@ -171,7 +171,7 @@ enable the device bindings to PennyLane, which are held to their own respective 
 
 PennyLane Lightning makes use of the following libraries and tools, which are under their own respective licenses:
 
-- **pybind11:** https://github.com/pybind/pybind11
+- **nanobind:** https://github.com/wjakob/nanobind
 - **Kokkos Core:** https://github.com/kokkos/kokkos
 - **NVIDIA cuQuantum:** https://developer.nvidia.com/cuquantum-sdk
 - **scipy-openblas32:** https://pypi.org/project/scipy-openblas32/

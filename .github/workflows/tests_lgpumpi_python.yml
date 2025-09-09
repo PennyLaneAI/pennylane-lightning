@@ -80,7 +80,7 @@ jobs:
         id: setup_python
         name: Install Python
         with:
-          python-version: '3.11'
+          python-version: '3.12'
 
       # Since the self-hosted runner can be re-used. It is best to set up all package
       # installations in a virtual environment that gets cleaned at the end of each workflow run
@@ -171,7 +171,7 @@ jobs:
         run: |
           source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}
           PL_DEVICE=lightning.gpu mpirun -np 2 \
-          coverage run --rcfile=.coveragerc --source=pennylane_lightning -p -m mpi4py -m pytest ./mpitests --tb=native
+          coverage run --rcfile=.coveragerc --source=pennylane_lightning -p -m mpi4py -m pytest ./mpitests -vv --maxfail=5 --tb=native
           coverage combine
           coverage xml -o coverage-${{ github.job }}-lightning_gpu_${{ matrix.mpilib }}_cu${{ matrix.cuda_version_maj }}-main.xml
 
