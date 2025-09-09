@@ -122,6 +122,9 @@ def enable_disable_plxpr():
     qml.capture.disable()
 
 
+qml.decomposition.enable_graph()
+
+
 class TestHelpers:
     """Unit tests for helper functions"""
 
@@ -201,6 +204,8 @@ class TestHelpers:
             stopping_condition_shots=stopping_condition_shots,
             name=name,
             skip_initial_state_prep=False,
+            device_wires=None,
+            target_gates=LightningDevice.capabilities.operations.keys()
         )
         expected_program.add_transform(validate_observables, accepted_observables, name=name)
         expected_program.add_transform(
@@ -766,6 +771,8 @@ class TestExecution:
             stopping_condition_shots=stopping_condition_shots,
             skip_initial_state_prep=True,
             name=device.name,
+            device_wires=device.wires,
+            target_gates=device.capabilities.operations.keys()
         )
         expected_program.add_transform(qml.transforms.broadcast_expand)
 
@@ -779,6 +786,8 @@ class TestExecution:
                 stopping_condition_shots=stopping_condition_shots,
                 name=name,
                 skip_initial_state_prep=False,
+                device_wires=device.wires,
+                target_gates=device.capabilities.operations.keys()
             )
             expected_program.add_transform(validate_observables, accepted_observables, name=name)
             expected_program.add_transform(
