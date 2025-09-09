@@ -64,7 +64,7 @@ class TNCuda : public TNCudaBase<PrecisionT, Derived> {
     TNCuda() = delete;
 
     explicit TNCuda(std::size_t numQubits, std::size_t maxBondDim = 1)
-        : BaseType(numQubits, 0, 0), maxBondDim_(maxBondDim),
+        : BaseType(numQubits), maxBondDim_(maxBondDim),
           bondDims_(setBondDims_()), sitesModes_(setSitesModes_()),
           sitesExtents_(setSitesExtents_()),
           sitesExtents_int64_(setSitesExtents_int64_()),
@@ -160,6 +160,33 @@ class TNCuda : public TNCudaBase<PrecisionT, Derived> {
     void reset() {
         const std::vector<std::size_t> zeroState(BaseType::getNumQubits(), 0);
         setBasisState(zeroState);
+    }
+
+    /**
+     * @brief Set Workspace Size Preference for cutensornet backend.
+     */
+    void setWorkspacePref(std::string_view pref) {
+        if (pref == "recommended") {
+            worksize_pref_ = CUTENSORNET_WORKSIZE_PREF_RECOMMENDED;
+        } else if (pref == "max") {
+            worksize_pref_ = CUTENSORNET_WORKSIZE_PREF_MAX;
+        } else if (pref == "min") {
+            worksize_pref_ = CUTENSORNET_WORKSIZE_PREF_MIN;
+        } else {
+            PL_ABORT_IF(true,
+                        "Invalid workspace preference. Please choose from "
+                        "'recommended', 'max', or 'min'.");
+        }
+    }
+
+    /**
+     * @brief Get the Worksize Pref setting.
+     *
+     * @return const cutensornetWorksizePref_t
+     */
+    [[nodiscard]] auto getWorksizePref() const
+        -> const cutensornetWorksizePref_t {
+        return worksize_pref_;
     }
 
     /**
@@ -589,8 +616,8 @@ class TNCuda : public TNCudaBase<PrecisionT, Derived> {
             /* cutensornetWorkspaceDescriptor_t */ workDesc,
             /*  cudaStream_t unused as of v24.03*/ 0x0));
 
-        std::size_t worksize =
-            getWorkSpaceMemorySize(BaseType::getTNCudaHandle(), workDesc, BaseType::getWorksizePref());
+        std::size_t worksize = getWorkSpaceMemorySize(
+            BaseType::getTNCudaHandle(), workDesc, getWorksizePref());
 
         PL_ABORT_IF(worksize > scratchSize,
                     "Insufficient workspace size on Device!");
@@ -630,6 +657,8 @@ class TNCuda : public TNCudaBase<PrecisionT, Derived> {
 
     std::vector<TensorCuda<PrecisionT>> tensors_;
     std::vector<TensorCuda<PrecisionT>> tensors_out_;
+
+    cutensornetWorksizePref_t worksize_pref_;
 
     /**
      * @brief Get accessor of a state tensor
@@ -683,8 +712,8 @@ class TNCuda : public TNCudaBase<PrecisionT, Derived> {
             /* cudaStream_t unused as of v24.03 */ 0x0));
 
         // Allocate workspace buffer
-        std::size_t worksize =
-            getWorkSpaceMemorySize(BaseType::getTNCudaHandle(), workDesc, BaseType::getWorksizePref());
+        std::size_t worksize = getWorkSpaceMemorySize(
+            BaseType::getTNCudaHandle(), workDesc, getWorksizePref());
 
         PL_ABORT_IF(worksize > scratchSize,
                     "Insufficient workspace size on Device!");

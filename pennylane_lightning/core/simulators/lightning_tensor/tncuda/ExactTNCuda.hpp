@@ -60,10 +60,10 @@ class ExactTNCuda final : public TNCuda<Precision, ExactTNCuda<Precision>> {
   public:
     ExactTNCuda() = delete;
 
-    explicit ExactTNCuda(std::size_t numQubits) : BaseType(numQubits, 1) {}
+    explicit ExactTNCuda(std::size_t numQubits) : BaseType(numQubits) {}
 
     explicit ExactTNCuda(std::size_t numQubits, DevTag<int> dev_tag)
-        : BaseType(numQubits, dev_tag, 1) {}
+        : BaseType(numQubits, dev_tag) {}
 
     ~ExactTNCuda() = default;
 };

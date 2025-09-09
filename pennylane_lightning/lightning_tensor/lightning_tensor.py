@@ -394,7 +394,7 @@ class LightningTensor(Device):
                 max_bond_dim=self._max_bond_dim,
                 cutoff=self._cutoff,
                 cutoff_mode=self._cutoff_mode,
-                workspace_pref=self._workspace_pref
+                workspace_pref=self._workspace_pref,
             )
         return LightningTensorNet(num_wires, self._method, self._c_dtype, device_name=self.name)
 

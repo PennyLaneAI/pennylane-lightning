@@ -405,7 +405,7 @@ class LightningTensorNet:
         cutoff_mode (str): Singular value truncation mode for MPS tensors can be done either by
             considering the absolute values of the singular values (``"abs"``) or by considering
             the relative values of the singular values (``"rel"``). Default is ``"abs"``.
-        workspace_pref (str): Preference for workspace for cutensornet backend. The options are ``recommended`` and ``max``. Default is ``recommended``.
+        workspace_pref (str): Preference for workspace for cutensornet backend. The options are ``recommended``, ``min``, and ``max``. Default is ``recommended``.
     """
 
     # pylint: disable=too-many-arguments, too-many-positional-arguments
@@ -429,21 +429,19 @@ class LightningTensorNet:
         self._device_name = device_name
 
         self._wires = Wires(range(num_wires))
-        
-        workspace_pref = kwargs.get("workspace_pref", "recommended")
-        workspace_dict = {"recommended": self._tensornet_dtype().RECOMMENDED, 
-                          "max": self._tensornet_dtype().MAX,
-                          "min": self._tensornet_dtype().MIN}
-        self._workspace_pref = workspace_dict[workspace_pref]
+
         if self._method == "mps":
             self._max_bond_dim = kwargs.get("max_bond_dim", 128)
             self._cutoff = kwargs.get("cutoff", 0)
             self._cutoff_mode = kwargs.get("cutoff_mode", "abs")
-            self._tensornet = self._tensornet_dtype()(self._num_wires, self._max_bond_dim, self._workspace_pref)
+            self._tensornet = self._tensornet_dtype()(self._num_wires, self._max_bond_dim)
         elif self._method == "tn":
-            self._tensornet = self._tensornet_dtype()(self._num_wires, self._workspace_pref)
+            self._tensornet = self._tensornet_dtype()(self._num_wires)
         else:
             raise DeviceError(f"The method {self._method} is not supported.")
+
+        workspace_pref = kwargs.get("workspace_pref", "recommended")
+        self.set_workspace_pref(workspace_pref)
 
     @property
     def dtype(self):
@@ -772,6 +770,14 @@ class LightningTensorNet:
                     raise DeviceError("Exact Tensor Network does not support MPSPrep")
 
         self._apply_lightning(operations)
+
+    def set_workspace_pref(self, workspace_pref: str):
+        """Set the workspace preference for the cutensornet backend.
+
+        Args:
+            workspace_pref (str): Preference for workspace for cutensornet backend. The options are ``recommended``, ``max``, or ``min``. Default is ``recommended``.
+        """
+        self._tensornet.setWorkspacePref(workspace_pref)
 
     def set_tensor_network(self, circuit: QuantumScript):
         """

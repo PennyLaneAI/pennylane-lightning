@@ -60,15 +60,13 @@ template <class PrecisionT, class Derived> class TNCudaBase {
     cutensornetStatePurity_t purity_ =
         CUTENSORNET_STATE_PURITY_PURE; // Only supports pure tensor network
                                        // states as v24.03
-    
-    cutensornetWorksizePref_t worksizePref_;
 
   public:
     TNCudaBase() = delete;
 
     explicit TNCudaBase(const std::size_t numQubits, int device_id = 0,
-                        cudaStream_t stream_id = 0, cutensornetWorksizePref_t worksizePref = CUTENSORNET_WORKSIZE_PREF_RECOMMENDED)
-        : dev_tag_({device_id, stream_id}), numQubits_(numQubits), worksizePref_(worksizePref) {
+                        cudaStream_t stream_id = 0)
+        : dev_tag_({device_id, stream_id}), numQubits_(numQubits) {
         PL_ABORT_IF(numQubits < 2,
                     "The number of qubits should be greater than 1.");
 
@@ -165,15 +163,6 @@ template <class PrecisionT, class Derived> class TNCudaBase {
      */
     [[nodiscard]] auto getDevTag() const -> const DevTag<int> & {
         return dev_tag_;
-    }
-
-    /**
-     * @brief Get the Worksize Pref setting.
-     * 
-     * @return const cutensornetWorksizePref_t 
-     */
-    [[nodiscard]] auto getWorksizePref() const -> const cutensornetWorksizePref_t {
-        return worksizePref_;
     }
 };
 } // namespace Pennylane::LightningTensor::TNCuda

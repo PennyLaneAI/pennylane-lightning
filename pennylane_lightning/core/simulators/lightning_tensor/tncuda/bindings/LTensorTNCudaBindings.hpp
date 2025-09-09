@@ -28,6 +28,7 @@
 #include <nanobind/ndarray.h>
 #include <nanobind/stl/complex.h>
 #include <nanobind/stl/string.h>
+#include <nanobind/stl/string_view.h>
 #include <nanobind/stl/vector.h>
 
 #include "BindingsUtils.hpp"
@@ -141,6 +142,12 @@ void registerBackendClassSpecificBindingsMPS(PyClass &pyclass) {
         },
         "Get the final state.");
     pyclass.def("reset", &TensorNetT::reset, "Reset the tensor network.");
+    pyclass.def(
+        "setWorkspacePref",
+        [](TensorNetT &tensor_network, std::string_view pref) {
+            tensor_network.setWorkspacePref(pref);
+        },
+        "Set Workspace Size Preference.");
 }
 
 /**
@@ -180,6 +187,12 @@ void registerBackendClassSpecificBindingsExactTNCuda(PyClass &pyclass) {
         },
         "Pass MPS site data to the C++ backend.");
     pyclass.def("reset", &TensorNetT::reset, "Reset the tensor network.");
+    pyclass.def(
+        "setWorkspacePref",
+        [](TensorNetT &tensor_network, std::string_view pref) {
+            tensor_network.setWorkspacePref(pref);
+        },
+        "Set Workspace Size Preference.");
 }
 
 /**
