@@ -165,7 +165,7 @@ class TNCuda : public TNCudaBase<PrecisionT, Derived> {
     /**
      * @brief Set Workspace Size Preference for cutensornet backend.
      */
-    void setWorkspacePref(std::string_view pref) {
+    void setWorksizePref(std::string_view pref) {
         if (pref == "recommended") {
             worksize_pref_ = CUTENSORNET_WORKSIZE_PREF_RECOMMENDED;
         } else if (pref == "max") {
@@ -173,8 +173,7 @@ class TNCuda : public TNCudaBase<PrecisionT, Derived> {
         } else if (pref == "min") {
             worksize_pref_ = CUTENSORNET_WORKSIZE_PREF_MIN;
         } else {
-            PL_ABORT_IF(true,
-                        "Invalid workspace preference. Please choose from "
+            PL_ABORT("Invalid workspace preference. Please choose from "
                         "'recommended', 'max', or 'min'.");
         }
     }
@@ -184,8 +183,7 @@ class TNCuda : public TNCudaBase<PrecisionT, Derived> {
      *
      * @return const cutensornetWorksizePref_t
      */
-    [[nodiscard]] auto getWorksizePref() const
-        -> const cutensornetWorksizePref_t {
+    [[nodiscard]] cutensornetWorksizePref_t getWorksizePref() const {
         return worksize_pref_;
     }
 
@@ -658,7 +656,8 @@ class TNCuda : public TNCudaBase<PrecisionT, Derived> {
     std::vector<TensorCuda<PrecisionT>> tensors_;
     std::vector<TensorCuda<PrecisionT>> tensors_out_;
 
-    cutensornetWorksizePref_t worksize_pref_;
+    cutensornetWorksizePref_t worksize_pref_ = 
+        CUTENSORNET_WORKSIZE_PREF_RECOMMENDED;
 
     /**
      * @brief Get accessor of a state tensor

@@ -405,7 +405,7 @@ class LightningTensorNet:
         cutoff_mode (str): Singular value truncation mode for MPS tensors can be done either by
             considering the absolute values of the singular values (``"abs"``) or by considering
             the relative values of the singular values (``"rel"``). Default is ``"abs"``.
-        workspace_pref (str): Preference for workspace for cutensornet backend. The options are ``recommended``, ``min``, and ``max``. Default is ``recommended``.
+        worksize_pref (str): Preference for workspace size for cutensornet backend. The options are ``recommended``, ``min``, and ``max``. Default is ``recommended``.
     """
 
     # pylint: disable=too-many-arguments, too-many-positional-arguments
@@ -440,8 +440,8 @@ class LightningTensorNet:
         else:
             raise DeviceError(f"The method {self._method} is not supported.")
 
-        workspace_pref = kwargs.get("workspace_pref", "recommended")
-        self.set_workspace_pref(workspace_pref)
+        worksize_pref = kwargs.get("worksize_pref", "recommended")
+        self.set_worksize_pref(worksize_pref)
 
     @property
     def dtype(self):
@@ -771,13 +771,17 @@ class LightningTensorNet:
 
         self._apply_lightning(operations)
 
-    def set_workspace_pref(self, workspace_pref: str):
-        """Set the workspace preference for the cutensornet backend.
+    def set_worksize_pref(self, worksize_pref: str):
+        """Set the worksize preference for the cutensornet backend.
 
         Args:
-            workspace_pref (str): Preference for workspace for cutensornet backend. The options are ``recommended``, ``max``, or ``min``. Default is ``recommended``.
+            worksize_pref (str): Preference for workspace size for cutensornet backend. The options are ``recommended``, ``max``, or ``min``. Default is ``recommended``.
         """
-        self._tensornet.setWorkspacePref(workspace_pref)
+        if worksize_pref not in ("recommended", "max", "min"):
+            raise ValueError(
+                f'Worksize preference "{worksize_pref}" is not valid. Please select one of the following options: "recommended", "max", or "min".'
+            )
+        self._tensornet.setWorksizePref(worksize_pref)
 
     def set_tensor_network(self, circuit: QuantumScript):
         """

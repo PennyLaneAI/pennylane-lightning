@@ -4,6 +4,9 @@
 
 <h3>Improvements 🛠</h3>
 
+- Worksize preference in `cuTensorNet` can now be set and updated when using `lightning.tensor` device to reduce memory usage or improve stability. 
+  [(#1238)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1238)
+
 - **Migrated to Nanobind for Python bindings**, replacing pybind11 to enhance performance, modularity, and build system efficiency.
   [(#1176)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1176)
 
@@ -72,9 +75,6 @@
 
 - Setup the correct PL version for stable-stable test with `lightning.gpu` with MPI.
   [(#1237)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1237)
-
-- Change the default setting of the `cuTensorNet` worksize preference in order to make simulation with `lightning.tensor` more stable. 
-  [(#1238)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1238)
 
 <h3>Internal changes ⚙️</h3>
 

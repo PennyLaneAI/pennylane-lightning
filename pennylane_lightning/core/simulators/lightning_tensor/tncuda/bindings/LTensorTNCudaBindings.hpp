@@ -143,9 +143,9 @@ void registerBackendClassSpecificBindingsMPS(PyClass &pyclass) {
         "Get the final state.");
     pyclass.def("reset", &TensorNetT::reset, "Reset the tensor network.");
     pyclass.def(
-        "setWorkspacePref",
+        "setWorksizePref",
         [](TensorNetT &tensor_network, std::string_view pref) {
-            tensor_network.setWorkspacePref(pref);
+            tensor_network.setWorksizePref(pref);
         },
         "Set Workspace Size Preference.");
 }
@@ -188,9 +188,9 @@ void registerBackendClassSpecificBindingsExactTNCuda(PyClass &pyclass) {
         "Pass MPS site data to the C++ backend.");
     pyclass.def("reset", &TensorNetT::reset, "Reset the tensor network.");
     pyclass.def(
-        "setWorkspacePref",
+        "setWorksizePref",
         [](TensorNetT &tensor_network, std::string_view pref) {
-            tensor_network.setWorkspacePref(pref);
+            tensor_network.setWorksizePref(pref);
         },
         "Set Workspace Size Preference.");
 }
@@ -223,13 +223,10 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
 template <class TensorNetT, class PyClass>
 void registerBackendSpecificMeasurements(PyClass &pyclass) {
     using MeasurementsT = MeasurementsTNCuda<TensorNetT>;
-    using ObservableT = ObservableTNCuda<TensorNetT>;
     pyclass.def("generate_samples", [](MeasurementsT &M,
                                        const std::vector<std::size_t> &wires,
                                        std::size_t num_shots) {
-        constexpr auto sz = sizeof(std::size_t);
         const std::size_t num_wires = wires.size();
-        const std::size_t ndim = 2;
         const std::vector<std::size_t> shape{num_shots, num_wires};
         auto &&result = M.generate_samples(wires, num_shots);
 
