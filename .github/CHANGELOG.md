@@ -75,6 +75,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Use GCC 13 for CI.
+  [(#XXXX)](https://github.com/PennyLaneAI/pennylane-lightning/pull/XXXX)
+  
 - Update Python to 3.12 and CIBuildWheel to 3.1.4 for CI.
   [(#1248)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1248)
 
