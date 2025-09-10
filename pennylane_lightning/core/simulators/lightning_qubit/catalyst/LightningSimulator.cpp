@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <set>
+
 #include "LightningSimulator.hpp"
 
 #include "AdjointJacobianLQubit.hpp"
@@ -65,6 +67,27 @@ auto LightningSimulator::AllocateQubits(size_t num_qubits)
     return result;
 }
 
+void LightningSimulator::ReleaseQubits(const std::vector<QubitIdType> &ids) {
+    // fast path for single register alloc and dealloc
+    if (this->GetNumQubits() == ids.size()) {
+        std::vector<QubitIdType> allocated_ids =
+            this->qubit_manager.getAllQubitIds();
+        std::set<QubitIdType> s1, s2;
+        s1.insert(ids.begin(), ids.end());
+        s2.insert(allocated_ids.begin(), allocated_ids.end());
+        if (s1 == s2) {
+            this->qubit_manager.ReleaseAll();
+            this->device_sv = std::make_unique<StateVectorT>(0);
+            return;
+        }
+    }
+
+    for (auto id : ids) {
+        ReleaseQubit(id);
+    }
+}
+
+// TODO: remove this function
 void LightningSimulator::ReleaseAllQubits() {
     this->qubit_manager.ReleaseAll();
     this->device_sv = std::make_unique<StateVectorT>(0); // reset the device
