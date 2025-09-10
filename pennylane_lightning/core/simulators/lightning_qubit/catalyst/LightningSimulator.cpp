@@ -94,6 +94,14 @@ void LightningSimulator::ReleaseAllQubits() {
 }
 
 void LightningSimulator::ReleaseQubit(QubitIdType q) {
+    // We do not deallocate physical memory in the statevector for this
+    // operation, instead we just mark the qubits as released.
+    // TODO: need to ensure the semantic behaviour of releasing qubits is still
+    // maintained,
+    //       in particular: measurements must not compute results for released
+    //       qubits, only for active/allocated qubits reallocation of qubits
+    //       should also be considered, in particular the statevector memory for
+    //       freed qubits should be reused for new allocations
     this->qubit_manager.Release(q);
 }
 
