@@ -72,7 +72,6 @@ _methods = frozenset({"mps", "tn"})
 _operations = frozenset(
     {
         "Identity",
-        "BasisState",
         "MPSPrep",
         "QubitUnitary",
         "ControlledQubitUnitary",
