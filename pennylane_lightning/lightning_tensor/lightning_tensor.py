@@ -460,7 +460,7 @@ class LightningTensor(Device):
             skip_initial_state_prep=True,
             name=self.name,
             device_wires=self.wires,
-            target_gates=self.capabilities.operations.keys(),
+            target_gates=self.operations,
         )
         return program, config
 
