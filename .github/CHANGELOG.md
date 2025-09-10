@@ -4,6 +4,9 @@
 
 <h3>Improvements 🛠</h3>
 
+- Lightning devices now call the new `preprocess` method integrated with the graph decomposition system.
+  [(#1251)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1251)
+
 - **Migrated to Nanobind for Python bindings**, replacing pybind11 to enhance performance, modularity, and build system efficiency.
   [(#1176)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1176)
 
