@@ -83,7 +83,7 @@ void LightningSimulator::ReleaseQubits(const std::vector<QubitIdType> &ids) {
     }
 
     for (auto id : ids) {
-        ReleaseQubit(id);
+        this->qubit_manager.Release(id);
     }
 }
 
@@ -103,6 +103,9 @@ void LightningSimulator::ReleaseQubit(QubitIdType q) {
     //       should also be considered, in particular the statevector memory for
     //       freed qubits should be reused for new allocations
     this->qubit_manager.Release(q);
+
+    // TODO: We don't have to check whether the released qubit is pure, but it
+    // is something we can add easily to catch program errors.
 }
 
 auto LightningSimulator::GetNumQubits() const -> size_t {
