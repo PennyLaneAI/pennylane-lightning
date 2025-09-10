@@ -24,29 +24,60 @@
 namespace Catalyst::Runtime::Simulator {
 
 auto LightningSimulator::AllocateQubit() -> QubitIdType {
-    const std::size_t num_qubits = this->device_sv->getNumQubits();
-
+    const size_t num_qubits = GetNumQubits();
     if (num_qubits == 0U) {
         this->device_sv = std::make_unique<StateVectorT>(1);
-        return this->qubit_manager.Allocate(num_qubits);
+        return this->qubit_manager.Allocate(0);
     }
 
     std::vector<std::complex<double>, AlignedAllocator<std::complex<double>>>
         data = this->device_sv->getDataVector();
-    const std::size_t dsize = data.size();
-    data.resize(dsize << 1UL);
+    const size_t dsize = data.size();
 
-    auto src = data.begin();
-    std::advance(src, dsize - 1);
+    // The statevector may contain previously freed qubits,
+    // that means we may not need to resize the vector.
+    size_t device_idx;
+    if (dsize < (1UL << (num_qubits + 1))) {
+        data.resize(dsize << 1UL);
+        device_idx = num_qubits;
 
-    for (auto dst = data.end() - 2; src != data.begin();
-         std::advance(src, -1), std::advance(dst, -2)) {
-        *dst = *src;
-        *src = std::complex<double>(.0, .0);
+        // zero the new data and move existing amplitudes
+        auto src = data.begin();
+        std::advance(src, dsize - 1);
+        for (auto dst = data.end() - 2; src != data.begin();
+             std::advance(src, -1), std::advance(dst, -2)) {
+            *dst = *src;
+            *src = std::complex<double>(.0, .0);
+        }
+    } else {
+        // find a free qubit (TODO: can be removed by tracking frees)
+        std::vector<size_t> active_indices = getDeviceWires();
+        std::sort(active_indices.begin(), active_indices.end());
+        size_t last_seen = 0;
+        for (size_t idx : active_indices) {
+            if (idx && idx != last_seen + 1) {
+                device_idx = idx;
+                break;
+            }
+        }
+
+        // To reuse existing space in the statevector, zero the elements
+        // corresponding to the |1> state of the freed qubit and renormalize.
+        //  - xxxx1xxxx index mask for the desired qubit
+        //  - total iteration space is half the vector
+        size_t bit_mask = 1UL << device_idx;
+        for (size_t idx = 0; idx < (data.size() >> 1UL); idx++) {
+            size_t full_idx = (idx >= bit_mask ? (idx << 1UL) : idx) | bit_mask;
+            data[full_idx] = std::complex<double>(0., 0.);
+        }
+        double norm = std::sqrt(squaredNorm(data.data(), data.size()));
+        std::transform(
+            data.begin(), data.end(), data.begin(),
+            [norm](const std::complex<double> &elem) { return elem * norm; });
     }
 
     this->device_sv = std::make_unique<StateVectorT>(data);
-    return this->qubit_manager.Allocate(num_qubits);
+    return this->qubit_manager.Allocate(device_idx);
 }
 
 auto LightningSimulator::AllocateQubits(size_t num_qubits)
@@ -99,9 +130,7 @@ void LightningSimulator::ReleaseQubit(QubitIdType q) {
     // TODO: need to ensure the semantic behaviour of releasing qubits is still
     // maintained,
     //       in particular: measurements must not compute results for released
-    //       qubits, only for active/allocated qubits reallocation of qubits
-    //       should also be considered, in particular the statevector memory for
-    //       freed qubits should be reused for new allocations
+    //       qubits, only for active/allocated qubits
     this->qubit_manager.Release(q);
 
     // TODO: We don't have to check whether the released qubit is pure, but it
@@ -154,7 +183,7 @@ void LightningSimulator::SetState(DataView<std::complex<double>, 1> &state,
 
 void LightningSimulator::SetBasisState(DataView<int8_t, 1> &n,
                                        std::vector<QubitIdType> &wires) {
-    std::vector<std::size_t> data_vector(n.begin(), n.end());
+    std::vector<size_t> data_vector(n.begin(), n.end());
     this->device_sv->setBasisState(data_vector, getDeviceWires(wires));
 }
 
