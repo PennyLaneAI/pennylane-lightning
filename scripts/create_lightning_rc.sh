@@ -338,8 +338,8 @@ create_version_bump_PR(){
     git commit -m "Update CHANGELOG.md with new version entry."
 
     # Update minimum PennLane version in requirements.txt and configure_pyproject_toml.py
-    sed -i "s/pennylane>=0.[0-9]\{2\}/pennylane>=${RELEASE_VERSION%??}/" ${ROOT_DIR}/requirements.txt
-    sed -i "s/pennylane>=0.[0-9]\{2\}/pennylane>=${RELEASE_VERSION%??}/" ${ROOT_DIR}/scripts/configure_pyproject_toml.py
+    sed -i "s/pennylane>=v\?[0-9\.]\+/pennylane>=${RELEASE_VERSION%??}/" ${ROOT_DIR}/requirements.txt
+    sed -i "s/pennylane>=v\?[0-9\.]\+/pennylane>=${RELEASE_VERSION%??}/" ${ROOT_DIR}/scripts/configure_pyproject_toml.py
 
     git add ${ROOT_DIR}/requirements.txt ${ROOT_DIR}/scripts/configure_pyproject_toml.py
     git commit -m "Update minimum PennyLane version to ${RELEASE_VERSION%??}"
