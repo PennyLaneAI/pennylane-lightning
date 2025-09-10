@@ -75,7 +75,9 @@ void LightningSimulator::ReleaseQubit(QubitIdType q) {
 }
 
 auto LightningSimulator::GetNumQubits() const -> size_t {
-    return this->device_sv->getNumQubits();
+    // This needs to produce the currently allocated number of qubits,
+    // not the internal state size.
+    return this->qubit_manager.getNumQubits();
 }
 
 void LightningSimulator::StartTapeRecording() {
