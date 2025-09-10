@@ -459,6 +459,8 @@ class LightningTensor(Device):
             stopping_condition_shots=stopping_condition,
             skip_initial_state_prep=True,
             name=self.name,
+            device_wires=self.wires,
+            target_gates=self.capabilities.operations.keys(),
         )
         return program, config
 
