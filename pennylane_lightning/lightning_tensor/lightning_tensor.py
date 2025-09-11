@@ -241,6 +241,7 @@ class LightningTensor(Device):
         cutoff (float): (Only for ``method=mps``) The threshold used to truncate the singular values of the MPS tensors. The default is 0.
         cutoff_mode (str): (Only for ``method=mps``) Singular value truncation mode for MPS tensors. The options are ``"rel"`` and ``"abs"``. Default is ``"abs"``.
         backend (str): Supported backend. Currently, only ``cutensornet`` is supported. Default is ``cutensornet``.
+        worksize_pref (str): Preference for workspace size for cutensornet backend. The options are ``recommended`` and ``max``. Default is ``recommended``.
 
     **Example for the MPS method**
 
@@ -288,8 +289,8 @@ class LightningTensor(Device):
     # pylint: disable=too-many-instance-attributes
 
     _device_options = {
-        "mps": ("backend", "max_bond_dim", "cutoff", "cutoff_mode"),
-        "tn": ("backend"),
+        "mps": ("backend", "max_bond_dim", "cutoff", "cutoff_mode", "worksize_pref"),
+        "tn": ("backend", "worksize_pref"),
     }
 
     _CPP_BINARY_AVAILABLE = LT_CPP_BINARY_AVAILABLE
@@ -334,6 +335,7 @@ class LightningTensor(Device):
         self._c_dtype = c_dtype
 
         self._backend = kwargs.get("backend", "cutensornet")
+        self._worksize_pref = kwargs.get("worksize_pref", "recommended")
 
         for arg in kwargs:
             if arg not in self._device_options[self._method]:
@@ -391,6 +393,7 @@ class LightningTensor(Device):
                 max_bond_dim=self._max_bond_dim,
                 cutoff=self._cutoff,
                 cutoff_mode=self._cutoff_mode,
+                worksize_pref=self._worksize_pref,
             )
         return LightningTensorNet(num_wires, self._method, self._c_dtype, device_name=self.name)
 

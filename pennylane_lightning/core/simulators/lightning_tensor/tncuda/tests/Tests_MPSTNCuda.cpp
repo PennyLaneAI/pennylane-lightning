@@ -227,6 +227,39 @@ TEMPLATE_TEST_CASE("MPSTNCuda::SetBasisStates() & reset()", "[MPSTNCuda]",
     }
 }
 
+TEMPLATE_TEST_CASE("MPSTNCuda::WorksizePref", "[MPSTNCuda]", float, double) {
+    SECTION("Set wrong worksize preference") {
+        constexpr std::size_t num_qubits = 10;
+        constexpr std::size_t maxBondDim = 2;
+        DevTag<int> dev_tag{0, 0};
+
+        MPSTNCuda<TestType> mps_state{num_qubits, maxBondDim, dev_tag};
+        REQUIRE_THROWS_WITH(
+            mps_state.setWorksizePref("invalid_pref"),
+            Catch::Matchers::Contains("Invalid workspace preference"));
+    }
+
+    SECTION("Set and get workspace preference") {
+        constexpr std::size_t num_qubits = 10;
+        constexpr std::size_t maxBondDim = 2;
+        DevTag<int> dev_tag{0, 0};
+
+        MPSTNCuda<TestType> mps_state{num_qubits, maxBondDim, dev_tag};
+        CHECK(mps_state.getWorksizePref() ==
+              CUTENSORNET_WORKSIZE_PREF_RECOMMENDED); // Default
+
+        mps_state.setWorksizePref("max");
+        CHECK(mps_state.getWorksizePref() == CUTENSORNET_WORKSIZE_PREF_MAX);
+
+        mps_state.setWorksizePref("min");
+        CHECK(mps_state.getWorksizePref() == CUTENSORNET_WORKSIZE_PREF_MIN);
+
+        mps_state.setWorksizePref("recommended");
+        CHECK(mps_state.getWorksizePref() ==
+              CUTENSORNET_WORKSIZE_PREF_RECOMMENDED);
+    }
+}
+
 TEMPLATE_TEST_CASE("MPSTNCuda::getDataVector()", "[MPSTNCuda]", float, double) {
     using cp_t = std::complex<TestType>;
     SECTION("Get zero state") {
