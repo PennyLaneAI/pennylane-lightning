@@ -4,6 +4,9 @@
 
 <h3>Improvements 🛠</h3>
 
+- Worksize preference in `cuTensorNet` can now be set and updated when using `lightning.tensor` device to reduce memory usage or improve stability. 
+  [(#1238)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1238)
+
 - **Migrated to Nanobind for Python bindings**, replacing pybind11 to enhance performance, modularity, and build system efficiency.
   [(#1176)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1176)
 
@@ -75,6 +78,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Update Release script for bumping the minimum version for PennyLane.
+  [(#1253)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1253)
+
 - Update Python to 3.12 and CIBuildWheel to 3.1.4 for CI.
   [(#1248)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1248)
 
@@ -131,6 +137,7 @@ Christina Lee,
 Joseph Lee,
 Luis Alfredo Nuñez Meneses,
 Andrija Paurevic,
+Marc Vandelle,
 Jake Zaia.
 
 ---
