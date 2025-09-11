@@ -34,6 +34,7 @@ To build Lightning-Kokkos with MPI on `Frontier <https://www.olcf.ornl.gov/front
         -DKokkos_ENABLE_SERIAL:BOOL=ON \
         -DKokkos_ENABLE_HIP:BOOL=ON \
         -DKokkos_ARCH_AMD_GFX90A:BOOL=ON \
+        -DKokkos_ENABLE_COMPLEX_ALIGN:BOOL=OFF \
         -DKokkos_ENABLE_EXAMPLES:BOOL=OFF \
         -DKokkos_ENABLE_TESTS:BOOL=OFF \
         -DKokkos_ENABLE_LIBDL:BOOL=OFF

@@ -47,6 +47,7 @@ Build Kokkos for NVIDIA A100 cards (``SM80`` architecture), and append the insta
         -DKokkos_ENABLE_SERIAL:BOOL=ON \
         -DKokkos_ENABLE_CUDA:BOOL=ON \
         -DKokkos_ARCH_AMPERE80:BOOL=ON \
+        -DKokkos_ENABLE_COMPLEX_ALIGN:BOOL=OFF \
         -DKokkos_ENABLE_EXAMPLES:BOOL=OFF \
         -DKokkos_ENABLE_TESTS:BOOL=OFF \
         -DKokkos_ENABLE_LIBDL:BOOL=OFF
