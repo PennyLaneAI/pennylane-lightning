@@ -59,9 +59,11 @@ auto LightningSimulator::AllocateQubit() -> QubitIdType {
         // corresponding to the |1> state of the freed qubit and renormalize.
         //  - xxxx1xxxx index mask for the desired qubit
         //  - total iteration space is half the vector
-        size_t bit_mask = 1UL << device_idx;
+        size_t fixed_bit = 1UL << device_idx;
         for (size_t idx = 0; idx < (data.size() >> 1UL); idx++) {
-            size_t full_idx = (idx >= bit_mask ? (idx << 1UL) : idx) | bit_mask;
+            size_t lower_bits = idx & (fixed_bit - 1);
+            size_t upper_bits = (idx >> device_idx) << (device_idx + 1);
+            size_t full_idx = upper_bits | fixed_bit | lower_bits;
             data[full_idx] = std::complex<double>(0., 0.);
         }
 
