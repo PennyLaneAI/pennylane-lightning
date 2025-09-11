@@ -28,8 +28,8 @@
 #include "CacheManager.hpp"
 #include "Exception.hpp"
 #include "LightningObsManager.hpp"
+#include "LightningQubitManager.hpp"
 #include "QuantumDevice.hpp"
-#include "QubitManager.hpp"
 
 namespace Catalyst::Runtime::Simulator {
 class LightningSimulator final : public Catalyst::Runtime::QuantumDevice {
@@ -46,7 +46,7 @@ class LightningSimulator final : public Catalyst::Runtime::QuantumDevice {
     static constexpr std::string_view default_kernel_name{
         "Local"}; // tidy: readability-magic-numbers
 
-    Catalyst::Runtime::QubitManager<QubitIdType, size_t> qubit_manager{};
+    QubitManager<QubitIdType, size_t> qubit_manager{};
     Catalyst::Runtime::CacheManager<std::complex<double>> cache_manager{};
     bool tape_recording{false};
     size_t device_shots{0};
