@@ -531,7 +531,6 @@ class TestInitialization:
         assert dev._rng is not None
 
 
-@pytest.mark.usefixtures("enable_and_disable_graph_decomp")
 class TestExecution:
     """Unit tests for executing quantum tapes on a device"""
 
@@ -744,6 +743,7 @@ class TestExecution:
         with pytest.raises(DeviceError, match="mcm_method='foo' is not supported"):
             _ = device.preprocess(config)
 
+    @pytest.mark.usefixtures("enable_and_disable_graph_decomp")
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
         reason="lightning.tensor device doesn't have support for program capture.",
@@ -775,6 +775,7 @@ class TestExecution:
         # pylint: disable=protected-access
         assert program[0].transform == qml.transforms.decompose._transform
 
+    @pytest.mark.usefixtures("enable_and_disable_graph_decomp")
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
         reason="lightning.tensor does not support adjoint",
@@ -828,6 +829,7 @@ class TestExecution:
         actual_program, _ = device.preprocess(config)
         assert actual_program == expected_program
 
+    @pytest.mark.usefixtures("enable_and_disable_graph_decomp")
     @pytest.mark.parametrize(
         "op, is_trainable",
         (
@@ -865,6 +867,7 @@ class TestExecution:
         expected_tape = qml.tape.QuantumScript([*decomp, qml.RX(1.23, wires=0)], tape.measurements)
         assert qml.equal(new_tape, expected_tape)
 
+    @pytest.mark.usefixtures("enable_and_disable_graph_decomp")
     @pytest.mark.parametrize(
         "op, decomp_depth",
         [
@@ -1078,7 +1081,6 @@ class TestExecution:
         assert qml.math.allclose(res3, np.array([0.5, 0.0, 0.5, 0.0]))
 
 
-@pytest.mark.usefixtures("enable_and_disable_graph_decomp")
 @pytest.mark.skipif(
     device_name == "lightning.tensor",
     reason="lightning.tensor does not support derivatives",
@@ -1308,6 +1310,7 @@ class TestDerivatives:
         assert len(jac) == 1
         assert qml.math.shape(jac[0]) == (0,)
 
+    @pytest.mark.usefixtures("enable_and_disable_graph_decomp")
     @pytest.mark.parametrize("execute_and_derivatives", [True, False])
     @pytest.mark.parametrize(
         "state_prep, params, wires",
@@ -1495,7 +1498,6 @@ class TestDerivatives:
         assert np.allclose(jac, expected_jac, atol=tol, rtol=0)
 
 
-@pytest.mark.usefixtures("enable_and_disable_graph_decomp")
 @pytest.mark.skipif(
     device_name == "lightning.tensor",
     reason="lightning.tensor does not support vjp",
@@ -1737,6 +1739,7 @@ class TestVJP:
         assert len(jac) == 1
         assert qml.math.shape(jac[0]) == (0,)
 
+    @pytest.mark.usefixtures("enable_and_disable_graph_decomp")
     @pytest.mark.parametrize("execute_and_derivatives", [True, False])
     @pytest.mark.parametrize(
         "state_prep, params, wires",
@@ -1918,3 +1921,45 @@ class TestVJP:
         assert len(res) == len(jac) == 1
         assert np.allclose(res, expected, atol=tol, rtol=0)
         assert np.allclose(jac, expected_jac, atol=tol, rtol=0)
+
+
+class TestLightningDeviceGraphModeExclusive:
+    """Tests for LightningDevice features that require graph mode enabled.
+    The legacy decomposition mode should not be able to run these tests.
+
+    NOTE: All tests in this suite will auto-enable graph mode via fixture.
+    """
+
+    @pytest.fixture(autouse=True)
+    def enable_graph_mode_only(self):
+        """Auto-enable graph mode for all tests in this class."""
+        qml.decomposition.enable_graph()
+        yield
+        qml.decomposition.disable_graph()
+
+    def test_insufficient_work_wires_causes_fallback(self):
+        """Test that if a decomposition requires more work wires than available on lightning device,
+        that decomposition is discarded and fallback is used."""
+
+        class MyLightningDeviceOp(qml.operation.Operator):
+            num_wires = 1
+
+        @qml.register_resources({qml.H: 2})
+        def decomp_fallback(wires):
+            qml.H(wires)
+            qml.H(wires)
+
+        @qml.register_resources({qml.X: 1}, work_wires={"burnable": 5})
+        def decomp_with_work_wire(wires):
+            qml.X(wires)
+
+        qml.add_decomps(MyLightningDeviceOp, decomp_fallback, decomp_with_work_wire)
+
+        tape = qml.tape.QuantumScript([MyLightningDeviceOp(0)])
+        dev = LightningDevice(wires=1)  # Only 1 wire, but decomp needs 5 burnable
+        program = dev.preprocess_transforms()
+        (out_tape,), _ = program([tape])
+
+        assert len(out_tape.operations) == 2
+        assert out_tape.operations[0].name == "Hadamard"
+        assert out_tape.operations[1].name == "Hadamard"
