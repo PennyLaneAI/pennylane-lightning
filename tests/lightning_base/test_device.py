@@ -122,7 +122,7 @@ def enable_disable_plxpr():
     qml.capture.disable()
 
 
-@pytest.fixture(params=[False, True], ids=["graph_disabled", "graph_enabled"], autouse=True)
+@pytest.fixture(params=[False, True], ids=["graph_disabled", "graph_enabled"])
 def enable_and_disable_graph_decomp(request):
     """
     A fixture that parametrizes a test to run twice: once with graph
@@ -531,6 +531,7 @@ class TestInitialization:
         assert dev._rng is not None
 
 
+@pytest.mark.usefixtures("enable_and_disable_graph_decomp")
 class TestExecution:
     """Unit tests for executing quantum tapes on a device"""
 
@@ -1077,6 +1078,7 @@ class TestExecution:
         assert qml.math.allclose(res3, np.array([0.5, 0.0, 0.5, 0.0]))
 
 
+@pytest.mark.usefixtures("enable_and_disable_graph_decomp")
 @pytest.mark.skipif(
     device_name == "lightning.tensor",
     reason="lightning.tensor does not support derivatives",
@@ -1493,6 +1495,7 @@ class TestDerivatives:
         assert np.allclose(jac, expected_jac, atol=tol, rtol=0)
 
 
+@pytest.mark.usefixtures("enable_and_disable_graph_decomp")
 @pytest.mark.skipif(
     device_name == "lightning.tensor",
     reason="lightning.tensor does not support vjp",
