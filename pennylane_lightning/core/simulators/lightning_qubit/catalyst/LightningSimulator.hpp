@@ -121,7 +121,7 @@ class LightningSimulator final : public Catalyst::Runtime::QuantumDevice {
     auto AllocateQubits(std::size_t num_qubits)
         -> std::vector<QubitIdType> override;
     void ReleaseQubit(QubitIdType q) override;
-    void ReleaseAllQubits() override;
+    void ReleaseQubits(const std::vector<QubitIdType> &ids) override;
     [[nodiscard]] auto GetNumQubits() const -> std::size_t override;
     void StartTapeRecording() override;
     void StopTapeRecording() override;

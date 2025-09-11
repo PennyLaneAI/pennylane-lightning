@@ -113,12 +113,6 @@ void LightningSimulator::ReleaseQubits(const std::vector<QubitIdType> &ids) {
     }
 }
 
-// TODO: remove this function
-void LightningSimulator::ReleaseAllQubits() {
-    this->qubit_manager.ReleaseAll();
-    this->device_sv = std::make_unique<StateVectorT>(0); // reset the device
-}
-
 void LightningSimulator::ReleaseQubit(QubitIdType q) {
     // We do not deallocate physical memory in the statevector for this
     // operation, instead we just mark the qubits as released.
