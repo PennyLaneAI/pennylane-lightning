@@ -63,6 +63,7 @@ jobs:
         with:
           repository: PennyLaneAI/catalyst
           path: ${{ github.workspace}}/catalyst
+          ref: paul0403/rt_individual_dealloc
 
       - name: Switch to release build of Lightning
         if: inputs.lightning-version == 'release'
@@ -75,7 +76,7 @@ jobs:
         run: |
           git fetch --tags --force
           git checkout latest_release
-          
+
       - uses: actions/setup-python@v5
         id: setup_python
         name: Install Python
