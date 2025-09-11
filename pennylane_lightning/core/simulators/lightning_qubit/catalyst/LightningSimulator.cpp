@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <cassert>
 #include <set>
 
 #include "LightningSimulator.hpp"
@@ -37,7 +38,9 @@ auto LightningSimulator::AllocateQubit() -> QubitIdType {
     // The statevector may contain previously freed qubits,
     // that means we may not need to resize the vector.
     size_t device_idx;
-    if (dsize < (1UL << (num_qubits + 1))) {
+    std::optional<size_t> candidate = this->qubit_manager.popFreeQubit();
+    if (!candidate.has_value()) {
+        assert(dsize == 1UL << num_qubits);
         data.resize(dsize << 1UL);
         device_idx = num_qubits;
 
@@ -50,16 +53,7 @@ auto LightningSimulator::AllocateQubit() -> QubitIdType {
             *src = std::complex<double>(.0, .0);
         }
     } else {
-        // find a free qubit (TODO: can be removed by tracking frees)
-        std::vector<size_t> active_indices = getDeviceWires();
-        std::sort(active_indices.begin(), active_indices.end());
-        size_t last_seen = 0;
-        for (size_t idx : active_indices) {
-            if (idx && idx != last_seen + 1) {
-                device_idx = idx;
-                break;
-            }
-        }
+        device_idx = candidate.value();
 
         // To reuse existing space in the statevector, zero the elements
         // corresponding to the |1> state of the freed qubit and renormalize.
@@ -70,6 +64,7 @@ auto LightningSimulator::AllocateQubit() -> QubitIdType {
             size_t full_idx = (idx >= bit_mask ? (idx << 1UL) : idx) | bit_mask;
             data[full_idx] = std::complex<double>(0., 0.);
         }
+
         double norm = std::sqrt(squaredNorm(data.data(), data.size()));
         std::transform(
             data.begin(), data.end(), data.begin(),
