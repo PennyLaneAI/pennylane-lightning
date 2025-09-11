@@ -47,8 +47,9 @@ if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-acces
 @pytest.mark.parametrize("num_wires", range(1, 4))
 @pytest.mark.parametrize("bondDims", [1, 2, 3, 4])
 @pytest.mark.parametrize("dtype", [np.complex64, np.complex128])
+@pytest.mark.parametrize("workspace_pref", ["recommended", "max", "min"])
 @pytest.mark.parametrize("device_name", ["lightning.tensor"])
-def test_device_name_and_init(num_wires, bondDims, dtype, device_name, tn_backend):
+def test_device_name_and_init(num_wires, bondDims, dtype, device_name, tn_backend, workspace_pref):
     """Test the class initialization and returned properties."""
     if num_wires < 2:
         with pytest.raises(ValueError, match="Number of wires must be greater than 1."):
@@ -58,6 +59,7 @@ def test_device_name_and_init(num_wires, bondDims, dtype, device_name, tn_backen
                 c_dtype=dtype,
                 device_name=device_name,
                 method=tn_backend,
+                workspace_pref=workspace_pref,
             )
         return
     else:
@@ -67,6 +69,7 @@ def test_device_name_and_init(num_wires, bondDims, dtype, device_name, tn_backen
             c_dtype=dtype,
             device_name=device_name,
             method=tn_backend,
+            workspace_pref=workspace_pref,
         )
         assert tensornet.dtype == dtype
         assert tensornet.device_name == device_name
@@ -84,6 +87,20 @@ def test_wrong_method_name():
     """Test an invalid method name"""
     with pytest.raises(DeviceError, match="The method "):
         LightningTensorNet(3, max_bond_dim=5, device_name="lightning.tensor", method="spider_web")
+
+
+def test_wrong_worksize_pref():
+    """Test an invalid worksize preference"""
+    with pytest.raises(ValueError, match="Worksize preference"):
+        LightningTensorNet(3, max_bond_dim=5, method="tn", worksize_pref="medium")
+
+
+def test_wrong_worksize_setting_after_init():
+    """Test setting worksize preference after initialization"""
+    tensornet = LightningTensorNet(3, max_bond_dim=5, method="tn")
+
+    with pytest.raises(ValueError, match="Worksize preference"):
+        tensornet.set_worksize_pref("medium")
 
 
 @pytest.mark.parametrize("tn_backend", ["mps", "tn"])
