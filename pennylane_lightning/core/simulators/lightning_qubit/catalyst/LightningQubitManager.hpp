@@ -38,7 +38,7 @@ namespace Catalyst::Runtime::Simulator {
  */
 template <typename ProgramQubitID = QubitIdType,
           typename DeviceQubitID = size_t>
-class QubitManager {
+class QubitManager final {
   private:
     std::unordered_map<ProgramQubitID, DeviceQubitID> qubit_id_map{};
     std::unordered_set<DeviceQubitID> free_device_qubits;
