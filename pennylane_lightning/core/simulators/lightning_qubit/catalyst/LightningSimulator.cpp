@@ -52,28 +52,15 @@ auto LightningSimulator::AllocateQubit() -> QubitIdType {
             *dst = *src;
             *src = std::complex<double>(.0, .0);
         }
+
+        this->device_sv = std::make_unique<StateVectorT>(data);
     } else {
         device_idx = candidate.value();
 
-        // To reuse existing space in the statevector, zero the elements
-        // corresponding to the |1> state of the freed qubit and renormalize.
-        //  - xxxx1xxxx index mask for the desired qubit
-        //  - total iteration space is half the vector
-        size_t fixed_bit = 1UL << device_idx;
-        for (size_t idx = 0; idx < (data.size() >> 1UL); idx++) {
-            size_t lower_bits = idx & (fixed_bit - 1);
-            size_t upper_bits = (idx >> device_idx) << (device_idx + 1);
-            size_t full_idx = upper_bits | fixed_bit | lower_bits;
-            data[full_idx] = std::complex<double>(0., 0.);
-        }
-
-        double norm = std::sqrt(squaredNorm(data.data(), data.size()));
-        std::transform(
-            data.begin(), data.end(), data.begin(),
-            [norm](const std::complex<double> &elem) { return elem * norm; });
+        // Reuse existing space in the statevector by collapsing onto |0>.
+        this->device_sv->collapse(device_idx, 0);
     }
 
-    this->device_sv = std::make_unique<StateVectorT>(data);
     return this->qubit_manager.Allocate(device_idx);
 }
 
