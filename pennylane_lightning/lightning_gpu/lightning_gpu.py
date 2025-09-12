@@ -128,12 +128,12 @@ def adjoint_measurements(mp: qml.measurements.MeasurementProcess) -> bool:
     return isinstance(mp, qml.measurements.ExpectationMP)
 
 
-def _supports_adjoint(circuit):
+def _supports_adjoint(circuit, device_wires=None):
     if circuit is None:
         return True
 
     prog = TransformProgram()
-    _add_adjoint_transforms(prog)
+    _add_adjoint_transforms(prog, device_wires=device_wires)
 
     try:
         prog((circuit,))
@@ -151,7 +151,7 @@ def _adjoint_ops(op: qml.operation.Operator) -> bool:
     )
 
 
-def _add_adjoint_transforms(program: TransformProgram) -> None:
+def _add_adjoint_transforms(program: TransformProgram, device_wires=None) -> None:
     """Private helper function for ``preprocess`` that adds the transforms specific
     for adjoint differentiation.
 
@@ -171,6 +171,8 @@ def _add_adjoint_transforms(program: TransformProgram) -> None:
         stopping_condition=_adjoint_ops,
         name=name,
         skip_initial_state_prep=False,
+        device_wires=device_wires,
+        target_gates=LightningGPU.capabilities.operations.keys(),
     )
     program.add_transform(validate_observables, accepted_observables, name=name)
     program.add_transform(
@@ -398,6 +400,8 @@ class LightningGPU(LightningBase):
             stopping_condition=_stopping_condition,
             skip_initial_state_prep=True,
             name=self.name,
+            device_wires=self.wires,
+            target_gates=self.capabilities.operations.keys(),
         )
         _allow_resets = exec_config.mcm_config.mcm_method != "deferred"
         program.add_transform(
@@ -411,7 +415,7 @@ class LightningGPU(LightningBase):
         program.add_transform(qml.transforms.broadcast_expand)
 
         if exec_config.gradient_method == "adjoint":
-            _add_adjoint_transforms(program)
+            _add_adjoint_transforms(program, device_wires=self.wires)
         return program
 
     # pylint: disable=unused-argument
@@ -470,7 +474,7 @@ class LightningGPU(LightningBase):
         if execution_config and execution_config.gradient_method in {"adjoint", "best"}:
             if circuit is None:
                 return True
-            return _supports_adjoint(circuit=circuit)
+            return _supports_adjoint(circuit=circuit, device_wires=self.wires)
 
         return False
 
