@@ -4,6 +4,9 @@
 
 <h3>Improvements 🛠</h3>
 
+- Lightning devices now call the new `preprocess` method integrated with the graph decomposition system.
+  [(#1251)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1251)
+
 - Worksize preference in `cuTensorNet` can now be set and updated when using `lightning.tensor` device to reduce memory usage or improve stability. 
   [(#1238)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1238)
 

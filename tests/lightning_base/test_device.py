@@ -122,6 +122,36 @@ def enable_disable_plxpr():
     qml.capture.disable()
 
 
+@pytest.fixture(params=[False, True], ids=["graph_disabled", "graph_enabled"])
+def enable_and_disable_graph_decomp(request):
+    """
+    A fixture that parametrizes a test to run twice: once with graph
+    decomposition disabled and once with it enabled.
+
+    It automatically handles the setup (enabling/disabling) before the
+    test runs and the teardown (always disabling) after the test completes.
+    """
+    try:
+        use_graph_decomp = request.param
+
+        # --- Setup Phase ---
+        # This code runs before the test function is executed.
+        if use_graph_decomp:
+            qml.decomposition.enable_graph()
+        else:
+            # Explicitly disable to ensure a clean state
+            qml.decomposition.disable_graph()
+
+        # Yield control to the test function
+        yield use_graph_decomp
+
+    finally:
+        # --- Teardown Phase ---
+        # This code runs after the test function has finished,
+        # regardless of whether it passed or failed.
+        qml.decomposition.disable_graph()
+
+
 class TestHelpers:
     """Unit tests for helper functions"""
 
@@ -199,6 +229,8 @@ class TestHelpers:
             stopping_condition_shots=stopping_condition_shots,
             name=name,
             skip_initial_state_prep=False,
+            device_wires=None,
+            target_gates=LightningDevice.capabilities.operations.keys(),
         )
         expected_program.add_transform(validate_observables, accepted_observables, name=name)
         expected_program.add_transform(
@@ -711,6 +743,7 @@ class TestExecution:
         with pytest.raises(DeviceError, match="mcm_method='foo' is not supported"):
             _ = device.preprocess(config)
 
+    @pytest.mark.usefixtures("enable_and_disable_graph_decomp")
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
         reason="lightning.tensor device doesn't have support for program capture.",
@@ -742,6 +775,7 @@ class TestExecution:
         # pylint: disable=protected-access
         assert program[0].transform == qml.transforms.decompose._transform
 
+    @pytest.mark.usefixtures("enable_and_disable_graph_decomp")
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
         reason="lightning.tensor does not support adjoint",
@@ -764,6 +798,8 @@ class TestExecution:
             stopping_condition_shots=stopping_condition_shots,
             skip_initial_state_prep=True,
             name=device.name,
+            device_wires=device.wires,
+            target_gates=device.capabilities.operations.keys(),
         )
         expected_program.add_transform(qml.transforms.broadcast_expand)
 
@@ -777,6 +813,8 @@ class TestExecution:
                 stopping_condition_shots=stopping_condition_shots,
                 name=name,
                 skip_initial_state_prep=False,
+                device_wires=device.wires,
+                target_gates=device.capabilities.operations.keys(),
             )
             expected_program.add_transform(validate_observables, accepted_observables, name=name)
             expected_program.add_transform(
@@ -791,6 +829,7 @@ class TestExecution:
         actual_program, _ = device.preprocess(config)
         assert actual_program == expected_program
 
+    @pytest.mark.usefixtures("enable_and_disable_graph_decomp")
     @pytest.mark.parametrize(
         "op, is_trainable",
         (
@@ -828,6 +867,7 @@ class TestExecution:
         expected_tape = qml.tape.QuantumScript([*decomp, qml.RX(1.23, wires=0)], tape.measurements)
         assert qml.equal(new_tape, expected_tape)
 
+    @pytest.mark.usefixtures("enable_and_disable_graph_decomp")
     @pytest.mark.parametrize(
         "op, decomp_depth",
         [
@@ -1270,6 +1310,7 @@ class TestDerivatives:
         assert len(jac) == 1
         assert qml.math.shape(jac[0]) == (0,)
 
+    @pytest.mark.usefixtures("enable_and_disable_graph_decomp")
     @pytest.mark.parametrize("execute_and_derivatives", [True, False])
     @pytest.mark.parametrize(
         "state_prep, params, wires",
@@ -1698,6 +1739,7 @@ class TestVJP:
         assert len(jac) == 1
         assert qml.math.shape(jac[0]) == (0,)
 
+    @pytest.mark.usefixtures("enable_and_disable_graph_decomp")
     @pytest.mark.parametrize("execute_and_derivatives", [True, False])
     @pytest.mark.parametrize(
         "state_prep, params, wires",
@@ -1879,3 +1921,45 @@ class TestVJP:
         assert len(res) == len(jac) == 1
         assert np.allclose(res, expected, atol=tol, rtol=0)
         assert np.allclose(jac, expected_jac, atol=tol, rtol=0)
+
+
+class TestLightningDeviceGraphModeExclusive:
+    """Tests for LightningDevice features that require graph mode enabled.
+    The legacy decomposition mode should not be able to run these tests.
+
+    NOTE: All tests in this suite will auto-enable graph mode via fixture.
+    """
+
+    @pytest.fixture(autouse=True)
+    def enable_graph_mode_only(self):
+        """Auto-enable graph mode for all tests in this class."""
+        qml.decomposition.enable_graph()
+        yield
+        qml.decomposition.disable_graph()
+
+    def test_insufficient_work_wires_causes_fallback(self):
+        """Test that if a decomposition requires more work wires than available on lightning device,
+        that decomposition is discarded and fallback is used."""
+
+        class MyLightningDeviceOp(qml.operation.Operator):
+            num_wires = 1
+
+        @qml.register_resources({qml.H: 2})
+        def decomp_fallback(wires):
+            qml.H(wires)
+            qml.H(wires)
+
+        @qml.register_resources({qml.X: 1}, work_wires={"burnable": 5})
+        def decomp_with_work_wire(wires):
+            qml.X(wires)
+
+        qml.add_decomps(MyLightningDeviceOp, decomp_fallback, decomp_with_work_wire)
+
+        tape = qml.tape.QuantumScript([MyLightningDeviceOp(0)])
+        dev = LightningDevice(wires=1)  # Only 1 wire, but decomp needs 5 burnable
+        program = dev.preprocess_transforms()
+        (out_tape,), _ = program([tape])
+
+        assert len(out_tape.operations) == 2
+        assert out_tape.operations[0].name == "Hadamard"
+        assert out_tape.operations[1].name == "Hadamard"
