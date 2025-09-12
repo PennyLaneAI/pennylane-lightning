@@ -19,7 +19,7 @@ Install Kokkos (Optional)
 
 .. note::
 
-    Lightning-Kokkos was tested with Kokkos version <= 4.5.0
+    Lightning-Kokkos was tested with Kokkos version <= 4.5.00
 
 We suggest first installing Kokkos with the wanted configuration following the instructions found in the `Kokkos documentation <https://kokkos.github.io/kokkos-core-wiki/building.html>`_.
 For example, the following will build Kokkos for NVIDIA A100 cards:

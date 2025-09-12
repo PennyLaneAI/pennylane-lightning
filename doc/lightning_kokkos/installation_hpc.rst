@@ -22,7 +22,7 @@ Install Kokkos (Recommended)
 
 .. note::
 
-    Lightning-Kokkos was tested with Kokkos version <= 4.5.0
+    Lightning-Kokkos was tested with Kokkos version <= 4.5.00
     
 We suggest first installing Kokkos with the wanted configuration following the instructions found in the Kokkos documentation. For example, the following will build Kokkos for AMD MI210/250/250X GPUs.
 
