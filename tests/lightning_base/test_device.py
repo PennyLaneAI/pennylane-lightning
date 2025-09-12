@@ -34,9 +34,11 @@ from conftest import (
 )
 from pennylane.devices import DefaultQubit, ExecutionConfig, MCMConfig
 from pennylane.devices.default_qubit import adjoint_ops
+from pennylane.devices.preprocess import device_resolve_dynamic_wires
 from pennylane.exceptions import DeviceError, QuantumFunctionError
 from pennylane.measurements import ProbabilityMP
 from pennylane.tape import QuantumScript
+from pennylane.transforms import defer_measurements, dynamic_one_shot
 
 if device_name == "lightning.qubit":
     from pennylane_lightning.lightning_qubit.lightning_qubit import (
@@ -46,11 +48,11 @@ if device_name == "lightning.qubit":
         accepted_observables,
         adjoint_measurements,
         adjoint_observables,
+        allow_mcms_stopping_condition,
         decompose,
-        mid_circuit_measurements,
+        no_mcms_stopping_condition,
         no_sampling,
         stopping_condition,
-        stopping_condition_shots,
         validate_adjoint_trainable_params,
         validate_device_wires,
         validate_measurements,
@@ -64,11 +66,11 @@ elif device_name == "lightning.kokkos":
         accepted_observables,
         adjoint_measurements,
         adjoint_observables,
+        allow_mcms_stopping_condition,
         decompose,
-        mid_circuit_measurements,
+        no_mcms_stopping_condition,
         no_sampling,
         stopping_condition,
-        stopping_condition_shots,
         validate_adjoint_trainable_params,
         validate_device_wires,
         validate_measurements,
@@ -82,11 +84,11 @@ elif device_name == "lightning.gpu":
         accepted_observables,
         adjoint_measurements,
         adjoint_observables,
+        allow_mcms_stopping_condition,
         decompose,
-        mid_circuit_measurements,
+        no_mcms_stopping_condition,
         no_sampling,
         stopping_condition,
-        stopping_condition_shots,
         validate_adjoint_trainable_params,
         validate_device_wires,
         validate_measurements,
@@ -196,7 +198,6 @@ class TestHelpers:
         expected_program.add_transform(
             decompose,
             stopping_condition=_adjoint_ops,
-            stopping_condition_shots=stopping_condition_shots,
             name=name,
             skip_initial_state_prep=False,
         )
@@ -539,6 +540,7 @@ class TestExecution:
                     use_device_gradient=False,
                     use_device_jacobian_product=False,
                     device_options=_default_device_options,
+                    mcm_config=MCMConfig(mcm_method="deferred"),
                 ),
             ),
             (
@@ -548,6 +550,7 @@ class TestExecution:
                     use_device_gradient=False,
                     use_device_jacobian_product=False,
                     device_options=_default_device_options,
+                    mcm_config=MCMConfig(mcm_method="deferred"),
                 ),
             ),
             (
@@ -558,6 +561,7 @@ class TestExecution:
                     use_device_gradient=True,
                     use_device_jacobian_product=True,
                     device_options=_default_device_options,
+                    mcm_config=MCMConfig(mcm_method="deferred"),
                 ),
             ),
             pytest.param(
@@ -578,6 +582,7 @@ class TestExecution:
                         "kernel_name": None,
                         "num_burnin": 0,
                     },
+                    mcm_config=MCMConfig(mcm_method="deferred"),
                 ),
                 marks=pytest.mark.skipif(
                     device_name != "lightning.qubit",
@@ -591,7 +596,7 @@ class TestExecution:
                         "mcmc": True,
                         "kernel_name": "Local",
                         "num_burnin": 100,
-                    }
+                    },
                 ),
                 ExecutionConfig(
                     grad_on_execution=None,
@@ -604,6 +609,7 @@ class TestExecution:
                         "kernel_name": "Local",
                         "num_burnin": 100,
                     },
+                    mcm_config=MCMConfig(mcm_method="deferred"),
                 ),
                 marks=pytest.mark.skipif(
                     device_name != "lightning.qubit",
@@ -630,6 +636,7 @@ class TestExecution:
                         "kernel_name": "NonZeroRandom",
                         "num_burnin": 100,
                     },
+                    mcm_config=MCMConfig(mcm_method="deferred"),
                 ),
                 marks=pytest.mark.skipif(
                     device_name != "lightning.qubit",
@@ -648,6 +655,7 @@ class TestExecution:
                     grad_on_execution=False,
                     use_device_jacobian_product=False,
                     device_options=_default_device_options,
+                    mcm_config=MCMConfig(mcm_method="deferred"),
                 ),
             ),
         ],
@@ -655,7 +663,7 @@ class TestExecution:
     def test_preprocess_correct_config_setup(self, config, expected_config):
         """Test that the execution config is set up correctly in preprocess"""
         device = LightningDevice(wires=2)
-        _, new_config = device.preprocess(config)
+        new_config = device.setup_execution_config(config)
 
         # Update the device options to be able to compare
         device_options = new_config.device_options.copy()
@@ -677,7 +685,7 @@ class TestExecution:
         )
         device = LightningDevice(wires=2)
         with pytest.raises(DeviceError, match="device option is_wrong_option"):
-            _ = device.preprocess(config)
+            _ = device.setup_execution_config(config)
 
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
@@ -697,7 +705,7 @@ class TestExecution:
             UserWarning,
             match="Setting 'postselect_mode' is not supported with mcm_method='single-branch-",
         ):
-            _ = device.preprocess(config)
+            _ = device.setup_execution_config(config)
 
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
@@ -709,7 +717,7 @@ class TestExecution:
         config = ExecutionConfig(mcm_config=MCMConfig(mcm_method="foo"))
 
         with pytest.raises(DeviceError, match="mcm_method='foo' is not supported"):
-            _ = device.preprocess(config)
+            _ = device.setup_execution_config(config)
 
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
@@ -721,15 +729,14 @@ class TestExecution:
 
         # Default config
         config = ExecutionConfig()
-        program, _ = dev.preprocess(execution_config=config)
-        assert len(program) == 2
+        program = dev.preprocess_transforms(execution_config=config)
+        assert len(program) == 1
         # pylint: disable=protected-access
-        assert program[0].transform == qml.defer_measurements._transform
-        assert program[1].transform == qml.transforms.decompose._transform
+        assert program[0].transform == qml.transforms.decompose._transform
 
         # mcm_method="deferred"
         config = ExecutionConfig(mcm_config=MCMConfig(mcm_method="deferred"))
-        program, _ = dev.preprocess(execution_config=config)
+        program = dev.preprocess_transforms(execution_config=config)
         assert len(program) == 2
         # pylint: disable=protected-access
         assert program[0].transform == qml.defer_measurements._transform
@@ -737,7 +744,7 @@ class TestExecution:
 
         # mcm_method="single-branch-statistics"
         config = ExecutionConfig(mcm_config=MCMConfig(mcm_method="single-branch-statistics"))
-        program, _ = dev.preprocess(execution_config=config)
+        program = dev.preprocess_transforms(execution_config=config)
         assert len(program) == 1
         # pylint: disable=protected-access
         assert program[0].transform == qml.transforms.decompose._transform
@@ -747,24 +754,32 @@ class TestExecution:
         reason="lightning.tensor does not support adjoint",
     )
     @pytest.mark.parametrize("adjoint", [True, False])
-    def test_preprocess(self, adjoint):
+    @pytest.mark.parametrize("mcm_method", ("deferred", "one-shot", "tree-traversal"))
+    def test_preprocess(self, adjoint, mcm_method):
         """Test that the transform program returned by preprocess is correct"""
         device = LightningDevice(wires=2)
 
         expected_program = qml.transforms.core.TransformProgram()
         expected_program.add_transform(validate_measurements, name=device.name)
         expected_program.add_transform(validate_observables, accepted_observables, name=device.name)
-        expected_program.add_transform(
-            mid_circuit_measurements, device=device, mcm_config=MCMConfig()
-        )
-        expected_program.add_transform(validate_device_wires, device.wires, name=device.name)
+        if mcm_method == "deferred":
+            expected_program.add_transform(defer_measurements, allow_postselect=False)
         expected_program.add_transform(
             decompose,
-            stopping_condition=stopping_condition,
-            stopping_condition_shots=stopping_condition_shots,
+            stopping_condition=(
+                no_mcms_stopping_condition
+                if mcm_method == "deferred"
+                else allow_mcms_stopping_condition
+            ),
             skip_initial_state_prep=True,
             name=device.name,
         )
+        expected_program.add_transform(
+            device_resolve_dynamic_wires, wires=device.wires, allow_resets=mcm_method != "deferred"
+        )
+        expected_program.add_transform(validate_device_wires, device.wires, name=device.name)
+        if mcm_method == "one-shot":
+            expected_program.add_transform(dynamic_one_shot, postselect_mode=None)
         expected_program.add_transform(qml.transforms.broadcast_expand)
 
         if adjoint:
@@ -774,7 +789,6 @@ class TestExecution:
             expected_program.add_transform(
                 decompose,
                 stopping_condition=_adjoint_ops,
-                stopping_condition_shots=stopping_condition_shots,
                 name=name,
                 skip_initial_state_prep=False,
             )
@@ -787,8 +801,10 @@ class TestExecution:
             expected_program.add_transform(validate_adjoint_trainable_params)
 
         gradient_method = "adjoint" if adjoint else None
-        config = ExecutionConfig(gradient_method=gradient_method)
-        actual_program, _ = device.preprocess(config)
+        config = ExecutionConfig(
+            gradient_method=gradient_method, mcm_config=MCMConfig(mcm_method=mcm_method)
+        )
+        actual_program = device.preprocess_transforms(config)
         assert actual_program == expected_program
 
     @pytest.mark.parametrize(
