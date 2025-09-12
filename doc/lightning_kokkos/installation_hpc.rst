@@ -27,6 +27,7 @@ Install Kokkos (Recommended)
 We suggest first installing Kokkos with the wanted configuration following the instructions found in the Kokkos documentation. For example, the following will build Kokkos for AMD MI210/250/250X GPUs.
 
 Download the `Kokkos code <https://github.com/kokkos/kokkos/releases>`_.
+
 .. code-block:: bash
 
     # Replace x, y, and z by the correct version
