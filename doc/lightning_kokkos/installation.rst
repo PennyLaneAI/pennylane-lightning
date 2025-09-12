@@ -17,10 +17,14 @@ As Kokkos enables support for many different HPC-targeted hardware platforms, ``
 Install Kokkos (Optional)
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
+.. note::
+
+    Lightning-Kokkos was tested with Kokkos version <= 4.5.0
+
 We suggest first installing Kokkos with the wanted configuration following the instructions found in the `Kokkos documentation <https://kokkos.github.io/kokkos-core-wiki/building.html>`_.
 For example, the following will build Kokkos for NVIDIA A100 cards:
 
-Download the `Kokkos code <https://github.com/kokkos/kokkos/releases>`_. Lightning-Kokkos was tested with Kokkos version <= 4.5.0
+Download the `Kokkos code <https://github.com/kokkos/kokkos/releases>`_.
 
 .. code-block:: bash
 
