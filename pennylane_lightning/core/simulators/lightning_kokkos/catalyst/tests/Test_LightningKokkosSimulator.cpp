@@ -67,10 +67,9 @@ TEST_CASE("LightningKokkosSimulator::unit_tests", "[unit tests]") {
         LKsim->AllocateQubits(2);
         REQUIRE(LKsim->GetNumQubits() == 4);
         LKsim->ReleaseQubit(0);
-        REQUIRE(
-            LKsim->GetNumQubits() ==
-            4); // releasing only one qubit does not change the total number.
-        LKsim->ReleaseAllQubits();
+        REQUIRE(LKsim->GetNumQubits() == 3);
+        Qs.insert(Qs.end(), {1, 2, 3});
+        LKsim->ReleaseQubits(Qs);
         REQUIRE(LKsim->GetNumQubits() ==
                 0); // releasing all qubits resets the simulator.
     }

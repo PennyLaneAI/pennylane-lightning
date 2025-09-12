@@ -245,6 +245,7 @@ jobs:
         with:
           repository: PennyLaneAI/catalyst
           path: ${{ github.workspace}}/catalyst
+          ref: paul0403/rt_individual_dealloc
 
       - name: Install ML libraries for interfaces
         run: |
@@ -264,7 +265,7 @@ jobs:
           python -m pip install . -vv
 
       - name: Run PennyLane-Lightning integration tests
-        if: ${{ matrix.pl_backend != 'all' }}      
+        if: ${{ matrix.pl_backend != 'all' }}
         env:
           OMP_NUM_THREADS: 1
           OMP_PROC_BIND: false
