@@ -15,8 +15,8 @@
 #pragma once
 
 #include <algorithm>
-#include <map>
-#include <set>
+#include <unordered_map>
+#include <unordered_set>
 
 #include "Exception.hpp"
 #include "Types.h"
@@ -40,8 +40,8 @@ template <typename ProgramQubitID = QubitIdType,
           typename DeviceQubitID = size_t>
 class QubitManager {
   private:
-    std::map<ProgramQubitID, DeviceQubitID> qubit_id_map{};
-    std::set<DeviceQubitID> free_device_qubits;
+    std::unordered_map<ProgramQubitID, DeviceQubitID> qubit_id_map{};
+    std::unordered_set<DeviceQubitID> free_device_qubits;
     ProgramQubitID next_program_id{0};
 
   public:
