@@ -22,6 +22,7 @@
 namespace Catalyst::Runtime::Simulator {
 
 auto LightningKokkosSimulator::AllocateQubit() -> QubitIdType {
+    // TODO: do statevector on device
     const size_t num_qubits = GetNumQubits();
     if (num_qubits == 0U) {
         this->device_sv = std::make_unique<StateVectorT>(1);
