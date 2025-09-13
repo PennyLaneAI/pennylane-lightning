@@ -1,0 +1,3 @@
+add_library(lightning_catalyst_base INTERFACE)
+
+target_include_directories(lightning_catalyst_base INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
