@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <set>
+#include <unordered_set>
 
 #include "LightningSimulator.hpp"
 
@@ -86,10 +86,13 @@ void LightningSimulator::ReleaseQubits(const std::vector<QubitIdType> &ids) {
     if (this->GetNumQubits() == ids.size()) {
         std::vector<QubitIdType> allocated_ids =
             this->qubit_manager.getAllQubitIds();
-        std::set<QubitIdType> s1, s2;
-        s1.insert(ids.begin(), ids.end());
-        s2.insert(allocated_ids.begin(), allocated_ids.end());
-        if (s1 == s2) {
+        std::unordered_set<QubitIdType> allocated_set(allocated_ids.begin(),
+                                                      allocated_ids.end());
+        bool deallocate_all =
+            std::all_of(ids.begin(), ids.end(), [&](QubitIdType id) {
+                return allocated_set.contains(id);
+            });
+        if (deallocate_all) {
             this->qubit_manager.ReleaseAll();
             this->device_sv = std::make_unique<StateVectorT>(0);
             return;
