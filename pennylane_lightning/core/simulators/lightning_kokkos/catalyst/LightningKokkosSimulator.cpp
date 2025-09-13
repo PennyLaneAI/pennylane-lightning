@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <cassert>
 #include <set>
 
 #include <Kokkos_Complex.hpp>
@@ -38,7 +37,7 @@ auto LightningKokkosSimulator::AllocateQubit() -> QubitIdType {
     size_t device_idx;
     std::optional<size_t> candidate = this->qubit_manager.popFreeQubit();
     if (!candidate.has_value()) {
-        assert(dsize == 1UL << num_qubits);
+        RT_ASSERT(dsize == 1UL << num_qubits);
         data.resize(dsize << 1UL);
         device_idx = num_qubits;
 
