@@ -175,3 +175,36 @@ TEST_CASE("Check re-AllocateQubit", "[Driver]") {
     CHECK(state[0].real() == Approx(0.707107).epsilon(1e-5));
     CHECK(state[8].real() == Approx(0.707107).epsilon(1e-5));
 }
+
+TEST_CASE("Check dynamic qubit reuse", "[Driver]") {
+    std::unique_ptr<LQSimulator> sim = std::make_unique<LQSimulator>();
+
+    auto qubits = sim->AllocateQubits(2);
+    sim->NamedOperation("PauliX", {}, {qubits[0]}, false);
+    sim->NamedOperation("Hadamard", {}, {qubits[1]}, false);
+
+    std::vector<std::complex<double>> state(1U << sim->GetNumQubits());
+    DataView<std::complex<double>, 1> view(state);
+    sim->State(view);
+    CHECK(state[0b00].real() == Approx(0.).epsilon(1e-5));
+    CHECK(state[0b10].real() == Approx(0.707107).epsilon(1e-5));
+    CHECK(state[0b01].real() == Approx(0.).epsilon(1e-5));
+    CHECK(state[0b11].real() == Approx(0.707107).epsilon(1e-5));
+
+    sim->ReleaseQubit(qubits[1]);
+
+    sim->State(view);
+    CHECK(state[0b00].real() == Approx(0.).epsilon(1e-5));
+    CHECK(state[0b10].real() == Approx(0.707107).epsilon(1e-5));
+    CHECK(state[0b01].real() == Approx(0.).epsilon(1e-5));
+    CHECK(state[0b11].real() == Approx(0.707107).epsilon(1e-5));
+
+    auto new_qubit = sim->AllocateQubit();
+    CHECK(new_qubit != qubits[1]);
+
+    sim->State(view);
+    CHECK(state[0b00].real() == Approx(0.).epsilon(1e-5));
+    CHECK(state[0b10].real() == Approx(1.).epsilon(1e-5));
+    CHECK(state[0b01].real() == Approx(0.).epsilon(1e-5));
+    CHECK(state[0b11].real() == Approx(0.).epsilon(1e-5));
+}

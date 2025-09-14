@@ -68,8 +68,9 @@ TEST_CASE("LightningSimulator::unit_tests", "[unit tests]") {
         REQUIRE(LQsim->GetNumQubits() == 4);
         LQsim->ReleaseQubit(0);
         REQUIRE(LQsim->GetNumQubits() == 3);
-        Qs.insert(Qs.end(), {1, 2, 3});
-        LQsim->ReleaseQubits(Qs);
+        LQsim->ReleaseQubits({1, 3});
+        REQUIRE(LQsim->GetNumQubits() == 1);
+        LQsim->ReleaseQubits({2});
         REQUIRE(LQsim->GetNumQubits() == 0);
     }
     SECTION("Tape recording") {
