@@ -43,13 +43,11 @@ auto LightningSimulator::AllocateQubit() -> QubitIdType {
         data.resize(dsize << 1UL);
         device_idx = num_qubits;
 
-        // zero the new data and move existing amplitudes
-        auto src = data.begin();
-        std::advance(src, dsize - 1);
-        for (auto dst = data.end() - 2; src != data.begin();
-             std::advance(src, -1), std::advance(dst, -2)) {
-            *dst = *src;
-            *src = std::complex<double>(.0, .0);
+        std::vector<std::complex<double>,
+                    AlignedAllocator<std::complex<double>>>
+            new_data(dsize << 1UL);
+        for (size_t i = 0; i < dsize; ++i) {
+            new_data[2 * i] = data[i];
         }
 
         this->device_sv = std::make_unique<StateVectorT>(data);
