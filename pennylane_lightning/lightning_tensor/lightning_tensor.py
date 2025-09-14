@@ -72,7 +72,6 @@ _methods = frozenset({"mps", "tn"})
 _operations = frozenset(
     {
         "Identity",
-        "BasisState",
         "MPSPrep",
         "QubitUnitary",
         "ControlledQubitUnitary",
@@ -462,6 +461,8 @@ class LightningTensor(Device):
             stopping_condition_shots=stopping_condition,
             skip_initial_state_prep=True,
             name=self.name,
+            device_wires=self.wires,
+            target_gates=self.operations,
         )
         return program, config
 
