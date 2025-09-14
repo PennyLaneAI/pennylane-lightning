@@ -1,4 +1,0 @@
-BasedOnStyle: llvm
-BreakBeforeBraces: Attach
-IndentWidth: 4
-IndentPPDirectives: None
