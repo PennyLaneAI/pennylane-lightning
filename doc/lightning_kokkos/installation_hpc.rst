@@ -62,7 +62,7 @@ Build Kokkos for AMD GPU (``GFX90A`` architecture), and append the install locat
 Install Lightning-Kokkos
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-Lightning-Qubit needs to be 'installed' by ``pip`` before Lightning-Kokkos (compilation is not necessary).
+Lightning-Qubit needs to be 'installed' by ``pip`` before Lightning-Kokkos. This can be installed from source as follows.
 
 .. code-block:: console
 
