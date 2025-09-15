@@ -77,10 +77,6 @@ TEST_CASE("lightning Basis vector", "[Driver]") {
     [[maybe_unused]] QubitIdType q2 = sim->AllocateQubit();
     [[maybe_unused]] QubitIdType q3 = sim->AllocateQubit();
 
-    // TODO: releasing doesn't rescale the state
-    //       either remove from test or re-enable after fix
-    // sim->ReleaseQubit(q3);
-
     std::vector<std::complex<double>> state(1U << sim->GetNumQubits());
     DataView<std::complex<double>, 1> view(state);
     sim->State(view);
@@ -101,10 +97,6 @@ TEST_CASE("test AllocateQubits", "[Driver]") {
     CHECK(sim->AllocateQubits(0).empty());
 
     auto &&q = sim->AllocateQubits(2);
-
-    // TODO: releasing doesn't rescale the state
-    //       either remove from test or re-enable after fix
-    // sim->ReleaseQubit(q[0]);
 
     std::vector<std::complex<double>> state(1U << sim->GetNumQubits());
     DataView<std::complex<double>, 1> view(state);
@@ -226,4 +218,14 @@ TEST_CASE("Check dynamic qubit reuse", "[Driver]") {
     CHECK(state[0b10].real() == Approx(1.).epsilon(1e-5));
     CHECK(state[0b01].real() == Approx(0.).epsilon(1e-5));
     CHECK(state[0b11].real() == Approx(0.).epsilon(1e-5));
+}
+
+TEST_CASE("Release Qubits", "[Driver]") {
+    std::unique_ptr<LSimulator> sim = std::make_unique<LSimulator>();
+
+    auto qubits = sim->AllocateQubits(4);
+
+    sim->ReleaseQubits({qubits[1], qubits[2]});
+
+    CHECK(sim->GetNumQubits() == 2);
 }
