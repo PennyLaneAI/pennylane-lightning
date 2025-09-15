@@ -85,7 +85,6 @@ jobs:
         with:
           repository: PennyLaneAI/catalyst
           path: ${{ github.workspace}}/catalyst
-          ref: paul0403/rt_individual_dealloc
 
       - uses: actions/setup-python@v5
         id: setup_python
