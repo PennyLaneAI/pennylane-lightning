@@ -34,6 +34,7 @@ auto LightningKokkosSimulator::AllocateQubit() -> QubitIdType {
     size_t device_idx;
     std::optional<size_t> candidate = this->qubit_manager.popFreeQubit();
     if (!candidate.has_value()) {
+        // TODO: update statevector directly on device
         const auto &original_data = this->device_sv->getDataVector();
 
         const size_t dsize = original_data.size();
