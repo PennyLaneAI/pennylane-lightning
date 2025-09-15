@@ -16,7 +16,7 @@ target_include_directories(lightning_gpu_catalyst PUBLIC
 target_link_libraries(lightning_gpu_catalyst PUBLIC  lightning_compile_options
                                                         lightning_gpu_algorithms
                                                         lightning_gpu_measurements
-                                                        lightning_catalyst_base
+                                                        lightning_catalyst
 )
 
 set(CMAKE_BUILD_RPATH_USE_ORIGIN ON)

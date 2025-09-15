@@ -45,7 +45,7 @@ auto LightningSimulator::AllocateQubit() -> QubitIdType {
             new_data(dsize << 1UL, original_data.get_allocator());
 
         device_idx = num_qubits;
-        for (size_t i = 0; i < original_data.size(); ++i) {
+        for (size_t i = 0; i < original_data.size(); i++) {
             new_data[2 * i] = original_data[i];
         }
         this->device_sv = std::make_unique<StateVectorT>(new_data);

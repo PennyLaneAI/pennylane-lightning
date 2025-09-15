@@ -16,7 +16,7 @@ target_link_libraries(lightning_qubit_catalyst PUBLIC  lightning_compile_options
                                                        lightning_qubit_algorithms
                                                        lightning_qubit_measurements
                                                        lightning_qubit_observables
-                                                       lightning_catalyst_base
+                                                       lightning_catalyst
 )
 
 set(CMAKE_BUILD_RPATH_USE_ORIGIN ON)

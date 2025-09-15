@@ -43,7 +43,7 @@ target_include_directories(lightning_kokkos_catalyst PUBLIC
 target_link_libraries(lightning_kokkos_catalyst PUBLIC  lightning_compile_options
                                                         lightning_kokkos_algorithms
                                                         lightning_kokkos_measurements
-                                                        lightning_catalyst_base
+                                                        lightning_catalyst
 )
 
 set(CMAKE_BUILD_RPATH_USE_ORIGIN ON)

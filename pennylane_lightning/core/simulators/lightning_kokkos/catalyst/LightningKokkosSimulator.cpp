@@ -43,7 +43,7 @@ auto LightningKokkosSimulator::AllocateQubit() -> QubitIdType {
         std::vector<Kokkos::complex<double>> new_data(dsize << 1UL);
 
         device_idx = num_qubits;
-        for (size_t i = 0; i < original_data.size(); ++i) {
+        for (size_t i = 0; i < original_data.size(); i++) {
             new_data[2 * i] = original_data[i];
         }
         this->device_sv = std::make_unique<StateVectorT>(new_data);

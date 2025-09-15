@@ -15,5 +15,3 @@ if (BUILD_TESTS AND NOT DEFINED PL_TENSOR)
     enable_testing()
     add_subdirectory("tests")
 endif()
-
-add_subdirectory(catalyst)
