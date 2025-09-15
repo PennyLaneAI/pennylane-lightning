@@ -181,6 +181,6 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::normalize",
         REQUIRE_THROWS_WITH(
             sv.normalize(),
             Catch::Contains(
-                "vector has norm close to zero and can't be normalized"));
+                "Vector has norm close to zero and can't be normalized"));
     }
 }
