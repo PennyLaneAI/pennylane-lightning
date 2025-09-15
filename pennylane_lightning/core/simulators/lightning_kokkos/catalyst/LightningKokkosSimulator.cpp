@@ -29,30 +29,23 @@ auto LightningKokkosSimulator::AllocateQubit() -> QubitIdType {
         return this->qubit_manager.Allocate(0);
     }
 
-    std::vector<Kokkos::complex<double>> data =
-        this->device_sv->getDataVector();
-    const size_t dsize = data.size();
-
     // The statevector may contain previously freed qubits,
     // that means we may not need to resize the vector.
     size_t device_idx;
     std::optional<size_t> candidate = this->qubit_manager.popFreeQubit();
     if (!candidate.has_value()) {
+        const auto &original_data = this->device_sv->getDataVector();
+
+        const size_t dsize = original_data.size();
         RT_ASSERT(dsize == 1UL << num_qubits);
-        data.resize(dsize << 1UL);
+
+        std::vector<Kokkos::complex<double>> new_data(dsize << 1UL);
+
         device_idx = num_qubits;
-
-        // zero the new data and move existing amplitudes
-        auto src = data.begin();
-        std::advance(src, dsize - 1);
-
-        for (auto dst = data.end() - 2; src != data.begin();
-             std::advance(src, -1), std::advance(dst, -2)) {
-            *dst = std::move(*src);
-            *src = Kokkos::complex<double>(.0, .0);
+        for (size_t i = 0; i < original_data.size(); ++i) {
+            new_data[2 * i] = original_data[i];
         }
-
-        this->device_sv = std::make_unique<StateVectorT>(data);
+        this->device_sv = std::make_unique<StateVectorT>(new_data);
     } else {
         device_idx = candidate.value();
 
