@@ -126,12 +126,12 @@ def adjoint_measurements(mp: qml.measurements.MeasurementProcess) -> bool:
     return isinstance(mp, qml.measurements.ExpectationMP)
 
 
-def _supports_adjoint(circuit):
+def _supports_adjoint(circuit, device_wires=None):
     if circuit is None:
         return True
 
     prog = TransformProgram()
-    _add_adjoint_transforms(prog)
+    _add_adjoint_transforms(prog, device_wires=device_wires)
 
     try:
         prog((circuit,))
@@ -149,7 +149,7 @@ def _adjoint_ops(op: qml.operation.Operator) -> bool:
     )
 
 
-def _add_adjoint_transforms(program: TransformProgram) -> None:
+def _add_adjoint_transforms(program: TransformProgram, device_wires=None) -> None:
     """Private helper function for ``preprocess`` that adds the transforms specific
     for adjoint differentiation.
 
@@ -170,6 +170,8 @@ def _add_adjoint_transforms(program: TransformProgram) -> None:
         stopping_condition_shots=stopping_condition_shots,
         name=name,
         skip_initial_state_prep=False,
+        device_wires=device_wires,
+        target_gates=LightningQubit.capabilities.operations.keys(),
     )
     program.add_transform(validate_observables, accepted_observables, name=name)
     program.add_transform(
@@ -385,11 +387,13 @@ class LightningQubit(LightningBase):
             stopping_condition_shots=stopping_condition_shots,
             skip_initial_state_prep=True,
             name=self.name,
+            device_wires=self.wires,
+            target_gates=self.capabilities.operations.keys(),  # let's temporarily read the toml file to get the gate set
         )
         program.add_transform(qml.transforms.broadcast_expand)
 
         if exec_config.gradient_method == "adjoint":
-            _add_adjoint_transforms(program)
+            _add_adjoint_transforms(program, device_wires=self.wires)
         return program, exec_config
 
     # pylint: disable=unused-argument
@@ -454,7 +458,7 @@ class LightningQubit(LightningBase):
         if execution_config and execution_config.gradient_method in {"adjoint", "best"}:
             if circuit is None:
                 return True
-            return _supports_adjoint(circuit=circuit)
+            return _supports_adjoint(circuit=circuit, device_wires=self.wires)
 
         return False
 

@@ -163,6 +163,31 @@ class TNCuda : public TNCudaBase<PrecisionT, Derived> {
     }
 
     /**
+     * @brief Set Workspace Size Preference for cutensornet backend.
+     */
+    void setWorksizePref(std::string_view pref) {
+        if (pref == "recommended") {
+            worksize_pref_ = CUTENSORNET_WORKSIZE_PREF_RECOMMENDED;
+        } else if (pref == "max") {
+            worksize_pref_ = CUTENSORNET_WORKSIZE_PREF_MAX;
+        } else if (pref == "min") {
+            worksize_pref_ = CUTENSORNET_WORKSIZE_PREF_MIN;
+        } else {
+            PL_ABORT("Invalid workspace preference. Please choose from "
+                     "'recommended', 'max', or 'min'.");
+        }
+    }
+
+    /**
+     * @brief Get the Worksize Pref setting.
+     *
+     * @return const cutensornetWorksizePref_t
+     */
+    [[nodiscard]] cutensornetWorksizePref_t getWorksizePref() const {
+        return worksize_pref_;
+    }
+
+    /**
      * @brief Update quantum state with a basis state.
      * NOTE: This API assumes the bond vector is a standard basis vector
      * ([1,0,0,......]) and current implementation only works for qubit systems.
@@ -589,8 +614,8 @@ class TNCuda : public TNCudaBase<PrecisionT, Derived> {
             /* cutensornetWorkspaceDescriptor_t */ workDesc,
             /*  cudaStream_t unused as of v24.03*/ 0x0));
 
-        std::size_t worksize =
-            getWorkSpaceMemorySize(BaseType::getTNCudaHandle(), workDesc);
+        std::size_t worksize = getWorkSpaceMemorySize(
+            BaseType::getTNCudaHandle(), workDesc, getWorksizePref());
 
         PL_ABORT_IF(worksize > scratchSize,
                     "Insufficient workspace size on Device!");
@@ -630,6 +655,9 @@ class TNCuda : public TNCudaBase<PrecisionT, Derived> {
 
     std::vector<TensorCuda<PrecisionT>> tensors_;
     std::vector<TensorCuda<PrecisionT>> tensors_out_;
+
+    cutensornetWorksizePref_t worksize_pref_ =
+        CUTENSORNET_WORKSIZE_PREF_RECOMMENDED;
 
     /**
      * @brief Get accessor of a state tensor
@@ -683,8 +711,8 @@ class TNCuda : public TNCudaBase<PrecisionT, Derived> {
             /* cudaStream_t unused as of v24.03 */ 0x0));
 
         // Allocate workspace buffer
-        std::size_t worksize =
-            getWorkSpaceMemorySize(BaseType::getTNCudaHandle(), workDesc);
+        std::size_t worksize = getWorkSpaceMemorySize(
+            BaseType::getTNCudaHandle(), workDesc, getWorksizePref());
 
         PL_ABORT_IF(worksize > scratchSize,
                     "Insufficient workspace size on Device!");

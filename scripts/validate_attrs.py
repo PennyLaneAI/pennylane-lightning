@@ -49,6 +49,7 @@ for path in Path().glob("*.whl"):
                 )
                 or re.match(r"pennylane_lightning/lightning_.*_ops.cpython-3.?.?-darwin\.so", name)
                 or re.match(r"pennylane_lightning/lightning_.*_ops.pdb", name)
+                or re.match(r"pennylane_lightning/lightning_.*_ops.*-win_amd64.pyd", name)
             ):
                 continue
 
