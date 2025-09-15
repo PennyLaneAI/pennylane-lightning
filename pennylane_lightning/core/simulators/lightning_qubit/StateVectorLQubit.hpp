@@ -911,8 +911,8 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
 
         // TODO: Waiting the decision from PL core about how to solve the issue
         // https://github.com/PennyLaneAI/pennylane/issues/6504
-        // PL_ABORT_IF(norm < std::numeric_limits<PrecisionT>::epsilon() * 1e2,
-        //             "vector has norm close to zero and can't be normalized");
+         PL_ABORT_IF(norm < std::numeric_limits<PrecisionT>::epsilon() * 1e2,
+                     "vector has norm close to zero and can't be normalized");
 
         ComplexT inv_norm = 1. / norm;
         for (std::size_t k = 0; k < BaseType::getLength(); k++) {
