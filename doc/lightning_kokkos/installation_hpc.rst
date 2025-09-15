@@ -37,7 +37,7 @@ Download the `Kokkos code <https://github.com/kokkos/kokkos/releases>`_.
 
 Build Kokkos for AMD GPU (``GFX90A`` architecture), and append the install location to ``CMAKE_PREFIX_PATH``.
 
-.. code-block:: console
+.. code-block:: bash
 
     # Install Kokkos:
     export KOKKOS_INSTALL_PATH=<install-path>
@@ -64,7 +64,7 @@ Install Lightning-Kokkos
 
 Lightning-Qubit needs to be 'installed' by ``pip`` before Lightning-Kokkos. This can be installed from source as follows.
 
-.. code-block:: console
+.. code-block:: bash
 
     # Install Lightning-Qubit
     git clone https://github.com/PennyLaneAI/pennylane-lightning.git
@@ -76,7 +76,7 @@ Lightning-Qubit needs to be 'installed' by ``pip`` before Lightning-Kokkos. This
 
 Then to install Lightning-Kokkos with MPI support:
 
-.. code-block:: console
+.. code-block:: bash
 
     # Install Lightning-Kokkos with MPI support
 
