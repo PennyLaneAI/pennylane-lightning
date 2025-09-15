@@ -5,7 +5,7 @@
 <h3>Improvements 🛠</h3>
 
 - Raise exception when calling normalize with `lightning.qubit` state with norm close to 0.
-  [(#XXXX)](https://github.com/PennyLaneAI/pennylane-lightning/pull/XXXX)
+  [(#1257)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1257)
 
 - Lightning devices now call the new `preprocess` method integrated with the graph decomposition system.
   [(#1251)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1251)
