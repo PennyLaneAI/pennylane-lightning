@@ -81,6 +81,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Update Catalyst's QuantumDevice interface and downstream Qubit Manager to Lightning in preparation for dynamic qubit allocation functionality.
+  [(#1254)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1254)
+
 - Update Release script for bumping the minimum version for PennyLane.
   [(#1253)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1253)
 
