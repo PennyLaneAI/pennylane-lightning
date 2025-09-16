@@ -81,6 +81,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Use GCC 13 for CI.
+  [(#XXXX)](https://github.com/PennyLaneAI/pennylane-lightning/pull/XXXX)
+  
 - Update Release script for bumping the minimum version for PennyLane.
   [(#1253)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1253)
 
