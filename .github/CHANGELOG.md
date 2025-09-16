@@ -7,6 +7,9 @@
 - Lightning devices now call the new `preprocess` method integrated with the graph decomposition system.
   [(#1251)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1251)
 
+- Lightning devices now support executing circuits with dynamic qubit allocation with `qml.allocate`.
+  [(#1255)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1255)
+
 - Worksize preference in `cuTensorNet` can now be set and updated when using `lightning.tensor` device to reduce memory usage or improve stability. 
   [(#1238)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1238)
 

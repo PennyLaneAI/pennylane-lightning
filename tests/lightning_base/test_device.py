@@ -751,6 +751,71 @@ class TestExecution:
         with pytest.raises(DeviceError, match="mcm_method='foo' is not supported"):
             _ = device.setup_execution_config(config)
 
+    def test_decompose_conditionals(self):
+        """Test that conditional templates are properly decomposed."""
+
+        class NoMatOp(qml.operation.Operation):
+            """Dummy operation for expanding circuit."""
+
+            # pylint: disable=arguments-renamed, invalid-overridden-method
+            @property
+            def has_matrix(self):
+                return False
+
+            def decomposition(self):
+                return [qml.PauliX(self.wires), qml.PauliY(self.wires)]
+
+        m0 = qml.measure(0)
+        tape = qml.tape.QuantumScript(
+            [m0.measurements[0], qml.ops.Conditional(m0, NoMatOp(wires=0))], [qml.probs(wires=0)]
+        )
+        config = ExecutionConfig(mcm_config=MCMConfig(mcm_method="deferred"))
+
+        prog = LightningDevice(wires=2).preprocess_transforms(config)
+        [new_tape], _ = prog((tape,))
+
+        expected = qml.tape.QuantumScript(
+            [qml.CNOT((0, 1)), qml.CNOT((1, 0)), qml.CY((1, 0))], [qml.probs(wires=0)]
+        )
+        qml.assert_equal(new_tape, expected)
+
+    def test_no_mcms_conditionals_defer_measurements(self):
+        """Test that an error is raised if an mcm occurs in a decomposition after defer measurements has been applied."""
+
+        m0 = qml.measure(0)
+
+        class MyOp(qml.operation.Operator):
+
+            def decomposition(self):
+                return m0.measurements
+
+        tape = qml.tape.QuantumScript([MyOp(0)])
+        config = qml.devices.ExecutionConfig(
+            mcm_config=qml.devices.MCMConfig(mcm_method="deferred")
+        )
+
+        prog = LightningDevice(wires=2).preprocess_transforms(config)
+
+        with pytest.raises(DeviceError, match="not supported with"):
+            prog((tape,))
+
+    @pytest.mark.parametrize("shots, expected", [(None, "deferred"), (10, "one-shot")])
+    def test_default_mcm_method_circuit(self, shots, expected):
+        """Test that the default mcm method depends on the shots in the circuit."""
+        device = LightningDevice(wires=2)
+        config = ExecutionConfig()
+        processed = device.setup_execution_config(
+            config, circuit=qml.tape.QuantumScript(shots=shots)
+        )
+        assert processed.mcm_config.mcm_method == expected
+
+    def test_default_mcm_method_no_circuit(self):
+        """Test that the default mcm method is deferred if no shots are provided."""
+        device = LightningDevice(wires=2)
+        config = ExecutionConfig()
+        processed = device.setup_execution_config(config)
+        assert processed.mcm_config.mcm_method == "deferred"
+
     @pytest.mark.usefixtures("enable_and_disable_graph_decomp")
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
@@ -1095,6 +1160,67 @@ class TestExecution:
         tape3 = QuantumScript([op], [qml.probs(wires=(wire_order[1], wire_order[0]))])
         res3 = dev.execute(tape3)
         assert qml.math.allclose(res3, np.array([0.5, 0.0, 0.5, 0.0]))
+
+    @pytest.mark.parametrize("device_wires", (None, (0, 1, 2)))
+    def test_reuse_without_mcms(self, device_wires):
+        """Test that a dynamic allocations that do not require mcms can be executed."""
+
+        dev = LightningDevice(wires=device_wires)
+
+        with qml.queuing.AnnotatedQueue() as q:
+            with qml.allocate(1, restored=True) as wires:
+                qml.H(wires)
+                qml.CNOT((wires[0], 0))
+                qml.H(wires)
+
+            with qml.allocate(1) as wires:
+                qml.H(wires)
+                qml.CNOT((wires[0], 1))
+            return qml.expval(qml.Z(0)), qml.expval(qml.Z(1))
+
+        tape = qml.tape.QuantumScript.from_queue(q)
+        config = dev.setup_execution_config(circuit=tape)
+        [new_tape], _ = dev.preprocess_transforms(config)((tape,))
+        assert not any(isinstance(w, qml.allocation.DynamicWire) for w in new_tape.wires)
+        assert not any(isinstance(op, qml.measurements.MidMeasureMP) for op in new_tape)
+        assert len(new_tape.wires) == 3
+
+        res1, res2 = dev.execute(new_tape, config)
+        assert qml.math.allclose(res1, 0)
+        assert qml.math.allclose(res2, 0)
+
+    @pytest.mark.parametrize("device_wires", (None, (0, 1, 2, 3)))
+    @pytest.mark.parametrize("mcm_method", ("tree-traversal", "deferred", "one-shot"))
+    def test_reuse_with_mcms(self, device_wires, mcm_method):
+        """Test that a simple dynamic allocation can be executed."""
+
+        dev = LightningDevice(wires=device_wires)
+
+        with qml.queuing.AnnotatedQueue() as q:
+            with qml.allocate(1, restored=False) as wires:
+                qml.H(wires)
+                qml.CNOT((wires[0], 0))
+                qml.H(wires)
+
+            with qml.allocate(1) as wires:
+                qml.H(wires)
+                qml.CNOT((wires[0], 1))
+            qml.expval(qml.Z(0))
+            qml.expval(qml.Z(1))
+
+        tape = qml.tape.QuantumScript.from_queue(
+            q, shots=5000 if mcm_method == "one-shot" else None
+        )
+        config = qml.devices.ExecutionConfig(
+            mcm_config=qml.devices.MCMConfig(mcm_method=mcm_method)
+        )
+        config = dev.setup_execution_config(config)
+        batch, fn = dev.preprocess_transforms(config)((tape,))
+
+        res1, res2 = fn(dev.execute(batch, config))[0]
+        atol = 0.05 if mcm_method == "one-shot" else 1e-6
+        assert qml.math.allclose(res1, 0, atol=atol)
+        assert qml.math.allclose(res2, 0, atol=atol)
 
 
 @pytest.mark.skipif(
