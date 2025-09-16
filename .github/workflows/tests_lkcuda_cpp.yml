@@ -78,6 +78,7 @@ jobs:
                           -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
                           -DCMAKE_C_COMPILER="$(which gcc-$GCC_VERSION)" \
                           -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)" \
+                          -DCMAKE_CUDA_HOST_COMPILER=$(which gcc-$GCC_VERSION) \
                           -DCMAKE_CXX_STANDARD=20 \
                           -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
                           -G Ninja
@@ -203,6 +204,7 @@ jobs:
             -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos \
             -DPL_BACKEND=${{ matrix.pl_backend }} \
             -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
+            -DCMAKE_CUDA_HOST_COMPILER=$(which gcc-$GCC_VERSION) \
             -DENABLE_COVERAGE=ON \
             -DLIGHTNING_CATALYST_SRC_PATH=${{ github.workspace }}/catalyst
           cmake --build ./Build --verbose
