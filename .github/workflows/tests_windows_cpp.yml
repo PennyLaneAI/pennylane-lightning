@@ -43,7 +43,6 @@ jobs:
         with:
           repository: PennyLaneAI/catalyst
           path: ${{ github.workspace}}/catalyst
-          ref: paul0403/rt_individual_dealloc
 
       - name: Kokkos execution strategy
         id: exec_model
