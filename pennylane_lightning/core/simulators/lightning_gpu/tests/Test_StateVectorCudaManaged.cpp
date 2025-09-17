@@ -305,14 +305,10 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::collapse",
 TEMPLATE_TEST_CASE("StateVectorCudaManaged::collapse error",
                    "[StateVectorCudaManaged]", float, double) {
     using PrecisionT = TestType;
-    using ComplexT = typename StateVectorCudaManaged<PrecisionT>::ComplexT;
-    using CFP_t = typename StateVectorCudaManaged<PrecisionT>::CFP_t;
-    using TestVectorT = TestVector<ComplexT>;
 
     constexpr std::size_t num_qubits = 3;
 
-    SECTION("Collapse the state vector after having measured one of the "
-            "qubits.") {
+    SECTION("Collapse bad branch") {
         StateVectorCudaManaged<PrecisionT> sv(num_qubits);
 
         const std::size_t wire = 0;

@@ -909,6 +909,8 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
         auto *arr = BaseType::getData();
         PrecisionT norm = std::sqrt(squaredNorm(arr, BaseType::getLength()));
 
+        // TODO: Waiting the decision from PL core about how to solve the issue
+        // https://github.com/PennyLaneAI/pennylane/issues/6504
         PL_ABORT_IF(norm < std::numeric_limits<PrecisionT>::epsilon() * 1e2,
                     "Vector has norm close to zero and cannot be normalized");
 
