@@ -68,12 +68,10 @@ TEST_CASE("LightningGPUSimulator::unit_tests", "[unit tests]") {
         LGPUsim->AllocateQubits(2);
         REQUIRE(LGPUsim->GetNumQubits() == 4);
         LGPUsim->ReleaseQubit(0);
-        REQUIRE(
-            LGPUsim->GetNumQubits() ==
-            4); // releasing only one qubit does not change the total number.
-        LGPUsim->ReleaseAllQubits();
-        REQUIRE(LGPUsim->GetNumQubits() ==
-                0); // releasing all qubits resets the simulator.
+        REQUIRE(LGPUsim->GetNumQubits() == 3);
+        Qs.insert(Qs.end(), {1, 2, 3});
+        LGPUsim->ReleaseQubits(Qs);
+        REQUIRE(LGPUsim->GetNumQubits() == 0);
     }
     SECTION("Tape recording") {
         std::unique_ptr<LGPUSimulator> LGPUsim =

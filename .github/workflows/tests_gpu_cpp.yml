@@ -157,7 +157,7 @@ jobs:
           cd ./Build
           mkdir -p ./tests/results_${{ github.job }}_${{ matrix.pl_backend }}
           test_status=0
-          for file in *runner ; do 
+          for file in *runner ; do
             report_file="./tests/results_${{ github.job }}_${{ matrix.pl_backend }}/report_$file.xml";
             ./$file --reporter junit --out $report_file && echo "Test $file Success!" || { cat $report_file; test_status=1; }
           done;
