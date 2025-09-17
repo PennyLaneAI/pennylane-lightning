@@ -30,7 +30,9 @@ target_sources(catalyst_tests INTERFACE runner_catalyst.cpp)
 ################################################################################
 # Define targets
 ################################################################################
-set(TEST_SOURCES   Test_LightningDriver.cpp
+set(TEST_SOURCES
+    Test_LightningDriver.cpp
+    Test_LightningQubitManager.cpp
 )
 
 add_executable(catalyst_tests_runner ${TEST_SOURCES})
