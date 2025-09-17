@@ -33,6 +33,7 @@ target_sources(catalyst_tests INTERFACE runner_catalyst.cpp)
 set(TEST_SOURCES
     Test_LightningDriver.cpp
     Test_LightningQubitManager.cpp
+)
 
 add_executable(catalyst_tests_runner ${TEST_SOURCES})
 target_link_libraries(catalyst_tests_runner PRIVATE  catalyst_tests)
