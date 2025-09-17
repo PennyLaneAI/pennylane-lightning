@@ -12,15 +12,34 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "TestHelpers.hpp"
+#include "catch2/catch.hpp"
 #include <numeric>
 #include <string>
 
-#include "LightningSimulator.hpp"
-#include "catch2/catch.hpp"
+#ifdef _ENABLE_PLQUBIT
 
-using namespace Catalyst::Runtime;
+constexpr bool BACKEND_FOUND = true;
+#include "LightningSimulator.hpp"
+using LSimulator = Catalyst::Runtime::Simulator::LightningSimulator;
+
+#elif _ENABLE_PLKOKKOS == 1
+constexpr bool BACKEND_FOUND = true;
+#include "LightningKokkosSimulator.hpp"
+using LSimulator = Catalyst::Runtime::Simulator::LightningKokkosSimulator;
+
+#elif _ENABLE_PLGPU == 1
+constexpr bool BACKEND_FOUND = true;
+#include "LightningGPUSimulator.hpp"
+using LSimulator = Catalyst::Runtime::Simulator::LightningGPUSimulator;
+
+#else
+constexpr bool BACKEND_FOUND = false;
+using LSimulator = Pennylane::Util::TypeList<void>;
+#endif
+
 using namespace Catalyst::Runtime::Simulator;
-using LQSimulator = LightningSimulator;
+using namespace Catalyst::Runtime;
 
 TEST_CASE("Test parse_kwargs coverage", "[Utils]") {
     std::string case1;
@@ -52,13 +71,11 @@ TEST_CASE("Test parse_kwargs coverage", "[Utils]") {
 }
 
 TEST_CASE("lightning Basis vector", "[Driver]") {
-    std::unique_ptr<LQSimulator> sim = std::make_unique<LQSimulator>();
+    std::unique_ptr<LSimulator> sim = std::make_unique<LSimulator>();
 
     [[maybe_unused]] QubitIdType q1 = sim->AllocateQubit();
     [[maybe_unused]] QubitIdType q2 = sim->AllocateQubit();
-    QubitIdType q3 = sim->AllocateQubit();
-
-    sim->ReleaseQubit(q3);
+    [[maybe_unused]] QubitIdType q3 = sim->AllocateQubit();
 
     std::vector<std::complex<double>> state(1U << sim->GetNumQubits());
     DataView<std::complex<double>, 1> view(state);
@@ -75,13 +92,11 @@ TEST_CASE("lightning Basis vector", "[Driver]") {
 }
 
 TEST_CASE("test AllocateQubits", "[Driver]") {
-    std::unique_ptr<LQSimulator> sim = std::make_unique<LQSimulator>();
+    std::unique_ptr<LSimulator> sim = std::make_unique<LSimulator>();
 
     CHECK(sim->AllocateQubits(0).empty());
 
     auto &&q = sim->AllocateQubits(2);
-
-    sim->ReleaseQubit(q[0]);
 
     std::vector<std::complex<double>> state(1U << sim->GetNumQubits());
     DataView<std::complex<double>, 1> view(state);
@@ -91,7 +106,7 @@ TEST_CASE("test AllocateQubits", "[Driver]") {
 }
 
 TEST_CASE("test multiple AllocateQubits", "[Driver]") {
-    std::unique_ptr<LQSimulator> sim = std::make_unique<LQSimulator>();
+    std::unique_ptr<LSimulator> sim = std::make_unique<LSimulator>();
 
     auto &&q1 = sim->AllocateQubits(2);
     CHECK(q1[0] == 0);
@@ -104,7 +119,7 @@ TEST_CASE("test multiple AllocateQubits", "[Driver]") {
 }
 
 TEST_CASE("test DeviceShots", "[Driver]") {
-    std::unique_ptr<LQSimulator> sim = std::make_unique<LQSimulator>();
+    std::unique_ptr<LSimulator> sim = std::make_unique<LSimulator>();
 
     CHECK(sim->GetDeviceShots() == 0);
 
@@ -114,7 +129,7 @@ TEST_CASE("test DeviceShots", "[Driver]") {
 }
 
 TEST_CASE("compute register tests", "[Driver]") {
-    std::unique_ptr<LQSimulator> sim = std::make_unique<LQSimulator>();
+    std::unique_ptr<LSimulator> sim = std::make_unique<LSimulator>();
 
     constexpr size_t n = 10;
     std::vector<QubitIdType> Qs;
@@ -150,7 +165,7 @@ TEST_CASE("Check an unsupported operation", "[Driver]") {
 }
 
 TEST_CASE("Check re-AllocateQubit", "[Driver]") {
-    std::unique_ptr<LQSimulator> sim = std::make_unique<LQSimulator>();
+    std::unique_ptr<LSimulator> sim = std::make_unique<LSimulator>();
 
     sim->AllocateQubit();
     sim->NamedOperation("Hadamard", {}, {0}, false);
@@ -170,4 +185,47 @@ TEST_CASE("Check re-AllocateQubit", "[Driver]") {
     sim->State(view);
     CHECK(state[0].real() == Approx(0.707107).epsilon(1e-5));
     CHECK(state[8].real() == Approx(0.707107).epsilon(1e-5));
+}
+
+TEST_CASE("Check dynamic qubit reuse", "[Driver]") {
+    std::unique_ptr<LSimulator> sim = std::make_unique<LSimulator>();
+
+    auto qubits = sim->AllocateQubits(2);
+    sim->NamedOperation("PauliX", {}, {qubits[0]}, false);
+    sim->NamedOperation("Hadamard", {}, {qubits[1]}, false);
+
+    std::vector<std::complex<double>> state(1U << sim->GetNumQubits());
+    DataView<std::complex<double>, 1> view(state);
+    sim->State(view);
+    CHECK(state[0b00].real() == Approx(0.).epsilon(1e-5));
+    CHECK(state[0b10].real() == Approx(0.707107).epsilon(1e-5));
+    CHECK(state[0b01].real() == Approx(0.).epsilon(1e-5));
+    CHECK(state[0b11].real() == Approx(0.707107).epsilon(1e-5));
+
+    sim->ReleaseQubit(qubits[1]);
+
+    sim->State(view);
+    CHECK(state[0b00].real() == Approx(0.).epsilon(1e-5));
+    CHECK(state[0b10].real() == Approx(0.707107).epsilon(1e-5));
+    CHECK(state[0b01].real() == Approx(0.).epsilon(1e-5));
+    CHECK(state[0b11].real() == Approx(0.707107).epsilon(1e-5));
+
+    auto new_qubit = sim->AllocateQubit();
+    CHECK(new_qubit != qubits[1]);
+
+    sim->State(view);
+    CHECK(state[0b00].real() == Approx(0.).epsilon(1e-5));
+    CHECK(state[0b10].real() == Approx(1.).epsilon(1e-5));
+    CHECK(state[0b01].real() == Approx(0.).epsilon(1e-5));
+    CHECK(state[0b11].real() == Approx(0.).epsilon(1e-5));
+}
+
+TEST_CASE("Release Qubits", "[Driver]") {
+    std::unique_ptr<LSimulator> sim = std::make_unique<LSimulator>();
+
+    auto qubits = sim->AllocateQubits(4);
+
+    sim->ReleaseQubits({qubits[1], qubits[2]});
+
+    CHECK(sim->GetNumQubits() == 2);
 }
