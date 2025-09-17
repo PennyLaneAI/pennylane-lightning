@@ -691,6 +691,10 @@ class StateVectorCudaManaged
 
         const double norm = branch ? abs2sum1 : abs2sum0;
 
+        PL_ABORT_IF(norm < std::numeric_limits<PrecisionT>::epsilon() * 1e2,
+                    "Chosen branch has vector norm close to zero and cannot be "
+                    "normalized");
+
         const int parity = static_cast<int>(branch);
 
         PL_CUSTATEVEC_IS_SUCCESS(custatevecCollapseOnZBasis(
