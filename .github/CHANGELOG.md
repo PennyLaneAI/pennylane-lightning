@@ -140,11 +140,13 @@ This release contains contributions from (in alphabetical order):
 Ali Asadi,
 Yushao Chen,
 Amintor Dusko,
+David Ittah,
 Christina Lee,
 Joseph Lee,
 Luis Alfredo Nuñez Meneses,
 Andrija Paurevic,
 Marc Vandelle,
+Paul Haochen Wang,
 Jake Zaia.
 
 ---
