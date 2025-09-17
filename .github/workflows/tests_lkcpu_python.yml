@@ -190,6 +190,13 @@ jobs:
           git log -1 --format='%H'
           git status
 
+      - name: Checkout Catalyst
+        uses: actions/checkout@v4
+        with:
+          repository: PennyLaneAI/catalyst
+          path: ${{ github.workspace}}/catalyst
+          ref: ${{ (inputs.pennylane-version == 'stable' && 'v0.12.0') || 'main' }} # FIXME: remove after v0.43 release
+
       - uses: actions/download-artifact@v4
         with:
           name: ${{ matrix.pl_backend }}-${{ matrix.exec_model }}_name.txt
