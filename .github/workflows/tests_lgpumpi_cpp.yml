@@ -61,6 +61,7 @@ jobs:
         with:
           repository: PennyLaneAI/catalyst
           path: ${{ github.workspace}}/catalyst
+          ref: ${{ (inputs.pennylane-version == 'stable' && 'v0.12.0') || 'main' }} # FIXME: remove after v0.43 release
 
       - name: Switch to stable build of Lightning-GPU
         if: inputs.lightning-version == 'stable'
