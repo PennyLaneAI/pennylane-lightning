@@ -301,3 +301,22 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::collapse",
                               expected_state[branch][wire].size(), eps));
     }
 }
+
+TEMPLATE_TEST_CASE("StateVectorCudaManaged::collapse error",
+                   "[StateVectorCudaManaged]", float, double) {
+    using PrecisionT = TestType;
+
+    constexpr std::size_t num_qubits = 3;
+
+    SECTION("Collapse bad branch") {
+        StateVectorCudaManaged<PrecisionT> sv(num_qubits);
+
+        const std::size_t wire = 0;
+        const std::size_t branch = 1;
+
+        REQUIRE_THROWS_WITH(
+            sv.collapse(wire, branch),
+            Catch::Contains("Chosen branch has vector norm close to zero and "
+                            "cannot be normalized"));
+    }
+}

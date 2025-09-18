@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Unit tests for the serialization helper functions.
+Unit tests for lightning base statevector class
 """
 
 import math
@@ -521,3 +521,12 @@ def test_operation_is_sparse_is_false_for_not_supported_devices():
     assert (
         state_vector._operation_is_sparse(qml.QubitUnitary(sp.sparse.eye(wires), wires=0)) == False
     )
+
+
+def test_collapse_branch_error():
+    """Tests that when collapsing on branch with norm close to 0 gets error."""
+    wires = 3
+    state_vector = LightningStateVector(wires)
+
+    with pytest.raises(RuntimeError, match="norm close to zero and cannot be normalized"):
+        state_vector.state_vector.collapse(0, True)
