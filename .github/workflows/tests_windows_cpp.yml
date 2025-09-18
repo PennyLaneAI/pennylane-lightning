@@ -234,7 +234,7 @@ jobs:
         run: |
           choco install OpenCppCoverage -y
           echo "C:\Program Files\OpenCppCoverage" >> $env:GITHUB_PATH
-      
+
       - name: Add path to scipy-openblas32 to environment variable
         run: |
           $scipy_openblas32_path = python -c "import scipy_openblas32; print(scipy_openblas32.get_lib_dir())"

@@ -37,10 +37,13 @@ if(Kokkos_ENABLE_CUDA)
     endif()
 endif()
 
-target_include_directories(lightning_kokkos_catalyst INTERFACE  ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(lightning_kokkos_catalyst PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
 target_link_libraries(lightning_kokkos_catalyst PUBLIC  lightning_compile_options
                                                         lightning_kokkos_algorithms
                                                         lightning_kokkos_measurements
+                                                        lightning_catalyst_core
 )
 
 set(CMAKE_BUILD_RPATH_USE_ORIGIN ON)

@@ -10,10 +10,13 @@ include(FetchContent)
 include("${pennylane_lightning_SOURCE_DIR}/cmake/support_catalyst.cmake")
 FindCatalyst(lightning_gpu_catalyst)
 
-target_include_directories(lightning_gpu_catalyst INTERFACE  ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(lightning_gpu_catalyst PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
 target_link_libraries(lightning_gpu_catalyst PUBLIC  lightning_compile_options
                                                         lightning_gpu_algorithms
                                                         lightning_gpu_measurements
+                                                        lightning_catalyst_core
 )
 
 set(CMAKE_BUILD_RPATH_USE_ORIGIN ON)
