@@ -189,7 +189,8 @@ TEST_CASE("Check re-AllocateQubit", "[Driver]") {
 }
 
 TEST_CASE("Check dynamic qubit reuse", "[Driver]") {
-    SECTION("Two total qubits") {
+    SECTION("Two total device qubits with PauliX gate and deterministic "
+            "measurements") {
         std::unique_ptr<LSimulator> sim = std::make_unique<LSimulator>();
 
         std::vector<intptr_t> Qs = sim->AllocateQubits(1);
@@ -222,7 +223,8 @@ TEST_CASE("Check dynamic qubit reuse", "[Driver]") {
         sim->ReleaseQubits(tempQs2);
     }
 
-    SECTION("Three total qubits") {
+    SECTION("Two total device qubits with Hadamard gate and non deterministic "
+            "measurements") {
         std::unique_ptr<LSimulator> sim = std::make_unique<LSimulator>();
 
         auto qubits = sim->AllocateQubits(2);
