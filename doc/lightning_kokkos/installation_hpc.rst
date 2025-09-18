@@ -6,7 +6,9 @@ The Lightning-Kokkos simulator is well suited for various parallel HPC platforms
 Building and Running Lightning-Kokkos with MPI on Frontier
 ==========================================================
 
-To build Lightning-Kokkos with MPI on `Frontier <https://www.olcf.ornl.gov/frontier/>`_ for AMD GPUs, the following commands can be used:
+Here we demonstrate the steps to build Lightning-Kokkos with MPI on `Frontier <https://www.olcf.ornl.gov/frontier/>`_ for AMD GPUs.
+
+We can load the following modules to enable the relevant compilers and Python environment:
 
 .. code-block:: console
 
@@ -14,13 +16,29 @@ To build Lightning-Kokkos with MPI on `Frontier <https://www.olcf.ornl.gov/front
     module load cray-python
     module load PrgEnv-amd
 
-    # Install Lightning-Qubit
-    git clone https://github.com/PennyLaneAI/pennylane-lightning.git
-    cd pennylane-lightning
-    pip install -r requirements.txt
-    pip install git+https://github.com/PennyLaneAI/pennylane.git@master
-    PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
-    CMAKE_ARGS="-DCMAKE_CXX_COMPILER=CC" pip install .
+
+Install Kokkos (Recommended)
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. note::
+
+    Lightning-Kokkos is tested with Kokkos version <= 4.5.00
+    
+We suggest first installing Kokkos with the desired configuration, following the instructions found in the Kokkos documentation.
+For example, the following instructions demonstrate building Kokkos for AMD MI210/250/250X GPUs:
+
+Download the `Kokkos code <https://github.com/kokkos/kokkos/releases>`_.
+
+.. code-block:: bash
+
+    # Replace x, y, and z by the correct version
+    wget https://github.com/kokkos/kokkos/archive/refs/tags/4.x.yz.tar.gz
+    tar -xvf 4.x.y.z.tar.gz
+    cd kokkos-4.x.y.z
+
+Build Kokkos for AMD GPU (``GFX90A`` architecture), and append the install location to ``CMAKE_PREFIX_PATH``.
+
+.. code-block:: bash
 
     # Install Kokkos:
     export KOKKOS_INSTALL_PATH=<install-path>
@@ -34,11 +52,33 @@ To build Lightning-Kokkos with MPI on `Frontier <https://www.olcf.ornl.gov/front
         -DKokkos_ENABLE_SERIAL:BOOL=ON \
         -DKokkos_ENABLE_HIP:BOOL=ON \
         -DKokkos_ARCH_AMD_GFX90A:BOOL=ON \
+        -DKokkos_ENABLE_COMPLEX_ALIGN:BOOL=OFF \
         -DKokkos_ENABLE_EXAMPLES:BOOL=OFF \
         -DKokkos_ENABLE_TESTS:BOOL=OFF \
         -DKokkos_ENABLE_LIBDL:BOOL=OFF
     cmake --build build && cmake --install build
     export CMAKE_PREFIX_PATH=$KOKKOS_INSTALL_PATH  
+
+
+Install Lightning-Kokkos
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+Before Lightning-Kokkos can be installed, Lightning-Qubit needs to be installed via ``pip``.
+It can be installed from source as follows:
+
+.. code-block:: bash
+
+    # Install Lightning-Qubit
+    git clone https://github.com/PennyLaneAI/pennylane-lightning.git
+    cd pennylane-lightning
+    pip install -r requirements.txt
+    pip install git+https://github.com/PennyLaneAI/pennylane.git@master
+    PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
+    CMAKE_ARGS="-DCMAKE_CXX_COMPILER=CC" pip install .
+
+Then to install Lightning-Kokkos with MPI support:
+
+.. code-block:: bash
 
     # Install Lightning-Kokkos with MPI support
 
