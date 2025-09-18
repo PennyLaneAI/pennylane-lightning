@@ -58,21 +58,6 @@ TEST_CASE("Test the device factory method", "[constructibility]") {
 }
 
 TEST_CASE("LightningKokkosSimulator::unit_tests", "[unit tests]") {
-    SECTION("Managing Qubits") {
-        std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
-        std::vector<intptr_t> Qs = LKsim->AllocateQubits(0);
-        REQUIRE(LKsim->GetNumQubits() == 0);
-        LKsim->AllocateQubits(2);
-        REQUIRE(LKsim->GetNumQubits() == 2);
-        LKsim->AllocateQubits(2);
-        REQUIRE(LKsim->GetNumQubits() == 4);
-        LKsim->ReleaseQubit(0);
-        REQUIRE(LKsim->GetNumQubits() == 3);
-        Qs.insert(Qs.end(), {1, 2, 3});
-        LKsim->ReleaseQubits(Qs);
-        REQUIRE(LKsim->GetNumQubits() ==
-                0); // releasing all qubits resets the simulator.
-    }
     SECTION("Tape recording") {
         std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
         std::vector<intptr_t> Qs = LKsim->AllocateQubits(1);
@@ -788,3 +773,103 @@ TEST_CASE("LightningKokkosSimulator::GateSet", "[GateSet]") {
 }
 
 TEST_CASE("Test mismatch controlled wires", "[]") {}
+
+TEST_CASE("LightningKokkosSimulator qubit release and reuse", "[unit tests]") {
+    SECTION("Managing Qubits") {
+        std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
+        std::vector<intptr_t> Qs = LKsim->AllocateQubits(0);
+        REQUIRE(LKsim->GetNumQubits() == 0);
+        LKsim->AllocateQubits(2);
+        REQUIRE(LKsim->GetNumQubits() == 2);
+        LKsim->AllocateQubits(2);
+        REQUIRE(LKsim->GetNumQubits() == 4);
+        LKsim->ReleaseQubit(0);
+        REQUIRE(LKsim->GetNumQubits() == 3);
+        Qs.insert(Qs.end(), {1, 2, 3});
+        LKsim->ReleaseQubits(Qs);
+        REQUIRE(LKsim->GetNumQubits() ==
+                0); // releasing all qubits resets the simulator.
+    }
+
+    SECTION("Test ReleaseQubit reuse") {
+        std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
+        std::vector<intptr_t> Qs = LKsim->AllocateQubits(1);
+        CHECK(Qs[0] == 0);
+
+        std::vector<intptr_t> tempQs1 = LKsim->AllocateQubits(1);
+        CHECK(tempQs1[0] == 1);
+        LKsim->NamedOperation("PauliX", {}, {tempQs1[0]}, false);
+        LKsim->ReleaseQubits(tempQs1);
+
+        // Check that internal device state vector is still |01> after release
+        std::vector<std::complex<double>> state1(4);
+        DataView<std::complex<double>, 1> view1(state1);
+        LKsim->State(view1);
+        CHECK(state1.at(1) == std::complex<double>{1, 0});
+
+        std::complex<double> sum1{0, 0};
+        for (std::size_t ind = 0; ind < state1.size(); ind++) {
+            sum1 += state1[ind];
+        }
+
+        CHECK(sum1 == std::complex<double>{1, 0});
+
+        std::vector<intptr_t> tempQs2 = LKsim->AllocateQubits(1);
+        // Check that program ID is different for every allocation
+        CHECK(tempQs2[0] == 2);
+
+        // Check that the second allocation reuses bit 1, and device sv resets
+        // back to |00>
+        std::vector<std::complex<double>> state2(4);
+        DataView<std::complex<double>, 1> view2(state2);
+        LKsim->State(view2);
+        CHECK(state2.at(0) == std::complex<double>{1, 0});
+
+        std::complex<double> sum2{0, 0};
+        for (std::size_t ind = 0; ind < state2.size(); ind++) {
+            sum2 += state2[ind];
+        }
+
+        CHECK(sum2 == std::complex<double>{1, 0});
+
+        LKsim->ReleaseQubits(tempQs2);
+    }
+
+    SECTION("Test ReleaseQubits with full circuit") {
+        std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
+        std::vector<intptr_t> Qs = LKsim->AllocateQubits(3); // |000>
+
+        std::vector<intptr_t> tempQs1 =
+            LKsim->AllocateQubits(1); // |000> and |0>
+        LKsim->NamedOperation("PauliX", {}, {tempQs1[0]},
+                              false); // |000> and |1>
+        LKsim->NamedOperation("CNOT", {}, {tempQs1[0], Qs[1]},
+                              false);  // |010> and |1>
+        LKsim->ReleaseQubits(tempQs1); // |010>
+
+        std::vector<intptr_t> tempQs2 =
+            LKsim->AllocateQubits(1); // |010> and |0>
+        LKsim->NamedOperation("PauliX", {}, {tempQs2[0]},
+                              false); // |010> and |1>
+        LKsim->NamedOperation("CNOT", {}, {tempQs2[0], Qs[1]},
+                              false);  // |000> and |1>
+        LKsim->ReleaseQubits(tempQs2); // |000>
+
+        std::vector<intptr_t> tempQs3 =
+            LKsim->AllocateQubits(1); // |000> and |0>
+        LKsim->NamedOperation("PauliX", {}, {tempQs3[0]},
+                              false); // |000> and |1>
+        LKsim->NamedOperation("CNOT", {}, {tempQs3[0], Qs[1]},
+                              false);  // |010> and |1>
+        LKsim->ReleaseQubits(tempQs3); // |010>
+
+        std::vector<double> probs(8);
+        DataView<double, 1> view(probs);
+        LKsim->PartialProbs(view, Qs);
+
+        std::vector<double> expected_probs = {0.0, 0.0, 1.0, 0.0,
+                                              0.0, 0.0, 0.0, 0.0};
+
+        CHECK(probs == PLApprox(expected_probs).margin(1e-5));
+    }
+}
