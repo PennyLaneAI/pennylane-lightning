@@ -64,7 +64,7 @@
 
 <h3>Documentation 📝</h3>
 
-- Update Lightning-Kokkos installation instruction to include `Kokkos_ENABLE_COMPLEX_ALIGN=OFF`.
+- Updated Lightning-Kokkos installation instructions to include `Kokkos_ENABLE_COMPLEX_ALIGN=OFF`.
   [(#1256)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1256)
 
 - Added missing `Kernel performance tuning` documentation page to the AVX2/AVX512 kernels index for improved discoverability.

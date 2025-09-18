@@ -24,7 +24,8 @@ Install Kokkos (Recommended)
 
     Lightning-Kokkos was tested with Kokkos version <= 4.5.00
     
-We suggest first installing Kokkos with the wanted configuration following the instructions found in the Kokkos documentation. For example, the following will build Kokkos for AMD MI210/250/250X GPUs.
+We suggest first installing Kokkos with the desired configuration, following the instructions found in the Kokkos documentation.
+For example, the following instructions demonstrate building Kokkos for AMD MI210/250/250X GPUs:
 
 Download the `Kokkos code <https://github.com/kokkos/kokkos/releases>`_.
 
@@ -62,7 +63,8 @@ Build Kokkos for AMD GPU (``GFX90A`` architecture), and append the install locat
 Install Lightning-Kokkos
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-Lightning-Qubit needs to be 'installed' by ``pip`` before Lightning-Kokkos. This can be installed from source as follows.
+Before Lightning-Kokkos can be installed, Lightning-Qubit needs to be installed via ``pip``.
+It can be installed from source as follows:
 
 .. code-block:: bash
 
