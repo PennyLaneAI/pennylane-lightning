@@ -55,8 +55,8 @@ auto LightningKokkosSimulator::AllocateQubit() -> QubitIdType {
         // The collapse is performed by a measurement followed by an X gate if
         // measured 1.
         new_program_idx = this->qubit_manager.Allocate(device_idx);
-        bool mres = this->Measure(new_program_idx);
-        if (mres) {
+        Result mres = this->Measure(new_program_idx);
+        if (*mres) {
             this->NamedOperation("PauliX", {}, {new_program_idx}, false, {},
                                  {});
         }
