@@ -188,36 +188,107 @@ TEST_CASE("Check re-AllocateQubit", "[Driver]") {
 }
 
 TEST_CASE("Check dynamic qubit reuse", "[Driver]") {
-    std::unique_ptr<LSimulator> sim = std::make_unique<LSimulator>();
+    SECTION("Two total qubits") {
+        std::unique_ptr<LSimulator> sim = std::make_unique<LSimulator>();
 
-    auto qubits = sim->AllocateQubits(2);
-    sim->NamedOperation("PauliX", {}, {qubits[0]}, false);
-    sim->NamedOperation("Hadamard", {}, {qubits[1]}, false);
+        std::vector<intptr_t> Qs = sim->AllocateQubits(1);
+        CHECK(Qs[0] == 0);
+        std::vector<intptr_t> tempQs1 = sim->AllocateQubits(1);
+        CHECK(tempQs1[0] == 1);
+        sim->NamedOperation("PauliX", {}, {tempQs1[0]}, false);
+        sim->ReleaseQubits(tempQs1);
 
-    std::vector<std::complex<double>> state(1U << sim->GetNumQubits());
-    DataView<std::complex<double>, 1> view(state);
-    sim->State(view);
-    CHECK(state[0b00].real() == Approx(0.).epsilon(1e-5));
-    CHECK(state[0b10].real() == Approx(0.707107).epsilon(1e-5));
-    CHECK(state[0b01].real() == Approx(0.).epsilon(1e-5));
-    CHECK(state[0b11].real() == Approx(0.707107).epsilon(1e-5));
+        // Check that internal device state vector is still |01> after release
+        std::vector<std::complex<double>> state(4);
+        DataView<std::complex<double>, 1> view(state);
+        sim->State(view);
+        CHECK(state[0b00].real() == Approx(0.).epsilon(1e-5));
+        CHECK(state[0b10].real() == Approx(0.).epsilon(1e-5));
+        CHECK(state[0b01].real() == Approx(1.).epsilon(1e-5));
+        CHECK(state[0b11].real() == Approx(0.).epsilon(1e-5));
 
-    sim->ReleaseQubit(qubits[1]);
+        std::vector<intptr_t> tempQs2 = sim->AllocateQubits(1);
+        // Check that program ID is different for every allocation
+        CHECK(tempQs2[0] == 2);
 
-    sim->State(view);
-    CHECK(state[0b00].real() == Approx(0.).epsilon(1e-5));
-    CHECK(state[0b10].real() == Approx(0.707107).epsilon(1e-5));
-    CHECK(state[0b01].real() == Approx(0.).epsilon(1e-5));
-    CHECK(state[0b11].real() == Approx(0.707107).epsilon(1e-5));
+        // Check that the second allocation reuses bit 1, and device sv resets
+        // back to |00>
+        sim->State(view);
+        CHECK(state[0b00].real() == Approx(1.).epsilon(1e-5));
+        CHECK(state[0b10].real() == Approx(0.).epsilon(1e-5));
+        CHECK(state[0b01].real() == Approx(0.).epsilon(1e-5));
+        CHECK(state[0b11].real() == Approx(0.).epsilon(1e-5));
+        sim->ReleaseQubits(tempQs2);
+    }
 
-    auto new_qubit = sim->AllocateQubit();
-    CHECK(new_qubit != qubits[1]);
+    SECTION("Three total qubits") {
+        std::unique_ptr<LSimulator> sim = std::make_unique<LSimulator>();
 
-    sim->State(view);
-    CHECK(state[0b00].real() == Approx(0.).epsilon(1e-5));
-    CHECK(state[0b10].real() == Approx(1.).epsilon(1e-5));
-    CHECK(state[0b01].real() == Approx(0.).epsilon(1e-5));
-    CHECK(state[0b11].real() == Approx(0.).epsilon(1e-5));
+        auto qubits = sim->AllocateQubits(2);
+        sim->NamedOperation("PauliX", {}, {qubits[0]}, false);
+        sim->NamedOperation("Hadamard", {}, {qubits[1]}, false);
+
+        std::vector<std::complex<double>> state(1U << sim->GetNumQubits());
+        DataView<std::complex<double>, 1> view(state);
+        sim->State(view);
+        CHECK(state[0b00].real() == Approx(0.).epsilon(1e-5));
+        CHECK(state[0b10].real() == Approx(0.707107).epsilon(1e-5));
+        CHECK(state[0b01].real() == Approx(0.).epsilon(1e-5));
+        CHECK(state[0b11].real() == Approx(0.707107).epsilon(1e-5));
+
+        sim->ReleaseQubit(qubits[1]);
+
+        sim->State(view);
+        CHECK(state[0b00].real() == Approx(0.).epsilon(1e-5));
+        CHECK(state[0b10].real() == Approx(0.707107).epsilon(1e-5));
+        CHECK(state[0b01].real() == Approx(0.).epsilon(1e-5));
+        CHECK(state[0b11].real() == Approx(0.707107).epsilon(1e-5));
+
+        auto new_qubit = sim->AllocateQubit();
+        CHECK(new_qubit != qubits[1]);
+
+        sim->State(view);
+        CHECK(state[0b00].real() == Approx(0.).epsilon(1e-5));
+        CHECK(state[0b10].real() == Approx(1.).epsilon(1e-5));
+        CHECK(state[0b01].real() == Approx(0.).epsilon(1e-5));
+        CHECK(state[0b11].real() == Approx(0.).epsilon(1e-5));
+    }
+
+    SECTION("Multi qubit gates on dynamically and statically allocated qubits "
+            "together") {
+        std::unique_ptr<LSimulator> sim = std::make_unique<LSimulator>();
+        std::vector<intptr_t> Qs = sim->AllocateQubits(3); // |000>
+
+        std::vector<intptr_t> tempQs1 = sim->AllocateQubits(1); // |000> and |0>
+        sim->NamedOperation("PauliX", {}, {tempQs1[0]},
+                            false); // |000> and |1>
+        sim->NamedOperation("CNOT", {}, {tempQs1[0], Qs[1]},
+                            false);  // |010> and |1>
+        sim->ReleaseQubits(tempQs1); // |010>
+
+        std::vector<intptr_t> tempQs2 = sim->AllocateQubits(1); // |010> and |0>
+        sim->NamedOperation("PauliX", {}, {tempQs2[0]},
+                            false); // |010> and |1>
+        sim->NamedOperation("CNOT", {}, {tempQs2[0], Qs[1]},
+                            false);  // |000> and |1>
+        sim->ReleaseQubits(tempQs2); // |000>
+
+        std::vector<intptr_t> tempQs3 = sim->AllocateQubits(1); // |000> and |0>
+        sim->NamedOperation("PauliX", {}, {tempQs3[0]},
+                            false); // |000> and |1>
+        sim->NamedOperation("CNOT", {}, {tempQs3[0], Qs[1]},
+                            false);  // |010> and |1>
+        sim->ReleaseQubits(tempQs3); // |010>
+
+        std::vector<double> probs(8);
+        DataView<double, 1> view(probs);
+        sim->PartialProbs(view, Qs);
+
+        std::vector<double> expected_probs = {0.0, 0.0, 1.0, 0.0,
+                                              0.0, 0.0, 0.0, 0.0};
+
+        CHECK(probs == PLApprox(expected_probs).margin(1e-5));
+    }
 }
 
 TEST_CASE("Release Qubits", "[Driver]") {

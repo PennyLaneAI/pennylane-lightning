@@ -58,6 +58,21 @@ TEST_CASE("Test the device factory method", "[constructibility]") {
 }
 
 TEST_CASE("LightningGPUSimulator::unit_tests", "[unit tests]") {
+    SECTION("Managing Qubits") {
+        std::unique_ptr<LGPUSimulator> LGPUsim =
+            std::make_unique<LGPUSimulator>();
+        std::vector<intptr_t> Qs = LGPUsim->AllocateQubits(0);
+        REQUIRE(LGPUsim->GetNumQubits() == 0);
+        LGPUsim->AllocateQubits(2);
+        REQUIRE(LGPUsim->GetNumQubits() == 2);
+        LGPUsim->AllocateQubits(2);
+        REQUIRE(LGPUsim->GetNumQubits() == 4);
+        LGPUsim->ReleaseQubit(0);
+        REQUIRE(LGPUsim->GetNumQubits() == 3);
+        Qs.insert(Qs.end(), {1, 2, 3});
+        LGPUsim->ReleaseQubits(Qs);
+        REQUIRE(LGPUsim->GetNumQubits() == 0);
+    }
     SECTION("Tape recording") {
         std::unique_ptr<LGPUSimulator> LGPUsim =
             std::make_unique<LGPUSimulator>();
@@ -790,107 +805,5 @@ TEST_CASE("LightningGPUSimulator::GateSet", "[GateSet]") {
         std::complex<double> c2{0.0, 0.0};
         CHECK(state[0] == PLApproxComplex(c1).epsilon(1e-5));
         CHECK(state[1] == PLApproxComplex(c2).epsilon(1e-5));
-    }
-}
-
-TEST_CASE("LightningGPUSimulator qubit release and reuse", "[unit tests]") {
-    SECTION("Managing Qubits") {
-        std::unique_ptr<LGPUSimulator> LGPUsim =
-            std::make_unique<LGPUSimulator>();
-        std::vector<intptr_t> Qs = LGPUsim->AllocateQubits(0);
-        REQUIRE(LGPUsim->GetNumQubits() == 0);
-        LGPUsim->AllocateQubits(2);
-        REQUIRE(LGPUsim->GetNumQubits() == 2);
-        LGPUsim->AllocateQubits(2);
-        REQUIRE(LGPUsim->GetNumQubits() == 4);
-        LGPUsim->ReleaseQubit(0);
-        REQUIRE(LGPUsim->GetNumQubits() == 3);
-        Qs.insert(Qs.end(), {1, 2, 3});
-        LGPUsim->ReleaseQubits(Qs);
-        REQUIRE(LGPUsim->GetNumQubits() == 0);
-    }
-
-    SECTION("Test ReleaseQubit reuse") {
-        std::unique_ptr<LGPUSimulator> LGPUsim =
-            std::make_unique<LGPUSimulator>();
-        std::vector<intptr_t> Qs = LGPUsim->AllocateQubits(1);
-        CHECK(Qs[0] == 0);
-
-        std::vector<intptr_t> tempQs1 = LGPUsim->AllocateQubits(1);
-        CHECK(tempQs1[0] == 1);
-        LGPUsim->NamedOperation("PauliX", {}, {tempQs1[0]}, false);
-        LGPUsim->ReleaseQubits(tempQs1);
-
-        // Check that internal device state vector is still |01> after release
-        std::vector<std::complex<double>> state1(4);
-        DataView<std::complex<double>, 1> view1(state1);
-        LGPUsim->State(view1);
-        CHECK(state1.at(1) == std::complex<double>{1, 0});
-
-        std::complex<double> sum1{0, 0};
-        for (std::size_t ind = 0; ind < state1.size(); ind++) {
-            sum1 += state1[ind];
-        }
-
-        CHECK(sum1 == std::complex<double>{1, 0});
-
-        std::vector<intptr_t> tempQs2 = LGPUsim->AllocateQubits(1);
-        // Check that program ID is different for every allocation
-        CHECK(tempQs2[0] == 2);
-
-        // Check that the second allocation reuses bit 1, and device sv resets
-        // back to |00>
-        std::vector<std::complex<double>> state2(4);
-        DataView<std::complex<double>, 1> view2(state2);
-        LGPUsim->State(view2);
-        CHECK(state2.at(0) == std::complex<double>{1, 0});
-
-        std::complex<double> sum2{0, 0};
-        for (std::size_t ind = 0; ind < state2.size(); ind++) {
-            sum2 += state2[ind];
-        }
-
-        CHECK(sum2 == std::complex<double>{1, 0});
-
-        LGPUsim->ReleaseQubits(tempQs2);
-    }
-
-    SECTION("Test ReleaseQubits with full circuit") {
-        std::unique_ptr<LGPUSimulator> LGPUsim =
-            std::make_unique<LGPUSimulator>();
-        std::vector<intptr_t> Qs = LGPUsim->AllocateQubits(3); // |000>
-
-        std::vector<intptr_t> tempQs1 =
-            LGPUsim->AllocateQubits(1); // |000> and |0>
-        LGPUsim->NamedOperation("PauliX", {}, {tempQs1[0]},
-                                false); // |000> and |1>
-        LGPUsim->NamedOperation("CNOT", {}, {tempQs1[0], Qs[1]},
-                                false);  // |010> and |1>
-        LGPUsim->ReleaseQubits(tempQs1); // |010>
-
-        std::vector<intptr_t> tempQs2 =
-            LGPUsim->AllocateQubits(1); // |010> and |0>
-        LGPUsim->NamedOperation("PauliX", {}, {tempQs2[0]},
-                                false); // |010> and |1>
-        LGPUsim->NamedOperation("CNOT", {}, {tempQs2[0], Qs[1]},
-                                false);  // |000> and |1>
-        LGPUsim->ReleaseQubits(tempQs2); // |000>
-
-        std::vector<intptr_t> tempQs3 =
-            LGPUsim->AllocateQubits(1); // |000> and |0>
-        LGPUsim->NamedOperation("PauliX", {}, {tempQs3[0]},
-                                false); // |000> and |1>
-        LGPUsim->NamedOperation("CNOT", {}, {tempQs3[0], Qs[1]},
-                                false);  // |010> and |1>
-        LGPUsim->ReleaseQubits(tempQs3); // |010>
-
-        std::vector<double> probs(8);
-        DataView<double, 1> view(probs);
-        LGPUsim->PartialProbs(view, Qs);
-
-        std::vector<double> expected_probs = {0.0, 0.0, 1.0, 0.0,
-                                              0.0, 0.0, 0.0, 0.0};
-
-        CHECK(probs == PLApprox(expected_probs).margin(1e-5));
     }
 }
