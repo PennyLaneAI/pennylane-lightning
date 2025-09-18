@@ -84,6 +84,13 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Pin GitHub CI temporarily to the stable version to use Catalyst release v0.12.0.
+  [(#1259)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1259)
+
+- Update Catalyst's QuantumDevice interface and downstream Qubit Manager to Lightning in preparation for dynamic qubit allocation functionality.
+  [(#1254)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1254)
+  [(#1258)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1258)
+
 - Update Release script for bumping the minimum version for PennyLane.
   [(#1253)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1253)
 
@@ -139,11 +146,13 @@ This release contains contributions from (in alphabetical order):
 Ali Asadi,
 Yushao Chen,
 Amintor Dusko,
+David Ittah,
 Christina Lee,
 Joseph Lee,
 Luis Alfredo Nuñez Meneses,
 Andrija Paurevic,
 Marc Vandelle,
+Paul Haochen Wang,
 Jake Zaia.
 
 ---
