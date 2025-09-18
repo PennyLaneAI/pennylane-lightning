@@ -751,6 +751,10 @@ class TestExecution:
         with pytest.raises(DeviceError, match="mcm_method='foo' is not supported"):
             _ = device.setup_execution_config(config)
 
+    @pytest.mark.skipif(
+        device_name == "lightning.tensor",
+        reason="lightning.tensor device does not support mcms",
+    )
     def test_decompose_conditionals(self):
         """Test that conditional templates are properly decomposed."""
 
@@ -799,6 +803,10 @@ class TestExecution:
         with pytest.raises(DeviceError, match="not supported with"):
             prog((tape,))
 
+    @pytest.mark.skipif(
+        device_name == "lightning.tensor",
+        reason="lightning.tensor device does not support mcms",
+    )
     @pytest.mark.parametrize("shots, expected", [(None, "deferred"), (10, "one-shot")])
     def test_default_mcm_method_circuit(self, shots, expected):
         """Test that the default mcm method depends on the shots in the circuit."""
@@ -809,6 +817,10 @@ class TestExecution:
         )
         assert processed.mcm_config.mcm_method == expected
 
+    @pytest.mark.skipif(
+        device_name == "lightning.tensor",
+        reason="lightning.tensor device does not support mcms",
+    )
     def test_default_mcm_method_no_circuit(self):
         """Test that the default mcm method is deferred if no shots are provided."""
         device = LightningDevice(wires=2)

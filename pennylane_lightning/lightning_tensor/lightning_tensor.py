@@ -26,6 +26,7 @@ from pennylane.devices import Device, ExecutionConfig
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
 from pennylane.devices.preprocess import (
     decompose,
+    device_resolve_dynamic_wires,
     validate_device_wires,
     validate_measurements,
     validate_observables,
@@ -399,10 +400,14 @@ class LightningTensor(Device):
 
     dtype = c_dtype
 
-    def _setup_execution_config(self, config: ExecutionConfig | None = None) -> ExecutionConfig:
+    def setup_execution_config(
+        self, config: ExecutionConfig | None = None, circuit=None
+    ) -> ExecutionConfig:
         """
         Update the execution config with choices for how the device should be used and the device options.
         """
+        if config is None:
+            config = ExecutionConfig()
         # TODO: add options for gradients next quarter
         updated_values = {}
 
@@ -446,9 +451,7 @@ class LightningTensor(Device):
         * Does not support vector-Jacobian products.
         """
         if execution_config is None:
-            execution_config = ExecutionConfig()
-
-        config = self._setup_execution_config(execution_config)
+            execution_config = self.setup_execution_config(ExecutionConfig())
 
         program = TransformProgram()
 
@@ -458,13 +461,13 @@ class LightningTensor(Device):
         program.add_transform(
             decompose,
             stopping_condition=stopping_condition,
-            stopping_condition_shots=stopping_condition,
             skip_initial_state_prep=True,
             name=self.name,
             device_wires=self.wires,
             target_gates=self.operations,
         )
-        return program, config
+        program.add_transform(device_resolve_dynamic_wires, wires=self.wires, allow_resets=False)
+        return program
 
     # pylint: disable=unused-argument
     def execute(
