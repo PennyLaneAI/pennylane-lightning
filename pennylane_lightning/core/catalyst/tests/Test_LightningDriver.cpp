@@ -14,6 +14,7 @@
 
 #include "TestHelpers.hpp"
 #include "catch2/catch.hpp"
+#include <algorithm>
 #include <numeric>
 #include <string>
 
@@ -257,16 +258,32 @@ TEST_CASE("Check dynamic qubit reuse", "[Driver]") {
     SECTION("Multi qubit gates on dynamically and statically allocated qubits "
             "together") {
         std::unique_ptr<LSimulator> sim = std::make_unique<LSimulator>();
+        std::vector<std::complex<double>> state(16);
+        DataView<std::complex<double>, 1> state_view(state);
+
         std::vector<intptr_t> Qs = sim->AllocateQubits(3); // |000>
 
         std::vector<intptr_t> tempQs1 = sim->AllocateQubits(1); // |000> and |0>
         sim->NamedOperation("PauliX", {}, {tempQs1[0]},
                             false); // |000> and |1>
         sim->NamedOperation("CNOT", {}, {tempQs1[0], Qs[1]},
-                            false);  // |010> and |1>
+                            false); // |010> and |1>
+
+        sim->State(state_view);
+        CHECK(state[0b0101].real() == Approx(1.).epsilon(1e-5));
+        CHECK(std::accumulate(state.begin(), state.end(),
+                              std::complex<double>{0.0, 0.0}) ==
+              PLApproxComplex(std::complex<double>{1.0, 0.0}).epsilon(1e-5));
+
         sim->ReleaseQubits(tempQs1); // |010>
 
         std::vector<intptr_t> tempQs2 = sim->AllocateQubits(1); // |010> and |0>
+        sim->State(state_view);
+        CHECK(state[0b0100].real() == Approx(1.).epsilon(1e-5));
+        CHECK(std::accumulate(state.begin(), state.end(),
+                              std::complex<double>{0.0, 0.0}) ==
+              PLApproxComplex(std::complex<double>{1.0, 0.0}).epsilon(1e-5));
+
         sim->NamedOperation("PauliX", {}, {tempQs2[0]},
                             false); // |010> and |1>
         sim->NamedOperation("CNOT", {}, {tempQs2[0], Qs[1]},
@@ -274,11 +291,23 @@ TEST_CASE("Check dynamic qubit reuse", "[Driver]") {
         sim->ReleaseQubits(tempQs2); // |000>
 
         std::vector<intptr_t> tempQs3 = sim->AllocateQubits(1); // |000> and |0>
+        sim->State(state_view);
+        CHECK(state[0b0000].real() == Approx(1.).epsilon(1e-5));
+        CHECK(std::accumulate(state.begin(), state.end(),
+                              std::complex<double>{0.0, 0.0}) ==
+              PLApproxComplex(std::complex<double>{1.0, 0.0}).epsilon(1e-5));
+
         sim->NamedOperation("PauliX", {}, {tempQs3[0]},
                             false); // |000> and |1>
         sim->NamedOperation("CNOT", {}, {tempQs3[0], Qs[1]},
                             false);  // |010> and |1>
         sim->ReleaseQubits(tempQs3); // |010>
+
+        sim->State(state_view);
+        CHECK(state[0b0101].real() == Approx(1.).epsilon(1e-5));
+        CHECK(std::accumulate(state.begin(), state.end(),
+                              std::complex<double>{0.0, 0.0}) ==
+              PLApproxComplex(std::complex<double>{1.0, 0.0}).epsilon(1e-5));
 
         std::vector<double> probs(8);
         DataView<double, 1> view(probs);
