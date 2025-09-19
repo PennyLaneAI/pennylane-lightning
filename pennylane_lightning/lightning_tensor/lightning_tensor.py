@@ -26,6 +26,7 @@ from pennylane.devices import Device, ExecutionConfig
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
 from pennylane.devices.preprocess import (
     decompose,
+    device_resolve_dynamic_wires,
     validate_device_wires,
     validate_measurements,
     validate_observables,
@@ -399,10 +400,15 @@ class LightningTensor(Device):
 
     dtype = c_dtype
 
-    def _setup_execution_config(self, config: ExecutionConfig | None = None) -> ExecutionConfig:
+    # pylint: disable=unused-argument
+    def setup_execution_config(
+        self, config: ExecutionConfig | None = None, circuit=None
+    ) -> ExecutionConfig:
         """
         Update the execution config with choices for how the device should be used and the device options.
         """
+        if config is None:
+            config = ExecutionConfig()
         # TODO: add options for gradients next quarter
         updated_values = {}
 
@@ -425,10 +431,10 @@ class LightningTensor(Device):
 
         return circuit.map_to_standard_wires() if self.num_wires is None else circuit
 
-    def preprocess(
+    def preprocess_transforms(
         self,
         execution_config: ExecutionConfig | None = None,
-    ):
+    ) -> TransformProgram:
         """This function defines the device transform program to be applied and an updated device configuration.
 
         Args:
@@ -446,25 +452,23 @@ class LightningTensor(Device):
         * Does not support vector-Jacobian products.
         """
         if execution_config is None:
-            execution_config = ExecutionConfig()
-
-        config = self._setup_execution_config(execution_config)
+            execution_config = self.setup_execution_config(ExecutionConfig())
 
         program = TransformProgram()
 
         program.add_transform(validate_measurements, name=self.name)
         program.add_transform(validate_observables, accepted_observables, name=self.name)
-        program.add_transform(validate_device_wires, self._wires, name=self.name)
         program.add_transform(
             decompose,
             stopping_condition=stopping_condition,
-            stopping_condition_shots=stopping_condition,
             skip_initial_state_prep=True,
             name=self.name,
             device_wires=self.wires,
             target_gates=self.operations,
         )
-        return program, config
+        program.add_transform(device_resolve_dynamic_wires, wires=self.wires, allow_resets=False)
+        program.add_transform(validate_device_wires, self._wires, name=self.name)
+        return program
 
     # pylint: disable=unused-argument
     def execute(
