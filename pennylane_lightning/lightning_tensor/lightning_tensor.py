@@ -457,7 +457,6 @@ class LightningTensor(Device):
 
         program.add_transform(validate_measurements, name=self.name)
         program.add_transform(validate_observables, accepted_observables, name=self.name)
-        program.add_transform(validate_device_wires, self._wires, name=self.name)
         program.add_transform(
             decompose,
             stopping_condition=stopping_condition,
@@ -467,6 +466,7 @@ class LightningTensor(Device):
             target_gates=self.operations,
         )
         program.add_transform(device_resolve_dynamic_wires, wires=self.wires, allow_resets=False)
+        program.add_transform(validate_device_wires, self._wires, name=self.name)
         return program
 
     # pylint: disable=unused-argument
