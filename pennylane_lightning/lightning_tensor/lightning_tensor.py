@@ -430,10 +430,10 @@ class LightningTensor(Device):
 
         return circuit.map_to_standard_wires() if self.num_wires is None else circuit
 
-    def preprocess(
+    def preprocess_transforms(
         self,
         execution_config: ExecutionConfig | None = None,
-    ):
+    ) -> TransformProgram:
         """This function defines the device transform program to be applied and an updated device configuration.
 
         Args:
