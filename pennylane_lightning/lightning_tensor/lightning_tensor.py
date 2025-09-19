@@ -400,6 +400,7 @@ class LightningTensor(Device):
 
     dtype = c_dtype
 
+    # pylint: disable=unused-argument
     def setup_execution_config(
         self, config: ExecutionConfig | None = None, circuit=None
     ) -> ExecutionConfig:
