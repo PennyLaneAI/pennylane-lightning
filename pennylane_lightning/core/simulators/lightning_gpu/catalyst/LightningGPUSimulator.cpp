@@ -28,6 +28,7 @@ auto LightningGPUSimulator::AllocateQubit() -> QubitIdType {
     // The statevector may contain previously freed qubits,
     // that means we may not need to resize the vector.
     size_t device_idx;
+    QubitIdType new_program_idx;
     std::optional<size_t> candidate = this->qubit_manager.popFreeQubit();
     if (!candidate.has_value()) {
         // TODO: update statevector directly on device
@@ -44,14 +45,22 @@ auto LightningGPUSimulator::AllocateQubit() -> QubitIdType {
         }
         this->device_sv =
             std::make_unique<StateVectorT>(new_data.data(), new_data.size());
+        new_program_idx = this->qubit_manager.Allocate(device_idx);
     } else {
         device_idx = candidate.value();
 
         // Reuse existing space in the statevector by collapsing onto |0>.
-        this->device_sv->collapse(device_idx, 0);
+        // The collapse is performed by a measurement followed by an X gate if
+        // measured 1.
+        new_program_idx = this->qubit_manager.Allocate(device_idx);
+        Result mres = this->Measure(new_program_idx);
+        if (*mres) {
+            this->NamedOperation("PauliX", {}, {new_program_idx}, false, {},
+                                 {});
+        }
     }
 
-    return this->qubit_manager.Allocate(device_idx);
+    return new_program_idx;
 }
 
 auto LightningGPUSimulator::AllocateQubits(std::size_t num_qubits)
