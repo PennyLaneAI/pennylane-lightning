@@ -64,6 +64,9 @@
 
 <h3>Documentation 📝</h3>
 
+- Updated Lightning-Kokkos installation instructions to include `Kokkos_ENABLE_COMPLEX_ALIGN=OFF`.
+  [(#1256)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1256)
+
 - Added missing `Kernel performance tuning` documentation page to the AVX2/AVX512 kernels index for improved discoverability.
   [(#1217)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1217)
 
@@ -84,6 +87,14 @@
 - Use GCC 13 for CI.
   [(#XXXX)](https://github.com/PennyLaneAI/pennylane-lightning/pull/XXXX)
   
+- Pin GitHub CI temporarily to the stable version to use Catalyst release v0.12.0.
+  [(#1259)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1259)
+
+- Update Catalyst's QuantumDevice interface and downstream Qubit Manager to Lightning in preparation for dynamic qubit allocation functionality.
+  [(#1254)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1254)
+  [(#1258)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1258)
+  [(#1260)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1260)
+
 - Update Release script for bumping the minimum version for PennyLane.
   [(#1253)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1253)
 
@@ -139,11 +150,13 @@ This release contains contributions from (in alphabetical order):
 Ali Asadi,
 Yushao Chen,
 Amintor Dusko,
+David Ittah,
 Christina Lee,
 Joseph Lee,
 Luis Alfredo Nuñez Meneses,
 Andrija Paurevic,
 Marc Vandelle,
+Paul Haochen Wang,
 Jake Zaia.
 
 ---

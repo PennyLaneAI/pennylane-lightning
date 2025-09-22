@@ -90,8 +90,8 @@ jobs:
             cd ./Build
             mkdir -p ./tests/results
             test_status=0
-            for file in *runner ; do 
-              ./$file  --reporter junit --out ./tests/results/report_$file.xml && echo "Test $file Success!" || { cat ./tests/results/report_$file.xml; test_status=1; }; 
+            for file in *runner ; do
+              ./$file  --reporter junit --out ./tests/results/report_$file.xml && echo "Test $file Success!" || { cat ./tests/results/report_$file.xml; test_status=1; };
             done;
             if [ $test_status -ne 0 ]; then
               echo "Tests failed. Exiting with error code."
@@ -165,7 +165,7 @@ jobs:
             cd ./Build
             mkdir -p ./tests/results
             test_status=0
-            for file in *runner ; do 
+            for file in *runner ; do
               ./$file  --reporter junit --out ./tests/results/report_$file.xml && echo "Test $file Success!" || { cat ./tests/results/report_$file.xml; test_status=1; };
             done;
             if [ $test_status -ne 0 ]; then
@@ -265,7 +265,7 @@ jobs:
             cd ./Build
             mkdir -p ./tests/results-${{ github.job }}-${{ matrix.pl_backend }}
             test_status=0
-            for file in *runner ; do 
+            for file in *runner ; do
               report_file="./tests/results-${{ github.job }}-${{ matrix.pl_backend }}/report_$file.xml";
               ./$file --reporter junit --out $report_file && echo "Test $file Success!" || { cat $report_file; test_status=1; }
             done;
@@ -380,7 +380,7 @@ jobs:
             cd ./Build
             mkdir -p ./tests/results_multiple_backends
             test_status=0
-            for file in *runner ; do 
+            for file in *runner ; do
               ./$file  --reporter junit --out ./tests/results_multiple_backends/report_$file.xml && echo "Test $file Success!" || { cat ./tests/results_multiple_backends/report_$file.xml; test_status=1; };
             done;
             if [ $test_status -ne 0 ]; then
