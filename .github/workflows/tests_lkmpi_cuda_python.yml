@@ -146,7 +146,9 @@ jobs:
                           -DKokkos_ENABLE_SERIAL=ON \
                           -DKokkos_ENABLE_${{ matrix.exec_model }}=ON \
                           -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
+                          -DCMAKE_C_COMPILER=mpicc \
                           -DCMAKE_CXX_COMPILER=mpicxx \
+                          -DCMAKE_CUDA_HOST_COMPILER=$(which gcc-$GCC_VERSION) \
                           -DCMAKE_CXX_STANDARD=20 \
                           -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
                           -G Ninja
@@ -187,7 +189,7 @@ jobs:
         run: |
           source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}
           python scripts/configure_pyproject_toml.py || true
-          CMAKE_ARGS="-DCMAKE_C_COMPILER=mpicc -DCMAKE_CXX_COMPILER=mpicxx -DENABLE_MPI=ON -DPython_EXECUTABLE=${{ steps.python_path.outputs.python }} -DLIGHTNING_CATALYST_SRC_PATH=${{ github.workspace }}/catalyst -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}" \
+          CMAKE_ARGS="-DCMAKE_C_COMPILER=mpicc -DCMAKE_CXX_COMPILER=mpicxx -DCMAKE_CUDA_HOST_COMPILER=$(which gcc-$GCC_VERSION) -DENABLE_MPI=ON -DPython_EXECUTABLE=${{ steps.python_path.outputs.python }} -DLIGHTNING_CATALYST_SRC_PATH=${{ github.workspace }}/catalyst -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}" \
           python -m pip install . -vv
 
       # There are issues running py-cov with MPI. A solution is to use coverage as reported

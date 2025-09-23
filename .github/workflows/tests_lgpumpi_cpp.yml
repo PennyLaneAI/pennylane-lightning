@@ -141,8 +141,10 @@ jobs:
             -DCMAKE_BUILD_TYPE=Debug \
             -DENABLE_COVERAGE=ON \
             -DBUILD_TESTS=ON \
+            -DCMAKE_C_COMPILER=mpicc \
             -DCMAKE_CXX_COMPILER=mpicxx \
             -DCMAKE_CUDA_COMPILER=$(which nvcc) \
+            -DCMAKE_CUDA_HOST_COMPILER=$(which gcc-$GCC_VERSION) \
             -DCMAKE_CUDA_ARCHITECTURES="86" \
             -DCUQUANTUM_SDK=${CUQUANTUM_SDK} \
             -DSCIPY_OPENBLAS=${SCIPY_OPENBLAS} \
