@@ -141,8 +141,10 @@ RUN apt-get update \
     software-properties-common \
     gnupg \
     && add-apt-repository ppa:deadsnakes/ppa -y \
+    && add-apt-repository ppa:ubuntu-toolchain-r/test -y \
     && apt-get update \
     && apt-get install --no-install-recommends -y \
+    gcc-${GCC_VERSION} g++-${GCC_VERSION} cpp-${GCC_VERSION} \
     libgomp1 \
     git \
     python3.12 \
@@ -219,7 +221,7 @@ RUN CMAKE_ARGS="-DKokkos_ENABLE_SERIAL:BOOL=ON \
     -DKokkos_ENABLE_OPENMP:BOOL=ON \
     -DKokkos_ENABLE_HIP:BOOL=ON \
     -DKokkos_ARCH_${AMD_ARCH}=ON \
-    -DCMAKE_CXX_FLAGS='--gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/12/'" \
+    -DCMAKE_CXX_FLAGS='--gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/11/'" \
     python -m build --wheel
 
 # Install lightning-kokkos HIP backend
