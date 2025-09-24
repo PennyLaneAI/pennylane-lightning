@@ -263,7 +263,12 @@ jobs:
           PL_BACKEND=lightning_qubit SKIP_COMPILATION=True python -m pip install . -vv
 
           PL_BACKEND=${{ matrix.pl_backend }} python scripts/configure_pyproject_toml.py || true
-          PL_BACKEND=${{ matrix.pl_backend }} CMAKE_ARGS="-DCMAKE_C_COMPILER=$(which gcc-$GCC_VERSION) -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) -DCMAKE_CUDA_HOST_COMPILER=$(which gcc-$GCC_VERSION) -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DLIGHTNING_CATALYST_SRC_PATH=${{ github.workspace }}/catalyst" \
+          PL_BACKEND=${{ matrix.pl_backend }} \
+          CMAKE_ARGS="-DCMAKE_C_COMPILER=$(which gcc-$GCC_VERSION) \
+                      -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
+                      -DCMAKE_CUDA_HOST_COMPILER=$(which gcc-$GCC_VERSION) \
+                      -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos \
+                      -DLIGHTNING_CATALYST_SRC_PATH=${{ github.workspace }}/catalyst" \
           python -m pip install . -vv
 
       - name: Run PennyLane-Lightning integration tests

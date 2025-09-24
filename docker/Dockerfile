@@ -124,7 +124,11 @@ ENV PL_BACKEND=lightning_kokkos
 RUN pip uninstall -y pennylane-lightning
 RUN echo >> cmake/support_kokkos.cmake && echo "find_package(CUDAToolkit REQUIRED)" >> cmake/support_kokkos.cmake
 RUN python scripts/configure_pyproject_toml.py || true
-RUN CMAKE_ARGS="-DKokkos_ENABLE_SERIAL:BOOL=ON -DKokkos_ENABLE_OPENMP:BOOL=ON -DKokkos_ENABLE_CUDA:BOOL=ON -DKokkos_ARCH_${CUDA_ARCH}=ON" python -m build --wheel
+RUN CMAKE_ARGS="-DKokkos_ENABLE_SERIAL:BOOL=ON \
+    -DKokkos_ENABLE_OPENMP:BOOL=ON \
+    -DKokkos_ENABLE_CUDA:BOOL=ON \
+    -DKokkos_ARCH_${CUDA_ARCH}=ON" \
+    python -m build --wheel
 
 # Install python3 and setup runtime virtual env in CUDA-12-runtime image (includes CUDA runtime and math libraries)
 # Install lightning-kokkos CUDA backend
@@ -210,7 +214,12 @@ ENV CXX=hipcc
 ENV PL_BACKEND=lightning_kokkos
 RUN pip uninstall -y pennylane-lightning
 RUN python scripts/configure_pyproject_toml.py || true
-RUN CMAKE_ARGS="-DKokkos_ENABLE_SERIAL:BOOL=ON -DKokkos_ENABLE_OPENMP:BOOL=ON -DKokkos_ENABLE_HIP:BOOL=ON -DKokkos_ARCH_${AMD_ARCH}=ON -DCMAKE_CXX_FLAGS='--gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/13/'" python -m build --wheel
+RUN CMAKE_ARGS="-DKokkos_ENABLE_SERIAL:BOOL=ON \
+    -DKokkos_ENABLE_OPENMP:BOOL=ON \
+    -DKokkos_ENABLE_HIP:BOOL=ON \
+    -DKokkos_ARCH_${AMD_ARCH}=ON \
+    -DCMAKE_CXX_FLAGS='--gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/13/'" \
+    python -m build --wheel
 
 # Install lightning-kokkos HIP backend
 FROM rocm/dev-ubuntu-22.04:6.2.4 AS wheel-lightning-kokkos-rocm
