@@ -22,7 +22,7 @@ ARG AMD_ARCH=AMD_GFX90A
 ARG CUDA_ARCH=AMPERE80
 ARG CUDA_INSTALLER=https://developer.download.nvidia.com/compute/cuda/12.2.2/local_installers/cuda_12.2.2_535.104.05_linux.run
 ARG DEBIAN_FRONTEND=noninteractive
-ARG GCC_VERSION=13
+ARG GCC_VERSION=12
 ARG LIGHTNING_VERSION=master
 ARG PENNYLANE_VERSION
 ARG ROCM_INSTALLER=https://repo.radeon.com/amdgpu-install/6.2.4/ubuntu/jammy/amdgpu-install_6.2.60204-1_all.deb
