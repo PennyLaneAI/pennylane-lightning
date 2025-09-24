@@ -31,7 +31,8 @@ RUN apt-get update \
     apt-utils \
     software-properties-common \
     gnupg \
-    && add-apt-repository ppa:deadsnakes/ppa ppa:ubuntu-toolchain-r/test \
+    && add-apt-repository ppa:deadsnakes/ppa -y \
+    && add-apt-repository ppa:ubuntu-toolchain-r/test -y \
     && apt-get update \
     && apt-get install --no-install-recommends -y \
     ca-certificates \
@@ -176,7 +177,8 @@ RUN apt-get update \
     && apt-get install --no-install-recommends -y \
     software-properties-common \
     gnupg \
-    && add-apt-repository ppa:deadsnakes/ppa ppa:ubuntu-toolchain-r/test -y \
+    && add-apt-repository ppa:deadsnakes/ppa -y \
+    && add-apt-repository ppa:ubuntu-toolchain-r/test -y \
     && apt-get update \
     && apt-get install --no-install-recommends -y \
     git \
@@ -229,7 +231,8 @@ RUN apt-get update \
     && apt-get install --no-install-recommends -y \
     software-properties-common \
     gnupg \
-    && add-apt-repository ppa:deadsnakes/ppa ppa:ubuntu-toolchain-r/test -y \
+    && add-apt-repository ppa:deadsnakes/ppa -y \
+    && add-apt-repository ppa:ubuntu-toolchain-r/test -y \
     && apt-get update \
     && apt-get install --no-install-recommends -y \
     git \
