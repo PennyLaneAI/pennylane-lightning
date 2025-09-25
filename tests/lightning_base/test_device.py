@@ -1202,7 +1202,9 @@ class TestExecution:
         assert qml.math.allclose(res2, 0)
 
     @pytest.mark.parametrize("device_wires", (None, (0, 1, 2, 3)))
-    @pytest.mark.parametrize("mcm_method", ("tree-traversal", "deferred", "one-shot", "device", None))
+    @pytest.mark.parametrize(
+        "mcm_method", ("tree-traversal", "deferred", "one-shot", "device", None)
+    )
     def test_reuse_with_mcms(self, device_wires, mcm_method):
         """Test that a simple dynamic allocation can be executed."""
 
