@@ -1206,7 +1206,7 @@ class TestExecution:
         "mcm_method", ("tree-traversal", "deferred", "one-shot", "device", None)
     )
     def test_reuse_with_mcms(self, device_wires, mcm_method):
-        """Test that a simple dynamic allocation can be executed."""
+        """Test that a simple dynamic allocation with mcms can be executed."""
 
         dev = LightningDevice(wires=device_wires)
 
