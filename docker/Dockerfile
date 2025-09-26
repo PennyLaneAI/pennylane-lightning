@@ -203,7 +203,7 @@ RUN amdgpu-install -y --accept-eula --usecase=rocm,hiplibsdk --no-dkms
 
 # Download Lightning release and build lightning-kokkos backend with Kokkos-ROCm
 FROM base-build-rocm AS build-wheel-lightning-kokkos-rocm
-ARG AMD_ARCH=AMD_GFX90A
+ARG AMD_ARCH
 WORKDIR /opt/pennylane-lightning
 ENV CMAKE_PREFIX_PATH=/opt/rocm:$CMAKE_PREFIX_PATH
 ENV CXX=hipcc
