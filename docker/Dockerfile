@@ -213,7 +213,8 @@ RUN python scripts/configure_pyproject_toml.py || true
 RUN CMAKE_ARGS="-DKokkos_ENABLE_SERIAL:BOOL=ON \
     -DKokkos_ENABLE_OPENMP:BOOL=ON \
     -DKokkos_ENABLE_HIP:BOOL=ON \
-    -DKokkos_ARCH_${AMD_ARCH}=ON" \
+    -DKokkos_ARCH_${AMD_ARCH}=ON \
+    -DCMAKE_CXX_FLAGS='--gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/13/'" \
     python -m build --wheel
 
 # Install lightning-kokkos HIP backend
