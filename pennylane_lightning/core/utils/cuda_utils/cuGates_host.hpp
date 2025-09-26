@@ -601,7 +601,7 @@ row-major format.
  */
 template <class CFP_t, class U = double>
 static auto getCRot(U phi, U theta, U omega) -> std::vector<CFP_t> {
-    const auto rot{std::move(getRot<CFP_t>(phi, theta, omega))};
+    const auto rot{getRot<CFP_t>(phi, theta, omega)};
     return {cuUtil::ONE<CFP_t>(),
             cuUtil::ZERO<CFP_t>(),
             cuUtil::ZERO<CFP_t>(),

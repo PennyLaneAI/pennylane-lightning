@@ -87,6 +87,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Use GCC 13 for CI.
+  [(#1249)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1249)
+  
 - Pin GitHub CI temporarily to the stable version to use Catalyst release v0.12.0.
   [(#1259)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1259)
 
