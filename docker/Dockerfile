@@ -168,7 +168,7 @@ RUN CUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}
 
 # Install python3 and setup runtime virtual env in CUDA-12-runtime image (includes CUDA runtime and math libraries)
 # Install lightning-kokkos CUDA backend
-FROM nvidia/cuda:12.5.0-runtime-ubuntu24.04 AS wheel-lightning-gpu
+FROM nvidia/cuda:12.5.1-runtime-ubuntu24.04 AS wheel-lightning-gpu
 ARG PENNYLANE_VERSION
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
