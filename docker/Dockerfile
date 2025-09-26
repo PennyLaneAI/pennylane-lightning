@@ -14,43 +14,39 @@
 
 # Define global build defaults
 ARG PENNYLANE_VERSION=master
-
-# Create basic runtime environment base on Ubuntu 22.04 (jammy)
-# Create and activate runtime virtual environment
-FROM ubuntu:jammy AS base-runtime
+ARG LIGHTNING_VERSION=master
+ARG GCC_VERSION=13
+ARG CUDA_INSTALLER=https://developer.download.nvidia.com/compute/cuda/12.5.1/local_installers/cuda_12.5.1_555.42.06_linux.run
+ARG ROCM_INSTALLER=https://repo.radeon.com/amdgpu-install/6.2.4/ubuntu/noble/amdgpu-install_6.2.60204-1_all.deb
 ARG AMD_ARCH=AMD_GFX90A
 ARG CUDA_ARCH=AMPERE80
-ARG CUDA_INSTALLER=https://developer.download.nvidia.com/compute/cuda/12.2.2/local_installers/cuda_12.2.2_535.104.05_linux.run
+
+# Create basic runtime environment base on Ubuntu 24.04 (noble)
+# Create and activate runtime virtual environment
+FROM ubuntu:noble AS base-runtime
 ARG DEBIAN_FRONTEND=noninteractive
-ARG GCC_VERSION=12
-ARG LIGHTNING_VERSION=master
+ARG LIGHTNING_VERSION
 ARG PENNYLANE_VERSION
-ARG ROCM_INSTALLER=https://repo.radeon.com/amdgpu-install/6.2.4/ubuntu/jammy/amdgpu-install_6.2.60204-1_all.deb
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
     apt-utils \
-    software-properties-common \
-    gnupg \
-    && add-apt-repository ppa:deadsnakes/ppa -y \
-    && add-apt-repository ppa:ubuntu-toolchain-r/test -y \
-    && apt-get update \
-    && apt-get install --no-install-recommends -y \
     ca-certificates \
     git \
     libgomp1 \
-    python3.12 \
+    python3 \
     python3-pip \
-    python3.12-venv \
+    python3-venv \
     tzdata \
     wget \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 ENV VIRTUAL_ENV=/opt/venv
-RUN python3.12 -m venv $VIRTUAL_ENV
+RUN python3 -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 # Create basic build environment with build tools and compilers
 FROM base-runtime AS base-build
+ARG GCC_VERSION
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
     build-essential \
@@ -58,8 +54,7 @@ RUN apt-get update \
     cmake \
     curl \
     ninja-build \
-    python3.12-dev \
-    gcc-${GCC_VERSION} g++-${GCC_VERSION} cpp-${GCC_VERSION} \
+    python3-dev \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 RUN update-alternatives \
@@ -73,9 +68,10 @@ RUN ccache --set-config=cache_dir=/opt/ccache
 # Create and activate build virtual environment
 # Install Lightning dev requirements
 FROM base-build AS base-build-python
+ARG LIGHTNING_VERSION
 WORKDIR /opt/pennylane-lightning
 ENV VIRTUAL_ENV=/opt/venv-build
-RUN python3.12 -m venv $VIRTUAL_ENV
+RUN python3 -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 RUN rm -rf tmp && git clone --depth 1 --branch ${LIGHTNING_VERSION} https://github.com/PennyLaneAI/pennylane-lightning.git tmp\
     && mv tmp/* /opt/pennylane-lightning && rm -rf tmp
@@ -90,6 +86,7 @@ RUN python -m build --wheel
 
 # Install lightning-qubit backend
 FROM base-runtime AS wheel-lightning-qubit
+ARG PENNYLANE_VERSION
 COPY --from=build-wheel-lightning-qubit /opt/pennylane-lightning/dist/ /
 RUN pip install --force-reinstall --no-cache-dir pennylane_lightning*.whl && rm pennylane_lightning*.whl
 RUN pip install --no-cache-dir git+https://github.com/PennyLaneAI/pennylane.git@${PENNYLANE_VERSION}
@@ -104,6 +101,7 @@ RUN CMAKE_ARGS="-DKokkos_ENABLE_SERIAL:BOOL=ON -DKokkos_ENABLE_OPENMP:BOOL=ON" p
 
 # Install lightning-kokkos OpenMP backend
 FROM base-runtime AS wheel-lightning-kokkos-openmp
+ARG PENNYLANE_VERSION
 COPY --from=build-wheel-lightning-kokkos-openmp /opt/pennylane-lightning/dist/ /
 COPY --from=build-wheel-lightning-qubit /opt/pennylane-lightning/dist/ /
 RUN pip install --force-reinstall --no-cache-dir pennylane_lightning*.whl && rm pennylane_lightning*.whl
@@ -112,6 +110,7 @@ RUN pip install --no-cache-dir git+https://github.com/PennyLaneAI/pennylane.git@
 # Install CUDA-12 in build venv image
 FROM base-build-python AS base-build-cuda
 WORKDIR /opt/cuda-build
+ARG CUDA_INSTALLER
 RUN curl -o cuda-install.run ${CUDA_INSTALLER}
 RUN chmod a+x cuda-install.run
 RUN ./cuda-install.run --silent --toolkit --toolkitpath=/usr/local/cuda-$(echo ${CUDA_INSTALLER} | grep -o -P '/cuda/.{0,4}' | cut -d / -f 3)
@@ -120,6 +119,7 @@ ENV LD_LIBRARY_PATH=/usr/local/cuda/lib64:${LD_LIBRARY_PATH}
 
 # Download Lightning release and build lightning-kokkos backend with Kokkos-CUDA
 FROM base-build-cuda AS build-wheel-lightning-kokkos-cuda
+ARG CUDA_ARCH
 WORKDIR /opt/pennylane-lightning
 ENV PL_BACKEND=lightning_kokkos
 RUN pip uninstall -y pennylane-lightning
@@ -133,27 +133,23 @@ RUN CMAKE_ARGS="-DKokkos_ENABLE_SERIAL:BOOL=ON \
 
 # Install python3 and setup runtime virtual env in CUDA-12-runtime image (includes CUDA runtime and math libraries)
 # Install lightning-kokkos CUDA backend
-FROM nvidia/cuda:12.2.0-base-ubuntu22.04 AS wheel-lightning-kokkos-cuda
+FROM nvidia/cuda:12.5.1-base-ubuntu24.04 AS wheel-lightning-kokkos-cuda
 ARG PENNYLANE_VERSION
+ARG GCC_VERSION
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
-    && apt-get install --no-install-recommends -y \
-    software-properties-common \
-    gnupg \
-    && add-apt-repository ppa:deadsnakes/ppa -y \
-    && add-apt-repository ppa:ubuntu-toolchain-r/test -y \
     && apt-get update \
     && apt-get install --no-install-recommends -y \
     gcc-${GCC_VERSION} g++-${GCC_VERSION} cpp-${GCC_VERSION} \
     libgomp1 \
     git \
-    python3.12 \
+    python3 \
     python3-pip \
-    python3.12-venv \
+    python3-venv \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 ENV VIRTUAL_ENV=/opt/venv
-RUN python3.12 -m venv $VIRTUAL_ENV
+RUN python3 -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 COPY --from=build-wheel-lightning-kokkos-cuda /opt/pennylane-lightning/dist/ /
 COPY --from=build-wheel-lightning-qubit /opt/pennylane-lightning/dist/ /
@@ -177,20 +173,15 @@ ARG PENNYLANE_VERSION
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
-    software-properties-common \
-    gnupg \
-    && add-apt-repository ppa:deadsnakes/ppa -y \
-    && apt-get update \
-    && apt-get install --no-install-recommends -y \
     git \
     libgomp1 \
-    python3.12 \
+    python3 \
     python3-pip \
-    python3.12-venv \
+    python3-venv \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 ENV VIRTUAL_ENV=/opt/venv
-RUN python3.12 -m venv $VIRTUAL_ENV
+RUN python3 -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 RUN pip install --no-cache-dir custatevec-cu12
 ENV LD_LIBRARY_PATH="$VIRTUAL_ENV/lib/python3.12/site-packages/cuquantum/lib:$LD_LIBRARY_PATH"
@@ -201,6 +192,7 @@ RUN pip install --no-cache-dir git+https://github.com/PennyLaneAI/pennylane.git@
 
 # Install ROCm in build venv image
 FROM base-build-python AS base-build-rocm
+ARG ROCM_INSTALLER
 RUN wget --progress=dot:giga ${ROCM_INSTALLER}
 RUN apt-get update \
     && apt-get upgrade -y \
@@ -211,6 +203,7 @@ RUN amdgpu-install -y --accept-eula --usecase=rocm,hiplibsdk --no-dkms
 
 # Download Lightning release and build lightning-kokkos backend with Kokkos-ROCm
 FROM base-build-rocm AS build-wheel-lightning-kokkos-rocm
+ARG AMD_ARCH=AMD_GFX90A
 WORKDIR /opt/pennylane-lightning
 ENV CMAKE_PREFIX_PATH=/opt/rocm:$CMAKE_PREFIX_PATH
 ENV CXX=hipcc
@@ -225,25 +218,20 @@ RUN CMAKE_ARGS="-DKokkos_ENABLE_SERIAL:BOOL=ON \
     python -m build --wheel
 
 # Install lightning-kokkos HIP backend
-FROM rocm/dev-ubuntu-22.04:6.2.4 AS wheel-lightning-kokkos-rocm
+FROM rocm/dev-ubuntu-24.04:6.2.4 AS wheel-lightning-kokkos-rocm
 ARG PENNYLANE_VERSION
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
-    software-properties-common \
-    gnupg \
-    && add-apt-repository ppa:deadsnakes/ppa -y \
-    && apt-get update \
-    && apt-get install --no-install-recommends -y \
     git \
     libgomp1 \
-    python3.12 \
+    python3 \
     python3-pip \
-    python3.12-venv \
+    python3-venv \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 ENV VIRTUAL_ENV=/opt/venv
-RUN python3.12 -m venv $VIRTUAL_ENV
+RUN python3 -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 COPY --from=build-wheel-lightning-kokkos-rocm /opt/pennylane-lightning/dist/ /
 COPY --from=build-wheel-lightning-qubit /opt/pennylane-lightning/dist/ /
