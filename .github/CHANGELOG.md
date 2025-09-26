@@ -88,7 +88,7 @@
 <h3>Internal changes ⚙️</h3>
 
 - Remove unnecessary `std::move` in `cuGates_host`.
-  [(#XXXX)](https://github.com/PennyLaneAI/pennylane-lightning/pull/XXXX)
+  [(#1263)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1263)
 
 - Pin GitHub CI temporarily to the stable version to use Catalyst release v0.12.0.
   [(#1259)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1259)
