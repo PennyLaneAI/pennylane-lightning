@@ -17,7 +17,7 @@ ARG PENNYLANE_VERSION=master
 ARG LIGHTNING_VERSION=master
 ARG GCC_VERSION=13
 ARG CUDA_INSTALLER=https://developer.download.nvidia.com/compute/cuda/12.5.1/local_installers/cuda_12.5.1_555.42.06_linux.run
-ARG ROCM_INSTALLER=https://repo.radeon.com/amdgpu-install/6.4.4/ubuntu/noble/amdgpu-install_6.3.60404-1_all.deb
+ARG ROCM_INSTALLER=https://repo.radeon.com/amdgpu-install/6.4.4/ubuntu/noble/amdgpu-install_6.4.60404-1_all.deb
 ARG AMD_ARCH=AMD_GFX90A
 ARG CUDA_ARCH=AMPERE80
 
