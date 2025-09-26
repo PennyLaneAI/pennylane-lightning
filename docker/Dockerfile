@@ -17,7 +17,7 @@ ARG PENNYLANE_VERSION=master
 ARG LIGHTNING_VERSION=master
 ARG GCC_VERSION=13
 ARG CUDA_INSTALLER=https://developer.download.nvidia.com/compute/cuda/12.5.1/local_installers/cuda_12.5.1_555.42.06_linux.run
-ARG ROCM_INSTALLER=https://repo.radeon.com/amdgpu-install/6.4.4/ubuntu/noble/amdgpu-install_6.4.60404-1_all.deb
+ARG ROCM_INSTALLER=https://repo.radeon.com/amdgpu-install/6.2.4/ubuntu/noble/amdgpu-install_6.2.60204-1_all.deb
 ARG AMD_ARCH=AMD_GFX90A
 ARG CUDA_ARCH=AMPERE80
 
@@ -213,11 +213,12 @@ RUN python scripts/configure_pyproject_toml.py || true
 RUN CMAKE_ARGS="-DKokkos_ENABLE_SERIAL:BOOL=ON \
     -DKokkos_ENABLE_OPENMP:BOOL=ON \
     -DKokkos_ENABLE_HIP:BOOL=ON \
-    -DKokkos_ARCH_${AMD_ARCH}=ON" \
+    -DKokkos_ARCH_${AMD_ARCH}=ON \
+    -DCMAKE_CXX_FLAGS='--gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/11/'" \
     python -m build --wheel
 
 # Install lightning-kokkos HIP backend
-FROM rocm/dev-ubuntu-24.04:6.4.4 AS wheel-lightning-kokkos-rocm
+FROM rocm/dev-ubuntu-24.04:6.2.4 AS wheel-lightning-kokkos-rocm
 ARG PENNYLANE_VERSION
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
