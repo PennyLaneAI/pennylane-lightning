@@ -36,10 +36,35 @@ jobs:
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
 
+      - name: Update event name if release candidates
+        id: update_event_name
+        run: |
+          event_name="${{ inputs.event_name }}"
+
+          branch_name="${{ github.ref_name }}"
+
+          is_release_candidate="false"
+
+          # Check if the branch name matches the release candidate pattern v0.X.Y_rc
+          if [[ $branch_name =~ ^v0\.\d+\.\d+_rc$ ]]; then
+            echo "This is a release candidate branch: $branch_name"
+            is_release_candidate="true"
+          else
+            echo "This is NOT a release candidate branch: $branch_name"
+          fi
+
+          if [[ "$is_release_candidate" == "true" && "$event_name" == "pull_request" ]]; then
+            event_name="${event_name}-with_release_candidate"
+            echo "Updated event name to: $event_name"
+          else
+            echo "Event name remains: $event_name"
+          fi
+          echo "final_event_name=$event_name" >> $GITHUB_OUTPUT
+
       - name: Python version
         id: pyver
         run: |
-          if [[ ${{ inputs.event_name }} == 'pull_request' ]]; then
+          if [[ ${{ steps.update_event_name.outputs.final_event_name }} == 'pull_request' ]]; then
             echo "python_version=$(python3 scripts/gen_pyver_matrix.py \
               --min-version=3.${{ env.PYTHON3_MIN_VERSION }} \
               --max-version=3.${{ env.PYTHON3_MAX_VERSION }})" >> $GITHUB_OUTPUT
@@ -51,7 +76,7 @@ jobs:
       - name: Python version for GPU runners
         id: pyvergpu
         run: |
-          if [[ ${{ inputs.event_name }} == 'pull_request' ]]; then
+          if [[ ${{ steps.update_event_name.outputs.final_event_name }} == 'pull_request' ]]; then
             echo "python_version_gpu=$(python3 scripts/gen_pyver_matrix.py \
               --min-version=3.${{ env.PYTHON3_MIN_VERSION }} \
               --max-version=3.${{ env.PYTHON3_MAX_VERSION }})" >> $GITHUB_OUTPUT
