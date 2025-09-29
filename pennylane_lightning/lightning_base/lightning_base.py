@@ -118,19 +118,6 @@ class LightningBase(Device):
     def _set_lightning_classes(self):
         """Load the LightningStateVector, LightningMeasurements, LightningAdjointJacobian as class attribute"""
 
-    @abstractmethod
-    def _setup_execution_config(self, config: ExecutionConfig):
-        """
-        Update the execution config with choices for how the device should be used and the device options.
-
-        Args:
-            config (ExecutionConfig): A data structure describing the parameters needed to fully describe the execution.
-
-        Returns:
-            ExecutionConfig: An updated execution config with device options set.
-
-        """
-
     def dynamic_wires_from_circuit(self, circuit):
         """Allocate the underlying quantum state from the pre-defined wires or a given circuit if applicable. Circuit wires will be mapped to Pennylane ``default.qubit`` standard wire order.
 
@@ -156,27 +143,6 @@ class LightningBase(Device):
             self._statevector.reset_state()
 
         return circuit
-
-    @abstractmethod
-    def preprocess(self, execution_config: ExecutionConfig | None = None):
-        """This function defines the device transform program to be applied and an updated device configuration.
-
-        Args:
-            execution_config (Union[ExecutionConfig, Sequence[ExecutionConfig]]): A data structure describing the
-                parameters needed to fully describe the execution.
-
-        Returns:
-            TransformProgram, ExecutionConfig: A transform program that when called returns :class:`~.QuantumTape`'s that the
-            device can natively execute as well as a postprocessing function to be called after execution, and a configuration
-            with unset specifications filled in.
-
-        This device:
-
-        * Supports any qubit operations that provide a matrix
-        * Currently does not support finite shots
-        * Currently does not intrinsically support parameter broadcasting
-
-        """
 
     @abstractmethod
     def execute(

@@ -10,6 +10,9 @@
 - Lightning devices now call the new `preprocess` method integrated with the graph decomposition system.
   [(#1251)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1251)
 
+- Lightning devices now support executing circuits with dynamic qubit allocation with `qml.allocate`.
+  [(#1255)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1255)
+
 - Worksize preference in `cuTensorNet` can now be set and updated when using `lightning.tensor` device to reduce memory usage or improve stability. 
   [(#1238)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1238)
 
@@ -86,6 +89,9 @@
   [(#1237)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1237)
 
 <h3>Internal changes ⚙️</h3>
+
+- Remove unnecessary `std::move` in `cuGates_host`.
+  [(#1263)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1263)
 
 - Pin GitHub CI temporarily to the stable version to use Catalyst release v0.12.0.
   [(#1259)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1259)
