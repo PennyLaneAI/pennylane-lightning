@@ -88,7 +88,7 @@
 
 <h3>Internal changes ⚙️</h3>
 
-- Update GitHubActions to produce the RC wheels for all Python versions. 
+- Update GitHub Actions to produce the release candidate wheels for all supported Python versions. 
   [(#1264)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1264)
 
 - Remove unnecessary `std::move` in `cuGates_host`.
