@@ -4,7 +4,7 @@
 
 <h3>Improvements 🛠</h3>
 
-- Raise exception when calling normalize or collapse method with `lightning.qubit` and `lightning.gpu` when norm is close to 0.
+- Raise exception when calling normalize or collapse method with `lightning.qubit`, `lightning.kokkos` and `lightning.gpu` when norm is close to 0.
   [(#1257)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1257)
 
 - Lightning devices now call the new `preprocess` method integrated with the graph decomposition system.
