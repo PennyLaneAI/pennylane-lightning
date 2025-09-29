@@ -41,7 +41,7 @@ jobs:
         run: |
           event_name="${{ inputs.event_name }}"
 
-          branch_name="${{ github.ref_name }}"
+          branch_name="${{ github.head_ref }}"
 
           is_release_candidate="false"
 
