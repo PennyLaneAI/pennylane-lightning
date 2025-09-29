@@ -30,6 +30,7 @@
     [(#1184)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1184)
   - **Lightning Tensor bindings** for tensor network simulations
     [(#1206)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1206)
+
 - Added support for `GlobalPhase` with zero-qubit Lightning devices. Currently, only the `lightning.qubit` and `lightning.kokkos` backends support zero-qubit initialization.
   [(#1205)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1205)
 
@@ -86,6 +87,9 @@
   [(#1237)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1237)
 
 <h3>Internal changes ⚙️</h3>
+
+- Update GitHubActions to produce the RC wheels for all Python versions. 
+  [(#1264)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1264)
 
 - Remove unnecessary `std::move` in `cuGates_host`.
   [(#1263)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1263)
