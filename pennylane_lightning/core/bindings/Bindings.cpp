@@ -33,6 +33,12 @@ namespace Pennylane::NanoBindings {
  * Python module using Nanobind.
  */
 NB_MODULE(LIGHTNING_MODULE_NAME, m) {
+#ifdef NDEBUG
+    // Disable leak warnings in release mode. These are often false positives
+    // caused by 3rd party libraries
+    nb::set_leak_warnings(false);
+#endif
+
     // Register array alignment functionality
     registerArrayAlignmentBindings(m);
 
@@ -58,6 +64,12 @@ NB_MODULE(LIGHTNING_MODULE_NAME, m) {
  * module.
  */
 NB_MODULE(LIGHTNING_TENSOR_MODULE_NAME, m) {
+#ifdef NDEBUG
+    // Disable leak warnings in release mode. These are often false positives
+    // caused by 3rd party libraries
+    nb::set_leak_warnings(false);
+#endif
+
     // Register general info
     registerInfo(m);
 
