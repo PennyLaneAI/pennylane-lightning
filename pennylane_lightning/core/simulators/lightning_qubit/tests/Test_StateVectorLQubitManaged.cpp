@@ -165,3 +165,22 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::SetStateVector",
         REQUIRE(sv.getDataVector() == approx(expected_state));
     }
 }
+
+TEMPLATE_TEST_CASE("StateVectorLQubitManaged::normalize",
+                   "[StateVectorLQubitManaged]", float, double) {
+    using PrecisionT = TestType;
+    using ComplexT = std::complex<PrecisionT>;
+    using TestVectorT = TestVector<ComplexT>;
+
+    SECTION("Raise error when norm is close to zero") {
+        TestVectorT init_state(4, ComplexT{0.0, 0.0},
+                               getBestAllocator<ComplexT>());
+
+        StateVectorLQubitManaged<PrecisionT> sv{init_state.data(),
+                                                init_state.size()};
+        REQUIRE_THROWS_WITH(
+            sv.normalize(),
+            Catch::Contains(
+                "Vector has norm close to zero and cannot be normalized"));
+    }
+}
