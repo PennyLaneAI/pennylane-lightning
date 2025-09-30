@@ -18,7 +18,7 @@
 
 - **Migrated to Nanobind for Python bindings**, replacing pybind11 to enhance performance, modularity, and build system efficiency.
   [(#1176)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1176)
-  [(#1265)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1265)
+  [(#1266)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1266)
 
   This migration includes comprehensive updates across all Lightning backends:
 
