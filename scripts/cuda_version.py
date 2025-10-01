@@ -39,7 +39,10 @@ def _get_cuda_version_from_nvcc():
     """
     try:
         result = subprocess.run(
-            "nvcc --version", capture_output=True, text=True, check=True, shell=True
+            ["nvcc", "--version"],
+            capture_output=True,
+            text=True,
+            check=True,
         )
         nvcc_output = result.stdout.strip()
         match = re.search(r"release (\d+)\.\d+", nvcc_output)
