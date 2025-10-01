@@ -91,7 +91,7 @@
 <h3>Internal changes ⚙️</h3>
 
 - Support building `lightning.gpu` and `lightning.tensor` from source with CUDA 13.
-  [(#XXXX)](https://github.com/PennyLaneAI/pennylane-lightning/pull/XXXX)
+  [(#1267)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1267)
 
 - Remove unnecessary `std::move` in `cuGates_host`.
   [(#1263)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1263)
