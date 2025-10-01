@@ -21,6 +21,7 @@ from importlib.util import find_spec
 from pathlib import Path
 
 from backend_support import backend, device_name
+from cuda_version import cuda_version
 
 path_to_project = Path(__file__).parent.parent.absolute()
 
@@ -100,9 +101,11 @@ if __name__ == "__main__":
         requires.append("nanobind>=2.7.0")
 
     if backend == "lightning_gpu":
-        requires.append("custatevec-cu12")
+        cuda_version = cuda_version()
+        requires.append(f"custatevec-cu{cuda_version}")
     if backend == "lightning_tensor":
-        requires.append("cutensornet-cu12")
+        cuda_version = cuda_version()
+        requires.append(f"cutensornet-cu{cuda_version}")
 
     pyproject["build-system"]["requires"] = requires
 
@@ -130,18 +133,26 @@ if __name__ == "__main__":
     ]
 
     if backend == "lightning_gpu":
-        dependencies += ["custatevec-cu12"]
+        dependencies += [f"custatevec-cu{cuda_version}"]
 
     if backend == "lightning_tensor":
-        dependencies += ["cutensornet-cu12", "nvidia-cusolver-cu12"]
+        dependencies += [f"cutensornet-cu{cuda_version}", f"nvidia-cusolver-cu{cuda_version}"]
 
     if backend in ("lightning_gpu", "lightning_tensor"):
-        dependencies += [
-            "nvidia-nvjitlink-cu12",
-            "nvidia-cusparse-cu12",
-            "nvidia-cublas-cu12",
-            "nvidia-cuda-runtime-cu12",
-        ]
+        if cuda_version == "12":
+            dependencies += [
+                "nvidia-nvjitlink-cu12",
+                "nvidia-cusparse-cu12",
+                "nvidia-cublas-cu12",
+                "nvidia-cuda-runtime-cu12",
+            ]
+        elif cuda_version == "13":
+            dependencies += [
+                "nvidia-nvjitlink",
+                "nvidia-cusparse",
+                "nvidia-cublas",
+                "nvidia-cuda-runtime",
+            ]
 
     if backend != "lightning_qubit":
         dependencies += ["pennylane_lightning==" + version]
