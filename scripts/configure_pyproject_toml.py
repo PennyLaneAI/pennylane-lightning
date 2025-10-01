@@ -140,19 +140,16 @@ if __name__ == "__main__":
 
     if backend in ("lightning_gpu", "lightning_tensor"):
         if cuda_version == "12":
-            dependencies += [
-                "nvidia-nvjitlink-cu12",
-                "nvidia-cusparse-cu12",
-                "nvidia-cublas-cu12",
-                "nvidia-cuda-runtime-cu12",
-            ]
+            package_suffix = "-cu12"
         elif cuda_version == "13":
-            dependencies += [
-                "nvidia-nvjitlink",
-                "nvidia-cusparse",
-                "nvidia-cublas",
-                "nvidia-cuda-runtime",
-            ]
+            package_suffix = ""
+
+        dependencies += [
+            f"nvidia-nvjitlink{package_suffix}",
+            f"nvidia-cusparse{package_suffix}",
+            f"nvidia-cublas{package_suffix}",
+            f"nvidia-cuda-runtime{package_suffix}",
+        ]
 
     if backend != "lightning_qubit":
         dependencies += ["pennylane_lightning==" + version]
