@@ -24,6 +24,7 @@ The allowed CUDA major versions are "12" and "13".
 """
 import os
 import re
+import shutil
 import subprocess
 
 _ALLOWED_CUDA_MAJOR_VERSIONS = ("12", "13")
@@ -37,9 +38,14 @@ def _get_cuda_version_from_nvcc():
     Returns:
         str: The CUDA major version string (e.g., "12") or None if not found.
     """
+    nvcc_path = shutil.which("nvcc")
+
+    if nvcc_path is None:
+        return None
+
     try:
         result = subprocess.run(
-            ["nvcc", "--version"],
+            [nvcc_path, "--version"],
             capture_output=True,
             text=True,
             check=True,
