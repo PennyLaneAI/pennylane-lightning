@@ -26,6 +26,7 @@ import os
 import re
 import shutil
 import subprocess
+import warnings
 
 _ALLOWED_CUDA_MAJOR_VERSIONS = ("12", "13")
 _DEFAULT_CUDA_VERSION = "12"
@@ -54,6 +55,13 @@ def cuda_version():
     if version not in _ALLOWED_CUDA_MAJOR_VERSIONS:
         raise ValueError(
             f"Invalid CUDA version {version}. Allowed major versions are: {_ALLOWED_CUDA_MAJOR_VERSIONS}."
+        )
+
+    nvcc_version = _get_cuda_version_from_nvcc()
+    if version != nvcc_version:
+        warnings.warn(
+            f"Using CUDA version {version}, but found version {nvcc_version} from nvcc. Please ensure CUDA Toolkit version matches.",
+            UserWarning,
         )
 
     return version
