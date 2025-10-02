@@ -139,9 +139,7 @@ if __name__ == "__main__":
         dependencies += [f"cutensornet-cu{cuda_version}", f"nvidia-cusolver-cu{cuda_version}"]
 
     if backend in ("lightning_gpu", "lightning_tensor"):
-        package_suffix = ""
-        if cuda_version == "12":
-            package_suffix = "-cu12"
+        package_suffix = "-cu12" if cuda_version == "12" else ""
 
         dependencies += [
             f"nvidia-nvjitlink{package_suffix}",
