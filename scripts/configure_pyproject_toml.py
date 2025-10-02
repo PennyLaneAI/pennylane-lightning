@@ -139,7 +139,7 @@ if __name__ == "__main__":
         dependencies += [f"cutensornet-cu{cuda_version}", f"nvidia-cusolver-cu{cuda_version}"]
 
     if backend in ("lightning_gpu", "lightning_tensor"):
-        # We only need to append "12" for CUDA 12 packages as these 
+        # We only need to append "12" for CUDA 12 packages as these
         # specific Nvidia libraries currently do not append "13" for CUDA 13
         package_suffix = "-cu12" if cuda_version == "12" else ""
 
