@@ -31,50 +31,6 @@ _ALLOWED_CUDA_MAJOR_VERSIONS = ("12", "13")
 _DEFAULT_CUDA_VERSION = "12"
 
 
-def _get_cuda_version_from_nvcc():
-    """
-    Tries to get the CUDA Toolkit version by running 'nvcc --version'.
-
-    Returns:
-        str: The CUDA major version string (e.g., "12") or None if not found.
-    """
-    nvcc_path = shutil.which("nvcc")
-
-    if nvcc_path is None:
-        return None
-
-    try:
-        result = subprocess.run(
-            [nvcc_path, "--version"],
-            capture_output=True,
-            text=True,
-            check=True,
-        )
-        nvcc_output = result.stdout.strip()
-        match = re.search(r"release (\d+)\.\d+", nvcc_output)
-        if match:
-            return match.group(1)
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        return None
-    return None
-
-
-def _get_cuda_version_from_cmake_args():
-    """
-    Tries to extract the CUDA version from the CMAKE_ARGS environment variable.
-
-    Returns:
-        str: The CUDA version string or None if not found.
-    """
-    cmake_args = os.environ.get("CMAKE_ARGS")
-    if cmake_args:
-        # Find an argument like 'PL_CUDA_VERSION=12'
-        match = re.search(r"PL_CUDA_VERSION=(\d+)", cmake_args)
-        if match:
-            return match.group(1)
-    return None
-
-
 def cuda_version():
     """
     Finds the CUDA version from multiple sources in a specific order of priority.
@@ -101,3 +57,47 @@ def cuda_version():
         )
 
     return version
+
+
+def _get_cuda_version_from_cmake_args():
+    """
+    Tries to extract the CUDA version from the CMAKE_ARGS environment variable.
+
+    Returns:
+        str: The CUDA version string or None if not found.
+    """
+    cmake_args = os.environ.get("CMAKE_ARGS")
+    if cmake_args:
+        # Find an argument like 'PL_CUDA_VERSION=12'
+        match = re.search(r"PL_CUDA_VERSION=(\d+)", cmake_args)
+        if match:
+            return match.group(1)
+    return None
+
+
+def _get_cuda_version_from_nvcc():
+    """
+    Tries to get the CUDA Toolkit version by running 'nvcc --version'.
+
+    Returns:
+        str: The CUDA major version string (e.g., "12") or None if not found.
+    """
+    nvcc_path = shutil.which("nvcc")
+
+    if nvcc_path is None:
+        return None
+
+    try:
+        result = subprocess.run(
+            [nvcc_path, "--version"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        nvcc_output = result.stdout.strip()
+        match = re.search(r"release (\d+)\.\d+", nvcc_output)
+        if match:
+            return match.group(1)
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return None
+    return None
