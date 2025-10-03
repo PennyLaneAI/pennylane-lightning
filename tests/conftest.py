@@ -93,73 +93,46 @@ def n_subsystems(request):
 
 # Looking for the device for testing.
 default_device = "lightning.qubit"
+
 supported_devices = {"lightning.kokkos", "lightning.qubit", "lightning.gpu", "lightning.tensor"}
-supported_devices.update({sb.replace(".", "_") for sb in supported_devices})
 
 
 def get_device():
     """Return the pennylane lightning device.
 
     The device is ``lightning.qubit`` by default. Allowed values are:
-    "lightning.kokkos", and "lightning.qubit". An
-    underscore can also be used instead of a dot. If the environment
-    variable ``PL_DEVICE`` is defined, its value is used. Underscores
-    are replaced by dots upon exiting.
+    "lightning.kokkos", "lightning.qubit", "lightning.gpu", and "lightning.tensor".
+    If the environment variable ``PL_DEVICE`` is defined, its value is used.
     """
-    device = None
-    if "PL_DEVICE" in os.environ:
-        device = os.environ.get("PL_DEVICE", default_device)
-        device = device.replace("_", ".")
-    if device is None:
-        device = default_device
+    device = os.environ.get("PL_DEVICE", default_device)
+    device = device.replace("_", ".")
+
     if device not in supported_devices:
-        raise ValueError(f"Invalid backend {device}.")
+        raise ValueError(f"Invalid device {device}. Supported: {', '.join(supported_devices)}")
+
+    if device not in qml.plugin_devices:
+        raise DeviceError(
+            f"Device {device} does not exist. Make sure the required plugin is installed."
+        )
+
     return device
 
 
 device_name = get_device()
-
-if device_name not in qml.plugin_devices:
-    raise DeviceError(
-        f"Device {device_name} does not exist. Make sure the required plugin is installed."
-    )
+device_module_name = device_name.replace(".", "_")  # lightning_qubit
+print(f"Running tests for {device_name}")
 
 # Device specification
-import pennylane_lightning.lightning_qubit as lightning_ops  # Any definition of lightning_ops will do
+import importlib
 
-LightningException = None
+# Initialize variables for device classes
+lightning_ops = None
 
-if device_name == "lightning.kokkos":
-    from pennylane_lightning.lightning_kokkos import LightningKokkos as LightningDevice
-    from pennylane_lightning.lightning_kokkos._adjoint_jacobian import (
-        LightningKokkosAdjointJacobian as LightningAdjointJacobian,
-    )
-    from pennylane_lightning.lightning_kokkos._measurements import (
-        LightningKokkosMeasurements as LightningMeasurements,
-    )
-    from pennylane_lightning.lightning_kokkos._state_vector import (
-        LightningKokkosStateVector as LightningStateVector,
-    )
+# Define nanobind module name based on current device
+nanobind_module_name = f"pennylane_lightning.{device_module_name}_ops"
 
-    if hasattr(pennylane_lightning, "lightning_kokkos_ops"):
-        import pennylane_lightning.lightning_kokkos_ops as lightning_ops
-        from pennylane_lightning.lightning_kokkos_ops import LightningException
-elif device_name == "lightning.gpu":
-    from pennylane_lightning.lightning_gpu import LightningGPU as LightningDevice
-    from pennylane_lightning.lightning_gpu._adjoint_jacobian import (
-        LightningGPUAdjointJacobian as LightningAdjointJacobian,
-    )
-    from pennylane_lightning.lightning_gpu._measurements import (
-        LightningGPUMeasurements as LightningMeasurements,
-    )
-    from pennylane_lightning.lightning_gpu._state_vector import (
-        LightningGPUStateVector as LightningStateVector,
-    )
-
-    if hasattr(pennylane_lightning, "lightning_gpu_ops"):
-        import pennylane_lightning.lightning_gpu_ops as lightning_ops
-        from pennylane_lightning.lightning_gpu_ops import LightningException
-elif device_name == "lightning.tensor":
+# Handle lightning.tensor separately since it has different class structure
+if device_name == "lightning.tensor":
     from pennylane_lightning.lightning_tensor import LightningTensor as LightningDevice
     from pennylane_lightning.lightning_tensor._measurements import (
         LightningTensorMeasurements as LightningMeasurements,
@@ -172,16 +145,42 @@ elif device_name == "lightning.tensor":
 
     if hasattr(pennylane_lightning, "lightning_tensor_ops"):
         import pennylane_lightning.lightning_tensor_ops as lightning_ops
-        from pennylane_lightning.lightning_tensor_ops import LightningException
 else:
-    from pennylane_lightning.lightning_qubit import LightningQubit as LightningDevice
-    from pennylane_lightning.lightning_qubit._adjoint_jacobian import LightningAdjointJacobian
-    from pennylane_lightning.lightning_qubit._measurements import LightningMeasurements
-    from pennylane_lightning.lightning_qubit._state_vector import LightningStateVector
+    # General case for lightning.qubit, lightning.kokkos, and lightning.gpu
+    # Capitalize device name for class names
+    backend_cap = device_name.split(".")[1].capitalize()
+    if device_name == "lightning.gpu":
+        backend_cap = "GPU"  # Special case for GPU (uppercase)
+    if device_name == "lightning.qubit":
+        backend_cap = ""  # Special case for LightningQubit (default)
 
-    if hasattr(pennylane_lightning, "lightning_qubit_ops"):
-        import pennylane_lightning.lightning_qubit_ops as lightning_ops
-        from pennylane_lightning.lightning_qubit_ops import LightningException
+    # Import main device class
+    module_path = f"pennylane_lightning.{device_module_name}"
+    device_class = (
+        f"LightningQubit" if device_name == "lightning.qubit" else f"Lightning{backend_cap}"
+    )  # Special case for LightningQubit (default)
+    module = importlib.import_module(module_path)
+    LightningDevice = getattr(module, device_class)
+
+    # Import adjoint jacobian class
+    adjoint_module = importlib.import_module(f"{module_path}._adjoint_jacobian")
+    LightningAdjointJacobian = getattr(adjoint_module, f"Lightning{backend_cap}AdjointJacobian")
+
+    # Import measurements class
+    measurements_module = importlib.import_module(f"{module_path}._measurements")
+    LightningMeasurements = getattr(measurements_module, f"Lightning{backend_cap}Measurements")
+
+    # Import state vector class
+    state_vector_module = importlib.import_module(f"{module_path}._state_vector")
+    LightningStateVector = getattr(state_vector_module, f"Lightning{backend_cap}StateVector")
+
+    # Try to import ops module
+    ops_module_path = f"pennylane_lightning.{device_module_name}_ops"
+    print(ops_module_path)
+    if hasattr(pennylane_lightning, f"{device_module_name}_ops"):
+        lightning_ops = importlib.import_module(ops_module_path)
+    else:
+        print("no ops")
 
 
 # General qubit_device fixture, for any number of wires.
@@ -351,6 +350,21 @@ def pytest_report_header():
     ]
 
 
+@pytest.fixture(params=["64", "128"])
+def precision(request):
+    """Return the precision for the test."""
+    return request.param
+
+
+@pytest.fixture(scope="session")
+def current_module():
+    """Return the nanobind module for the current device."""
+    try:
+        return importlib.import_module(nanobind_module_name)
+    except ImportError as e:
+        pytest.skip(f"Nanobind module {nanobind_module_name} not available: {str(e)}")
+
+
 # Extract _default_rng_seed from `rng_salt` in pytest.ini
 # which are used for generating random vectors/matrices in functions below
 config = configparser.ConfigParser()
@@ -390,3 +404,37 @@ def get_sparse_hermitian_matrix(n):
     H = random_array((n, n), density=0.15)
     H = H + 1.0j * random_array((n, n), density=0.15)
     return csr_matrix(H + H.conj().T)
+
+
+def compare_serialized_ops(actual, expected):
+    """Helper function to compare serialized operations that may contain NumPy arrays.
+
+    This function handles partial comparisons where the expected structure may be incomplete.
+    It only compares elements that exist in the expected structure.
+    """
+    if isinstance(actual, np.ndarray) and isinstance(expected, np.ndarray):
+        # Use allclose for floating point arrays to handle numerical precision issues
+        if np.issubdtype(actual.dtype, np.number) or np.issubdtype(expected.dtype, np.number):
+            return np.allclose(actual, expected)
+        return np.array_equal(actual, expected)
+    elif isinstance(actual, (list, tuple)) and isinstance(expected, (list, tuple)):
+        # Handle case where expected is shorter than actual (partial comparison)
+        if len(expected) > len(actual):
+            return False
+
+        # For tuples and lists, compare only the elements that exist in expected
+        if isinstance(expected, tuple) and len(expected) < len(actual):
+            # Only compare elements up to the length of expected
+            return all(
+                compare_serialized_ops(a, e) for a, e in zip(actual[: len(expected)], expected)
+            )
+
+        # For regular lists, compare all elements
+        return all(compare_serialized_ops(a, e) for a, e in zip(actual, expected))
+    elif isinstance(expected, dict) and isinstance(actual, dict):
+        # For dictionaries, only check keys that exist in expected
+        return all(
+            k in actual and compare_serialized_ops(actual[k], v) for k, v in expected.items()
+        )
+    else:
+        return actual == expected

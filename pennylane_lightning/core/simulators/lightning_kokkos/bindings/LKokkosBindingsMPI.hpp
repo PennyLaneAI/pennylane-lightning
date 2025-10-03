@@ -11,18 +11,31 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+/**
+ * @file LKokkosBindingsMPI.hpp
+ * Defines lightning.kokkos specific MPI operations to export to Python using
+ * Nanobind.
+ */
+
 #pragma once
-#include <set>
-#include <sstream>
+#include <complex>
+#include <memory>
 #include <string>
-#include <tuple>
-#include <variant>
 #include <vector>
 
-#include "BindingsBase.hpp"
+#include <nanobind/nanobind.h>
+#include <nanobind/ndarray.h>
+#include <nanobind/stl/complex.h>
+#include <nanobind/stl/string.h>
+#include <nanobind/stl/vector.h>
+
+#include "Bindings.hpp"
+#include "BindingsUtils.hpp"
 #include "Constant.hpp"
 #include "ConstantUtil.hpp" // lookup
 #include "GateOperation.hpp"
+#include "Kokkos_Core.hpp"
 #include "MPIManagerKokkos.hpp"
 #include "MeasurementsKokkosMPI.hpp"
 #include "ObservablesKokkos.hpp"
@@ -32,322 +45,312 @@
 
 /// @cond DEV
 namespace {
-using namespace Pennylane::Bindings;
+using namespace Pennylane::NanoBindings;
 using namespace Pennylane::LightningKokkos::Algorithms;
 using namespace Pennylane::LightningKokkos::Measures;
 using namespace Pennylane::LightningKokkos::Observables;
 using Kokkos::InitializationSettings;
-using Pennylane::LightningKokkos::StateVectorKokkosMPI;
+using Pennylane::LightningKokkos::StateVectorKokkos;
+using Pennylane::LightningKokkos::Util::MPIManagerKokkos;
 using Pennylane::Util::exp2;
 } // namespace
 /// @endcond
 
-namespace py = pybind11;
+namespace Pennylane::LightningKokkos::NanoBindings {
 
-namespace Pennylane::LightningKokkos {
+namespace nb = nanobind;
+
 /// @cond DEV
+/**
+ * @brief Define StateVector backends for lightning.kokkos MPI
+ */
 using StateVectorMPIBackends =
     Pennylane::Util::TypeList<StateVectorKokkosMPI<float>,
                               StateVectorKokkosMPI<double>, void>;
 /// @endcond
 
 /**
- * @brief Get a gate kernel map for a statevector.
+ * @brief Register backend class specific bindings for MPI.
+ *
+ * @tparam StateVectorT The type of the state vector.
+ * @tparam PyClass Nanobind's class to bind methods.
+ * @param pyclass Nanobind's class to bind methods.
  */
 template <class StateVectorT, class PyClass>
-void registerBackendClassSpecificBindingsMPI(PyClass &pyclass) {
-    using PrecisionT =
-        typename StateVectorT::PrecisionT; // Statevector's precision
+void registerBackendSpecificStateVectorMethodsMPI(PyClass &pyclass) {
+    using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
-    using ParamT = PrecisionT; // Parameter's data precision
-    using np_arr_c = py::array_t<std::complex<ParamT>,
-                                 py::array::c_style | py::array::forcecast>;
-    registerGatesForStateVector<StateVectorT>(pyclass);
-    registerControlledGate<StateVectorT>(pyclass);
-    pyclass
-        .def(
-            py::init([](MPIManagerKokkos &mpi_manager, std::size_t num_qubits) {
-                return new StateVectorT(mpi_manager, num_qubits);
-            }))
-        .def(py::init([](MPIManagerKokkos &mpi_manager, std::size_t num_qubits,
-                         const InitializationSettings &kokkos_args) {
-            return new StateVectorT(mpi_manager, num_qubits, kokkos_args);
-        }))
-        .def(py::init([](std::size_t num_qubits) {
-            return new StateVectorT(num_qubits);
-        }))
-        .def(py::init([](std::size_t num_qubits,
-                         const InitializationSettings &kokkos_args) {
-            return new StateVectorT(num_qubits, kokkos_args);
-        }))
-        .def("resetStateVector", &StateVectorT::resetStateVector)
-        .def(
-            "setBasisState",
-            [](StateVectorT &sv, const std::vector<std::size_t> &state,
-               const std::vector<std::size_t> &wires) {
-                sv.setBasisState(state, wires);
-            },
-            "Set the state vector to a basis state.")
-        .def(
-            "setStateVector",
-            [](StateVectorT &sv, const np_arr_c &state,
-               const std::vector<std::size_t> &wires) {
-                const auto buffer = state.request();
-                sv.setStateVector(static_cast<const ComplexT *>(buffer.ptr),
-                                  wires);
-            },
-            "Set the state vector to the data contained in `state`.")
-        .def(
-            "DeviceToHost",
-            [](StateVectorT &device_sv, np_arr_c &host_sv) {
-                py::buffer_info numpyArrayInfo = host_sv.request();
-                auto *data_ptr = static_cast<ComplexT *>(numpyArrayInfo.ptr);
-                if (host_sv.size()) {
-                    device_sv.DeviceToHost(data_ptr, host_sv.size());
-                }
-            },
-            "Synchronize data from the Kokkos device to host.")
-        .def("HostToDevice",
-             py::overload_cast<ComplexT *, std::size_t>(
-                 &StateVectorT::HostToDevice),
-             "Synchronize data from the host device to Kokkos.")
-        .def(
-            "HostToDevice",
-            [](StateVectorT &device_sv, const np_arr_c &host_sv) {
-                const py::buffer_info numpyArrayInfo = host_sv.request();
-                auto *data_ptr = static_cast<ComplexT *>(numpyArrayInfo.ptr);
-                const auto length =
-                    static_cast<std::size_t>(numpyArrayInfo.shape[0]);
-                if (length) {
-                    device_sv.HostToDevice(data_ptr, length);
-                }
-            },
-            "Synchronize data from the host device to Kokkos.")
-        .def(
-            "apply",
-            [](StateVectorT &sv, const std::string &str,
-               const std::vector<std::size_t> &wires, bool inv,
-               [[maybe_unused]] const std::vector<std::vector<ParamT>> &params,
-               [[maybe_unused]] const np_arr_c &gate_matrix) {
-                const auto m_buffer = gate_matrix.request();
-                std::vector<Kokkos::complex<ParamT>> conv_matrix;
-                if (m_buffer.size) {
-                    const auto m_ptr =
-                        static_cast<const Kokkos::complex<ParamT> *>(
-                            m_buffer.ptr);
-                    conv_matrix = std::vector<Kokkos::complex<ParamT>>{
-                        m_ptr, m_ptr + m_buffer.size};
-                }
-                sv.applyOperation(str, wires, inv, std::vector<ParamT>{},
-                                  conv_matrix);
-            },
-            "Apply operation via the gate matrix")
-        .def(
-            "applyPauliRot",
-            [](StateVectorT &sv, const std::vector<std::size_t> &wires,
-               const bool inverse, const std::vector<ParamT> &params,
-               const std::string &word) {
-                sv.applyPauliRot(wires, inverse, params, word);
-            },
-            "Apply a Pauli rotation.")
-        .def("applyControlledMatrix", &applyControlledMatrix<StateVectorT>,
-             "Apply controlled operation")
-        .def("collapse", &StateVectorT::collapse,
-             "Collapse the statevector onto the 0 or 1 branch of a given wire.")
-        // MPI related functions
-        .def(
-            "getNumLocalWires",
-            [](StateVectorT &sv) { return sv.getNumLocalWires(); },
-            "Get number of local wires.")
-        .def(
-            "getNumGlobalWires",
-            [](StateVectorT &sv) { return sv.getNumGlobalWires(); },
-            "Get number of global wires.")
-        .def(
-            "swapGlobalLocalWires",
-            [](StateVectorT &sv,
-               const std::vector<std::size_t> &global_wires_to_swap,
-               const std::vector<std::size_t> &local_wires_to_swap) {
-                sv.swapGlobalLocalWires(global_wires_to_swap,
-                                        local_wires_to_swap);
-            },
-            "Swap global and local wires - global_wire_to_swap must be in "
-            "global_wires_ and local_wires_to_swap must be in local_wires_")
-        .def(
-            "getLocalBlockSize",
-            [](StateVectorT &sv) { return sv.getLocalBlockSize(); },
-            "Get Local Block Size, i.e. size of SV on a single rank.")
-        .def(
-            "resetIndices", [](StateVectorT &sv) { sv.resetIndices(); },
-            "Reset indices including global_wires, local_wires_, and "
-            "mpi_rank_to_global_index_map_.")
-        .def(
-            "reorderAllWires", [](StateVectorT &sv) { sv.reorderAllWires(); },
-            "Reorder all wires so that global_wires_ = {0, 1, ...} and "
-            "local_wires_ = {..., num_qubit-1}.");
+
+    using ArrayComplexT = nb::ndarray<std::complex<PrecisionT>, nb::c_contig>;
+
+    // Register gates for state vector
+    registerGates<StateVectorT>(pyclass);
+    registerControlledGates<StateVectorT>(pyclass);
+
+    pyclass.def(nb::init<std::size_t>());
+    pyclass.def(nb::init<MPIManagerKokkos &, std::size_t>());
+    pyclass.def(nb::init<MPIManagerKokkos &, std::size_t,
+                         const InitializationSettings &>());
+    pyclass.def(nb::init<std::size_t, const InitializationSettings &>());
+
+    pyclass.def("resetStateVector", &StateVectorT::resetStateVector);
+    pyclass.def(
+        "setBasisState",
+        [](StateVectorT &sv, const std::vector<std::size_t> &state,
+           const std::vector<std::size_t> &wires) {
+            sv.setBasisState(state, wires);
+        },
+        "Set the state vector to a basis state.");
+    pyclass.def(
+        "setStateVector",
+        [](StateVectorT &sv, const ArrayComplexT &state,
+           const std::vector<std::size_t> &wires) {
+            sv.setStateVector(PL_reinterpret_cast<const ComplexT>(state.data()),
+                              wires);
+        },
+        "Set the state vector to the data contained in `state`.");
+    pyclass.def(
+        "DeviceToHost",
+        [](StateVectorT &device_sv, ArrayComplexT &host_sv) {
+            auto *data_ptr = PL_reinterpret_cast<ComplexT>(host_sv.data());
+            if (host_sv.size()) {
+                device_sv.DeviceToHost(data_ptr, host_sv.size());
+            }
+        },
+        "Synchronize data from the Kokkos device to host.");
+    pyclass.def(
+        "HostToDevice",
+        nb::overload_cast<ComplexT *, std::size_t>(&StateVectorT::HostToDevice),
+        "Synchronize data from the host device to Kokkos.");
+    pyclass.def(
+        "HostToDevice",
+        [](StateVectorT &device_sv, const ArrayComplexT &host_sv) {
+            auto *data_ptr = const_cast<ComplexT *>(
+                PL_reinterpret_cast<ComplexT>(host_sv.data()));
+            if (host_sv.size()) {
+                device_sv.HostToDevice(data_ptr, host_sv.size());
+            }
+        },
+        "Synchronize data from the host device to Kokkos.");
+    pyclass.def(
+        "apply",
+        [](StateVectorT &sv, const std::string &str,
+           const std::vector<std::size_t> &wires, bool inv,
+           [[maybe_unused]] const std::vector<std::vector<PrecisionT>> &params,
+           [[maybe_unused]] const ArrayComplexT &gate_matrix) {
+            std::vector<ComplexT> conv_matrix;
+            if (gate_matrix.size()) {
+                conv_matrix = std::vector<ComplexT>{gate_matrix.data(),
+                                                    gate_matrix.data() +
+                                                        gate_matrix.size()};
+            }
+            sv.applyOperation(str, wires, inv, std::vector<PrecisionT>{},
+                              conv_matrix);
+        },
+        "Apply a matrix operation.");
+    pyclass.def(
+        "applyPauliRot",
+        [](StateVectorT &sv, const std::vector<std::size_t> &wires,
+           const bool inverse, const std::vector<PrecisionT> &params,
+           const std::string &word) {
+            sv.applyPauliRot(wires, inverse, params, word);
+        },
+        "Apply a Pauli rotation.");
+    pyclass.def("applyControlledMatrix", &applyControlledMatrix<StateVectorT>,
+                "Apply controlled operation");
+    pyclass.def(
+        "collapse", &StateVectorT::collapse,
+        "Collapse the statevector onto the 0 or 1 branch of a given wire.");
+    pyclass.def(
+        "getNumLocalWires",
+        [](StateVectorT &sv) { return sv.getNumLocalWires(); },
+        "Get number of local wires.");
+    pyclass.def(
+        "getNumGlobalWires",
+        [](StateVectorT &sv) { return sv.getNumGlobalWires(); },
+        "Get number of global wires.");
+    pyclass.def(
+        "swapGlobalLocalWires",
+        [](StateVectorT &sv,
+           const std::vector<std::size_t> &global_wires_to_swap,
+           const std::vector<std::size_t> &local_wires_to_swap) {
+            sv.swapGlobalLocalWires(global_wires_to_swap, local_wires_to_swap);
+        },
+        "Swap global and local wires - global_wire_to_swap must be in "
+        "global_wires_ and local_wires_to_swap must be in local_wires_");
+    pyclass.def(
+        "getLocalBlockSize",
+        [](StateVectorT &sv) { return sv.getLocalBlockSize(); },
+        "Get Local Block Size, i.e. size of SV on a single rank.");
+    pyclass.def(
+        "resetIndices", [](StateVectorT &sv) { sv.resetIndices(); },
+        "Reset indices including global_wires, local_wires_, and "
+        "mpi_rank_to_global_index_map_.");
+    pyclass.def(
+        "reorderAllWires", [](StateVectorT &sv) { sv.reorderAllWires(); },
+        "Reorder all wires so that global_wires_ = {0, 1, ...} and "
+        "local_wires_ = {..., num_qubit-1}.");
 }
 
 /**
- * @brief Register backend specific measurements class functionalities.
+ * @brief Register backend specific measurements class functionalities for MPI.
  *
  * @tparam StateVectorT
  * @tparam PyClass
- * @param pyclass Pybind11's measurements class to bind methods.
+ * @param pyclass Nanobind's measurements class to bind methods.
  */
 template <class StateVectorT, class PyClass>
 void registerBackendSpecificMeasurementsMPI(PyClass &pyclass) {
-    using PrecisionT =
-        typename StateVectorT::PrecisionT; // Statevector's precision
-    using ComplexT =
-        typename StateVectorT::ComplexT; // Statevector's complex type
-    using ParamT = PrecisionT;           // Parameter's data precision
+    using PrecisionT = typename StateVectorT::PrecisionT;
+    using ComplexT = typename StateVectorT::ComplexT;
+    using ArrayComplexT = nb::ndarray<std::complex<PrecisionT>, nb::c_contig>;
 
-    using np_arr_c = py::array_t<std::complex<ParamT>,
-                                 py::array::c_style | py::array::forcecast>;
-
-    pyclass
-        .def("expval",
-             static_cast<PrecisionT (MeasurementsMPI<StateVectorT>::*)(
-                 const std::string &, const std::vector<std::size_t> &)>(
-                 &MeasurementsMPI<StateVectorT>::expval),
-             "Expected value of an operation by name.")
-        .def(
-            "expval",
-            [](MeasurementsMPI<StateVectorT> &M, const np_arr_c &matrix,
-               const std::vector<std::size_t> &wires) {
-                const std::size_t matrix_size = exp2(2 * wires.size());
-                auto matrix_data =
-                    static_cast<ComplexT *>(matrix.request().ptr);
-                std::vector<ComplexT> matrix_v{matrix_data,
-                                               matrix_data + matrix_size};
-                return M.expval(matrix_v, wires);
-            },
-            "Expected value of a Hermitian observable.")
-        .def(
-            "expval",
-            [](MeasurementsMPI<StateVectorT> &M,
-               const std::vector<std::string> &pauli_words,
-               const std::vector<std::vector<std::size_t>> &target_wires,
-               const std::vector<ParamT> &coeffs) {
-                return M.expval(pauli_words, target_wires, coeffs);
-            },
-            "Expected value of a Hamiltonian represented by Pauli words.")
-        .def("var",
-             [](MeasurementsMPI<StateVectorT> &M, const std::string &operation,
-                const std::vector<std::size_t> &wires) {
-                 return M.var(operation, wires);
-             })
-        .def("var",
-             static_cast<PrecisionT (MeasurementsMPI<StateVectorT>::*)(
-                 const std::string &, const std::vector<std::size_t> &)>(
-                 &MeasurementsMPI<StateVectorT>::var),
-             "Variance of an operation by name.");
+    pyclass.def(
+        "expval",
+        [](MeasurementsMPI<StateVectorT> &M, const std::string &operation,
+           const std::vector<std::size_t> &wires) {
+            return M.expval(operation, wires);
+        },
+        "Expected value of an operation by name.");
+    pyclass.def(
+        "expval",
+        [](MeasurementsMPI<StateVectorT> &M, const ArrayComplexT &matrix,
+           const std::vector<std::size_t> &wires) {
+            const std::size_t matrix_size = exp2(2 * wires.size());
+            auto matrix_data =
+                PL_reinterpret_cast<const ComplexT>(matrix.data());
+            std::vector<ComplexT> matrix_v{matrix_data,
+                                           matrix_data + matrix_size};
+            return M.expval(matrix_v, wires);
+        },
+        "Expected value of a Hermitian observable.");
+    pyclass.def(
+        "expval",
+        [](MeasurementsMPI<StateVectorT> &M,
+           const std::vector<std::string> &pauli_words,
+           const std::vector<std::vector<std::size_t>> &target_wires,
+           const std::vector<PrecisionT> &coeffs) {
+            return M.expval(pauli_words, target_wires, coeffs);
+        },
+        "Expected value of a Hamiltonian represented by Pauli words.");
+    pyclass.def(
+        "var",
+        [](MeasurementsMPI<StateVectorT> &M, const std::string &operation,
+           const std::vector<std::size_t> &wires) {
+            return M.var(operation, wires);
+        },
+        "Variance of an operation by name.");
 }
 
 /**
- * @brief Register observable classes.
+ * @brief Register backend specific observables for MPI.
  *
  * @tparam StateVectorT
- * @param m Pybind module
+ * @param m Nanobind module
  */
 template <class StateVectorT>
-void registerBackendSpecificObservablesMPI(py::module_ &m) {
-    using PrecisionT =
-        typename StateVectorT::PrecisionT; // Statevector's precision.
-    using ParamT = PrecisionT;             // Parameter's data precision
+void registerBackendSpecificObservablesMPI(nb::module_ &m) {
+    using PrecisionT = typename StateVectorT::PrecisionT;
+    using ComplexT = typename StateVectorT::ComplexT;
 
     const std::string bitsize =
-        std::to_string(sizeof(std::complex<PrecisionT>) * 8);
+        std::is_same_v<PrecisionT, float> ? "64" : "128";
 
-    using np_arr_c = py::array_t<std::complex<ParamT>, py::array::c_style>;
+    using ArrayComplexT = nb::ndarray<std::complex<PrecisionT>, nb::c_contig>;
+    using SparseIndexT = std::size_t;
+    using ArrSparseIndT = nb::ndarray<SparseIndexT, nb::c_contig>;
 
-    std::string class_name;
+    std::string class_name = "SparseHamiltonianC" + bitsize;
+    auto sparse_hamiltonian_class =
+        nb::class_<SparseHamiltonian<StateVectorT>>(m, class_name.c_str());
 
-    class_name = "SparseHamiltonianC" + bitsize;
-    py::class_<SparseHamiltonian<StateVectorT>,
-               std::shared_ptr<SparseHamiltonian<StateVectorT>>,
-               Observable<StateVectorT>>(m, class_name.c_str(),
-                                         py::module_local())
-        .def(py::init([](const np_arr_c &data,
-                         const std::vector<std::size_t> &indices,
-                         const std::vector<std::size_t> &indptr,
-                         const std::vector<std::size_t> &wires) {
-            using ComplexT = typename StateVectorT::ComplexT;
-            const py::buffer_info buffer_data = data.request();
-            const auto *data_ptr = static_cast<ComplexT *>(buffer_data.ptr);
+    sparse_hamiltonian_class.def(
+        "__init__",
+        [](SparseHamiltonian<StateVectorT> *self, const ArrayComplexT &data,
+           const std::vector<std::size_t> &indices,
+           const std::vector<std::size_t> &indptr,
+           const std::vector<std::size_t> &wires) {
+            const ComplexT *data_ptr =
+                PL_reinterpret_cast<const ComplexT>(data.data());
+            std::vector<ComplexT> data_vec(data_ptr, data_ptr + data.size());
+            new (self) SparseHamiltonian<StateVectorT>(data_vec, indices,
+                                                       indptr, wires);
+        });
 
-            return SparseHamiltonian<StateVectorT>{
-                std::vector<ComplexT>({data_ptr, data_ptr + data.size()}),
-                indices, indptr, wires};
-        }))
-        .def("__repr__", &SparseHamiltonian<StateVectorT>::getObsName)
-        .def("get_wires", &SparseHamiltonian<StateVectorT>::getWires,
-             "Get wires of observables")
-        .def(
-            "__eq__",
-            [](const SparseHamiltonian<StateVectorT> &self,
-               py::handle other) -> bool {
-                if (!py::isinstance<SparseHamiltonian<StateVectorT>>(other)) {
-                    return false;
-                }
-                auto other_cast = other.cast<SparseHamiltonian<StateVectorT>>();
-                return self == other_cast;
-            },
-            "Compare two observables");
+    sparse_hamiltonian_class.def("__repr__",
+                                 &SparseHamiltonian<StateVectorT>::getObsName,
+                                 "Get the name of the observable");
+    sparse_hamiltonian_class.def("get_wires",
+                                 &SparseHamiltonian<StateVectorT>::getWires,
+                                 "Get wires of observables");
+
+    sparse_hamiltonian_class.def(
+        "__eq__",
+        [](const SparseHamiltonian<StateVectorT> &self,
+           nb::handle other) -> bool {
+            if (!nb::isinstance<SparseHamiltonian<StateVectorT>>(other)) {
+                return false;
+            }
+            auto other_cast = nb::cast<SparseHamiltonian<StateVectorT>>(other);
+            return self == other_cast;
+        },
+        "Compare two observables");
 }
 
 /**
- * @brief Register backend specific adjoint Jacobian methods.
+ * @brief Register backend specific adjoint Jacobian methods for MPI.
  *
  * @tparam StateVectorT
- * @param m Pybind module
+ * @param m Nanobind module
  */
 template <class StateVectorT>
-void registerBackendSpecificAlgorithmsMPI([[maybe_unused]] py::module_ &m) {}
+void registerBackendSpecificAlgorithmsMPI(nb::module_ &m) {
+    // This function is intentionally left empty as there are no
+    // backend-specific algorithms for Kokkos MPI
+}
 
 /**
- * @brief Register bindings for backend-specific info.
+ * @brief Register bindings for backend-specific info for MPI.
  *
- * @param m Pybind11 module.
+ * @param m Nanobind module.
  */
-void registerBackendSpecificInfoMPI(py::module_ &m) {
-    using np_arr_c64 = py::array_t<std::complex<float>,
-                                   py::array::c_style | py::array::forcecast>;
-    using np_arr_c128 = py::array_t<std::complex<double>,
-                                    py::array::c_style | py::array::forcecast>;
-    py::class_<MPIManagerKokkos>(m, "MPIManagerKokkos")
-        .def(py::init<>())
-        .def(py::init<MPIManagerKokkos &>())
-        .def("Barrier", &MPIManagerKokkos::Barrier)
-        .def("getRank", &MPIManagerKokkos::getRank)
-        .def("getSize", &MPIManagerKokkos::getSize)
-        .def("getSizeNode", &MPIManagerKokkos::getSizeNode)
-        .def("getTime", &MPIManagerKokkos::getTime)
-        .def("getVendor", &MPIManagerKokkos::getVendor)
-        .def("getVersion", &MPIManagerKokkos::getVersion)
-        .def(
-            "Scatter",
-            [](MPIManagerKokkos &mpi_manager, np_arr_c64 &sendBuf,
-               np_arr_c64 &recvBuf, int root) {
-                auto send_ptr =
-                    static_cast<std::complex<float> *>(sendBuf.request().ptr);
-                auto recv_ptr =
-                    static_cast<std::complex<float> *>(recvBuf.request().ptr);
-                mpi_manager.template Scatter<std::complex<float>>(
-                    send_ptr, recv_ptr, recvBuf.request().size, root);
-            },
-            "MPI Scatter.")
-        .def(
-            "Scatter",
-            [](MPIManagerKokkos &mpi_manager, np_arr_c128 &sendBuf,
-               np_arr_c128 &recvBuf, int root) {
-                auto send_ptr =
-                    static_cast<std::complex<double> *>(sendBuf.request().ptr);
-                auto recv_ptr =
-                    static_cast<std::complex<double> *>(recvBuf.request().ptr);
-                mpi_manager.template Scatter<std::complex<double>>(
-                    send_ptr, recv_ptr, recvBuf.request().size, root);
-            },
-            "MPI Scatter.");
+void registerBackendSpecificInfoMPI(nb::module_ &m) {
+    using ArrayComplex64T = nb::ndarray<std::complex<float>, nb::c_contig>;
+    using ArrayComplex128T = nb::ndarray<std::complex<double>, nb::c_contig>;
+
+    auto mpi_manager_class =
+        nb::class_<MPIManagerKokkos>(m, "MPIManagerKokkos");
+    mpi_manager_class.def(nb::init<>());
+    mpi_manager_class.def(nb::init<MPIManagerKokkos &>());
+    mpi_manager_class.def("Barrier", &MPIManagerKokkos::Barrier);
+    mpi_manager_class.def("getRank", &MPIManagerKokkos::getRank);
+    mpi_manager_class.def("getSize", &MPIManagerKokkos::getSize);
+    mpi_manager_class.def("getSizeNode", &MPIManagerKokkos::getSizeNode);
+    mpi_manager_class.def("getTime", &MPIManagerKokkos::getTime);
+    mpi_manager_class.def("getVendor", &MPIManagerKokkos::getVendor);
+    mpi_manager_class.def("getVersion", &MPIManagerKokkos::getVersion);
+    mpi_manager_class.def(
+        "Scatter",
+        [](MPIManagerKokkos &mpi_manager, ArrayComplex64T &sendBuf,
+           ArrayComplex64T &recvBuf, int root) {
+            auto send_ptr = static_cast<std::complex<float> *>(sendBuf.data());
+            auto recv_ptr = static_cast<std::complex<float> *>(recvBuf.data());
+            mpi_manager.template Scatter<std::complex<float>>(
+                send_ptr, recv_ptr, static_cast<std::size_t>(recvBuf.size()),
+                root);
+        },
+        "MPI Scatter for complex float arrays.");
+    mpi_manager_class.def(
+        "Scatter",
+        [](MPIManagerKokkos &mpi_manager, ArrayComplex128T &sendBuf,
+           ArrayComplex128T &recvBuf, int root) {
+            auto send_ptr = static_cast<std::complex<double> *>(sendBuf.data());
+            auto recv_ptr = static_cast<std::complex<double> *>(recvBuf.data());
+            mpi_manager.template Scatter<std::complex<double>>(
+                send_ptr, recv_ptr, static_cast<std::size_t>(recvBuf.size()),
+                root);
+        },
+        "MPI Scatter for complex double arrays.");
 }
-} // namespace Pennylane::LightningKokkos
+
+} // namespace Pennylane::LightningKokkos::NanoBindings

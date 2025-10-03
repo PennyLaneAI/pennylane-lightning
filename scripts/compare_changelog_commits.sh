@@ -4,23 +4,25 @@
 # It prints the authors of the merged PRs and the PRs in the CHANGELOG, and highlights any discrepancies.
 
 # Usage:
-# Edit the variable LAST_RELEASE_DATE with the date from https://github.com/PennyLaneAI/pennylane-lightning/releases
 # Run the script with 
 # bash compare_changelog_commits.sh 
 
-# Last release date
-LAST_RELEASE_DATE="2025-05-05"
+# Root directory, should be the location of the pennylane-lightning repo
+ROOT_DIR="."
+
+# --------------------------------------------------------------------------------------------------
+# Script body
+# --------------------------------------------------------------------------------------------------
+
+ROOT_DIR="$(pwd)/$ROOT_DIR"
 
 # Path to ChangeLog
-CHANGELOG_FILE="../.github/CHANGELOG.md"
-
-# -------------------------------------------------------------------------------------------------
-# Script body
-# -------------------------------------------------------------------------------------------------
+CHANGELOG_FILE="$ROOT_DIR/.github/CHANGELOG.md"
 
 # Test if CHANGELOG file exists
 if [ ! -f "$CHANGELOG_FILE" ]; then
     echo "CHANGELOG file not found at $CHANGELOG_FILE"
+    echo "Please make sure you are in the root of the pennylane-lightning repository"
     exit 1
 fi
 
@@ -30,25 +32,66 @@ if ! command -v gh &> /dev/null; then
     exit 1
 fi
 
+# Last release date YYYY-MM-DD
+LAST_RELEASE_DATE=$(gh release view --json publishedAt | jq -r '.publishedAt | split("T")[0]')
+
 # Find the end of the current version section in the CHANGELOG
 changelog_lower_bound=$(grep -n -- "---" "${CHANGELOG_FILE}" | head -n 1 | cut -d: -f1)
 
 # Find the beginning of the Contributors section
 contributors_begin=$(grep -n "<h3>Contributors ✍️</h3>" "${CHANGELOG_FILE}" | head -n 1 | cut -d: -f1)
 
+extract_contributors_from_changelog() {
+    # Extract the list of contributors from the CHANGELOG
+    contribution_list=$(sed -n "$((contributors_begin + 4)),$((changelog_lower_bound - 2))p" "${CHANGELOG_FILE}") 
+    # Sort and format the contribution list
+    contribution_list=$(echo "$contribution_list" | sort | sed 's/.$/,/ ; s/,//; s/$/,/')
+    echo "$contribution_list"
+}
+
+extract_contributors_from_git() {
+    # Extract the list of contributors from Git
+    contribution_list=$(git log master --since=$LAST_RELEASE_DATE --pretty=format:"%an <%ae>")
+    # Sort, find unique entries, and format the contribution list
+    contribution_list=$(echo "$contribution_list" | sort | uniq | sed 's|<.*|| ; s|Author: ||')
+    echo "$contribution_list"
+}
+
 # Print list of Authors from Changelog and Git
 echo "Authors in CHANGELOG       /  Authors in Git"
 echo "---------------------------|---------------------------"
-paste <(sed -n "$((contributors_begin + 4)),$((changelog_lower_bound - 2))p" "${CHANGELOG_FILE}" | sort | sed 's/,//; s/$/,/') <(git log master --since=$LAST_RELEASE_DATE | grep "Author:" | sort | uniq | sed 's|<.*|| ; s|Author: ||' ) | column -t -s ','
-
+paste <(extract_contributors_from_changelog) \
+      <(extract_contributors_from_git) \
+      | column -t -s ','
+echo "---------------------------|---------------------------"
 echo "--------------------------------------------------------------------------------"
 
 # Create the list of merged PR
-gh pr list --state merged --base master --search "merged:>=$LAST_RELEASE_DATE" -L 1000  | sort -h | awk -F 'MERGED' '{print $1}' > release_list_merged_PR.txt
+list_merged_PRs(){
+    # Get the list of merged PRs to master 
+    list_PRs=$(gh pr list --state merged --base master --search "merged:>=$LAST_RELEASE_DATE" -L 1000 )
+    # Extract the PR number and title, format it, and sort it
+    list_PRs=$(echo "$list_PRs" | awk -F 'MERGED' '{print $1}' | sort -h)
+    echo "$list_PRs" > release_list_merged_PR.txt
+}
 
-# Create the list of PRs in the CHANGELOG
-sed -n "1,${changelog_lower_bound}p" "${CHANGELOG_FILE}" | grep -B 1 'pull/'  | tr -d "\n" | sed 's/--/\n/g; s|pull/|pull/_ |g ; s/)//g'| awk '{print $NF, "  ", $0}' | sed 's|\[(.*||' |   sort -h -k1 > release_list_PR_in_changelog.txt
+list_entries_in_changelog(){
+    # Create a list of PRs in the CHANGELOG
+    list_entries=$( sed -n "1,${changelog_lower_bound}p" "${CHANGELOG_FILE}" )
+    # Extract only the PRs
+    list_entries=$(echo "$list_entries" | grep -B 1 'pull/'  | tr -d "\n" )
+    # Format the list of PRs, replace 'pull/' with 'pull/_', and remove trailing parentheses
+    list_entries=$(echo "$list_entries" | sed 's/--/\n/g; s|pull/|pull/_ |g ; s/)//g')
+    # Add the PR number at the beginning of the line
+    list_entries=$(echo "$list_entries" |  awk '{print $NF, "  ", $0}') 
+    # Remove the PR link and sort the entries
+    list_entries=$(echo "$list_entries" | sed 's|\[(.*||' | sort -h -k1)
+    echo "$list_entries" > release_list_PR_in_changelog.txt
+}
 
+# Create the list of entries in the CHANGELOG and the merged PRs
+list_entries_in_changelog
+list_merged_PRs 
 
 interleave_rows(){
     file1="$1"

@@ -36,8 +36,8 @@
 #include "CacheManager.hpp"
 #include "Exception.hpp"
 #include "LightningKokkosObsManager.hpp"
+#include "LightningQubitManager.hpp"
 #include "QuantumDevice.hpp"
-#include "QubitManager.hpp"
 
 namespace Catalyst::Runtime::Simulator {
 /**
@@ -55,7 +55,7 @@ class LightningKokkosSimulator final : public Catalyst::Runtime::QuantumDevice {
     static constexpr bool GLOBAL_RESULT_TRUE_CONST = true;
     static constexpr bool GLOBAL_RESULT_FALSE_CONST = false;
 
-    Catalyst::Runtime::QubitManager<QubitIdType, std::size_t> qubit_manager{};
+    QubitManager<QubitIdType, std::size_t> qubit_manager{};
     Catalyst::Runtime::CacheManager<Kokkos::complex<double>> cache_manager{};
     bool tape_recording{false};
 
@@ -121,7 +121,7 @@ class LightningKokkosSimulator final : public Catalyst::Runtime::QuantumDevice {
     auto AllocateQubits(std::size_t num_qubits)
         -> std::vector<QubitIdType> override;
     void ReleaseQubit(QubitIdType q) override;
-    void ReleaseAllQubits() override;
+    void ReleaseQubits(const std::vector<QubitIdType> &ids) override;
     [[nodiscard]] auto GetNumQubits() const -> std::size_t override;
     void StartTapeRecording() override;
     void StopTapeRecording() override;

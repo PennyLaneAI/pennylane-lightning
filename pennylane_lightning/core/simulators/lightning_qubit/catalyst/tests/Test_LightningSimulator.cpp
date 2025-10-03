@@ -67,12 +67,11 @@ TEST_CASE("LightningSimulator::unit_tests", "[unit tests]") {
         LQsim->AllocateQubits(2);
         REQUIRE(LQsim->GetNumQubits() == 4);
         LQsim->ReleaseQubit(0);
-        REQUIRE(
-            LQsim->GetNumQubits() ==
-            4); // releasing only one qubit does not change the total number.
-        LQsim->ReleaseAllQubits();
-        REQUIRE(LQsim->GetNumQubits() ==
-                0); // releasing all qubits resets the simulator.
+        REQUIRE(LQsim->GetNumQubits() == 3);
+        LQsim->ReleaseQubits({1, 3});
+        REQUIRE(LQsim->GetNumQubits() == 1);
+        LQsim->ReleaseQubits({2});
+        REQUIRE(LQsim->GetNumQubits() == 0);
     }
     SECTION("Tape recording") {
         std::unique_ptr<LQSimulator> LQsim = std::make_unique<LQSimulator>();

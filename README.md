@@ -58,7 +58,7 @@ The Lightning plugin ecosystem provides fast state-vector and tensor-network sim
 
 [PennyLane](https://docs.pennylane.ai) is a cross-platform Python library for quantum machine
 learning, automatic differentiation, and optimization of hybrid quantum-classical computations.
-PennyLane supports Python 3.10 and above.
+PennyLane supports Python 3.11 and above.
 
 ## Backends
 
@@ -171,7 +171,7 @@ enable the device bindings to PennyLane, which are held to their own respective 
 
 PennyLane Lightning makes use of the following libraries and tools, which are under their own respective licenses:
 
-- **pybind11:** https://github.com/pybind/pybind11
+- **nanobind:** https://github.com/wjakob/nanobind
 - **Kokkos Core:** https://github.com/kokkos/kokkos
 - **NVIDIA cuQuantum:** https://developer.nvidia.com/cuquantum-sdk
 - **scipy-openblas32:** https://pypi.org/project/scipy-openblas32/

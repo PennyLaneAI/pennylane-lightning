@@ -28,10 +28,10 @@ import numpy as np
 import pennylane as qml
 from numpy.random import BitGenerator, Generator, SeedSequence
 from numpy.typing import ArrayLike
-from pennylane.devices import DefaultExecutionConfig, Device, ExecutionConfig
+from pennylane.devices import Device, ExecutionConfig
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
 from pennylane.exceptions import DeviceError
-from pennylane.measurements import MidMeasureMP
+from pennylane.measurements import MidMeasureMP, Shots, ShotsLike
 from pennylane.tape import QuantumScript, QuantumTape
 from pennylane.typing import Result, ResultBatch, TensorLike
 
@@ -118,19 +118,6 @@ class LightningBase(Device):
     def _set_lightning_classes(self):
         """Load the LightningStateVector, LightningMeasurements, LightningAdjointJacobian as class attribute"""
 
-    @abstractmethod
-    def _setup_execution_config(self, config: ExecutionConfig):
-        """
-        Update the execution config with choices for how the device should be used and the device options.
-
-        Args:
-            config (ExecutionConfig): A data structure describing the parameters needed to fully describe the execution.
-
-        Returns:
-            ExecutionConfig: An updated execution config with device options set.
-
-        """
-
     def dynamic_wires_from_circuit(self, circuit):
         """Allocate the underlying quantum state from the pre-defined wires or a given circuit if applicable. Circuit wires will be mapped to Pennylane ``default.qubit`` standard wire order.
 
@@ -158,31 +145,10 @@ class LightningBase(Device):
         return circuit
 
     @abstractmethod
-    def preprocess(self, execution_config: ExecutionConfig = DefaultExecutionConfig):
-        """This function defines the device transform program to be applied and an updated device configuration.
-
-        Args:
-            execution_config (Union[ExecutionConfig, Sequence[ExecutionConfig]]): A data structure describing the
-                parameters needed to fully describe the execution.
-
-        Returns:
-            TransformProgram, ExecutionConfig: A transform program that when called returns :class:`~.QuantumTape`'s that the
-            device can natively execute as well as a postprocessing function to be called after execution, and a configuration
-            with unset specifications filled in.
-
-        This device:
-
-        * Supports any qubit operations that provide a matrix
-        * Currently does not support finite shots
-        * Currently does not intrinsically support parameter broadcasting
-
-        """
-
-    @abstractmethod
     def execute(
         self,
         circuits: QuantumTape_or_Batch,
-        execution_config: ExecutionConfig = DefaultExecutionConfig,
+        execution_config: ExecutionConfig | None = None,
     ) -> Result_or_ResultBatch:
         """Execute a circuit or a batch of circuits and turn it into results.
 
@@ -270,7 +236,7 @@ class LightningBase(Device):
     @abstractmethod
     def supports_derivatives(
         self,
-        execution_config: Optional[ExecutionConfig] = None,
+        execution_config: ExecutionConfig | None = None,
         circuit: Optional[qml.tape.QuantumTape] = None,
     ) -> bool:
         """Check whether or not derivatives are available for a given configuration and circuit.
@@ -408,17 +374,20 @@ class LightningBase(Device):
     def compute_derivatives(
         self,
         circuits: QuantumTape_or_Batch,
-        execution_config: ExecutionConfig = DefaultExecutionConfig,
+        execution_config: ExecutionConfig | None = None,
     ) -> Tuple:
         """Calculate the jacobian of either a single or a batch of circuits on the device.
 
         Args:
             circuits (Union[QuantumTape, Sequence[QuantumTape]]): the circuits to calculate derivatives for
-            execution_config (ExecutionConfig): a data structure with all additional information required for execution. Default is ``DefaultExecutionConfig``.
+            execution_config (ExecutionConfig): a data structure with all additional information required for execution. Default is ``None``, which sets the execution config to the default setup.
 
         Returns:
             Tuple: The jacobian for each trainable parameter
         """
+        if execution_config is None:
+            execution_config = ExecutionConfig(gradient_method="adjoint")
+
         batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
 
         return tuple(
@@ -434,17 +403,20 @@ class LightningBase(Device):
     def execute_and_compute_derivatives(
         self,
         circuits: QuantumTape_or_Batch,
-        execution_config: ExecutionConfig = DefaultExecutionConfig,
+        execution_config: ExecutionConfig | None = None,
     ) -> Tuple:
         """Compute the results and jacobians of circuits at the same time.
 
         Args:
             circuits (Union[QuantumTape, Sequence[QuantumTape]]): the circuits or batch of circuits
-            execution_config (ExecutionConfig): a data structure with all additional information required for execution. Default is ``DefaultExecutionConfig``.
+            execution_config (ExecutionConfig): a data structure with all additional information required for execution. Default is ``None``, which sets the execution config to the default setup.
 
         Returns:
             Tuple: A numeric result of the computation and the gradient.
         """
+        if execution_config is None:
+            execution_config = ExecutionConfig(gradient_method="adjoint")
+
         batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
         results = tuple(
             self.simulate_and_jacobian(
@@ -459,7 +431,7 @@ class LightningBase(Device):
 
     def supports_vjp(
         self,
-        execution_config: Optional[ExecutionConfig] = None,
+        execution_config: ExecutionConfig | None = None,
         circuit: Optional[QuantumTape] = None,
     ) -> bool:
         """Whether or not this device defines a custom vector jacobian product.
@@ -476,7 +448,7 @@ class LightningBase(Device):
         self,
         circuits: QuantumTape_or_Batch,
         cotangents: Tuple[Number],
-        execution_config: ExecutionConfig = DefaultExecutionConfig,
+        execution_config: ExecutionConfig | None = None,
     ) -> Tuple:
         r"""The vector jacobian product used in reverse-mode differentiation. ``Lightning[Device]`` uses the
         adjoint differentiation method to compute the VJP.
@@ -485,7 +457,8 @@ class LightningBase(Device):
             cotangents (Tuple[Number, Tuple[Number]]): Gradient-output vector. Must have shape matching the output shape of the
                 corresponding circuit. If the circuit has a single output, ``cotangents`` may be a single number, not an iterable
                 of numbers.
-            execution_config (ExecutionConfig): a datastructure with all additional information required for execution
+            execution_config (ExecutionConfig): a datastructure with all additional information required for execution.
+                Default is ``None``, which sets the execution config to the default setup.
         Returns:
             tensor-like: A numeric result of computing the vector jacobian product
         **Definition of vjp:**
@@ -504,6 +477,9 @@ class LightningBase(Device):
         * For ``n`` expectation values, the cotangents must have shape ``(n, batch_size)``. If ``n = 1``,
           then the shape must be ``(batch_size,)``.
         """
+        if execution_config is None:
+            execution_config = ExecutionConfig(gradient_method="adjoint")
+
         batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
         return tuple(
             self.vjp(
@@ -520,7 +496,7 @@ class LightningBase(Device):
         self,
         circuits: QuantumTape_or_Batch,
         cotangents: Tuple[Number],
-        execution_config: ExecutionConfig = DefaultExecutionConfig,
+        execution_config: ExecutionConfig | None = None,
     ) -> Tuple:
         """Calculate both the results and the vector jacobian product used in reverse-mode differentiation.
         Args:
@@ -532,6 +508,9 @@ class LightningBase(Device):
         Returns:
             Tuple, Tuple: the result of executing the scripts and the numeric result of computing the vector jacobian product
         """
+        if execution_config is None:
+            execution_config = ExecutionConfig(gradient_method="adjoint")
+
         batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
         results = tuple(
             self.simulate_and_vjp(
@@ -551,7 +530,8 @@ class LightningBase(Device):
         jaxpr: "jax.extend.core.Jaxpr",
         consts: list[TensorLike],
         *args: TensorLike,
-        execution_config: Optional[ExecutionConfig] = None,
+        execution_config: ExecutionConfig | None = None,
+        shots: ShotsLike = None,
     ) -> list[TensorLike]:
         """Execute pennylane variant jaxpr using C++ simulation tools.
 
@@ -561,7 +541,7 @@ class LightningBase(Device):
             *args (TensorLike): The arguments to the jaxpr.
 
         Keyword Args:
-            execution_config (Optional[ExecutionConfig]): a datastructure with additional
+            execution_config (ExecutionConfig | None): a datastructure with additional
                 information required for execution
 
         Returns:
@@ -612,19 +592,20 @@ class LightningBase(Device):
             num_wires=len(self.wires), dtype=self._c_dtype, rng=self._rng
         )
 
+        shots = Shots(shots)
         interpreter = LightningInterpreter(
-            self._statevector, self.LightningMeasurements, shots=self.shots
+            self._statevector, self.LightningMeasurements, shots=shots
         )
         evaluator = partial(interpreter.eval, jaxpr)
 
-        def shape(var):
+        def shape(var, shots):
             if isinstance(var.aval, AbstractMeasurement):
-                shots = self.shots.total_shots
+                shots = shots.total_shots
                 s, dtype = var.aval.abstract_eval(num_device_wires=len(self.wires), shots=shots)
                 return jax.core.ShapedArray(s, dtype_map[dtype])
             return var.aval
 
-        shapes = [shape(var) for var in jaxpr.outvars]
+        shapes = [shape(var, shots) for var in jaxpr.outvars]
         return jax.pure_callback(evaluator, shapes, consts, *args, vmap_method="sequential")
 
     def jaxpr_jvp(
@@ -632,7 +613,7 @@ class LightningBase(Device):
         jaxpr: "jax.extend.core.Jaxpr",
         args: Sequence[TensorLike],
         tangents: Sequence[TensorLike],
-        execution_config: Optional[ExecutionConfig] = None,
+        execution_config: ExecutionConfig | None = None,
     ) -> tuple[Sequence[TensorLike], Sequence[TensorLike]]:
         """
         An **experimental** method for computing the results and jvp for PLXPR with LightningBase devices.
@@ -646,7 +627,7 @@ class LightningBase(Device):
                 May contain ``jax.interpreters.ad.Zero``.
 
         Keyword Args:
-            execution_config (Optional[ExecutionConfig]): a data structure with additional information required for execution
+            execution_config (ExecutionConfig | None): a data structure with additional information required for execution
 
         Returns:
             Sequence[TensorLike], Sequence[TensorLike]: the results and Jacobian vector products
@@ -674,6 +655,8 @@ class LightningBase(Device):
         if self.wires is None:
             raise NotImplementedError("Wires must be specified for integration with plxpr capture.")
 
+        if execution_config is None:
+            execution_config = ExecutionConfig(gradient_method="adjoint")
         gradient_method = getattr(execution_config, "gradient_method", "adjoint")
 
         if gradient_method != "adjoint":

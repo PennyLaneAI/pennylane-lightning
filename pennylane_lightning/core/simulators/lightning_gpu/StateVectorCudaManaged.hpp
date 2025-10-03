@@ -280,8 +280,29 @@ class StateVectorCudaManaged
                         const std::vector<std::size_t> &wires, bool adjoint,
                         const std::vector<Precision> &params,
                         const std::vector<ComplexT> &matrix) {
-        std::vector<CFP_t> matrix_cu(matrix.size());
-        std::transform(matrix.begin(), matrix.end(), matrix_cu.begin(),
+        applyOperation(opName, wires, adjoint, params, matrix.data(),
+                       matrix.size());
+    }
+
+    /**
+     * @brief Apply a single gate to the state-vector. Offloads to custatevec
+     * specific API calls if available. If unable, attempts to use prior cached
+     * gate values on the device. Lastly, accepts a host-provided matrix if
+     * otherwise, and caches on the device for later reuse.
+     *
+     * @param opName Name of gate to apply.
+     * @param wires Wires to apply gate to.
+     * @param adjoint Indicates whether to use adjoint of gate.
+     * @param params Optional parameter list for parametric gates.
+     * @param matrix Gate data (in row-major format).
+     * @param mat_size The number of components in the gate matrix
+     */
+    void applyOperation(const std::string &opName,
+                        const std::vector<std::size_t> &wires, bool adjoint,
+                        const std::vector<Precision> &params,
+                        const ComplexT *matrix, const size_t mat_size) {
+        std::vector<CFP_t> matrix_cu(mat_size);
+        std::transform(matrix, matrix + mat_size, matrix_cu.begin(),
                        [](const std::complex<Precision> &x) {
                            return cuUtil::complexToCu<std::complex<Precision>>(
                                x);
@@ -669,6 +690,10 @@ class StateVectorCudaManaged
             /* const uint32_t nBasisBits */ basisBits.size()));
 
         const double norm = branch ? abs2sum1 : abs2sum0;
+
+        PL_ABORT_IF(norm < std::numeric_limits<PrecisionT>::epsilon() * 1e2,
+                    "Chosen branch has vector norm close to zero and cannot be "
+                    "normalized");
 
         const int parity = static_cast<int>(branch);
 

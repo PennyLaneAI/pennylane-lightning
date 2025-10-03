@@ -24,7 +24,6 @@ import pennylane as qml
 from pennylane.devices.qubit.sampling import _group_measurements
 from pennylane.measurements import (
     ClassicalShadowMP,
-    CountsMP,
     ExpectationMP,
     MeasurementProcess,
     ProbabilityMP,
@@ -457,15 +456,7 @@ class LightningBaseMeasurements(ABC):
             wires = qml.wires.Wires(range(total_indices))
 
         def _process_single_shot(samples):
-            processed = []
-            for mp in mps:
-                res = mp.process_samples(samples, wires)
-                if not isinstance(mp, CountsMP):
-                    res = qml.math.squeeze(res)
-
-                processed.append(res)
-
-            return tuple(processed)
+            return tuple(mp.process_samples(samples, wires) for mp in mps)
 
         try:
             if self._mcmc:
@@ -516,5 +507,5 @@ class LightningBaseMeasurements(ABC):
             )
             return sum(results)
 
-        unsqueezed_results = tuple(_sum_for_single_shot(type(shots)(s)) for s in shots)
-        return [unsqueezed_results] if shots.has_partitioned_shots else [unsqueezed_results[0]]
+        results = tuple(_sum_for_single_shot(type(shots)(s)) for s in shots)
+        return [results] if shots.has_partitioned_shots else [results[0]]

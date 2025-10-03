@@ -1,4 +1,4 @@
-// Copyright 2024 Xanadu Quantum Technologies Inc.
+// Copyright 2025 Xanadu Quantum Technologies Inc.
 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,88 +14,101 @@
 
 /**
  * @file BindingsCudaUtils.hpp
- * Defines CUDA device - specific operations to export to Python, other
- * utility functions interfacing with Pybind11 and support to agnostic bindings.
+ * Defines CUDA device-specific operations to export to Python, other
+ * utility functions interfacing with Nanobind and support to agnostic bindings.
  */
 
 #pragma once
 
-#include "BindingsBase.hpp"
+#include "BindingsUtils.hpp"
 #include "DevTag.hpp"
 #include "DevicePool.hpp"
 #include "cuda_helpers.hpp"
 
+#include <nanobind/nanobind.h>
+
 /// @cond DEV
 namespace {
-using namespace Pennylane;
-using namespace Pennylane::Bindings;
+using namespace Pennylane::LightningGPU;
+using namespace Pennylane::LightningGPU::Util;
 } // namespace
 /// @endcond
+namespace Pennylane::Util::NanoBindings {
+namespace nb = nanobind;
 
-namespace py = pybind11;
-
-namespace Pennylane::LightningGPU::Util {
 /**
  * @brief Register bindings for CUDA utils.
  *
- * @param m Pybind11 module.
+ * Register the device_reset and allToAllAccess functions to the given module.
+ *
+ * @param m Nanobind module.
  */
-void registerCudaUtils(py::module_ &m) {
+void registerCudaUtils(nb::module_ &m) {
+    /* device_reset function */
     m.def("device_reset", &deviceReset, "Reset all GPU devices and contexts.");
+
+    /* allToAllAccess function */
     m.def("allToAllAccess", []() {
         for (int i = 0; i < static_cast<int>(getGPUCount()); i++) {
             cudaDeviceEnablePeerAccess(i, 0);
         }
     });
 
+    /* is_gpu_supported function */
     m.def("is_gpu_supported", &isCuQuantumSupported,
-          py::arg("device_number") = 0,
+          nb::arg("device_number") = 0,
           "Checks if the given GPU device meets the minimum architecture "
           "support for the PennyLane-Lightning-GPU device.");
 
-    m.def("get_gpu_arch", &getGPUArch, py::arg("device_number") = 0,
+    /* get_gpu_arch function */
+    m.def("get_gpu_arch", &getGPUArch, nb::arg("device_number") = 0,
           "Returns the given GPU major and minor GPU support.");
-    py::class_<DevicePool<int>>(m, "DevPool")
-        .def(py::init<>())
-        .def("getActiveDevices", &DevicePool<int>::getActiveDevices)
-        .def("isActive", &DevicePool<int>::isActive)
-        .def("isInactive", &DevicePool<int>::isInactive)
-        .def("acquireDevice", &DevicePool<int>::acquireDevice)
-        .def("releaseDevice", &DevicePool<int>::releaseDevice)
-        .def("syncDevice", &DevicePool<int>::syncDevice)
-        .def("refresh", &DevicePool<int>::refresh)
-        .def_static("getTotalDevices", &DevicePool<int>::getTotalDevices)
-        .def_static("getDeviceUIDs", &DevicePool<int>::getDeviceUIDs)
-        .def_static("setDeviceID", &DevicePool<int>::setDeviceIdx)
-        .def(py::pickle(
-            []([[maybe_unused]] const DevicePool<int> &self) { // __getstate__
-                return py::make_tuple();
-            },
-            [](py::tuple &t) { // __setstate__
-                if (t.size() != 0) {
-                    throw std::runtime_error("Invalid state!");
-                }
-                return DevicePool<int>{};
-            }));
 
-    py::class_<DevTag<int>>(m, "DevTag")
-        .def(py::init<>())
-        .def(py::init<int>())
-        .def(py::init([](int device_id, void *stream_id) {
-            // Note, streams must be handled externally for now.
-            // Binding support provided through void* conversion to cudaStream_t
-            return new DevTag<int>(device_id,
-                                   static_cast<cudaStream_t>(stream_id));
-        }))
-        .def(py::init<const DevTag<int> &>())
-        .def("getDeviceID", &DevTag<int>::getDeviceID)
-        .def("getStreamID",
-             [](DevTag<int> &dev_tag) {
-                 // default stream points to nullptr, so just return void* as
-                 // type
-                 return static_cast<void *>(dev_tag.getStreamID());
-             })
-        .def("refresh", &DevTag<int>::refresh);
+    /* DevicePool class */
+    auto pyclass_devpool = nb::class_<DevicePool<int>>(m, "DevPool");
+    pyclass_devpool.def(nb::init<>());
+    pyclass_devpool.def("getActiveDevices", &DevicePool<int>::getActiveDevices);
+    pyclass_devpool.def("isActive", &DevicePool<int>::isActive);
+    pyclass_devpool.def("isInactive", &DevicePool<int>::isInactive);
+    pyclass_devpool.def("acquireDevice", &DevicePool<int>::acquireDevice);
+    pyclass_devpool.def("releaseDevice", &DevicePool<int>::releaseDevice);
+    pyclass_devpool.def("syncDevice", &DevicePool<int>::syncDevice);
+    pyclass_devpool.def("refresh", &DevicePool<int>::refresh);
+    pyclass_devpool.def_static("getTotalDevices",
+                               &DevicePool<int>::getTotalDevices);
+    pyclass_devpool.def_static("getDeviceUIDs",
+                               &DevicePool<int>::getDeviceUIDs);
+    pyclass_devpool.def_static("setDeviceID", &DevicePool<int>::setDeviceIdx);
+    pyclass_devpool.def(
+        "__getstate__",
+        []([[maybe_unused]] const DevicePool<int> &self) { // __getstate__
+            return nb::make_tuple();
+        });
+    pyclass_devpool.def("__setstate__", [](DevicePool<int> &self,
+                                           nb::tuple &t) { // __setstate__
+        if (t.size() != 0) {
+            throw std::runtime_error("Invalid state!");
+        }
+
+        new (&self) DevicePool<int>(); // Reconstruct the object
+    });
+
+    /* DevTag class */
+    auto pyclass_devtag = nb::class_<DevTag<int>>(m, "DevTag");
+    pyclass_devtag.def(nb::init<>());
+    pyclass_devtag.def(nb::init<int>());
+    pyclass_devtag.def(nb::init<const DevTag<int> &>());
+    pyclass_devtag.def("__init__", [](int device_id, void *stream_id) {
+        // The lower level `__init__` needs to be defined directly to
+        // support type casting
+        return DevTag<int>(device_id, static_cast<cudaStream_t>(stream_id));
+    });
+    pyclass_devtag.def("getDeviceID", &DevTag<int>::getDeviceID);
+    pyclass_devtag.def("getStreamID", [](DevTag<int> &dev_tag) {
+        // default stream points to nullptr, so just return void* as
+        // type
+        return static_cast<void *>(dev_tag.getStreamID());
+    });
+    pyclass_devtag.def("refresh", &DevTag<int>::refresh);
 }
-
-} // namespace Pennylane::LightningGPU::Util
+} // namespace Pennylane::Util::NanoBindings

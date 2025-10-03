@@ -66,13 +66,13 @@ extern void normalizeProbs_CUDA(double *probs, const int data_size,
  */
 template <class TensorNetT> class MeasurementsTNCuda {
   private:
+    const TensorNetT &tensor_network_;
+
+  public:
     using PrecisionT = typename TensorNetT::PrecisionT;
     using ComplexT = typename TensorNetT::ComplexT;
     using CFP_t = typename TensorNetT::CFP_t;
 
-    const TensorNetT &tensor_network_;
-
-  public:
     explicit MeasurementsTNCuda(const TensorNetT &tensor_network)
         : tensor_network_(tensor_network){};
 
@@ -269,7 +269,8 @@ template <class TensorNetT> class MeasurementsTNCuda {
             /* cudaStream_t unused as of v24.08 */ 0x0));
 
         std::size_t worksize =
-            getWorkSpaceMemorySize(tensor_network_.getTNCudaHandle(), workDesc);
+            getWorkSpaceMemorySize(tensor_network_.getTNCudaHandle(), workDesc,
+                                   tensor_network_.getWorksizePref());
 
         PL_ABORT_IF(worksize > scratchSize,
                     "Insufficient workspace size on Device.\n");
@@ -396,7 +397,8 @@ template <class TensorNetT> class MeasurementsTNCuda {
             /* cudaStream_t [unused] */ 0x0));
 
         std::size_t worksize =
-            getWorkSpaceMemorySize(tensor_network_.getTNCudaHandle(), workDesc);
+            getWorkSpaceMemorySize(tensor_network_.getTNCudaHandle(), workDesc,
+                                   tensor_network_.getWorksizePref());
 
         PL_ABORT_IF(worksize > scratchSize,
                     "Insufficient workspace size on Device.\n");

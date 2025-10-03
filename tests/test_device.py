@@ -80,7 +80,7 @@ def test_create_device_with_unsupported_mpi_buf_size():
 
 @pytest.mark.skipif(
     device_name != "lightning.gpu",
-    reason="Check if the method is pickleable throught the cpp layer",
+    reason="Check if the method is pickleable through the cpp layer",
 )
 def test_devpool_is_pickleable():
     dev = qml.device(device_name, wires=2)

@@ -16,7 +16,7 @@ This module contains the :class:`~.LightningKokkos` class, a PennyLane simulator
 interfaces with C++ for fast linear algebra calculations.
 """
 from dataclasses import replace
-from functools import reduce
+from functools import partial, reduce
 from pathlib import Path
 from typing import List, Optional, Union
 from warnings import warn
@@ -25,12 +25,12 @@ import numpy as np
 import pennylane as qml
 from numpy.random import BitGenerator, Generator, SeedSequence
 from numpy.typing import ArrayLike
-from pennylane.devices import DefaultExecutionConfig, ExecutionConfig, MCMConfig
+from pennylane.devices import ExecutionConfig, MCMConfig
 from pennylane.devices.capabilities import OperatorProperties
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
 from pennylane.devices.preprocess import (
     decompose,
-    mid_circuit_measurements,
+    device_resolve_dynamic_wires,
     no_sampling,
     validate_adjoint_trainable_params,
     validate_device_wires,
@@ -41,6 +41,7 @@ from pennylane.exceptions import DecompositionUndefinedError, DeviceError
 from pennylane.measurements import MidMeasureMP
 from pennylane.operation import Operator
 from pennylane.ops import Conditional, PauliRot, Prod, SProd, Sum
+from pennylane.transforms import defer_measurements, dynamic_one_shot
 from pennylane.transforms.core import TransformProgram
 
 from pennylane_lightning.lightning_base.lightning_base import (
@@ -75,28 +76,22 @@ _to_matrix_ops = {
 }
 
 
-def stopping_condition(op: Operator) -> bool:
+def stopping_condition(op: Operator, allow_mcms: bool = True) -> bool:
     """A function that determines whether or not an operation is supported by ``lightning.kokkos``."""
     if isinstance(op, qml.PauliRot):
         word = op._hyperparameters["pauli_word"]  # pylint: disable=protected-access
         # decomposes to IsingXX, etc. for n <= 2
         return reduce(lambda x, y: x + (y != "I"), word, 0) > 2
-    if op.name in ("C(SProd)", "C(Exp)"):
-        return True
 
-    if (isinstance(op, Conditional) and stopping_condition(op.base)) or isinstance(
-        op, MidMeasureMP
-    ):
-        # Conditional and MidMeasureMP should not be decomposed
-        return True
+    if isinstance(op, MidMeasureMP):
+        return allow_mcms
 
     return _supports_operation(op.name)
 
 
-def stopping_condition_shots(op: Operator) -> bool:
-    """A function that determines whether or not an operation is supported by ``lightning.kokkos``
-    with finite shots."""
-    return stopping_condition(op) or isinstance(op, (MidMeasureMP, qml.ops.op_math.Conditional))
+# need to create these once so we can compare in tests
+allow_mcms_stopping_condition = partial(stopping_condition, allow_mcms=True)
+no_mcms_stopping_condition = partial(stopping_condition, allow_mcms=False)
 
 
 def accepted_observables(obs: Operator) -> bool:
@@ -124,12 +119,12 @@ def adjoint_measurements(mp: qml.measurements.MeasurementProcess) -> bool:
     return isinstance(mp, qml.measurements.ExpectationMP)
 
 
-def _supports_adjoint(circuit):
+def _supports_adjoint(circuit, device_wires=None):
     if circuit is None:
         return True
 
     prog = TransformProgram()
-    _add_adjoint_transforms(prog)
+    _add_adjoint_transforms(prog, device_wires=device_wires)
 
     try:
         prog((circuit,))
@@ -147,7 +142,7 @@ def _adjoint_ops(op: qml.operation.Operator) -> bool:
     )
 
 
-def _add_adjoint_transforms(program: TransformProgram) -> None:
+def _add_adjoint_transforms(program: TransformProgram, device_wires=None) -> None:
     """Private helper function for ``preprocess`` that adds the transforms specific
     for adjoint differentiation.
 
@@ -165,9 +160,10 @@ def _add_adjoint_transforms(program: TransformProgram) -> None:
     program.add_transform(
         decompose,
         stopping_condition=_adjoint_ops,
-        stopping_condition_shots=stopping_condition_shots,
         name=name,
         skip_initial_state_prep=False,
+        device_wires=device_wires,
+        target_gates=LightningKokkos.capabilities.operations.keys(),
     )
     program.add_transform(validate_observables, accepted_observables, name=name)
     program.add_transform(
@@ -276,10 +272,14 @@ class LightningKokkos(LightningBase):
         self.LightningMeasurements = LightningKokkosMeasurements
         self.LightningAdjointJacobian = LightningKokkosAdjointJacobian
 
-    def _setup_execution_config(self, config):
+    def setup_execution_config(
+        self, config: ExecutionConfig | None = None, circuit: qml.tape.QuantumScript | None = None
+    ) -> ExecutionConfig:
         """
         Update the execution config with choices for how the device should be used and the device options.
         """
+        if config is None:
+            config = ExecutionConfig()
         updated_values = {}
 
         # It is necessary to set the mcmc default configuration to complete the requirements of ExecuteConfig
@@ -312,10 +312,12 @@ class LightningKokkos(LightningBase):
 
         new_device_options.update(mcmc_default)
 
-        updated_values["mcm_config"] = _resolve_mcm_method(config.mcm_config)
+        updated_values["mcm_config"] = _resolve_mcm_method(config.mcm_config, circuit)
         return replace(config, **updated_values, device_options=new_device_options)
 
-    def preprocess(self, execution_config: ExecutionConfig = DefaultExecutionConfig):
+    def preprocess_transforms(
+        self, execution_config: ExecutionConfig | None = None
+    ) -> TransformProgram:
         """This function defines the device transform program to be applied and an updated device configuration.
 
         Args:
@@ -334,42 +336,56 @@ class LightningKokkos(LightningBase):
         * Currently does not intrinsically support parameter broadcasting
 
         """
-        exec_config = self._setup_execution_config(execution_config)
+        if execution_config is None:
+            execution_config = ExecutionConfig()
+        exec_config = execution_config
         program = TransformProgram()
 
         if qml.capture.enabled():
 
             if exec_config.mcm_config.mcm_method == "deferred":
                 program.add_transform(qml.defer_measurements, num_wires=len(self.wires))
-            # Using stopping_condition_shots because we don't want to decompose Conditionals or MCMs
-            program.add_transform(qml.transforms.decompose, gate_set=stopping_condition_shots)
-            return program, exec_config
+            program.add_transform(qml.transforms.decompose, gate_set=no_mcms_stopping_condition)
+            return program
 
         program.add_transform(validate_measurements, name=self.name)
         program.add_transform(validate_observables, accepted_observables, name=self.name)
-        program.add_transform(
-            mid_circuit_measurements, device=self, mcm_config=exec_config.mcm_config
-        )
-        program.add_transform(validate_device_wires, self.wires, name=self.name)
+        if exec_config.mcm_config.mcm_method == "deferred":
+            program.add_transform(defer_measurements, allow_postselect=False)
+            _stopping_condition = no_mcms_stopping_condition
+        else:
+            _stopping_condition = allow_mcms_stopping_condition
 
         program.add_transform(
             decompose,
-            stopping_condition=stopping_condition,
-            stopping_condition_shots=stopping_condition_shots,
+            stopping_condition=_stopping_condition,
             skip_initial_state_prep=True,
             name=self.name,
+            device_wires=self.wires,
+            target_gates=self.capabilities.operations.keys(),
         )
+
+        _allow_resets = exec_config.mcm_config.mcm_method != "deferred"
+        program.add_transform(
+            device_resolve_dynamic_wires, wires=self.wires, allow_resets=_allow_resets
+        )
+        program.add_transform(validate_device_wires, self.wires, name=self.name)
+        if exec_config.mcm_config.mcm_method == "one-shot":
+            program.add_transform(
+                dynamic_one_shot, postselect_mode=exec_config.mcm_config.postselect_mode
+            )
+
         program.add_transform(qml.transforms.broadcast_expand)
 
         if exec_config.gradient_method == "adjoint":
-            _add_adjoint_transforms(program)
-        return program, exec_config
+            _add_adjoint_transforms(program, device_wires=self.wires)
+        return program
 
     # pylint: disable=unused-argument
     def execute(
         self,
         circuits: QuantumTape_or_Batch,
-        execution_config: ExecutionConfig = DefaultExecutionConfig,
+        execution_config: ExecutionConfig | None = None,
     ) -> Result_or_ResultBatch:
         """Execute a circuit or a batch of circuits and turn it into results.
 
@@ -380,6 +396,8 @@ class LightningKokkos(LightningBase):
         Returns:
             TensorLike, tuple[TensorLike], tuple[tuple[TensorLike]]: A numeric result of the computation.
         """
+        if execution_config is None:
+            execution_config = ExecutionConfig()
         results = []
         for circuit in circuits:
             if self._wire_map is not None:
@@ -397,7 +415,7 @@ class LightningKokkos(LightningBase):
 
     def supports_derivatives(
         self,
-        execution_config: Optional[ExecutionConfig] = None,
+        execution_config: ExecutionConfig | None = None,
         circuit: Optional[qml.tape.QuantumTape] = None,
     ) -> bool:
         """Check whether or not derivatives are available for a given configuration and circuit.
@@ -414,11 +432,13 @@ class LightningKokkos(LightningBase):
         """
         if execution_config is None and circuit is None:
             return True
-        if execution_config.gradient_method not in {"adjoint", "best"}:
-            return False
-        if circuit is None:
-            return True
-        return _supports_adjoint(circuit=circuit)
+
+        if execution_config and execution_config.gradient_method in {"adjoint", "best"}:
+            if circuit is None:
+                return True
+            return _supports_adjoint(circuit=circuit, device_wires=self.wires)
+
+        return False
 
     @staticmethod
     def get_c_interface():
@@ -429,7 +449,7 @@ class LightningKokkos(LightningBase):
         return LightningBase.get_c_interface_impl("LightningKokkosSimulator", "lightning_kokkos")
 
 
-def _resolve_mcm_method(mcm_config: MCMConfig):
+def _resolve_mcm_method(mcm_config: MCMConfig, tape):
     """Resolve the mcm method for the LightningKokkos device"""
 
     mcm_supported_methods = (
@@ -441,8 +461,12 @@ def _resolve_mcm_method(mcm_config: MCMConfig):
     if (mcm_method := mcm_config.mcm_method) not in mcm_supported_methods:
         raise DeviceError(f"mcm_method='{mcm_method}' is not supported with lightning.kokkos.")
 
-    if mcm_config.mcm_method == "device":
-        mcm_config = replace(mcm_config, mcm_method="tree-traversal")
+    final_mcm_method = mcm_config.mcm_method
+    if mcm_config.mcm_method is None:
+        final_mcm_method = "one-shot" if getattr(tape, "shots", None) else "deferred"
+    elif mcm_config.mcm_method == "device":
+        final_mcm_method = "tree-traversal"
+    mcm_config = replace(mcm_config, mcm_method=final_mcm_method)
 
     if qml.capture.enabled():
 

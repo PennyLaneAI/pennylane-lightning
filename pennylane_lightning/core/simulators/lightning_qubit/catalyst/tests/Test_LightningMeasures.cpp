@@ -112,7 +112,7 @@ TEST_CASE("Measurement collapse concrete logical qubit difference",
     // The first time an array is allocated, logical and concrete qubits
     // are the same.
     std::vector<intptr_t> Qs = sim->AllocateQubits(n);
-    sim->ReleaseAllQubits();
+    sim->ReleaseQubits(Qs);
 
     // Now in this the concrete qubits are shifted by n.
     Qs = sim->AllocateQubits(n);

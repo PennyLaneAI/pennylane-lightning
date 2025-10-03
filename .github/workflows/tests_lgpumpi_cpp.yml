@@ -67,12 +67,12 @@ jobs:
         run: |
           git fetch tags --force
           git checkout latest_release
-          
+
       - uses: actions/setup-python@v5
         id: setup_python
         name: Install Python
         with:
-          python-version: '3.10'
+          python-version: '3.12'
 
       # Since the self-hosted runner can be re-used. It is best to set up all package
       # installations in a virtual environment that gets cleaned at the end of each workflow run
@@ -159,7 +159,8 @@ jobs:
             echo "Tests failed. Exiting with error code."
             exit 1
           fi
-          lcov --directory . -b ../pennylane_lightning/core --capture --output-file coverage.info
+          lcov --directory . -b ../pennylane_lightning/core --capture --output-file coverage.info \
+               --gcov-tool /usr/bin/gcov-13
           lcov --remove coverage.info '/usr/*' --output-file coverage.info
           mv coverage.info coverage-${{ github.job }}-lightning_gpu_${{ matrix.mpilib }}.info
 

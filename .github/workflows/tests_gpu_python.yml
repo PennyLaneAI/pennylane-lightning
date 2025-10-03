@@ -96,12 +96,13 @@ jobs:
         with:
           repository: PennyLaneAI/catalyst
           path: ${{ github.workspace}}/catalyst
+          ref: ${{ (inputs.pennylane-version == 'stable' && 'v0.12.0') || 'main' }} # FIXME: remove after v0.43 release
 
       - uses: actions/setup-python@v5
         id: setup_python
         name: Install Python
         with:
-          python-version: '3.10'
+          python-version: '3.12'
 
       - name: Setup Python virtual environment
         id: setup_venv

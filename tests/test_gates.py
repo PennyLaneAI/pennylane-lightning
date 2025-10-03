@@ -962,3 +962,21 @@ def test_controlled_adjoint_qubit_unitary(n_qubits, control_value, tol):
                 circ = qml.QNode(circuit, dev)
                 circ_def = qml.QNode(circuit, dev_def)
                 assert np.allclose(circ(), circ_def(), tol)
+
+
+@pytest.mark.parametrize("operation", [-1 * qml.PauliZ(0), qml.exp(1j * qml.PauliX(0))])
+def test_controlled_math_op_gates(operation, tol):
+    """Test that gates created via controlled op_math (e.g. C(Exp), C(SProd)) are correctly applied to a state"""
+    n_qubits = 3
+    dev_def = qml.device("default.qubit", wires=n_qubits)
+    dev = qml.device(device_name, wires=n_qubits)
+    init_state = get_random_normalized_state(2**n_qubits)
+
+    def circuit():
+        qml.StatePrep(init_state, wires=range(n_qubits))
+        qml.ctrl(operation, control=[2])
+        return qml.state()
+
+    circ = qml.QNode(circuit, dev)
+    circ_def = qml.QNode(circuit, dev_def)
+    assert np.allclose(circ(), circ_def(), tol)

@@ -34,7 +34,6 @@ import pennylane as qml
 from pennylane.devices.qubit.sampling import _group_measurements
 from pennylane.measurements import (
     ClassicalShadowMP,
-    CountsMP,
     ExpectationMP,
     MeasurementProcess,
     ProbabilityMP,
@@ -373,15 +372,7 @@ class LightningTensorMeasurements:
         wires = reduce(sum, (mp.wires for mp in mps))
 
         def _process_single_shot(samples):
-            processed = []
-            for mp in mps:
-                res = mp.process_samples(samples, wires)
-                if not isinstance(mp, CountsMP):
-                    res = qml.math.squeeze(res)
-
-                processed.append(res)
-
-            return tuple(processed)
+            return tuple(mp.process_samples(samples, wires) for mp in mps)
 
         try:
             samples = self._measurement_lightning.generate_samples(

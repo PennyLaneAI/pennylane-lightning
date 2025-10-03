@@ -12,33 +12,55 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <unordered_set>
+
 #include "LightningGPUSimulator.hpp"
 
 namespace Catalyst::Runtime::Simulator {
 
 auto LightningGPUSimulator::AllocateQubit() -> QubitIdType {
-    const std::size_t num_qubits = this->device_sv->getNumQubits();
-
-    if (!num_qubits) {
+    const size_t num_qubits = GetNumQubits();
+    if (num_qubits == 0U) {
         this->device_sv = std::make_unique<StateVectorT>(1);
-        return this->qubit_manager.Allocate(num_qubits);
+        return this->qubit_manager.Allocate(0);
     }
 
-    std::vector<std::complex<double>> data = this->device_sv->getDataVector();
-    const std::size_t dsize = data.size();
-    data.resize(dsize << 1UL);
+    // The statevector may contain previously freed qubits,
+    // that means we may not need to resize the vector.
+    size_t device_idx;
+    QubitIdType new_program_idx;
+    std::optional<size_t> candidate = this->qubit_manager.popFreeQubit();
+    if (!candidate.has_value()) {
+        // TODO: update statevector directly on device
+        const auto &original_data = this->device_sv->getDataVector();
 
-    auto src = data.begin();
-    std::advance(src, dsize - 1);
+        const size_t dsize = original_data.size();
+        RT_ASSERT(dsize == 1UL << num_qubits);
 
-    for (auto dst = data.end() - 2; src != data.begin();
-         std::advance(src, -1), std::advance(dst, -2)) {
-        *dst = std::move(*src);
-        *src = std::complex<double>(.0, .0);
+        std::vector<std::complex<double>> new_data(dsize << 1UL);
+
+        device_idx = num_qubits;
+        for (size_t i = 0; i < original_data.size(); i++) {
+            new_data[2 * i] = original_data[i];
+        }
+        this->device_sv =
+            std::make_unique<StateVectorT>(new_data.data(), new_data.size());
+        new_program_idx = this->qubit_manager.Allocate(device_idx);
+    } else {
+        device_idx = candidate.value();
+
+        // Reuse existing space in the statevector by collapsing onto |0>.
+        // The collapse is performed by a measurement followed by an X gate if
+        // measured 1.
+        new_program_idx = this->qubit_manager.Allocate(device_idx);
+        Result mres = this->Measure(new_program_idx);
+        if (*mres) {
+            this->NamedOperation("PauliX", {}, {new_program_idx}, false, {},
+                                 {});
+        }
     }
 
-    this->device_sv = std::make_unique<StateVectorT>(data.data(), data.size());
-    return this->qubit_manager.Allocate(num_qubits);
+    return new_program_idx;
 }
 
 auto LightningGPUSimulator::AllocateQubits(std::size_t num_qubits)
@@ -60,16 +82,36 @@ auto LightningGPUSimulator::AllocateQubits(std::size_t num_qubits)
 }
 
 void LightningGPUSimulator::ReleaseQubit(QubitIdType q) {
+    // We do not deallocate physical memory in the statevector for this
+    // operation, instead we just mark the qubits as released.
     this->qubit_manager.Release(q);
 }
 
-void LightningGPUSimulator::ReleaseAllQubits() {
-    this->qubit_manager.ReleaseAll();
-    this->device_sv = std::make_unique<StateVectorT>(0); // reset the device
+void LightningGPUSimulator::ReleaseQubits(const std::vector<QubitIdType> &ids) {
+    // fast path for single register alloc and dealloc
+    if (GetNumQubits() == ids.size()) {
+        std::vector<QubitIdType> allocated_ids =
+            this->qubit_manager.getAllQubitIds();
+        std::unordered_set<QubitIdType> allocated_set(allocated_ids.begin(),
+                                                      allocated_ids.end());
+        bool deallocate_all =
+            std::all_of(ids.begin(), ids.end(), [&](QubitIdType id) {
+                return allocated_set.contains(id);
+            });
+        if (deallocate_all) {
+            this->qubit_manager.ReleaseAll();
+            this->device_sv = std::make_unique<StateVectorT>(0);
+            return;
+        }
+    }
+
+    for (auto id : ids) {
+        this->qubit_manager.Release(id);
+    }
 }
 
 auto LightningGPUSimulator::GetNumQubits() const -> std::size_t {
-    return this->device_sv->getNumQubits();
+    return this->qubit_manager.getNumQubits();
 }
 
 void LightningGPUSimulator::StartTapeRecording() {
@@ -369,10 +411,10 @@ void LightningGPUSimulator::Counts(DataView<double, 1> &eigvals,
 
     auto li_samples = this->GenerateSamples(device_shots);
 
-    // Fill the eigenvalues with the integer representation of the corresponding
-    // computational basis bitstring. In the future, eigenvalues can also be
-    // obtained from an observable, hence the bitstring integer is stored as a
-    // double.
+    // Fill the eigenvalues with the integer representation of the
+    // corresponding computational basis bitstring. In the future,
+    // eigenvalues can also be obtained from an observable, hence the
+    // bitstring integer is stored as a double.
     std::iota(eigvals.begin(), eigvals.end(), 0);
     std::fill(counts.begin(), counts.end(), 0);
 
@@ -407,10 +449,10 @@ void LightningGPUSimulator::PartialCounts(
 
     auto li_samples = this->GenerateSamples(device_shots);
 
-    // Fill the eigenvalues with the integer representation of the corresponding
-    // computational basis bitstring. In the future, eigenvalues can also be
-    // obtained from an observable, hence the bitstring integer is stored as a
-    // double.
+    // Fill the eigenvalues with the integer representation of the
+    // corresponding computational basis bitstring. In the future,
+    // eigenvalues can also be obtained from an observable, hence the
+    // bitstring integer is stored as a double.
     std::iota(eigvals.begin(), eigvals.end(), 0);
     std::fill(counts.begin(), counts.end(), 0);
 
@@ -471,10 +513,10 @@ void LightningGPUSimulator::Gradient(
     bool is_valid_measurements =
         std::all_of(obs_callees.begin(), obs_callees.end(),
                     [](const auto &m) { return m == MeasurementsT::Expval; });
-    RT_FAIL_IF(
-        !is_valid_measurements,
-        "Unsupported measurements to compute gradient; "
-        "Adjoint differentiation method only supports expectation return type");
+    RT_FAIL_IF(!is_valid_measurements,
+               "Unsupported measurements to compute gradient; "
+               "Adjoint differentiation method only supports expectation "
+               "return type");
 
     // Create OpsData
     auto &&ops_names = this->cache_manager.getOperationsNames();

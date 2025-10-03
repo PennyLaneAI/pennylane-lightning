@@ -163,6 +163,31 @@ class TNCuda : public TNCudaBase<PrecisionT, Derived> {
     }
 
     /**
+     * @brief Set Workspace Size Preference for cutensornet backend.
+     */
+    void setWorksizePref(std::string_view pref) {
+        if (pref == "recommended") {
+            worksize_pref_ = CUTENSORNET_WORKSIZE_PREF_RECOMMENDED;
+        } else if (pref == "max") {
+            worksize_pref_ = CUTENSORNET_WORKSIZE_PREF_MAX;
+        } else if (pref == "min") {
+            worksize_pref_ = CUTENSORNET_WORKSIZE_PREF_MIN;
+        } else {
+            PL_ABORT("Invalid workspace preference. Please choose from "
+                     "'recommended', 'max', or 'min'.");
+        }
+    }
+
+    /**
+     * @brief Get the Worksize Pref setting.
+     *
+     * @return const cutensornetWorksizePref_t
+     */
+    [[nodiscard]] cutensornetWorksizePref_t getWorksizePref() const {
+        return worksize_pref_;
+    }
+
+    /**
      * @brief Update quantum state with a basis state.
      * NOTE: This API assumes the bond vector is a standard basis vector
      * ([1,0,0,......]) and current implementation only works for qubit systems.
@@ -281,6 +306,33 @@ class TNCuda : public TNCudaBase<PrecisionT, Derived> {
         for (std::size_t i = 0; i < numOperations; i++) {
             applyOperation(ops[i], ops_wires[i], ops_adjoint[i], {});
         }
+    }
+
+    /**
+     * @brief Append a single controlled gate tensor to the compute graph.
+     *
+     * NOTE: This function does not update the quantum state but only appends
+     * gate tensor operator to the graph. The controlled gate should be
+     * immutable as v24.08.
+     *
+     * @param baseOpName Base gate's name.
+     * @param controlled_wires Controlled wires for the gate.
+     * @param controlled_values Controlled values for the gate.
+     * @param targetWires Target wires for the gate.
+     * @param adjoint Indicates whether to use adjoint of gate.
+     * @param params Optional parameter list for parametric gates.
+     * @param gate_matrix Optional gate matrix for custom gates.
+     */
+    inline void applyOperation(const std::string &baseOpName,
+                               const std::vector<std::size_t> &controlled_wires,
+                               const std::vector<bool> &controlled_values,
+                               const std::vector<std::size_t> &targetWires,
+                               bool adjoint = false,
+                               const std::vector<PrecisionT> &params = {0.0},
+                               const std::vector<ComplexT> &gate_matrix = {}) {
+        applyControlledOperation(baseOpName, controlled_wires,
+                                 controlled_values, targetWires, adjoint,
+                                 params, gate_matrix);
     }
 
     /**
@@ -432,6 +484,24 @@ class TNCuda : public TNCudaBase<PrecisionT, Derived> {
     }
 
     /**
+     * @brief Append a single gate tensor specified as a matrix to the compute
+     * graph. NOTE: This function does not update the quantum state but only
+     * appends gate tensor operator to the graph.
+     * @param matrix The gate matrix for custom gates. This should be a region
+     * of memory with a size equal to 2^(wires.size()*2)
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicates whether to use adjoint of gate.
+     */
+    inline void applyMatrix(const ComplexT *matrix,
+                            const std::vector<std::size_t> &wires,
+                            bool inverse = false) {
+        std::size_t size = Pennylane::Util::exp2(wires.size() * 2);
+        std::vector<ComplexT> gate_matrix(matrix, matrix + size);
+
+        this->applyOperation("applyMatrix", wires, inverse, {}, gate_matrix);
+    }
+
+    /**
      * @brief Get the state vector representation of a tensor network.
      *
      * @param host_data Pointer to the host memory for state tensor data.
@@ -544,8 +614,8 @@ class TNCuda : public TNCudaBase<PrecisionT, Derived> {
             /* cutensornetWorkspaceDescriptor_t */ workDesc,
             /*  cudaStream_t unused as of v24.03*/ 0x0));
 
-        std::size_t worksize =
-            getWorkSpaceMemorySize(BaseType::getTNCudaHandle(), workDesc);
+        std::size_t worksize = getWorkSpaceMemorySize(
+            BaseType::getTNCudaHandle(), workDesc, getWorksizePref());
 
         PL_ABORT_IF(worksize > scratchSize,
                     "Insufficient workspace size on Device!");
@@ -585,6 +655,9 @@ class TNCuda : public TNCudaBase<PrecisionT, Derived> {
 
     std::vector<TensorCuda<PrecisionT>> tensors_;
     std::vector<TensorCuda<PrecisionT>> tensors_out_;
+
+    cutensornetWorksizePref_t worksize_pref_ =
+        CUTENSORNET_WORKSIZE_PREF_RECOMMENDED;
 
     /**
      * @brief Get accessor of a state tensor
@@ -638,8 +711,8 @@ class TNCuda : public TNCudaBase<PrecisionT, Derived> {
             /* cudaStream_t unused as of v24.03 */ 0x0));
 
         // Allocate workspace buffer
-        std::size_t worksize =
-            getWorkSpaceMemorySize(BaseType::getTNCudaHandle(), workDesc);
+        std::size_t worksize = getWorkSpaceMemorySize(
+            BaseType::getTNCudaHandle(), workDesc, getWorksizePref());
 
         PL_ABORT_IF(worksize > scratchSize,
                     "Insufficient workspace size on Device!");
