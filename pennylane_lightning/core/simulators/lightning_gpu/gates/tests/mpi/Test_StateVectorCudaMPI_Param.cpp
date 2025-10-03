@@ -38,36 +38,24 @@ using namespace Pennylane::LightningGPU;
 using namespace Pennylane::LightningGPU::MPI;
 
 #define num_qubits 8
-#define lsb_1qbit                                                              \
-    { 0 }
-#define msb_1qbit                                                              \
-    { num_qubits - 1 }
+#define lsb_1qbit {0}
+#define msb_1qbit {num_qubits - 1}
 
-#define lsb_2qbit                                                              \
-    { 0, 1 }
-#define msb_2qbit                                                              \
-    { num_qubits - 2, num_qubits - 1 }
-#define mlsb_2qbit                                                             \
-    { 0, num_qubits - 1 }
+#define lsb_2qbit {0, 1}
+#define msb_2qbit {num_qubits - 2, num_qubits - 1}
+#define mlsb_2qbit {0, num_qubits - 1}
 
-#define lsb_3qbit                                                              \
-    { 0, 1, 2 }
-#define msb_3qbit                                                              \
-    { num_qubits - 3, num_qubits - 2, num_qubits - 1 }
-#define mlsb_3qbit                                                             \
-    { 0, num_qubits - 2, num_qubits - 1 }
+#define lsb_3qbit {0, 1, 2}
+#define msb_3qbit {num_qubits - 3, num_qubits - 2, num_qubits - 1}
+#define mlsb_3qbit {0, num_qubits - 2, num_qubits - 1}
 
-#define lsb_4qbit                                                              \
-    { 0, 1, 2, 3 }
+#define lsb_4qbit {0, 1, 2, 3}
 #define msb_4qbit                                                              \
-    { num_qubits - 4, num_qubits - 3, num_qubits - 2, num_qubits - 1 }
-#define mlsb_4qbit                                                             \
-    { 0, 1, num_qubits - 2, num_qubits - 1 }
+    {num_qubits - 4, num_qubits - 3, num_qubits - 2, num_qubits - 1}
+#define mlsb_4qbit {0, 1, num_qubits - 2, num_qubits - 1}
 
-#define angle_1param                                                           \
-    { 0.4 }
-#define angle_3param                                                           \
-    { 0.4, 0.3, 0.2 }
+#define angle_1param {0.4}
+#define angle_3param {0.4, 0.3, 0.2}
 
 #define PLGPU_MPI_TEST_GATE_OPS_PARAM(TestType, NUM_QUBITS, GATE_METHOD,       \
                                       GATE_NAME, WIRE, ANGLE)                  \
