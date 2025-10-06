@@ -20,9 +20,6 @@ on:
   workflow_dispatch:
 
 env:
-  ARCHS: 'arm64'
-  PYTHON3_MIN_VERSION: "11"
-  PYTHON3_MAX_VERSION: "13"
   MACOSX_DEPLOYMENT_TARGET: 13.0
 
 concurrency:
@@ -30,43 +27,24 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  mac-set-matrix-arm:
+  set_wheel_build_matrix:
     if: |
       github.event_name != 'pull_request' ||
       (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'ci:build_wheels'))
-    timeout-minutes: 30
-    name: Set builder matrix
-    runs-on: ubuntu-24.04
-
-    steps:
-      - name: Checkout PennyLane-Lightning
-        uses: actions/checkout@v4
-
-      - name: Python version
-        id: pyver
-        run: |
-          if [[ ${{ github.event_name }} == 'pull_request' ]]; then
-            echo "python_version=$(python3 scripts/gen_pyver_matrix.py \
-              --min-version=3.${{ env.PYTHON3_MIN_VERSION }} \
-              --max-version=3.${{ env.PYTHON3_MAX_VERSION }})" >> $GITHUB_OUTPUT
-          else
-            echo "python_version=$(python3 scripts/gen_pyver_matrix.py \
-              --min-version=3.${{ env.PYTHON3_MIN_VERSION }} \
-              --max-version=3.${{ env.PYTHON3_MAX_VERSION }} --range)" >> $GITHUB_OUTPUT
-          fi
-
-    outputs:
-      python_version: ${{ steps.pyver.outputs.python_version }}
+    name: "Set wheel build matrix"
+    uses: ./.github/workflows/set_wheel_build_matrix.yml
+    with:
+      event_name: ${{ github.event_name }}
 
   mac-wheels-arm64:
-    needs: [mac-set-matrix-arm]
+    needs: [set_wheel_build_matrix]
     strategy:
       fail-fast: false
       matrix:
         os: [macos-13]
         arch: [arm64]
         pl_backend: ["lightning_kokkos", "lightning_qubit"]
-        cibw_build: ${{fromJson(needs.mac-set-matrix-arm.outputs.python_version)}}
+        cibw_build: ${{fromJson(needs.set_wheel_build_matrix.outputs.python_version)}}
     timeout-minutes: 30
     name: macos-latest::arm64 - ${{ matrix.pl_backend }} (Python ${{ fromJson('{ "cp311-*":"3.11","cp312-*":"3.12", "cp313-*":"3.13" }')[matrix.cibw_build] }})
     runs-on: ${{ matrix.os }}
@@ -136,12 +114,12 @@ jobs:
           include-hidden-files: true
 
   upload-pypi:
-    needs: [mac-set-matrix-arm, mac-wheels-arm64]
+    needs: [set_wheel_build_matrix, mac-wheels-arm64]
     strategy:
       matrix:
         arch: [arm64]
         pl_backend: ["lightning_qubit", "lightning_kokkos"]
-        cibw_build: ${{ fromJson(needs.mac-set-matrix-arm.outputs.python_version) }}
+        cibw_build: ${{ fromJson(needs.set_wheel_build_matrix.outputs.python_version) }}
     runs-on: ubuntu-24.04
     permissions:
       id-token: write
