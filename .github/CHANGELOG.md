@@ -91,6 +91,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Update GitHub Actions to produce the release candidate wheels for all supported Python versions for MacOS-ARM. 
+  [(#1273)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1273)
+
 - Update GitHub Actions to produce the release candidate wheels for all supported Python versions. 
   [(#1264)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1264)
 
