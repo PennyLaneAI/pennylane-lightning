@@ -16,6 +16,7 @@ r"""
 This module contains the :class:`~.LightningGPU` class, a PennyLane simulator device that
 interfaces with the NVIDIA cuQuantum cuStateVec simulator library for GPU-enabled calculations.
 """
+
 from __future__ import annotations
 
 from ctypes.util import find_library
@@ -185,7 +186,6 @@ def _add_adjoint_transforms(program: TransformProgram, device_wires=None) -> Non
 def check_gpu_resources() -> None:
     """Check the available resources of each Nvidia GPU"""
     if find_library("custatevec") is None and not imp_util.find_spec("cuquantum"):
-
         raise ImportError(
             "cuStateVec libraries not found. Please pip install the appropriate cuStateVec library in a virtual environment."
         )
@@ -380,7 +380,6 @@ class LightningGPU(LightningBase):
         program = TransformProgram()
 
         if qml.capture.enabled():
-
             if exec_config.mcm_config.mcm_method == "deferred":
                 program.add_transform(qml.defer_measurements, num_wires=len(self.wires))
             # Using stopping_condition_shots because we don't want to decompose Conditionals or MCMs
@@ -504,10 +503,15 @@ def _resolve_mcm_method(mcm_config: MCMConfig, tape: None | qml.tape.QuantumScri
         final_mcm_method = "one-shot" if getattr(tape, "shots", None) else "deferred"
     elif mcm_config.mcm_method == "device":
         final_mcm_method = "tree-traversal"
+
+    if mcm_config.postselect_mode == "fill-shots" and final_mcm_method != "deferred":
+        raise DeviceError(
+            "Using postselect_mode='fill-shots' is only supported with mcm_method='deferred'."
+        )
+
     mcm_config = replace(mcm_config, mcm_method=final_mcm_method)
 
     if qml.capture.enabled():
-
         mcm_updated_values = {}
 
         if mcm_method == "single-branch-statistics" and mcm_config.postselect_mode is not None:
