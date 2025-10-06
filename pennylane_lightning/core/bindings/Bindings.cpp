@@ -26,6 +26,8 @@
 
 namespace Pennylane::NanoBindings {
 
+namespace nb = nanobind;
+
 #if defined(LIGHTNING_MODULE_NAME)
 
 /**
