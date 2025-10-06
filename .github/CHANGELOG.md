@@ -4,6 +4,9 @@
 
 <h3>Improvements 🛠</h3>
 
+- Raise exception when calling normalize or collapse method with `lightning.qubit`, `lightning.kokkos` and `lightning.gpu` when norm is close to 0.
+  [(#1257)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1257)
+
 - Lightning devices now call the new `preprocess` method integrated with the graph decomposition system.
   [(#1251)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1251)
 
@@ -90,6 +93,9 @@
 
 - Update GitHub Actions to produce the release candidate wheels for all supported Python versions. 
   [(#1264)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1264)
+
+- Support building `lightning.gpu` and `lightning.tensor` from source with CUDA 13.
+  [(#1267)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1267)
 
 - Remove unnecessary `std::move` in `cuGates_host`.
   [(#1263)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1263)
