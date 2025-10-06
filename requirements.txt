@@ -9,7 +9,7 @@ pytest-mock>=3.7.0
 pytest-rng
 pytest-xdist>=2.5.0
 flaky>=3.7.0 # For pl-device-test
-pennylane>=0.43
+pennylane>=0.42
 
 # Formatting / Linting Dependencies
 black>=21
