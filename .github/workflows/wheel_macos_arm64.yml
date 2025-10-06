@@ -19,6 +19,9 @@ on:
     types: [published]
   workflow_dispatch:
 
+env:
+  MACOSX_DEPLOYMENT_TARGET: 13.0
+
 concurrency:
   group: wheel_macos_arm64-${{ github.ref }}
   cancel-in-progress: true
