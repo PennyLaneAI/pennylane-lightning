@@ -117,6 +117,9 @@ Joseph Lee
 
 <h3>Internal changes ⚙️</h3>
 
+- Bumped release version for testing Docker.
+  [(#1271)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1271)
+
 - Support building `lightning.gpu` and `lightning.tensor` from source with CUDA 13.
   [(#1267)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1267)
 
