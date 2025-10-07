@@ -1,11 +1,47 @@
-# Release 0.43.0-dev (development release)
+# Release 0.44.0-dev (development release)
 
 <h3>New features since last release</h3>
 
 <h3>Improvements 🛠</h3>
 
+<h3>Breaking changes 💔</h3>
+
+<h3>Deprecations 👋</h3>
+
+<h3>Documentation 📝</h3>
+
+<h3>Bug fixes 🐛</h3>
+
+<h3>Internal changes ⚙️</h3>
+
+- Use GCC 13 for CI.
+  [(#1249)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1249)
+  
+- Bumped the version.
+    [(#1272)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1272)
+
+<h3>Contributors ✍️</h3>
+
+This release contains contributions from (in alphabetical order):
+
+Joseph Lee
+
+---
+
+# Release 0.43.0
+
+<h3>New features since last release</h3>
+
+<h3>Improvements 🛠</h3>
+
+- Raise exception when calling normalize or collapse method with `lightning.qubit`, `lightning.kokkos` and `lightning.gpu` when norm is close to 0.
+  [(#1257)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1257)
+
 - Lightning devices now call the new `preprocess` method integrated with the graph decomposition system.
   [(#1251)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1251)
+
+- Lightning devices now support executing circuits with dynamic qubit allocation with `qml.allocate`.
+  [(#1255)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1255)
 
 - Worksize preference in `cuTensorNet` can now be set and updated when using `lightning.tensor` device to reduce memory usage or improve stability. 
   [(#1238)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1238)
@@ -84,9 +120,12 @@
 
 <h3>Internal changes ⚙️</h3>
 
-- Use GCC 13 for CI.
-  [(#1249)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1249)
-  
+- Support building `lightning.gpu` and `lightning.tensor` from source with CUDA 13.
+  [(#1267)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1267)
+
+- Remove unnecessary `std::move` in `cuGates_host`.
+  [(#1263)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1263)
+
 - Pin GitHub CI temporarily to the stable version to use Catalyst release v0.12.0.
   [(#1259)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1259)
 
