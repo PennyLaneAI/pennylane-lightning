@@ -100,13 +100,17 @@ jobs:
           regex: '.*[0-9]+.[0-9]+.[0-9]+[-_]?rc[0-9]*'
 
       - uses: actions/download-artifact@v4
-        if: ${{ github.event_name == 'release' || steps.rc_build.outputs.match }}
+        if: |
+          github.event_name == 'release' || 
+          steps.rc_build.outputs.match
         with:
           name: pure-python-wheels-${{ matrix.pl_backend }}.zip
           path: dist
 
       - name: Upload wheels to PyPI
-        if: ${{ github.event_name == 'release' || steps.rc_build.outputs.match }}
+        if: |
+          github.event_name == 'release' || 
+          steps.rc_build.outputs.match
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__
