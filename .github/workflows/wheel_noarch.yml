@@ -103,7 +103,7 @@ jobs:
         if: |
             ${{
               github.event_name == 'release' ||
-              steps.rc_build.outputs.match != ''
+              steps.rc_build.outputs.match
             }}
         with:
           name: pure-python-wheels-${{ matrix.pl_backend }}.zip
