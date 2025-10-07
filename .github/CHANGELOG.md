@@ -89,6 +89,10 @@
 - Setup the correct PL version for stable-stable test with `lightning.gpu` with MPI.
   [(#1237)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1237)
 
+- Using `postselect_mode="fill-shots"` with `mcm_method="one-shot"` or `"tree-traversal"` has been disallowed, as it produces incorrect results where the correlation between measurements is not preserved.
+  [(#8391)](https://github.com/PennyLaneAI/pennylane/pull/8391)
+
+
 <h3>Internal changes ⚙️</h3>
 
 - Update GitHub Actions to produce the release candidate wheels for all supported Python versions. 
