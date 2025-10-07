@@ -101,8 +101,10 @@ jobs:
 
       - uses: actions/download-artifact@v4
         if: |
-          ${{ github.event_name == 'release' }} ||
-          steps.rc_build.outputs.match != null
+            ${{
+              github.event_name == 'release' ||
+              steps.rc_build.outputs.match != ''
+            }}
         with:
           name: pure-python-wheels-${{ matrix.pl_backend }}.zip
           path: dist
@@ -110,7 +112,7 @@ jobs:
       - name: Upload wheels to PyPI
         if: |
           ${{ github.event_name == 'release' }} ||
-          steps.rc_build.outputs.match != ''
+          steps.rc_build.outputs.match != null
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__
