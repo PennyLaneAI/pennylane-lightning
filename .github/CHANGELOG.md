@@ -15,7 +15,7 @@
 <h3>Internal changes ⚙️</h3>
 
 - Bumped the seed for pytests.
-    [(#XXXX)](https://github.com/PennyLaneAI/pennylane-lightning/pull/XXXX)
+    [(#1276)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1276)
 
 - Bumped the version.
     [(#1272)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1272)
