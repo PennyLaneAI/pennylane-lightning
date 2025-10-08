@@ -49,7 +49,6 @@ from pennylane_lightning.lightning_base.lightning_base import (
     LightningBase,
     QuantumTape_or_Batch,
     Result_or_ResultBatch,
-    resolve_mcm_method,
 )
 
 try:
@@ -314,8 +313,7 @@ class LightningKokkos(LightningBase):
 
         new_device_options.update(mcmc_default)
 
-        mcm_config = resolve_mcm_method(config.mcm_config, circuit, "lightning.kokkos")
-        updated_values["mcm_config"] = mcm_config
+        updated_values["mcm_config"] = _resolve_mcm_method(config.mcm_config, circuit)
         return replace(config, **updated_values, device_options=new_device_options)
 
     def preprocess_transforms(
