@@ -13,7 +13,7 @@
 # limitations under the License.
 """Tests for default qubit preprocessing."""
 
-from functools import partial, reduce
+from functools import partial
 from typing import Sequence
 
 import numpy as np
@@ -185,6 +185,8 @@ class TestUnsupportedConfigurationsMCM:
 
     @pytest.mark.parametrize("mcm_method", ["one-shot", "tree-traversal"])
     def test_unsupported_postselect_mode(self, mcm_method):
+        """Test raising an error for unsupported postselection in Lightning"""
+
         circuit = self.generate_mcm_circuit(
             device_kwargs={"wires": 1, "shots": 100},
             qnode_kwargs={"mcm_method": mcm_method, "postselect_mode": "fill-shots"},
