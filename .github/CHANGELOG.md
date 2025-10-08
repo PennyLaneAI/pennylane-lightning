@@ -167,6 +167,7 @@
 This release contains contributions from (in alphabetical order):
 
 Ali Asadi,
+Astral Cai,
 Yushao Chen,
 Amintor Dusko,
 David Ittah,
