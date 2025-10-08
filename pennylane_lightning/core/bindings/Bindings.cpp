@@ -38,6 +38,7 @@ NB_MODULE(LIGHTNING_MODULE_NAME, m) {
 #ifdef NDEBUG
     // Disable leak warnings in release mode. These are often false positives
     // caused by 3rd party libraries
+    // https://nanobind.readthedocs.io/en/latest/refleaks.html#additional-sources-of-leaks
     nb::set_leak_warnings(false);
 #endif
 
@@ -69,6 +70,7 @@ NB_MODULE(LIGHTNING_TENSOR_MODULE_NAME, m) {
 #ifdef NDEBUG
     // Disable leak warnings in release mode. These are often false positives
     // caused by 3rd party libraries
+    // https://nanobind.readthedocs.io/en/latest/refleaks.html#additional-sources-of-leaks
     nb::set_leak_warnings(false);
 #endif
 
