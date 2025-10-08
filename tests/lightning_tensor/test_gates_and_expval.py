@@ -139,7 +139,7 @@ def circuit_ansatz(params, wires):
 
 
 # The expected values were generated using default.qubit
-@pytest.mark.local_salt(42)
+@pytest.mark.local_salt(43)
 @pytest.mark.parametrize("method", [{"method": "mps", "max_bond_dim": 128}, {"method": "tn"}])
 @pytest.mark.parametrize(
     "returns",
