@@ -80,6 +80,9 @@
 
 <h3>Bug fixes 🐛</h3>
 
+- Using `postselect_mode="fill-shots"` with `mcm_method="one-shot"` or `"tree-traversal"` has been disallowed, as it produces incorrect results where the correlation between measurements is not preserved.
+  [(#1274)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1274)
+
 - Setting device with seed now produces deterministic measurement for MCMC.
   [(#1252)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1252)
 
@@ -165,6 +168,7 @@
 This release contains contributions from (in alphabetical order):
 
 Ali Asadi,
+Astral Cai,
 Yushao Chen,
 Amintor Dusko,
 David Ittah,

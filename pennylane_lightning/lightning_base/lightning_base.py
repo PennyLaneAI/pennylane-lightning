@@ -16,19 +16,22 @@ r"""
 This module contains the :class:`~.LightningBase` class, that serves as a base class for Lightning simulator devices that
 interfaces with C++ for fast linear algebra calculations.
 """
+
 import os
 import sys
 from abc import abstractmethod
+from dataclasses import replace
 from functools import partial
 from numbers import Number
 from pathlib import Path
 from typing import Callable, List, Optional, Sequence, Tuple, Union
+from warnings import warn
 
 import numpy as np
 import pennylane as qml
 from numpy.random import BitGenerator, Generator, SeedSequence
 from numpy.typing import ArrayLike
-from pennylane.devices import Device, ExecutionConfig
+from pennylane.devices import Device, ExecutionConfig, MCMConfig
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
 from pennylane.exceptions import DeviceError
 from pennylane.measurements import MidMeasureMP, Shots, ShotsLike
@@ -198,7 +201,6 @@ class LightningBase(Device):
 
         # Simulate with Mid Circuit Measurements
         if any(isinstance(op, MidMeasureMP) for op in circuit.operations):
-
             # If mcm_method is not specified and the circuit does not have shots, default to "deferred".
             # It is not listed here because all mid-circuit measurements are replaced with additional wires.
 
@@ -747,3 +749,45 @@ class LightningBase(Device):
                 return lightning_device_name, lib_location
 
         raise RuntimeError(f"'{lightning_device_name}' shared library not found")
+
+
+def resolve_mcm_method(mcm_config: MCMConfig, tape: QuantumScript | None, device_name: str):
+    """Resolve the mcm config for the Lightning device."""
+
+    mcm_supported_methods = (
+        ("device", "deferred", "tree-traversal", "one-shot", None)
+        if not qml.capture.enabled()
+        else ("deferred", "single-branch-statistics", None)
+    )
+
+    if (mcm_method := mcm_config.mcm_method) not in mcm_supported_methods:
+        raise DeviceError(f"mcm_method='{mcm_method}' is not supported with {device_name}.")
+
+    final_mcm_method = mcm_config.mcm_method
+    if mcm_config.mcm_method is None:
+        final_mcm_method = "one-shot" if getattr(tape, "shots", None) else "deferred"
+    elif mcm_config.mcm_method == "device":
+        final_mcm_method = "tree-traversal"
+
+    # TODO: Update this condition when postselection is natively supported in Lightning [sc-82462]
+    if mcm_config.postselect_mode == "fill-shots" and final_mcm_method != "deferred":
+        raise DeviceError("Using postselect_mode='fill-shots' is not supported.")
+
+    mcm_config = replace(mcm_config, mcm_method=final_mcm_method)
+
+    if qml.capture.enabled():
+        mcm_updated_values = {}
+
+        if mcm_method == "single-branch-statistics" and mcm_config.postselect_mode is not None:
+            warn(
+                "Setting 'postselect_mode' is not supported with mcm_method='single-branch-"
+                "statistics'. 'postselect_mode' will be ignored.",
+                UserWarning,
+            )
+            mcm_updated_values["postselect_mode"] = None
+        elif mcm_method is None:
+            mcm_updated_values["mcm_method"] = "deferred"
+
+        mcm_config = replace(mcm_config, **mcm_updated_values)
+
+    return mcm_config
