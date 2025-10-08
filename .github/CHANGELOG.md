@@ -1,4 +1,31 @@
-# Release 0.43.0-dev (development release)
+# Release 0.44.0-dev (development release)
+
+<h3>New features since last release</h3>
+
+<h3>Improvements 🛠</h3>
+
+<h3>Breaking changes 💔</h3>
+
+<h3>Deprecations 👋</h3>
+
+<h3>Documentation 📝</h3>
+
+<h3>Bug fixes 🐛</h3>
+
+<h3>Internal changes ⚙️</h3>
+
+- Bumped the version.
+    [(#1272)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1272)
+
+<h3>Contributors ✍️</h3>
+
+This release contains contributions from (in alphabetical order):
+
+Joseph Lee
+
+---
+
+# Release 0.43.0
 
 <h3>New features since last release</h3>
 
@@ -89,6 +116,12 @@
   [(#1237)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1237)
 
 <h3>Internal changes ⚙️</h3>
+
+- Bumped release version for testing Docker.
+  [(#1271)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1271)
+
+- Support building `lightning.gpu` and `lightning.tensor` from source with CUDA 13.
+  [(#1267)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1267)
 
 - Remove unnecessary `std::move` in `cuGates_host`.
   [(#1263)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1263)
