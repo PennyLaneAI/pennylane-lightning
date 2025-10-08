@@ -164,7 +164,6 @@ class LightningBaseStateVector(ABC):
         measure_final_state: callable,
         operation: MidMeasureMP,
         mid_measurements: dict,
-        postselect_mode: str,
     ):
         """Execute a MidMeasureMP operation and return the sample in mid_measurements.
 
