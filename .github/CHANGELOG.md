@@ -16,7 +16,10 @@
 
 - Use GCC 13 for CI.
   [(#1249)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1249)
-  
+
+- `lightning.qubit` CI Python tests now use rc branch for testing release candidates.
+    [(#1280)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1280)
+
 - Bumped the version.
     [(#1272)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1272)
 
@@ -119,6 +122,9 @@ Joseph Lee
   [(#1237)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1237)
 
 <h3>Internal changes ⚙️</h3>
+
+- Bumped release version for testing Docker.
+  [(#1271)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1271)
 
 - Support building `lightning.gpu` and `lightning.tensor` from source with CUDA 13.
   [(#1267)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1267)
