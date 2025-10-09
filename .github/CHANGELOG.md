@@ -14,6 +14,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Use GCC 13 for CI.
+  [(#1249)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1249)
+
 - `lightning.qubit` CI Python tests now use rc branch for testing release candidates.
     [(#1280)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1280)
 
