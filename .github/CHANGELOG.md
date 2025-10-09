@@ -2,16 +2,20 @@
 
 <h3>New features since last release</h3>
 
-<h3>Improvements 🛠</h3>
-
-- Raise exception when calling normalize or collapse method with `lightning.qubit`, `lightning.kokkos` and `lightning.gpu` when norm is close to 0.
-  [(#1257)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1257)
+- Lightning devices now support executing circuits with dynamic qubit allocation with `qml.allocate`.
+  [(#1255)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1255)
 
 - Lightning devices now call the new `preprocess` method integrated with the graph decomposition system.
   [(#1251)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1251)
 
-- Lightning devices now support executing circuits with dynamic qubit allocation with `qml.allocate`.
-  [(#1255)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1255)
+- Using `mcm_method="device"` on `lightning.qubit`, `lightning.kokkos` and `lightning.gpu`
+  now resolves to the tree-traversal method.
+  [(#1210)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1210)
+
+<h3>Improvements 🛠</h3>
+
+- Raise exception when calling normalize or collapse method with `lightning.qubit`, `lightning.kokkos` and `lightning.gpu` when norm is close to 0.
+  [(#1257)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1257)
 
 - Worksize preference in `cuTensorNet` can now be set and updated when using `lightning.tensor` device to reduce memory usage or improve stability. 
   [(#1238)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1238)
@@ -36,10 +40,6 @@
 
 - Added support for `GlobalPhase` with zero-qubit Lightning devices. Currently, only the `lightning.qubit` and `lightning.kokkos` backends support zero-qubit initialization.
   [(#1205)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1205)
-
-- Using `mcm_method="device"` on `lightning.qubit`, `lightning.kokkos` and `lightning.gpu`
-  now resolves to the tree-traversal method.
-  [(#1210)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1210)
 
 - Skipped Identity operation in `lightning.qubit` and removed assert for applying Identity gate not equal to 1 wire.
   [(#1212)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1212)
@@ -82,7 +82,8 @@
 - Setting device with seed now produces deterministic measurement for MCMC.
   [(#1252)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1252)
 
-- **CHANGE REVERTED:** Updated stopping condition for `qml.ops.op_math.SProd` and `qml.ops.op_math.Exp`, in all devices, after breaking changes upstream. Was instead fixed in PennyLane and change was reverted.
+- **CHANGE REVERTED:** Updated stopping condition for `qml.ops.op_math.SProd` and `qml.ops.op_math.Exp`, in all devices, after breaking changes upstream.]
+  Was instead fixed in PennyLane and change was reverted.
   [(#1239)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1239)
   [(#1246)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1246)
 
