@@ -24,7 +24,11 @@
 #include <string>
 #include <vector>
 
+#include "Error.hpp"
+
+#ifdef SCIPY_OPENBLAS_ENABLED
 #include "BLASLibLoaderManager.hpp"
+#endif
 
 /// @cond DEV
 namespace {
@@ -52,6 +56,7 @@ namespace Pennylane::Util {
  * @param unitaries unitary result.
  */
 
+#ifdef SCIPY_OPENBLAS_ENABLED
 template <typename T>
 void compute_diagonalizing_gates(int n, int lda,
                                  const std::vector<std::complex<T>> &Ah,
@@ -110,4 +115,18 @@ void compute_diagonalizing_gates(int n, int lda,
                        return std::complex<T>{value.real(), -value.imag()};
                    });
 }
+#else
+template <typename T>
+void compute_diagonalizing_gates(
+    [[maybe_unused]] int n, [[maybe_unused]] int lda,
+    [[maybe_unused]] const std::vector<std::complex<T>> &Ah,
+    [[maybe_unused]] std::vector<T> &eigenVals,
+    [[maybe_unused]] std::vector<std::complex<T>> &unitary) {
+    PL_ABORT("Decompose Hermitian matrix into diagonal matrix and unitaries is "
+             "only available"
+             "with scipy-openblas. Consider enabling this feature by setting "
+             "ENABLE_SCIPY_OPENBLAS.");
+}
+#endif
+
 } // namespace Pennylane::Util
