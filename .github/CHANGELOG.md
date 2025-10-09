@@ -14,6 +14,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- `lightning.qubit` CI Python tests now use rc branch for testing release candidates.
+    [(#1280)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1280)
+
 - Bumped the version.
     [(#1272)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1272)
 
