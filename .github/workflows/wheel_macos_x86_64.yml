@@ -180,11 +180,11 @@ jobs:
         id: rc_build
         with:
           text: ${{ github.event.pull_request.head.ref }}
-          regex: '.*[0-9]+.[0-9]+.[0-9]+[-_]?rc[0-9]+'
+          regex: '^v[0-9]+\.[0-9]+\.[0-9]+[-_]rc$'
 
       - uses: actions/upload-artifact@v4
         if: |
-          github.event_name == 'pull_request' ||
+          github.event_name == 'release' ||
           github.event_name == 'workflow_dispatch' ||
           github.ref == 'refs/heads/master' ||
           steps.rc_build.outputs.match != ''
@@ -204,18 +204,29 @@ jobs:
     runs-on: ubuntu-24.04
     permissions:
       id-token: write
-    if: |
-      github.event_name == 'pull_request' ||
-      github.ref == 'refs/heads/master'
-
+    
     steps:
+      - uses: actions-ecosystem/action-regex-match@main
+        id: rc_build
+        with:
+          text: ${{ github.event.pull_request.head.ref }}
+          regex: '^v[0-9]+\.[0-9]+\.[0-9]+[-_]rc$'
+          
       - uses: actions/download-artifact@v4
+        if: |
+          github.event_name == 'release' ||
+          github.ref == 'refs/heads/master' || 
+          steps.rc_build.outputs.match != ''
         with:
           name: macOS-wheels-${{ matrix.pl_backend }}-${{ fromJson('{ "cp311-*":"py311","cp312-*":"py312","cp313-*":"py313"  }')[matrix.cibw_build] }}-${{ matrix.arch }}.zip
           path: dist
 
       - name: Upload wheels to TestPyPI
         uses: pypa/gh-action-pypi-publish@release/v1
+        if: |
+          github.event_name == 'release' ||
+          github.ref == 'refs/heads/master' || 
+          steps.rc_build.outputs.match != ''
         with:
           verbose: true
           repository-url: https://test.pypi.org/legacy/

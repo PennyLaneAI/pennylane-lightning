@@ -67,9 +67,18 @@ jobs:
           python -m pip install twine
           python -m twine check dist/*.whl
 
+      - uses: actions-ecosystem/action-regex-match@main
+        id: rc_build
+        with:
+          text: ${{ github.event.pull_request.head.ref }}
+          regex: '^v[0-9]+\.[0-9]+\.[0-9]+[-_]rc$'
+
       - uses: actions/upload-artifact@v4
         if: |
-          (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/master')
+          github.event_name == 'release' || 
+          github.event_name == 'workflow_dispatch' || 
+          github.ref == 'refs/heads/master' ||
+          steps.rc_build.outputs.match != ''
         with:
           name: pure-python-wheels-${{ matrix.pl_backend }}.zip
           path: dist/*.whl
@@ -84,14 +93,24 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
+      - uses: actions-ecosystem/action-regex-match@main
+        id: rc_build
+        with:
+          text: ${{ github.event.pull_request.head.ref }}
+          regex: '^v[0-9]+\.[0-9]+\.[0-9]+[-_]rc$'
+
       - uses: actions/download-artifact@v4
-        if: ${{ github.event_name == 'pull_request' }}
+        if: |
+          github.event_name == 'release' || 
+          steps.rc_build.outputs.match != ''
         with:
           name: pure-python-wheels-${{ matrix.pl_backend }}.zip
           path: dist
 
       - name: Upload wheels to PyPI
-        if: ${{ github.event_name == 'pull_request' }}
+        if: |
+          github.event_name == 'release' || 
+          steps.rc_build.outputs.match != ''
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__
