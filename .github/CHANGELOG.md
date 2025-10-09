@@ -17,6 +17,9 @@
 - Bumped the seed for pytests.
     [(#1276)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1276)
 
+- `lightning.qubit` CI Python tests now use rc branch for testing release candidates.
+    [(#1280)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1280)
+
 - Bumped the version.
     [(#1272)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1272)
 
