@@ -242,7 +242,7 @@ class LightningTensor(Device):
         cutoff (float): (Only for ``method=mps``) The threshold used to truncate the singular values of the MPS tensors. The default is 0.
         cutoff_mode (str): (Only for ``method=mps``) Singular value truncation mode for MPS tensors. The options are ``"rel"`` and ``"abs"``. Default is ``"abs"``.
         backend (str): Supported backend. Currently, only ``cutensornet`` is supported. Default is ``cutensornet``.
-        worksize_pref (str): Preference for workspace size for cutensornet backend. The options are ``recommended`` and ``max``. Default is ``recommended``.
+        worksize_pref (str): Preference for workspace size for cutensornet backend. The options are ``recommended``, ``min``, and ``max``. Default is ``recommended``.
 
     **Example for the MPS method**
 
