@@ -38,6 +38,9 @@
   - **Lightning Tensor bindings** for tensor network simulations
     [(#1206)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1206)
 
+  For compatibility with PyTorch, reference leak warnings for nanobind are disabled
+  [(#1266)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1266)
+
 - Added support for `GlobalPhase` with zero-qubit Lightning devices. Currently, only the `lightning.qubit` and `lightning.kokkos` backends support zero-qubit initialization.
   [(#1205)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1205)
 
@@ -94,6 +97,9 @@
   [(#1237)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1237)
 
 <h3>Internal changes ⚙️</h3>
+
+- Updated test to skip MCM test for `lightning.tensor` and fix seed for deterministic test.
+  [(#1281)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1281)
 
 - Updated GitHub Actions to produce the release candidate wheels for all supported Python versions for MacOS-ARM. 
   [(#1273)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1273)
