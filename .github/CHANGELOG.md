@@ -1,4 +1,4 @@
-# Release 0.43.0-dev (development release)
+# Release 0.43.0
 
 <h3>New features since last release</h3>
 
@@ -82,6 +82,9 @@
 
 <h3>Bug fixes 🐛</h3>
 
+- Using `postselect_mode="fill-shots"` with `mcm_method="one-shot"` or `"tree-traversal"` has been disallowed, as it produces incorrect results where the correlation between measurements is not preserved.
+  [(#1274)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1274)
+
 - Setting device with seed now produces deterministic measurement for MCMC.
   [(#1252)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1252)
 
@@ -93,6 +96,15 @@
   [(#1237)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1237)
 
 <h3>Internal changes ⚙️</h3>
+
+- Update GitHub Actions to produce the release candidate wheels for all supported Python versions for MacOS-ARM. 
+  [(#1273)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1273)
+
+- Update GitHub Actions to produce the release candidate wheels for all supported Python versions. 
+  [(#1264)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1264)
+
+- Support building `lightning.gpu` and `lightning.tensor` from source with CUDA 13.
+  [(#1267)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1267)
 
 - Remove unnecessary `std::move` in `cuGates_host`.
   [(#1263)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1263)
@@ -158,6 +170,7 @@
 This release contains contributions from (in alphabetical order):
 
 Ali Asadi,
+Astral Cai,
 Yushao Chen,
 Amintor Dusko,
 David Ittah,
