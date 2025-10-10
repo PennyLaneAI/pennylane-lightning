@@ -1201,14 +1201,18 @@ class TestExecution:
         assert qml.math.allclose(res1, 0)
         assert qml.math.allclose(res2, 0)
 
+    @pytest.mark.local_salt(42)
     @pytest.mark.parametrize("device_wires", (None, (0, 1, 2, 3)))
     @pytest.mark.parametrize(
         "mcm_method", ("tree-traversal", "deferred", "one-shot", "device", None)
     )
-    def test_reuse_with_mcms(self, device_wires, mcm_method):
+    def test_reuse_with_mcms(self, device_wires, mcm_method, seed):
         """Test that a simple dynamic allocation with mcms can be executed."""
+        
+        if device_name == "lightning.tensor":
+            pytest.skip("lightning.tensor does not support native mcm.")
 
-        dev = LightningDevice(wires=device_wires)
+        dev = LightningDevice(wires=device_wires, seed=seed)
 
         with qml.queuing.AnnotatedQueue() as q:
             with qml.allocate(1, restored=False) as wires:

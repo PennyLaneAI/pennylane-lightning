@@ -94,6 +94,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Updated test to skip MCM test for `lightning.tensor` and fix seed for deterministic test.
+  [(#XXXX)](https://github.com/PennyLaneAI/pennylane-lightning/pull/XXXX)
+
 - Update GitHub Actions to produce the release candidate wheels for all supported Python versions for MacOS-ARM. 
   [(#1273)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1273)
 
