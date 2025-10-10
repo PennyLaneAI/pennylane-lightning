@@ -1208,7 +1208,7 @@ class TestExecution:
     )
     def test_reuse_with_mcms(self, device_wires, mcm_method, seed):
         """Test that a simple dynamic allocation with mcms can be executed."""
-        
+
         if device_name == "lightning.tensor":
             pytest.skip("lightning.tensor does not support native mcm.")
 
