@@ -159,6 +159,7 @@ class LightningBaseStateVector(ABC):
             None
         """
 
+    # pylint: disable=unused-argument
     def _apply_lightning_midmeasure(
         self,
         measure_final_state: callable,
