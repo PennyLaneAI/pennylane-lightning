@@ -18,7 +18,7 @@ Unit tests for the LightningTensor class.
 import numpy as np
 import pennylane as qml
 import pytest
-from conftest import LightningDevice, LightningException, device_name
+from conftest import LightningDevice, device_name
 from pennylane.exceptions import DeviceError
 from pennylane.tape import QuantumScript
 from pennylane.wires import Wires
@@ -237,7 +237,7 @@ class TestTensorNetMPS:
         qnode_ltensor = qml.QNode(circuit, dev)
 
         with pytest.raises(
-            LightningException,
+            RuntimeError,
             match="The incoming MPS does not have the correct layout for lightning.tensor",
         ):
             _ = qnode_ltensor(MPS)
@@ -420,7 +420,7 @@ class TestTensorNetMPS:
         qnode_ltensor = qml.QNode(circuit, dev)
 
         with pytest.raises(
-            LightningException,
+            RuntimeError,
             match="Error in PennyLane Lightning: The incoming MPS does not have the correct layout for lightning.tensor.",
         ):
             _ = qnode_ltensor()

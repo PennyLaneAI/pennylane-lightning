@@ -1,15 +1,8 @@
-# Release 0.42.0-dev (development release)
+# Release 0.44.0-dev (development release)
 
 <h3>New features since last release</h3>
 
 <h3>Improvements 🛠</h3>
-
-- PennyLane-Lightning is compatible with JAX version 0.5.3+.
-  [(#1152)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1152)
-  [(#1161)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1161)
-
-- Improve performance of computing expectation values of Pauli Sentences for `lightning.kokkos`.
-  [(#1126)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1126)
 
 <h3>Breaking changes 💔</h3>
 
@@ -17,64 +10,315 @@
 
 <h3>Documentation 📝</h3>
 
-- Added a header/banner image to the README (`README.rst`), as in the `pennylane` and `catalyst` repositories.
-  Temporarily reverted this change as PyPI forbids the `.. raw::` directive for security reasons in `rst` files.
-  This will be revisited in a future PR.
-  [(#1139)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1139)
-  [(#1141)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1141)
-
 <h3>Bug fixes 🐛</h3>
-
-- Only download JAX version 0.5.3 for non-X86 MacOS. 
-  [(#1163)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1163)
-
-- Fix Docker build for Lighting-Kokkos with ROCM library for AMD GPUs.
-  Updating ROCM from 5.7 to 6.2.4. 
-  [(#1158)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1158)
 
 <h3>Internal changes ⚙️</h3>
 
-- Use JAX version 0.6.0 for CI tests for latest version.
+- `lightning.qubit` CI Python tests now use rc branch for testing release candidates.
+    [(#1280)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1280)
+
+- Bumped the version.
+    [(#1272)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1272)
+
+<h3>Contributors ✍️</h3>
+
+This release contains contributions from (in alphabetical order):
+
+Joseph Lee
+
+---
+
+# Release 0.43.0
+
+<h3>New features since last release</h3>
+
+<h3>Improvements 🛠</h3>
+
+- Raise exception when calling normalize or collapse method with `lightning.qubit`, `lightning.kokkos` and `lightning.gpu` when norm is close to 0.
+  [(#1257)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1257)
+
+- Lightning devices now call the new `preprocess` method integrated with the graph decomposition system.
+  [(#1251)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1251)
+
+- Lightning devices now support executing circuits with dynamic qubit allocation with `qml.allocate`.
+  [(#1255)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1255)
+
+- Worksize preference in `cuTensorNet` can now be set and updated when using `lightning.tensor` device to reduce memory usage or improve stability. 
+  [(#1238)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1238)
+
+- **Migrated to Nanobind for Python bindings**, replacing pybind11 to enhance performance, modularity, and build system efficiency.
+  [(#1176)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1176)
+
+  This migration includes comprehensive updates across all Lightning backends:
+
+  - **Zero-copy measurement exchanges** for improved memory efficiency
+    [(#1187)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1187)
+  - **MPI and Adjoint Jacobian support** for distributed computing
+    [(#1189)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1189)
+  - **Lightning Qubit bindings** with enhanced performance
+    [(#1198)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1198)
+  - **Lightning Kokkos bindings** for heterogeneous computing
+    [(#1213)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1213)
+  - **Lightning GPU bindings** with CUDA optimization
+    [(#1184)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1184)
+  - **Lightning Tensor bindings** for tensor network simulations
+    [(#1206)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1206)
+- Added support for `GlobalPhase` with zero-qubit Lightning devices. Currently, only the `lightning.qubit` and `lightning.kokkos` backends support zero-qubit initialization.
+  [(#1205)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1205)
+
+- Using `mcm_method="device"` on `lightning.qubit`, `lightning.kokkos` and `lightning.gpu`
+  now resolves to the tree-traversal method.
+  [(#1210)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1210)
+
+- Skipped Identity operation in Lightning Qubit and removed assert for applying Identity gate not equal to 1 wire.
+  [(#1212)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1212)
+
+- Update `test_device.py` to no longer mutate an execution configuration for testing.
+  [(#1242)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1242)
+
+<h3>Breaking changes 💔</h3>
+
+- `LightningBase.eval_jaxpr` no longer uses `self.shots`; instead, it takes a keyword argument `shots`.
+  [(#1243)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1243)
+
+- No longer squeezes out singleton dimensions from samples in accordance with a breaking change in
+  PennyLane. See PennyLane PR [(#7944)](https://github.com/PennyLaneAI/pennylane/pull/7944) for
+  more information.
+  [(#1226)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1226)
+  [(#1246)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1246)
+
+- Dropped support for Python 3.10. Supported Python versions are now 3.11, 3.12 and 3.13.
+  [(#1224)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1224)
+
+- Dropped testing support for `tensorflow` interface after deprecation in Pennylane. 
+  [(#1225)](github.com/PennyLaneAI/pennylane-lightning/pull/1225)
+
+<h3>Deprecations 👋</h3>
+
+- Specifying `shots` at `qml.device` initialization is deprecated. Instead, use `qml.set_shots` to configure shots for a specific QNode.
+   [(#1221)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1221)
+
+<h3>Documentation 📝</h3>
+
+- Updated Lightning-Kokkos installation instructions to include `Kokkos_ENABLE_COMPLEX_ALIGN=OFF`.
+  [(#1256)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1256)
+
+- Added missing `Kernel performance tuning` documentation page to the AVX2/AVX512 kernels index for improved discoverability.
+  [(#1217)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1217)
+
+<h3>Bug fixes 🐛</h3>
+
+- Setting device with seed now produces deterministic measurement for MCMC.
+  [(#1252)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1252)
+
+- **CHANGE REVERTED:** Update stopping condition for `qml.ops.op_math.SProd` and `qml.ops.op_math.Exp`, in all devices, after breaking changes upstream. Was instead fixed in PennyLane and change was reverted.
+  [(#1239)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1239)
+  [(#1246)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1246)
+
+- Setup the correct PL version for stable-stable test with `lightning.gpu` with MPI.
+  [(#1237)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1237)
+
+<h3>Internal changes ⚙️</h3>
+
+- Bumped release version for testing Docker.
+  [(#1271)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1271)
+
+- Support building `lightning.gpu` and `lightning.tensor` from source with CUDA 13.
+  [(#1267)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1267)
+
+- Remove unnecessary `std::move` in `cuGates_host`.
+  [(#1263)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1263)
+
+- Pin GitHub CI temporarily to the stable version to use Catalyst release v0.12.0.
+  [(#1259)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1259)
+
+- Update Catalyst's QuantumDevice interface and downstream Qubit Manager to Lightning in preparation for dynamic qubit allocation functionality.
+  [(#1254)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1254)
+  [(#1258)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1258)
+  [(#1260)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1260)
+
+- Update Release script for bumping the minimum version for PennyLane.
+  [(#1253)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1253)
+
+- Update Python to 3.12 and CIBuildWheel to 3.1.4 for CI.
+  [(#1248)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1248)
+
+- Updated decomposition stopping condition to no longer convert `C(SProd)` and `C(Exp)` to Qubit Unitary, since PennyLane can decompose these operators after [PR 8133](https://github.com/PennyLaneAI/pennylane/pull/8133). 
+  [(#1247)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1247)
+
+- Remove `--no-deps` for Lightning Qubit CI tests for stable version.
+  [(#1245)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1245)
+
+- Ported Linux based GitHub Actions workflows from using the GitHub 4vcpu large runner to blacksmith 4vcpu runner.
+  [(#1241)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1241)
+
+- Added script to automate the release process.
+  [(#1231)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1231)
+  
+- Stopped the wheels creation for no arch if the PR is draft.
+  [(#1233)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1233)
+
+- Adjust where the MCMC config validation occurs, from initialization to preprocess.
+  [(#1222)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1222)
+
+- Replace `DefaultExecutionConfig` with `ExecutionConfig()` across the Lightning Python device APIs.
+  [(#1185)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1185)
+
+- Updated tests with `circuit(..., shots=...)` to use `qml.set_shots` to ensure compatibility with the latest version of PennyLane.
+  [(#1216)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1216)
+
+- Used `pennylane.exceptions` for custom PennyLane exceptions across Lightning Python code.
+  [(#1215)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1215)
+
+- Switched off the PLxPR integration tests by removing JAX dependency from requirements files.
+  [(#1214)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1214)
+
+- Updated JAX version from 0.6.0 to 0.6.2, keeping the same version as PennyLane and Catalyst
+  [(#1200)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1200)
+
+- Removed FIXMEs for pinning jax & catalyst 0.11.0 for CI testing stable version.
+  [(#1211)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1211)
+
+- Increased minimum version of `pytest` within requirements files to `8.4.1`.
+  [(#1207)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1207)
+
+- Merged the `v0.42.0_rc_merge` branch to the `master` and bumped the version.
+  [(#1209)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1209)
+
+<h3>Contributors ✍️</h3>
+
+This release contains contributions from (in alphabetical order):
+
+Ali Asadi,
+Yushao Chen,
+Amintor Dusko,
+David Ittah,
+Christina Lee,
+Joseph Lee,
+Luis Alfredo Nuñez Meneses,
+Andrija Paurevic,
+Marc Vandelle,
+Paul Haochen Wang,
+Jake Zaia.
+
+---
+
+# Release 0.42.0
+
+<h3>New features since last release</h3>
+
+- Added distributed simulation using MPI to the `lightning.kokkos` device,
+  enabling larger quantum circuits by distributing workloads across multiple CPUs or GPUs.
+  [(#1114)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1114)
+
+- Mid-circuit measurements using the tree-traversal algorithm are now supported
+  in the `lightning.qubit`, `lightning.kokkos` and `lightning.gpu` devices,
+  providing both significant memory savings and sampling efficiency!
+  [(#1166)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1166)
+
+<h3>Improvements 🛠</h3>
+
+- Lightning devices can now accept a `seed` argument to enable deterministic shots measurements.
+  [(#1171)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1171)
+
+- PennyLane-Lightning is compatible with JAX version 0.5.3+.
+  [(#1152)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1152)
   [(#1161)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1161)
 
-- Use JAX version 0.4.28 for CI tests for stable version.
-  [(#1160)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1160)
+- Refactored `MPIManager` class from `lightning.gpu` to base class.
+  [(#1162)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1162)
 
-- Bump `readthedocs` Github action runner to use Ubuntu-24.04.
-  [(#1151)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1151)
+<h3>Breaking changes 💔</h3>
 
-- The `LightningBaseStateVector`, `LightningBaseAdjointJacobian`, `LightningBaseMeasurements`, `LightningInterpreter` and `QuantumScriptSerializer` base classes now can be found at `pennylane_lightning.lightning_base`.
-
-  The new `lightning_base` module further enables the relocation of core files from `pennylane_lightning/core/src/*` to `pennylane_lightning/core/*`.
-
-  The license classifier and `project.license` as a TOML table are deprecated in favor of a SPDX license expression and removed in `pyproject.toml`.
-
+- The `LightningBaseStateVector`, `LightningBaseAdjointJacobian`, `LightningBaseMeasurements`,
+  `LightningInterpreter` and `QuantumScriptSerializer` base classes now can be found at `pennylane_lightning.lightning_base`.  
+  The new `lightning_base` module further enables the relocation of core files from `pennylane_lightning/core/src/*` to `pennylane_lightning/core/*`.  
+  The license classifier and `project.license` as a TOML table are deprecated in favor of a SPDX license expression and removed in `pyproject.toml`.  
   To speedup the recompilation of C++ source code, `ccache` is also added to `Makefile`.
-
   [(#1098)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1098)
 
-- All Catalyst plugins have been updated to be compatible with the next version of Catalyst (v0.12) with changes to the `QuantumDevice` interface.
-  [(#1143)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1143)
-  [(#1147)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1147)
+- Updated `pyproject` to adhere to PyPA binary distribution format for built wheels.
+  [(#1193)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1193)
 
-- Updates for depending deprecations to `Observable`, `is_trainable`, and `AnyWires` in pennylane.
-  [(#1138)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1138)
-  [(#1146)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1146)
+<h3>Deprecations 👋</h3>
 
-- Import custom PennyLane errors from `pennylane.exceptions` rather than top-level.
-  [(#1122)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1122)
+- Added and subsequently removed native support for `MultiControlledX` gates in `lightning.tensor`.
+  [(#1169)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1169)
+  [(#1183)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1183)
 
-- Merge the `v0.41.0-rc` branch to the master and bump version.
-  [(#1132)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1132)
+<h3>Documentation 📝</h3>
 
-- Added flags to all Codecov reports and a default carryforward flag for all flags.
-  [(1144)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1144)
+- Converted the `README` to markdown (as in the `pennylane` and `catalyst` repositories), and added a header image.
+  [(#1139)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1139)
+  [(#1141)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1141)
+  [(#1142)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1142)
+
+- Edited and prepared `CHANGELOG.md` for the release `v0.42.0`.
+  [(#1199)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1199)
+  [(#1204)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1204)
+
+- Fixed typo in `lightning.gpu` documentation adjoint-jacobian section.
+  [(#1179)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1179)
+
+<h3>Bug fixes 🐛</h3>
+
+- Fixed the implementation of multi-controlled gates with a single target wire for arbitrary control values in `lightning.tensor`.
+  [(#1169)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1169)
+
+- Updated requirements to only download JAX version 0.5.3 for non-X86 MacOS. 
+  [(#1163)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1163)
+
+- Fixed Docker build for `lighting.kokkos` with ROCM library for AMD GPUs. Updated ROCM from 5.7 to 6.2.4. 
+  [(#1158)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1158)
+
+- Fixed use of Torch with `AmplitudeEmbedding` by applying `qml.broadcast_expand` before decomposition in the preprocessing stage. 
+  [(#1175)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1175)
+
+<h3>Internal changes ⚙️</h3>
+
+- Updated tests with `device(..., shots=...)` to use `qml.set_shots` to ensure compatibility with the latest version of PennyLane.
+  [(#1173)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1173)
+  
+- Fixed `applyMultiRZ` for `lightning.kokkos` device to use Kokkos function instead of lambda.
+  [(#1194)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1194)
+  
+- Enabled `AmplitudeEmbedding` Python tests for `lightning.kokkos` and `lightning.gpu` devices.
+  [(#1192)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1192)
+
+- Updated docker build CI for stable version to use v0.41.1.
+  [(#1188)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1188)
+
+- Removed flaky tests and added random seeding to measurement tests.
+  [(#1172)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1172)
+  [(#1196)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1196)
+
+- Improved CI to use local catalyst repository instead of fetching on Github CI.
+  [(#1164)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1164)
+
+- Updated the Lightning build dependencies.
+  [(#1168)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1168)
+
+- Updated dev requirements to use JAX version 0.6.0 for CI tests.
+  [(#1161)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1161)
+  
+- Updated stable requirements to use JAX version 0.4.28 for CI tests.
+  [(#1160)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1160)
+
+- Bumped `readthedocs` Github action runner to use Ubuntu-24.04.
+  [(#1151)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1151)
 
 - Updated the `clang-format` and `clang-tidy` versions to v20 for compatibility with Catalyst.
   [(#1153)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1153)
 
-- Bump `readthedocs` Github action runner to use Ubuntu-24.04.
-  [(#1151)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1151)
+- Removed `max_workers` argument for `default.qubit` device in Python tests to reduce CI testing time.
+  [(##1174)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1174)
+  
+- Bumped Github action runner to use `Ubuntu-24.04` or `Ubuntu-latest`.
+  Fixed all `ubuntu-latest` action runners to `ubuntu-24.04`.
+  [(#1167)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1167)
+
+- Merged the `v0.41.0-rc` branch to the `master` and bumped the version.
+  [(#1132)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1132)
 
 <h3>Contributors ✍️</h3>
 
@@ -82,14 +326,17 @@ This release contains contributions from (in alphabetical order):
 
 Runor Agbaire,
 Ali Asadi,
-David Ittah,
+Yushao Chen,
+Amintor Dusko
 Christina Lee,
 Joseph Lee,
 Mehrdad Malekmohammadi,
 Anton Naim Ibrahim,
 Luis Alfredo Nuñez Meneses,
 Mudit Pandey,
-Andrija Paurevic,
+Shuli Shu,
+Marc Vandelle,
+Jake Zaia
 
 ---
 
@@ -111,6 +358,25 @@ Andrija Paurevic,
 - Move the installation sections from `README.rst` to dedicated pages.
   [(#1131)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1131)
 
+<h3>Internal changes ⚙️</h3>
+
+- Updates for depending deprecations to `Observable`, `is_trainable`, and `AnyWires` in pennylane.
+  [(#1138)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1138)
+  [(#1146)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1146)
+
+- Improve performance of computing expectation values of Pauli Sentences for `lightning.kokkos`.
+  [(#1126)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1126)
+
+- Import custom PennyLane errors from `pennylane.exceptions` rather than top-level.
+  [(#1122)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1122)
+
+- Added flags to all Codecov reports and a default carryforward flag for all flags.
+  [(1144)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1144)
+
+- All Catalyst plugins have been updated to be compatible with the next version of Catalyst (v0.12) with changes to the `QuantumDevice` interface.
+  [(#1143)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1143)
+  [(#1147)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1147)
+
 <h3>Contributors ✍️</h3>
 
 This release contains contributions from (in alphabetical order):
@@ -118,9 +384,11 @@ This release contains contributions from (in alphabetical order):
 Ali Asadi,
 Amintor Dusko,
 Andrew Gardhouse,
+David Ittah,
 Joseph Lee,
 Anton Naim Ibrahim,
-Luis Alfredo Nuñez Meneses
+Luis Alfredo Nuñez Meneses,
+Andrija Paurevic,
 
 ---
 

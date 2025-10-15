@@ -56,7 +56,11 @@ def test_accept_execution_config():
 def test_no_partitioned_shots():
     """Test that an error is raised if partitioned shots is requested."""
 
-    dev = qml.device(device_name, wires=1, shots=(100, 100, 100))
+    with pytest.warns(
+        qml.exceptions.PennyLaneDeprecationWarning,
+        match="shots on device is deprecated",
+    ):
+        dev = qml.device(device_name, wires=1, shots=(100, 100, 100))
     jaxpr = jax.make_jaxpr(lambda x: x + 1)(0.1)
 
     with pytest.raises(NotImplementedError, match="does not support partitioned shots"):
@@ -106,7 +110,11 @@ def test_simple_execution(use_jit, x64):
 def test_capture_remains_enabled_if_measurement_error():
     """Test that capture remains enabled if there is a measurement error."""
 
-    dev = qml.device(device_name, wires=1, shots=1)
+    with pytest.warns(
+        qml.exceptions.PennyLaneDeprecationWarning,
+        match="shots on device is deprecated",
+    ):
+        dev = qml.device(device_name, wires=1, shots=1)
 
     def g():
         return qml.state()
@@ -166,7 +174,11 @@ class TestSampling:
                 qml.X(0)
                 return qml.sample(wires=(0, 1))
 
-            dev = qml.device(device_name, wires=2, shots=10)
+            with pytest.warns(
+                qml.exceptions.PennyLaneDeprecationWarning,
+                match="shots on device is deprecated",
+            ):
+                dev = qml.device(device_name, wires=2, shots=10)
             jaxpr = jax.make_jaxpr(sampler)()
 
             if use_jit:
@@ -183,6 +195,44 @@ class TestSampling:
                 assert results.dtype == jax.numpy.int64
             else:
                 assert results.dtype == jax.numpy.int32
+
+        finally:
+            jax.config.update("jax_enable_x64", original_x64)
+
+    @pytest.mark.parametrize("use_jit", (True, False))
+    @pytest.mark.parametrize("x64", (True, False))
+    def test_seeded_sampling(self, use_jit, x64):
+        """Test sampling output with deterministic sampling output"""
+
+        original_x64 = jax.config.jax_enable_x64
+        try:
+            jax.config.update("jax_enable_x64", x64)
+
+            def sampler():
+                qml.Hadamard(0)
+                return qml.sample(wires=0)
+
+            with pytest.warns(
+                qml.exceptions.PennyLaneDeprecationWarning,
+                match="shots on device is deprecated",
+            ):
+
+                dev1 = qml.device(device_name, wires=2, shots=10, seed=123)
+                dev2 = qml.device(device_name, wires=2, shots=10, seed=123)
+                dev3 = qml.device(device_name, wires=2, shots=10, seed=321)
+            jaxpr = jax.make_jaxpr(sampler)()
+
+            if use_jit:
+                [results1] = jax.jit(partial(dev1.eval_jaxpr, jaxpr.jaxpr))(jaxpr.consts)
+                [results2] = jax.jit(partial(dev2.eval_jaxpr, jaxpr.jaxpr))(jaxpr.consts)
+                [results3] = jax.jit(partial(dev3.eval_jaxpr, jaxpr.jaxpr))(jaxpr.consts)
+            else:
+                [results1] = dev1.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts)
+                [results2] = dev2.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts)
+                [results3] = dev3.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts)
+
+            assert qml.math.allclose(results1, results2)
+            assert not qml.math.allclose(results1, results3)
 
         finally:
             jax.config.update("jax_enable_x64", original_x64)
@@ -228,7 +278,11 @@ class TestSampling:
                 return mp_type(op=m0)
             return mp_type(m0)
 
-        dev = qml.device(device_name, wires=1, shots=2)
+        with pytest.warns(
+            qml.exceptions.PennyLaneDeprecationWarning,
+            match="shots on device is deprecated",
+        ):
+            dev = qml.device(device_name, wires=1, shots=2)
         jaxpr = jax.make_jaxpr(f)()
 
         with pytest.raises(jax.errors.JaxRuntimeError):
@@ -572,13 +626,19 @@ def test_vmap_integration(use_jit):
 def test_vmap_in_axes(in_axis, out_axis):
     """Test that vmap works with specified in_axes and out_axes."""
 
-    @qml.qnode(qml.device(device_name, wires=1))
+    # Get the current x64 setting to determine which dtype to use
+    x64_enabled = jax.config.jax_enable_x64
+    c_dtype = jax.numpy.complex128 if x64_enabled else jax.numpy.complex64
+
+    @qml.qnode(qml.device(device_name, wires=1, c_dtype=c_dtype))
     def circuit(mat):
         qml.QubitUnitary(mat, 0)
         return qml.expval(qml.Z(0)), qml.state()
 
     mats = jax.numpy.stack(
-        [qml.X.compute_matrix(), qml.Y.compute_matrix(), qml.Z.compute_matrix()], axis=in_axis
+        [qml.X.compute_matrix(), qml.Y.compute_matrix(), qml.Z.compute_matrix()],
+        axis=in_axis,
+        dtype=c_dtype,
     )
     expval, state = jax.vmap(circuit, in_axes=in_axis, out_axes=(0, out_axis))(mats)
 
@@ -782,8 +842,11 @@ class TestDeferMeasurements:
 
     def test_shots(self):
         """Tests that defer measurements executes correctly with shots."""
-
-        dev = qml.device(device_name, wires=5, shots=100)
+        with pytest.warns(
+            qml.exceptions.PennyLaneDeprecationWarning,
+            match="shots on device is deprecated",
+        ):
+            dev = qml.device(device_name, wires=5, shots=100)
 
         @DeferMeasurementsInterpreter(num_wires=5)
         def f(x):
@@ -814,3 +877,108 @@ class TestDeferMeasurements:
         res = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, True)
         # Assert that the result is a mix of 0s and 1s
         assert not qml.math.allclose(res, 0) and not qml.math.allclose(res, 1)
+
+
+@pytest.mark.parametrize("shots", [None, 100, 1000])
+def test_eval_jaxpr_with_shots_parameter(shots):
+    """Test that eval_jaxpr accepts and respects the shots parameter."""
+
+    def f(x):
+        qml.RX(x, 0)
+        return qml.expval(qml.Z(0)) if shots is None else qml.sample(qml.Z(0))
+
+    dev = qml.device(device_name, wires=1)
+    jaxpr = jax.make_jaxpr(f)(0.5)
+
+    result = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, 0.5, shots=shots)
+
+    if shots is None:
+        # For analytic mode, result should be a single expectation value
+        assert qml.math.allclose(result[0], jax.numpy.cos(0.5))
+    else:
+        # For finite shots, result should be a sample array of the specified length
+        assert len(result[0]) == shots
+        assert all(sample in [-1, 1] for sample in result[0])
+
+
+def test_eval_jaxpr_shots_parameter_overrides_device_shots():
+    """Test that shots parameter overrides device-level shots setting."""
+
+    # Create device with device-level shots
+    with pytest.warns(
+        qml.exceptions.PennyLaneDeprecationWarning,
+        match="shots on device is deprecated",
+    ):
+        dev = qml.device(device_name, wires=1, shots=500)
+
+    def f():
+        qml.RX(0.5, 0)
+        return qml.sample(qml.Z(0))
+
+    jaxpr = jax.make_jaxpr(f)()
+
+    # Test with different shots parameter - should override device shots
+    result_100 = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, shots=100)
+    assert len(result_100[0]) == 100
+
+    result_1000 = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, shots=1000)
+    assert len(result_1000[0]) == 1000
+
+    # Test with None shots - should work in analytic mode
+    def f_expval():
+        qml.RX(0.5, 0)
+        return qml.expval(qml.Z(0))
+
+    jaxpr_expval = jax.make_jaxpr(f_expval)()
+    result_analytic = dev.eval_jaxpr(jaxpr_expval.jaxpr, jaxpr_expval.consts, shots=None)
+    assert qml.math.allclose(result_analytic[0], jax.numpy.cos(0.5))
+
+
+@pytest.mark.parametrize("shots", [50, 200, 1000])
+def test_eval_jaxpr_multiple_measurements_with_shots(shots):
+    """Test eval_jaxpr with multiple measurements and shots parameter."""
+
+    def f():
+        qml.RX(0.5, 0)
+        qml.RY(0.3, 1)
+        return [qml.sample(qml.Z(0)), qml.sample(qml.Z(1))]
+
+    dev = qml.device(device_name, wires=2)
+    jaxpr = jax.make_jaxpr(f)()
+
+    result = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, shots=shots)
+
+    # Should have two sample arrays, each with the correct number of shots
+    assert len(result) == 2
+    assert len(result[0]) == shots
+    assert len(result[1]) == shots
+
+    # All samples should be valid measurement outcomes
+    assert all(sample in [-1, 1] for sample in result[0])
+    assert all(sample in [-1, 1] for sample in result[1])
+
+
+def test_eval_jaxpr_shots_with_probs():
+    """Test eval_jaxpr with shots parameter for probability measurements."""
+
+    def f():
+        qml.RX(0.5, 0)
+        return qml.probs(wires=0)
+
+    dev = qml.device(device_name, wires=1)
+    jaxpr = jax.make_jaxpr(f)()
+
+    # Test with finite shots
+    result_shots = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, shots=1000)
+    probs_shots = result_shots[0]
+
+    # Should return probabilities that sum to 1
+    assert qml.math.allclose(jax.numpy.sum(probs_shots), 1.0, atol=1e-2)
+    assert len(probs_shots) == 2  # Two outcomes for single qubit
+
+    # Test with analytic mode
+    result_analytic = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, shots=None)
+    probs_analytic = result_analytic[0]
+
+    # Analytic and finite-shot results should be close
+    assert qml.math.allclose(probs_shots, probs_analytic, atol=0.1)

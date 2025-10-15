@@ -7,6 +7,7 @@ project(lightning_components LANGUAGES CXX)
 ###############################################################################
 set(COMPONENT_SUBDIRS   algorithms
                         bindings
+                        catalyst
                         gates
                         measurements
                         observables
@@ -25,4 +26,5 @@ if (BUILD_TESTS)
     FetchAndIncludeCatch()
 
     include(CTest)
+    enable_testing()
 endif()

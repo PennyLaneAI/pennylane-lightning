@@ -21,10 +21,8 @@ on:
       - master
 
 env:
-  TF_VERSION: 2.19.0
-  KERAS_VERSION: 3.9.0
   TORCH_VERSION: 2.5.1
-  COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --no-flaky-report -p no:warnings --tb=native"
+  COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing -p no:warnings --tb=native"
   GCC_VERSION: 13
   OMP_NUM_THREADS: "2"
   OMP_PROC_BIND: "false"
@@ -41,7 +39,7 @@ jobs:
         blas: ["OFF", "ON"]
     timeout-minutes: 60
     name: Build (${{ matrix.pl_backend }}, blas-${{ matrix.blas }})
-    runs-on: pl-4-core-large-runner
+    runs-on: blacksmith-4vcpu-ubuntu-2404
 
     steps:
       - name: Make disk space
@@ -55,7 +53,7 @@ jobs:
       - uses: actions/setup-python@v5
         name: Install Python
         with:
-          python-version: '3.10'
+          python-version: '3.12'
 
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
@@ -76,6 +74,13 @@ jobs:
           git log -1 --format='%H'
           git status
 
+      - name: Checkout Catalyst
+        uses: actions/checkout@v4
+        with:
+          repository: PennyLaneAI/catalyst
+          path: ${{ github.workspace}}/catalyst
+          ref: ${{ (inputs.pennylane-version == 'stable' && 'v0.12.0') || 'main' }} # FIXME: remove after v0.43 release
+
       - name: Install dependencies
         run: |
           sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION g++-$GCC_VERSION libopenblas-dev
@@ -89,7 +94,7 @@ jobs:
       - name: Create device wheel ${{ inputs.lightning-version }}
         run: |
           PL_BACKEND=${{ matrix.pl_backend }} python scripts/configure_pyproject_toml.py
-          CMAKE_ARGS="-DENABLE_BLAS=${{ matrix.blas }} -DLQ_ENABLE_KERNEL_OMP=ON -DENABLE_PYTHON=ON" python -m build
+          CMAKE_ARGS="-DENABLE_BLAS=${{ matrix.blas }} -DLQ_ENABLE_KERNEL_OMP=ON -DENABLE_PYTHON=ON -DLIGHTNING_CATALYST_SRC_PATH=${{ github.workspace }}/catalyst" python -m build
           cd dist
           WHEEL_NAME=$(ls *.whl)
           cp $WHEEL_NAME ${{ github.workspace }}/wheel_${{ matrix.pl_backend }}-${{ matrix.blas }}.whl
@@ -123,13 +128,13 @@ jobs:
         group: [1, 2, 3, 4]
     timeout-minutes: 60
     name: Python Tests (${{ matrix.pl_backend }}, blas-${{ matrix.blas }}, test-group-${{ matrix.group }})
-    runs-on: pl-4-core-large-runner
+    runs-on: blacksmith-4vcpu-ubuntu-2404
 
     steps:
       - uses: actions/setup-python@v5
         name: Install Python
         with:
-          python-version: '3.10'
+          python-version: '3.12'
 
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
@@ -158,12 +163,6 @@ jobs:
           python -m pip install openfermionpyscf semantic-version
           python -m pip install ${{ github.workspace }}/$WHEEL_NAME --no-deps --force-reinstall
 
-      - name: Revert to older JAX version for stable
-        if: inputs.pennylane-version == 'stable'
-        run: |
-          # FIXME: remove after v0.42 release
-          python -m pip install "jax[cpu]==0.4.28"
-
       - name: Checkout PennyLane for release or latest build
         if: inputs.pennylane-version == 'release' || inputs.pennylane-version == 'latest'
         uses: actions/checkout@v4
@@ -189,12 +188,17 @@ jobs:
       - name: Install Stable PennyLane
         if: inputs.pennylane-version == 'stable'
         run: |
-          python -m pip uninstall -y pennylane && python -m pip install -U pennylane --no-deps
+          python -m pip uninstall -y pennylane && python -m pip install -U pennylane
 
       - name: Install ML libraries for interfaces
         run: |
           python -m pip install --upgrade torch==$TORCH_VERSION --index-url https://download.pytorch.org/whl/cpu
-          python -m pip install --upgrade tensorflow~=$TF_VERSION keras~=$KERAS_VERSION
+
+      - name: Switch to release build of Lightning
+        if: inputs.lightning-version == 'release'
+        run: |
+          git fetch --all
+          git checkout $(git branch -a --list "origin/v0.*rc*" | sort | tail -1)
 
       - name: Switch to stable tag of Lightning
         if: inputs.lightning-version == 'stable'
@@ -211,6 +215,9 @@ jobs:
           rm -r pennylane_lightning
           pl-device-test --device ${DEVICENAME} --skip-ops --shots=10000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
+
+      - name: Python packages
+        run: pip freeze
 
       - name: Run PennyLane-Lightning unit tests
         env:
@@ -248,12 +255,12 @@ jobs:
     if: github.event_name == 'pull_request'
     needs: [test_lightning_qubit_wheels]
     name: Upload python coverage data to codecov
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/setup-python@v5
         name: Install Python
         with:
-          python-version: '3.10'
+          python-version: '3.12'
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -269,7 +276,7 @@ jobs:
       - name: Combine coverage files
         run: |
           # Update .coveragerc to include sources for combining equivalent paths
-          wheelpath=$Python_ROOT_DIR/lib/python3.10/site-packages
+          wheelpath=$Python_ROOT_DIR/lib/python3.12/site-packages
           echo "" >> .coveragerc
           echo "[paths]" >> .coveragerc
           echo "source =" >> .coveragerc

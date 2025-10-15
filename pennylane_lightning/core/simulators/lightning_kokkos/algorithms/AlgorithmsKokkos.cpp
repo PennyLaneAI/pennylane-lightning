@@ -14,10 +14,13 @@
 
 #include "AdjointJacobianKokkos.hpp"
 #include "JacobianData.hpp"
+#include "StateVectorKokkos.hpp"
 
 // using namespace Pennylane;
 using namespace Pennylane::LightningKokkos;
 using Pennylane::LightningKokkos::StateVectorKokkos;
+
+using namespace Pennylane::LightningKokkos::Algorithms;
 
 // explicit instantiation
 template class Pennylane::Algorithms::OpsData<StateVectorKokkos<float>>;

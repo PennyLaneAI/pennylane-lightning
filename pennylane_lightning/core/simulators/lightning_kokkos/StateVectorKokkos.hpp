@@ -303,6 +303,18 @@ class StateVectorKokkos final
         : StateVectorKokkos(hostdata_.data(), hostdata_.size(), kokkos_args) {}
 
     /**
+     * @brief Create a new state vector from data on the host.
+     *
+     * @param hostdata_ Host vector for state vector
+     * @param kokkos_args Arguments for Kokkos initialization
+     */
+    template <class complex>
+    StateVectorKokkos(std::vector<complex> hostdata_,
+                      const Kokkos::InitializationSettings &kokkos_args = {})
+        : StateVectorKokkos(reinterpret_cast<ComplexT *>(hostdata_.data()),
+                            hostdata_.size(), kokkos_args) {}
+
+    /**
      * @brief Copy constructor
      *
      * @param other Another state vector
@@ -811,7 +823,7 @@ class StateVectorKokkos final
 
         PL_ABORT_IF(squaredNorm <
                         std::numeric_limits<PrecisionT>::epsilon() * 1e2,
-                    "vector has norm close to zero and can't be normalized");
+                    "Vector has norm close to zero and cannot be normalized");
 
         const std::complex<PrecisionT> inv_norm =
             1. / Kokkos::sqrt(squaredNorm);

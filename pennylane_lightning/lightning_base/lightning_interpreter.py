@@ -146,7 +146,7 @@ def _(self, *invals, jaxpr, n_consts, lazy=True):
 
 # pylint: disable=too-many-arguments
 @LightningInterpreter.register_primitive(ctrl_transform_prim)
-def _(self, *invals, n_control, jaxpr, control_values, work_wires, n_consts):
+def _(self, *invals, n_control, jaxpr, control_values, n_consts, work_wires):
     consts = invals[:n_consts]
     control_wires = invals[-n_control:]
     args = invals[n_consts:-n_control]

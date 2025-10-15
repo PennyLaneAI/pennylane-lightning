@@ -30,7 +30,8 @@ target_sources(lightning_kokkos_measurements_tests INTERFACE runner_lightning_ko
 ################################################################################
 # Define targets
 ################################################################################
-set(TEST_SOURCES    Test_StateVectorKokkos_Expval.cpp  
+set(TEST_SOURCES    
+                    Test_StateVectorKokkos_Expval.cpp  
                     Test_StateVectorKokkos_Measure.cpp  
                     Test_StateVectorKokkos_Var.cpp
 )
@@ -40,3 +41,33 @@ target_link_libraries(lightning_kokkos_measurements_test_runner PRIVATE lightnin
 catch_discover_tests(lightning_kokkos_measurements_test_runner)
 
 install(TARGETS lightning_kokkos_measurements_test_runner DESTINATION bin)
+
+
+if(ENABLE_MPI)
+    add_library(${PL_BACKEND}_measurements_tests_mpi INTERFACE)
+    target_link_libraries(${PL_BACKEND}_measurements_tests_mpi INTERFACE     Catch2::Catch2
+                                                                ${PL_BACKEND}
+                                                                ${PL_BACKEND}_gates
+                                                                ${PL_BACKEND}_utils
+                                                                ${PL_BACKEND}_measurements
+                                                                ${PL_BACKEND}_observables
+                                                                lightning_external_libs
+                                                                )
+
+    ProcessTestOptions(${PL_BACKEND}_measurements_tests_mpi)
+
+    target_sources(${PL_BACKEND}_measurements_tests_mpi INTERFACE ./mpi/runner_${PL_BACKEND}_measurements_mpi.cpp)
+
+    ################################################################################
+    # Define targets
+    ################################################################################
+    set(TEST_SOURCES 
+                        ./mpi/Test_StateVectorKokkosMPI_Measure.cpp
+                        )
+
+    add_executable(${PL_BACKEND}_measurements_test_runner_mpi ${TEST_SOURCES})
+    target_link_libraries(${PL_BACKEND}_measurements_test_runner_mpi PRIVATE ${PL_BACKEND}_measurements_tests_mpi)
+    catch_discover_tests(${PL_BACKEND}_measurements_test_runner_mpi)
+
+endif()
+

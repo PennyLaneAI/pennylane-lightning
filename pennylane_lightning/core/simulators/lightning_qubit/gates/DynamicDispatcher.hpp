@@ -996,7 +996,6 @@ template <typename PrecisionT> class DynamicDispatcher {
                              const std::vector<bool> &controlled_values,
                              const std::vector<std::size_t> &wires,
                              bool inverse) const -> PrecisionT {
-
         using Pennylane::Gates::Constant::controlled_generator_names;
         const auto iter =
             controlled_generator_kernels_.find(std::make_pair(gntr_op, kernel));

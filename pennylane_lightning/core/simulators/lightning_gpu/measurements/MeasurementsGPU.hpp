@@ -63,14 +63,17 @@ namespace Pennylane::LightningGPU::Measures {
 template <class StateVectorT>
 class Measurements final
     : public MeasurementsBase<StateVectorT, Measurements<StateVectorT>> {
-  private:
+  public:
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
-    using BaseType = MeasurementsBase<StateVectorT, Measurements<StateVectorT>>;
-    using CFP_t = decltype(cuUtil::getCudaType(PrecisionT{}));
+
+  private:
     cudaDataType_t data_type_;
 
     GateCache<PrecisionT> gate_cache_;
+
+    using BaseType = MeasurementsBase<StateVectorT, Measurements<StateVectorT>>;
+    using CFP_t = decltype(cuUtil::getCudaType(PrecisionT{}));
 
   public:
     explicit Measurements(StateVectorT &statevector)

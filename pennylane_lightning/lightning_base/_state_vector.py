@@ -16,10 +16,11 @@ Class implementation for state-vector manipulation.
 """
 
 from abc import ABC, abstractmethod
-from typing import Optional, Union
+from typing import Union
 
 import numpy as np
 import pennylane as qml
+from numpy.random import Generator
 from pennylane import BasisState, StatePrep
 from pennylane.measurements import MidMeasureMP
 from pennylane.ops import Controlled
@@ -37,15 +38,19 @@ class LightningBaseStateVector(ABC):
         num_wires(int): the number of wires to initialize the device with
         dtype: Datatypes for state-vector representation. Must be one of
             ``np.complex64`` or ``np.complex128``. Default is ``np.complex128``
+        rng (Generator): random number generator to use for seeding sampling measurement.
     """
 
-    def __init__(self, num_wires: int, dtype: Union[np.complex128, np.complex64]):
+    def __init__(
+        self, num_wires: int, dtype: Union[np.complex128, np.complex64], rng: Generator = None
+    ):
         if dtype not in [np.complex64, np.complex128]:
             raise TypeError(f"Unsupported complex type: {dtype}")
 
         self._num_wires = num_wires
         self._wires = Wires(range(num_wires))
         self._dtype = dtype
+        self._rng = rng
 
         # Dummy for the device name
         self._device_name = None
@@ -102,8 +107,9 @@ class LightningBaseStateVector(ABC):
         # init the state vector to |00..0>
         self._qubit_state.resetStateVector()
 
+    @staticmethod
     @abstractmethod
-    def _operation_is_sparse(self, operation):
+    def _operation_is_sparse(operation):
         """Check if an operation is sparse.
 
         Args:
@@ -114,11 +120,11 @@ class LightningBaseStateVector(ABC):
         """
 
     @abstractmethod
-    def _apply_state_vector(self, state, device_wires: Wires, sync: Optional[bool] = None):
+    def _apply_state_vector(self, state, device_wires: Wires):
         """Initialize the internal state vector in a specified state.
         Args:
             state (Union[array[complex], scipy.SparseABC]): normalized input state of length ``2**len(wires)`` as a dense array or Scipy sparse array.
-            device_wires (Wires): wires that get initialized in the state
+            device_wires (Wires): wires that get initialized in the state.
         """
 
     def _apply_basis_state(self, state, wires):
@@ -129,7 +135,6 @@ class LightningBaseStateVector(ABC):
                 consisting of 0s and 1s.
             wires (Wires): wires that the provided computational state should be
                 initialized on
-            use_async(Optional[bool]): immediately sync with host-sv after applying operation.
 
         Note: This function does not support broadcasted inputs yet.
         """

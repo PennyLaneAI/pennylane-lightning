@@ -80,7 +80,7 @@ def test_create_device_with_unsupported_mpi_buf_size():
 
 @pytest.mark.skipif(
     device_name != "lightning.gpu",
-    reason="Check if the method is pickleable throught the cpp layer",
+    reason="Check if the method is pickleable through the cpp layer",
 )
 def test_devpool_is_pickleable():
     dev = qml.device(device_name, wires=2)
@@ -101,11 +101,11 @@ def test_devpool_is_pickleable():
 
 @pytest.mark.skipif(
     (device_name == "lightning.kokkos" and sys.platform == "win32"),
-    reason="lightning.kokkos doesn't support 0 wires on Windows.",
+    reason="lightning.kokkos doesn't support zero wires on Windows.",
 )
 @pytest.mark.skipif(
     device_name in ["lightning.gpu", "lightning.tensor"],
-    reason=device_name + " doesn't support 0 wires.",
+    reason=device_name + " doesn't support zero wires.",
 )
 def test_device_init_zero_qubit():
     """Test the device initialization with zero-qubit."""
@@ -117,6 +117,27 @@ def test_device_init_zero_qubit():
         return qml.state()
 
     assert np.allclose(circuit(), np.array([1.0]))
+
+
+@pytest.mark.skipif(
+    (device_name == "lightning.kokkos" and sys.platform == "win32"),
+    reason="lightning.kokkos doesn't support zero wires on Windows.",
+)
+@pytest.mark.skipif(
+    device_name in ["lightning.gpu", "lightning.tensor"],
+    reason=device_name + " doesn't support zero wires.",
+)
+def test_device_gphase_zero_qubit():
+    """Test the device initialization with zero-qubit."""
+
+    dev = qml.device(device_name, wires=0)
+
+    @qml.qnode(dev)
+    def circuit():
+        qml.adjoint(qml.GlobalPhase(np.pi / 4))
+        return qml.state()
+
+    assert np.allclose(circuit(), np.array([1.0]) * np.exp(1j * np.pi / 4))
 
 
 @pytest.mark.skipif(

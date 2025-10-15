@@ -85,7 +85,7 @@ class TestComparison:
             basis state"""
             qml.BasisState(np.array(basis_state), wires=0)
             one_qubit_block(wires=0)
-            return measurement() if callable(measurement) else measurement
+            return measurement() if callable(measurement) else qml.apply(measurement)
 
         dev_l = lightning_dev_version(wires)
         dev_d = default_qubit_dev(wires)
@@ -134,7 +134,7 @@ class TestComparison:
             one_qubit_block(wires=1)
             qml.CRZ(0.02, wires=[0, 1])
             qml.CRot(0.2, 0.3, 0.7, wires=[0, 1])
-            return measurement() if callable(measurement) else measurement
+            return measurement() if callable(measurement) else qml.apply(measurement)
 
         dev_l = lightning_dev_version(wires)
         dev_d = default_qubit_dev(wires)
@@ -190,7 +190,7 @@ class TestComparison:
             qml.CRot(0.2, 0.3, 0.7, wires=[2, 1])
             qml.RZ(0.4, wires=0)
             qml.Toffoli(wires=[2, 1, 0])
-            return measurement() if callable(measurement) else measurement
+            return measurement() if callable(measurement) else qml.apply(measurement)
 
         dev_l = lightning_dev_version(wires)
         dev_d = default_qubit_dev(wires)
@@ -251,7 +251,7 @@ class TestComparison:
             qml.CRot(0.2, 0.3, 0.7, wires=[2, 1])
             qml.RZ(0.4, wires=0)
             qml.Toffoli(wires=[2, 1, 0])
-            return measurement() if callable(measurement) else measurement
+            return measurement() if callable(measurement) else qml.apply(measurement)
 
         dev_l = lightning_dev_version(wires)
         dev_d = default_qubit_dev(wires)
@@ -275,21 +275,23 @@ class TestComparison:
     )
     @pytest.mark.parametrize("wires", range(1, 17))
     @pytest.mark.parametrize("num_threads", [1, 2])
-    def test_n_qubit_circuit(self, monkeypatch, wires, lightning_dev_version, num_threads):
+    def test_n_qubit_circuit(self, monkeypatch, wires, lightning_dev_version, num_threads, seed):
         """Test an n-qubit circuit"""
 
         monkeypatch.setenv("OMP_NUM_THREADS", str(num_threads))
 
         vec = np.array([1] * (2**wires)) / np.sqrt(2**wires)
         shape = qml.StronglyEntanglingLayers.shape(2, wires)
-        w = np.random.uniform(high=2 * np.pi, size=shape)
+
+        rng = np.random.default_rng(seed)
+        w = rng.uniform(high=2 * np.pi, size=shape)
 
         def circuit(measurement):
             """Prepares the equal superposition state and then applies StronglyEntanglingLayers
             and concludes with a simple PauliZ measurement"""
             qml.StatePrep(vec, wires=range(wires))
             qml.StronglyEntanglingLayers(w, wires=range(wires))
-            return measurement() if callable(measurement) else measurement
+            return measurement() if callable(measurement) else qml.apply(measurement)
 
         dev_l = lightning_dev_version(wires)
         dev_d = default_qubit_dev(wires)

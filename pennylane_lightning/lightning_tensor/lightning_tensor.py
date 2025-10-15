@@ -17,15 +17,16 @@ It is a device to perform tensor network simulations of quantum circuits using `
 """
 from dataclasses import replace
 from numbers import Number
-from typing import Callable, Optional, Sequence, Tuple, Union
+from typing import Callable, Optional, Sequence, Tuple
 from warnings import warn
 
 import numpy as np
 import pennylane as qml
-from pennylane.devices import DefaultExecutionConfig, Device, ExecutionConfig
+from pennylane.devices import Device, ExecutionConfig
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
 from pennylane.devices.preprocess import (
     decompose,
+    device_resolve_dynamic_wires,
     validate_device_wires,
     validate_measurements,
     validate_observables,
@@ -57,9 +58,9 @@ except ImportError as ex:
     warn(str(ex), UserWarning)
     LT_CPP_BINARY_AVAILABLE = False
 
-Result_or_ResultBatch = Union[Result, ResultBatch]
+Result_or_ResultBatch = Result | ResultBatch
 QuantumTapeBatch = Sequence[QuantumTape]
-QuantumTape_or_Batch = Union[QuantumTape, QuantumTapeBatch]
+QuantumTape_or_Batch = QuantumTape | QuantumTapeBatch
 PostprocessingFn = Callable[[ResultBatch], Result_or_ResultBatch]
 
 
@@ -72,7 +73,6 @@ _methods = frozenset({"mps", "tn"})
 _operations = frozenset(
     {
         "Identity",
-        "BasisState",
         "MPSPrep",
         "QubitUnitary",
         "ControlledQubitUnitary",
@@ -175,9 +175,6 @@ def stopping_condition(op: Operator) -> bool:
     if isinstance(op, qml.MPSPrep):
         return True
 
-    if op.name in ("C(SProd)", "C(Exp)"):
-        return True
-
     return op.has_matrix and op.name in _operations
 
 
@@ -245,6 +242,7 @@ class LightningTensor(Device):
         cutoff (float): (Only for ``method=mps``) The threshold used to truncate the singular values of the MPS tensors. The default is 0.
         cutoff_mode (str): (Only for ``method=mps``) Singular value truncation mode for MPS tensors. The options are ``"rel"`` and ``"abs"``. Default is ``"abs"``.
         backend (str): Supported backend. Currently, only ``cutensornet`` is supported. Default is ``cutensornet``.
+        worksize_pref (str): Preference for workspace size for cutensornet backend. The options are ``recommended`` and ``max``. Default is ``recommended``.
 
     **Example for the MPS method**
 
@@ -290,12 +288,10 @@ class LightningTensor(Device):
     """
 
     # pylint: disable=too-many-instance-attributes
-    pennylane_requires = ">=0.41"
-    version = __version__
 
     _device_options = {
-        "mps": ("backend", "max_bond_dim", "cutoff", "cutoff_mode"),
-        "tn": ("backend"),
+        "mps": ("backend", "max_bond_dim", "cutoff", "cutoff_mode", "worksize_pref"),
+        "tn": ("backend", "worksize_pref"),
     }
 
     _CPP_BINARY_AVAILABLE = LT_CPP_BINARY_AVAILABLE
@@ -340,6 +336,7 @@ class LightningTensor(Device):
         self._c_dtype = c_dtype
 
         self._backend = kwargs.get("backend", "cutensornet")
+        self._worksize_pref = kwargs.get("worksize_pref", "recommended")
 
         for arg in kwargs:
             if arg not in self._device_options[self._method]:
@@ -397,19 +394,22 @@ class LightningTensor(Device):
                 max_bond_dim=self._max_bond_dim,
                 cutoff=self._cutoff,
                 cutoff_mode=self._cutoff_mode,
+                worksize_pref=self._worksize_pref,
             )
         return LightningTensorNet(num_wires, self._method, self._c_dtype, device_name=self.name)
 
     dtype = c_dtype
 
-    def _setup_execution_config(
-        self, config: Optional[ExecutionConfig] = DefaultExecutionConfig
+    # pylint: disable=unused-argument
+    def setup_execution_config(
+        self, config: ExecutionConfig | None = None, circuit=None
     ) -> ExecutionConfig:
         """
         Update the execution config with choices for how the device should be used and the device options.
         """
+        if config is None:
+            config = ExecutionConfig()
         # TODO: add options for gradients next quarter
-
         updated_values = {}
 
         new_device_options = dict(config.device_options)
@@ -431,10 +431,10 @@ class LightningTensor(Device):
 
         return circuit.map_to_standard_wires() if self.num_wires is None else circuit
 
-    def preprocess(
+    def preprocess_transforms(
         self,
-        execution_config: ExecutionConfig = DefaultExecutionConfig,
-    ):
+        execution_config: ExecutionConfig | None = None,
+    ) -> TransformProgram:
         """This function defines the device transform program to be applied and an updated device configuration.
 
         Args:
@@ -451,28 +451,30 @@ class LightningTensor(Device):
         * Does not support derivatives.
         * Does not support vector-Jacobian products.
         """
-
-        config = self._setup_execution_config(execution_config)
+        if execution_config is None:
+            execution_config = self.setup_execution_config(ExecutionConfig())
 
         program = TransformProgram()
 
         program.add_transform(validate_measurements, name=self.name)
         program.add_transform(validate_observables, accepted_observables, name=self.name)
-        program.add_transform(validate_device_wires, self._wires, name=self.name)
         program.add_transform(
             decompose,
             stopping_condition=stopping_condition,
-            stopping_condition_shots=stopping_condition,
             skip_initial_state_prep=True,
             name=self.name,
+            device_wires=self.wires,
+            target_gates=self.operations,
         )
-        return program, config
+        program.add_transform(device_resolve_dynamic_wires, wires=self.wires, allow_resets=False)
+        program.add_transform(validate_device_wires, self._wires, name=self.name)
+        return program
 
     # pylint: disable=unused-argument
     def execute(
         self,
         circuits: QuantumTape_or_Batch,
-        execution_config: ExecutionConfig = DefaultExecutionConfig,
+        execution_config: ExecutionConfig | None = None,
     ) -> Result_or_ResultBatch:
         """Execute a circuit or a batch of circuits and turn it into results.
 
@@ -503,7 +505,7 @@ class LightningTensor(Device):
     # pylint: disable=unused-argument
     def supports_derivatives(
         self,
-        execution_config: Optional[ExecutionConfig] = None,
+        execution_config: ExecutionConfig | None = None,
         circuit: Optional[qml.tape.QuantumTape] = None,
     ) -> bool:
         """Check whether or not derivatives are available for a given configuration and circuit.
@@ -521,7 +523,7 @@ class LightningTensor(Device):
     def compute_derivatives(
         self,
         circuits: QuantumTape_or_Batch,
-        execution_config: ExecutionConfig = DefaultExecutionConfig,
+        execution_config: ExecutionConfig | None = None,
     ):
         """Calculate the Jacobian of either a single or a batch of circuits on the device.
 
@@ -539,7 +541,7 @@ class LightningTensor(Device):
     def execute_and_compute_derivatives(
         self,
         circuits: QuantumTape_or_Batch,
-        execution_config: ExecutionConfig = DefaultExecutionConfig,
+        execution_config: ExecutionConfig | None = None,
     ):
         """Compute the results and Jacobians of circuits at the same time.
 
@@ -557,7 +559,7 @@ class LightningTensor(Device):
     # pylint: disable=unused-argument
     def supports_vjp(
         self,
-        execution_config: Optional[ExecutionConfig] = None,
+        execution_config: ExecutionConfig | None = None,
         circuit: Optional[QuantumTape] = None,
     ) -> bool:
         """Whether or not this device defines a custom vector-Jacobian product.
@@ -575,7 +577,7 @@ class LightningTensor(Device):
         self,
         circuits: QuantumTape_or_Batch,
         cotangents: Tuple[Number],
-        execution_config: ExecutionConfig = DefaultExecutionConfig,
+        execution_config: ExecutionConfig | None = None,
     ):
         r"""The vector-Jacobian product used in reverse-mode differentiation.
 
@@ -597,7 +599,7 @@ class LightningTensor(Device):
         self,
         circuits: QuantumTape_or_Batch,
         cotangents: Tuple[Number],
-        execution_config: ExecutionConfig = DefaultExecutionConfig,
+        execution_config: ExecutionConfig | None = None,
     ):
         """Calculate both the results and the vector-Jacobian product used in reverse-mode differentiation.
 

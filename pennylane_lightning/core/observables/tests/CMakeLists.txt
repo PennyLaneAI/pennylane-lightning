@@ -41,7 +41,7 @@ catch_discover_tests(observables_test_runner)
 
 install(TARGETS observables_test_runner DESTINATION bin)
 
-if(ENABLE_MPI)
+if(ENABLE_PLGPU_MPI) #FIXME: Currently base MPI tests explicitly use LG-MPI
     add_library(observables_tests_mpi INTERFACE)
     target_link_libraries(observables_tests_mpi INTERFACE     Catch2::Catch2)
     foreach(BACKEND ${PL_BACKEND})

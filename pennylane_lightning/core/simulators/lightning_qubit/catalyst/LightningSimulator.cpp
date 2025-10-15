@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <unordered_set>
+
 #include "LightningSimulator.hpp"
 
 #include "AdjointJacobianLQubit.hpp"
@@ -22,29 +24,49 @@
 namespace Catalyst::Runtime::Simulator {
 
 auto LightningSimulator::AllocateQubit() -> QubitIdType {
-    const std::size_t num_qubits = this->device_sv->getNumQubits();
-
+    const size_t num_qubits = GetNumQubits();
     if (num_qubits == 0U) {
         this->device_sv = std::make_unique<StateVectorT>(1);
-        return this->qubit_manager.Allocate(num_qubits);
+        return this->qubit_manager.Allocate(0);
     }
 
-    std::vector<std::complex<double>, AlignedAllocator<std::complex<double>>>
-        data = this->device_sv->getDataVector();
-    const std::size_t dsize = data.size();
-    data.resize(dsize << 1UL);
+    // The statevector may contain previously freed qubits,
+    // that means we may not need to resize the vector.
+    size_t device_idx;
+    QubitIdType new_program_idx;
+    std::optional<size_t> candidate = this->qubit_manager.popFreeQubit();
+    if (!candidate.has_value()) {
+        // TODO: update statevector directly without copy
+        const auto &original_data = this->device_sv->getDataVector();
 
-    auto src = data.begin();
-    std::advance(src, dsize - 1);
+        const size_t dsize = original_data.size();
+        RT_ASSERT(dsize == 1UL << num_qubits);
+        std::vector<std::complex<double>,
+                    AlignedAllocator<std::complex<double>>>
+            new_data(dsize << 1UL, original_data.get_allocator());
 
-    for (auto dst = data.end() - 2; src != data.begin();
-         std::advance(src, -1), std::advance(dst, -2)) {
-        *dst = *src;
-        *src = std::complex<double>(.0, .0);
+        device_idx = num_qubits;
+        for (size_t i = 0; i < original_data.size(); i++) {
+            new_data[2 * i] = original_data[i];
+        }
+        this->device_sv = std::make_unique<StateVectorT>(new_data);
+        new_program_idx = this->qubit_manager.Allocate(device_idx);
+
+    } else {
+        device_idx = candidate.value();
+
+        // Reuse existing space in the statevector by collapsing onto |0>.
+        // The collapse is performed by a measurement followed by an X gate if
+        // measured 1.
+        new_program_idx = this->qubit_manager.Allocate(device_idx);
+        Result mres = this->Measure(new_program_idx);
+        if (*mres) {
+            this->NamedOperation("PauliX", {}, {new_program_idx}, false, {},
+                                 {});
+        }
     }
 
-    this->device_sv = std::make_unique<StateVectorT>(data);
-    return this->qubit_manager.Allocate(num_qubits);
+    return new_program_idx;
 }
 
 auto LightningSimulator::AllocateQubits(size_t num_qubits)
@@ -65,17 +87,46 @@ auto LightningSimulator::AllocateQubits(size_t num_qubits)
     return result;
 }
 
-void LightningSimulator::ReleaseAllQubits() {
-    this->qubit_manager.ReleaseAll();
-    this->device_sv = std::make_unique<StateVectorT>(0); // reset the device
+void LightningSimulator::ReleaseQubits(const std::vector<QubitIdType> &ids) {
+    // fast path for single register alloc and dealloc
+    if (this->GetNumQubits() == ids.size()) {
+        std::vector<QubitIdType> allocated_ids =
+            this->qubit_manager.getAllQubitIds();
+        std::unordered_set<QubitIdType> allocated_set(allocated_ids.begin(),
+                                                      allocated_ids.end());
+        bool deallocate_all =
+            std::all_of(ids.begin(), ids.end(), [&](QubitIdType id) {
+                return allocated_set.contains(id);
+            });
+        if (deallocate_all) {
+            this->qubit_manager.ReleaseAll();
+            this->device_sv = std::make_unique<StateVectorT>(0);
+            return;
+        }
+    }
+
+    for (auto id : ids) {
+        this->qubit_manager.Release(id);
+    }
 }
 
 void LightningSimulator::ReleaseQubit(QubitIdType q) {
+    // We do not deallocate physical memory in the statevector for this
+    // operation, instead we just mark the qubits as released.
+    // TODO: need to ensure the semantic behaviour of releasing qubits is still
+    // maintained,
+    //       in particular: measurements must not compute results for released
+    //       qubits, only for active/allocated qubits
     this->qubit_manager.Release(q);
+
+    // TODO: We don't have to check whether the released qubit is pure, but it
+    // is something we can add easily to catch program errors.
 }
 
 auto LightningSimulator::GetNumQubits() const -> size_t {
-    return this->device_sv->getNumQubits();
+    // This needs to produce the currently allocated number of qubits,
+    // not the internal state size.
+    return this->qubit_manager.getNumQubits();
 }
 
 void LightningSimulator::StartTapeRecording() {
@@ -118,7 +169,7 @@ void LightningSimulator::SetState(DataView<std::complex<double>, 1> &state,
 
 void LightningSimulator::SetBasisState(DataView<int8_t, 1> &n,
                                        std::vector<QubitIdType> &wires) {
-    std::vector<std::size_t> data_vector(n.begin(), n.end());
+    std::vector<size_t> data_vector(n.begin(), n.end());
     this->device_sv->setBasisState(data_vector, getDeviceWires(wires));
 }
 

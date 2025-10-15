@@ -17,7 +17,7 @@ This module contains the :class:`~.LightningGPU_MPIHandler` class, a MPI handler
 
 try:
     # pylint: disable=no-name-in-module
-    from pennylane_lightning.lightning_gpu_ops import DevPool, DevTag, MPIManager
+    from pennylane_lightning.lightning_gpu_ops import DevPool, DevTag, MPIManagerGPU
 
     MPI_SUPPORT = True
 except ImportError:
@@ -100,7 +100,7 @@ class MPIHandler:  # pylint: disable=too-few-public-methods
         """Set up MPI checks and initializations."""
 
         # initialize MPIManager and config check in the MPIManager ctor
-        mpi_manager = MPIManager()
+        mpi_manager = MPIManagerGPU()
 
         # check if number of GPUs per node is larger than number of processes per node
         numDevices = self._dp.getTotalDevices()

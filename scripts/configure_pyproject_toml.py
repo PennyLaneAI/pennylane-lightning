@@ -21,6 +21,7 @@ from importlib.util import find_spec
 from pathlib import Path
 
 from backend_support import backend, device_name
+from cuda_version import cuda_version
 
 path_to_project = Path(__file__).parent.parent.absolute()
 
@@ -89,15 +90,22 @@ if __name__ == "__main__":
     # Configure Build.
     # ------------------------
     requires = [
-        "cmake~=3.27.0",
+        "cmake",
         "ninja; platform_system!='Windows'",
-        "setuptools>=42",
+        "setuptools>=75.8.1",
         "tomli",
     ]
+
+    # Add nanobind if enabled
+    if os.environ.get("ENABLE_NANOBIND", "0") == "1":
+        requires.append("nanobind>=2.7.0")
+
     if backend == "lightning_gpu":
-        requires.append("custatevec-cu12")
+        cuda_version = cuda_version()
+        requires.append(f"custatevec-cu{cuda_version}")
     if backend == "lightning_tensor":
-        requires.append("cutensornet-cu12")
+        cuda_version = cuda_version()
+        requires.append(f"cutensornet-cu{cuda_version}")
 
     pyproject["build-system"]["requires"] = requires
 
@@ -105,35 +113,41 @@ if __name__ == "__main__":
     # Configure Project.
     # ------------------------
     suffix = backend.replace("lightning_", "")
-    suffix = suffix.upper() if suffix == "gpu" else suffix.title()
-
-    plugin = "pennylane_lightning." + backend + ":Lightning" + suffix
-
-    pkg_suffix = "" if suffix == "Qubit" else "_" + suffix
 
     # Specifying the project name.
-    pyproject["project"]["name"] = f"PennyLane_Lightning{pkg_suffix}"
+    pkg_suffix = "" if suffix == "qubit" else "_" + suffix
+
+    pyproject["project"]["name"] = f"pennylane_lightning{pkg_suffix}"
+
+    # Specifying the Lightning module name.
+    module_suffix = suffix.upper() if suffix == "gpu" else suffix.title()
+
+    module_name = "pennylane_lightning." + backend + ":Lightning" + module_suffix
 
     # Project entry point.
-    pyproject["project"]["entry-points"]["pennylane.plugins"] = {device_name: plugin}
+    pyproject["project"]["entry-points"]["pennylane.plugins"] = {device_name: module_name}
 
     dependencies = [
-        "pennylane>=0.41",
+        "pennylane>=0.42",
         "scipy-openblas32>=0.3.26",
     ]
 
     if backend == "lightning_gpu":
-        dependencies += ["custatevec-cu12"]
+        dependencies += [f"custatevec-cu{cuda_version}"]
 
     if backend == "lightning_tensor":
-        dependencies += ["cutensornet-cu12", "nvidia-cusolver-cu12"]
+        dependencies += [f"cutensornet-cu{cuda_version}", f"nvidia-cusolver-cu{cuda_version}"]
 
     if backend in ("lightning_gpu", "lightning_tensor"):
+        # We only need to append "12" for CUDA 12 packages as these
+        # specific Nvidia libraries currently do not append "13" for CUDA 13
+        package_suffix = "-cu12" if cuda_version == "12" else ""
+
         dependencies += [
-            "nvidia-nvjitlink-cu12",
-            "nvidia-cusparse-cu12",
-            "nvidia-cublas-cu12",
-            "nvidia-cuda-runtime-cu12",
+            f"nvidia-nvjitlink{package_suffix}",
+            f"nvidia-cusparse{package_suffix}",
+            f"nvidia-cublas{package_suffix}",
+            f"nvidia-cuda-runtime{package_suffix}",
         ]
 
     if backend != "lightning_qubit":
@@ -141,6 +155,18 @@ if __name__ == "__main__":
 
     # Package requirements.
     pyproject["project"]["dependencies"] = dependencies
+
+    # Edit Classifiers based on the backend.
+    windows_classifier = "Operating System :: Microsoft :: Windows"
+    classifiers = pyproject["project"]["classifiers"]
+
+    if backend != "lightning_qubit":
+        if windows_classifier in classifiers:
+            classifiers.remove(windows_classifier)
+    else:
+        if windows_classifier not in classifiers:
+            idx = classifiers.index("Operating System :: MacOS :: MacOS X")
+            classifiers.insert(idx + 1, windows_classifier)
 
     with open(pyproject_path, "w", encoding="utf-8") as file:
         toml.dump(pyproject, file)

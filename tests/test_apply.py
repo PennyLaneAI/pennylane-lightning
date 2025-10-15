@@ -15,13 +15,14 @@
 Unit tests for Lightning devices.
 """
 import math
+from functools import partial
 
 import numpy as np
 import pennylane as qml
 import pytest
 from conftest import PHI, THETA
 from conftest import LightningDevice as ld
-from conftest import device_name
+from conftest import device_name, get_random_matrix, get_random_normalized_state
 from pennylane.exceptions import DeviceError
 from pennylane.operation import Operation
 from pennylane.wires import Wires
@@ -75,8 +76,9 @@ class TestExpval:
     )
     def test_expval_estimate(self):
         """Test that the expectation value is not analytically calculated"""
-        dev = qml.device(device_name, wires=1, shots=3)
+        dev = qml.device(device_name, wires=1)
 
+        @partial(qml.set_shots, shots=3)
         @qml.qnode(dev)
         def circuit():
             return qml.expval(qml.PauliX(0))
@@ -134,8 +136,9 @@ class TestVar:
     def test_var_estimate(self):
         """Test that the variance is not analytically calculated"""
 
-        dev = qml.device(device_name, wires=1, shots=3)
+        dev = qml.device(device_name, wires=1)
 
+        @partial(qml.set_shots, shots=3)
         @qml.qnode(dev)
         def circuit():
             return qml.var(qml.PauliX(0))
@@ -296,10 +299,11 @@ class TestLightningDeviceIntegration:
         """Test that the default qubit plugin provides correct result for high shot number"""
 
         shots = 10**4
-        dev = qml.device(device_name, wires=1, shots=shots)
+        dev = qml.device(device_name, wires=1)
 
         p = 0.543
 
+        @partial(qml.set_shots, shots=shots)
         @qml.qnode(dev)
         def circuit(x):
             """Test quantum function"""
@@ -673,8 +677,9 @@ class TestLightningDeviceIntegration:
         """Tests if the samples returned by the sample function have
         the correct dimensions
         """
-        dev = qubit_device(wires=2, shots=1000)
+        dev = qubit_device(wires=2)
 
+        @partial(qml.set_shots, shots=1000)
         @qml.qnode(dev)
         def circuit():
             qml.Hadamard(0)
@@ -694,8 +699,9 @@ class TestLightningDeviceIntegration:
         the correct dimensions
         """
 
-        dev = qml.device(device_name, wires=num_wires, shots=1000)
+        dev = qml.device(device_name, wires=num_wires)
 
+        @partial(qml.set_shots, shots=1000)
         @qml.qnode(dev)
         def circuit():
             qml.Hadamard(0)
@@ -725,8 +731,9 @@ class TestLightningDeviceIntegration:
 
     def test_snapshot_is_ignored_with_shots(self):
         """Tests if the Snapshot operator is ignored correctly"""
-        dev = qml.device(device_name, wires=4, shots=1000)
+        dev = qml.device(device_name, wires=4)
 
+        @partial(qml.set_shots, shots=1000)
         @qml.qnode(dev)
         def circuit():
             qml.Hadamard(0)
@@ -845,8 +852,7 @@ class TestApplyLightningMethod:
 
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit", wires=n_qubits)
-        init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
-        init_state /= np.linalg.norm(init_state)
+        init_state = get_random_normalized_state(2**n_qubits)
 
         def circuit():
             qml.StatePrep(init_state, wires=range(n_qubits))
@@ -875,10 +881,9 @@ def test_circuit_with_stateprep(op, theta, phi, tol):
     dev_def = qml.device("default.qubit", wires=n_qubits)
     dev = qml.device(device_name, wires=n_qubits)
     m = 2**n_wires
-    U = np.random.rand(m, m) + 1j * np.random.rand(m, m)
+    U = get_random_matrix(m)
     U, _ = np.linalg.qr(U)
-    init_state = np.random.rand(2**n_qubits) + 1j * np.random.rand(2**n_qubits)
-    init_state /= np.linalg.norm(init_state)
+    init_state = get_random_normalized_state(2**n_qubits)
 
     def circuit():
         qml.StatePrep(init_state, wires=range(n_qubits))
