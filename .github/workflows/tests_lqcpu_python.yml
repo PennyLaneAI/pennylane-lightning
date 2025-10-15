@@ -194,6 +194,12 @@ jobs:
         run: |
           python -m pip install --upgrade torch==$TORCH_VERSION --index-url https://download.pytorch.org/whl/cpu
 
+      - name: Switch to release build of Lightning
+        if: inputs.lightning-version == 'release'
+        run: |
+          git fetch --all
+          git checkout $(git branch -a --list "origin/v0.*rc*" | sort | tail -1)
+
       - name: Switch to stable tag of Lightning
         if: inputs.lightning-version == 'stable'
         run: |
