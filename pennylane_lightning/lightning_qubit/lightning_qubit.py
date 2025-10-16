@@ -15,6 +15,7 @@ r"""
 This module contains the LightningQubit class, a PennyLane simulator device that
 interfaces with C++ for fast linear algebra calculations.
 """
+
 from dataclasses import replace
 from functools import partial, reduce
 from pathlib import Path
@@ -25,7 +26,7 @@ import numpy as np
 import pennylane as qml
 from numpy.random import BitGenerator, Generator, SeedSequence
 from numpy.typing import ArrayLike
-from pennylane.devices import ExecutionConfig, MCMConfig
+from pennylane.devices import ExecutionConfig
 from pennylane.devices.capabilities import OperatorProperties
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
 from pennylane.devices.preprocess import (
@@ -48,6 +49,7 @@ from pennylane_lightning.lightning_base.lightning_base import (
     LightningBase,
     QuantumTape_or_Batch,
     Result_or_ResultBatch,
+    resolve_mcm_method,
 )
 
 try:
@@ -336,7 +338,8 @@ class LightningQubit(LightningBase):
 
         _validate_mcmc_options(mcmc_enabled, kernel_name, num_burnin, shots)
 
-        updated_values["mcm_config"] = _resolve_mcm_method(config.mcm_config, circuit)
+        mcm_config = resolve_mcm_method(config.mcm_config, circuit, "lightning.qubit")
+        updated_values["mcm_config"] = mcm_config
         return replace(config, **updated_values, device_options=new_device_options)
 
     def preprocess_transforms(
@@ -367,7 +370,6 @@ class LightningQubit(LightningBase):
         program = TransformProgram()
 
         if qml.capture.enabled():
-
             if exec_config.mcm_config.mcm_method == "deferred":
                 program.add_transform(qml.defer_measurements, num_wires=len(self.wires))
             # Using stopping_condition_shots because we don't want to decompose Conditionals or MCMs
@@ -478,44 +480,6 @@ class LightningQubit(LightningBase):
         """
 
         return LightningBase.get_c_interface_impl("LightningSimulator", "lightning_qubit")
-
-
-def _resolve_mcm_method(mcm_config: MCMConfig, tape):
-    """Resolve the mcm method for the LightningQubit device."""
-
-    mcm_supported_methods = (
-        ("device", "deferred", "tree-traversal", "one-shot", None)
-        if not qml.capture.enabled()
-        else ("deferred", "single-branch-statistics", None)
-    )
-
-    if (mcm_method := mcm_config.mcm_method) not in mcm_supported_methods:
-        raise DeviceError(f"mcm_method='{mcm_method}' is not supported with lightning.qubit")
-
-    final_mcm_method = mcm_config.mcm_method
-    if mcm_config.mcm_method is None:
-        final_mcm_method = "one-shot" if getattr(tape, "shots", None) else "deferred"
-    elif mcm_config.mcm_method == "device":
-        final_mcm_method = "tree-traversal"
-    mcm_config = replace(mcm_config, mcm_method=final_mcm_method)
-
-    if qml.capture.enabled():
-
-        mcm_updated_values = {}
-
-        if mcm_method == "single-branch-statistics" and mcm_config.postselect_mode is not None:
-            warn(
-                "Setting 'postselect_mode' is not supported with mcm_method='single-branch-"
-                "statistics'. 'postselect_mode' will be ignored.",
-                UserWarning,
-            )
-            mcm_updated_values["postselect_mode"] = None
-        elif mcm_method is None:
-            mcm_updated_values["mcm_method"] = "deferred"
-
-        mcm_config = replace(mcm_config, **mcm_updated_values)
-
-    return mcm_config
 
 
 def _validate_mcmc_options(
