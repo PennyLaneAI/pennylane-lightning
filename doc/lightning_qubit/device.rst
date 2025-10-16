@@ -141,6 +141,15 @@ If you are computing a large number of expectation values, or if you are using a
     dev = qml.device("lightning.qubit", wires=2, batch_obs=True)
 
 
+**OpenMP acceleration of the gate kernels:**
+
+OpenMP acceleration of the gate kernels across all kernel types (LM, AVX2, and AVX512) is enabled by default in Lightning-Qubit.
+You can control the number of threads used by setting the ``OMP_NUM_THREADS`` environment variable before starting your Python session,
+or if already started, before simulating your PennyLane programs.
+
+For gradient workloads with many observables, this may reduce performance in comparison with the default mode,
+to turn this off, use the CMake flag ``-DLQ_ENABLE_KERNEL_OMP=OFF`` when building Lightning-Qubit.
+
 **Markov Chain Monte Carlo sampling support:**
 
 The ``lightning.qubit`` device allows users to use the Markov Chain Monte Carlo (MCMC) sampling method to generate approximate samples. To enable the MCMC sampling method for sample generation, initialize a ``lightning.qubit`` device with the ``mcmc=True`` keyword argument, as:
