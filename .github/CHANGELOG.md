@@ -14,6 +14,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Toggle the `scipy-openblas32` dependency when installing from source using the `ENABLE_SCIPY_OPENBLAS` compilation flag.
+    [(#1220)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1220)
+
 - Removed Catalyst version pin in stable CI tests.
     [(#1284)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1284)
 
