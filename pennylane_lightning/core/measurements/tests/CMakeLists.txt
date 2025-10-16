@@ -42,7 +42,7 @@ catch_discover_tests(measurements_test_runner)
 
 install(TARGETS measurements_test_runner DESTINATION bin)
 
-if(ENABLE_MPI)
+if(ENABLE_PLGPU_MPI) #FIXME: Currently base MPI tests explicitly use LG-MPI
     add_library(measurements_tests_mpi INTERFACE)
     target_link_libraries(measurements_tests_mpi INTERFACE     Catch2::Catch2)
     foreach(BACKEND ${PL_BACKEND})

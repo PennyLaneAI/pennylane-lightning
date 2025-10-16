@@ -12,10 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #pragma once
-#include <span>
-
 #include "AdjointJacobianBase.hpp"
 #include "ObservablesKokkos.hpp"
+#include <span>
 
 /// @cond DEV
 namespace {
@@ -28,7 +27,7 @@ using Pennylane::LightningKokkos::Util::getImagOfComplexInnerProduct;
 namespace Pennylane::LightningKokkos::Algorithms {
 /**
  * @brief Kokkos-enabled adjoint Jacobian evaluator following the method of
- * arXiV:2009.02823
+ * arXiv:2009.02823
  *
  * @tparam StateVectorT State vector type.
  */
@@ -36,10 +35,10 @@ template <class StateVectorT>
 class AdjointJacobian final
     : public AdjointJacobianBase<StateVectorT, AdjointJacobian<StateVectorT>> {
   private:
-    using ComplexT = typename StateVectorT::ComplexT;
-    using PrecisionT = typename StateVectorT::PrecisionT;
     using BaseType =
         AdjointJacobianBase<StateVectorT, AdjointJacobian<StateVectorT>>;
+    using typename BaseType::ComplexT;
+    using typename BaseType::PrecisionT;
 
     /**
      * @brief Utility method to update the Jacobian at a given index by
@@ -54,9 +53,10 @@ class AdjointJacobian final
     inline void updateJacobian(StateVectorT &sv1, StateVectorT &sv2,
                                std::span<PrecisionT> &jac,
                                PrecisionT scaling_coeff, std::size_t idx) {
-        jac[idx] = -2 * scaling_coeff *
-                   getImagOfComplexInnerProduct<PrecisionT>(sv1.getView(),
-                                                            sv2.getView());
+        auto element = -2 * scaling_coeff *
+                       getImagOfComplexInnerProduct<PrecisionT>(sv1.getView(),
+                                                                sv2.getView());
+        jac[idx] = element;
     }
 
   public:

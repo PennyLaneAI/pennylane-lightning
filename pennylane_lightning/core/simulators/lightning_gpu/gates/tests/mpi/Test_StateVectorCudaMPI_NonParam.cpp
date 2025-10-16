@@ -31,7 +31,7 @@
 #include "StateVectorCudaMPI.hpp"
 #include "StateVectorCudaManaged.hpp"
 
-#include "MPIManager.hpp"
+#include "MPIManagerGPU.hpp"
 
 #include "TestHelpers.hpp"
 
@@ -54,11 +54,11 @@ using namespace Pennylane::LightningGPU;
  */
 TEMPLATE_TEST_CASE("StateVectorCudaMPI::StateVectorCudaMPI",
                    "[StateVectorCudaMPI_Nonparam]", float, double) {
-    SECTION("StateVectorCudaMPI<TestType> {MPIManager, DevTag, "
+    SECTION("StateVectorCudaMPI<TestType> {MPIManagerGPU, DevTag, "
             "std::size_t, std::size_t, std::size_t}") {
-        REQUIRE(std::is_constructible<StateVectorCudaMPI<TestType>, MPIManager,
-                                      DevTag<int>, std::size_t, std::size_t,
-                                      std::size_t>::value);
+        REQUIRE(std::is_constructible<StateVectorCudaMPI<TestType>,
+                                      MPIManagerGPU, DevTag<int>, std::size_t,
+                                      std::size_t, std::size_t>::value);
     }
     SECTION("StateVectorCudaMPI<TestType> {MPI_Comm, DevTag, "
             "std::size_t, std::size_t, std::size_t}") {
@@ -95,7 +95,7 @@ TEMPLATE_TEST_CASE("StateVectorCudaMPI::SetStateVector",
                    "[StateVectorCudaMPI_Nonparam]", float, double) {
     using PrecisionT = TestType;
     using cp_t = std::complex<PrecisionT>;
-    MPIManager mpi_manager(MPI_COMM_WORLD);
+    MPIManagerGPU mpi_manager(MPI_COMM_WORLD);
     REQUIRE(mpi_manager.getSize() == 2);
 
     std::size_t mpi_buffersize = 1;
@@ -169,7 +169,7 @@ TEMPLATE_TEST_CASE("StateVectorCudaMPI::SetIthStates",
                    "[StateVectorCudaMPI_Nonparam]", float, double) {
     using PrecisionT = TestType;
     using cp_t = std::complex<PrecisionT>;
-    MPIManager mpi_manager(MPI_COMM_WORLD);
+    MPIManagerGPU mpi_manager(MPI_COMM_WORLD);
     REQUIRE(mpi_manager.getSize() == 2);
 
     std::size_t mpi_buffersize = 1;
@@ -217,7 +217,7 @@ TEMPLATE_TEST_CASE("StateVectorCudaMPI::SetIthStates",
         const bool adjoint = GENERATE(true, false);                            \
         using cp_t = std::complex<TestType>;                                   \
         using PrecisionT = TestType;                                           \
-        MPIManager mpi_manager(MPI_COMM_WORLD);                                \
+        MPIManagerGPU mpi_manager(MPI_COMM_WORLD);                             \
         REQUIRE(mpi_manager.getSize() == 2);                                   \
         std::size_t mpi_buffersize = 1;                                        \
         std::size_t nGlobalIndexBits =                                         \

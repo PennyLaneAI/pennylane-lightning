@@ -20,7 +20,7 @@ import numpy as np
 import pennylane as qml
 import pytest
 from conftest import PHI, THETA, LightningDevice, device_name  # tested device
-from pennylane.devices import DefaultExecutionConfig, DefaultQubit
+from pennylane.devices import DefaultQubit, ExecutionConfig
 
 if device_name == "lightning.tensor":
     pytest.skip("Skipping tests for the LightningTensor class.", allow_module_level=True)
@@ -34,7 +34,7 @@ class TestSimulate:
 
     @staticmethod
     def calculate_reference(tape):
-        dev = DefaultQubit(max_workers=1)
+        dev = DefaultQubit()
         program, _ = dev.preprocess()
         tapes, transf_fn = program([tape])
         results = dev.execute(tapes)
@@ -105,7 +105,7 @@ class TestSimulate:
             "num_burnin": 100,
         }
 
-        execution_config = DefaultExecutionConfig
+        execution_config = ExecutionConfig()
 
         dev = LightningDevice(wires=1)
         result = dev.simulate(

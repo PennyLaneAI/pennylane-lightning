@@ -405,6 +405,7 @@ class LightningTensorNet:
         cutoff_mode (str): Singular value truncation mode for MPS tensors can be done either by
             considering the absolute values of the singular values (``"abs"``) or by considering
             the relative values of the singular values (``"rel"``). Default is ``"abs"``.
+        worksize_pref (str): Preference for workspace size for cutensornet backend. The options are ``recommended``, ``min``, and ``max``. Default is ``recommended``.
     """
 
     # pylint: disable=too-many-arguments, too-many-positional-arguments
@@ -438,6 +439,9 @@ class LightningTensorNet:
             self._tensornet = self._tensornet_dtype()(self._num_wires)
         else:
             raise DeviceError(f"The method {self._method} is not supported.")
+
+        worksize_pref = kwargs.get("worksize_pref", "recommended")
+        self.set_worksize_pref(worksize_pref)
 
     @property
     def dtype(self):
@@ -648,6 +652,8 @@ class LightningTensorNet:
             gate_matrix, wires, max_mpo_bond_dim, self._c_dtype
         )
 
+        # Convert to C-contiguous arrays for C++ bindings
+        mpos = [np.ascontiguousarray(mpo) for mpo in mpos]
         self._tensornet.applyMPOOperation(mpos, sorted_wires, max_mpo_bond_dim)
 
     # pylint: disable=too-many-branches
@@ -702,7 +708,11 @@ class LightningTensorNet:
             method = getattr(tensornet, name, None)
             wires = list(operation.wires)
 
-            if isinstance(operation, qml.ops.Controlled) and len(list(operation.target_wires)) == 1:
+            if (
+                isinstance(operation, qml.ops.Controlled)
+                and len(list(operation.target_wires)) == 1
+                and len(set(operation.control_values)) == 1
+            ):
                 self._apply_lightning_controlled(operation)
             elif isinstance(operation, qml.GlobalPhase):
                 matrix = np.eye(2) * operation.matrix().flatten()[0]
@@ -760,6 +770,18 @@ class LightningTensorNet:
                     raise DeviceError("Exact Tensor Network does not support MPSPrep")
 
         self._apply_lightning(operations)
+
+    def set_worksize_pref(self, worksize_pref: str):
+        """Set the worksize preference for the cutensornet backend.
+
+        Args:
+            worksize_pref (str): Preference for workspace size for cutensornet backend. The options are ``recommended``, ``max``, or ``min``. Default is ``recommended``.
+        """
+        if worksize_pref not in ("recommended", "max", "min"):
+            raise ValueError(
+                f'Worksize preference "{worksize_pref}" is not valid. Please select one of the following options: "recommended", "max", or "min".'
+            )
+        self._tensornet.setWorksizePref(worksize_pref)
 
     def set_tensor_network(self, circuit: QuantumScript):
         """

@@ -27,7 +27,7 @@ constexpr bool BACKEND_FOUND = true;
 #include "AdjointJacobianGPU.hpp"
 #include "AdjointJacobianGPUMPI.hpp"
 #include "JacobianDataMPI.hpp"
-#include "MPIManager.hpp"
+#include "MPIManagerGPU.hpp"
 #include "ObservablesGPU.hpp"
 #include "ObservablesGPUMPI.hpp"
 #include "StateVectorCudaMPI.hpp"
@@ -56,7 +56,7 @@ template <typename TypeList> void testAdjointJacobian() {
         using PrecisionT = typename StateVectorT::PrecisionT;
         using ComplexT = typename StateVectorT::ComplexT;
 
-        MPIManager mpi_manager(MPI_COMM_WORLD);
+        MPIManagerGPU mpi_manager(MPI_COMM_WORLD);
         REQUIRE(mpi_manager.getSize() == 2);
 
         const std::vector<PrecisionT> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};

@@ -19,12 +19,10 @@ import pennylane as qml
 import pytest
 from conftest import PHI, THETA, VARPHI
 from conftest import LightningDevice as ld
-from conftest import device_name
+from conftest import device_name, get_random_normalized_state
 
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
-
-np.random.seed(42)
 
 
 @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
@@ -58,8 +56,7 @@ class TestVar:
         dev_def = qml.device("default.qubit", wires=n_qubits)
         dev = qubit_device(wires=n_qubits)
 
-        init_state = np.random.rand(2**n_qubits) + 1j * np.random.rand(2**n_qubits)
-        init_state /= np.linalg.norm(init_state)
+        init_state = get_random_normalized_state(2**n_qubits)
         obs = qml.Projector(np.array([0, 1, 0, 0]) / np.sqrt(2), wires=[0, 1])
 
         def circuit():

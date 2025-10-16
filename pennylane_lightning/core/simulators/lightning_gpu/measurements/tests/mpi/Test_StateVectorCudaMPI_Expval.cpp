@@ -22,7 +22,7 @@
 #include <utility>
 #include <vector>
 
-#include "MPIManager.hpp"
+#include "MPIManagerGPU.hpp"
 #include "MeasurementsGPU.hpp"
 #include "MeasurementsGPUMPI.hpp"
 #include "StateVectorCudaMPI.hpp"
@@ -53,7 +53,7 @@ TEMPLATE_TEST_CASE("[Identity]", "[StateVectorCudaMPI_Expval]", float, double) {
     const std::size_t num_qubits = 3;
     auto ONE = TestType(1);
 
-    MPIManager mpi_manager(MPI_COMM_WORLD);
+    MPIManagerGPU mpi_manager(MPI_COMM_WORLD);
     REQUIRE(mpi_manager.getSize() == 2);
 
     std::size_t mpi_buffersize = 1;
@@ -92,7 +92,7 @@ TEMPLATE_TEST_CASE("[PauliX]", "[StateVectorCudaMPI_Expval]", float, double) {
         auto ZERO = TestType(0);
         auto ONE = TestType(1);
 
-        MPIManager mpi_manager(MPI_COMM_WORLD);
+        MPIManagerGPU mpi_manager(MPI_COMM_WORLD);
         REQUIRE(mpi_manager.getSize() == 2);
 
         std::size_t mpi_buffersize = 1;
@@ -162,7 +162,7 @@ TEMPLATE_TEST_CASE("[PauliY]", "[StateVectorCudaMPI_Expval]", float, double) {
         auto ONE = TestType(1);
         auto PI = TestType(M_PI);
 
-        MPIManager mpi_manager(MPI_COMM_WORLD);
+        MPIManagerGPU mpi_manager(MPI_COMM_WORLD);
         REQUIRE(mpi_manager.getSize() == 2);
 
         std::size_t mpi_buffersize = 1;
@@ -227,7 +227,7 @@ TEMPLATE_TEST_CASE("[PauliZ]", "[StateVectorCudaMPI_Expval]", float, double) {
             createNonTrivialState<StateVectorCudaManaged<TestType>>();
         std::size_t num_qubits = 3;
 
-        MPIManager mpi_manager(MPI_COMM_WORLD);
+        MPIManagerGPU mpi_manager(MPI_COMM_WORLD);
         REQUIRE(mpi_manager.getSize() == 2);
 
         std::size_t mpi_buffersize = 1;
@@ -267,7 +267,7 @@ TEMPLATE_TEST_CASE("[Hadamard]", "[StateVectorCudaMPI_Expval]", float, double) {
         const std::size_t num_qubits = 3;
         auto INVSQRT2 = TestType(0.707106781186547524401);
 
-        MPIManager mpi_manager(MPI_COMM_WORLD);
+        MPIManagerGPU mpi_manager(MPI_COMM_WORLD);
         REQUIRE(mpi_manager.getSize() == 2);
 
         std::size_t mpi_buffersize = 1;
@@ -301,7 +301,7 @@ TEMPLATE_TEST_CASE("Test expectation value of HamiltonianObs",
     using StateVectorT = StateVectorCudaMPI<TestType>;
     using ComplexT = StateVectorT::ComplexT;
 
-    MPIManager mpi_manager(MPI_COMM_WORLD);
+    MPIManagerGPU mpi_manager(MPI_COMM_WORLD);
     REQUIRE(mpi_manager.getSize() == 2);
 
     std::size_t num_qubits = 3;
@@ -349,7 +349,7 @@ TEMPLATE_TEST_CASE("Test expectation value of TensorProdObs",
     using StateVectorT = StateVectorCudaMPI<TestType>;
     using ComplexT = StateVectorT::ComplexT;
 
-    MPIManager mpi_manager(MPI_COMM_WORLD);
+    MPIManagerGPU mpi_manager(MPI_COMM_WORLD);
     REQUIRE(mpi_manager.getSize() == 2);
 
     std::size_t num_qubits = 3;
@@ -397,7 +397,7 @@ TEMPLATE_TEST_CASE("StateVectorCudaMPI::Hamiltonian_expval_Sparse",
     using IdxT = typename std::conditional<std::is_same<TestType, float>::value,
                                            int32_t, int64_t>::type;
 
-    MPIManager mpi_manager(MPI_COMM_WORLD);
+    MPIManagerGPU mpi_manager(MPI_COMM_WORLD);
     REQUIRE(mpi_manager.getSize() == 2);
 
     std::size_t num_qubits = 3;

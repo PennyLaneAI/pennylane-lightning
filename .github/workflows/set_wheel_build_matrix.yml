@@ -1,7 +1,7 @@
 name: Set wheel build matrix
 
 env:
-  PYTHON3_MIN_VERSION: "10"
+  PYTHON3_MIN_VERSION: "11"
   PYTHON3_MAX_VERSION: "13"
 
 on:
@@ -30,7 +30,7 @@ concurrency:
 
 jobs:
   set-builder-matrix:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout PennyLane-Lightning
@@ -39,7 +39,14 @@ jobs:
       - name: Python version
         id: pyver
         run: |
-          if [[ ${{ inputs.event_name }} == 'pull_request' ]]; then
+          # Check if the branch name matches the release candidate pattern v0.X.Y_rc
+          branch_name="${{ github.head_ref }}"
+          is_rc="false"
+          if [[ $branch_name == ^v0\.\d+\.\d+_rc$ ]]; then
+            is_rc="true"
+          fi
+
+          if [[ ${{ inputs.event_name }} == 'pull_request' ]] && [[ "$is_rc" == "true" ]]; then
             echo "python_version=$(python3 scripts/gen_pyver_matrix.py \
               --min-version=3.${{ env.PYTHON3_MIN_VERSION }} \
               --max-version=3.${{ env.PYTHON3_MAX_VERSION }})" >> $GITHUB_OUTPUT
@@ -48,10 +55,18 @@ jobs:
               --min-version=3.${{ env.PYTHON3_MIN_VERSION }} \
               --max-version=3.${{ env.PYTHON3_MAX_VERSION }} --range)" >> $GITHUB_OUTPUT
           fi
+
       - name: Python version for GPU runners
         id: pyvergpu
         run: |
-          if [[ ${{ inputs.event_name }} == 'pull_request' ]]; then
+          # Check if the branch name matches the release candidate pattern v0.X.Y_rc
+          branch_name="${{ github.head_ref }}"
+          is_rc="false"
+          if [[ $branch_name == ^v0\.\d+\.\d+_rc$ ]]; then
+            is_rc="true"
+          fi
+
+          if [[ ${{ inputs.event_name }} == 'pull_request' ]] && [[ "$is_rc" == "true" ]]; then
             echo "python_version_gpu=$(python3 scripts/gen_pyver_matrix.py \
               --min-version=3.${{ env.PYTHON3_MIN_VERSION }} \
               --max-version=3.${{ env.PYTHON3_MAX_VERSION }})" >> $GITHUB_OUTPUT

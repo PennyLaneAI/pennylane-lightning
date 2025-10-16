@@ -23,7 +23,7 @@ using Pennylane::Util::isApproxEqual;
 
 #ifdef _ENABLE_PLGPU
 constexpr bool BACKEND_FOUND = true;
-#include "MPIManager.hpp"
+#include "MPIManagerGPU.hpp"
 #include "MeasurementsGPU.hpp"
 #include "MeasurementsGPUMPI.hpp"
 #include "ObservablesGPU.hpp"
@@ -69,7 +69,7 @@ template <typename TypeList> void testProbabilities() {
 
         std::size_t num_qubits = 3;
 
-        MPIManager mpi_manager(MPI_COMM_WORLD);
+        MPIManagerGPU mpi_manager(MPI_COMM_WORLD);
         REQUIRE(mpi_manager.getSize() == 2);
 
         std::size_t mpi_buffersize = 1;
@@ -153,7 +153,7 @@ template <typename TypeList> void testProbabilitiesObs() {
         auto statevector_data =
             createNonTrivialState<StateVectorCudaManaged<PrecisionT>>();
 
-        MPIManager mpi_manager(MPI_COMM_WORLD);
+        MPIManagerGPU mpi_manager(MPI_COMM_WORLD);
         REQUIRE(mpi_manager.getSize() == 2);
 
         std::size_t mpi_buffersize = 1;
@@ -336,7 +336,7 @@ template <typename TypeList> void testProbabilitiesObsShots() {
         auto statevector_data =
             createNonTrivialState<StateVectorCudaManaged<PrecisionT>>();
 
-        MPIManager mpi_manager(MPI_COMM_WORLD);
+        MPIManagerGPU mpi_manager(MPI_COMM_WORLD);
         REQUIRE(mpi_manager.getSize() == 2);
 
         std::size_t mpi_buffersize = 1;
@@ -439,7 +439,7 @@ template <typename TypeList> void testNamedObsExpval() {
 
         std::size_t num_qubits = 3;
 
-        MPIManager mpi_manager(MPI_COMM_WORLD);
+        MPIManagerGPU mpi_manager(MPI_COMM_WORLD);
         REQUIRE(mpi_manager.getSize() == 2);
 
         std::size_t mpi_buffersize = 1;
@@ -509,7 +509,7 @@ template <typename TypeList> void testNamedObsExpvalShot() {
 
         std::size_t num_qubits = 3;
 
-        MPIManager mpi_manager(MPI_COMM_WORLD);
+        MPIManagerGPU mpi_manager(MPI_COMM_WORLD);
         REQUIRE(mpi_manager.getSize() == 2);
 
         std::size_t mpi_buffersize = 1;
@@ -587,7 +587,7 @@ template <typename TypeList> void testHermitianObsExpval() {
 
         std::size_t num_qubits = 3;
 
-        MPIManager mpi_manager(MPI_COMM_WORLD);
+        MPIManagerGPU mpi_manager(MPI_COMM_WORLD);
         REQUIRE(mpi_manager.getSize() == 2);
 
         std::size_t mpi_buffersize = 1;
@@ -689,7 +689,7 @@ template <typename TypeList> void testTensorProdObsExpvalShot() {
 
         std::size_t num_qubits = 3;
 
-        MPIManager mpi_manager(MPI_COMM_WORLD);
+        MPIManagerGPU mpi_manager(MPI_COMM_WORLD);
         REQUIRE(mpi_manager.getSize() == 2);
 
         std::size_t mpi_buffersize = 1;
@@ -801,7 +801,7 @@ template <typename TypeList> void testHamiltonianObsExpvalShot() {
 
         std::size_t num_qubits = 3;
 
-        MPIManager mpi_manager(MPI_COMM_WORLD);
+        MPIManagerGPU mpi_manager(MPI_COMM_WORLD);
         REQUIRE(mpi_manager.getSize() == 2);
 
         std::size_t mpi_buffersize = 1;
@@ -915,7 +915,7 @@ template <typename TypeList> void testNamedObsVar() {
 
         std::size_t num_qubits = 3;
 
-        MPIManager mpi_manager(MPI_COMM_WORLD);
+        MPIManagerGPU mpi_manager(MPI_COMM_WORLD);
         REQUIRE(mpi_manager.getSize() == 2);
 
         std::size_t mpi_buffersize = 1;
@@ -1002,7 +1002,7 @@ template <typename TypeList> void testHermitianObsVar() {
 
         std::size_t num_qubits = 3;
 
-        MPIManager mpi_manager(MPI_COMM_WORLD);
+        MPIManagerGPU mpi_manager(MPI_COMM_WORLD);
         REQUIRE(mpi_manager.getSize() == 2);
 
         std::size_t mpi_buffersize = 1;
@@ -1103,7 +1103,7 @@ template <typename TypeList> void testTensorProdObsVarShot() {
 
         std::size_t num_qubits = 3;
 
-        MPIManager mpi_manager(MPI_COMM_WORLD);
+        MPIManagerGPU mpi_manager(MPI_COMM_WORLD);
         REQUIRE(mpi_manager.getSize() == 2);
 
         std::size_t mpi_buffersize = 1;
@@ -1186,7 +1186,7 @@ template <typename TypeList> void testSamples() {
 
         std::size_t num_qubits = 3;
 
-        MPIManager mpi_manager(MPI_COMM_WORLD);
+        MPIManagerGPU mpi_manager(MPI_COMM_WORLD);
         REQUIRE(mpi_manager.getSize() == 2);
 
         std::size_t mpi_buffersize = 1;
@@ -1267,7 +1267,7 @@ template <typename TypeList> void testSamplesCountsObs() {
 
         std::size_t num_qubits = 3;
 
-        MPIManager mpi_manager(MPI_COMM_WORLD);
+        MPIManagerGPU mpi_manager(MPI_COMM_WORLD);
         REQUIRE(mpi_manager.getSize() == 2);
 
         std::size_t mpi_buffersize = 1;
@@ -1444,7 +1444,7 @@ template <typename TypeList> void testHamiltonianObsVarShot() {
 
         std::size_t num_qubits = 3;
 
-        MPIManager mpi_manager(MPI_COMM_WORLD);
+        MPIManagerGPU mpi_manager(MPI_COMM_WORLD);
         REQUIRE(mpi_manager.getSize() == 2);
 
         std::size_t mpi_buffersize = 1;

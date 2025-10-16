@@ -1,7 +1,7 @@
 name: Wheel::Windows::x86_64
 
 # **What it does**: Builds python wheels for Windows (windows-latest) and store it as artifacts.
-#                   Python versions: 3.10, 3.11, 3.12, 3.13.
+#                   Python versions: 3.11, 3.12, 3.13.
 # **Why we have it**: To build wheels for pennylane-lightning installation.
 # **Who does it impact**: Wheels to be uploaded to PyPI.
 
@@ -97,7 +97,7 @@ jobs:
         exec_model: ["SERIAL"]
         kokkos_version: ${{ fromJson(needs.set_wheel_build_matrix.outputs.kokkos_version) }}
     timeout-minutes: 30
-    name: ${{ matrix.os }} - ${{ matrix.pl_backend }} (Python ${{ fromJson('{ "cp310-*":"3.10","cp311-*":"3.11","cp312-*":"3.12","cp313-*":"3.13" }')[matrix.cibw_build] }})
+    name: ${{ matrix.os }} - ${{ matrix.pl_backend }} (Python ${{ fromJson('{ "cp311-*":"3.11","cp312-*":"3.12","cp313-*":"3.13" }')[matrix.cibw_build] }})
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -117,8 +117,19 @@ jobs:
           Copy-Item -Path "D:\a\install_dir\${{ matrix.exec_model }}\" `
                     -Destination "D:\a\pennylane-lightning\pennylane-lightning\Kokkos" -Recurse -Force
 
+      - name: Determine Python version
+        id: pyvs
+        shell: bash
+        run: |
+          echo "version=$(echo  ${{ matrix.cibw_build }} | tr -cd '[:digit:].' | sed 's/./&./1')" >> $GITHUB_OUTPUT
+
+      - uses: actions/setup-python@v5
+        name: Install Python
+        with:
+          python-version: ${{ steps.pyvs.outputs.version }}
+
       - name: Install dependencies
-        run: python -m pip install cibuildwheel~=2.21.0 wheel toml
+        run: python -m pip install cibuildwheel~=3.1.4 wheel toml
 
       - name: Configure pyproject.toml file
         env:
@@ -133,7 +144,7 @@ jobs:
 
           # Python build settings
           CIBW_BEFORE_BUILD: |
-            python -m pip install pybind11 cmake~=3.27.0 build
+            python -m pip install cmake build
 
           CIBW_ENVIRONMENT: |
             CMAKE_ARGS="-DCMAKE_BUILD_TYPE=Release"
@@ -167,17 +178,6 @@ jobs:
           }
           cd ..
 
-      - name: Determine Python version
-        id: pyvs
-        shell: bash
-        run: |
-          echo "version=$(echo  ${{ matrix.cibw_build }} | tr -cd '[:digit:].' | sed 's/./&./1')" >> $GITHUB_OUTPUT
-
-      - uses: actions/setup-python@v5
-        name: Install Python
-        with:
-          python-version: ${{ steps.pyvs.outputs.version }}
-
       - name: Test wheels
         run: |
           python -m ensurepip --upgrade
@@ -190,7 +190,7 @@ jobs:
           }
           popd
           $DEVICENAME=(echo ${{ matrix.pl_backend }} | %{$_ -replace "_","."})
-          pl-device-test --device=$DEVICENAME --skip-ops -x --tb=short --no-flaky-report
+          pl-device-test --device=$DEVICENAME --skip-ops -x --tb=short
 
       - name: Validate wheels
         run: |
@@ -201,7 +201,7 @@ jobs:
         id: rc_build
         with:
           text: ${{ github.event.pull_request.head.ref }}
-          regex: '.*[0-9]+.[0-9]+.[0-9]+[-_]?rc[0-9]+'
+          regex: '^v[0-9]+\.[0-9]+\.[0-9]+[-_]rc$'
 
       - uses: actions/upload-artifact@v4
         if: |
@@ -210,7 +210,7 @@ jobs:
           github.ref == 'refs/heads/master' ||
           steps.rc_build.outputs.match != ''
         with:
-          name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ fromJson('{ "cp310-*":"py310","cp311-*":"py311","cp312-*":"py312","cp313-*":"py313" }')[matrix.cibw_build] }}-${{ matrix.arch }}.zip
+          name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ fromJson('{ "cp311-*":"py311","cp312-*":"py312","cp313-*":"py313" }')[matrix.cibw_build] }}-${{ matrix.arch }}.zip
           path: ./wheelhouse/*.whl
           retention-days: 1
           include-hidden-files: true
@@ -222,19 +222,30 @@ jobs:
         arch: [AMD64]
         pl_backend: ["lightning_qubit"]
         cibw_build: ${{ fromJson(needs.set_wheel_build_matrix.outputs.python_version) }}
-    runs-on: ubuntu-latest
-    if: |
-      github.event_name == 'release' ||
-      github.ref == 'refs/heads/master'
+    runs-on: ubuntu-24.04
 
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions-ecosystem/action-regex-match@main
+        id: rc_build
         with:
-          name: Windows-wheels-${{ matrix.pl_backend }}-${{ fromJson('{ "cp310-*":"py310","cp311-*":"py311","cp312-*":"py312","cp313-*":"py313" }')[matrix.cibw_build] }}-${{ matrix.arch }}.zip
+          text: ${{ github.event.pull_request.head.ref }}
+          regex: '^v[0-9]+\.[0-9]+\.[0-9]+[-_]rc$'
+
+      - uses: actions/download-artifact@v4
+        if: |
+          github.event_name == 'release' ||
+          github.ref == 'refs/heads/master' || 
+          steps.rc_build.outputs.match != ''
+        with:
+          name: Windows-wheels-${{ matrix.pl_backend }}-${{ fromJson('{ "cp311-*":"py311","cp312-*":"py312","cp313-*":"py313" }')[matrix.cibw_build] }}-${{ matrix.arch }}.zip
           path: dist
 
       - name: Upload wheels to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
+        if: |
+          github.event_name == 'release' ||
+          github.ref == 'refs/heads/master' || 
+          steps.rc_build.outputs.match != ''
         with:
           user: __token__
           password: ${{ secrets.TEST_PYPI_API_TOKEN }}

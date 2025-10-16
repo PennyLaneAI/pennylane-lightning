@@ -31,10 +31,8 @@ on:
       - master
 
 env:
-  TF_VERSION: 2.19.0
-  KERAS_VERSION: 3.9.0
   TORCH_VERSION: 2.5.1
-  COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --no-flaky-report -p no:warnings --tb=native"
+  COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing -p no:warnings --tb=native"
   GCC_VERSION: 11
   OMP_NUM_THREADS: "2"
   OMP_PROC_BIND: "false"
@@ -49,26 +47,32 @@ jobs:
     name: "Build and cache Kokkos"
     uses: ./.github/workflows/build_and_cache_Kokkos_linux.yml
     with:
-      os: ubuntu-latest
+      os: ubuntu-24.04
       kokkos_version: "4.5.00"
 
   build_lightning_kokkos_wheels:
     needs: [build_and_cache_Kokkos]
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-24.04]
         pl_backend: ["lightning_kokkos"]
         exec_model: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.exec_model) }}
         kokkos_version: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.kokkos_version) }}
     timeout-minutes: 60
     name: Build (${{ matrix.pl_backend }}, kokkos-${{ matrix.kokkos_version }}, model-${{ matrix.exec_model }})
-    runs-on: pl-4-core-large-runner
+    runs-on: blacksmith-4vcpu-ubuntu-2404
 
     steps:
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
         with:
           fetch-tags: true
+
+      - name: Checkout Catalyst
+        uses: actions/checkout@v4
+        with:
+          repository: PennyLaneAI/catalyst
+          path: ${{ github.workspace}}/catalyst
 
       - name: Switch to release build of Lightning
         if: inputs.lightning-version == 'release'
@@ -87,7 +91,7 @@ jobs:
       - uses: actions/setup-python@v5
         name: Install Python
         with:
-          python-version: '3.10'
+          python-version: '3.12'
 
       - name: Restoring cached dependencies
         id: kokkos-cache
@@ -117,7 +121,7 @@ jobs:
       - name: Create device wheel ${{ inputs.lightning-version }}
         run: |
           PL_BACKEND=${{ matrix.pl_backend }} python scripts/configure_pyproject_toml.py
-          CMAKE_ARGS="-DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos" python -m build
+          CMAKE_ARGS="-DLIGHTNING_CATALYST_SRC_PATH=${{ github.workspace }}/catalyst -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos" python -m build
           cd dist
           WHEEL_NAME=$(ls *.whl)
           cp $WHEEL_NAME ${{ github.workspace }}/wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}.whl
@@ -146,20 +150,20 @@ jobs:
     needs: [build_and_cache_Kokkos, build_lightning_kokkos_wheels]
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-24.04]
         pl_backend: ["lightning_kokkos"]
         group: [1, 2, 3, 4, 5, 6, 7]
         exec_model: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.exec_model) }}
         kokkos_version: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.kokkos_version) }}
     timeout-minutes: 60
     name: Python Tests (${{ matrix.pl_backend }}, kokkos-${{ matrix.kokkos_version }}, model-${{ matrix.exec_model }}, test-group-${{ matrix.group }})
-    runs-on: pl-4-core-large-runner
+    runs-on: blacksmith-4vcpu-ubuntu-2404
 
     steps:
       - uses: actions/setup-python@v5
         name: Install Python
         with:
-          python-version: '3.10'
+          python-version: '3.12'
 
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
@@ -185,6 +189,12 @@ jobs:
           git log -1 --format='%H'
           git status
 
+      - name: Checkout Catalyst
+        uses: actions/checkout@v4
+        with:
+          repository: PennyLaneAI/catalyst
+          path: ${{ github.workspace}}/catalyst
+
       - uses: actions/download-artifact@v4
         with:
           name: ${{ matrix.pl_backend }}-${{ matrix.exec_model }}_name.txt
@@ -206,12 +216,6 @@ jobs:
             SKIP_COMPILATION=True python -m pip install . -vv
           fi
           python -m pip install ${{ github.workspace }}/$WHEEL_NAME --no-deps
-
-      - name: Revert to older JAX version for stable
-        if: inputs.pennylane-version == 'stable'
-        run: |
-          # FIXME: remove after v0.42 release
-          python -m pip install "jax[cpu]==0.4.28"
 
       - name: Checkout PennyLane for release or latest build
         if: inputs.pennylane-version == 'release' || inputs.pennylane-version == 'latest'
@@ -243,7 +247,6 @@ jobs:
       - name: Install ML libraries for interfaces
         run: |
           python -m pip install --upgrade torch==$TORCH_VERSION --index-url https://download.pytorch.org/whl/cpu
-          python -m pip install --upgrade tensorflow~=$TF_VERSION keras~=$KERAS_VERSION
 
       - name: Run PennyLane-Lightning integration tests
         env:
@@ -274,7 +277,7 @@ jobs:
           SKIP_COMPILATION=True python -m pip install -e . --config-settings editable_mode=compat
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
           PL_BACKEND=${DEVICENAME} python scripts/configure_pyproject_toml.py
-          python -m pip install -e . --config-settings editable_mode=compat -vv
+          CMAKE_ARGS="-DLIGHTNING_CATALYST_SRC_PATH=${{ github.workspace }}/catalyst" python -m pip install -e . --config-settings editable_mode=compat -vv
           PL_DEVICE=${DEVICENAME} python -m pytest tests/test_device.py $COVERAGE_FLAGS --cov-append
 
       - name: Upload test durations
@@ -303,12 +306,12 @@ jobs:
     if: github.event_name == 'pull_request'
     needs: [test_lightning_kokkos_wheels]
     name: Upload python coverage data to codecov
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/setup-python@v5
         name: Install Python
         with:
-          python-version: '3.10'
+          python-version: '3.12'
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -324,7 +327,7 @@ jobs:
       - name: Combine coverage files
         run: |
           # Update .coveragerc to include sources for combining equivalent paths
-          wheelpath=$Python_ROOT_DIR/lib/python3.10/site-packages
+          wheelpath=$Python_ROOT_DIR/lib/python3.12/site-packages
           echo "" >> .coveragerc
           echo "[paths]" >> .coveragerc
           echo "source =" >> .coveragerc

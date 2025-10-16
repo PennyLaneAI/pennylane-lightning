@@ -16,7 +16,7 @@ jobs:
     with:
       github-repository: ${{ github.repository }}
       repository-ref: ${{ github.ref }}
-      runner_name: ubuntu-latest
+      runner_name: ubuntu-24.04
       bandit-config-file: pyproject.toml
       scan_directory: pennylane_lightning
 

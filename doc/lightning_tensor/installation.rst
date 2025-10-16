@@ -25,6 +25,7 @@ Lightning-Qubit needs to be 'installed' by ``pip`` before Lightning-Tensor (comp
     cd pennylane-lightning
     pip install -r requirements.txt
     pip install cutensornet-cu12
+    pip install git+https://github.com/PennyLaneAI/pennylane.git@master
     PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
     SKIP_COMPILATION=True pip install -e . --config-settings editable_mode=compat
 
@@ -39,7 +40,11 @@ The Lightning-Tensor can then be installed with ``pip``:
 .. code-block:: bash
 
     PL_BACKEND="lightning_tensor" python scripts/configure_pyproject_toml.py
-    pip install -e . --config-settings editable_mode=compat -vv
+    CMAKE_ARGS="-DCMAKE_CUDA_ARCHITECTURES=XX" pip install -e . --config-settings editable_mode=compat -vv
+
+Where ``XX`` is the architecture of the GPU you are using. 
+For example, if you are using an A100 GPU, you should use ``CMAKE_ARGS="-DCMAKE_CUDA_ARCHITECTURES=80"``.
+For more options, check the compute capabilities of your GPU in the `CUDA <https://developer.nvidia.com/cuda-gpus>`_ documentation.
 
 Lightning-Tensor also requires additional NVIDIA libraries including ``nvJitLink``, ``cuSOLVER``, ``cuSPARSE``, ``cuBLAS``, and ``CUDA runtime``. These can be installed through the `CUDA Toolkit <https://developer.nvidia.com/cuda-toolkit/>`_ or from ``pip``.
 

@@ -7,14 +7,14 @@ include_guard()
 
 # Macro to aid in finding CUDA lib
 macro(findCUDATK external_libs)
-    find_package(CUDAToolkit REQUIRED EXACT 12)
+    find_package(CUDAToolkit REQUIRED 12)
     if(CUDA_FOUND)
 	    target_link_libraries(${external_libs} INTERFACE CUDA::cudart CUDA::cublas CUDA::cusparse)
     endif()
 endmacro()
 
 # Macro to aid in finding MPI lib
-macro(findMPI external_libs)
+macro(findMPI_LG external_libs)
     if(ENABLE_MPI)
         find_package(MPI REQUIRED)
         if(MPI_FOUND)

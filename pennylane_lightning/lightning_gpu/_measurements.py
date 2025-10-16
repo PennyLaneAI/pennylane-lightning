@@ -41,7 +41,6 @@ from pennylane.typing import TensorLike
 
 # pylint: disable=ungrouped-imports
 from pennylane_lightning.lightning_base._measurements import LightningBaseMeasurements
-from pennylane_lightning.lightning_base._serialize import QuantumScriptSerializer
 
 
 class LightningGPUMeasurements(LightningBaseMeasurements):  # pylint: disable=too-few-public-methods
@@ -67,6 +66,8 @@ class LightningGPUMeasurements(LightningBaseMeasurements):  # pylint: disable=to
             self._num_local_wires = qubit_state._mpi_handler.num_local_wires
 
         self._measurement_lightning = self._measurement_dtype()(qubit_state.state_vector)
+        if qubit_state._rng:
+            self._measurement_lightning.set_random_seed(qubit_state._rng.integers(0, 2**31 - 1))
 
     def _measurement_dtype(self):
         """Binding to Lightning GPU Measurements C++ class.
@@ -81,62 +82,6 @@ class LightningGPUMeasurements(LightningBaseMeasurements):  # pylint: disable=to
 
         # without MPI
         return MeasurementsC128 if self.dtype == np.complex128 else MeasurementsC64
-
-    def expval(self, measurementprocess: MeasurementProcess):
-        """Expectation value of the supplied observable contained in the MeasurementProcess.
-
-        Args:
-            measurementprocess (StateMeasurement): measurement to apply to the state
-
-        Returns:
-            Expectation value of the observable
-        """
-
-        if self._observable_is_sparse(measurementprocess.obs):
-            # ensuring CSR sparse representation.
-
-            if self._use_mpi:
-                # Identity for CSR_SparseHamiltonian to pass to processes with rank != 0 to reduce
-                # host(cpu) memory requirements
-                CSR_SparseHamiltonian = qml.Identity(0).sparse_matrix()
-                # CSR_SparseHamiltonian for rank == 0
-                if self._mpi_handler.mpi_manager.getRank() == 0:
-                    CSR_SparseHamiltonian = measurementprocess.obs.sparse_matrix().tocsr()
-            else:
-                CSR_SparseHamiltonian = measurementprocess.obs.sparse_matrix(
-                    wire_order=list(range(self._qubit_state.num_wires))
-                ).tocsr(copy=False)
-
-            return self._measurement_lightning.expval(
-                CSR_SparseHamiltonian.indptr,
-                CSR_SparseHamiltonian.indices,
-                CSR_SparseHamiltonian.data,
-            )
-
-        # use specialized function to compute expval(pauli_sentence)
-        if measurementprocess.obs.pauli_rep is not None:
-            return self._expval_pauli_sentence(measurementprocess)
-
-        # use specialized functors to compute expval(Hermitian)
-        if isinstance(measurementprocess.obs, qml.Hermitian):
-            observable_wires = measurementprocess.obs.wires
-            if self._use_mpi and len(observable_wires) > self._num_local_wires:
-                raise RuntimeError(
-                    "MPI backend does not support Hermitian with number of target wires larger than local wire number."
-                )
-            matrix = measurementprocess.obs.matrix()
-            return self._measurement_lightning.expval(matrix, observable_wires)
-
-        if measurementprocess.obs.arithmetic_depth:
-            # pylint: disable=protected-access
-            ob_serialized = QuantumScriptSerializer(
-                self._qubit_state.device_name, self.dtype == np.complex64, self._use_mpi
-            )._ob(measurementprocess.obs)
-            return self._measurement_lightning.expval(ob_serialized)
-
-        return self._measurement_lightning.expval(
-            measurementprocess.obs.name, measurementprocess.obs.wires
-        )
 
     def _expval_pauli_sentence(self, measurementprocess: MeasurementProcess):
         """Specialized method for computing the expectation value of a Pauli sentence.

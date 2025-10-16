@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Unit tests for the expval method of Lightning devices.
+Unit tests for expval on :mod:`pennylane_lightning` MPI-enabled devices.
 """
-# pylint: disable=protected-access,too-few-public-methods,unused-import,missing-function-docstring,too-many-arguments,c-extension-no-member
+# pylint: disable=protected-access,too-few-public-methods,unused-import,missing-function-docstring,too-many-arguments,too-many-positional-arguments,c-extension-no-member
 
 import numpy as np
 import pennylane as qml
@@ -25,89 +25,16 @@ from mpi4py import MPI
 numQubits = 8
 
 
-def create_random_init_state(numWires, c_dtype, seed_value=48):
-    """Returns a random initial state of a certain type."""
-    np.random.seed(seed_value)
-
+def create_random_init_state(numWires, c_dtype, seed=None):
+    """Returns a random normalized state of c_dtype with 2**numWires elements."""
+    rng = np.random.default_rng(seed)
     r_dtype = np.float64 if c_dtype == np.complex128 else np.float32
 
     num_elements = 2**numWires
-    init_state = np.random.rand(num_elements).astype(r_dtype) + 1j * np.random.rand(
-        num_elements
-    ).astype(r_dtype)
-
-    init_state = init_state / np.linalg.norm(init_state)
-    return init_state
-
-
-def apply_operation_gates_qnode_param(tol, dev_mpi, operation, par, Wires):
-    """Wrapper applying a parametric gate with QNode function."""
-    num_wires = numQubits
-    comm = MPI.COMM_WORLD
-    commSize = comm.Get_size()
-    num_global_wires = commSize.bit_length() - 1
-    num_local_wires = num_wires - num_global_wires
-
-    c_dtype = dev_mpi.c_dtype
-
-    expected_output_cpu = np.zeros(2**num_wires).astype(c_dtype)
-    local_state_vector = np.zeros(2**num_local_wires).astype(c_dtype)
-    local_expected_output_cpu = np.zeros(2**num_local_wires).astype(c_dtype)
-
-    state_vector = create_random_init_state(num_wires, dev_mpi.c_dtype)
-    comm.Bcast(state_vector, root=0)
-
-    comm.Scatter(state_vector, local_state_vector, root=0)
-    dev_cpu = qml.device("lightning.qubit", wires=num_wires, c_dtype=c_dtype)
-
-    def circuit(*params):
-        qml.StatePrep(state_vector, wires=range(num_wires))
-        operation(*params, wires=Wires)
-        return qml.state()
-
-    cpu_qnode = qml.QNode(circuit, dev_cpu)
-    expected_output_cpu = cpu_qnode(*par).astype(c_dtype)
-    comm.Scatter(expected_output_cpu, local_expected_output_cpu, root=0)
-
-    mpi_qnode = qml.QNode(circuit, dev_mpi)
-    local_state_vector = mpi_qnode(*par)
-
-    assert np.allclose(local_state_vector, local_expected_output_cpu, atol=tol, rtol=0)
-
-
-def apply_operation_gates_qnode_nonparam(tol, dev_mpi, operation, Wires):
-    """Wrapper applying a non-parametric gate with QNode function."""
-    num_wires = numQubits
-    comm = MPI.COMM_WORLD
-    commSize = comm.Get_size()
-    num_global_wires = commSize.bit_length() - 1
-    num_local_wires = num_wires - num_global_wires
-
-    c_dtype = dev_mpi.c_dtype
-
-    expected_output_cpu = np.zeros(2**num_wires).astype(c_dtype)
-    local_state_vector = np.zeros(2**num_local_wires).astype(c_dtype)
-    local_expected_output_cpu = np.zeros(2**num_local_wires).astype(c_dtype)
-
-    state_vector = create_random_init_state(num_wires, dev_mpi.c_dtype)
-    comm.Bcast(state_vector, root=0)
-
-    comm.Scatter(state_vector, local_state_vector, root=0)
-    dev_cpu = qml.device("lightning.qubit", wires=num_wires, c_dtype=c_dtype)
-
-    def circuit():
-        qml.StatePrep(state_vector, wires=range(num_wires))
-        operation(wires=Wires)
-        return qml.state()
-
-    cpu_qnode = qml.QNode(circuit, dev_cpu)
-    expected_output_cpu = cpu_qnode().astype(c_dtype)
-    comm.Scatter(expected_output_cpu, local_expected_output_cpu, root=0)
-
-    mpi_qnode = qml.QNode(circuit, dev_mpi)
-    local_state_vector = mpi_qnode()
-
-    assert np.allclose(local_state_vector, local_expected_output_cpu, atol=tol, rtol=0)
+    init_state = rng.random(num_elements).astype(r_dtype) + 1j * rng.random(num_elements).astype(
+        r_dtype
+    )
+    return init_state / np.linalg.norm(init_state)
 
 
 @pytest.mark.parametrize("c_dtype", [np.complex128, np.complex64])
@@ -126,18 +53,20 @@ class TestExpval:
         ],
     )
     @pytest.mark.parametrize("wires", [0, 1, 2, numQubits - 2, numQubits - 1])
-    def test_expval_single_wire_no_parameters(self, tol, operation, wires, c_dtype, batch_obs):
+    def test_expval_single_wire_no_parameters(
+        self, tol, operation, wires, c_dtype, batch_obs, seed
+    ):
         """Tests that expectation values are properly calculated for single-wire observables without parameters."""
         num_wires = numQubits
         comm = MPI.COMM_WORLD
 
         dev_mpi = qml.device(
-            "lightning.gpu", wires=numQubits, mpi=True, c_dtype=c_dtype, batch_obs=batch_obs
+            device_name, wires=numQubits, mpi=True, c_dtype=c_dtype, batch_obs=batch_obs
         )
 
         dev_cpu = qml.device("lightning.qubit", wires=num_wires, c_dtype=c_dtype)
 
-        state_vector = create_random_init_state(num_wires, dev_mpi.c_dtype)
+        state_vector = create_random_init_state(num_wires, dev_mpi.c_dtype, seed)
         comm.Bcast(state_vector, root=0)
 
         def circuit():
@@ -170,7 +99,7 @@ class TestExpval:
 
         dev_cpu = qml.device("lightning.qubit", wires=num_wires, c_dtype=c_dtype)
         dev_mpi = qml.device(
-            "lightning.gpu", wires=num_wires, mpi=True, c_dtype=c_dtype, batch_obs=batch_obs
+            device_name, wires=num_wires, mpi=True, c_dtype=c_dtype, batch_obs=batch_obs
         )
 
         def circuit():
@@ -218,7 +147,7 @@ class TestExpval:
 
         dev_cpu = qml.device("lightning.qubit", wires=num_wires, c_dtype=c_dtype)
         dev_mpi = qml.device(
-            "lightning.gpu", wires=num_wires, mpi=True, c_dtype=c_dtype, batch_obs=batch_obs
+            device_name, wires=num_wires, mpi=True, c_dtype=c_dtype, batch_obs=batch_obs
         )
 
         def circuit():
@@ -231,11 +160,9 @@ class TestExpval:
 
         assert np.allclose(cpu_qnode(), mpi_qnode(), atol=tol, rtol=0)
 
-    def test_expval_non_pauli_word_hamiltionian(self, tol, c_dtype, batch_obs):
+    def test_expval_non_pauli_word_hamiltonian(self, tol, c_dtype, batch_obs):
         """Tests expectation values of non-Pauli word Hamiltonians."""
-        dev_mpi = qml.device(
-            "lightning.gpu", wires=3, mpi=True, c_dtype=c_dtype, batch_obs=batch_obs
-        )
+        dev_mpi = qml.device(device_name, wires=3, mpi=True, c_dtype=c_dtype, batch_obs=batch_obs)
         dev_cpu = qml.device("lightning.qubit", wires=3)
 
         theta = 0.432
@@ -257,7 +184,7 @@ class TestExpval:
 
     @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
     @pytest.mark.parametrize("n_wires", range(1, numQubits))
-    def test_hermitian_expectation(self, n_wires, theta, phi, tol, c_dtype, batch_obs):
+    def test_hermitian_expectation(self, n_wires, theta, phi, tol, c_dtype, batch_obs, seed):
         """Test that Hadamard expectation value is correct"""
         n_qubits = numQubits - 1
         dev_def = qml.device("default.qubit", wires=n_qubits)
@@ -266,14 +193,15 @@ class TestExpval:
         )
         comm = MPI.COMM_WORLD
 
+        rng = np.random.default_rng(seed)
         m = 2**n_wires
-        U = np.random.rand(m, m) + 1j * np.random.rand(m, m)
+        U = rng.random((m, m)) + 1j * rng.random((m, m))
         U = U + np.conj(U.T)
         U = U.astype(dev.c_dtype)
         comm.Bcast(U, root=0)
         obs = qml.Hermitian(U, wires=range(n_wires))
 
-        init_state = np.random.rand(2**n_qubits) + 1j * np.random.rand(2**n_qubits)
+        init_state = rng.random(2**n_qubits) + 1j * rng.random(2**n_qubits)
         init_state = init_state / np.linalg.norm(init_state)
         init_state = init_state.astype(dev.c_dtype)
         comm.Bcast(init_state, root=0)

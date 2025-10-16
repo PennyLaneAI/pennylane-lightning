@@ -20,7 +20,7 @@ import math
 import pennylane as qml
 import pytest
 from conftest import LightningDevice as ld
-from conftest import LightningException, device_name
+from conftest import device_name
 from pennylane import numpy as np
 from pennylane.exceptions import QuantumFunctionError
 
@@ -131,7 +131,7 @@ class TestVectorJacobianProduct:
         dy = np.array([1.0])
 
         with pytest.raises(
-            LightningException,
+            RuntimeError,
             match="The operation is not supported using the",
         ):
             dev.compute_vjp(tape, dy)

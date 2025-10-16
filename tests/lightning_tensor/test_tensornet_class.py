@@ -18,7 +18,12 @@ import numpy as np
 import pennylane as qml
 import pytest
 import scipy
-from conftest import LightningDevice, device_name  # tested device
+from conftest import (  # tested device
+    LightningDevice,
+    device_name,
+    get_hermitian_matrix,
+    get_random_normalized_state,
+)
 from pennylane.exceptions import DeviceError
 
 if device_name != "lightning.tensor":
@@ -42,8 +47,9 @@ if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-acces
 @pytest.mark.parametrize("num_wires", range(1, 4))
 @pytest.mark.parametrize("bondDims", [1, 2, 3, 4])
 @pytest.mark.parametrize("dtype", [np.complex64, np.complex128])
+@pytest.mark.parametrize("workspace_pref", ["recommended", "max", "min"])
 @pytest.mark.parametrize("device_name", ["lightning.tensor"])
-def test_device_name_and_init(num_wires, bondDims, dtype, device_name, tn_backend):
+def test_device_name_and_init(num_wires, bondDims, dtype, device_name, tn_backend, workspace_pref):
     """Test the class initialization and returned properties."""
     if num_wires < 2:
         with pytest.raises(ValueError, match="Number of wires must be greater than 1."):
@@ -53,6 +59,7 @@ def test_device_name_and_init(num_wires, bondDims, dtype, device_name, tn_backen
                 c_dtype=dtype,
                 device_name=device_name,
                 method=tn_backend,
+                workspace_pref=workspace_pref,
             )
         return
     else:
@@ -62,6 +69,7 @@ def test_device_name_and_init(num_wires, bondDims, dtype, device_name, tn_backen
             c_dtype=dtype,
             device_name=device_name,
             method=tn_backend,
+            workspace_pref=workspace_pref,
         )
         assert tensornet.dtype == dtype
         assert tensornet.device_name == device_name
@@ -81,6 +89,20 @@ def test_wrong_method_name():
         LightningTensorNet(3, max_bond_dim=5, device_name="lightning.tensor", method="spider_web")
 
 
+def test_wrong_worksize_pref():
+    """Test an invalid worksize preference"""
+    with pytest.raises(ValueError, match="Worksize preference"):
+        LightningTensorNet(3, max_bond_dim=5, method="tn", worksize_pref="medium")
+
+
+def test_wrong_worksize_setting_after_init():
+    """Test setting worksize preference after initialization"""
+    tensornet = LightningTensorNet(3, max_bond_dim=5, method="tn")
+
+    with pytest.raises(ValueError, match="Worksize preference"):
+        tensornet.set_worksize_pref("medium")
+
+
 @pytest.mark.parametrize("tn_backend", ["mps", "tn"])
 def test_errors_basis_state(tn_backend):
     """Test that errors are raised when applying a BasisState operation."""
@@ -98,8 +120,7 @@ def test_dense_decompose():
     site_shape = [2, 2]
     max_mpo_bond_dim = 128
 
-    hermitian = np.random.rand(2**n_wires, 2**n_wires) + 1j * np.random.rand(2**n_wires, 2**n_wires)
-    hermitian = hermitian @ hermitian.conj().T
+    hermitian = get_hermitian_matrix(2**n_wires)
 
     gate = scipy.linalg.expm(1j * hermitian)
     original_gate = gate.copy()  # for later to double check
@@ -130,7 +151,7 @@ def test_dense_decompose():
 def test_gate_matrix_decompose():
     """Test the gate matrix decomposition function."""
     wires = [0, 1, 2]
-    hermitian = np.random.rand(2 ** len(wires), 2 ** len(wires))
+    hermitian = get_hermitian_matrix(2 ** len(wires))
     hermitian = hermitian @ hermitian.conj().T
 
     gate = scipy.linalg.expm(1j * hermitian)
@@ -157,7 +178,7 @@ def test_gate_matrix_decompose():
 def test_gate_matrix_decompose_out_of_order():
     """Test the gate matrix decomposition function when the wires are not sorted."""
     wires = [1, 2, 0]
-    hermitian = np.random.rand(2 ** len(wires), 2 ** len(wires))
+    hermitian = get_hermitian_matrix(2 ** len(wires))
     hermitian = hermitian @ hermitian.conj().T
 
     gate = scipy.linalg.expm(1j * hermitian)
@@ -190,8 +211,7 @@ def test_mps_canonical_form():
     site_shape = [2]
     max_mpo_bond_dim = 128
 
-    random_state = np.random.rand(2**n_wires) + 1j * np.random.rand(2**n_wires)
-    random_state = random_state / np.linalg.norm(random_state)
+    random_state = get_random_normalized_state(2**n_wires)
 
     # decompose the gate into MPOs with left canonical form
     mpos = decompose_dense(
@@ -227,8 +247,7 @@ def test_expand_mps_first_site():
     site_shape = [2]
     max_bond_dim = 128
 
-    random_state = np.random.rand(2**n_wires) + 1j * np.random.rand(2**n_wires)
-    random_state = random_state / np.linalg.norm(random_state)
+    random_state = get_random_normalized_state(2**n_wires)
 
     # decompose the gate into MPOs with right canonical form
     mps = decompose_dense(random_state, n_wires, site_shape, max_bond_dim, canonical_right=True)
@@ -256,8 +275,7 @@ def test_expand_mps_top_max_bond_dim():
     site_shape = [2]
     max_bond_dim = 4
 
-    random_state = np.random.rand(2**n_wires) + 1j * np.random.rand(2**n_wires)
-    random_state = random_state / np.linalg.norm(random_state)
+    random_state = get_random_normalized_state(2**n_wires)
 
     # decompse the gate into mps with left canonical form
     mps = decompose_dense(random_state, n_wires, site_shape, max_bond_dim)
@@ -284,8 +302,7 @@ def test_restore_left_canonical_form():
     site_shape = [2]
     max_bond_dim = 128
 
-    random_state = np.random.rand(2**n_wires) + 1j * np.random.rand(2**n_wires)
-    random_state = random_state / np.linalg.norm(random_state)
+    random_state = get_random_normalized_state(2**n_wires)
 
     # decompose the gate into mps with right canonical form
     mps = decompose_dense(random_state, n_wires, site_shape, max_bond_dim, canonical_right=True)
@@ -317,8 +334,7 @@ def test_restore_right_canonical_form():
     site_shape = [2]
     max_bond_dim = 128
 
-    random_state = np.random.rand(2**n_wires) + 1j * np.random.rand(2**n_wires)
-    random_state = random_state / np.linalg.norm(random_state)
+    random_state = get_random_normalized_state(2**n_wires)
 
     # decompose the gate into MPS with false canonical form
     mps = decompose_dense(random_state, n_wires, site_shape, max_bond_dim, canonical_right=False)

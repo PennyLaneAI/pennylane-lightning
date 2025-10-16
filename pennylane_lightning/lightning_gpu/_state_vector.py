@@ -36,6 +36,7 @@ from typing import Union
 import numpy as np
 import pennylane as qml
 import scipy as sp
+from numpy.random import Generator
 from pennylane.exceptions import DeviceError
 from pennylane.measurements import MidMeasureMP
 from pennylane.ops import Conditional
@@ -68,21 +69,22 @@ class LightningGPUStateVector(LightningBaseStateVector):
         num_wires(int): the number of wires to initialize the device with
         dtype: Datatypes for state-vector representation. Must be one of
             ``np.complex64`` or ``np.complex128``. Default is ``np.complex128``
-        device_name(string): state vector device name. Options: ["lightning.gpu"]
+        rng (Generator): random number generator to use for seeding sampling measurement.
         mpi_handler(MPIHandler): MPI handler for PennyLane Lightning GPU device.
             Provides functionality to distribute the state-vector to multiple devices.
         use_async (bool): is host-device data copy asynchronized or not.
     """
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-arguments, too-many-positional-arguments
         self,
         num_wires: int,
         dtype: Union[np.complex128, np.complex64] = np.complex128,
+        rng: Generator = None,
         mpi_handler: MPIHandler = None,
         use_async: bool = False,
     ):
 
-        super().__init__(num_wires, dtype)
+        super().__init__(num_wires, dtype, rng)
 
         self._device_name = "lightning.gpu"
 
@@ -106,7 +108,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
                 self._mpi_handler.num_local_wires,
             )
         else:  # without MPI
-            self._qubit_state = self._state_dtype()(self.num_wires)
+            self._qubit_state = self._state_dtype()(num_wires)
 
     def _state_dtype(self):
         """Binding to Lightning Managed state vector C++ class.
@@ -205,15 +207,15 @@ class LightningGPUStateVector(LightningBaseStateVector):
         # Currently there is not support for sparse matrices in the LightningGPU device.
         return False
 
-    def _apply_state_vector(self, state, device_wires, use_async: bool = False):
-        """Initialize the state vector on GPU with a specified state on host.
-        Note that any use of this method will introduce host-overheads.
+    def _apply_state_vector(self, state, device_wires: Wires, **kwargs):
+        """Initialize the internal state vector in a specified state.
         Args:
-        state (Union[array[complex], scipy.SparseABC]): normalized input state of length ``2**len(wires)`` as a dense array or Scipy sparse array.
-        device_wires (Wires): wires that get initialized in the state
-        use_async(bool): indicates whether to use asynchronous memory copy from host to device or not.
+            state (Union[array[complex], scipy.SparseABC]): normalized input state of length ``2**len(wires)`` as a dense array or Scipy sparse array.
+            device_wires (Wires): wires that get initialized in the state
+            use_async(bool): indicates whether to use asynchronous memory copy from host to device or not.
         Note: This function only supports synchronized memory copy from host to device.
         """
+        use_async = kwargs.get("use_async", False)
 
         if isinstance(state, self._qubit_state.__class__):
             raise DeviceError("LightningGPU does not support allocate external state_vector.")

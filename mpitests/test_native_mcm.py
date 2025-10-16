@@ -11,7 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Tests for default qubit preprocessing."""
+"""
+Unit tests for native mid-circuit measurements on :mod:`pennylane_lightning` MPI-enabled devices.
+"""
+from functools import partial
+
 import numpy as np
 import pennylane as qml
 import pytest
@@ -26,9 +30,10 @@ if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-acces
 def test_unspported_mid_measurement():
     """Test unsupported mid_measurement for Lightning-GPU-MPI."""
     comm = MPI.COMM_WORLD
-    dev = qml.device(device_name, wires=2, mpi=True, shots=1000)
+    dev = qml.device(device_name, wires=2, mpi=True)
     params = np.pi / 4 * np.ones(2)
 
+    @partial(qml.set_shots, shots=1000)
     @qml.qnode(dev)
     def func(x, y):
         qml.RX(x, wires=0)
@@ -40,6 +45,6 @@ def test_unspported_mid_measurement():
 
     with pytest.raises(
         DeviceError,
-        match="Lightning-GPU-MPI does not support Mid-circuit measurements.",
+        match="Lightning Device with MPI does not support Mid-circuit measurements.",
     ):
         func(*params)

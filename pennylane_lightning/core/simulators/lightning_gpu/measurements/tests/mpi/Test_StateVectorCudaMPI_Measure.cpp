@@ -21,7 +21,7 @@
 
 #include <catch2/catch.hpp>
 
-#include "MPIManager.hpp"
+#include "MPIManagerGPU.hpp"
 #include "MeasurementsGPU.hpp"
 #include "MeasurementsGPUMPI.hpp"
 #include "StateVectorCudaMPI.hpp"
@@ -48,7 +48,7 @@ TEMPLATE_TEST_CASE("Expected Values", "[MeasurementsMPI]", float, double) {
 
     std::size_t num_qubits = 3;
 
-    MPIManager mpi_manager(MPI_COMM_WORLD);
+    MPIManagerGPU mpi_manager(MPI_COMM_WORLD);
     REQUIRE(mpi_manager.getSize() == 2);
 
     std::size_t mpi_buffersize = 1;
@@ -195,7 +195,7 @@ TEMPLATE_TEST_CASE("Pauliwords base on expval", "[MeasurementsMPI]", float,
     using cp_t = std::complex<PrecisionT>;
     using StateVectorT = StateVectorCudaMPI<TestType>;
 
-    MPIManager mpi_manager(MPI_COMM_WORLD);
+    MPIManagerGPU mpi_manager(MPI_COMM_WORLD);
     REQUIRE(mpi_manager.getSize() == 2);
 
     std::size_t numqubits = 4;
@@ -309,7 +309,7 @@ TEMPLATE_TEST_CASE("Variances", "[MeasurementsMPI]", double) {
 
     std::size_t num_qubits = 3;
 
-    MPIManager mpi_manager(MPI_COMM_WORLD);
+    MPIManagerGPU mpi_manager(MPI_COMM_WORLD);
     REQUIRE(mpi_manager.getSize() == 2);
 
     std::size_t mpi_buffersize = 1;
@@ -421,7 +421,7 @@ TEMPLATE_TEST_CASE("Probabilities", "[MeasuresMPI]", double) {
 
     std::size_t num_qubits = 3;
 
-    MPIManager mpi_manager(MPI_COMM_WORLD);
+    MPIManagerGPU mpi_manager(MPI_COMM_WORLD);
     REQUIRE(mpi_manager.getSize() == 2);
 
     std::size_t mpi_buffersize = 1;

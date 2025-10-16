@@ -19,11 +19,11 @@
 #include <complex>
 #include <vector>
 
-#include "MPIManager.hpp"
+#include "MPIManagerGPU.hpp"
 
 /// @cond DEV
 namespace {
-using namespace Pennylane::LightningGPU;
+using namespace Pennylane::LightningGPU::Util;
 } // namespace
 /// @endcond
 namespace Pennylane::LightningGPU::MPI {
@@ -77,7 +77,7 @@ template <class Precision, class IndexT> class CSRMatrix {
  *
  * @tparam Precision Floating-point precision type.
  * @tparam IndexT Integer type used as indices of the sparse matrix.
- * @param mpi_manager MPIManager object.
+ * @param mpi_manager MPIManagerGPU object.
  * @param num_rows Number of rows of the CSR matrix.
  * @param csrOffsets_ptr Pointer to the array of row offsets of the sparse
  * matrix. Array of size csrOffsets_size.
@@ -88,7 +88,7 @@ template <class Precision, class IndexT> class CSRMatrix {
  * @return auto A vector of vector of CSRMatrix.
  */
 template <class Precision, class IndexT>
-auto splitCSRMatrix(MPIManager &mpi_manager, const std::size_t &num_rows,
+auto splitCSRMatrix(MPIManagerGPU &mpi_manager, const std::size_t &num_rows,
                     const IndexT *csrOffsets_ptr, const IndexT *columns_ptr,
                     const std::complex<Precision> *values_ptr)
     -> std::vector<std::vector<CSRMatrix<Precision, IndexT>>> {
@@ -162,13 +162,13 @@ auto splitCSRMatrix(MPIManager &mpi_manager, const std::size_t &num_rows,
  *
  * @tparam Precision Floating-point precision type.
  * @tparam IndexT Integer type used as indices of the sparse matrix.
- * @param mpi_manager MPIManager object.
+ * @param mpi_manager MPIManagerGPU object.
  * @param matrix CSR (Compressed Sparse Row) format matrix vector.
  * @param local_num_rows Number of rows of local CSR matrix.
  * @param root Root rank of the scatter operation.
  */
 template <class Precision, class IndexT>
-auto scatterCSRMatrix(MPIManager &mpi_manager,
+auto scatterCSRMatrix(MPIManagerGPU &mpi_manager,
                       std::vector<CSRMatrix<Precision, IndexT>> &matrix,
                       std::size_t local_num_rows, std::size_t root)
     -> CSRMatrix<Precision, IndexT> {

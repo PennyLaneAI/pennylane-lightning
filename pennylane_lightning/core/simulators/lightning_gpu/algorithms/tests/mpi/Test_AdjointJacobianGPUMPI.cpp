@@ -26,7 +26,7 @@
 
 #include "AdjointJacobianGPUMPI.hpp"
 #include "JacobianDataMPI.hpp"
-#include "MPIManager.hpp"
+#include "MPIManagerGPU.hpp"
 #include "StateVectorCudaMPI.hpp"
 
 #include "TestHelpers.hpp"
@@ -56,7 +56,7 @@ TEST_CASE("AdjointJacobianGPUMPI::adjointJacobianMPI Op=RX, Obs=[Z,Z]",
           "[AdjointJacobianGPUMPI]") {
     using StateVectorT = StateVectorCudaMPI<double>;
 
-    MPIManager mpi_manager(MPI_COMM_WORLD);
+    MPIManagerGPU mpi_manager(MPI_COMM_WORLD);
     REQUIRE(mpi_manager.getSize() == 2);
 
     AdjointJacobianMPI<StateVectorT> adj;
@@ -113,7 +113,7 @@ TEST_CASE("AdjointJacobianGPUMPI::adjointJacobianMPI Op=["
     const std::string test_ops = GENERATE("StatePrep", "BasisState");
     using StateVectorT = StateVectorCudaMPI<double>;
 
-    MPIManager mpi_manager(MPI_COMM_WORLD);
+    MPIManagerGPU mpi_manager(MPI_COMM_WORLD);
     REQUIRE(mpi_manager.getSize() == 2);
 
     AdjointJacobianMPI<StateVectorT> adj;
@@ -178,7 +178,7 @@ TEST_CASE(
     std::vector<double> jacobian(num_obs * tp.size(), 0);
     std::vector<double> jacobian_serial(num_obs * tp.size(), 0);
 
-    MPIManager mpi_manager(MPI_COMM_WORLD);
+    MPIManagerGPU mpi_manager(MPI_COMM_WORLD);
     REQUIRE(mpi_manager.getSize() == 2);
 
     std::size_t mpi_buffersize = 1;
@@ -246,7 +246,7 @@ TEST_CASE(
     std::vector<double> jacobian(num_obs * tp.size(), 0);
     std::vector<double> jacobian_serial(num_obs * tp.size(), 0);
 
-    MPIManager mpi_manager(MPI_COMM_WORLD);
+    MPIManagerGPU mpi_manager(MPI_COMM_WORLD);
     REQUIRE(mpi_manager.getSize() == 2);
 
     std::size_t mpi_buffersize = 1;
@@ -310,7 +310,7 @@ TEST_CASE("AdjointJacobianGPUMPI::adjointJacobian Op=[RX,RX,RX], Obs=[ZZZ]",
     std::vector<double> jacobian(num_obs * tp.size(), 0);
     std::vector<double> jacobian_serial(num_obs * tp.size(), 0);
 
-    MPIManager mpi_manager(MPI_COMM_WORLD);
+    MPIManagerGPU mpi_manager(MPI_COMM_WORLD);
     REQUIRE(mpi_manager.getSize() == 2);
 
     std::size_t mpi_buffersize = 1;
@@ -372,7 +372,7 @@ TEST_CASE("AdjointJacobianGPUMPI::adjointJacobian Op=Mixed, Obs=[XXX]",
     std::vector<double> jacobian(num_obs * tp.size(), 0);
     std::vector<double> jacobian_serial(num_obs * tp.size(), 0);
 
-    MPIManager mpi_manager(MPI_COMM_WORLD);
+    MPIManagerGPU mpi_manager(MPI_COMM_WORLD);
     REQUIRE(mpi_manager.getSize() == 2);
 
     std::size_t mpi_buffersize = 1;
@@ -451,7 +451,7 @@ TEST_CASE("AdjointJacobianGPU::AdjointJacobianGPUMPI Op=[RX,RX,RX], "
     std::vector<double> jacobian(num_obs * tp.size(), 0);
     std::vector<double> jacobian_serial(num_obs * tp.size(), 0);
 
-    MPIManager mpi_manager(MPI_COMM_WORLD);
+    MPIManagerGPU mpi_manager(MPI_COMM_WORLD);
     REQUIRE(mpi_manager.getSize() == 2);
 
     std::size_t mpi_buffersize = 1;
@@ -519,7 +519,7 @@ TEST_CASE("AdjointJacobianGPU::AdjointJacobianGPU Test HermitianObs",
     std::vector<double> jacobian1_serial(num_obs * tp.size(), 0);
     std::vector<double> jacobian2_serial(num_obs * tp.size(), 0);
 
-    MPIManager mpi_manager(MPI_COMM_WORLD);
+    MPIManagerGPU mpi_manager(MPI_COMM_WORLD);
     REQUIRE(mpi_manager.getSize() == 2);
 
     std::size_t mpi_buffersize = 1;

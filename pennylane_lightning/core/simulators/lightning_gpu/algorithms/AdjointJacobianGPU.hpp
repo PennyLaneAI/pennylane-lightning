@@ -43,7 +43,7 @@ namespace Pennylane::LightningGPU::Algorithms {
 
 /**
  * @brief GPU-enabled adjoint Jacobian evaluator following the method of
- * arXiV:2009.02823
+ * arXiv:2009.02823
  *
  * @tparam StateVectorT State vector type.
  */
@@ -51,11 +51,11 @@ template <class StateVectorT>
 class AdjointJacobian final
     : public AdjointJacobianBase<StateVectorT, AdjointJacobian<StateVectorT>> {
   private:
-    using ComplexT = typename StateVectorT::ComplexT;
-    using PrecisionT = typename StateVectorT::PrecisionT;
-    using CFP_t = decltype(cuUtil::getCudaType(PrecisionT{}));
     using BaseType =
         AdjointJacobianBase<StateVectorT, AdjointJacobian<StateVectorT>>;
+    using typename BaseType::ComplexT;
+    using typename BaseType::PrecisionT;
+    using CFP_t = decltype(cuUtil::getCudaType(PrecisionT{}));
 
     /**
      * @brief Utility method to update the Jacobian at a given index by
