@@ -48,7 +48,7 @@ option(ENABLE_COVERAGE "Enable code coverage" OFF)
 option(ENABLE_WARNINGS "Enable warnings" ON)
 option(ENABLE_NATIVE "Enable native CPU build tuning" OFF)
 option(ENABLE_PYTHON "Enable compilation of the Python module" ON)
-option(ENABLE_SCIPY_OPENBLAS "Enable SciPy OpenBLAS support" OFF)
+option(ENABLE_SCIPY_OPENBLAS "Enable SciPy OpenBLAS support" ON)
 
 # OpenMP
 find_package(OpenMP)
