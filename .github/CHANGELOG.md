@@ -14,6 +14,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Bumped the seed for pytests.
+  [(#1276)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1276)
+    
 - `scipy-openblas32` dependency can be set manually when installing from source using the `ENABLE_SCIPY_OPENBLAS` cmake flag.
   [(#1220)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1220)
 
