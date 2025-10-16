@@ -80,6 +80,15 @@ jobs:
           repository: PennyLaneAI/catalyst
           path: ${{ github.workspace}}/catalyst
 
+      - name: Switch to release build of Catalyst
+        if: inputs.lightning-version == 'release'
+        run: |
+          cd ${{ github.workspace}}/catalyst
+          git fetch --all
+          git checkout $(git branch -a --list "origin/v0.*rc*" | sort | tail -1)
+          git log -1 --format='%H'
+          cd ${{ github.workspace }}
+
       - name: Install dependencies
         run: |
           sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION g++-$GCC_VERSION libopenblas-dev

@@ -97,6 +97,15 @@ jobs:
           repository: PennyLaneAI/catalyst
           path: ${{ github.workspace}}/catalyst
 
+      - name: Switch to release build of Catalyst
+        if: inputs.lightning-version == 'release'
+        run: |
+          cd ${{ github.workspace}}/catalyst
+          git fetch --all
+          git checkout $(git branch -a --list "origin/v0.*rc*" | sort | tail -1)
+          git log -1 --format='%H'
+          cd ${{ github.workspace }}
+
       - uses: actions/setup-python@v5
         id: setup_python
         name: Install Python
