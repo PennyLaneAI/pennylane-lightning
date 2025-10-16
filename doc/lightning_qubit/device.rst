@@ -147,8 +147,8 @@ OpenMP acceleration of the gate kernels across all kernel types (LM, AVX2, and A
 You can control the number of threads used by setting the ``OMP_NUM_THREADS`` environment variable before starting your Python session,
 or if already started, before simulating your PennyLane programs.
 
-For gradient workloads with many observables, this may reduce performance in comparison with the default mode,
-to turn this off, use the CMake flag ``-DLQ_ENABLE_KERNEL_OMP=OFF`` when building Lightning-Qubit.
+For workloads involving gradients with many observables measurements, this may reduce performance in comparison with the default mode.
+To turn this off, use the CMake flag ``-DLQ_ENABLE_KERNEL_OMP=OFF`` when building Lightning-Qubit.
 
 **Markov Chain Monte Carlo sampling support:**
 
