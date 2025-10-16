@@ -14,6 +14,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- `scipy-openblas32` dependency can be set manually when installing from source using the `ENABLE_SCIPY_OPENBLAS` cmake flag.
+  [(#1220)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1220)
+
 - Merge v0.43.0 rc branch to master.
   [(#1282)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1282)
 
@@ -23,7 +26,7 @@
 - `lightning.qubit` CI Python tests now use rc branch for testing release candidates.
   [(#1280)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1280)
 
-- Bumped the version.
+- Bumped the version to 0.44.0-dev.
   [(#1272)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1272)
 
 - Bumped release version for testing Docker.

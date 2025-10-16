@@ -275,6 +275,7 @@ TEST_CASE("Expval(HermitianObs) test", "[Measures]") {
     CHECK(sim->Expval(h2) == Approx(.0).margin(1e-5));
 }
 
+#ifdef SCIPY_OPENBLAS_ENABLED
 TEST_CASE("Expval(HermitianObs) shots test", "[Measures]") {
     std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
 
@@ -322,6 +323,7 @@ TEST_CASE("Var(HermitianObs) shots test", "[Measures]") {
 
     CHECK(sim->Var(h1) == Approx(0.0).margin(1e-5));
 }
+#endif // SCIPY_OPENBLAS_ENABLED
 
 TEST_CASE("Expval(TensorProd(NamedObs)) test", "[Measures]") {
     std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
