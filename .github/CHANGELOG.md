@@ -14,15 +14,18 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Merge v0.43.0 rc branch to master.
+  [(#1282)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1282)
+
 - Removed Catalyst version pin in stable CI tests.
-    [(#1284)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1284)
+  [(#1284)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1284)
 
 - `lightning.qubit` CI Python tests now use rc branch for testing release candidates.
-    [(#1280)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1280)
+  [(#1280)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1280)
 
 - Bumped the version.
-    [(#1272)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1272)
-    
+  [(#1272)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1272)
+
 - Bumped release version for testing Docker.
   [(#1271)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1271)
 
