@@ -28,7 +28,7 @@ on:
 
 env:
   COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:./coverage.xml -p no:warnings --tb=native"
-  GCC_VERSION: 11
+  GCC_VERSION: 13
   OMP_NUM_THREADS: "2"
   CI_CUDA_ARCH: 86
 
@@ -141,8 +141,10 @@ jobs:
             -DCMAKE_BUILD_TYPE=Debug \
             -DENABLE_COVERAGE=ON \
             -DBUILD_TESTS=ON \
+            -DCMAKE_C_COMPILER=mpicc \
             -DCMAKE_CXX_COMPILER=mpicxx \
             -DCMAKE_CUDA_COMPILER=$(which nvcc) \
+            -DCMAKE_CUDA_HOST_COMPILER=$(which gcc-$GCC_VERSION) \
             -DCMAKE_CUDA_ARCHITECTURES="86" \
             -DCUQUANTUM_SDK=${CUQUANTUM_SDK} \
             -DSCIPY_OPENBLAS=${SCIPY_OPENBLAS} \
