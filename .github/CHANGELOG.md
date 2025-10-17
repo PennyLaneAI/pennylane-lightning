@@ -4,6 +4,10 @@
 
 <h3>Improvements 🛠</h3>
 
+- Enabled OpenMP support in `lightning.qubit` across all kernel types (LM, AVX2, and AVX512) by default for better performance tuning.
+  [(#1133)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1133)
+
+
 <h3>Breaking changes 💔</h3>
 
 <h3>Deprecations 👋</h3>
@@ -39,6 +43,7 @@
 
 This release contains contributions from (in alphabetical order):
 
+Ali Asadi,
 Joseph Lee
 
 ---
