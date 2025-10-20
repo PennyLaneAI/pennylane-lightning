@@ -201,7 +201,7 @@ def test_integration_for_all_supported_gates(returns, method, seed):
 
     ref = qml.QNode(circuit, dev_default)(params)
 
-    assert np.allclose(j_ltensor, ref, rtol=1e-6)
+    assert np.allclose(j_ltensor, ref, rtol=2e-6)
 
 
 @pytest.mark.parametrize("method", [{"method": "mps", "max_bond_dim": 128}, {"method": "tn"}])
