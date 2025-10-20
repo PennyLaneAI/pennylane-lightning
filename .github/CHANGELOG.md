@@ -14,6 +14,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Bumped pylint and isort versions in requirement files.
+  [(#1288)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1288)
+
 - Bumped the seed for pytests.
   [(#1276)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1276)
     
