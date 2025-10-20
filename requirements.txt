@@ -15,5 +15,5 @@ pennylane>=0.42
 black>=21
 clang-tidy~=20.1
 clang-format~=20.1
-isort==5.13.2
-pylint==2.7.4
+isort~=7.0.0
+pylint~=4.0.0
