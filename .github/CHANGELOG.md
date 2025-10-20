@@ -14,6 +14,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- No longer create wheels for x86 macOS.
+  [(#1287)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1287)
+
 - Bumped the seed for pytests.
   [(#1276)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1276)
     
