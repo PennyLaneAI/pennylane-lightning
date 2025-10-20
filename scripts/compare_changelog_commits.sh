@@ -145,4 +145,4 @@ interleave_rows(){
 # Compare the two lists
 echo "--------------------------------------------------------------------------------"
 echo "Merged PRs in Git / PRs in CHANGELOG"
-# interleave_rows release_list_merged_PR.txt release_list_PR_in_changelog.txt
+interleave_rows release_list_merged_PR.txt release_list_PR_in_changelog.txt
