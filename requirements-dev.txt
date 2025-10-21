@@ -19,7 +19,7 @@ flaky>=3.7.0 # For pl-device-test
 
 # Formatting / Linting Dependencies
 pre-commit>=2.19.0
-black>=21
+black==25.9.0
 clang-tidy~=20.1
 clang-format~=20.1
 isort~=7.0.0
