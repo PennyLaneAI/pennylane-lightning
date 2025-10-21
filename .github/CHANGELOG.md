@@ -14,7 +14,7 @@
 
 <h3>Internal changes ⚙️</h3>
 
-- Use GCC 13 for CI.
+- Updated CIs to use GCC 13.
   [(#1249)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1249)
 
 - Bumped the seed for pytests.
