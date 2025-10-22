@@ -17,6 +17,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Pinned black, pylint, and isort versions in requirement files.
+  [(#1288)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1288)
+
 - Updated CIs to use GCC 13.
   [(#1249)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1249)
 
