@@ -79,16 +79,16 @@ If you're not sure which simulator to use, check out our [PennyLane Performance]
 
 The following table summarizes the supported platforms and the primary installation mode:
 
-|                        | Linux x86 | Linux ARM | MacOS x86 | MacOS ARM | Windows   |
-|------------------------|-----------|-----------|-----------|-----------|-----------|
-| Lightning-Qubit        | pip       | pip       | pip       | pip       | pip       |
-| Lightning-GPU          | pip       | pip       |           |           |           |
-| Lightning-GPU (MPI)    | source    |           |           |           |           |
-| Lightning-Kokkos (OMP) | pip       | pip       | pip       | pip       |           |
-| Lightning-Kokkos (CUDA)| source    | source    |           |           |           |
-| Lightning-Kokkos (HIP) | source    | source    |           |           |           |
-| Lightning-Kokkos (MPI) | source    |           |           |           |           |
-| Lightning-Tensor       | pip       | pip       |           |           |           |
+|                        | Linux x86 | Linux ARM | MacOS ARM | Windows   |
+|------------------------|-----------|-----------|-----------|-----------|
+| Lightning-Qubit        | pip       | pip       | pip       | pip       |
+| Lightning-GPU          | pip       | pip       |           |           |
+| Lightning-GPU (MPI)    | source    |           |           |           |
+| Lightning-Kokkos (OMP) | pip       | pip       | pip       |           |
+| Lightning-Kokkos (CUDA)| source    | source    |           |           |
+| Lightning-Kokkos (HIP) | source    | source    |           |           |
+| Lightning-Kokkos (MPI) | source    |           |           |           |
+| Lightning-Tensor       | pip       | pip       |           |           |
 
 To install the latest stable version of these plugins,
 check out the [PennyLane installation guide](https://pennylane.ai/install#high-performance-computing-and-gpus).
