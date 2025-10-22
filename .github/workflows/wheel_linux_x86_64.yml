@@ -60,7 +60,7 @@ jobs:
         if: ${{ (matrix.container_img == 'ubuntu-24.04') && (steps.kokkos-cache.outputs.cache-hit != 'true') }}
         run: |
           apt-get update && DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y -q install cmake gcc-$GCC_VERSION g++-$GCC_VERSION ninja-build git
-          echo "COMPILER=g++-13" >> $GITHUB_ENV
+          echo "COMPILER=g++-${GCC_VERSION}" >> $GITHUB_ENV
 
       - name: Install dependencies (AlmaLinux)
         if: ${{ (matrix.container_img == 'quay.io/pypa/manylinux_2_28_x86_64') && (steps.kokkos-cache.outputs.cache-hit != 'true') }}
