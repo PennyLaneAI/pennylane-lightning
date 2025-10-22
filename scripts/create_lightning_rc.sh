@@ -3,15 +3,34 @@
 # Exit immediately if a command exits with a non-zero status
 set -e
 
-# This script creates a release candidate branch for PennyLane-Lightning
-# How to use:
-# 1. Make sure you have the latest changes from the main branch
-# 2. Run the script with the desired options. For example:
+# This script automates the creation of a release candidate branch for PennyLane-Lightning.
 #
-#    bash scripts/create_lightning_rc.sh -s 0.42.0 -r 0.43.99 -n 0.44.99 --create_rc
-#    bash scripts/create_lightning_rc.sh -s 0.42.0 -r 0.43.99 -n 0.44.99 --lightning_test
-#    bash scripts/create_lightning_rc.sh -s 0.42.0 -r 0.43.99 -n 0.44.99 --release
-#    bash scripts/create_lightning_rc.sh -s 0.42.0 -r 0.43.99 -n 0.44.99 --release_assets
+# Prerequisites:
+# - Be on the latest master branch in the root directory of pennylane-lightning/
+# - Have 'gh' CLI installed and authenticated with GitHub
+# - Have 'jq' installed for JSON processing
+#
+# Usage Instructions:
+# The script supports different phases of the release process. The script should run on the root
+# directory of the pennylane-lightning repository and in master branch.
+# Run them in sequence:
+#
+# 1. Create Release Candidate (creates branches and PRs):
+#    bash scripts/create_lightning_rc.sh -s 0.42.0 -r 0.43.0 -n 0.44.0 --create_rc
+#
+# 2. Test Lightning Installation (validates RC build):
+#    bash scripts/create_lightning_rc.sh -s 0.42.0 -r 0.43.0 -n 0.44.0 --lightning_test
+#
+# 3. Create Release (creates GitHub release):
+#    bash scripts/create_lightning_rc.sh -s 0.42.0 -r 0.43.0 -n 0.44.0 --release
+#
+# 4. Handle Release Assets (upload wheels and source distributions):
+#    bash scripts/create_lightning_rc.sh -s 0.42.0 -r 0.43.0 -n 0.44.0 --release_assets
+#
+# Version flags:
+# -s/--stable_version: Current stable release (e.g., 0.42.0)
+# -r/--release_version: Version being released (e.g., 0.43.0)
+# -n/--next_version: Next development version (e.g., 0.44.0)
 #
 # Use the --help option to see all available options.
 
