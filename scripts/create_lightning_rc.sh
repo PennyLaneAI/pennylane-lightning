@@ -3,15 +3,34 @@
 # Exit immediately if a command exits with a non-zero status
 set -e
 
-# This script creates a release candidate branch for PennyLane-Lightning
-# How to use:
-# 1. Make sure you have the latest changes from the main branch
-# 2. Run the script with the desired options. For example:
+# This script automates the creation of a release candidate branch for PennyLane-Lightning.
 #
-#    bash scripts/create_lightning_rc.sh -s 0.42.0 -r 0.43.99 -n 0.44.99 --create_rc
-#    bash scripts/create_lightning_rc.sh -s 0.42.0 -r 0.43.99 -n 0.44.99 --lightning_test
-#    bash scripts/create_lightning_rc.sh -s 0.42.0 -r 0.43.99 -n 0.44.99 --release
-#    bash scripts/create_lightning_rc.sh -s 0.42.0 -r 0.43.99 -n 0.44.99 --release_assets
+# Prerequisites:
+# - Be on the latest master branch in the root directory of pennylane-lightning/
+# - Have 'gh' CLI installed and authenticated with GitHub
+# - Have 'jq' installed for JSON processing
+#
+# Usage Instructions:
+# The script supports different phases of the release process. The script should run on the root
+# directory of the pennylane-lightning repository and in master branch.
+# Run them in sequence:
+#
+# 1. Create Release Candidate (creates branches and PRs):
+#    bash scripts/create_lightning_rc.sh -s 0.42.0 -r 0.43.0 -n 0.44.0 --create_rc
+#
+# 2. Test Lightning Installation (validates RC build):
+#    bash scripts/create_lightning_rc.sh -s 0.42.0 -r 0.43.0 -n 0.44.0 --lightning_test
+#
+# 3. Create Release (creates GitHub release):
+#    bash scripts/create_lightning_rc.sh -s 0.42.0 -r 0.43.0 -n 0.44.0 --release
+#
+# 4. Handle Release Assets (upload wheels and source distributions):
+#    bash scripts/create_lightning_rc.sh -s 0.42.0 -r 0.43.0 -n 0.44.0 --release_assets
+#
+# Version flags:
+# -s/--stable_version: Current stable release (e.g., 0.42.0)
+# -r/--release_version: Version being released (e.g., 0.43.0)
+# -n/--next_version: Next development version (e.g., 0.44.0)
 #
 # Use the --help option to see all available options.
 
@@ -25,13 +44,16 @@ IS_TEST=true
 # Debug option
 # To avoid pushing any branch or PR to GitHub. Set to true
 LOCAL_TEST=true
-# To avoid publishing to TestPyPI. Set to false
-PUSH_TESTPYPI=false
 
-# Check if gh CLI is installed
+# Check if gh CLI, and jq are installed
 if ! command -v gh &> /dev/null; then
     echo "gh CLI could not be found"
-    exit
+    exit 1
+fi
+
+if ! command -v jq &> /dev/null; then
+    echo "jq could not be found"
+    exit 1
 fi
 
 # --------------------------------------------------------------------------------------------------
@@ -53,7 +75,7 @@ help(){
     echo "  -h, --help                        Show this help message"
 }
 
-ROOT_DIR="$(pwd)"
+ROOT_DIR="."
 
 if [ ! -d "${ROOT_DIR}/.git" ]; then
     echo "You should to run the script on the root directory of the repository"
@@ -71,21 +93,25 @@ use_dry_run(){
     if [ "$LOCAL_TEST" == "true" ]; then
         dry_run="--dry-run"
     fi
-    
+
     echo $dry_run
 }
 
-branch_name(){
-    version=$1
-    suffix=$2
+branch_name() {
+    local version=$1
+    local suffix=$2
+    local branch
 
-    branch=$(echo "v${version}_${suffix}" | tr '[:upper:]' '[:lower:]')
+    # The expression ${suffix:+_${suffix}} adds "_$suffix" ONLY if suffix is not empty.
+    branch="v${version}${suffix:+_${suffix}}"
 
     if [ "$IS_TEST" == "true" ]; then
-        branch="test_v${version}_${suffix}_alpha"
+        # The same logic applies here for the test branch.
+        branch="test_v${version}${suffix:+_${suffix}}_alpha"
     fi
 
-    echo $branch
+    # Convert to lowercase at the end.
+    echo "$branch" | tr '[:upper:]' '[:lower:]'
 }
 
 test_pennylane_version(){
@@ -128,6 +154,17 @@ create_release_notes(){
     sed -i 's|^- |* |' ${ROOT_DIR}/release_notes.md
 }
 
+add_CHANGELOG_entry(){
+    # Add a new entry to the CHANGELOG
+    local changelog_entry=$1
+    local PR_number=$2
+
+sed -i "/<h3>Internal changes ⚙️<\/h3>/a \\
+\\
+- $changelog_entry\\
+  [(#${PR_number})](https://github.com/PennyLaneAI/pennylane-lightning/pull/${PR_number})" $CHANGELOG_FILE
+}
+
 # Release functions
 
 create_release_candidate_branch() {
@@ -138,7 +175,7 @@ create_release_candidate_branch() {
     git checkout master
     git pull origin master
 
-    # Create branches 
+    # Create branches
     for branch in base docs rc; do
         git checkout -b $(branch_name ${RELEASE_VERSION} ${branch})
         if [ "$LOCAL_TEST" == "false" ]; then
@@ -175,19 +212,6 @@ create_release_candidate_branch() {
     git add ${ROOT_DIR}/cmake/support_catalyst.cmake
     git commit -m "Set Catalyst dependency in cmake to commit ${last_catalyst_commit}."
 
-    # Update RNG salt
-    sed -i "/rng_salt = /d" ${ROOT_DIR}/tests/pytest.ini
-    echo "rng_salt = v${RELEASE_VERSION}" >> ${ROOT_DIR}/tests/pytest.ini
-    git add ${ROOT_DIR}/tests/pytest.ini
-    git commit -m "Set rng_salt to v${RELEASE_VERSION} in tests/pytest.ini."
-
-    # Enable to upload the wheels to TestPyPI and GitHub Artifacts
-    if [ "$PUSH_TESTPYPI" == "true" ]; then
-    sed -i "s|event_name == 'release'|event_name == 'pull_request'|g" ${ROOT_DIR}/.github/workflows/wheel_*
-    git add ${ROOT_DIR}/.github/workflows/wheel_*
-    git commit -m "Update wheel workflows for pull request"
-    fi
-
     if [ "$LOCAL_TEST" == "false" ]; then
     git push --set-upstream origin $(branch_name ${RELEASE_VERSION} rc)
     fi
@@ -215,6 +239,10 @@ create_docs_review_PR(){
     git commit -m "Modify docs for v${RELEASE_VERSION}" --allow-empty
 
     if [ "$LOCAL_TEST" == "false" ]; then
+    git push --set-upstream origin $(branch_name ${RELEASE_VERSION} docs)
+    fi
+
+    if [ "$LOCAL_TEST" == "false" ]; then
     gh pr create $(use_dry_run) \
         --title "Create v${RELEASE_VERSION} Doc branch" \
         --body "v${RELEASE_VERSION} Doc branch." \
@@ -235,6 +263,10 @@ create_docker_PR(){
 
     git add ${ROOT_DIR}/.github/workflows/compat-docker-release.yml
     git commit -m "Update compat-docker-release.yml to use v${RELEASE_VERSION}"
+
+    add_CHANGELOG_entry "Test Docker images for v${RELEASE_VERSION} RC branch." "0000"
+    git add $CHANGELOG_FILE
+    git commit -m "Add CHANGELOG entry for Docker test"
 
     if [ "$LOCAL_TEST" == "false" ]; then
     git push --set-upstream origin $(branch_name ${RELEASE_VERSION} docker)
@@ -288,7 +320,7 @@ echo "$new_changelog_text"
 }
 
 create_version_bump_PR(){
-    # Create a PR for the new version 
+    # Create a PR for the new version
 
     git checkout master
     git checkout -b $(branch_name ${RELEASE_VERSION} bump)
@@ -338,19 +370,31 @@ create_version_bump_PR(){
     git commit -m "Update CHANGELOG.md with new version entry."
 
     # Update minimum PennLane version in requirements.txt and configure_pyproject_toml.py
-    sed -i "s/pennylane>=v\?[0-9\.]\+/pennylane>=${RELEASE_VERSION%??}/" ${ROOT_DIR}/requirements.txt
-    sed -i "s/pennylane>=v\?[0-9\.]\+/pennylane>=${RELEASE_VERSION%??}/" ${ROOT_DIR}/scripts/configure_pyproject_toml.py
+    sed -i "s/pennylane>=v\?[0-9\.]\+/pennylane>=${STABLE_VERSION%??}/" ${ROOT_DIR}/requirements.txt
+    sed -i "s/pennylane>=v\?[0-9\.]\+/pennylane>=${STABLE_VERSION%??}/" ${ROOT_DIR}/scripts/configure_pyproject_toml.py
+    sed -i "s/pennylane>=v\?[0-9\.]\+/pennylane>=${STABLE_VERSION%??}/" ${ROOT_DIR}/pyproject.toml
 
-    git add ${ROOT_DIR}/requirements.txt ${ROOT_DIR}/scripts/configure_pyproject_toml.py
+    git add ${ROOT_DIR}/requirements.txt
+    git add ${ROOT_DIR}/scripts/configure_pyproject_toml.py
+    git add ${ROOT_DIR}/pyproject.toml
+
     git commit -m "Update minimum PennyLane version to ${RELEASE_VERSION%??}"
-    
+
+    # Update RNG salt
+    for i in ${ROOT_DIR}/tests/pytest.ini ${ROOT_DIR}/mpitests/pytest.ini ; do
+        sed -i "/rng_salt = /d" $i
+        echo "rng_salt = v${RELEASE_VERSION}" >> $i
+        git add $i
+    done
+    git commit -m "Set rng_salt to v${RELEASE_VERSION} in tests/pytest.ini and mpitests/pytest.ini."
+
     if [ "$LOCAL_TEST" == "false" ]; then
     git push origin $(branch_name ${RELEASE_VERSION} bump)
     fi
 }
 
 test_install_lightning(){
-    # Test Lightning installation 
+    # Test Lightning installation
 
     git checkout master
     git checkout $(branch_name ${RELEASE_VERSION} rc)
@@ -367,7 +411,7 @@ test_install_lightning(){
 
     # Test installation of lightning custom compiles options
 
-    # Lightning Kokkos with CUDA and MPI
+    # Lightning Kokkos and MPI
     pip uninstall -y pennylane_lightning_kokkos
     PL_BACKEND="lightning_kokkos" python ${ROOT_DIR}/scripts/configure_pyproject_toml.py
     CMAKE_ARGS="-DENABLE_MPI=ON -DKokkos_ENABLE_CUDA=OFF -DKokkos_ENABLE_OPENMP=ON" python -m pip install . -v
@@ -386,9 +430,9 @@ test_install_lightning(){
     echo "Installed backends:"
     echo "- Lightning Default:"
     echo "$is_installed_backend"
-    echo "- Lightning Kokkos (MPI):" 
+    echo "- Lightning Kokkos (MPI):"
     echo "$is_installed_kokkos_mpi"
-    echo "- Lightning GPU (MPI):" 
+    echo "- Lightning GPU (MPI):"
     echo "$is_installed_gpu_mpi"
 }
 
@@ -396,9 +440,9 @@ download_artifacts_gh(){
     # Download the artifacts from the GitHub Actions runs
 
     wheels_runners=$(gh run list --branch $(branch_name ${RELEASE_VERSION} rc) \
-        --json status,workflowName,workflowDatabaseId | jq '.[] | select(.workflowName | contains("Wheel"))')
+        --json status,workflowName,databaseId | jq '.[] | select(.workflowName | contains("Wheel"))')
 
-    completed_runners=$(echo "$wheels_runners" | jq -r '. | select(.status == "completed") | .workflowDatabaseId')
+    completed_runners=$(echo "$wheels_runners" | jq -r '. | select(.status == "completed") | .databaseId')
 
     incomplete_runners=$(echo "$wheels_runners" | jq -r '. | select(.status != "completed") ')
 
@@ -418,8 +462,8 @@ test_wheels_for_unwanted_libraries(){
 
     pushd Wheels
 
-    for wheel in *.zip; do
-        unzip -o -q "$wheel"
+    for wheel in *.zip/*.whl; do
+        cp "$wheel" .
     done
 
     python ${ROOT_DIR}/scripts/validate_attrs.py
@@ -436,7 +480,7 @@ create_release_branch(){
     gh pr comment $(branch_name ${RELEASE_VERSION} rc) \
         --body "Forked as v${RELEASE_VERSION}_release to be released with tag v${RELEASE_VERSION}"
     fi
-    
+
     # Create the release branch
     git checkout -b $(branch_name ${RELEASE_VERSION} release)
 
@@ -448,13 +492,7 @@ create_release_branch(){
         echo '__version__ = "'${RELEASE_VERSION}'"' >> $PL_VERSION_FILE
     fi
 
-    if [ "$PUSH_TESTPYPI" == "true" ]; then
-    # Disable to upload the wheels to TestPyPI and GitHub Artifacts
-    sed -i "s|event_name == 'pull_request'|event_name == 'release'|g" ${ROOT_DIR}/.github/workflows/wheel_*
-    fi
-
     git add $PL_VERSION_FILE
-    git add ${ROOT_DIR}/.github/workflows/wheel_*
     git commit -m "Pre-release updates"
     if [ "$LOCAL_TEST" == "false" ]; then
     git push --set-upstream origin $(branch_name ${RELEASE_VERSION} release)
@@ -484,9 +522,9 @@ create_GitHub_release(){
 download_release_artifacts_gh(){
     # Download the artifacts from the GitHub Actions runs
     wheels_runners=$(gh run list --event release --branch $(branch_name ${RELEASE_VERSION}) \
-        --json status,workflowName,workflowDatabaseId | jq '.[] | select(.workflowName | contains("Wheel"))')
+        --json status,workflowName,databaseId | jq '.[] | select(.workflowName | contains("Wheel"))')
 
-     completed_runners=$(echo "$wheels_runners" | jq -r '. | select(.status == "completed") | .workflowDatabaseId')
+     completed_runners=$(echo "$wheels_runners" | jq -r '. | select(.status == "completed") | .databaseId')
      incomplete_runners=$(echo "$wheels_runners" | jq -r '. | select(.status != "completed") ')
 
      mkdir -p ${ROOT_DIR}/Release_Assets
@@ -504,17 +542,21 @@ create_sdist(){
     # Create the source distribution
 
     git checkout $(branch_name ${RELEASE_VERSION} "release")
-    PL_BACKEND=lightning_qubit python ${ROOT_DIR}/scripts/configure_pyproject_toml.py
-    python setup.py sdist
 
     mkdir -p ${ROOT_DIR}/Release_Assets
+
+    for backend in qubit gpu kokkos tensor; do
+        PL_BACKEND=lightning_${backend} python ${ROOT_DIR}/scripts/configure_pyproject_toml.py
+        python setup.py sdist
+    done
+
     cp dist/*.tar.gz ${ROOT_DIR}/Release_Assets/
 }
 
 upload_release_assets_gh(){
     # Upload the release assets
-    gh release upload $(branch_name ${RELEASE_VERSION} "0") ${ROOT_DIR}/Release_Assets/*.whl --clobber
-    gh release upload $(branch_name ${RELEASE_VERSION} "0") ${ROOT_DIR}/Release_Assets/*.tar.gz --clobber
+    gh release upload $(branch_name ${RELEASE_VERSION}) ${ROOT_DIR}/Release_Assets/*.whl --clobber
+    gh release upload $(branch_name ${RELEASE_VERSION}) ${ROOT_DIR}/Release_Assets/*.tar.gz --clobber
 }
 
 create_merge_branch(){
@@ -545,10 +587,14 @@ create_merge_branch(){
     git commit -m "Restore Catalyst GIT_TAG to main"
 
     for i in release stable; do
-        sed -i "s|v${RELEASE_VERSION}|v${NEXT_VERSION}|g" ${ROOT_DIR}/.github/workflows/compat-docker-${i}.yml
+        sed -i "s|v${STABLE_VERSION}|v${RELEASE_VERSION}|g" ${ROOT_DIR}/.github/workflows/compat-docker-${i}.yml
         git add ${ROOT_DIR}/.github/workflows/compat-docker-${i}.yml
     done
     git commit -m "Update Docker workflows for new release version"
+
+    add_CHANGELOG_entry "Merge RC v${RELEASE_VERSION} rc to master" "0000"
+    git add $CHANGELOG_FILE
+    git commit -m "Add CHANGELOG entry for RC merge"
 
     if [ "$LOCAL_TEST" == "false" ]; then
     git push --set-upstream origin $(branch_name ${RELEASE_VERSION} "rc_merge")
@@ -640,7 +686,6 @@ set -- "${POSITIONAL_ARGS[@]}" # restore positional parameters
 # If not a test run
 if [ "$IS_TEST" == "false" ]; then
     LOCAL_TEST=false
-    PUSH_TESTPYPI=true
 fi
 
 echo "STABLE_VERSION: $STABLE_VERSION"
