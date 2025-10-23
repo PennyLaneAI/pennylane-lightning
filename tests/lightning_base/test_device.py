@@ -231,7 +231,7 @@ class TestHelpers:
             name=name,
             skip_initial_state_prep=False,
             device_wires=None,
-            target_gates=LightningDevice.capabilities.operations.keys(),
+            target_gates=LightningDevice.capabilities.gate_set(differentiable=True),
         )
         expected_program.add_transform(validate_observables, accepted_observables, name=name)
         expected_program.add_transform(
@@ -789,7 +789,6 @@ class TestExecution:
         m0 = qml.measure(0)
 
         class MyOp(qml.operation.Operator):
-
             def decomposition(self):
                 return m0.measurements
 
@@ -885,7 +884,7 @@ class TestExecution:
             skip_initial_state_prep=True,
             name=device.name,
             device_wires=device.wires,
-            target_gates=device.capabilities.operations.keys(),
+            target_gates=device.capabilities.gate_set(),
         )
         expected_program.add_transform(
             device_resolve_dynamic_wires, wires=device.wires, allow_resets=mcm_method != "deferred"
@@ -905,7 +904,7 @@ class TestExecution:
                 name=name,
                 skip_initial_state_prep=False,
                 device_wires=device.wires,
-                target_gates=device.capabilities.operations.keys(),
+                target_gates=device.capabilities.gate_set(differentiable=True),
             )
             expected_program.add_transform(validate_observables, accepted_observables, name=name)
             expected_program.add_transform(
