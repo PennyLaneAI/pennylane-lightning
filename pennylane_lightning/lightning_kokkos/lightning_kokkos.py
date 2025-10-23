@@ -165,7 +165,7 @@ def _add_adjoint_transforms(program: TransformProgram, device_wires=None) -> Non
         name=name,
         skip_initial_state_prep=False,
         device_wires=device_wires,
-        target_gates=LightningKokkos.capabilities.operations.keys(),
+        target_gates=LightningKokkos.capabilities.gate_set(differentiable=True),
     )
     program.add_transform(validate_observables, accepted_observables, name=name)
     program.add_transform(
@@ -347,7 +347,11 @@ class LightningKokkos(LightningBase):
         if qml.capture.enabled():
             if exec_config.mcm_config.mcm_method == "deferred":
                 program.add_transform(qml.defer_measurements, num_wires=len(self.wires))
-            program.add_transform(qml.transforms.decompose, gate_set=no_mcms_stopping_condition)
+            program.add_transform(
+                qml.transforms.decompose,
+                gate_set=self.capabilities.gate_set(),
+                stopping_condition=no_mcms_stopping_condition,
+            )
             return program
 
         program.add_transform(validate_measurements, name=self.name)
@@ -364,7 +368,7 @@ class LightningKokkos(LightningBase):
             skip_initial_state_prep=True,
             name=self.name,
             device_wires=self.wires,
-            target_gates=self.capabilities.operations.keys(),
+            target_gates=self.capabilities.gate_set(),
         )
 
         _allow_resets = exec_config.mcm_config.mcm_method != "deferred"
