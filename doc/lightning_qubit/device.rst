@@ -143,12 +143,20 @@ If you are computing a large number of expectation values, or if you are using a
 
 **OpenMP acceleration of the gate kernels:**
 
-OpenMP acceleration of the gate kernels across all kernel types (LM, AVX2, and AVX512) is enabled by default in Lightning-Qubit.
-You can control the number of threads used by setting the ``OMP_NUM_THREADS`` environment variable before starting your Python session,
-or if already started, before simulating your PennyLane programs.
+OpenMP acceleration of gate kernels across all kernel types (LM, AVX2, and AVX512) is enabled
+by default on Linux wheels in Lightning-Qubit.
 
-For workloads involving gradients with many observables measurements, this may reduce performance in comparison with the default mode.
-To turn this off, use the CMake flag ``-DLQ_ENABLE_KERNEL_OMP=OFF`` when building Lightning-Qubit.
+On other operating systems, OpenMP support can be enabled by setting the environment variable
+``LQ_ENABLE_KERNEL_OMP=ON`` before starting your Python session, or if already running, before
+simulating your PennyLane programs.
+You can also control the number of threads used by setting the ``OMP_NUM_THREADS``
+environment variable.
+
+For workloads that involve gradient computations with many observable measurements,
+OpenMP acceleration may reduce performance compared to the default mode.
+To disable it, use the CMake flag ``-DLQ_ENABLE_KERNEL_OMP=OFF`` when building
+Lightning-Qubit.
+
 
 **Markov Chain Monte Carlo sampling support:**
 
@@ -167,4 +175,3 @@ The ``lightning.qubit`` device also supports a ``"NonZeroRandom"`` kernel. This 
 
     import pennylane as qml
     dev = qml.device("lightning.qubit", wires=2, shots=1000, mcmc=True, kernel_name="NonZeroRandom", num_burnin=200)
-
