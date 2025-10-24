@@ -23,7 +23,7 @@ on:
 env:
   CI_CUDA_ARCH: 86
   COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:./coverage.xml -p no:warnings --tb=native"
-  GCC_VERSION: 11
+  GCC_VERSION: 13
 
 concurrency:
   group: tests_gpu_cpp-${{ github.ref }}-${{ github.event_name }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
@@ -85,6 +85,15 @@ jobs:
         with:
           repository: PennyLaneAI/catalyst
           path: ${{ github.workspace}}/catalyst
+
+      - name: Switch to release build of Catalyst
+        if: inputs.lightning-version == 'release'
+        run: |
+          cd ${{ github.workspace}}/catalyst
+          git fetch --all
+          git checkout $(git branch -a --list "origin/v0.*rc*" | sort | tail -1)
+          git log -1 --format='%H'
+          cd ${{ github.workspace }}
 
       - uses: actions/setup-python@v5
         id: setup_python
@@ -150,6 +159,7 @@ jobs:
             -DPL_BACKEND=${{ matrix.pl_backend }} \
             -DSCIPY_OPENBLAS=$(python -c "import scipy_openblas32; print(scipy_openblas32.get_lib_dir())") \
             -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
+            -DCMAKE_CUDA_HOST_COMPILER=$(which gcc-$GCC_VERSION) \
             -DENABLE_COVERAGE=ON \
             -G Ninja \
             -DLIGHTNING_CATALYST_SRC_PATH=${{ github.workspace }}/catalyst
@@ -165,7 +175,8 @@ jobs:
             echo "Tests failed. Exiting with error code."
             exit 1
           fi
-          lcov --directory . -b ../pennylane_lightning/core --capture --output-file coverage.info
+          lcov --directory . -b ../pennylane_lightning/core --capture --output-file coverage.info \
+               --gcov-tool /usr/bin/gcov-13
           lcov --remove coverage.info '/usr/*' --output-file coverage.info
           mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
 

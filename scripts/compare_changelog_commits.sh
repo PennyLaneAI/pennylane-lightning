@@ -4,8 +4,8 @@
 # It prints the authors of the merged PRs and the PRs in the CHANGELOG, and highlights any discrepancies.
 
 # Usage:
-# Run the script with 
-# bash compare_changelog_commits.sh 
+# Run the script with
+# bash compare_changelog_commits.sh
 
 # Root directory, should be the location of the pennylane-lightning repo
 ROOT_DIR="."
@@ -43,9 +43,9 @@ contributors_begin=$(grep -n "<h3>Contributors ✍️</h3>" "${CHANGELOG_FILE}" 
 
 extract_contributors_from_changelog() {
     # Extract the list of contributors from the CHANGELOG
-    contribution_list=$(sed -n "$((contributors_begin + 4)),$((changelog_lower_bound - 2))p" "${CHANGELOG_FILE}") 
+    contribution_list=$(sed -n "$((contributors_begin + 4)),$((changelog_lower_bound - 2))p" "${CHANGELOG_FILE}")
     # Sort and format the contribution list
-    contribution_list=$(echo "$contribution_list" | sort | sed 's/.$/,/ ; s/,//; s/$/,/')
+    contribution_list=$(echo "$contribution_list" | sort | sed 's/.$/,/ ; s/,//')
     echo "$contribution_list"
 }
 
@@ -58,17 +58,18 @@ extract_contributors_from_git() {
 }
 
 # Print list of Authors from Changelog and Git
-echo "Authors in CHANGELOG       /  Authors in Git"
+echo "Authors in CHANGELOG       |  Authors in Git"
 echo "---------------------------|---------------------------"
+# Add | in the middle of the two columns
 paste <(extract_contributors_from_changelog) \
       <(extract_contributors_from_git) \
-      | column -t -s ','
+      | sed 's/\t/ ,| /' | column -s ',' -t
 echo "---------------------------|---------------------------"
 echo "--------------------------------------------------------------------------------"
 
 # Create the list of merged PR
 list_merged_PRs(){
-    # Get the list of merged PRs to master 
+    # Get the list of merged PRs to master
     list_PRs=$(gh pr list --state merged --base master --search "merged:>=$LAST_RELEASE_DATE" -L 1000 )
     # Extract the PR number and title, format it, and sort it
     list_PRs=$(echo "$list_PRs" | awk -F 'MERGED' '{print $1}' | sort -h)
@@ -83,7 +84,7 @@ list_entries_in_changelog(){
     # Format the list of PRs, replace 'pull/' with 'pull/_', and remove trailing parentheses
     list_entries=$(echo "$list_entries" | sed 's/--/\n/g; s|pull/|pull/_ |g ; s/)//g')
     # Add the PR number at the beginning of the line
-    list_entries=$(echo "$list_entries" |  awk '{print $NF, "  ", $0}') 
+    list_entries=$(echo "$list_entries" |  awk '{print $NF, "  ", $0}')
     # Remove the PR link and sort the entries
     list_entries=$(echo "$list_entries" | sed 's|\[(.*||' | sort -h -k1)
     echo "$list_entries" > release_list_PR_in_changelog.txt
@@ -91,7 +92,7 @@ list_entries_in_changelog(){
 
 # Create the list of entries in the CHANGELOG and the merged PRs
 list_entries_in_changelog
-list_merged_PRs 
+list_merged_PRs
 
 interleave_rows(){
     file1="$1"
