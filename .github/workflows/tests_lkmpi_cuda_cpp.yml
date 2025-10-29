@@ -28,7 +28,7 @@ on:
 
 env:
   COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:./coverage.xml -p no:warnings --tb=native"
-  GCC_VERSION: 11
+  GCC_VERSION: 13
   OMP_NUM_THREADS: "1"
   CI_CUDA_ARCH: 86
 
@@ -63,6 +63,15 @@ jobs:
         with:
           repository: PennyLaneAI/catalyst
           path: ${{ github.workspace}}/catalyst
+
+      - name: Switch to release build of Catalyst
+        if: inputs.lightning-version == 'release'
+        run: |
+          cd ${{ github.workspace}}/catalyst
+          git fetch --all
+          git checkout $(git branch -a --list "origin/v0.*rc*" | sort | tail -1)
+          git log -1 --format='%H'
+          cd ${{ github.workspace }}
 
       - name: Switch to stable build of Lightning-Kokkos
         if: inputs.lightning-version == 'stable'
@@ -148,7 +157,9 @@ jobs:
                           -DKokkos_ENABLE_SERIAL=ON \
                           -DKokkos_ENABLE_${{ matrix.exec_model }}=ON \
                           -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
+                          -DCMAKE_C_COMPILER=mpicc \
                           -DCMAKE_CXX_COMPILER=mpicxx \
+                          -DCMAKE_CUDA_HOST_COMPILER=$(which gcc-$GCC_VERSION) \
                           -DCMAKE_CXX_STANDARD=20 \
                           -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
                           -G Ninja
@@ -168,7 +179,9 @@ jobs:
             -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }} \
             -DENABLE_COVERAGE=ON \
             -DBUILD_TESTS=ON \
+            -DCMAKE_C_COMPILER=mpicc \
             -DCMAKE_CXX_COMPILER=mpicxx \
+            -DCMAKE_CUDA_HOST_COMPILER=$(which gcc-$GCC_VERSION) \
             -DSCIPY_OPENBLAS=${SCIPY_OPENBLAS} \
             -DPython_EXECUTABLE:FILE="${{ steps.python_path.outputs.python }}" \
             -G Ninja \
@@ -184,7 +197,8 @@ jobs:
             echo "Tests failed. Exiting with error code."
             exit 1
           fi
-          lcov --directory . -b ../pennylane_lightning/core --capture --output-file coverage.info
+          lcov --directory . -b ../pennylane_lightning/core --capture --output-file coverage.info \
+               --gcov-tool /usr/bin/gcov-13
           lcov --remove coverage.info '/usr/*' --output-file coverage.info
           mv coverage.info coverage-${{ github.job }}-lightning_kokkos_mpi_cuda_${{ matrix.mpilib }}.info
 

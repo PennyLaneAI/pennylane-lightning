@@ -60,7 +60,7 @@ jobs:
         if: ${{ (matrix.container_img == 'ubuntu-24.04') && (steps.kokkos-cache.outputs.cache-hit != 'true') }}
         run: |
           apt-get update && DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y -q install cmake gcc-$GCC_VERSION g++-$GCC_VERSION ninja-build git
-          echo "COMPILER=g++-13" >> $GITHUB_ENV
+          echo "COMPILER=g++-${GCC_VERSION}" >> $GITHUB_ENV
 
       - name: Install dependencies (AlmaLinux)
         if: ${{ (matrix.container_img == 'quay.io/pypa/manylinux_2_28_x86_64') && (steps.kokkos-cache.outputs.cache-hit != 'true') }}
@@ -187,7 +187,7 @@ jobs:
         id: rc_build
         with:
           text: ${{ github.event.pull_request.head.ref }}
-          regex: '.*[0-9]+.[0-9]+.[0-9]+[-_]?rc[0-9]+'
+          regex: '^v[0-9]+\.[0-9]+\.[0-9]+[-_]rc$'
 
       - uses: actions/upload-artifact@v4
         if: |
@@ -211,18 +211,29 @@ jobs:
     runs-on: ubuntu-24.04
     permissions:
       id-token: write
-    if: |
-      github.event_name == 'release' ||
-      github.ref == 'refs/heads/master'
 
     steps:
+      - uses: actions-ecosystem/action-regex-match@main
+        id: rc_build
+        with:
+          text: ${{ github.event.pull_request.head.ref }}
+          regex: '^v[0-9]+\.[0-9]+\.[0-9]+[-_]rc$'
+
       - uses: actions/download-artifact@v4
+        if: |
+          github.event_name == 'release' ||
+          github.ref == 'refs/heads/master' || 
+          steps.rc_build.outputs.match != ''
         with:
           name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ fromJson('{ "cp311-*":"py311","cp312-*":"py312", "cp313-*":"py313" }')[matrix.cibw_build] }}-${{ matrix.arch }}.zip
           path: dist
 
       - name: Upload wheels to TestPyPI
         uses: pypa/gh-action-pypi-publish@release/v1
+        if: |
+          github.event_name == 'release' ||
+          github.ref == 'refs/heads/master' || 
+          steps.rc_build.outputs.match != ''
         with:
           verbose: true
           repository-url: https://test.pypi.org/legacy/

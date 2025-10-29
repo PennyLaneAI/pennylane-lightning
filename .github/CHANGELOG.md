@@ -1,13 +1,77 @@
-# Release 0.43.0-dev (development release)
+# Release 0.44.0-dev (development release)
 
 <h3>New features since last release</h3>
 
 <h3>Improvements 🛠</h3>
 
+<h3>Breaking changes 💔</h3>
+
+- MacOS x86 wheels are no longer built, and the PennyLane ecosystem will no longer support Intel MacOS platforms for v0.44. If needed, MacOS x86 wheels can be built from source. See [PennyLane deprecations page](https://pennylane.ai/blog/2025/10/pennylane-release-0.43/#deprecations-and-breaking-changes-) for more information.
+  [(#1287)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1287)
+
+<h3>Deprecations 👋</h3>
+
+<h3>Documentation 📝</h3>
+
+<h3>Bug fixes 🐛</h3>
+
+<h3>Internal changes ⚙️</h3>
+
+- Update release script and use the Catalyst `rc` branch in CIs in the release season.
+  [(#1285)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1285)
+
+- Updated CIs to use GCC 13.
+  [(#1249)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1249)
+
+- Bumped the seed for pytests.
+  [(#1276)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1276)
+
+- `scipy-openblas32` dependency can be set manually when installing from source using the `ENABLE_SCIPY_OPENBLAS` cmake flag.
+  [(#1220)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1220)
+
+- Merge v0.43.0 rc branch to master.
+  [(#1282)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1282)
+
+- Removed Catalyst version pin in stable CI tests.
+  [(#1284)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1284)
+
+- `lightning.qubit` CI Python tests now use rc branch for testing release candidates.
+  [(#1280)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1280)
+
+- Bumped the version to 0.44.0-dev.
+  [(#1272)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1272)
+
+- Bumped release version for testing Docker.
+  [(#1271)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1271)
+
+<h3>Contributors ✍️</h3>
+
+This release contains contributions from (in alphabetical order):
+
+Joseph Lee
+
+---
+
+# Release 0.43.0
+
+<h3>New features since last release</h3>
+
+- Lightning devices now support executing circuits with dynamic qubit allocation with `qml.allocate`.
+  [(#1255)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1255)
+
 - Lightning devices now call the new `preprocess` method integrated with the graph decomposition system.
   [(#1251)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1251)
 
-- Worksize preference in `cuTensorNet` can now be set and updated when using `lightning.tensor` device to reduce memory usage or improve stability. 
+- Using `mcm_method="device"` on `lightning.qubit`, `lightning.kokkos` and `lightning.gpu`
+  now resolves to the tree-traversal method.
+  [(#1210)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1210)
+
+<h3>Improvements 🛠</h3>
+
+- Raise exception when calling normalize or collapse method with `lightning.qubit`, `lightning.kokkos` and `lightning.gpu` when norm is close to 0.
+  [(#1257)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1257)
+
+- Worksize preference in `cuTensorNet` can now be set and updated when using `lightning.tensor` device to reduce memory usage or improve stability.
   [(#1238)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1238)
 
 - **Migrated to Nanobind for Python bindings**, replacing pybind11 to enhance performance, modularity, and build system efficiency.
@@ -27,17 +91,17 @@
     [(#1184)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1184)
   - **Lightning Tensor bindings** for tensor network simulations
     [(#1206)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1206)
+
+  For compatibility with PyTorch, reference leak warnings for nanobind are disabled
+  [(#1266)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1266)
+
 - Added support for `GlobalPhase` with zero-qubit Lightning devices. Currently, only the `lightning.qubit` and `lightning.kokkos` backends support zero-qubit initialization.
   [(#1205)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1205)
 
-- Using `mcm_method="device"` on `lightning.qubit`, `lightning.kokkos` and `lightning.gpu`
-  now resolves to the tree-traversal method.
-  [(#1210)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1210)
-
-- Skipped Identity operation in Lightning Qubit and removed assert for applying Identity gate not equal to 1 wire.
+- Skipped Identity operation in `lightning.qubit` and removed assert for applying Identity gate not equal to 1 wire.
   [(#1212)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1212)
 
-- Update `test_device.py` to no longer mutate an execution configuration for testing.
+- Updated `test_device.py` to no longer mutate an execution configuration for testing.
   [(#1242)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1242)
 
 <h3>Breaking changes 💔</h3>
@@ -54,7 +118,7 @@
 - Dropped support for Python 3.10. Supported Python versions are now 3.11, 3.12 and 3.13.
   [(#1224)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1224)
 
-- Dropped testing support for `tensorflow` interface after deprecation in Pennylane. 
+- Dropped testing support for `tensorflow` interface after deprecation in Pennylane.
   [(#1225)](github.com/PennyLaneAI/pennylane-lightning/pull/1225)
 
 <h3>Deprecations 👋</h3>
@@ -72,10 +136,14 @@
 
 <h3>Bug fixes 🐛</h3>
 
+- Using `postselect_mode="fill-shots"` with `mcm_method="one-shot"` or `"tree-traversal"` has been disallowed, as it produces incorrect results where the correlation between measurements is not preserved.
+  [(#1274)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1274)
+
 - Setting device with seed now produces deterministic measurement for MCMC.
   [(#1252)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1252)
 
-- **CHANGE REVERTED:** Update stopping condition for `qml.ops.op_math.SProd` and `qml.ops.op_math.Exp`, in all devices, after breaking changes upstream. Was instead fixed in PennyLane and change was reverted.
+- **CHANGE REVERTED:** Updated stopping condition for `qml.ops.op_math.SProd` and `qml.ops.op_math.Exp`, in all devices, after breaking changes upstream.
+  Was instead fixed in PennyLane and change was reverted.
   [(#1239)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1239)
   [(#1246)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1246)
 
@@ -84,24 +152,39 @@
 
 <h3>Internal changes ⚙️</h3>
 
-- Pin GitHub CI temporarily to the stable version to use Catalyst release v0.12.0.
+- Updated test to skip MCM test for `lightning.tensor` and fix seed for deterministic test.
+  [(#1281)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1281)
+
+- Updated GitHub Actions to produce the release candidate wheels for all supported Python versions for MacOS-ARM.
+  [(#1273)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1273)
+
+- Updated GitHub Actions to produce the release candidate wheels for all supported Python versions.
+  [(#1264)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1264)
+
+- Support building `lightning.gpu` and `lightning.tensor` from source with CUDA 13.
+  [(#1267)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1267)
+
+- Removed unnecessary `std::move` in `cuGates_host`.
+  [(#1263)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1263)
+
+- Pinned GitHub CI temporarily to the stable version to use Catalyst release v0.12.0.
   [(#1259)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1259)
 
-- Update Catalyst's QuantumDevice interface and downstream Qubit Manager to Lightning in preparation for dynamic qubit allocation functionality.
+- Updated Catalyst's QuantumDevice interface and downstream Qubit Manager to Lightning in preparation for dynamic qubit allocation functionality.
   [(#1254)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1254)
   [(#1258)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1258)
   [(#1260)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1260)
 
-- Update Release script for bumping the minimum version for PennyLane.
+- Updated Release script for bumping the minimum version for PennyLane.
   [(#1253)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1253)
 
-- Update Python to 3.12 and CIBuildWheel to 3.1.4 for CI.
+- Updated Python to 3.12 and CIBuildWheel to 3.1.4 for CI.
   [(#1248)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1248)
 
-- Updated decomposition stopping condition to no longer convert `C(SProd)` and `C(Exp)` to Qubit Unitary, since PennyLane can decompose these operators after [PR 8133](https://github.com/PennyLaneAI/pennylane/pull/8133). 
+- Updated decomposition stopping condition to no longer convert `C(SProd)` and `C(Exp)` to Qubit Unitary, since PennyLane can decompose these operators after [PR 8133](https://github.com/PennyLaneAI/pennylane/pull/8133).
   [(#1247)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1247)
 
-- Remove `--no-deps` for Lightning Qubit CI tests for stable version.
+- Removed `--no-deps` for Lightning Qubit CI tests for stable version.
   [(#1245)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1245)
 
 - Ported Linux based GitHub Actions workflows from using the GitHub 4vcpu large runner to blacksmith 4vcpu runner.
@@ -109,14 +192,14 @@
 
 - Added script to automate the release process.
   [(#1231)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1231)
-  
+
 - Stopped the wheels creation for no arch if the PR is draft.
   [(#1233)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1233)
 
-- Adjust where the MCMC config validation occurs, from initialization to preprocess.
+- Adjusted where the MCMC config validation occurs, from initialization to preprocess.
   [(#1222)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1222)
 
-- Replace `DefaultExecutionConfig` with `ExecutionConfig()` across the Lightning Python device APIs.
+- Replaced `DefaultExecutionConfig` with `ExecutionConfig()` across the Lightning Python device APIs.
   [(#1185)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1185)
 
 - Updated tests with `circuit(..., shots=...)` to use `qml.set_shots` to ensure compatibility with the latest version of PennyLane.
@@ -145,13 +228,17 @@
 This release contains contributions from (in alphabetical order):
 
 Ali Asadi,
+Astral Cai,
 Yushao Chen,
 Amintor Dusko,
 David Ittah,
 Christina Lee,
 Joseph Lee,
+Rashid N H M,
+Anton Naim Ibrahim,
 Luis Alfredo Nuñez Meneses,
 Andrija Paurevic,
+Justin Pickering,
 Marc Vandelle,
 Paul Haochen Wang,
 Jake Zaia.
@@ -186,9 +273,9 @@ Jake Zaia.
 <h3>Breaking changes 💔</h3>
 
 - The `LightningBaseStateVector`, `LightningBaseAdjointJacobian`, `LightningBaseMeasurements`,
-  `LightningInterpreter` and `QuantumScriptSerializer` base classes now can be found at `pennylane_lightning.lightning_base`.  
-  The new `lightning_base` module further enables the relocation of core files from `pennylane_lightning/core/src/*` to `pennylane_lightning/core/*`.  
-  The license classifier and `project.license` as a TOML table are deprecated in favor of a SPDX license expression and removed in `pyproject.toml`.  
+  `LightningInterpreter` and `QuantumScriptSerializer` base classes now can be found at `pennylane_lightning.lightning_base`.
+  The new `lightning_base` module further enables the relocation of core files from `pennylane_lightning/core/src/*` to `pennylane_lightning/core/*`.
+  The license classifier and `project.license` as a TOML table are deprecated in favor of a SPDX license expression and removed in `pyproject.toml`.
   To speedup the recompilation of C++ source code, `ccache` is also added to `Makefile`.
   [(#1098)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1098)
 
@@ -220,23 +307,23 @@ Jake Zaia.
 - Fixed the implementation of multi-controlled gates with a single target wire for arbitrary control values in `lightning.tensor`.
   [(#1169)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1169)
 
-- Updated requirements to only download JAX version 0.5.3 for non-X86 MacOS. 
+- Updated requirements to only download JAX version 0.5.3 for non-X86 MacOS.
   [(#1163)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1163)
 
-- Fixed Docker build for `lighting.kokkos` with ROCM library for AMD GPUs. Updated ROCM from 5.7 to 6.2.4. 
+- Fixed Docker build for `lighting.kokkos` with ROCM library for AMD GPUs. Updated ROCM from 5.7 to 6.2.4.
   [(#1158)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1158)
 
-- Fixed use of Torch with `AmplitudeEmbedding` by applying `qml.broadcast_expand` before decomposition in the preprocessing stage. 
+- Fixed use of Torch with `AmplitudeEmbedding` by applying `qml.broadcast_expand` before decomposition in the preprocessing stage.
   [(#1175)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1175)
 
 <h3>Internal changes ⚙️</h3>
 
 - Updated tests with `device(..., shots=...)` to use `qml.set_shots` to ensure compatibility with the latest version of PennyLane.
   [(#1173)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1173)
-  
+
 - Fixed `applyMultiRZ` for `lightning.kokkos` device to use Kokkos function instead of lambda.
   [(#1194)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1194)
-  
+
 - Enabled `AmplitudeEmbedding` Python tests for `lightning.kokkos` and `lightning.gpu` devices.
   [(#1192)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1192)
 
@@ -255,7 +342,7 @@ Jake Zaia.
 
 - Updated dev requirements to use JAX version 0.6.0 for CI tests.
   [(#1161)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1161)
-  
+
 - Updated stable requirements to use JAX version 0.4.28 for CI tests.
   [(#1160)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1160)
 
@@ -267,7 +354,7 @@ Jake Zaia.
 
 - Removed `max_workers` argument for `default.qubit` device in Python tests to reduce CI testing time.
   [(##1174)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1174)
-  
+
 - Bumped Github action runner to use `Ubuntu-24.04` or `Ubuntu-latest`.
   Fixed all `ubuntu-latest` action runners to `ubuntu-24.04`.
   [(#1167)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1167)

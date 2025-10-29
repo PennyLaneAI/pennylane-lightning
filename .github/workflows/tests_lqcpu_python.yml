@@ -79,22 +79,34 @@ jobs:
         with:
           repository: PennyLaneAI/catalyst
           path: ${{ github.workspace}}/catalyst
-          ref: ${{ (inputs.pennylane-version == 'stable' && 'v0.12.0') || 'main' }} # FIXME: remove after v0.43 release
 
-      - name: Install dependencies
+      - name: Switch to release build of Catalyst
+        if: inputs.lightning-version == 'release'
+        run: |
+          cd ${{ github.workspace}}/catalyst
+          git fetch --all
+          git checkout $(git branch -a --list "origin/v0.*rc*" | sort | tail -1)
+          git log -1 --format='%H'
+          cd ${{ github.workspace }}
+
+      - name: Install System dependencies
         run: |
           sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION g++-$GCC_VERSION libopenblas-dev
-          python -m pip install scipy-openblas32 wheel
+
+      - name: Install scipy-openblas32
+        if : matrix.blas == 'ON'
+        run: |
+          python -m pip install scipy-openblas32
 
       - name: Get required Python packages
         run: |
           python -m pip install -r requirements-tests.txt
-          python -m pip install build
+          python -m pip install build wheel
 
       - name: Create device wheel ${{ inputs.lightning-version }}
         run: |
           PL_BACKEND=${{ matrix.pl_backend }} python scripts/configure_pyproject_toml.py
-          CMAKE_ARGS="-DENABLE_BLAS=${{ matrix.blas }} -DLQ_ENABLE_KERNEL_OMP=ON -DENABLE_PYTHON=ON -DLIGHTNING_CATALYST_SRC_PATH=${{ github.workspace }}/catalyst" python -m build
+          CMAKE_ARGS="-DENABLE_BLAS=${{ matrix.blas }} -DENABLE_SCIPY_OPENBLAS=${{ matrix.blas }} -DLQ_ENABLE_KERNEL_OMP=ON -DENABLE_PYTHON=ON -DLIGHTNING_CATALYST_SRC_PATH=${{ github.workspace }}/catalyst" python -m build
           cd dist
           WHEEL_NAME=$(ls *.whl)
           cp $WHEEL_NAME ${{ github.workspace }}/wheel_${{ matrix.pl_backend }}-${{ matrix.blas }}.whl
@@ -193,6 +205,12 @@ jobs:
       - name: Install ML libraries for interfaces
         run: |
           python -m pip install --upgrade torch==$TORCH_VERSION --index-url https://download.pytorch.org/whl/cpu
+
+      - name: Switch to release build of Lightning
+        if: inputs.lightning-version == 'release'
+        run: |
+          git fetch --all
+          git checkout $(git branch -a --list "origin/v0.*rc*" | sort | tail -1)
 
       - name: Switch to stable tag of Lightning
         if: inputs.lightning-version == 'stable'

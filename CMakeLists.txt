@@ -48,6 +48,7 @@ option(ENABLE_COVERAGE "Enable code coverage" OFF)
 option(ENABLE_WARNINGS "Enable warnings" ON)
 option(ENABLE_NATIVE "Enable native CPU build tuning" OFF)
 option(ENABLE_PYTHON "Enable compilation of the Python module" ON)
+option(ENABLE_SCIPY_OPENBLAS "Enable SciPy OpenBLAS support" ON)
 
 # OpenMP
 find_package(OpenMP)
@@ -87,7 +88,7 @@ if(ENABLE_PYTHON)
     # Add nanobind
     find_package(Python COMPONENTS Interpreter Development)
     message(STATUS "Enabling Nanobind Python bindings")
-    
+
     # Ensure we have a valid Python executable
     if(NOT Python_EXECUTABLE)
         if(DEFINED PYTHON_EXECUTABLE)
@@ -97,9 +98,9 @@ if(ENABLE_PYTHON)
             find_program(Python_EXECUTABLE NAMES python3 python)
         endif()
     endif()
-    
+
     message(STATUS "Using Python executable: ${Python_EXECUTABLE}")
-    
+
     # Get Python include directory explicitly
     execute_process(
         COMMAND ${Python_EXECUTABLE} -c "import sysconfig; print(sysconfig.get_path('include'))"
@@ -107,7 +108,7 @@ if(ENABLE_PYTHON)
         OUTPUT_STRIP_TRAILING_WHITESPACE
         RESULT_VARIABLE PY_INCLUDE_RESULT
     )
-    
+
     if(PY_INCLUDE_RESULT EQUAL 0 AND PYTHON_INCLUDE_DIR)
         message(STATUS "Setting Python include directory: ${PYTHON_INCLUDE_DIR}")
         set(Python_INCLUDE_DIRS ${PYTHON_INCLUDE_DIR})
@@ -116,7 +117,7 @@ if(ENABLE_PYTHON)
     else()
         message(WARNING "Failed to get Python include directory")
     endif()
-    
+
     # Ensure nanobind can find Python extension suffix - try multiple methods
     execute_process(
         COMMAND ${Python_EXECUTABLE} -c "import sysconfig; print(sysconfig.get_config_var('EXT_SUFFIX') or '.so')"
@@ -124,7 +125,7 @@ if(ENABLE_PYTHON)
         OUTPUT_STRIP_TRAILING_WHITESPACE
         RESULT_VARIABLE PY_RESULT
     )
-    
+
     if(NOT PY_RESULT EQUAL 0 OR NOT NANOBIND_EXT_SUFFIX)
         message(WARNING "Failed to get Python extension suffix. Falling back to default '.so'")
         # Fallback method
@@ -139,13 +140,13 @@ if(ENABLE_PYTHON)
         endif()
 
     endif()
-    
+
     message(STATUS "Setting NANOBIND_EXT_SUFFIX to: ${NANOBIND_EXT_SUFFIX}")
     set(ENV{NANOBIND_EXT_SUFFIX} ${NANOBIND_EXT_SUFFIX})
-    
+
     # Also set it as a CMake variable that nanobind can access
     set(NANOBIND_EXT_SUFFIX ${NANOBIND_EXT_SUFFIX} CACHE STRING "Python extension suffix")
-    
+
     # Print nanobind include directory
     message(STATUS "Nanobind include directory: ${nanobind_SOURCE_DIR}/include")
 
@@ -161,25 +162,33 @@ endif()
 # Print Python site-packages directory for reference
 message("Python site-packages directory: ${Python_SITELIB}")
 
-if(DEFINED PY_INSTALL)
-    # Note the following setting is only for pyenv and not for conda
-    # TODO: Add support for conda
-    if(APPLE)
-        set(SCIPY_OPENBLAS32_RUNTIME_LIB_PATH "@loader_path/../scipy_openblas32/lib")
+if (ENABLE_SCIPY_OPENBLAS)
+    # Define a preprocessing macro to enable SCIPY_OPENBLAS32
+    add_compile_definitions(SCIPY_OPENBLAS_ENABLED)
+    message(STATUS "ENABLE_SCIPY_OPENBLAS is ON. SciPy OpenBLAS support is enabled.")
+    if(DEFINED PY_INSTALL)
+        # Note the following setting is only for pyenv and not for conda
+        # TODO: Add support for conda
+        if(APPLE)
+            set(SCIPY_OPENBLAS32_RUNTIME_LIB_PATH "@loader_path/../scipy_openblas32/lib")
+        else()
+            set(SCIPY_OPENBLAS32_RUNTIME_LIB_PATH "$ORIGIN/../scipy_openblas32/lib")
+        endif()
     else()
-        set(SCIPY_OPENBLAS32_RUNTIME_LIB_PATH "$ORIGIN/../scipy_openblas32/lib")
+        include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindSCIPY_OPENBLAS32.cmake")
+        if(NOT DEFINED SCIPY_OPENBLAS32_LIB_PATH AND NOT EXISTS ${SCIPY_OPENBLAS32_LIB_PATH})
+            set(SCIPY_OPENBLAS32_LIB_PATH "")
+            find_path_to_openblas(SCIPY_OPENBLAS32_LIB_PATH)
+            add_compile_definitions(SCIPY_OPENBLAS32_LIB="${SCIPY_OPENBLAS32_LIB_PATH}")
+            message(STATUS "SCIPY_OPENBLAS32_LIB_PATH: ${SCIPY_OPENBLAS32_LIB_PATH}")
+        else()
+            add_compile_definitions(SCIPY_OPENBLAS32_LIB="${SCIPY_OPENBLAS32_LIB_PATH}")
+        endif()
+        set(SCIPY_OPENBLAS32_RUNTIME_LIB_PATH "${SCIPY_OPENBLAS32_LIB_PATH}")
     endif()
 else()
-    include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindSCIPY_OPENBLAS32.cmake")
-    if(NOT DEFINED SCIPY_OPENBLAS32_LIB_PATH AND NOT EXISTS ${SCIPY_OPENBLAS32_LIB_PATH})
-        set(SCIPY_OPENBLAS32_LIB_PATH "")
-        find_path_to_openblas(SCIPY_OPENBLAS32_LIB_PATH)
-        add_compile_definitions(SCIPY_OPENBLAS32_LIB="${SCIPY_OPENBLAS32_LIB_PATH}")
-        message(STATUS "SCIPY_OPENBLAS32_LIB_PATH: ${SCIPY_OPENBLAS32_LIB_PATH}")
-    else()
-        add_compile_definitions(SCIPY_OPENBLAS32_LIB="${SCIPY_OPENBLAS32_LIB_PATH}")
-    endif()
-    set(SCIPY_OPENBLAS32_RUNTIME_LIB_PATH "${SCIPY_OPENBLAS32_LIB_PATH}")
+    message(STATUS "ENABLE_SCIPY_OPENBLAS is OFF. SciPy OpenBLAS support is disabled.")
+    set(SCIPY_OPENBLAS32_RUNTIME_LIB_PATH "")
 endif()
 
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
@@ -212,7 +221,9 @@ target_include_directories(pennylane_lightning  INTERFACE "$<INSTALL_INTERFACE:$
 if(ENABLE_PYTHON)
     message(STATUS "ENABLE_PYTHON is ON.")
     # Build Nanobind module
-    nanobind_add_module("${PL_BACKEND}_ops" "pennylane_lightning/core/bindings/Bindings.cpp")
+    nanobind_add_module("${PL_BACKEND}_ops"
+                        NB_DOMAIN "pennylane_lightning"
+                        "pennylane_lightning/core/bindings/Bindings.cpp")
 
     # Remove nanobind's problematic flags that are incompatible with NVCC
     target_compile_options("${PL_BACKEND}_ops" PRIVATE
@@ -230,7 +241,7 @@ if(ENABLE_PYTHON)
     else()
         set_target_properties("${PL_BACKEND}_ops" PROPERTIES BUILD_RPATH "${SCIPY_OPENBLAS32_RUNTIME_LIB_PATH}")
     endif()
-    
+
     # Link library
     target_link_libraries("${PL_BACKEND}_ops" PRIVATE lightning_compile_options
                                                     lightning_external_libs
@@ -242,11 +253,11 @@ if(ENABLE_PYTHON)
                                                     "${PL_BACKEND}_bindings"
                                                     "${PL_BACKEND}_measurements"
                                                    )
-    
+
     if(NOT DEFINED PL_TENSOR)
         target_link_libraries("${PL_BACKEND}_ops" PRIVATE "${PL_BACKEND}_algorithms")
     endif()
-    
+
     set_target_properties("${PL_BACKEND}_ops" PROPERTIES CXX_VISIBILITY_PRESET hidden)
     target_compile_definitions("${PL_BACKEND}_ops" PRIVATE VERSION_INFO=${VERSION_STRING})
 endif()

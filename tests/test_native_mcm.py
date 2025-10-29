@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Tests for default qubit preprocessing."""
-from functools import partial, reduce
+
+from functools import partial
 from typing import Sequence
 
 import numpy as np
@@ -77,7 +78,6 @@ class TestUnsupportedConfigurationsMCM:
         return func
 
     def test_unsupported_method(self):
-
         method = "roller-coaster"
         circuit = self.generate_mcm_circuit(
             device_kwargs={"wires": 1, "shots": 100},
@@ -134,7 +134,6 @@ class TestUnsupportedConfigurationsMCM:
             circuit(1.33)
 
         for postsel in ["hw-like", "fill-shots"]:
-
             circuit = self.generate_mcm_circuit(
                 device_kwargs={"wires": 1, "shots": 100},
                 qnode_kwargs={"mcm_method": "deferred", "postselect_mode": postsel},
@@ -184,6 +183,22 @@ class TestUnsupportedConfigurationsMCM:
             ):
                 circuit(1.33)
 
+    @pytest.mark.parametrize("mcm_method", ["one-shot", "tree-traversal"])
+    def test_unsupported_postselect_mode(self, mcm_method):
+        """Test raising an error for unsupported postselection in Lightning"""
+
+        circuit = self.generate_mcm_circuit(
+            device_kwargs={"wires": 1, "shots": 100},
+            qnode_kwargs={"mcm_method": mcm_method, "postselect_mode": "fill-shots"},
+            mcm_kwargs={"postselect": 1, "reset": False},
+            measurement=qml.expval,
+            obs=qml.Z(0),
+        )
+        with pytest.raises(
+            DeviceError, match="Using postselect_mode='fill-shots' is not supported."
+        ):
+            circuit(1.23)
+
     def test_impossible_state_for_TT(self):
         """Test impossible state with mid-circuit measurement for tree-traversal method."""
 
@@ -207,7 +222,6 @@ class TestUnsupportedConfigurationsMCM:
 
 
 class TestSupportedConfigurationsMCM:
-
     def generate_mcm_circuit(
         self,
         device_kwargs={},
@@ -328,8 +342,7 @@ class TestSupportedConfigurationsMCM:
         spy_dynamic_one_shot.assert_called_once()
         spy_tree_traversal.assert_not_called()
 
-    @pytest.mark.parametrize("postselect_mode", ["hw-like", "fill-shots"])
-    def test_qnode_postselect_mode(self, mcm_method, postselect_mode):
+    def test_qnode_postselect_mode(self, mcm_method):
         """Test that user specified qnode arg for discarding invalid shots is used correctly"""
 
         if mcm_method == "deferred":
@@ -340,7 +353,7 @@ class TestSupportedConfigurationsMCM:
         postselect = 1
 
         @partial(qml.set_shots, shots=shots)
-        @qml.qnode(device, postselect_mode=postselect_mode, mcm_method=mcm_method)
+        @qml.qnode(device, postselect_mode="hw-like", mcm_method=mcm_method)
         def f(x):
             qml.RX(x, 0)
             _ = qml.measure(0, postselect=postselect)
@@ -351,15 +364,11 @@ class TestSupportedConfigurationsMCM:
         # original number of shots. This helps avoid stochastic failures for the assertion below
         res = f(np.pi / 2)
 
-        if postselect_mode == "hw-like":
-            assert len(res) < shots
-        else:
-            assert len(res) == shots
+        assert len(res) < shots
         assert np.allclose(res, postselect)
 
 
 class TestExecutionMCM:
-
     # pylint: disable=unused-argument
     def obs_tape(x, y, z, reset=False, postselect=None):
         qml.RX(x, 0)
@@ -417,7 +426,7 @@ class TestExecutionMCM:
             assert np.all(np.isnan(r1))
             assert np.all(np.isnan(r2))
 
-    @pytest.mark.local_salt(42)
+    @pytest.mark.local_salt(44)
     @pytest.mark.parametrize("shots", [None, 5000, [4000, 4001]])
     @pytest.mark.parametrize("postselect", [None, 0, 1])
     @pytest.mark.parametrize("measure_f", [qml.counts, qml.expval, qml.probs, qml.sample, qml.var])
