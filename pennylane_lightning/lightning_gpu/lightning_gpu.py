@@ -174,7 +174,7 @@ def _add_adjoint_transforms(program: TransformProgram, device_wires=None) -> Non
         name=name,
         skip_initial_state_prep=False,
         device_wires=device_wires,
-        target_gates=LightningGPU.capabilities.gate_set(differntiable=True),
+        target_gates=LightningGPU.capabilities.gate_set(differentiable=True),
     )
     program.add_transform(validate_observables, accepted_observables, name=name)
     program.add_transform(
