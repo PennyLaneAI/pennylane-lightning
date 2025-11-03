@@ -15,6 +15,9 @@
 
 <h3>Bug fixes 🐛</h3>
 
+- Fix a test that was instantiating a PennyLane operator within a QNode to compute a matrix.
+  [(#1292)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1292)
+
 <h3>Internal changes ⚙️</h3>
 
 - Update Sphinx version to 8.1. [(#1291)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1291)
@@ -50,7 +53,8 @@
 
 This release contains contributions from (in alphabetical order):
 
-Joseph Lee
+Joseph Lee,
+David Wierichs,
 
 ---
 

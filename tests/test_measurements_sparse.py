@@ -50,15 +50,13 @@ class TestSparseExpval:
     def test_sparse_Pauli_words(self, cases, tol, dev):
         """Test expval of some simple sparse Hamiltonian"""
 
+        matrix = qml.Hamiltonian([1], [cases[0]]).sparse_matrix()
+
         @qml.qnode(dev, diff_method="parameter-shift")
         def circuit_expval():
             qml.RX(0.4, wires=[0])
             qml.RY(-0.2, wires=[1])
-            return qml.expval(
-                qml.SparseHamiltonian(
-                    qml.Hamiltonian([1], [cases[0]]).sparse_matrix(), wires=[0, 1]
-                )
-            )
+            return qml.expval(qml.SparseHamiltonian(matrix, wires=[0, 1]))
 
         assert np.allclose(circuit_expval(), cases[1], atol=tol, rtol=0)
 
@@ -66,11 +64,7 @@ class TestSparseExpval:
         def circuit_var():
             qml.RX(0.4, wires=[0])
             qml.RY(-0.2, wires=[1])
-            return qml.var(
-                qml.SparseHamiltonian(
-                    qml.Hamiltonian([1], [cases[0]]).sparse_matrix(), wires=[0, 1]
-                )
-            )
+            return qml.var(qml.SparseHamiltonian(matrix, wires=[0, 1]))
 
         assert np.allclose(circuit_var(), cases[2], atol=tol, rtol=0)
 
