@@ -15,7 +15,9 @@
 
 <h3>Bug fixes 🐛</h3>
 
-- Fix a test that was instantiating a PennyLane operator within a QNode to compute a matrix.
+- Corrected an issue in tests where a PennyLane operator was used within a QNode to compute a
+  matrix, which would lead to wrongful queuing as of PennyLane
+  pull request [#8131](https://github.com/PennyLaneAI/pennylane/pull/8131).
   [(#1292)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1292)
 
 <h3>Internal changes ⚙️</h3>

@@ -50,6 +50,8 @@ class TestSparseExpval:
     def test_sparse_Pauli_words(self, cases, tol, dev):
         """Test expval of some simple sparse Hamiltonian"""
 
+        # Compute the sparse matrix of the input operator
+        # This is done outside of the QNode to avoid queuing the `Hamiltonian`
         matrix = qml.Hamiltonian([1], [cases[0]]).sparse_matrix()
 
         @qml.qnode(dev, diff_method="parameter-shift")
