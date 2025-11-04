@@ -56,7 +56,7 @@
 This release contains contributions from (in alphabetical order):
 
 Joseph Lee,
-David Wierichs,
+David Wierichs.
 
 ---
 
