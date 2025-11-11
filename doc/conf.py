@@ -73,7 +73,7 @@ for mod_name in MOCK_MODULES:
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
-needs_sphinx = "3.3"
+needs_sphinx = "8.1"
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
@@ -108,7 +108,7 @@ ogp_image = "_static/pennylane_lightning.png"
 # The base URL with a proper language and version.
 html_baseurl = os.environ.get("READTHEDOCS_CANONICAL_URL", "/")
 
-intersphinx_mapping = {"https://docs.pennylane.ai/en/stable/": None}
+intersphinx_mapping = {'pennylane':("https://docs.pennylane.ai/en/stable/", None)}
 
 autosummary_generate = True
 autosummary_imported_members = False
