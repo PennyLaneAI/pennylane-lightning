@@ -126,7 +126,7 @@ or applications built on PennyLane.
 ### Black & Pylint
 
 If you contribute to the Python code, please mind the following.
-The Python code is formatted with the PEP 8 compliant opinionated formatter [Black](https://github.com/psf/black) (`black==25.1.0`).
+The Python code is formatted with the PEP 8 compliant opinionated formatter [Black](https://github.com/psf/black).
 We set a line width of a 100 characters.
 The Python code is statically analyzed with [Pylint](https://pylint.readthedocs.io/en/stable/).
 We set up a pre-commit hook (see [Git hooks](https://git-scm.com/docs/githooks)) to run both of these on `git commit`.
