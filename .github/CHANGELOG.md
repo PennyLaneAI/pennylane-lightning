@@ -22,7 +22,11 @@
 
 <h3>Internal changes ⚙️</h3>
 
-- Update Sphinx version to 8.1. [(#1291)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1291)
+- Pinned black, pylint, and isort versions in requirement files.
+  [(#1288)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1288)
+  
+- Update Sphinx version to 8.1.
+  [(#1291)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1291)
 
 - Update release script and use the Catalyst `rc` branch in CIs in the release season.
   [(#1285)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1285)
