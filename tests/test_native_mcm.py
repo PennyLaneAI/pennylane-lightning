@@ -79,9 +79,7 @@ class TestUnsupportedConfigurationsMCM:
 
     def test_unsupported_method(self):
         method = "roller-coaster"
-        with pytest.raises(
-            ValueError, match=f"'{method}' is not a valid mcm_method."
-        ):
+        with pytest.raises(ValueError, match=f"'{method}' is not a valid mcm_method."):
             _ = self.generate_mcm_circuit(
                 device_kwargs={"wires": 1, "shots": 100},
                 qnode_kwargs={"mcm_method": method},
