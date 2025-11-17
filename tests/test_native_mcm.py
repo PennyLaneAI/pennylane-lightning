@@ -79,17 +79,16 @@ class TestUnsupportedConfigurationsMCM:
 
     def test_unsupported_method(self):
         method = "roller-coaster"
-        circuit = self.generate_mcm_circuit(
-            device_kwargs={"wires": 1, "shots": 100},
-            qnode_kwargs={"mcm_method": method},
-            mcm_kwargs={"postselect": None, "reset": False},
-            measurement=qml.expval,
-            obs=qml.PauliZ(0),
-        )
         with pytest.raises(
             ValueError, match=f"'{method}' is not a valid mcm_method."
         ):
-            circuit(1.33)
+            _ = self.generate_mcm_circuit(
+                device_kwargs={"wires": 1, "shots": 100},
+                qnode_kwargs={"mcm_method": method},
+                mcm_kwargs={"postselect": None, "reset": False},
+                measurement=qml.expval,
+                obs=qml.PauliZ(0),
+            )
 
     def test_unsupported_measurement(self, mcm_method):
         """Test unsupported ``qml.classical_shadow`` measurement on Lightning devices."""
