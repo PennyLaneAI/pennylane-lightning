@@ -87,7 +87,7 @@ class TestUnsupportedConfigurationsMCM:
             obs=qml.PauliZ(0),
         )
         with pytest.raises(
-            DeviceError, match=f"'{method}' is not a valid mcm_method."
+            ValueError, match=f"'{method}' is not a valid mcm_method."
         ):
             circuit(1.33)
 
