@@ -1,13 +1,33 @@
 Kernel performance tuning
 #########################
 
-Lightning-Qubit's kernel implementations are by default tuned for high throughput single-threaded performance with gradient workloads. To enable this, we add OpenMP threading within the adjoint differentiation method implementation and use SIMD-level intrinsics to ensure fast performance for each given circuit in such a workload.
+Lightning-Qubit's kernel implementations are by default tuned for high throughput single-threaded performance with gradient workloads.
+To enable this, we add OpenMP threading within the adjoint differentiation method implementation
+and use SIMD-level intrinsics to ensure fast performance for each given circuit in such a workload.
 
-However, sometimes we may want to modify the above defaults to favour a given workload, such as by enabling multi-threaded execution of the gate kernels instead. For this, we have several compile-time flags to change the operating behaviour of Lightning-Qubit kernels.
+However, sometimes we may want to modify the above defaults to favour a given workload, such as by enabling multi-threaded execution of the gate kernels instead.
+For this, we have several compile-time flags to change the operating behaviour of Lightning-Qubit kernels.
 
 OpenMP threaded kernels
 -----------------------
 
-To enable OpenMP acceleration of the gate kernels, Lightning-Qubit can be compiled with the ``-DLQ_ENABLE_KERNEL_OMP=ON`` CMake flag. Not, that for gradient workloads with many observables, this may reduce performance in comparison with the default mode, so this behaviour is opt-in only.
+OpenMP acceleration of gate kernels across all kernel types (LM, AVX2, and AVX512) is enabled
+by default on Linux wheels in Lightning-Qubit.
 
-For workloads that show benefit from the use of threaded gate kernels, sometimes updating the CPU cache to accommodate recently modified data can become a bottleneck, and saturates the performance gained at high thread counts. This may be alleviated somewhat on systems supporting AVX2 and AVX-512 operations using the ``-DLQ_ENABLE_KERNEL_AVX_STREAMING=on`` CMake flag. This forces the data to avoid updating the CPU cache and can improve performance for larger workloads.
+On other operating systems, OpenMP support can be enabled by setting the environment variable
+``LQ_ENABLE_KERNEL_OMP=ON`` before starting your Python session, or if already running, before
+simulating your PennyLane programs.
+You can also control the number of threads used by setting the ``OMP_NUM_THREADS``
+environment variable.
+
+For workloads that involve gradient computations with many observable measurements,
+OpenMP acceleration may reduce performance compared to the default mode.
+To disable it, use the CMake flag ``-DLQ_ENABLE_KERNEL_OMP=OFF`` when building
+Lightning-Qubit.
+
+For workloads that show benefit from the use of threaded gate kernels,
+sometimes updating the CPU cache to accommodate recently modified data can become a bottleneck,
+and saturates the performance gained at high thread counts.
+This may be alleviated somewhat on systems supporting AVX2 and AVX-512 operations using
+the ``-DLQ_ENABLE_KERNEL_AVX_STREAMING=on`` CMake flag. This forces the data to avoid updating
+the CPU cache and can improve performance for larger workloads.
