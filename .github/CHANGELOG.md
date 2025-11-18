@@ -59,6 +59,7 @@
 
 This release contains contributions from (in alphabetical order):
 
+Yushao Chen,
 Joseph Lee,
 David Wierichs.
 
@@ -79,6 +80,8 @@ David Wierichs.
   [(#1210)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1210)
 
 <h3>Improvements 🛠</h3>
+- Supported Python 3.14 wheel builds.
+  [(#1294)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1294)
 
 - Supported Python version 3.14.
 
@@ -3013,5 +3016,5 @@ Tom Bromley, Josh Izaac, Antal Száva
 Initial release.
 
 This release contains contributions from (in alphabetical order):
-
+Tom Bromley, Josh Izaac, Nathan Killoran, Antal Száva
 Tom Bromley, Yushao Chen, Josh Izaac, Nathan Killoran, Antal Száva
