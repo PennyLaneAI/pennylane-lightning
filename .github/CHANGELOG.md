@@ -19,7 +19,18 @@
 
 <h3>Bug fixes 🐛</h3>
 
+- Corrected an issue in tests where a PennyLane operator was used within a QNode to compute a
+  matrix, which would lead to wrongful queuing as of PennyLane
+  pull request [#8131](https://github.com/PennyLaneAI/pennylane/pull/8131).
+  [(#1292)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1292)
+
 <h3>Internal changes ⚙️</h3>
+
+- Pinned black, pylint, and isort versions in requirement files.
+  [(#1288)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1288)
+  
+- Update Sphinx version to 8.1.
+  [(#1291)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1291)
 
 - Update release script and use the Catalyst `rc` branch in CIs in the release season.
   [(#1285)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1285)
@@ -53,7 +64,8 @@
 This release contains contributions from (in alphabetical order):
 
 Ali Asadi,
-Joseph Lee
+Joseph Lee,
+David Wierichs.
 
 ---
 
