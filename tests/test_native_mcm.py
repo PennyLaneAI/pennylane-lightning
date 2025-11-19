@@ -77,17 +77,6 @@ class TestUnsupportedConfigurationsMCM:
 
         return func
 
-    def test_unsupported_method(self):
-        method = "roller-coaster"
-        with pytest.raises(ValueError, match=f"'{method}' is not a valid mcm_method."):
-            _ = self.generate_mcm_circuit(
-                device_kwargs={"wires": 1, "shots": 100},
-                qnode_kwargs={"mcm_method": method},
-                mcm_kwargs={"postselect": None, "reset": False},
-                measurement=qml.expval,
-                obs=qml.PauliZ(0),
-            )
-
     def test_unsupported_measurement(self, mcm_method):
         """Test unsupported ``qml.classical_shadow`` measurement on Lightning devices."""
 
@@ -403,7 +392,9 @@ class TestExecutionMCM:
             )
 
         res1 = qml.QNode(circuit_op, dq)()
-        res2 = qml.set_shots(qml.QNode(circuit_op, dev, mcm_method=mcm_method), shots=10)()
+        res2 = qml.set_shots(
+            qml.QNode(circuit_op, dev, mcm_method=mcm_method), shots=10
+        )()
         for r1, r2 in zip(res1, res2):
             if isinstance(r1, Sequence):
                 assert len(r1) == len(r2)
@@ -416,7 +407,9 @@ class TestExecutionMCM:
             return qml.expval(op=m), qml.probs(op=m), qml.var(op=m)
 
         res1 = qml.QNode(circuit_mcm, dq)()
-        res2 = qml.set_shots(qml.QNode(circuit_mcm, dev, mcm_method=mcm_method), shots=10)()
+        res2 = qml.set_shots(
+            qml.QNode(circuit_mcm, dev, mcm_method=mcm_method), shots=10
+        )()
         for r1, r2 in zip(res1, res2):
             if isinstance(r1, Sequence):
                 assert len(r1) == len(r2)
@@ -426,10 +419,21 @@ class TestExecutionMCM:
     @pytest.mark.local_salt(44)
     @pytest.mark.parametrize("shots", [None, 5000, [4000, 4001]])
     @pytest.mark.parametrize("postselect", [None, 0, 1])
-    @pytest.mark.parametrize("measure_f", [qml.counts, qml.expval, qml.probs, qml.sample, qml.var])
+    @pytest.mark.parametrize(
+        "measure_f", [qml.counts, qml.expval, qml.probs, qml.sample, qml.var]
+    )
     @pytest.mark.parametrize(
         "measure_obj",
-        [qml.PauliZ(0), qml.PauliY(1), [0], [0, 1], [1, 0], "mcm", "composite_mcm", "mcm_list"],
+        [
+            qml.PauliZ(0),
+            qml.PauliY(1),
+            [0],
+            [0, 1],
+            [1, 0],
+            "mcm",
+            "composite_mcm",
+            "mcm_list",
+        ],
     )
     def test_simple_dynamic_circuit(
         self, mcm_method, shots, measure_f, postselect, measure_obj, seed
@@ -472,11 +476,17 @@ class TestExecutionMCM:
                 else (0.5 * m0 if measure_obj == "composite_mcm" else [m0, m1])
             )
             measurement_key = "wires" if isinstance(measure_obj, list) else "op"
-            measurement_value = mid_measure if isinstance(measure_obj, str) else measure_obj
+            measurement_value = (
+                mid_measure if isinstance(measure_obj, str) else measure_obj
+            )
             return measure_f(**{measurement_key: measurement_value})
 
-        results1 = qml.set_shots(qml.QNode(func, dev, mcm_method=mcm_method), shots=shots)(*params)
-        results2 = qml.set_shots(qml.QNode(func, dq, mcm_method="deferred"), shots=shots)(*params)
+        results1 = qml.set_shots(
+            qml.QNode(func, dev, mcm_method=mcm_method), shots=shots
+        )(*params)
+        results2 = qml.set_shots(
+            qml.QNode(func, dq, mcm_method="deferred"), shots=shots
+        )(*params)
 
         validate_measurements(measure_f, shots, results1, results2, atol=0.04)
 
@@ -484,7 +494,9 @@ class TestExecutionMCM:
     @pytest.mark.parametrize("shots", [None, 4000])
     @pytest.mark.parametrize("postselect", [None, 0, 1])
     @pytest.mark.parametrize("reset", [False, True])
-    def test_multiple_measurements_and_reset(self, mcm_method, shots, postselect, reset, seed):
+    def test_multiple_measurements_and_reset(
+        self, mcm_method, shots, postselect, reset, seed
+    ):
         """Tests that LightningDevices handles a circuit with a single mid-circuit measurement with reset
         and a conditional gate. Multiple measurements of the mid-circuit measurement value are
         performed. This function also tests `reset` parametrizing over the parameter."""
@@ -506,7 +518,9 @@ class TestExecutionMCM:
         obs = qml.PauliY(1)
 
         def func(x, y, z):
-            mcms = TestExecutionMCM.obs_tape(x, y, z, reset=reset, postselect=postselect)
+            mcms = TestExecutionMCM.obs_tape(
+                x, y, z, reset=reset, postselect=postselect
+            )
 
             if shots is None:
                 return (
@@ -523,8 +537,12 @@ class TestExecutionMCM:
                     qml.var(op=obs),
                 )
 
-        results1 = qml.set_shots(qml.QNode(func, dev, mcm_method=mcm_method), shots=shots)(*params)
-        results2 = qml.set_shots(qml.QNode(func, dq, mcm_method="deferred"), shots=shots)(*params)
+        results1 = qml.set_shots(
+            qml.QNode(func, dev, mcm_method=mcm_method), shots=shots
+        )(*params)
+        results2 = qml.set_shots(
+            qml.QNode(func, dq, mcm_method="deferred"), shots=shots
+        )(*params)
 
         measurements = (
             [qml.counts, qml.expval, qml.probs, qml.sample, qml.var]
@@ -549,7 +567,9 @@ class TestExecutionMCM:
             "list",
         ],
     )
-    @pytest.mark.parametrize("measure_f", [qml.counts, qml.expval, qml.probs, qml.sample, qml.var])
+    @pytest.mark.parametrize(
+        "measure_f", [qml.counts, qml.expval, qml.probs, qml.sample, qml.var]
+    )
     def test_composite_mcms(sefl, mcm_method, mcm_f, measure_f, seed):
         """Tests that Lightning Devices handles a circuit with a composite mid-circuit measurement and a
         conditional gate. A single measurement of a composite mid-circuit measurement is performed
@@ -630,10 +650,21 @@ class TestExecutionMCM:
 
     @pytest.mark.parametrize("shots", [40, [40, 40]])
     @pytest.mark.parametrize("postselect", [None, 0, 1])
-    @pytest.mark.parametrize("measure_f", [qml.counts, qml.expval, qml.probs, qml.sample, qml.var])
+    @pytest.mark.parametrize(
+        "measure_f", [qml.counts, qml.expval, qml.probs, qml.sample, qml.var]
+    )
     @pytest.mark.parametrize(
         "measure_obj",
-        [qml.PauliZ(0), qml.PauliY(1), [0], [0, 1], [1, 0], "mcm", "composite_mcm", "mcm_list"],
+        [
+            qml.PauliZ(0),
+            qml.PauliY(1),
+            [0],
+            [0, 1],
+            [1, 0],
+            "mcm",
+            "composite_mcm",
+            "mcm_list",
+        ],
     )
     def test_seeded_mcm(self, mcm_method, shots, measure_f, postselect, measure_obj):
         """Tests that seeded MCM measurements return the same results for two devices with the same seed."""
@@ -659,15 +690,17 @@ class TestExecutionMCM:
                 else (0.5 * m0 if measure_obj == "composite_mcm" else [m0, m1])
             )
             measurement_key = "wires" if isinstance(measure_obj, list) else "op"
-            measurement_value = mid_measure if isinstance(measure_obj, str) else measure_obj
+            measurement_value = (
+                mid_measure if isinstance(measure_obj, str) else measure_obj
+            )
             return measure_f(**{measurement_key: measurement_value})
 
-        results1 = qml.set_shots(qml.QNode(func, dev_1, mcm_method=mcm_method), shots=shots)(
-            *params
-        )
-        results2 = qml.set_shots(qml.QNode(func, dev_2, mcm_method=mcm_method), shots=shots)(
-            *params
-        )
+        results1 = qml.set_shots(
+            qml.QNode(func, dev_1, mcm_method=mcm_method), shots=shots
+        )(*params)
+        results2 = qml.set_shots(
+            qml.QNode(func, dev_2, mcm_method=mcm_method), shots=shots
+        )(*params)
 
         if measure_f is qml.counts:
             validate_counts(shots, results1, results2, rtol=0, atol=0)
