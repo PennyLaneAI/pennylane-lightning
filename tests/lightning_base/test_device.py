@@ -741,18 +741,6 @@ class TestExecution:
 
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
-        reason="lightning.tensor device doesn't have support for program capture.",
-    )
-    def test_preprocess_invalid_mcm_method_error(self, enable_disable_plxpr):
-        """Test that an error is raised if mcm_method is invalid."""
-        device = LightningDevice(wires=1)
-        config = ExecutionConfig(mcm_config=MCMConfig(mcm_method="foo"))
-
-        with pytest.raises(DeviceError, match="mcm_method='foo' is not supported"):
-            _ = device.setup_execution_config(config)
-
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
         reason="lightning.tensor device does not support mcms",
     )
     def test_decompose_conditionals(self):

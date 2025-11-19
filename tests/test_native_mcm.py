@@ -77,20 +77,6 @@ class TestUnsupportedConfigurationsMCM:
 
         return func
 
-    def test_unsupported_method(self):
-        method = "roller-coaster"
-        circuit = self.generate_mcm_circuit(
-            device_kwargs={"wires": 1, "shots": 100},
-            qnode_kwargs={"mcm_method": method},
-            mcm_kwargs={"postselect": None, "reset": False},
-            measurement=qml.expval,
-            obs=qml.PauliZ(0),
-        )
-        with pytest.raises(
-            DeviceError, match=f"mcm_method='{method}' is not supported with {device_name}"
-        ):
-            circuit(1.33)
-
     def test_unsupported_measurement(self, mcm_method):
         """Test unsupported ``qml.classical_shadow`` measurement on Lightning devices."""
 
@@ -432,7 +418,16 @@ class TestExecutionMCM:
     @pytest.mark.parametrize("measure_f", [qml.counts, qml.expval, qml.probs, qml.sample, qml.var])
     @pytest.mark.parametrize(
         "measure_obj",
-        [qml.PauliZ(0), qml.PauliY(1), [0], [0, 1], [1, 0], "mcm", "composite_mcm", "mcm_list"],
+        [
+            qml.PauliZ(0),
+            qml.PauliY(1),
+            [0],
+            [0, 1],
+            [1, 0],
+            "mcm",
+            "composite_mcm",
+            "mcm_list",
+        ],
     )
     def test_simple_dynamic_circuit(
         self, mcm_method, shots, measure_f, postselect, measure_obj, seed
@@ -636,7 +631,16 @@ class TestExecutionMCM:
     @pytest.mark.parametrize("measure_f", [qml.counts, qml.expval, qml.probs, qml.sample, qml.var])
     @pytest.mark.parametrize(
         "measure_obj",
-        [qml.PauliZ(0), qml.PauliY(1), [0], [0, 1], [1, 0], "mcm", "composite_mcm", "mcm_list"],
+        [
+            qml.PauliZ(0),
+            qml.PauliY(1),
+            [0],
+            [0, 1],
+            [1, 0],
+            "mcm",
+            "composite_mcm",
+            "mcm_list",
+        ],
     )
     def test_seeded_mcm(self, mcm_method, shots, measure_f, postselect, measure_obj):
         """Tests that seeded MCM measurements return the same results for two devices with the same seed."""

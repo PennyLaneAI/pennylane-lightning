@@ -22,6 +22,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Update tests to accomodate new PennyLane MCM method validation.
+  [(#1295)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1295)
+
 - Pinned black, pylint, and isort versions in requirement files.
   [(#1288)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1288)
   
