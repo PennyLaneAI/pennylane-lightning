@@ -757,7 +757,7 @@ def resolve_mcm_method(mcm_config: MCMConfig, tape: QuantumScript | None, device
     mcm_supported_methods = (
         ("device", "deferred", "tree-traversal", "one-shot", None)
         if not qml.capture.enabled()
-        else ("deferred", "single-branch-statistics", None)
+        else ("device", "deferred", "single-branch-statistics", None)
     )
 
     if (mcm_method := mcm_config.mcm_method) not in mcm_supported_methods:
