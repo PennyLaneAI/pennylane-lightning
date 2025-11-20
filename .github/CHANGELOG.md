@@ -4,6 +4,9 @@
 
 <h3>Improvements 🛠</h3>
 
+- Supported Python 3.14 wheel builds.
+  [(#1294)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1294)
+
 <h3>Breaking changes 💔</h3>
 
 - MacOS x86 wheels are no longer built, and the PennyLane ecosystem will no longer support Intel MacOS platforms for v0.44. If needed, MacOS x86 wheels can be built from source. See [PennyLane deprecations page](https://pennylane.ai/blog/2025/10/pennylane-release-0.43/#deprecations-and-breaking-changes-) for more information.
@@ -62,6 +65,7 @@
 
 This release contains contributions from (in alphabetical order):
 
+Yushao Chen,
 Joseph Lee,
 David Wierichs.
 
