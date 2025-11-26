@@ -23,6 +23,6 @@ class LightningAmdgpu(LightningKokkos):
     name = "lightning.amdgpu"
     short_name = "lightning.amdgpu"
 
-    def __init__(self, wires, *args, **kwargs):
+    def __init__(self, wires=None, *args, **kwargs):
         # Pass all arguments through to the parent Kokkos device
         super().__init__(wires, *args, **kwargs)
