@@ -13,11 +13,13 @@
 # limitations under the License.
 from pennylane_lightning.lightning_kokkos import LightningKokkos
 
+
 class LightningAmdgpu(LightningKokkos):
     """PennyLane-Lightning AMDGPU device.
 
     A device alias for LightningKokkos targeting AMDGPU platforms.
     """
+
     name = "lightning.amdgpu"
     short_name = "lightning.amdgpu"
 

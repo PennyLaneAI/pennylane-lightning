@@ -13,14 +13,20 @@
 # limitations under the License.
 """PennyLane lightning_amdgpu package."""
 
+import sys
+
 from pennylane_lightning.core import __version__
 
-import sys
 try:
     import pennylane_lightning.lightning_amdgpu_ops as lightning_amdgpu_ops
+
     sys.modules["pennylane_lightning.lightning_kokkos_ops"] = lightning_amdgpu_ops
-    sys.modules["pennylane_lightning.lightning_kokkos_ops.algorithms"] = lightning_amdgpu_ops.algorithms
-    sys.modules["pennylane_lightning.lightning_kokkos_ops.observables"] = lightning_amdgpu_ops.observables
+    sys.modules["pennylane_lightning.lightning_kokkos_ops.algorithms"] = (
+        lightning_amdgpu_ops.algorithms
+    )
+    sys.modules["pennylane_lightning.lightning_kokkos_ops.observables"] = (
+        lightning_amdgpu_ops.observables
+    )
 except ImportError:
     pass
 
