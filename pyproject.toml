@@ -35,6 +35,7 @@ email = "software@xanadu.ai"
 gpu = [ "pennylane-lightning-gpu",]
 kokkos = [ "pennylane-lightning-kokkos",]
 tensor = [ "pennylane-lightning-tensor",]
+amdgpu = [ "pennylane-lightning-amdgpu",]
 
 [project.urls]
 Homepage = "https://github.com/PennyLaneAI/pennylane-lightning"

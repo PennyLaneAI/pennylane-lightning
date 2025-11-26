@@ -179,6 +179,9 @@ packages_list = ["pennylane_lightning." + backend]
 if backend == "lightning_qubit":
     packages_list += ["pennylane_lightning.core", "pennylane_lightning.lightning_base"]
 
+if backend == "lightning_amdgpu":
+    packages_list += ["pennylane_lightning.lightning_kokkos"]
+
 info = {
     "version": version,
     "packages": find_namespace_packages(include=packages_list),

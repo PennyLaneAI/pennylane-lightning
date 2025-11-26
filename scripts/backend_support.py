@@ -17,7 +17,7 @@ Internal logic to check and set backend variables.
 import os
 
 default_backend = "lightning_qubit"
-supported_backends = {"lightning_kokkos", "lightning_qubit", "lightning_gpu", "lightning_tensor"}
+supported_backends = {"lightning_kokkos", "lightning_qubit", "lightning_gpu", "lightning_tensor", "lightning_amdgpu"}
 supported_backends.update({sb.replace("_", ".") for sb in supported_backends})
 
 

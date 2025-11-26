@@ -71,7 +71,11 @@ using namespace Pennylane::LightningQubit::NanoBindings;
 #include "MeasurementsKokkos.hpp"
 #include "ObservablesKokkos.hpp"
 
+#ifdef _ENABLE_PLAMDGPU
+#define LIGHTNING_MODULE_NAME lightning_amdgpu_ops
+#else
 #define LIGHTNING_MODULE_NAME lightning_kokkos_ops
+#endif
 
 /// @cond DEV
 namespace {
