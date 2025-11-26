@@ -17,7 +17,7 @@ from pennylane_lightning.lightning_kokkos import LightningKokkos
 class LightningAmdgpu(LightningKokkos):
     """PennyLane-Lightning AMDGPU device.
 
-    A device alias for LightningKokkos targeting AMDGPU platforms.
+    A device alias for LightningKokkos targeting AMD GPU platforms.
     """
 
     def __init__(self, wires=None, *args, **kwargs):
