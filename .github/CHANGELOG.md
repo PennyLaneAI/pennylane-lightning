@@ -4,6 +4,9 @@
 
 <h3>Improvements 🛠</h3>
 
+- Handle `qml.GlobalPhase` with zero-qubit target wires in `lightning.gpu`.
+  [(#1298)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1298)
+
 - Supported Python 3.14 wheel builds.
   [(#1294)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1294)
 

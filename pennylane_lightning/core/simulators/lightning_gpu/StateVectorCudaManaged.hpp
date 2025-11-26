@@ -439,6 +439,26 @@ class StateVectorCudaManaged
         PL_ABORT_IF(controlled_wires.size() != controlled_values.size(),
                     "`controlled_wires` and `controlled_values` must have the "
                     "same size.");
+
+        auto tgt_wires_cp = tgt_wires;
+
+        // Handle GlobalPhase with all zero-qubit target wires
+        if (opName == "GlobalPhase" && tgt_wires.empty()) {
+            const std::set<std::size_t> controlled_set(controlled_wires.begin(),
+                                                       controlled_wires.end());
+
+            std::vector<std::size_t> comp_wires;
+            const auto num_qubits = BaseType::getNumQubits();
+            comp_wires.reserve(num_qubits);
+
+            for (std::size_t i = 0; i < num_qubits; ++i) {
+                if (controlled_set.find(i) == controlled_set.end()) {
+                    comp_wires.push_back(i);
+                }
+            }
+            tgt_wires_cp = comp_wires;
+        }
+
         auto ctrlsInt = NormalizeCastIndices<std::size_t, int>(
             controlled_wires, BaseType::getNumQubits());
         auto tgtsInt = NormalizeCastIndices<std::size_t, int>(
