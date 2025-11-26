@@ -762,7 +762,7 @@ TEST_CASE("LightningKokkosSimulator::GateSet", "[GateSet]") {
         LKsim->NamedOperation("GlobalPhase", {M_PI_4}, {}, false,
                               {Qs[1], Qs[0]}, {true, false});
 
-        ObsType pz = LKsim->NamedObservable("PauliZ", {Qs[0]});
+        ObsIdType pz = LKsim->Observable(ObsId::PauliZ, {}, {Qs[0]});
         CHECK(LKsim->Expval(pz) == Approx(1.0).margin(1e-5));
     }
 

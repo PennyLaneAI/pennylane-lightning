@@ -782,7 +782,7 @@ TEST_CASE("LightningGPUSimulator::GateSet", "[GateSet]") {
         LGPUsim->NamedOperation("GlobalPhase", {M_PI_4}, {}, false,
                                 {Qs[1], Qs[0]}, {true, false});
 
-        ObsType pz = LGPUSim->NamedObservable("PauliZ", {Qs[0]});
+        ObsIdType pz = LGPUSim->Observable(ObsId::PauliZ, {}, {Qs[0]});
         CHECK(LGPUSim->Expval(pz) == Approx(1.0).margin(1e-5));
     }
 
