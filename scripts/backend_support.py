@@ -18,11 +18,11 @@ import os
 
 default_backend = "lightning_qubit"
 supported_backends = {
-    "lightning_kokkos",
     "lightning_qubit",
+    "lightning_kokkos",
+    "lightning_amdgpu",
     "lightning_gpu",
     "lightning_tensor",
-    "lightning_amdgpu",
 }
 supported_backends.update({sb.replace("_", ".") for sb in supported_backends})
 

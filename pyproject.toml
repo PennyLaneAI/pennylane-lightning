@@ -32,10 +32,10 @@ name = "Xanadu Quantum Technologies Inc."
 email = "software@xanadu.ai"
 
 [project.optional-dependencies]
-gpu = [ "pennylane-lightning-gpu",]
 kokkos = [ "pennylane-lightning-kokkos",]
-tensor = [ "pennylane-lightning-tensor",]
 amdgpu = [ "pennylane-lightning-amdgpu",]
+gpu = [ "pennylane-lightning-gpu",]
+tensor = [ "pennylane-lightning-tensor",]
 
 [project.urls]
 Homepage = "https://github.com/PennyLaneAI/pennylane-lightning"
