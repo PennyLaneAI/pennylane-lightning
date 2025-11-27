@@ -441,32 +441,10 @@ class StateVectorCudaManaged
                     "`controlled_wires` and `controlled_values` must have the "
                     "same size.");
 
-        // The cost of copying tgt_wires for GlobalPhase is negligible compared
-        // to the overall gate application time.
-        auto tgt_wires_cp = tgt_wires;
-
-        // Handle GlobalPhase with zero-qubit target wires by computing the
-        // complement wires in parity with other state-vector simulators.
-        if (opName == "GlobalPhase" && tgt_wires.empty()) {
-            const std::set<std::size_t> controlled_set(controlled_wires.begin(),
-                                                       controlled_wires.end());
-
-            std::vector<std::size_t> comp_wires;
-            const auto num_qubits = BaseType::getNumQubits();
-            comp_wires.reserve(num_qubits);
-
-            for (std::size_t i = 0; i < num_qubits; ++i) {
-                if (controlled_set.find(i) == controlled_set.end()) {
-                    comp_wires.push_back(i);
-                }
-            }
-            tgt_wires_cp = comp_wires;
-        }
-
         auto ctrlsInt = NormalizeCastIndices<std::size_t, int>(
             controlled_wires, BaseType::getNumQubits());
         auto tgtsInt = NormalizeCastIndices<std::size_t, int>(
-            tgt_wires_cp, BaseType::getNumQubits());
+            tgt_wires, BaseType::getNumQubits());
         auto ctrls_valuesInt =
             Pennylane::Util::cast_vector<bool, int>(controlled_values);
 
@@ -475,6 +453,41 @@ class StateVectorCudaManaged
             applyParametricPauliGeneralGate_(names, ctrlsInt, ctrls_valuesInt,
                                              tgtsInt, params.front(), adjoint);
         } else if (opName == "GlobalPhase") {
+
+            // Handle GlobalPhase with zero-qubit target wires by computing the
+            // complement wires in parity with other state-vector simulators.
+            if (tgt_wires.empty()) {
+                const std::set<std::size_t> controlled_set(
+                    controlled_wires.begin(), controlled_wires.end());
+
+                std::vector<std::size_t> comp_wires;
+                const auto num_qubits = BaseType::getNumQubits();
+                comp_wires.reserve(num_qubits);
+
+                for (std::size_t i = 0; i < num_qubits; ++i) {
+                    if (controlled_set.find(i) == controlled_set.end()) {
+                        comp_wires.push_back(i);
+                    }
+                }
+
+                tgtsInt = NormalizeCastIndices<std::size_t, int>(
+                    comp_wires, BaseType::getNumQubits());
+            }
+
+            if (controlled_wires.size() == 1 && controlled_values[0]) {
+                std::vector<Precision> neg_params = {-params[0]};
+                applyOperation("PhaseShift", {}, {}, controlled_wires, adjoint,
+                               neg_params);
+                return;
+            }
+
+            if (controlled_wires.size() == 1 && !controlled_values[0]) {
+                applyOperation("PhaseShift", {}, {}, controlled_wires, adjoint,
+                               params);
+                applyOperation("NCGlobalPhase", {}, {}, {}, adjoint, params);
+                return;
+            }
+
             const std::vector<std::string> names(tgtsInt.size(), "I");
             applyParametricPauliGeneralGate_(names, ctrlsInt, ctrls_valuesInt,
                                              tgtsInt, 2 * params[0], adjoint);
@@ -484,15 +497,14 @@ class StateVectorCudaManaged
             const CFP_t upper_complex{std::cos(phase), std::sin(phase)};
             const CFP_t lower_complex{std::cos(phase), -std::sin(phase)};
 
-            std::vector<CFP_t> diagonal(
-                Pennylane::Util::exp2(tgt_wires_cp.size()), lower_complex);
+            std::vector<CFP_t> diagonal(Pennylane::Util::exp2(tgt_wires.size()),
+                                        lower_complex);
 
             std::fill(diagonal.begin(), diagonal.begin() + dimension,
                       upper_complex);
 
             applyDevicePermutationGate_({}, diagonal.data(), controlled_wires,
-                                        tgt_wires_cp, controlled_values,
-                                        adjoint);
+                                        tgt_wires, controlled_values, adjoint);
         } else if (native_gates_.find(opName) != native_gates_.end()) {
             applyParametricPauliGeneralGate_({opName}, ctrlsInt,
                                              ctrls_valuesInt, tgtsInt,

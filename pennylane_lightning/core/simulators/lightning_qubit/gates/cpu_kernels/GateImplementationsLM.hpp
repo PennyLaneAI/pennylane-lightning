@@ -2068,6 +2068,20 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             return;
         }
 
+        // Special cases for single controlled wires
+        if (controlled_wires.size() == 1 && controlled_values[0]) {
+            applyNCPhaseShift(arr, num_qubits, {}, {}, controlled_wires,
+                              inverse, -angle);
+            return;
+        }
+
+        if (controlled_wires.size() == 1 && !controlled_values[0]) {
+            applyNCPhaseShift(arr, num_qubits, {}, {}, controlled_wires,
+                              inverse, angle);
+            applyNCGlobalPhase(arr, num_qubits, {}, {}, {}, inverse, angle);
+            return;
+        }
+
         auto core_function = [&phase](std::complex<PrecisionT> *arr,
                                       const std::size_t i0,
                                       const std::size_t i1) {
