@@ -711,7 +711,7 @@ TEST_CASE("LightningSimulator::GateSet", "[GateSet]") {
         REQUIRE(LQsim->CacheManagerInfo() == expected);
     }
 
-    SECTION("Controlled GlobalPhase") {
+    SECTION("Controlled GlobalPhase (multi-qubit)") {
         std::unique_ptr<LQSimulator> LQsim = std::make_unique<LQSimulator>();
 
         constexpr std::size_t n_qubits = 4;
@@ -728,6 +728,23 @@ TEST_CASE("LightningSimulator::GateSet", "[GateSet]") {
                               {true});
         LQsim->NamedOperation("GlobalPhase", {M_PI_4}, {}, false,
                               {Qs[1], Qs[0]}, {true, false});
+
+        ObsIdType pz = LQsim->Observable(ObsId::PauliZ, {}, {Qs[0]});
+        CHECK(LQsim->Expval(pz) == Approx(1.0).margin(1e-5));
+    }
+
+    SECTION("Controlled GlobalPhase (1-qubit)") {
+        std::unique_ptr<LQSimulator> LQsim = std::make_unique<LQSimulator>();
+
+        constexpr std::size_t n_qubits = 1;
+        std::vector<intptr_t> Qs{LQsim->AllocateQubit()};
+
+        LQsim->NamedOperation("GlobalPhase", {M_PI}, {}, false);
+        LQsim->NamedOperation("GlobalPhase", {M_PI_2}, {}, true);
+        LQsim->NamedOperation("GlobalPhase", {M_PI_2}, {}, false, {Qs[0]},
+                              {true});
+        LQsim->NamedOperation("GlobalPhase", {M_PI_2}, {}, false, {Qs[0]},
+                              {false});
 
         ObsIdType pz = LQsim->Observable(ObsId::PauliZ, {}, {Qs[0]});
         CHECK(LQsim->Expval(pz) == Approx(1.0).margin(1e-5));

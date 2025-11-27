@@ -2075,7 +2075,8 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             return;
         }
 
-        if (controlled_wires.size() == 1 && !controlled_values[0]) {
+        if (num_qubits == 1 && controlled_wires.size() == 1 &&
+            !controlled_values[0]) {
             applyNCPhaseShift(arr, num_qubits, {}, {}, controlled_wires,
                               inverse, angle);
             applyNCGlobalPhase(arr, num_qubits, {}, {}, {}, inverse, angle);

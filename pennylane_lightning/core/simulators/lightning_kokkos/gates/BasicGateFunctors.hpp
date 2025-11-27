@@ -636,7 +636,8 @@ void applyNCGlobalPhase(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
         return;
     }
 
-    if (controlled_wires.size() == 1 && !controlled_values[0]) {
+    if (num_qubits == 1 && controlled_wires.size() == 1 &&
+        !controlled_values[0]) {
         applyNCPhaseShift<ExecutionSpace, PrecisionT>(
             arr_, num_qubits, {}, {}, controlled_wires, inverse, params);
         applyNCGlobalPhase<ExecutionSpace, PrecisionT>(arr_, num_qubits, {}, {},

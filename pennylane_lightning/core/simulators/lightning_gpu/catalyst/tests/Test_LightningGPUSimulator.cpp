@@ -763,7 +763,7 @@ TEST_CASE("LightningGPUSimulator::GateSet", "[GateSet]") {
             Catch::Contains("Controlled wires/values size mismatch"));
     }
 
-    SECTION("Controlled GlobalPhase") {
+    SECTION("Controlled GlobalPhase (multi-qubit)") {
         std::unique_ptr<LGPUSimulator> LGPUsim =
             std::make_unique<LGPUSimulator>();
 
@@ -781,6 +781,24 @@ TEST_CASE("LightningGPUSimulator::GateSet", "[GateSet]") {
                                 {true});
         LGPUsim->NamedOperation("GlobalPhase", {M_PI_4}, {}, false,
                                 {Qs[1], Qs[0]}, {true, false});
+
+        ObsIdType pz = LGPUsim->Observable(ObsId::PauliZ, {}, {Qs[0]});
+        CHECK(LGPUsim->Expval(pz) == Approx(1.0).margin(1e-5));
+    }
+
+    SECTION("Controlled GlobalPhase (1-qubit)") {
+        std::unique_ptr<LGPUSimulator> LGPUsim =
+            std::make_unique<LGPUSimulator>();
+
+        constexpr std::size_t n_qubits = 1;
+        std::vector<intptr_t> Qs{LGPUsim->AllocateQubit()};
+
+        LGPUsim->NamedOperation("GlobalPhase", {M_PI}, {}, false);
+        LGPUsim->NamedOperation("GlobalPhase", {M_PI_2}, {}, true);
+        LGPUsim->NamedOperation("GlobalPhase", {M_PI_2}, {}, false, {Qs[0]},
+                                {true});
+        LGPUsim->NamedOperation("GlobalPhase", {M_PI_2}, {}, false, {Qs[0]},
+                                {false});
 
         ObsIdType pz = LGPUsim->Observable(ObsId::PauliZ, {}, {Qs[0]});
         CHECK(LGPUsim->Expval(pz) == Approx(1.0).margin(1e-5));

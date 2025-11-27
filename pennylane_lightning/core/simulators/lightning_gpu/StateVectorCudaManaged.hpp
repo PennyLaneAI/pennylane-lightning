@@ -453,7 +453,6 @@ class StateVectorCudaManaged
             applyParametricPauliGeneralGate_(names, ctrlsInt, ctrls_valuesInt,
                                              tgtsInt, params.front(), adjoint);
         } else if (opName == "GlobalPhase") {
-
             // Handle GlobalPhase with zero-qubit target wires by computing the
             // complement wires in parity with other state-vector simulators.
             if (tgt_wires.empty()) {
@@ -481,10 +480,11 @@ class StateVectorCudaManaged
                 return;
             }
 
-            if (controlled_wires.size() == 1 && !controlled_values[0]) {
+            if (controlled_wires.size() == 1 && !controlled_values[0] &&
+                BaseType::getNumQubits() == 1) {
                 applyOperation("PhaseShift", {}, {}, controlled_wires, adjoint,
                                params);
-                applyOperation("NCGlobalPhase", {}, {}, {}, adjoint, params);
+                applyOperation("GlobalPhase", {}, {}, {}, adjoint, params);
                 return;
             }
 
