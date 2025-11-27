@@ -77,12 +77,11 @@ class LightningAmdgpu(LightningKokkos):
 
         if lib_path and os.path.exists(lib_path):
             try:
-                # --- CRITICAL STEP: ATTEMPT TO LOAD ---
                 # If dependencies (like libamdhip64.so.7) are missing,
                 # this line triggers OSError immediately.
                 hip_lib = ctypes.CDLL(lib_path)
 
-                # If we reached here, the library loaded! Now query the version.
+                # If we reached here, the library loaded. Now query the version.
                 version_val = ctypes.c_int()
                 status = hip_lib.hipRuntimeGetVersion(ctypes.byref(version_val))
 
