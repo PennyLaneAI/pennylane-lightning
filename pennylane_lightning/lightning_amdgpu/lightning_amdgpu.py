@@ -11,6 +11,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+import ctypes
+import os
+import re
+import shutil
+import subprocess
+
 from pennylane_lightning.lightning_kokkos import LightningKokkos
 
 
@@ -21,5 +28,118 @@ class LightningAmdgpu(LightningKokkos):
     """
 
     def __init__(self, wires=None, *args, **kwargs):
-        # Pass all arguments through to the parent Kokkos device
+        self._check_amd_gpu_resources()
         super().__init__(wires, *args, **kwargs)
+
+    def _get_rocm_version_from_amd_smi(self):
+        if not shutil.which("amd-smi"):
+            return None
+
+        try:
+            output = subprocess.check_output(["amd-smi", "version"], text=True)
+            match = re.search(r"ROCm version:\s*([\d.]+)", output)
+            if match:
+                return match.group(1)
+        except Exception:
+            pass
+
+        return None
+
+    def _get_rocm_version_from_hipconfig(self):
+        if not shutil.which("hipconfig"):
+            return None
+        try:
+            output = subprocess.check_output(["hipconfig", "--version"], text=True).strip()
+            match = re.search(r"^([\d.]+)", output)
+            if match:
+                return match.group(1)
+        except Exception:
+            pass
+
+        return None
+
+    def _check_amd_gpu_resources(self):
+        # Detect local system ROCm version
+        local_version_str = (
+            self._get_rocm_version_from_amd_smi() or self._get_rocm_version_from_hipconfig()
+        )
+
+        # Get the library path
+        lib_path = None
+        try:
+            _, lib_path = self.get_c_interface()
+        except Exception as e:
+            pass
+
+        # Try to load the library and query version
+        lib_version_str = None
+        num_devices = 0
+
+        if lib_path and os.path.exists(lib_path):
+            try:
+                # --- CRITICAL STEP: ATTEMPT TO LOAD ---
+                # If dependencies (like libamdhip64.so.7) are missing,
+                # this line triggers OSError immediately.
+                hip_lib = ctypes.CDLL(lib_path)
+
+                # If we reached here, the library loaded! Now query the version.
+                version_val = ctypes.c_int()
+                status = hip_lib.hipRuntimeGetVersion(ctypes.byref(version_val))
+
+                if status == 0:
+                    val = version_val.value
+                    # Logic to unpack the integer version
+                    # ROCm uses: Major * 10^7 + Minor * 10^5 + Patch
+                    major = val // 10000000
+                    minor = (val % 10000000) // 100000
+                    patch = val % 100000
+                    lib_version_str = f"{major}.{minor}.{patch}"
+
+                dev_count_val = ctypes.c_int()
+                status_d = hip_lib.hipGetDeviceCount(ctypes.byref(dev_count_val))
+
+                if status_d == 0:
+                    num_devices = dev_count_val.value
+
+            except OSError as e:
+                # The library exists, but dependencies (like .so.7) are missing.
+                # This handle cases when e.g. library is built for ROCm 6.x but system has ROCm 7.x
+                error_msg = str(e)
+
+                print(f"\nERROR: Failed to load library at {lib_path}")
+                print(f"OS Error Details: {error_msg}")
+
+                if local_version_str:
+                    print(f"Detected System ROCm Version: {local_version_str}")
+
+                    if "cannot open shared object file" in error_msg:
+                        print("-" * 60)
+                        print(
+                            f"Possible Cause: The library was compiled for a different ROCm version"
+                        )
+                        print(f"than the one installed on this system ({local_version_str}).")
+                        print("Please ensure your compiled binaries match the system ROCm version.")
+                        print("-" * 60)
+
+                raise RuntimeError(
+                    "ROCm library loading failed due to missing dependencies."
+                ) from e
+
+        # If load succeeded, check Major Version Compatibility
+        if local_version_str and lib_version_str:
+            try:
+                local_major = int(local_version_str.split(".")[0])
+                lib_major = int(lib_version_str.split(".")[0])
+
+                if local_major != lib_major:
+                    raise RuntimeError(
+                        f"ROCm major version mismatch: System is {local_version_str} (Major {local_major}), "
+                        f"but library was compiled against {lib_version_str} (Major {lib_major})."
+                    )
+            except ValueError:
+                print("Warning: Could not parse ROCm versions for integer comparison.")
+
+        if num_devices == 0:
+            raise RuntimeError(
+                "No supported AMD GPU devices found. Please ensure that an AMD GPU is available and accessible."
+            )
