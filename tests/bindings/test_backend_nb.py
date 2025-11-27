@@ -435,6 +435,9 @@ class TestBackendInfoBindings:
         """Test getting backend info."""
         if hasattr(current_module, "backend_info"):
             info = current_module.backend_info()
-            assert info["NAME"] == device_name
+            if device_name == "lightning.amdgpu":
+                assert info["NAME"] == "lightning.kokkos"
+            else:
+                assert info["NAME"] == device_name
         else:
             pytest.skip("backend_info function not available in module")

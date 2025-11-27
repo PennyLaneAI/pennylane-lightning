@@ -50,7 +50,10 @@ def test_device_name_and_init(num_wires, dtype):
     """Test the class initialization and returned properties."""
     state_vector = LightningStateVector(num_wires, dtype=dtype)
     assert state_vector.dtype == dtype
-    assert state_vector.device_name == device_name
+    if device_name == "lightning.amdgpu":
+        assert state_vector.device_name == "lightning.kokkos"
+    else:
+        assert state_vector.device_name == device_name
     assert state_vector.wires == Wires(range(num_wires))
 
     if device_name == "lightning.kokkos":

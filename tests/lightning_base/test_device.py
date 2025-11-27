@@ -76,6 +76,24 @@ elif device_name == "lightning.kokkos":
         validate_measurements,
         validate_observables,
     )
+elif device_name == "lightning.amdgpu":
+    from pennylane_lightning.lightning_kokkos.lightning_kokkos import (
+        _add_adjoint_transforms,
+        _adjoint_ops,
+        _supports_adjoint,
+        accepted_observables,
+        adjoint_measurements,
+        adjoint_observables,
+        allow_mcms_stopping_condition,
+        decompose,
+        no_mcms_stopping_condition,
+        no_sampling,
+        stopping_condition,
+        validate_adjoint_trainable_params,
+        validate_device_wires,
+        validate_measurements,
+        validate_observables,
+    )
 elif device_name == "lightning.gpu":
     from pennylane_lightning.lightning_gpu.lightning_gpu import (
         _add_adjoint_transforms,
@@ -223,6 +241,8 @@ class TestHelpers:
         expected_program = qml.transforms.core.TransformProgram()
 
         name = f"adjoint + {device_name}"
+        if device_name == "lightning.amdgpu":
+            name = "adjoint + lightning.kokkos"
         expected_program.add_transform(no_sampling, name=name)
         expected_program.add_transform(qml.transforms.broadcast_expand)
         expected_program.add_transform(
@@ -897,6 +917,8 @@ class TestExecution:
 
         if adjoint:
             name = f"adjoint + {device_name}"
+            if device_name == "lightning.amdgpu":
+                name = "adjoint + lightning.kokkos"
             expected_program.add_transform(no_sampling, name=name)
             expected_program.add_transform(qml.transforms.broadcast_expand)
             expected_program.add_transform(

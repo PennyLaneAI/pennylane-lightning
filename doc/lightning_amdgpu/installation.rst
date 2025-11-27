@@ -72,7 +72,7 @@ Install Lightning-AMDGPU
     
     # First Install Lightning-Qubit
     PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
-    ip install . -vv
+    python -m pip install . -vv
 
     # Install Lightning-AMDGPU
     PL_BACKEND="lightning_amdgpu" python scripts/configure_pyproject_toml.py

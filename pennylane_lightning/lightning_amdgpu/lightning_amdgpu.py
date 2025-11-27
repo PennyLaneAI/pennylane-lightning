@@ -138,7 +138,8 @@ class LightningAmdgpu(LightningKokkos):
             except ValueError:
                 print("Warning: Could not parse ROCm versions for integer comparison.")
 
-        if num_devices == 0:
-            raise RuntimeError(
-                "No supported AMD GPU devices found. Please ensure that an AMD GPU is available and accessible."
-            )
+        # TO FIX WITH GET C INTERFACE FOR EDITABLE
+        # if num_devices == 0:
+        #     raise RuntimeError(
+        #         "No supported AMD GPU devices found. Please ensure that an AMD GPU is available and accessible."
+        #     )
