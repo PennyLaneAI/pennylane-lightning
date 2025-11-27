@@ -1,7 +1,7 @@
-lightning_gpu
+lightning_amdgpu
 =============
 
-.. automodapi:: pennylane_lightning.lightning_gpu
+.. automodapi:: pennylane_lightning.lightning_amdgpu
     :no-heading:
     :include-all-objects:
 
@@ -15,5 +15,5 @@ Directly importing the device class:
 
 .. code-block:: python3
 
-    from pennylane_lightning.lightning_gpu import LightningGPU
+    from pennylane_lightning.lightning_amdgpu import LightningAMDGPU
 
