@@ -807,6 +807,7 @@ def test_controlled_globalphase_zero_targetwire(n_qubits, control_value, tol):
             control_wires,
             control_values=([control_value or bool(i % 2) for i, _ in enumerate(control_wires)]),
         )
+        qml.GlobalPhase(0.512)
         return qml.state()
 
     circ = qml.QNode(circuit, dev)

@@ -769,7 +769,6 @@ TEST_CASE("LightningKokkosSimulator::GateSet", "[GateSet]") {
     SECTION("Controlled GlobalPhase (1-qubit)") {
         std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
 
-        constexpr std::size_t n_qubits = 1;
         std::vector<intptr_t> Qs{LKsim->AllocateQubit()};
 
         LKsim->NamedOperation("GlobalPhase", {M_PI}, {}, false);

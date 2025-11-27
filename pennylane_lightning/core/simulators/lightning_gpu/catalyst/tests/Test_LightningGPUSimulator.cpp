@@ -790,7 +790,6 @@ TEST_CASE("LightningGPUSimulator::GateSet", "[GateSet]") {
         std::unique_ptr<LGPUSimulator> LGPUsim =
             std::make_unique<LGPUSimulator>();
 
-        constexpr std::size_t n_qubits = 1;
         std::vector<intptr_t> Qs{LGPUsim->AllocateQubit()};
 
         LGPUsim->NamedOperation("GlobalPhase", {M_PI}, {}, false);
