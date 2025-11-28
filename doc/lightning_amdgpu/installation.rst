@@ -6,7 +6,7 @@ Install Lightning-AMDGPU from source
 
 Lightning-AMDGPU is an instantiation of the Lighting-Kokkos device, specifically for AMD GPUs using the HIP backend. For building Lightning-Kokkos for targets other than AMD GPUs, please refer to the :doc:`/lightning_kokkos/installation` page.
 
-Install Kokkos (Optional)
+Install Kokkos (Recommended)
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. note::
@@ -56,7 +56,7 @@ Build Kokkos for AMD MI300 GPU (``GFX942`` architecture), and append the install
 .. note::
 
     - Requires AMD compiler ``hipcc`` or ``amdclang`` from the ROCm software stack.
-    - `-DCMAKE_PREFIX_PATH="/opt/rocm"` enables CMake to properly discover the `rocthrust` library
+    - ``-DCMAKE_PREFIX_PATH="/opt/rocm"`` enables CMake to properly discover the ``rocthrust`` library
     - For information on choosing the correct architecture flag for your AMD GPU, please refer to the `Kokkos wiki <https://kokkos.org/kokkos-core-wiki/get-started/configuration-guide.html>`_.
 
 
@@ -82,7 +82,7 @@ Install Lightning-AMDGPU
 
 .. note ::
 
-    - Make sure that gcc-11 is installed and accessible on your system, since it is required to compile the Lightning-AMDGPU device. This can be done on Ubuntu via ``sudo apt install gcc-11 g++-11``.
+    - Make sure that ``gcc-11`` is installed and accessible on your system, since it is required to compile the Lightning-AMDGPU device. This can be done on Ubuntu via ``sudo apt install gcc-11 g++-11``.
 
 
 .. _install-lightning-AMDGPU-with-mpi:

@@ -52,7 +52,7 @@ The Lightning ecosystem provides the following devices:
 .. title-card::
     :name: 'lightning.amdgpu'
     :description: A heterogeneous backend state-vector simulator based on Lightning-Kokkos specifically for AMD GPUs.
-    :link: lightning_gpu/device.html
+    :link: lightning_amdgpu/device.html
     
 .. title-card::
     :name: 'lightning.gpu'
