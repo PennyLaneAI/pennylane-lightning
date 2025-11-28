@@ -18,6 +18,7 @@
 
 #include <algorithm>
 #include <random>
+#include <set>
 #include <type_traits>
 #include <unordered_map>
 #include <unordered_set>
@@ -439,6 +440,7 @@ class StateVectorCudaManaged
         PL_ABORT_IF(controlled_wires.size() != controlled_values.size(),
                     "`controlled_wires` and `controlled_values` must have the "
                     "same size.");
+
         auto ctrlsInt = NormalizeCastIndices<std::size_t, int>(
             controlled_wires, BaseType::getNumQubits());
         auto tgtsInt = NormalizeCastIndices<std::size_t, int>(
@@ -451,6 +453,42 @@ class StateVectorCudaManaged
             applyParametricPauliGeneralGate_(names, ctrlsInt, ctrls_valuesInt,
                                              tgtsInt, params.front(), adjoint);
         } else if (opName == "GlobalPhase") {
+            // Handle GlobalPhase with zero-qubit target wires by computing the
+            // complement wires in parity with other state-vector simulators.
+            if (tgt_wires.empty()) {
+                const std::set<std::size_t> controlled_set(
+                    controlled_wires.begin(), controlled_wires.end());
+
+                std::vector<std::size_t> comp_wires;
+                const auto num_qubits = BaseType::getNumQubits();
+                comp_wires.reserve(num_qubits);
+
+                for (std::size_t i = 0; i < num_qubits; ++i) {
+                    if (controlled_set.find(i) == controlled_set.end()) {
+                        comp_wires.push_back(i);
+                    }
+                }
+
+                tgtsInt = NormalizeCastIndices<std::size_t, int>(
+                    comp_wires, BaseType::getNumQubits());
+            }
+
+            // Special cases for single controlled wires
+            if (controlled_wires.size() == 1 && controlled_values[0]) {
+                std::vector<Precision> neg_params = {-params[0]};
+                applyOperation("PhaseShift", {}, {}, controlled_wires, adjoint,
+                               neg_params);
+                return;
+            }
+
+            if (controlled_wires.size() == 1 && !controlled_values[0] &&
+                BaseType::getNumQubits() == 1) {
+                applyOperation("PhaseShift", {}, {}, controlled_wires, adjoint,
+                               params);
+                applyOperation("GlobalPhase", {}, {}, {}, adjoint, params);
+                return;
+            }
+
             const std::vector<std::string> names(tgtsInt.size(), "I");
             applyParametricPauliGeneralGate_(names, ctrlsInt, ctrls_valuesInt,
                                              tgtsInt, 2 * params[0], adjoint);
