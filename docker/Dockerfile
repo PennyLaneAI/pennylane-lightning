@@ -200,6 +200,7 @@ RUN apt-get update \
     && apt-get install --no-install-recommends -y ./$(echo ${ROCM_INSTALLER} | xargs -I {} basename {}) \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+RUN wget -q -O - https://repo.radeon.com/rocm/rocm.gpg.key | gpg --dearmor | tee /etc/apt/trusted.gpg.d/rocm.gpg > /dev/null
 RUN amdgpu-install -y --accept-eula --usecase=rocm,hiplibsdk --no-dkms
 
 # Download Lightning release and build lightning-kokkos backend with Kokkos-ROCm
