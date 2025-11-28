@@ -20,9 +20,14 @@ Select the device below for detailed source-installation instructions:
    :link: ../lightning_qubit/installation.html
 
 .. title-card::
-   :name: Lightning GPU
-   :description: Detailed guidelines to installing and testing the Lightning GPU device
+   :name: Lightning Nvidia GPU
+   :description: Detailed guidelines to installing and testing the Lightning GPU device for NVIDIA GPUs.
    :link: ../lightning_gpu/installation.html
+
+.. title-card::
+   :name: Lightning AMD GPU
+   :description: Detailed guidelines to installing and testing the Lightning AMD GPU device.
+   :link: ../lightning_amdgpu/installation.html
 
 .. title-card::
    :name: Lightning Kokkos

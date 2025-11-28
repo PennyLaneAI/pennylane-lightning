@@ -48,6 +48,11 @@ endif()
 
 add_library(lightning_kokkos STATIC ${LKOKKOS_FILES})
 target_compile_options(lightning_compile_options INTERFACE "-D_ENABLE_PLKOKKOS=1")
+target_compile_definitions(lightning_kokkos PUBLIC "_ENABLE_PLKOKKOS=1")
+
+if("${PL_BACKEND}" STREQUAL "lightning_amdgpu")
+    target_compile_definitions(lightning_kokkos PUBLIC "_ENABLE_PLAMDGPU=1")
+endif()
 
 FindKokkos(lightning_external_libs)
 
@@ -91,6 +96,14 @@ set(COMPONENT_SUBDIRS   algorithms
 foreach(COMP ${COMPONENT_SUBDIRS})
     add_subdirectory(${COMP})
 endforeach()
+
+if("${PL_BACKEND}" STREQUAL "lightning_amdgpu")
+    add_library(lightning_amdgpu ALIAS lightning_kokkos)
+    add_library(lightning_amdgpu_algorithms ALIAS lightning_kokkos_algorithms)
+    add_library(lightning_amdgpu_observables ALIAS lightning_kokkos_observables)
+    add_library(lightning_amdgpu_bindings ALIAS lightning_kokkos_bindings)
+    add_library(lightning_amdgpu_measurements ALIAS lightning_kokkos_measurements)
+endif()
 
 if (BUILD_TESTS)
     enable_testing()
