@@ -29,7 +29,7 @@ from conftest import (
 )
 from pennylane.exceptions import DeviceError
 
-if device_name not in ("lightning.qubit", "lightning.kokkos", "lightning.gpu"):
+if device_name not in ("lightning.qubit", "lightning.kokkos", "lightning.amdgpu", "lightning.gpu"):
     pytest.skip("Native MCM not supported. Skipping.", allow_module_level=True)
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-access
@@ -86,8 +86,12 @@ class TestUnsupportedConfigurationsMCM:
             measurement=qml.expval,
             obs=qml.PauliZ(0),
         )
+        device_match = device_name
+        if device_name == "lightning.amdgpu":
+            device_match = "lightning.(amdgpu|kokkos)"
+
         with pytest.raises(
-            DeviceError, match=f"mcm_method='{method}' is not supported with {device_name}"
+            DeviceError, match=f"mcm_method='{method}' is not supported with {device_match}"
         ):
             circuit(1.33)
 
@@ -108,11 +112,15 @@ class TestUnsupportedConfigurationsMCM:
                 match=f"not accepted with finite shots on lightning.qubit",
             ):
                 circuit(1.33)
-        if device_name in ("lightning.kokkos", "lightning.gpu"):
+        if device_name in ("lightning.kokkos", "lightning.amdgpu", "lightning.gpu"):
+            device_match = device_name
+            if device_name == "lightning.amdgpu":
+                device_match = "lightning.(amdgpu|kokkos)"
+
             with pytest.raises(
                 DeviceError,
                 match=r"Measurement shadow\(wires=\[0\]\) not accepted with finite shots on "
-                + device_name,
+                + device_match,
             ):
                 circuit(1.33)
 
@@ -127,9 +135,13 @@ class TestUnsupportedConfigurationsMCM:
             obs=qml.PauliZ(0),
         )
 
+        device_match = device_name
+        if device_name == "lightning.amdgpu":
+            device_match = "lightning.(amdgpu|kokkos)"
+
         with pytest.raises(
             qml.exceptions.WireError,
-            match=f"on {device_name} as they contain wires not found on the device: {{1}}",
+            match=f"on {device_match} as they contain wires not found on the device: {{.*}}",
         ):
             circuit(1.33)
 
@@ -177,9 +189,13 @@ class TestUnsupportedConfigurationsMCM:
                 obs=qml.PauliZ(0),
             )
 
+            device_match = device_name
+            if device_name == "lightning.amdgpu":
+                device_match = "lightning.(amdgpu|kokkos)"
+
             with pytest.raises(
                 DeviceError,
-                match="not accepted for analytic simulation on " + device_name,
+                match="not accepted for analytic simulation on " + device_match,
             ):
                 circuit(1.33)
 

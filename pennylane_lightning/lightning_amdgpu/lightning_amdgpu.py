@@ -17,6 +17,8 @@ import os
 import re
 import shutil
 import subprocess
+import sys
+from pathlib import Path
 
 from pennylane_lightning.lightning_kokkos import LightningKokkos
 
@@ -69,7 +71,9 @@ class LightningAmdgpu(LightningKokkos):
         try:
             _, lib_path = self.get_c_interface()
         except Exception as e:
-            pass
+            raise RuntimeError(
+                "Lightning AMDGPU shared library not found. Please check installation."
+            ) from e
 
         # Try to load the library and query version
         lib_version_str = None
@@ -138,8 +142,51 @@ class LightningAmdgpu(LightningKokkos):
             except ValueError:
                 print("Warning: Could not parse ROCm versions for integer comparison.")
 
-        # TO FIX WITH GET C INTERFACE FOR EDITABLE
-        # if num_devices == 0:
-        #     raise RuntimeError(
-        #         "No supported AMD GPU devices found. Please ensure that an AMD GPU is available and accessible."
-        #     )
+        if num_devices == 0:
+            raise RuntimeError(
+                "No supported AMD GPU devices found. Please ensure that an AMD GPU is available and accessible."
+            )
+
+    @staticmethod
+    def get_c_interface():
+        """Returns a tuple consisting of the device name, and
+        the location to the shared object with the C/C++ device implementation.
+        The difference with the base implementation is that for editable mode,
+        the shared library is in `build_lightning_amdgpu` instead of following its actual
+        device name (Lightning Kokkos).
+        """
+        lightning_device_name = "LightningKokkosSimulator"
+        lightning_lib_name = "lightning_kokkos"
+
+        # The shared object file extension varies depending on the underlying operating system
+        file_extension = ""
+        OS = sys.platform
+        if OS == "linux":
+            file_extension = ".so"
+        elif OS == "darwin":
+            file_extension = ".dylib"
+        else:
+            raise RuntimeError(
+                f"'{lightning_device_name}' shared library not available for '{OS}' platform"
+            )
+
+        lib_name = "lib" + lightning_lib_name + "_catalyst" + file_extension
+        package_root = Path(__file__).parent
+
+        # The absolute path of the plugin shared object varies according to the installation mode.
+
+        # Wheel mode:
+        # Fixed location at the root of the project
+        wheel_mode_location = package_root.parent / lib_name
+        if wheel_mode_location.is_file():
+            return lightning_device_name, wheel_mode_location.as_posix()
+
+        # Editable mode:
+        build_lightning_dir = "build_lightning_amdgpu"
+        editable_mode_path = package_root.parent.parent / build_lightning_dir
+        for path, _, files in os.walk(editable_mode_path):
+            if lib_name in files:
+                lib_location = (Path(path) / lib_name).as_posix()
+                return lightning_device_name, lib_location
+
+        raise RuntimeError(f"'{lightning_device_name}' shared library not found")

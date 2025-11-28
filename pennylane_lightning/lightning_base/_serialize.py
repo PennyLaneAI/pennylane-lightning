@@ -77,7 +77,7 @@ class QuantumScriptSerializer:
                 raise ImportError(
                     f"Pre-compiled binaries for {device_name} are not available."
                 ) from exception
-        elif device_name == "lightning.kokkos":
+        elif device_name in ("lightning.kokkos", "lightning.amdgpu"):
             try:
                 import pennylane_lightning.lightning_kokkos_ops as lightning_ops
             except ImportError as exception:
@@ -103,7 +103,12 @@ class QuantumScriptSerializer:
 
         self._use_mpi = use_mpi
 
-        if device_name in ["lightning.qubit", "lightning.kokkos", "lightning.gpu"]:
+        if device_name in [
+            "lightning.qubit",
+            "lightning.kokkos",
+            "lightning.amdgpu",
+            "lightning.gpu",
+        ]:
             assert tensor_backend == str()
             self._set_lightning_state_bindings(lightning_ops)
         else:

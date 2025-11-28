@@ -50,7 +50,7 @@ Build Kokkos for AMD MI300 GPU (``GFX942`` architecture), and append the install
         -DKokkos_ENABLE_TESTS:BOOL=OFF \
         -DKokkos_ENABLE_LIBDL:BOOL=OFF
     cmake --build build && cmake --install build
-    export CMAKE_PREFIX_PATH=:"${KOKKOS_INSTALL_PATH}":$CMAKE_PREFIX_PATH
+    export CMAKE_PREFIX_PATH=:"${KOKKOS_INSTALL_PATH}":/opt/rocm:$CMAKE_PREFIX_PATH
 
 
 .. note::
@@ -77,9 +77,13 @@ Install Lightning-AMDGPU
     # Install Lightning-AMDGPU
     PL_BACKEND="lightning_amdgpu" python scripts/configure_pyproject_toml.py
     export CMAKE_ARGS="-DCMAKE_CXX_COMPILER=hipcc \
-                       -DCMAKE_CXX_FLAGS='--gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/11/' \
-                       -DCMAKE_PREFIX_PATH=/opt/rocm"
-    python -m pip install -e . --config-settings editable_mode=compat -vv
+                       -DCMAKE_CXX_FLAGS='--gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/11/'"
+    python -m pip install . -vv
+
+.. note ::
+
+    - Make sure that gcc-11 is installed and accessible on your system, since it is required to compile the Lightning-AMDGPU device. This can be done on Ubuntu via ``sudo apt install gcc-11 g++-11``.
+
 
 .. _install-lightning-AMDGPU-with-mpi:
 

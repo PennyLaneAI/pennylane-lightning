@@ -94,7 +94,13 @@ def n_subsystems(request):
 # Looking for the device for testing.
 default_device = "lightning.qubit"
 
-supported_devices = {"lightning.qubit", "lightning.kokkos", "lightning.amdgpu", "lightning.gpu", "lightning.tensor"}
+supported_devices = {
+    "lightning.qubit",
+    "lightning.kokkos",
+    "lightning.amdgpu",
+    "lightning.gpu",
+    "lightning.tensor",
+}
 
 
 def get_device():
@@ -158,7 +164,7 @@ else:
 
     # Import main device class
     module_path = f"pennylane_lightning.{device_module_name}"
-    
+
     if device_name == "lightning.amdgpu":
         device_class = "LightningAmdgpu"
         helper_module_path = "pennylane_lightning.lightning_kokkos"
