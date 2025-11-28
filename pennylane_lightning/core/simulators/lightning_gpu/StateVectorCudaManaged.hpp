@@ -473,6 +473,7 @@ class StateVectorCudaManaged
                     comp_wires, BaseType::getNumQubits());
             }
 
+            // Special cases for single controlled wires
             if (controlled_wires.size() == 1 && controlled_values[0]) {
                 std::vector<Precision> neg_params = {-params[0]};
                 applyOperation("PhaseShift", {}, {}, controlled_wires, adjoint,

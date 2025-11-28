@@ -819,6 +819,10 @@ def test_controlled_globalphase_zero_targetwire(n_qubits, control_value, tol):
     (device_name == "lightning.kokkos" and sys.platform == "win32"),
     reason="lightning.kokkos doesn't support zero wires on Windows.",
 )
+@pytest.mark.skipif(
+    device_name in ["lightning.tensor"],
+    reason=device_name + " cannot be initialized with less than 2 wires.",
+)
 @pytest.mark.parametrize("n_qubits", list(range(1, 3)))
 def test_controlled_globalphase_1ctrl_true_cornercase(n_qubits, tol):
     """Test that single-controlled (value=True) GlobalPhase with zero-wire is correctly applied to a state"""
@@ -843,6 +847,10 @@ def test_controlled_globalphase_1ctrl_true_cornercase(n_qubits, tol):
 @pytest.mark.skipif(
     (device_name == "lightning.kokkos" and sys.platform == "win32"),
     reason="lightning.kokkos doesn't support zero wires on Windows.",
+)
+@pytest.mark.skipif(
+    device_name in ["lightning.tensor"],
+    reason=device_name + " cannot be initialized with less than 2 wires.",
 )
 @pytest.mark.parametrize("n_qubits", list(range(1, 3)))
 def test_controlled_globalphase_1ctrl_false_cornercase(n_qubits, tol):
