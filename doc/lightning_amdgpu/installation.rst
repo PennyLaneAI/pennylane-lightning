@@ -92,4 +92,4 @@ Install Lightning-AMDGPU with MPI
 
 .. note::
 
-    To build Lightning-AMDGPU with MPI support, please consult the lightning-kokkos installation guide at :doc:`/lightning_kokkos/installation` and :doc:`/lightning_kokkos/insstallation_hpc`.
+    To build Lightning-AMDGPU with MPI support, please consult the Lightning-Kokkos installation guide at :doc:`/lightning_kokkos/installation` and :doc:`/lightning_kokkos/installation_hpc`.
