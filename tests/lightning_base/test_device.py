@@ -58,25 +58,7 @@ if device_name == "lightning.qubit":
         validate_measurements,
         validate_observables,
     )
-elif device_name == "lightning.kokkos":
-    from pennylane_lightning.lightning_kokkos.lightning_kokkos import (
-        _add_adjoint_transforms,
-        _adjoint_ops,
-        _supports_adjoint,
-        accepted_observables,
-        adjoint_measurements,
-        adjoint_observables,
-        allow_mcms_stopping_condition,
-        decompose,
-        no_mcms_stopping_condition,
-        no_sampling,
-        stopping_condition,
-        validate_adjoint_trainable_params,
-        validate_device_wires,
-        validate_measurements,
-        validate_observables,
-    )
-elif device_name == "lightning.amdgpu":
+elif device_name in ("lightning.kokkos", "lightning.amdgpu"):
     from pennylane_lightning.lightning_kokkos.lightning_kokkos import (
         _add_adjoint_transforms,
         _adjoint_ops,
