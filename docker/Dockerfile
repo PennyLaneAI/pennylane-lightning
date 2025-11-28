@@ -211,7 +211,7 @@ ENV CXX=hipcc
 ENV PL_BACKEND=lightning_amdgpu
 RUN pip uninstall -y pennylane-lightning
 RUN python scripts/configure_pyproject_toml.py || true
-RUN CMAKE_ARGS="-DKokkos_ENABLE_SERIAL:BOOL=ON -DKokkos_ENABLE_OPENMP:BOOL=ON -DKokkos_ENABLE_HIP:BOOL=ON -DKokkos_ARCH_${AMD_ARCH}=ON -DCMAKE_CXX_FLAGS='--gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/11/'" python -m build --wheel
+RUN CMAKE_ARGS="-DKokkos_ENABLE_SERIAL:BOOL=ON -DKokkos_ENABLE_HIP:BOOL=ON -DKokkos_ARCH_${AMD_ARCH}=ON -DCMAKE_CXX_FLAGS='--gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/11/'" python -m build --wheel
 
 # Install lightning-amdgpu HIP backend
 FROM rocm/dev-ubuntu-22.04:7.0.2 AS wheel-lightning-kokkos-rocm
