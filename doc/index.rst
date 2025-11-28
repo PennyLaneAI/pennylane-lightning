@@ -21,13 +21,14 @@ PennyLane-Lightning high performance simulators include the following backends:
 
 *   ``lightning.qubit``: a fast state-vector simulator written in C++
     with optional `OpenMP <https://www.openmp.org/>`_ additions and parallelized gate-level SIMD kernels.
-*   ``lightning.gpu``: a state-vector simulator based on
-    the `NVIDIA cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`_.
-    It notably implements a distributed state-vector simulator based on `MPI <https://www.mpi-forum.org/docs/>`_.
 *   ``lightning.kokkos``: a state-vector simulator written with `Kokkos <https://kokkos.github.io/kokkos-core-wiki/index.html>`_.
     It can exploit the inherent parallelism of modern processing units supporting the `OpenMP <https://www.openmp.org/>`_,
     `CUDA <https://developer.nvidia.com/cuda-toolkit>`_ or `HIP <https://rocm.docs.amd.com/projects/HIP/en/latest>`_ programming models.
     It also offers distributed state-vector simulation via `MPI <https://www.mpi-forum.org/docs/>`_.
+*   ``lightning.amdgpu``: a state-vector simulator based on the ``lightning-kokkos``, specifically built with AMD GPU (HIP) support.
+*   ``lightning.gpu``: a state-vector simulator based on
+    the `NVIDIA cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`_.
+    It notably implements a distributed state-vector simulator based on `MPI <https://www.mpi-forum.org/docs/>`_.
 *   ``lightning.tensor``: a tensor-network simulator based on the `NVIDIA cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`_.
     The supported methods are Matrix Product State (MPS) and Exact Tensor Network (TN).
 
@@ -44,14 +45,19 @@ The Lightning ecosystem provides the following devices:
     :link: lightning_qubit/device.html
 
 .. title-card::
-    :name: 'lightning.gpu'
-    :description: A heterogeneous backend state-vector simulator with NVIDIA cuQuantum library support.
-    :link: lightning_gpu/device.html
-
-.. title-card::
     :name: 'lightning.kokkos'
     :description: A heterogeneous backend state-vector simulator with Kokkos library support.
     :link: lightning_kokkos/device.html
+    
+.. title-card::
+    :name: 'lightning.amdgpu'
+    :description: A heterogeneous backend state-vector simulator based on Lightning-Kokkos specifically for AMD GPUs.
+    :link: lightning_gpu/device.html
+    
+.. title-card::
+    :name: 'lightning.gpu'
+    :description: A heterogeneous backend state-vector simulator with NVIDIA cuQuantum library support.
+    :link: lightning_gpu/device.html
 
 .. title-card::
     :name: 'lightning.tensor'
@@ -103,8 +109,9 @@ If you are using Lightning for research, please cite:
    :hidden:
 
    lightning_qubit/device
-   lightning_gpu/device
    lightning_kokkos/device
+   lightning_amdgpu/device
+   lightning_gpu/device
    lightning_tensor/device
 
 .. toctree::
