@@ -1,4 +1,4 @@
-Lightning GPU device
+Lightning AMD GPU device
 ====================
 
 The ``lightning.amdgpu`` device is an extension of PennyLane's built-in ``lightning.qubit`` device.
