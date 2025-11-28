@@ -18,14 +18,14 @@ ARG PENNYLANE_VERSION=master
 # Create basic runtime environment base on Ubuntu 22.04 (jammy)
 # Create and activate runtime virtual environment
 FROM ubuntu:jammy AS base-runtime
-ARG AMD_ARCH=AMD_GFX90A
+ARG AMD_ARCH=AMD_GFX942
 ARG CUDA_ARCH=AMPERE80
 ARG CUDA_INSTALLER=https://developer.download.nvidia.com/compute/cuda/12.2.2/local_installers/cuda_12.2.2_535.104.05_linux.run
 ARG DEBIAN_FRONTEND=noninteractive
 ARG GCC_VERSION=11
 ARG LIGHTNING_VERSION=master
 ARG PENNYLANE_VERSION
-ARG ROCM_INSTALLER=https://repo.radeon.com/amdgpu-install/6.2.4/ubuntu/jammy/amdgpu-install_6.2.60204-1_all.deb
+ARG ROCM_INSTALLER=https://repo.radeon.com/amdgpu-install/7.0.3/ubuntu/jammy/amdgpu-install_7.0.3.70003-1_all.deb
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
     apt-utils \
