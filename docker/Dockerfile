@@ -226,6 +226,7 @@ RUN apt-get update \
     && apt-get install --no-install-recommends -y \
     git \
     libgomp1 \
+    libomp-dev \
     python3.12 \
     python3-pip \
     python3.12-venv \
@@ -234,6 +235,7 @@ RUN apt-get update \
 ENV VIRTUAL_ENV=/opt/venv
 RUN python3.12 -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+ENV LD_LIBRARY_PATH="/usr/lib/llvm-14/lib:$LD_LIBRARY_PATH"
 COPY --from=build-wheel-lightning-kokkos-rocm /opt/pennylane-lightning/dist/ /
 COPY --from=build-wheel-lightning-qubit /opt/pennylane-lightning/dist/ /
 RUN pip install --force-reinstall --no-cache-dir pennylane_lightning*.whl && rm pennylane_lightning*.whl
