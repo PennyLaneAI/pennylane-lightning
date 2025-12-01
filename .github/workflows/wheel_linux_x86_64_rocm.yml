@@ -178,11 +178,11 @@ jobs:
           regex: '^v[0-9]+\.[0-9]+\.[0-9]+[-_]rc$'
 
       - uses: actions/upload-artifact@v4
-        if: |
-          github.event_name == 'release' ||
-          github.event_name == 'workflow_dispatch' ||
-          github.ref == 'refs/heads/master' ||
-          steps.rc_build.outputs.match != ''
+        # if: |
+        #   github.event_name == 'release' ||
+        #   github.event_name == 'workflow_dispatch' ||
+        #   github.ref == 'refs/heads/master' ||
+        #   steps.rc_build.outputs.match != ''
         with:
           name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ fromJson('{ "cp311-*":"py311","cp312-*":"py312","cp313-*":"py313" }')[matrix.cibw_build] }}-${{ matrix.arch }}-rocm${{ matrix.rocm_version }}.zip
           path: ./wheelhouse/*.whl
