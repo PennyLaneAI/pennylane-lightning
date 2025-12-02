@@ -1,7 +1,7 @@
 name: Wheel::Linux::x86_64::ROCm
 
 # **What it does**: Builds python wheels for Linux (ubuntu-24.04) architecture x86_64 and store it as artifacts.
-#                   Python versions: 3.11, 3.12, 3.13.
+#                   Python versions: 3.11, 3.12, 3.13, 3.14
 # **Why we have it**: To build wheels for pennylane-lightning-amdgpu installation.
 # **Who does it impact**: Wheels to be uploaded to PyPI.
 
