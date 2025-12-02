@@ -50,15 +50,15 @@ class TestSparseExpval:
     def test_sparse_Pauli_words(self, cases, tol, dev):
         """Test expval of some simple sparse Hamiltonian"""
 
+        # Compute the sparse matrix of the input operator
+        # This is done outside of the QNode to avoid queuing the `Hamiltonian`
+        matrix = qml.Hamiltonian([1], [cases[0]]).sparse_matrix()
+
         @qml.qnode(dev, diff_method="parameter-shift")
         def circuit_expval():
             qml.RX(0.4, wires=[0])
             qml.RY(-0.2, wires=[1])
-            return qml.expval(
-                qml.SparseHamiltonian(
-                    qml.Hamiltonian([1], [cases[0]]).sparse_matrix(), wires=[0, 1]
-                )
-            )
+            return qml.expval(qml.SparseHamiltonian(matrix, wires=[0, 1]))
 
         assert np.allclose(circuit_expval(), cases[1], atol=tol, rtol=0)
 
@@ -66,11 +66,7 @@ class TestSparseExpval:
         def circuit_var():
             qml.RX(0.4, wires=[0])
             qml.RY(-0.2, wires=[1])
-            return qml.var(
-                qml.SparseHamiltonian(
-                    qml.Hamiltonian([1], [cases[0]]).sparse_matrix(), wires=[0, 1]
-                )
-            )
+            return qml.var(qml.SparseHamiltonian(matrix, wires=[0, 1]))
 
         assert np.allclose(circuit_var(), cases[2], atol=tol, rtol=0)
 
@@ -93,26 +89,26 @@ class TestSparseExpvalQChem:
     singles, doubles = qchem.excitations(active_electrons, qubits)
     excitations = singles + doubles
 
-    @pytest.mark.parametrize("c_dtype", [np.complex64, np.complex128])
+    @pytest.fixture(params=[np.complex64, np.complex128])
     @pytest.mark.parametrize(
         "qubits, wires, H, hf_state, excitations",
         [
             [qubits, range(qubits), H, hf_state, excitations],
             [
                 qubits,
-                list(np.random.permutation(np.arange(qubits))),
+                np.random.permutation(np.arange(qubits)),
                 H,
                 hf_state,
                 excitations,
             ],
         ],
     )
-    def test_sparse_Pauli_words(self, qubits, wires, H, hf_state, excitations, tol, c_dtype):
+    def test_sparse_Pauli_words(self, qubits, wires, H, hf_state, excitations, tol, request):
         """Test expval of some simple sparse Hamiltonian"""
 
         H_sparse = H.sparse_matrix(wires)
 
-        dev = qml.device(device_name, wires=wires, c_dtype=c_dtype)
+        dev = qml.device(device_name, wires=wires, c_dtype=request.param)
 
         @qml.qnode(dev, diff_method="parameter-shift")
         def circuit():
