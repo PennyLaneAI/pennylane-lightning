@@ -196,7 +196,9 @@ ARG ROCM_INSTALLER
 RUN wget --progress=dot:giga ${ROCM_INSTALLER}
 RUN apt-get update \
     && apt-get upgrade -y \
-    && apt-get install --no-install-recommends -y ./$(echo ${ROCM_INSTALLER} | xargs -I {} basename {}) \
+    && apt-get install --no-install-recommends -y \
+       gnupg \
+       ./$(echo ${ROCM_INSTALLER} | xargs -I {} basename {}) \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 RUN wget -q -O - https://repo.radeon.com/rocm/rocm.gpg.key | gpg --dearmor | tee /etc/apt/trusted.gpg.d/rocm.gpg > /dev/null
