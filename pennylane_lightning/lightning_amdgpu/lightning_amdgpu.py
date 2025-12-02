@@ -49,7 +49,7 @@ class LightningAmdgpu(LightningKokkos):
             match = re.search(r"ROCm version:\s*([\d.]+)", output)
             if match:
                 return match.group(1)
-        
+
         except (subprocess.CalledProcessError, OSError):
             return None
 
@@ -65,7 +65,7 @@ class LightningAmdgpu(LightningKokkos):
             match = re.search(r"^([\d.]+)", output)
             if match:
                 return match.group(1)
-        
+
         except (subprocess.CalledProcessError, OSError):
             return None
 
