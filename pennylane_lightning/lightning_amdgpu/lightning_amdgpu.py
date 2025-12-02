@@ -12,6 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+r"""
+This module contains the :class:`~.LightningAmdgpu` class, a Lightning simulator device that derives from LightningKokkos specifically for AMD GPUs.
+"""
+
 import ctypes
 import os
 import re
@@ -29,34 +33,41 @@ class LightningAmdgpu(LightningKokkos):
     A device alias for LightningKokkos targeting AMD GPU platforms.
     """
 
+    # pylint: disable=too-few-public-methods
+
     def __init__(self, wires=None, *args, **kwargs):
         self._check_amd_gpu_resources()
         super().__init__(wires, *args, **kwargs)
 
     def _get_rocm_version_from_amd_smi(self):
-        if not shutil.which("amd-smi"):
+        amd_smi_path = shutil.which("amd-smi")
+        if not amd_smi_path:
             return None
 
         try:
-            output = subprocess.check_output(["amd-smi", "version"], text=True)
+            output = subprocess.check_output([amd_smi_path, "version"], text=True)
             match = re.search(r"ROCm version:\s*([\d.]+)", output)
             if match:
                 return match.group(1)
-        except Exception:
-            pass
+        
+        except (subprocess.CalledProcessError, OSError):
+            return None
 
         return None
 
     def _get_rocm_version_from_hipconfig(self):
-        if not shutil.which("hipconfig"):
+        hipconfig_path = shutil.which("hipconfig")
+        if not hipconfig_path:
             return None
+
         try:
-            output = subprocess.check_output(["hipconfig", "--version"], text=True).strip()
+            output = subprocess.check_output([hipconfig_path, "--version"], text=True).strip()
             match = re.search(r"^([\d.]+)", output)
             if match:
                 return match.group(1)
-        except Exception:
-            pass
+        
+        except (subprocess.CalledProcessError, OSError):
+            return None
 
         return None
 
@@ -118,7 +129,7 @@ class LightningAmdgpu(LightningKokkos):
                     if "cannot open shared object file" in error_msg:
                         print("-" * 60)
                         print(
-                            f"Possible Cause: The library was compiled for a different ROCm version"
+                            "Possible Cause: The library was compiled for a different ROCm version"
                         )
                         print(f"than the one installed on this system ({local_version_str}).")
                         print("Please ensure your compiled binaries match the system ROCm version.")
@@ -131,8 +142,8 @@ class LightningAmdgpu(LightningKokkos):
         # If load succeeded, check Major Version Compatibility
         if local_version_str and lib_version_str:
             try:
-                local_major = int(local_version_str.split(".")[0])
-                lib_major = int(lib_version_str.split(".")[0])
+                local_major = int(local_version_str.split(".", maxsplit=1)[0])
+                lib_major = int(lib_version_str.split(".", maxsplit=1)[0])
 
                 if local_major != lib_major:
                     raise RuntimeError(

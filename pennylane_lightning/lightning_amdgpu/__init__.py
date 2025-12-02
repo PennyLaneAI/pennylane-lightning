@@ -18,7 +18,7 @@ import sys
 from pennylane_lightning.core import __version__
 
 try:
-    import pennylane_lightning.lightning_amdgpu_ops as lightning_amdgpu_ops
+    from pennylane_lightning import lightning_amdgpu_ops
 
     sys.modules["pennylane_lightning.lightning_kokkos_ops"] = lightning_amdgpu_ops
     sys.modules["pennylane_lightning.lightning_kokkos_ops.algorithms"] = (
