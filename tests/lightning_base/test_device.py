@@ -897,7 +897,7 @@ class TestExecution:
                 name=name,
                 skip_initial_state_prep=False,
                 device_wires=device.wires,
-                target_gates=device.capabilities.gate_set(),
+                target_gates=device.capabilities.gate_set(differentiable=True),
             )
             expected_program.add_transform(validate_observables, accepted_observables, name=name)
             expected_program.add_transform(
