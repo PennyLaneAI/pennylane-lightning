@@ -17,4 +17,5 @@ The ``lightning.amdgpu`` device is an instantiation of the ``lightning.kokkos`` 
 
 .. note ::
 
-    It is not recommended to install both ``lightning.amdgpu`` and ``lightning.kokkos`` devices in the same environment, as this may lead to conflicts. Choose the device that best fits your hardware and simulation needs.
+    - It is not recommended to install both ``lightning.amdgpu`` and ``lightning.kokkos`` devices in the same environment, as this may lead to conflicts. Choose the device that best fits your hardware and simulation needs.
+    - ``lightning.amdgpu`` requires ``libomp.so``, which may present conflict with libraries requiring ``libgomp.so``. Please report if you encounter such issues.
