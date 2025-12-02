@@ -58,7 +58,7 @@ if device_name == "lightning.qubit":
         validate_measurements,
         validate_observables,
     )
-elif device_name == "lightning.kokkos":
+elif device_name in ("lightning.kokkos", "lightning.amdgpu"):
     from pennylane_lightning.lightning_kokkos.lightning_kokkos import (
         _add_adjoint_transforms,
         _adjoint_ops,
@@ -223,6 +223,8 @@ class TestHelpers:
         expected_program = qml.transforms.core.TransformProgram()
 
         name = f"adjoint + {device_name}"
+        if device_name == "lightning.amdgpu":
+            name = "adjoint + lightning.kokkos"
         expected_program.add_transform(no_sampling, name=name)
         expected_program.add_transform(qml.transforms.broadcast_expand)
         expected_program.add_transform(
@@ -231,7 +233,7 @@ class TestHelpers:
             name=name,
             skip_initial_state_prep=False,
             device_wires=None,
-            target_gates=LightningDevice.capabilities.gate_set(differentiable=True),
+            target_gates=LightningDevice.capabilities.operations.keys(),
         )
         expected_program.add_transform(validate_observables, accepted_observables, name=name)
         expected_program.add_transform(
@@ -741,6 +743,18 @@ class TestExecution:
 
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
+        reason="lightning.tensor device doesn't have support for program capture.",
+    )
+    def test_preprocess_invalid_mcm_method_error(self, enable_disable_plxpr):
+        """Test that an error is raised if mcm_method is invalid."""
+        device = LightningDevice(wires=1)
+        config = ExecutionConfig(mcm_config=MCMConfig(mcm_method="foo"))
+
+        with pytest.raises(DeviceError, match="mcm_method='foo' is not supported"):
+            _ = device.setup_execution_config(config)
+
+    @pytest.mark.skipif(
+        device_name == "lightning.tensor",
         reason="lightning.tensor device does not support mcms",
     )
     def test_decompose_conditionals(self):
@@ -777,6 +791,7 @@ class TestExecution:
         m0 = qml.measure(0)
 
         class MyOp(qml.operation.Operator):
+
             def decomposition(self):
                 return m0.measurements
 
@@ -872,7 +887,7 @@ class TestExecution:
             skip_initial_state_prep=True,
             name=device.name,
             device_wires=device.wires,
-            target_gates=device.capabilities.gate_set(),
+            target_gates=device.capabilities.operations.keys(),
         )
         expected_program.add_transform(
             device_resolve_dynamic_wires, wires=device.wires, allow_resets=mcm_method != "deferred"
@@ -884,6 +899,8 @@ class TestExecution:
 
         if adjoint:
             name = f"adjoint + {device_name}"
+            if device_name == "lightning.amdgpu":
+                name = "adjoint + lightning.kokkos"
             expected_program.add_transform(no_sampling, name=name)
             expected_program.add_transform(qml.transforms.broadcast_expand)
             expected_program.add_transform(
@@ -892,7 +909,7 @@ class TestExecution:
                 name=name,
                 skip_initial_state_prep=False,
                 device_wires=device.wires,
-                target_gates=device.capabilities.gate_set(differentiable=True),
+                target_gates=device.capabilities.operations.keys(),
             )
             expected_program.add_transform(validate_observables, accepted_observables, name=name)
             expected_program.add_transform(

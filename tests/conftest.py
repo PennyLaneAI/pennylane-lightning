@@ -94,14 +94,20 @@ def n_subsystems(request):
 # Looking for the device for testing.
 default_device = "lightning.qubit"
 
-supported_devices = {"lightning.kokkos", "lightning.qubit", "lightning.gpu", "lightning.tensor"}
+supported_devices = {
+    "lightning.qubit",
+    "lightning.kokkos",
+    "lightning.amdgpu",
+    "lightning.gpu",
+    "lightning.tensor",
+}
 
 
 def get_device():
     """Return the pennylane lightning device.
 
     The device is ``lightning.qubit`` by default. Allowed values are:
-    "lightning.kokkos", "lightning.qubit", "lightning.gpu", and "lightning.tensor".
+    "lightning.qubit", "lightning.kokkos", "lightning.amdgpu", "lightning.gpu", and "lightning.tensor".
     If the environment variable ``PL_DEVICE`` is defined, its value is used.
     """
     device = os.environ.get("PL_DEVICE", default_device)
@@ -153,25 +159,34 @@ else:
         backend_cap = "GPU"  # Special case for GPU (uppercase)
     if device_name == "lightning.qubit":
         backend_cap = ""  # Special case for LightningQubit (default)
+    if device_name == "lightning.amdgpu":
+        backend_cap = "Kokkos"
 
     # Import main device class
     module_path = f"pennylane_lightning.{device_module_name}"
-    device_class = (
-        f"LightningQubit" if device_name == "lightning.qubit" else f"Lightning{backend_cap}"
-    )  # Special case for LightningQubit (default)
+
+    if device_name == "lightning.amdgpu":
+        device_class = "LightningAmdgpu"
+        helper_module_path = "pennylane_lightning.lightning_kokkos"
+    else:
+        device_class = (
+            f"LightningQubit" if device_name == "lightning.qubit" else f"Lightning{backend_cap}"
+        )  # Special case for LightningQubit (default)
+        helper_module_path = module_path
+
     module = importlib.import_module(module_path)
     LightningDevice = getattr(module, device_class)
 
     # Import adjoint jacobian class
-    adjoint_module = importlib.import_module(f"{module_path}._adjoint_jacobian")
+    adjoint_module = importlib.import_module(f"{helper_module_path}._adjoint_jacobian")
     LightningAdjointJacobian = getattr(adjoint_module, f"Lightning{backend_cap}AdjointJacobian")
 
     # Import measurements class
-    measurements_module = importlib.import_module(f"{module_path}._measurements")
+    measurements_module = importlib.import_module(f"{helper_module_path}._measurements")
     LightningMeasurements = getattr(measurements_module, f"Lightning{backend_cap}Measurements")
 
     # Import state vector class
-    state_vector_module = importlib.import_module(f"{module_path}._state_vector")
+    state_vector_module = importlib.import_module(f"{helper_module_path}._state_vector")
     LightningStateVector = getattr(state_vector_module, f"Lightning{backend_cap}StateVector")
 
     # Try to import ops module

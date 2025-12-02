@@ -28,7 +28,7 @@ from pennylane_lightning.lightning_base._serialize import (
 if not LightningDevice._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
-if device_name == "lightning.kokkos":
+if device_name in ("lightning.kokkos", "lightning.amdgpu"):
     from pennylane_lightning.lightning_kokkos_ops.observables import (
         HamiltonianC64,
         HamiltonianC128,

@@ -27,7 +27,10 @@ MACRO(FIND_AND_ADD_SIMULATOR)
     FIND_SIMULATORS_LIST(SIMULATORS_LIST)
 
     FOREACH(BACKEND ${PL_BACKEND})
-        if (${BACKEND} IN_LIST SIMULATORS_LIST)
+        if ("${BACKEND}" STREQUAL "lightning_amdgpu")
+            # Reuse the lightning_kokkos source code for this backend
+            add_subdirectory(lightning_kokkos)
+        elseif (${BACKEND} IN_LIST SIMULATORS_LIST)
             add_subdirectory(${BACKEND})
         else()
             message("Could not find the requested backend. Options found are:")

@@ -17,8 +17,8 @@ ARG PENNYLANE_VERSION=master
 ARG LIGHTNING_VERSION=master
 ARG GCC_VERSION=13
 ARG CUDA_INSTALLER=https://developer.download.nvidia.com/compute/cuda/12.5.1/local_installers/cuda_12.5.1_555.42.06_linux.run
-ARG ROCM_INSTALLER=https://repo.radeon.com/amdgpu-install/6.2.4/ubuntu/noble/amdgpu-install_6.2.60204-1_all.deb
-ARG AMD_ARCH=AMD_GFX90A
+ARG ROCM_INSTALLER=https://repo.radeon.com/amdgpu-install/7.0.3/ubuntu/jammy/amdgpu-install_7.0.3.70003-1_all.deb
+ARG AMD_ARCH=AMD_GFX942
 ARG CUDA_ARCH=AMPERE80
 
 # Create basic runtime environment base on Ubuntu 24.04 (noble)
@@ -199,6 +199,7 @@ RUN apt-get update \
     && apt-get install --no-install-recommends -y ./$(echo ${ROCM_INSTALLER} | xargs -I {} basename {}) \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+RUN wget -q -O - https://repo.radeon.com/rocm/rocm.gpg.key | gpg --dearmor | tee /etc/apt/trusted.gpg.d/rocm.gpg > /dev/null
 RUN amdgpu-install -y --accept-eula --usecase=rocm,hiplibsdk --no-dkms
 
 # Download Lightning release and build lightning-kokkos backend with Kokkos-ROCm
@@ -207,24 +208,24 @@ ARG AMD_ARCH
 WORKDIR /opt/pennylane-lightning
 ENV CMAKE_PREFIX_PATH=/opt/rocm:$CMAKE_PREFIX_PATH
 ENV CXX=hipcc
-ENV PL_BACKEND=lightning_kokkos
+ENV PL_BACKEND=lightning_amdgpu
 RUN pip uninstall -y pennylane-lightning
 RUN python scripts/configure_pyproject_toml.py || true
 RUN CMAKE_ARGS="-DKokkos_ENABLE_SERIAL:BOOL=ON \
-    -DKokkos_ENABLE_OPENMP:BOOL=ON \
     -DKokkos_ENABLE_HIP:BOOL=ON \
     -DKokkos_ARCH_${AMD_ARCH}=ON \
     -DCMAKE_CXX_FLAGS='--gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/11/'" \
     python -m build --wheel
 
-# Install lightning-kokkos HIP backend
-FROM rocm/dev-ubuntu-24.04:6.2.4 AS wheel-lightning-kokkos-rocm
+# Install lightning-amdgpu HIP backend
+FROM rocm/dev-ubuntu-24.04:7.0.2 AS wheel-lightning-kokkos-rocm
 ARG PENNYLANE_VERSION
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
     git \
     libgomp1 \
+    libomp-dev \
     python3 \
     python3-pip \
     python3-venv \
@@ -233,6 +234,7 @@ RUN apt-get update \
 ENV VIRTUAL_ENV=/opt/venv
 RUN python3 -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+ENV LD_LIBRARY_PATH="/usr/lib/llvm-14/lib:$LD_LIBRARY_PATH"
 COPY --from=build-wheel-lightning-kokkos-rocm /opt/pennylane-lightning/dist/ /
 COPY --from=build-wheel-lightning-qubit /opt/pennylane-lightning/dist/ /
 RUN pip install --force-reinstall --no-cache-dir pennylane_lightning*.whl && rm pennylane_lightning*.whl
