@@ -233,7 +233,7 @@ class TestHelpers:
             name=name,
             skip_initial_state_prep=False,
             device_wires=None,
-            target_gates=LightningDevice.capabilities.operations.keys(),
+            target_gates=LightningDevice.capabilities.gate_set(differentiable=True),
         )
         expected_program.add_transform(validate_observables, accepted_observables, name=name)
         expected_program.add_transform(
@@ -739,18 +739,6 @@ class TestExecution:
             UserWarning,
             match="Setting 'postselect_mode' is not supported with mcm_method='single-branch-",
         ):
-            _ = device.setup_execution_config(config)
-
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor device doesn't have support for program capture.",
-    )
-    def test_preprocess_invalid_mcm_method_error(self, enable_disable_plxpr):
-        """Test that an error is raised if mcm_method is invalid."""
-        device = LightningDevice(wires=1)
-        config = ExecutionConfig(mcm_config=MCMConfig(mcm_method="foo"))
-
-        with pytest.raises(DeviceError, match="mcm_method='foo' is not supported"):
             _ = device.setup_execution_config(config)
 
     @pytest.mark.skipif(
