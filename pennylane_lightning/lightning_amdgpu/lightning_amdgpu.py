@@ -13,7 +13,7 @@
 # limitations under the License.
 
 r"""
-This module contains the :class:`~.LightningAmdgpu` class, a Lightning simulator device that derives from LightningKokkos specifically for AMD GPUs.
+This module contains the :class:`~.LightningAmdgpu` class, a Lightning simulator device that derives from :class:`~.LightningKokkos` specifically for AMD GPUs.
 """
 
 import ctypes
@@ -27,13 +27,12 @@ from pathlib import Path
 from pennylane_lightning.lightning_kokkos import LightningKokkos
 
 
+# pylint: disable=too-few-public-methods
 class LightningAmdgpu(LightningKokkos):
     """PennyLane-Lightning AMDGPU device.
 
     A device alias for LightningKokkos targeting AMD GPU platforms.
     """
-
-    # pylint: disable=too-few-public-methods
 
     def __init__(self, wires=None, *args, **kwargs):
         self._check_amd_gpu_resources()

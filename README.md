@@ -85,14 +85,14 @@ The following table summarizes the supported platforms and the primary installat
 | Lightning-Qubit        | pip       | pip       | pip       | pip       |
 | Lightning-Kokkos (OMP) | pip       | pip       | pip       |           |
 | Lightning-Kokkos (CUDA)| source    | source    |           |           |
-| Lightning-Kokkos (HIP) | pip       | source    |           |           |
+| Lightning-Kokkos (HIP) | source    | source    |           |           |
 | Lightning-Kokkos (MPI) | source    |           |           |           |
 | Lightning-AMDGPU       | pip       | source    |           |           |
 | Lightning-GPU          | pip       | pip       |           |           |
 | Lightning-GPU (MPI)    | source    |           |           |           |
 | Lightning-Tensor       | pip       | pip       |           |           |
 
-For `Lightning-Kokkos` with HIP and Lightning-AMDGPU, pre-built wheels are available for MI300 series GPU for ROCm 7.0. For other architecture and ROCm versions, please install from source.
+For Lightning-AMDGPU, pre-built wheels are available for MI300 series GPU for ROCm 7.0 and greater. For older architecture and ROCm versions, please install from source.
 
 To install the latest stable version of these plugins,
 check out the [PennyLane installation guide](https://pennylane.ai/install#high-performance-computing-and-gpus).
