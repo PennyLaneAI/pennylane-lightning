@@ -21,8 +21,8 @@ You can also control the number of threads used by setting the ``OMP_NUM_THREADS
 environment variable.
 
 For workloads that involve gradient computations with many observable measurements,
-OpenMP acceleration may reduce performance compared to the default mode.
-To disable it, use the CMake flag ``-DLQ_ENABLE_KERNEL_OMP=OFF`` when building
+OpenMP acceleration may reduce performance due to oversubscription of threads to CPU cores.
+To mitigate this, use the CMake flag ``-DLQ_ENABLE_KERNEL_OMP=OFF`` when building
 Lightning-Qubit.
 
 For workloads that show benefit from the use of threaded gate kernels,
