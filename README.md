@@ -68,7 +68,7 @@ PennyLane-Lightning high performance simulators include the following backends:
   It can exploit the inherent parallelism of modern processing units supporting the [OpenMP](https://www.openmp.org/>`),
   [CUDA](https://developer.nvidia.com/cuda-toolkit) or [HIP](https://rocm.docs.amd.com/projects/HIP/en/latest) programming models.
   It also offers distributed state-vector simulation via [MPI](https://www.mpi-forum.org/docs/).
-* ``lightning.amdgpugpu``: a state-vector simulator specifically for AMD GPUs. This device is an alias of our ``lightning.kokkos`` simulator.
+* ``lightning.amdgpu``: a state-vector simulator specifically for AMD GPUs. This device is an alias of our ``lightning.kokkos`` simulator.
 * ``lightning.gpu``: a state-vector simulator based on the [NVIDIA cuQuantum SDK](https://developer.nvidia.com/cuquantum-sdk).
   It notably implements a distributed state-vector simulator based on [MPI](https://www.mpi-forum.org/docs/).
 * ``lightning.tensor``: a tensor-network simulator based on the [NVIDIA cuQuantum SDK](https://developer.nvidia.com/cuquantum-sdk).
