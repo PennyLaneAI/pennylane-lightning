@@ -29,7 +29,7 @@
 
 <h3>Internal changes ⚙️</h3>
 
-- Temporarily skip aarch64 CUDA wheel tests for Python 3.14 due to [networkx issue](https://github.com/networkx/networkx/issues/8362).
+- Temporarily skip aarch64 CUDA wheel tests for Python 3.14 due to [networkx issue](https://github.com/networkx/networkx/issues/8362), also temporarily increased github action timeout limit to 90 min.
   [(#1301)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1301)
 
 - Update tests to accomodate new PennyLane MCM method validation.
