@@ -103,6 +103,7 @@ class LightningAmdgpu(LightningKokkos):
                     val = version_val.value
                     # Logic to unpack the integer version
                     # ROCm uses: Major * 10^7 + Minor * 10^5 + Patch
+                    # https://rocm.docs.amd.com/projects/HIP/en/latest/reference/hip_runtime_api/modules/initialization_and_version.html#_CPPv419hipDriverGetVersionPi
                     major = val // 10000000
                     minor = (val % 10000000) // 100000
                     patch = val % 100000
