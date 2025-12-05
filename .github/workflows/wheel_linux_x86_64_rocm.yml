@@ -43,7 +43,7 @@ jobs:
         kokkos_version: ${{ fromJson(needs.set_wheel_build_matrix.outputs.kokkos_version) }}
         rocm_version: ["7.0.3"] 
         container_img: ["quay.io/pypa/manylinux_2_28_x86_64"]
-    timeout-minutes: 45
+    timeout-minutes: 30
     name: Kokkos core (${{ matrix.exec_model }})
     runs-on: blacksmith-4vcpu-ubuntu-2404
     container: ${{ matrix.container_img }}
