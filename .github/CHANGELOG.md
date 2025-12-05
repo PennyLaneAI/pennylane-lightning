@@ -4,6 +4,7 @@
 
 - Introduced a new Lightning-AMDGPU device, which is an alias of Lightning-Kokkos specifically for AMD GPUs.
   [(#1300)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1300)
+  [(#1301)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1301)
 
 
 <h3>Improvements 🛠</h3>
