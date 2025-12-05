@@ -58,7 +58,7 @@ if device_name == "lightning.qubit":
         validate_measurements,
         validate_observables,
     )
-elif device_name == "lightning.kokkos":
+elif device_name in ("lightning.kokkos", "lightning.amdgpu"):
     from pennylane_lightning.lightning_kokkos.lightning_kokkos import (
         _add_adjoint_transforms,
         _adjoint_ops,
@@ -223,6 +223,8 @@ class TestHelpers:
         expected_program = qml.transforms.core.TransformProgram()
 
         name = f"adjoint + {device_name}"
+        if device_name == "lightning.amdgpu":
+            name = "adjoint + lightning.kokkos"
         expected_program.add_transform(no_sampling, name=name)
         expected_program.add_transform(qml.transforms.broadcast_expand)
         expected_program.add_transform(
@@ -777,6 +779,7 @@ class TestExecution:
         m0 = qml.measure(0)
 
         class MyOp(qml.operation.Operator):
+
             def decomposition(self):
                 return m0.measurements
 
@@ -884,6 +887,8 @@ class TestExecution:
 
         if adjoint:
             name = f"adjoint + {device_name}"
+            if device_name == "lightning.amdgpu":
+                name = "adjoint + lightning.kokkos"
             expected_program.add_transform(no_sampling, name=name)
             expected_program.add_transform(qml.transforms.broadcast_expand)
             expected_program.add_transform(

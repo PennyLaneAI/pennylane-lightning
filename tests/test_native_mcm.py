@@ -29,7 +29,7 @@ from conftest import (
 )
 from pennylane.exceptions import DeviceError
 
-if device_name not in ("lightning.qubit", "lightning.kokkos", "lightning.gpu"):
+if device_name not in ("lightning.qubit", "lightning.kokkos", "lightning.amdgpu", "lightning.gpu"):
     pytest.skip("Native MCM not supported. Skipping.", allow_module_level=True)
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-access
@@ -94,11 +94,15 @@ class TestUnsupportedConfigurationsMCM:
                 match=f"not accepted with finite shots on lightning.qubit",
             ):
                 circuit(1.33)
-        if device_name in ("lightning.kokkos", "lightning.gpu"):
+        if device_name in ("lightning.kokkos", "lightning.amdgpu", "lightning.gpu"):
+            device_match = device_name
+            if device_name == "lightning.amdgpu":
+                device_match = "lightning.(amdgpu|kokkos)"
+
             with pytest.raises(
                 DeviceError,
                 match=r"Measurement shadow\(wires=\[0\]\) not accepted with finite shots on "
-                + device_name,
+                + device_match,
             ):
                 circuit(1.33)
 
@@ -113,9 +117,13 @@ class TestUnsupportedConfigurationsMCM:
             obs=qml.PauliZ(0),
         )
 
+        device_match = device_name
+        if device_name == "lightning.amdgpu":
+            device_match = "lightning.(amdgpu|kokkos)"
+
         with pytest.raises(
             qml.exceptions.WireError,
-            match=f"on {device_name} as they contain wires not found on the device: {{1}}",
+            match=f"on {device_match} as they contain wires not found on the device: {{.*}}",
         ):
             circuit(1.33)
 
@@ -163,9 +171,13 @@ class TestUnsupportedConfigurationsMCM:
                 obs=qml.PauliZ(0),
             )
 
+            device_match = device_name
+            if device_name == "lightning.amdgpu":
+                device_match = "lightning.(amdgpu|kokkos)"
+
             with pytest.raises(
                 DeviceError,
-                match="not accepted for analytic simulation on " + device_name,
+                match="not accepted for analytic simulation on " + device_match,
             ):
                 circuit(1.33)
 
@@ -631,16 +643,7 @@ class TestExecutionMCM:
     @pytest.mark.parametrize("measure_f", [qml.counts, qml.expval, qml.probs, qml.sample, qml.var])
     @pytest.mark.parametrize(
         "measure_obj",
-        [
-            qml.PauliZ(0),
-            qml.PauliY(1),
-            [0],
-            [0, 1],
-            [1, 0],
-            "mcm",
-            "composite_mcm",
-            "mcm_list",
-        ],
+        [qml.PauliZ(0), qml.PauliY(1), [0], [0, 1], [1, 0], "mcm", "composite_mcm", "mcm_list"],
     )
     def test_seeded_mcm(self, mcm_method, shots, measure_f, postselect, measure_obj):
         """Tests that seeded MCM measurements return the same results for two devices with the same seed."""

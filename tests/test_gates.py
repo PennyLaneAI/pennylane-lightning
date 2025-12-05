@@ -462,7 +462,7 @@ def test_qubit_unitary(n_wires, theta, phi, tol):
 
 
 @pytest.mark.skipif(
-    device_name not in ("lightning.qubit", "lightning.kokkos"),
+    device_name not in ("lightning.qubit", "lightning.kokkos", "lightning.amdgpu"),
     reason="PennyLane-like StatePrep only implemented in lightning.qubit and lightning.kokkos.",
 )
 @pytest.mark.parametrize("n_targets", list(range(2, 8)))
@@ -685,7 +685,7 @@ def test_controlled_qubit_unitary_from_op(tol):
 
 @pytest.mark.local_salt(42)
 @pytest.mark.skipif(
-    device_name not in ("lightning.qubit", "lightning.kokkos"),
+    device_name not in ("lightning.qubit", "lightning.kokkos", "lightning.amdgpu"),
     reason="PauliRot operations only implemented in lightning.qubit and lightning.kokkos.",
 )
 @pytest.mark.parametrize("n_wires", [1, 2, 3, 4, 5, 10, 15])

@@ -2,6 +2,10 @@
 
 <h3>New features since last release</h3>
 
+- Introduced a new Lightning-AMDGPU device, which is an alias of Lightning-Kokkos specifically for AMD GPUs.
+  [(#1300)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1300)
+
+
 <h3>Improvements 🛠</h3>
 
 - Handled `qml.GlobalPhase` with zero-qubit target wires in `lightning.gpu`.
@@ -72,6 +76,7 @@
 
 This release contains contributions from (in alphabetical order):
 
+Ali Asadi,
 Yushao Chen,
 Joseph Lee,
 David Wierichs.

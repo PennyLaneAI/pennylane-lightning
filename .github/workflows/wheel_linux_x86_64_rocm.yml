@@ -1,0 +1,230 @@
+name: Wheel::Linux::x86_64::ROCm
+permissions:
+  contents: read
+
+# **What it does**: Builds python wheels for Linux (ubuntu-24.04) architecture x86_64 and store it as artifacts.
+#                   Python versions: 3.11, 3.12, 3.13, 3.14
+# **Why we have it**: To build wheels for pennylane-lightning-amdgpu installation.
+# **Who does it impact**: Wheels to be uploaded to PyPI.
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+  push:
+    branches:
+      - master
+  release:
+    types: [published]
+  workflow_dispatch:
+
+concurrency:
+  group: wheel_linux_x86_64_rocm-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  set_wheel_build_matrix:
+    if: |
+      github.event_name != 'pull_request' ||
+      (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'ci:build_wheels'))
+    name: "Set wheel build matrix"
+    uses: ./.github/workflows/set_wheel_build_matrix.yml
+    with:
+      event_name: ${{ github.event_name }}
+
+  build_dependencies:
+    needs: [set_wheel_build_matrix]
+    strategy:
+      matrix:
+        exec_model: ["HIP"]
+        kokkos_version: ${{ fromJson(needs.set_wheel_build_matrix.outputs.kokkos_version) }}
+        rocm_version: ["7.0.3"] 
+        container_img: ["quay.io/pypa/manylinux_2_28_x86_64"]
+    timeout-minutes: 30
+    name: Kokkos core (${{ matrix.exec_model }})
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    container: ${{ matrix.container_img }}
+
+    steps:
+      - name: Cache installation directories
+        id: kokkos-cache
+        uses: actions/cache@v4
+        with:
+          path: /root/Kokkos_install/${{ matrix.exec_model }}
+          key: ${{ matrix.container_img }}-rocm${{ matrix.rocm_version }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
+
+      - name: Configure ROCm Repo and Install Dependencies
+        if: steps.kokkos-cache.outputs.cache-hit != 'true'
+        run: |
+          printf "[ROCm]\nname=ROCm\nbaseurl=https://repo.radeon.com/rocm/rhel8/${{ matrix.rocm_version }}/main\nenabled=1\ngpgcheck=0" > /etc/yum.repos.d/rocm.repo
+          dnf clean all
+          dnf update -y
+          dnf install -y cmake ninja-build git wget gcc-toolset-11 rocm-dev hipcc hip-devel rocthrust-devel rocprim-devel
+          
+          echo "PATH=/opt/rh/gcc-toolset-11/root/usr/bin:$PATH" >> $GITHUB_ENV
+          echo "CXX=hipcc" >> $GITHUB_ENV
+
+      - name: Clone Kokkos libs
+        if: steps.kokkos-cache.outputs.cache-hit != 'true'
+        run: |
+          git clone --branch ${{ matrix.kokkos_version }} https://github.com/kokkos/kokkos.git
+
+      - name: Build Kokkos core library
+        if: steps.kokkos-cache.outputs.cache-hit != 'true'
+        run: |
+          source /opt/rh/gcc-toolset-11/enable
+          mkdir -p /root/Kokkos_install/${{ matrix.exec_model }}
+          cd kokkos
+          
+          cmake -BBuild . -DCMAKE_INSTALL_PREFIX=/root/Kokkos_install/${{ matrix.exec_model }} \
+                          -DKokkos_ENABLE_COMPLEX_ALIGN=OFF \
+                          -DKokkos_ENABLE_SERIAL=ON \
+                          -DKokkos_ENABLE_HIP=ON \
+                          -DKokkos_ARCH_AMD_GFX942=ON \
+                          -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
+                          -DCMAKE_CXX_COMPILER=hipcc \
+                          -DCMAKE_CXX_STANDARD=20 \
+                          -DCMAKE_CXX_FLAGS="--gcc-toolchain=/opt/rh/gcc-toolset-11/root/usr" \
+                          -DCMAKE_PREFIX_PATH="/opt/rocm" \
+                          -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+                          -G Ninja
+          cmake --build ./Build --verbose
+          cmake --install ./Build
+
+  linux-wheels-x86-64:
+    needs: [set_wheel_build_matrix, build_dependencies]
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [x86_64]
+        pl_backend: ["lightning_amdgpu"]
+        rocm_version: ["7.0.3"]
+        cibw_build: ${{ fromJson(needs.set_wheel_build_matrix.outputs.python_version_gpu) }}
+        exec_model: ["HIP"] 
+        kokkos_version: ${{ fromJson(needs.set_wheel_build_matrix.outputs.kokkos_version) }}
+        container_img: ["quay.io/pypa/manylinux_2_28_x86_64"]
+    timeout-minutes: 30
+    name: Linux::${{ matrix.arch }} - ${{ matrix.pl_backend }} ROCm ${{ matrix.rocm_version }} (Python ${{ fromJson('{"cp311-*":"3.11","cp312-*":"3.12","cp313-*":"3.13" }')[matrix.cibw_build] }})
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    container:
+      image: ${{ matrix.container_img }}
+      options: --privileged
+
+    steps:
+      - name: Restoring cached dependencies
+        id: kokkos-cache
+        uses: actions/cache@v4
+        with:
+          path: /root/Kokkos_install/${{ matrix.exec_model }}
+          key: ${{ matrix.container_img }}-rocm${{ matrix.rocm_version }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
+
+      - name: Checkout PennyLane-Lightning
+        uses: actions/checkout@v4
+
+      - name: Copy cached libraries
+        if: steps.kokkos-cache.outputs.cache-hit == 'true'
+        run: |
+          mkdir Kokkos
+          cp -rf /root/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
+
+      - name: Install dependencies (AlmaLinux)
+        run: |
+          dnf update -y && dnf install -y podman
+
+      - name: Install dependencies (Python)
+        run: python3.12 -m pip install cibuildwheel~=3.1.4 tomlkit
+
+      - name: Configure pyproject.toml file
+        run: PL_BACKEND="${{ matrix.pl_backend }}" python3.12 scripts/configure_pyproject_toml.py
+
+      - name: Build wheels
+        env:
+          CIBW_CONTAINER_ENGINE: "podman"
+          CIBW_ARCHS_LINUX: ${{ matrix.arch }}
+          CIBW_BUILD: ${{ matrix.cibw_build }}
+          CIBW_SKIP: "*-musllinux*"
+
+          # Prepare container for build
+          CIBW_BEFORE_BUILD: |
+            printf "[ROCm]\nname=ROCm\nbaseurl=https://repo.radeon.com/rocm/rhel8/${{ matrix.rocm_version }}/main\nenabled=1\ngpgcheck=0" > /etc/yum.repos.d/rocm.repo
+            
+            python -m pip install ninja cmake setuptools auditwheel~=5.0
+            
+            dnf clean all
+            dnf install -y git wget gcc-toolset-11 rocm-dev hipcc hip-devel rocthrust-devel rocprim-devel
+          
+          CIBW_ENVIRONMENT: |
+            PATH=/opt/rh/gcc-toolset-11/root/usr/bin:$PATH:/opt/rocm/bin \
+            LD_LIBRARY_PATH=/opt/rh/gcc-toolset-11/root/usr/lib64:/opt/rh/gcc-toolset-11/root/usr/lib:$LD_LIBRARY_PATH:/opt/rocm/lib \
+            CMAKE_ARGS="-DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=hipcc -DCMAKE_CXX_FLAGS='--gcc-install-dir=/opt/rh/gcc-toolset-11/root/usr/lib/gcc/x86_64-redhat-linux/11' -DCMAKE_PREFIX_PATH=/opt/rocm"
+
+          CIBW_REPAIR_WHEEL_COMMAND_LINUX: "./bin/auditwheel repair -w {dest_dir} {wheel}"
+
+          CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
+          CIBW_BUILD_VERBOSITY: 3
+
+        run: python3.12 -m cibuildwheel --output-dir wheelhouse
+
+      - name: Validate wheels
+        run: |
+          python3.12 -m pip install twine
+          python3.12 -m twine check ./wheelhouse/*.whl
+
+      - uses: actions-ecosystem/action-regex-match@main
+        id: rc_build
+        with:
+          text: ${{ github.event.pull_request.head.ref }}
+          regex: '^v[0-9]+\.[0-9]+\.[0-9]+[-_]rc$'
+
+      - uses: actions/upload-artifact@v4
+        if: |
+          github.event_name == 'release' ||
+          github.event_name == 'workflow_dispatch' ||
+          github.ref == 'refs/heads/master' ||
+          steps.rc_build.outputs.match != ''
+        with:
+          name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ fromJson('{ "cp311-*":"py311","cp312-*":"py312","cp313-*":"py313","cp314-*":"py314" }')[matrix.cibw_build] }}-${{ matrix.arch }}-rocm${{ matrix.rocm_version }}.zip
+          path: ./wheelhouse/*.whl
+          retention-days: 1
+          include-hidden-files: true
+
+  upload-pypi:
+    needs: [set_wheel_build_matrix, linux-wheels-x86-64]
+    strategy:
+      matrix:
+        arch: [x86_64]
+        pl_backend: ["lightning_amdgpu"]
+        rocm_version: ["7.0.3"]
+        cibw_build: ${{ fromJson(needs.set_wheel_build_matrix.outputs.python_version_gpu) }}
+    runs-on: ubuntu-24.04
+    permissions:
+      id-token: write
+
+    steps:
+      - uses: actions-ecosystem/action-regex-match@main
+        id: rc_build
+        with:
+          text: ${{ github.event.pull_request.head.ref }}
+          regex: '^v[0-9]+\.[0-9]+\.[0-9]+[-_]rc$'
+
+      - uses: actions/download-artifact@v4
+        if: |
+          github.event_name == 'release' ||
+          github.ref == 'refs/heads/master' || 
+          steps.rc_build.outputs.match != ''
+        with:
+          name:  ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ fromJson('{ "cp311-*":"py311","cp312-*":"py312","cp313-*":"py313","cp314-*":"py314" }')[matrix.cibw_build] }}-${{ matrix.arch }}-rocm${{ matrix.rocm_version }}.zip
+          path: dist
+
+      - name: Upload wheels to TestPyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        if: |
+          github.event_name == 'release' ||
+          github.ref == 'refs/heads/master' || 
+          steps.rc_build.outputs.match != ''
+        with:
+          verbose: true
+          repository-url: https://test.pypi.org/legacy/

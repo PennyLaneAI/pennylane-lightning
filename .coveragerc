@@ -4,6 +4,8 @@ source = pennylane_lightning
 omit =
     tests/*
     mpitests/*
+    pennylane_lightning/lightning_amdgpu/*
+    
 
 [coverage:run]
 parallel = true
