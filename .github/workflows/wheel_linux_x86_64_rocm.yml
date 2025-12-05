@@ -1,4 +1,6 @@
 name: Wheel::Linux::x86_64::ROCm
+permissions:
+  contents: read
 
 # **What it does**: Builds python wheels for Linux (ubuntu-24.04) architecture x86_64 and store it as artifacts.
 #                   Python versions: 3.11, 3.12, 3.13, 3.14
