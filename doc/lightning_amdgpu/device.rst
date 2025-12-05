@@ -1,5 +1,5 @@
 Lightning AMD GPU device
-====================
+========================
 
 The ``lightning.amdgpu`` device is an extension of PennyLane's built-in ``lightning.qubit`` device.
 It extends the CPU-focused Lightning simulator to enable GPU-accelerated simulation of quantum state-vector evolution specifically on AMD GPUs.

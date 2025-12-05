@@ -106,7 +106,7 @@ jobs:
         exec_model: ["HIP"] 
         kokkos_version: ${{ fromJson(needs.set_wheel_build_matrix.outputs.kokkos_version) }}
         container_img: ["quay.io/pypa/manylinux_2_28_x86_64"]
-    timeout-minutes: 60
+    timeout-minutes: 30
     name: Linux::${{ matrix.arch }} - ${{ matrix.pl_backend }} ROCm ${{ matrix.rocm_version }} (Python ${{ fromJson('{"cp311-*":"3.11","cp312-*":"3.12","cp313-*":"3.13" }')[matrix.cibw_build] }})
     runs-on: blacksmith-4vcpu-ubuntu-2404
     container:

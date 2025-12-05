@@ -26,7 +26,7 @@ Select the device below for detailed source-installation instructions:
 
 .. title-card::
    :name: Lightning AMD GPU
-   :description: Detailed guidelines to installing and testing the Lightning AMD GPU device.
+   :description: Detailed guidelines to installing and testing the Lightning AMDGPU device for AMD GPUs.
    :link: ../lightning_amdgpu/installation.html
 
 .. title-card::

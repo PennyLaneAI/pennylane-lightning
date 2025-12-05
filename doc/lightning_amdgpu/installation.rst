@@ -11,7 +11,7 @@ Install Kokkos (Recommended)
 
 .. note::
 
-    Lightning-Kokkos is tested with Kokkos version <= 4.5.00
+    Lightning-Kokkos is tested with Kokkos version 4.5.00
 
 We recommend first installing Kokkos with your desired configuration by following the instructions in the Kokkos documentation at <https://kokkos.github.io/kokkos-core-wiki/building.html>.
 For example, the following will build Kokkos for AMD MI300 GPU:
