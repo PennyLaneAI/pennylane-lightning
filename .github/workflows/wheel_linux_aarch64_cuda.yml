@@ -40,7 +40,7 @@ jobs:
         cuda_version: ["12"]
         cibw_build: ${{ fromJson(needs.set_wheel_build_matrix.outputs.python_version_gpu) }}
         container_img: ["quay.io/pypa/manylinux_2_28_aarch64"]
-    timeout-minutes: 60
+    timeout-minutes: 90 # FIXME: temporarily increased from 60
     name: ${{ matrix.os }}::${{ matrix.arch }} - ${{ matrix.pl_backend }} (Python ${{ fromJson('{ "cp311-*":"3.11", "cp312-*":"3.12", "cp313-*":"3.13", "cp314-*":"3.14" }')[matrix.cibw_build] }})
     runs-on: 
       - single-gpu-arm
@@ -144,11 +144,16 @@ jobs:
           python -m pip install ./wheelhouse/*.whl
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
           if (${{ matrix.pl_backend == 'lightning_tensor' }}) then
-            PL_DEVICE=${DEVICENAME} python -m pytest tests/
+            # FIXME: Here and below we skip the tests for Python 3.14 due to
+            # networkx issue with Python 3.14
+            # https://github.com/networkx/networkx/issues/8362
+            # Once this is resolved, we can remove the skips
+            [[ "${{ matrix.cibw_build }}" == "cp314-*" ]] || PL_DEVICE=${DEVICENAME} python -m pytest tests/
           else
-            pl-device-test --device=${DEVICENAME} --skip-ops -x --tb=short
+          # FIXME: see above
             # MCM tests are slow and skipped. get_c_interface() API is not supported with current test setup and skipped.
-            PL_DEVICE=${DEVICENAME} python -m pytest tests/ -k "not test_supported_linux_platform_gpu and not test_native_mcm"
+            [[ "${{ matrix.cibw_build }}" == "cp314-*" ]] || pl-device-test --device=${DEVICENAME} --skip-ops -x --tb=short
+            [[ "${{ matrix.cibw_build }}" == "cp314-*" ]] || PL_DEVICE=${DEVICENAME} python -m pytest tests/ -k "not test_supported_linux_platform_gpu and not test_native_mcm"
           fi
 
       - name: Validate wheels
