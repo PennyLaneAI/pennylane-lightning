@@ -152,7 +152,7 @@ if(ENABLE_PYTHON)
 
     FetchContent_Declare(nanobind
                 GIT_REPOSITORY https://github.com/wjakob/nanobind.git
-                GIT_TAG        v2.8.0
+                GIT_TAG        v2.10.1
     )
     FetchContent_MakeAvailable(nanobind)
 
