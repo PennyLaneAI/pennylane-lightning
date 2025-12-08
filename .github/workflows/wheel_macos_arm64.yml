@@ -92,6 +92,7 @@ jobs:
             # networkx issue with Python 3.14
             # https://github.com/networkx/networkx/issues/8362
             # Once this is resolved, we can remove the skips
+            # https://github.com/PennyLaneAI/pennylane-lightning/pull/1304
             [[ "${{ matrix.cibw_build }}" == "cp314-*" ]] || pl-device-test --device=${DEVICENAME} --skip-ops -x --tb=short
 
           CIBW_BUILD_VERBOSITY: 3
