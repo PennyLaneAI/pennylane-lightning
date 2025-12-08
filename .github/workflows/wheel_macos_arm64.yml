@@ -20,7 +20,7 @@ on:
   workflow_dispatch:
 
 env:
-  MACOSX_DEPLOYMENT_TARGET: 13.0
+  MACOSX_DEPLOYMENT_TARGET: 15.0
 
 concurrency:
   group: wheel_macos_arm64-${{ github.ref }}
