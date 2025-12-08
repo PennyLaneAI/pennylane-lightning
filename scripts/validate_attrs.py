@@ -37,7 +37,11 @@ for path in Path().glob("*.whl"):
             # Specific libraries
 
             # Skip OpenMP libraries
-            if re.match(r".*libgomp.*\.so.*", name) or re.match(r".*libomp.*\.dylib.*", name):
+            if (
+                re.match(r".*libgomp.*\.so.*", name)
+                or re.match(r".*libomp.*\.so.*", name)
+                or re.match(r".*libomp.*\.dylib.*", name)
+            ):
                 continue
             # Skip Catalyst libraries
             if "catalyst.so" in name or "catalyst.dylib" in name or "catalyst.dll" in name:
