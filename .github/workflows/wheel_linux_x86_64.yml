@@ -151,6 +151,8 @@ jobs:
           # Python build settings
           CIBW_BEFORE_BUILD: |
             cat /etc/dnf.conf | sed "s/\[main\]/\[main\]\ntimeout=5/g" > /etc/dnf.conf
+            which python
+            python --version
             python -m pip install ninja cmake
             dnf clean all -y
             dnf install gcc-toolset-13 python3-devel -y
