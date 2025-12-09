@@ -41,7 +41,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-13]
+        os: [macos-14]
         arch: [arm64]
         pl_backend: ["lightning_kokkos", "lightning_qubit"]
         cibw_build: ${{fromJson(needs.set_wheel_build_matrix.outputs.python_version)}}
