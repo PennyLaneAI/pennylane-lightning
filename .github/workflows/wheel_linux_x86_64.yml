@@ -161,6 +161,8 @@ jobs:
             PATH="/opt/rh/gcc-toolset-13/root/usr/bin:$PATH" CMAKE_ARGS="-DCMAKE_BUILD_TYPE=Release -DPython_EXECUTABLE=$(python -c 'import sys; print(sys.executable)')"
 
           CIBW_BEFORE_TEST: |
+            echo "CMAKE_ARGS:"
+            echo $CMAKE_ARGS
             python -m pip install -r requirements-tests.txt
             if ${{ matrix.pl_backend == 'lightning_kokkos'}}
             then
