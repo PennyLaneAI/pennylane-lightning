@@ -153,7 +153,7 @@ jobs:
             cat /etc/dnf.conf | sed "s/\[main\]/\[main\]\ntimeout=5/g" > /etc/dnf.conf
             python -m pip install ninja cmake
             dnf clean all -y
-            dnf install gcc-toolset-13 -y
+            dnf install gcc-toolset-13 python3-devel -y
             source /opt/rh/gcc-toolset-13/enable -y
             PATH="/opt/rh/gcc-toolset-13/root/usr/bin:$PATH"
 
