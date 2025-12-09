@@ -58,7 +58,7 @@ jobs:
           key: ${{ matrix.container_img }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
 
       - name: Clone Kokkos libs
-        if: steps.kokkos-cache.outputs.cache-hit != 'true'
+        # if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
           git clone --branch ${{ matrix.kokkos_version }} https://github.com/kokkos/kokkos.git
           pushd . &> /dev/null
@@ -72,7 +72,7 @@ jobs:
           image: tonistiigi/binfmt:qemu-v8.1.5
 
       - name: Build Kokkos core library
-        if: steps.kokkos-cache.outputs.cache-hit != 'true'
+        # if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
           mkdir -p ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
           cd kokkos
