@@ -158,9 +158,12 @@ jobs:
             PATH="/opt/rh/gcc-toolset-13/root/usr/bin:$PATH"
 
           CIBW_ENVIRONMENT: |
-            PATH="/opt/rh/gcc-toolset-13/root/usr/bin:$PATH" CMAKE_ARGS="-DCMAKE_BUILD_TYPE=Release"
+            PATH="/opt/rh/gcc-toolset-13/root/usr/bin:$PATH"
+            CMAKE_ARGS="-DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=$(python -c 'import sys; print(sys.prefix)') -DPython_ROOT_DIR=$(python -c 'import sys; print(sys.prefix)') -DPython_EXECUTABLE=$(python -c 'import sys; print(sys.executable)') -DPython_FIND_STRATEGY=LOCATION"
 
           CIBW_BEFORE_TEST: |
+            echo "CMAKE_ARGS:"
+            echo "$CMAKE_ARGS"
             python -m pip install -r requirements-tests.txt
             if ${{ matrix.pl_backend == 'lightning_kokkos'}}
             then

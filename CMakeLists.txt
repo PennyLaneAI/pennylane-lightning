@@ -86,7 +86,7 @@ include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/process_options.cmake")
 
 if(ENABLE_PYTHON)
     # Add nanobind
-    find_package(Python COMPONENTS Interpreter Development)
+    find_package(Python COMPONENTS Interpreter Development REQUIRED)
     message(STATUS "Enabling Nanobind Python bindings")
 
     # Ensure we have a valid Python executable
@@ -152,7 +152,7 @@ if(ENABLE_PYTHON)
 
     FetchContent_Declare(nanobind
                 GIT_REPOSITORY https://github.com/wjakob/nanobind.git
-                GIT_TAG        v2.8.0
+                GIT_TAG        v2.10.1
     )
     FetchContent_MakeAvailable(nanobind)
 
