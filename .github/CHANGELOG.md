@@ -34,6 +34,8 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Update `wheel_linux_aarch64.yml` workflow to run on Blacksmith Arm runner [(#1307)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1307)
+
 - Update MacOS runner to use OSX 14.
   [(#1304)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1304)
 
