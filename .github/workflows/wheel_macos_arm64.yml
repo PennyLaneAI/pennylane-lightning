@@ -13,8 +13,8 @@ on:
       - synchronize
       - ready_for_review
   push:
-    # branches:
-    #   - master
+    branches:
+      - master
   release:
     types: [published]
   workflow_dispatch:
