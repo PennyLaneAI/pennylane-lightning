@@ -4,6 +4,7 @@
 
 - Introduced a new Lightning-AMDGPU device, which is an alias of Lightning-Kokkos specifically for AMD GPUs.
   [(#1300)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1300)
+  [(#1305)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1305)
 
 
 <h3>Improvements 🛠</h3>
@@ -33,8 +34,11 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Update MacOS runner to use OSX 14.
+  [(#1304)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1304)
+
 - Temporarily increased github action timeout limit to 90 min.
-  [(#1302)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1302)
+  [(#1303)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1303)
   [(#1301)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1301)
 
 - Update tests to accomodate new PennyLane MCM method validation.
