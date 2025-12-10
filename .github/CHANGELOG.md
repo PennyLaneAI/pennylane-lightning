@@ -34,6 +34,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Update MacOS runner to use OSX 14.
+  [(#1304)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1304)
+
 - Temporarily skip aarch64 CUDA wheel tests for Python 3.14 due to [networkx issue](https://github.com/networkx/networkx/issues/8362), also temporarily increased github action timeout limit to 90 min.
   [(#1301)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1301)
 
