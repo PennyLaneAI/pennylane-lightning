@@ -34,7 +34,8 @@
 
 <h3>Internal changes ⚙️</h3>
 
-- Update `wheel_linux_aarch64.yml` workflow to run on a Blacksmith Arm runner. [(#1307)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1307)
+- Update `wheel_linux_aarch64.yml` workflow to run on a Blacksmith Arm runner. 
+  [(#1307)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1307)
 
 - Update MacOS runner to use OSX 14.
   [(#1304)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1304)
@@ -1053,7 +1054,7 @@ Haochen Paul Wang
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Amintor Dusko, Diego Guala, Joseph Lee, Luis Alfredo Nuñez Meneses, Vincent Michaud-Rioux, Lee J. O'Riordan, Mudit Pandey, Shuli Shu, Haochen Paul Wang
+Runor Agbaire, Ali Asadi, Amintor Dusko, Diego Guala, Joseph Lee, Luis Alfredo Nuñez Meneses, Vincent Michaud-Rioux, Lee J. O'Riordan, Mudit Pandey, Shuli Shu, Haochen Paul Wang
 
 ---
 
