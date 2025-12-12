@@ -88,12 +88,7 @@ jobs:
             fi
           CIBW_TEST_COMMAND: |
             DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
-            # FIXME: Here we skip the tests for Python 3.14 due to
-            # networkx issue with Python 3.14
-            # https://github.com/networkx/networkx/issues/8362
-            # Once this is resolved, we can remove the skips
-            # https://github.com/PennyLaneAI/pennylane-lightning/pull/1304
-            [[ "${{ matrix.cibw_build }}" == "cp314-*" ]] || pl-device-test --device=${DEVICENAME} --skip-ops -x --tb=short
+            pl-device-test --device=${DEVICENAME} --skip-ops -x --tb=short
 
           CIBW_BUILD_VERBOSITY: 3
 
