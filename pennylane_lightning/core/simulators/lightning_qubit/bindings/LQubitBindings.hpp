@@ -440,6 +440,7 @@ auto registerVJP(
 template <class StateVectorT>
 void registerBackendSpecificAlgorithms(nb::module_ &m) {
     using PrecisionT = typename StateVectorT::PrecisionT;
+    using ComplexT = typename StateVectorT::ComplexT;
 
     const std::string bitsize =
         std::is_same_v<PrecisionT, float> ? "64" : "128";
@@ -450,10 +451,34 @@ void registerBackendSpecificAlgorithms(nb::module_ &m) {
     //                        Vector Jacobian Product
     //***********************************************************************//
     class_name = "VectorJacobianProductC" + bitsize;
-    nb::class_<VectorJacobianProduct<StateVectorT>>(m, class_name.c_str())
-        .def(nb::init<>())
-        .def("__call__", &registerVJP<StateVectorT>,
-             "Vector Jacobian Product method.");
+    auto vjp_class =
+        nb::class_<VectorJacobianProduct<StateVectorT>>(m, class_name.c_str());
+    vjp_class.def(nb::init<>());
+    // .def("__call__", &registerVJP<StateVectorT>,
+    //      "Vector Jacobian Product method.");
+
+    // Add the __call__ method with proper binding
+    vjp_class.def(
+        "__call__",
+        [](VectorJacobianProduct<StateVectorT> &adj, const StateVectorT &sv,
+           const std::vector<std::shared_ptr<Observable<StateVectorT>>>
+               &observables,
+           const OpsData<StateVectorT> &operations,
+           const std::vector<ComplexT> &cotangents,
+           const std::vector<size_t> &trainableParams) {
+            using PrecisionT = typename StateVectorT::PrecisionT;
+            std::vector<PrecisionT> jac(
+                observables.size() * trainableParams.size(), PrecisionT{0.0});
+            const JacobianData<StateVectorT> jd{operations.getTotalNumParams(),
+                                                sv.getLength(),
+                                                sv.getData(),
+                                                observables,
+                                                operations,
+                                                trainableParams};
+            adj.apply_vjp(std::span{jac}, jd, cotangents);
+            return createNumpyArrayFromVector<PrecisionT>(std::move(jac));
+        },
+        "Calculate the Jacobian using the adjoint method.");
 }
 
 /**

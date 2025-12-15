@@ -229,5 +229,27 @@ template <class StateVectorT, class Derived> class AdjointJacobianBase {
         return static_cast<Derived *>(this)->adjointJacobian(jac, jd, ref_data,
                                                              apply_operations);
     }
+
+    /**
+     * @brief Calculates the vector-Jacobian product used in reverse-mode
+     * differentiation.
+     *
+     * Implements the adjoint method outlined in
+     * `Jones and Gacon <https://arxiv.org/abs/2009.02823>`__ to differentiate
+     * an input tape.
+     *
+     * @param jac Preallocated vector for Jacobian data results.
+     * @param jd JacobianData represents the QuantumTape to differentiate.
+     * @param cotangents A cotangent vector of size 2^n
+     * @param apply_operations Indicate whether to apply operations to tape.psi
+     * prior to calculation.
+     */
+    inline void adjointVJP(std::span<PrecisionT> jac,
+                           const JacobianData<StateVectorT> &jd,
+                           std::span<ComplexT> cotangents,
+                           bool apply_operations = false) {
+        return static_cast<Derived *>(this)->adjointVJP(jac, jd, cotangents,
+                                                        apply_operations);
+    }
 };
 } // namespace Pennylane::Algorithms

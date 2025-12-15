@@ -24,6 +24,7 @@
 #include "JacobianData.hpp"
 #include "LinearAlgebra.hpp" // innerProdC
 #include "StateVectorLQubitManaged.hpp"
+#include <iostream>
 
 /// @cond DEV
 namespace {
@@ -72,7 +73,7 @@ class VectorJacobianProduct final
      *
      * @param jac Preallocated vector for Jacobian data results.
      * @param jd Jacobian data
-     * @param vec A cotangent vector of size 2^n
+     * @param vec A cotangent vector
      * @param apply_operations Assume the given state is an input state and
      * apply operations if true
      */
@@ -161,5 +162,135 @@ class VectorJacobianProduct final
             this->applyOperationAdj(mu, ops, static_cast<std::size_t>(op_idx));
         }
     }
+
+    void apply_vjp(std::span<PrecisionT> jac,
+                   const JacobianData<StateVectorT> &jd,
+                   std::span<const ComplexT> cotangents,
+                   bool apply_operations = false) {
+        if (!jd.hasTrainableParams()) {
+            return;
+        }
+
+        const OpsData<StateVectorT> &ops = jd.getOperations();
+        const std::vector<std::string> &ops_name = ops.getOpsName();
+
+        const auto &obs = jd.getObservables();
+        const std::size_t num_observables = obs.size();
+
+        // TODO: Might be able to relax this later
+        PL_ASSERT(num_observables == 1);
+
+        // We can assume the trainable params are sorted (from Python)
+        const auto &trainable_params = jd.getTrainableParams();
+        const std::size_t tp_size = trainable_params.size();
+        const std::size_t num_param_ops = ops.getNumParOps();
+
+        PL_ABORT_IF_NOT(jac.size() == trainable_params.size(),
+                        "The size of preallocated jacobian must be same as "
+                        "the number of trainable parameters.");
+
+        // Create $U_{1:p}\vert \lambda \rangle$
+        StateVectorLQubitManaged<PrecisionT> ket(jd.getPtrStateVec(),
+                                                 jd.getSizeStateVec());
+        StateVectorLQubitManaged<PrecisionT> ket_temp(ket.getNumQubits());
+
+        // Apply given operations to statevector if requested
+        if (apply_operations) {
+            this->applyOperations(ket, ops);
+        }
+
+        // Create \vert \phi \rangle (copy of \vert \lambda \rangle)$
+        // Note that \vert \phi \rangle and \vert \mu \rangle are the same
+        // StateVectorLQubitManaged<PrecisionT> bra(ket);
+
+        ///////////////////////////////////////////////////////////////////////////////////
+        // Create observable-applied and mu state vectors
+        std::unique_ptr<StateVectorT> bra;
+
+        // Pointer to data storage for StateVectorLQubitRaw<PrecisionT>:
+        std::unique_ptr<std::vector<ComplexT>> bra_storage;
+        std::size_t ket_qubits = ket.getNumQubits();
+        if constexpr (std::is_same_v<typename StateVectorT::MemoryStorageT,
+                                     MemoryStorageLocation::Internal>) {
+            bra = std::make_unique<StateVectorT>(ket_qubits);
+        } else if constexpr (std::is_same_v<
+                                 typename StateVectorT::MemoryStorageT,
+                                 MemoryStorageLocation::External>) {
+            bra_storage =
+                std::make_unique<std::vector<ComplexT>>(ket.getLength());
+            (*bra_storage)[0] = {1.0, 0};
+
+            StateVectorT sv((*bra_storage).data(), (*bra_storage).size());
+            bra = std::make_unique<StateVectorT>(sv);
+        } else {
+            /// LCOV_EXCL_START
+            PL_ABORT("Undefined memory storage location for StateVectorT.");
+            /// LCOV_EXCL_STOP
+        }
+
+        bra->updateData(ket.getDataVector());
+        ///////////////////////////////////////////////////////////////////////////////////
+
+        this->applyObservable(*bra,
+                              *(obs[0])); // TODO: This wouldn't be index 0,
+                                          // it'd be for each observable
+
+        const auto tp_rend = trainable_params.rend();
+        auto tp_it = trainable_params.rbegin();
+        std::size_t current_param_idx =
+            num_param_ops - 1; // total number of parametric ops
+        std::size_t trainable_param_idx = trainable_params.size() - 1;
+
+        for (int op_idx = static_cast<int>(ops_name.size() - 1); op_idx >= 0;
+             op_idx--) {
+            PL_ABORT_IF(ops.getOpsParams()[op_idx].size() > 1,
+                        "The operation is not supported using the adjoint "
+                        "differentiation method");
+            if ((ops_name[op_idx] == "StatePrep") ||
+                (ops_name[op_idx] == "BasisState")) {
+                continue; // ignore them
+            }
+
+            if (tp_it == tp_rend) {
+                break; // All done
+            }
+
+            this->applyOperationAdj(ket, ops, static_cast<std::size_t>(op_idx));
+
+            if (ops.hasParams(op_idx)) {
+                if (current_param_idx == *tp_it) {
+                    // if current parameter is a trainable parameter
+
+                    // Apply derivative operation to copy of ket
+                    ket_temp.updateData(ket.getDataVector());
+                    const auto scalingFactor =
+                        (ops.getOpsControlledWires()[op_idx].empty())
+                            ? ket_temp.applyGenerator(
+                                  ops_name[op_idx], ops.getOpsWires()[op_idx],
+                                  !ops.getOpsInverses()[op_idx]) *
+                                  (ops.getOpsInverses()[op_idx] ? -1 : 1)
+                            : ket_temp.applyGenerator(
+                                  ops_name[op_idx],
+                                  ops.getOpsControlledWires()[op_idx],
+                                  ops.getOpsControlledValues()[op_idx],
+                                  ops.getOpsWires()[op_idx],
+                                  !ops.getOpsInverses()[op_idx]) *
+                                  (ops.getOpsInverses()[op_idx] ? -1 : 1);
+
+                    jac[trainable_param_idx] =
+                        -2 * scalingFactor *
+                        std::real(innerProdC(bra->getDataVector(),
+                                             ket_temp.getDataVector()));
+                    --trainable_param_idx;
+                    ++tp_it;
+                }
+                --current_param_idx;
+            }
+
+            this->applyOperationAdj(*bra, ops,
+                                    static_cast<std::size_t>(op_idx));
+        }
+    }
 };
+
 } // namespace Pennylane::LightningQubit::Algorithms

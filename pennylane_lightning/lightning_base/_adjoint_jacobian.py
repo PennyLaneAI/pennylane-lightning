@@ -249,9 +249,9 @@ class LightningBaseAdjointJacobian(ABC):
                 shape of the corresponding tape, i.e. number of measurements if the return type is expectation.
 
         Returns:
-            The vector-Jacobian products of a tape.
+            The vector-Jacobian products of a tape. // TODO: Take another look at these return type docs, a bit confusing
         """
-
+        # breakpoint()
         empty_array = self._handle_raises(tape, is_jacobian=False, grad_vec=grad_vec)
 
         if empty_array:
@@ -287,4 +287,5 @@ class LightningBaseAdjointJacobian(ABC):
             trainable_params=tape.trainable_params,
         )
 
-        return self.calculate_jacobian(new_tape)
+        # return self.calculate_jacobian(new_tape)
+        return self.potato_vjp(new_tape, grad_vec)

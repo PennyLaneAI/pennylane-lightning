@@ -107,6 +107,7 @@ class LightningBase(Device):
         self.LightningStateVector: Callable = None
         self.LightningMeasurements: type[LightningBaseMeasurements] = None
         self.LightningAdjointJacobian: Callable = None
+        self.LightningVectorJacobianProduct: Callable = None
 
         # Lightning device name and library name for get_c_interface
         self._lightning_device_name: str = None
@@ -331,6 +332,7 @@ class LightningBase(Device):
         Returns:
             TensorLike: The VJP of the quantum script
         """
+        # breakpoint()
         if wire_map is not None:
             [circuit], _ = qml.map_wires(circuit, wire_map)
         state.reset_state()
@@ -482,8 +484,10 @@ class LightningBase(Device):
         if execution_config is None:
             execution_config = ExecutionConfig(gradient_method="adjoint")
 
+        # breakpoint()
+
         batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
-        return tuple(
+        t = tuple(
             self.vjp(
                 self.dynamic_wires_from_circuit(circuit),
                 cots,
@@ -493,6 +497,9 @@ class LightningBase(Device):
             )
             for circuit, cots in zip(circuits, cotangents)
         )
+
+        # breakpoint()
+        return t
 
     def execute_and_compute_vjp(
         self,

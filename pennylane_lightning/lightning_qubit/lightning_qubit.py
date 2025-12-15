@@ -292,6 +292,7 @@ class LightningQubit(LightningBase):
         self.LightningStateVector = LightningStateVector
         self.LightningMeasurements = LightningMeasurements
         self.LightningAdjointJacobian = LightningAdjointJacobian
+        # self.LightningVectorJacobianProduct = LightningVectorJacobianProduct
 
     def setup_execution_config(
         self, config: ExecutionConfig | None = None, circuit: qml.tape.QuantumScript | None = None

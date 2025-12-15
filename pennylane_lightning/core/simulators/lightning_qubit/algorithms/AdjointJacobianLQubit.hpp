@@ -17,6 +17,8 @@
  * method.
  */
 #pragma once
+#include <chrono>
+#include <iostream>
 #include <span>
 #include <type_traits>
 #include <vector>
@@ -219,6 +221,8 @@ class AdjointJacobian final
                          const JacobianData<StateVectorT> &jd,
                          [[maybe_unused]] const StateVectorT &ref_data = {0},
                          bool apply_operations = false) {
+        auto start_time = std::chrono::high_resolution_clock::now();
+
         const OpsData<StateVectorT> &ops = jd.getOperations();
         const std::vector<std::string> &ops_name = ops.getOpsName();
 
@@ -290,8 +294,12 @@ class AdjointJacobian final
 
         applyObservables(*H_lambda, lambda, obs);
 
+        auto pre_loop_time = std::chrono::high_resolution_clock::now();
+
         for (int op_idx = static_cast<int>(ops_name.size() - 1); op_idx >= 0;
              op_idx--) {
+            // auto loop_iter_start = std::chrono::high_resolution_clock::now();
+
             PL_ABORT_IF(ops.getOpsParams()[op_idx].size() > 1,
                         "The operation is not supported using the adjoint "
                         "differentiation method");
@@ -303,13 +311,15 @@ class AdjointJacobian final
             if (tp_it == tp_rend) {
                 break; // All done
             }
-            mu.updateData(lambda.getData(), lambda.getLength());
-            BaseType::applyOperationAdj(lambda, ops, op_idx);
+            mu.updateData(lambda.getData(), lambda.getLength()); // Cost: 3s
+            BaseType::applyOperationAdj(lambda, ops, op_idx);    // Cost: 3s
 
             if (ops.hasParams(op_idx)) {
+                // std::cout << "Processing parameterized op index: " << op_idx
+                // << std::endl;
                 if (current_param_idx == *tp_it) {
                     // if current parameter is a trainable parameter
-                    const PrecisionT scalingFactor =
+                    const PrecisionT scalingFactor = // Cost: 2s
                         (ops.getOpsControlledWires()[op_idx].empty())
                             ? mu.applyGenerator(ops_name[op_idx],
                                                 ops.getOpsWires()[op_idx],
@@ -326,19 +336,26 @@ class AdjointJacobian final
                     const std::size_t mat_row_idx =
                         trainableParamNumber * num_observables;
 
-                    // clang-format off
+                    // Cost: 1.5s
+                    if (num_observables == 1) {
+                        updateJacobian(*H_lambda, mu, jac, scalingFactor, 0,
+                                       mat_row_idx);
+                    } else {
 
-                #if defined(_OPENMP)
-                #pragma omp parallel for default(none)                         \
-                    shared(H_lambda, jac, mu, scalingFactor, mat_row_idx,      \
-                            num_observables)
-                #endif
-                    // clang-format on
+                        // clang-format off
 
-                    for (std::size_t obs_idx = 0; obs_idx < num_observables;
-                         obs_idx++) {
-                        updateJacobian(*H_lambda, mu, jac, scalingFactor,
-                                       obs_idx, mat_row_idx);
+                        #if defined(_OPENMP)
+                        #pragma omp parallel for default(none)                         \
+                        shared(H_lambda, jac, mu, scalingFactor, mat_row_idx,      \
+                                    num_observables)
+                        #endif
+                        // clang-format on
+
+                        for (std::size_t obs_idx = 0; obs_idx < num_observables;
+                             obs_idx++) {
+                            updateJacobian(*H_lambda, mu, jac, scalingFactor,
+                                           obs_idx, mat_row_idx);
+                        }
                     }
                     trainableParamNumber--;
                     ++tp_it;
@@ -346,12 +363,32 @@ class AdjointJacobian final
                 current_param_idx--;
             }
             applyOperationsAdj(*H_lambda, ops,
-                               static_cast<std::size_t>(op_idx));
+                               static_cast<std::size_t>(op_idx)); // Cost: 3s
+
+            // auto loop_iter_end = std::chrono::high_resolution_clock::now();
+            // std::chrono::duration<double> elapsed = loop_iter_end -
+            // loop_iter_start; std::cout << "Loop iter: " << elapsed.count() <<
+            // " seconds\n";
         }
         const auto jac_transpose = Transpose(std::span<const PrecisionT>{jac},
                                              tp_size, num_observables);
         std::copy(std::begin(jac_transpose), std::end(jac_transpose),
                   std::begin(jac));
+
+        auto end_time = std::chrono::high_resolution_clock::now();
+
+        std::chrono::duration<double> elapsed = pre_loop_time - start_time;
+        std::cout << "Pre-loop Adjoint Jacobian Time: " << elapsed.count()
+                  << " seconds\n";
+
+        elapsed = end_time - start_time;
+        std::cout << "Total Adjoint Jacobian Time: " << elapsed.count()
+                  << " seconds\n";
+
+        //     for (auto &val : jac) {
+        //         std::cout << val << " ";
+        //     }
+        //     std::cout << std::endl;
     }
 };
 } // namespace Pennylane::LightningQubit::Algorithms
