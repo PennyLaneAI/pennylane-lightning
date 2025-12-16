@@ -22,7 +22,7 @@
 /// @cond DEV
 namespace {
 using namespace Pennylane::Util;
-using Kokkos::Experimental::swap;
+using Kokkos::kokkos_swap;
 using Pennylane::LightningKokkos::Util::controlBitPatterns;
 using Pennylane::LightningKokkos::Util::generateBitPatterns;
 using Pennylane::LightningKokkos::Util::one;
