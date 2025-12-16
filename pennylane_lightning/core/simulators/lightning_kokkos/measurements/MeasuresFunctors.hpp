@@ -442,7 +442,8 @@ auto probs_bitshift_generic(
             d_probabilities);
         break;
     case 7UL:
-    // Following conditions are here to prevent error for HIP out of shared memory error
+        // Following conditions are here to prevent error for HIP out of shared
+        // memory error
 #ifdef KOKKOS_ENABLE_HIP
         if constexpr (std::is_same_v<DeviceType, Kokkos::HIP> &&
                       sizeof(PrecisionT) == 8) {
