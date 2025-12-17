@@ -25,6 +25,7 @@
 #include "LinearAlgebra.hpp" // innerProdC
 #include "StateVectorLQubitManaged.hpp"
 #include <iostream>
+#include <chrono>
 
 /// @cond DEV
 namespace {
@@ -171,6 +172,8 @@ class VectorJacobianProduct final
             return;
         }
 
+        auto start_time = std::chrono::high_resolution_clock::now();
+
         const OpsData<StateVectorT> &ops = jd.getOperations();
         const std::vector<std::string> &ops_name = ops.getOpsName();
 
@@ -241,6 +244,8 @@ class VectorJacobianProduct final
             num_param_ops - 1; // total number of parametric ops
         std::size_t trainable_param_idx = trainable_params.size() - 1;
 
+        auto pre_loop_time = std::chrono::high_resolution_clock::now();
+
         for (int op_idx = static_cast<int>(ops_name.size() - 1); op_idx >= 0;
              op_idx--) {
             PL_ABORT_IF(ops.getOpsParams()[op_idx].size() > 1,
@@ -290,6 +295,17 @@ class VectorJacobianProduct final
             this->applyOperationAdj(*bra, ops,
                                     static_cast<std::size_t>(op_idx));
         }
+
+        auto end_time = std::chrono::high_resolution_clock::now();
+
+        std::chrono::duration<double> elapsed = pre_loop_time - start_time;
+        std::cout << "Pre-loop Adjoint Jacobian Time: " << elapsed.count()
+                  << " seconds\n";
+
+        elapsed = end_time - start_time;
+        std::cout << "Total Adjoint Jacobian Time: " << elapsed.count()
+                  << " seconds\n";
+
     }
 };
 

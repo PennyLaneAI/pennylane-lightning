@@ -273,13 +273,13 @@ class LightningBaseAdjointJacobian(ABC):
                 "tape is returning an expectation value"
             )
 
-        ham = qml.simplify(qml.dot(grad_vec, [m.obs for m in tape.measurements]))
-
         num_params = len(tape.trainable_params)
 
         if num_params == 0:
             return np.array([], dtype=self.qubit_state.dtype)
 
+        # breakpoint()
+        ham = qml.simplify(qml.dot(grad_vec, [m.obs for m in tape.measurements]))
         new_tape = qml.tape.QuantumScript(
             tape.operations,
             [qml.expval(ham)],
@@ -287,5 +287,8 @@ class LightningBaseAdjointJacobian(ABC):
             trainable_params=tape.trainable_params,
         )
 
-        # return self.calculate_jacobian(new_tape)
-        return self.potato_vjp(new_tape, grad_vec)
+        v = self.calculate_jacobian(new_tape)
+
+        # TODO: Make this work with more than a single observable
+        # v = self.potato_vjp(new_tape, grad_vec)
+        return v
