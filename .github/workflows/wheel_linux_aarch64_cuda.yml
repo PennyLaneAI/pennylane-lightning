@@ -144,16 +144,11 @@ jobs:
           python -m pip install ./wheelhouse/*.whl
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
           if (${{ matrix.pl_backend == 'lightning_tensor' }}) then
-            # FIXME: Here and below we skip the tests for Python 3.14 due to
-            # networkx issue with Python 3.14
-            # https://github.com/networkx/networkx/issues/8362
-            # Once this is resolved, we can remove the skips
-            [[ "${{ matrix.cibw_build }}" == "cp314-*" ]] || PL_DEVICE=${DEVICENAME} python -m pytest tests/
+            PL_DEVICE=${DEVICENAME} python -m pytest tests/
           else
-          # FIXME: see above
+            pl-device-test --device=${DEVICENAME} --skip-ops -x --tb=short
             # MCM tests are slow and skipped. get_c_interface() API is not supported with current test setup and skipped.
-            [[ "${{ matrix.cibw_build }}" == "cp314-*" ]] || pl-device-test --device=${DEVICENAME} --skip-ops -x --tb=short
-            [[ "${{ matrix.cibw_build }}" == "cp314-*" ]] || PL_DEVICE=${DEVICENAME} python -m pytest tests/ -k "not test_supported_linux_platform_gpu and not test_native_mcm"
+            PL_DEVICE=${DEVICENAME} python -m pytest tests/ -k "not test_supported_linux_platform_gpu and not test_native_mcm"
           fi
 
       - name: Validate wheels
