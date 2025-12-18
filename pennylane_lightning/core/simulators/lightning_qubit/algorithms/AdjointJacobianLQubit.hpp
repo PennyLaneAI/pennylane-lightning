@@ -306,11 +306,8 @@ class AdjointJacobian final
                                   !ops.getOpsInverses()[op_idx]) *
                                   (ops.getOpsInverses()[op_idx] ? -1 : 1);
 
-                    const std::size_t mat_row_idx =
-                        trainableParamNumber * num_observables;
-
                     updateJacobian(*H_lambda, mu, jac, scalingFactor,
-                                   mat_row_idx);
+                                   trainableParamNumber);
                     trainableParamNumber--;
                     ++tp_it;
                 }
