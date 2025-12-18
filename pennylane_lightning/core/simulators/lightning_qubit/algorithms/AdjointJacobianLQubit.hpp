@@ -78,14 +78,13 @@ class AdjointJacobian final
     }
 
     template <class OtherStateVectorT>
-    inline void
-    updateJacobian(StateVectorT &state, OtherStateVectorT &sv,
-                   std::span<PrecisionT> &jac, PrecisionT scaling_coeff,
-                   std::size_t mat_row_idx) {
-        jac[mat_row_idx] =
-            -2 * scaling_coeff *
-            std::imag(innerProdC(state.getData(), sv.getData(),
-                                 sv.getLength()));
+    inline void updateJacobian(StateVectorT &state, OtherStateVectorT &sv,
+                               std::span<PrecisionT> &jac,
+                               PrecisionT scaling_coeff,
+                               std::size_t mat_row_idx) {
+        jac[mat_row_idx] = -2 * scaling_coeff *
+                           std::imag(innerProdC(state.getData(), sv.getData(),
+                                                sv.getLength()));
     }
 
     /**
@@ -203,14 +202,13 @@ class AdjointJacobian final
   public:
     AdjointJacobian() = default;
 
-    void adjointJacobianSingleObservable(std::span<PrecisionT> jac,
-                                         const JacobianData<StateVectorT> &jd,
-                                         [[maybe_unused]] const StateVectorT &ref_data = {0},
-                                         bool apply_operations = false) {
+    void adjointJacobianSingleObservable(
+        std::span<PrecisionT> jac, const JacobianData<StateVectorT> &jd,
+        [[maybe_unused]] const StateVectorT &ref_data = {0},
+        bool apply_operations = false) {
         const auto &_obs = jd.getObservables();
         const std::size_t num_observables = _obs.size();
-        PL_ABORT_IF(num_observables != 1,
-                    "Requires 1 observable");
+        PL_ABORT_IF(num_observables != 1, "Requires 1 observable");
 
         const auto &ob = *_obs[0];
 
@@ -272,8 +270,7 @@ class AdjointJacobian final
 
         StateVectorLQubitManaged<PrecisionT> mu(lambda_qubits);
 
-        H_lambda->updateData(lambda.getData(),
-                             lambda.getLength());
+        H_lambda->updateData(lambda.getData(), lambda.getLength());
         BaseType::applyObservable(*H_lambda, ob);
 
         for (int op_idx = static_cast<int>(ops_name.size() - 1); op_idx >= 0;
@@ -313,13 +310,14 @@ class AdjointJacobian final
                         trainableParamNumber * num_observables;
 
                     updateJacobian(*H_lambda, mu, jac, scalingFactor,
-                                    mat_row_idx);
+                                   mat_row_idx);
                     trainableParamNumber--;
                     ++tp_it;
                 }
                 current_param_idx--;
             }
-            BaseType::applyOperationAdj(*H_lambda, ops, static_cast<std::size_t>(op_idx));
+            BaseType::applyOperationAdj(*H_lambda, ops,
+                                        static_cast<std::size_t>(op_idx));
         }
         const auto jac_transpose = Transpose(std::span<const PrecisionT>{jac},
                                              tp_size, num_observables);
