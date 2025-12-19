@@ -222,13 +222,15 @@ class AdjointJacobian final
                          [[maybe_unused]] const StateVectorT &ref_data = {0},
                          bool apply_operations = false) {
 
+        std::chrono::duration<double, std::milli> zero_time = std::chrono::duration<double, std::milli>::zero();
+
         auto total_start = std::chrono::steady_clock::now();
         auto total_end = std::chrono::steady_clock::now();
-        std::chrono::duration<double, std::milli> total_time = total_end - total_start;
+        std::chrono::duration<double, std::milli> total_time = zero_time;
 
         auto step_start = std::chrono::steady_clock::now();
         auto step_end = std::chrono::steady_clock::now();
-        std::chrono::duration<double, std::milli> step_time = step_end - step_start;
+        std::chrono::duration<double, std::milli> step_time = zero_time;
 
         {
             std::cout << "adjointJacobian::start" << std::endl;
@@ -329,27 +331,32 @@ class AdjointJacobian final
         int adj1_cnt = 0;
         auto adj1_start = std::chrono::steady_clock::now();
         auto adj1_end = std::chrono::steady_clock::now();
-        std::chrono::duration<double, std::milli> adj1_time = adj1_end - adj1_start;
+        std::chrono::duration<double, std::milli> adj1_time = zero_time;
 
         int adj2_cnt = 0;
         auto adj2_start = std::chrono::steady_clock::now();
         auto adj2_end = std::chrono::steady_clock::now();
-        std::chrono::duration<double, std::milli> adj2_time = adj2_end - adj2_start;
+        std::chrono::duration<double, std::milli> adj2_time = zero_time;
 
         int updt_cnt = 0;
         auto updt_start = std::chrono::steady_clock::now();
         auto updt_end = std::chrono::steady_clock::now();
-        std::chrono::duration<double, std::milli> updt_time = updt_end - updt_start;
+        std::chrono::duration<double, std::milli> updt_time = zero_time;
 
-        int param_cnt = 0;
-        auto param_start = std::chrono::steady_clock::now();
-        auto param_end = std::chrono::steady_clock::now();
-        std::chrono::duration<double, std::milli> param_time = param_end - param_start;
+        int deriv_cnt = 0;
+        auto deriv_start = std::chrono::steady_clock::now();
+        auto deriv_end = std::chrono::steady_clock::now();
+        std::chrono::duration<double, std::milli> deriv_time = zero_time;
+
+        int jacob_cnt = 0;
+        auto jacob_start = std::chrono::steady_clock::now();
+        auto jacob_end = std::chrono::steady_clock::now();
+        std::chrono::duration<double, std::milli> jacob_time = zero_time;
 
         int trnsp_cnt = 0;
         auto trnsp_start = std::chrono::steady_clock::now();
         auto trnsp_end = std::chrono::steady_clock::now();
-        std::chrono::duration<double, std::milli> trnsp_time = trnsp_end - trnsp_start;
+        std::chrono::duration<double, std::milli> trnsp_time = zero_time;
 
         for (int op_idx = static_cast<int>(ops_name.size() - 1); op_idx >= 0;
              op_idx--) {
@@ -374,7 +381,7 @@ class AdjointJacobian final
                     updt_time += updt_end - updt_start;
                     updt_cnt++;
 
-                    param_start = std::chrono::steady_clock::now();
+                    deriv_start = std::chrono::steady_clock::now();
                     // if current parameter is a trainable parameter
                     const PrecisionT scalingFactor =
                         (ops.getOpsControlledWires()[op_idx].empty())
@@ -390,6 +397,10 @@ class AdjointJacobian final
                                   !ops.getOpsInverses()[op_idx]) *
                                   (ops.getOpsInverses()[op_idx] ? -1 : 1);
 
+                    deriv_end = std::chrono::steady_clock::now();
+                    deriv_time += deriv_end - deriv_start;
+                    deriv_cnt++;
+
                     const std::size_t mat_row_idx =
                         trainableParamNumber * num_observables;
 
@@ -402,6 +413,8 @@ class AdjointJacobian final
                 #endif
                     // clang-format on
 
+                    jacob_start = std::chrono::steady_clock::now();
+
                     for (std::size_t obs_idx = 0; obs_idx < num_observables;
                          obs_idx++) {
                         updateJacobian(*H_lambda, mu, jac, scalingFactor,
@@ -410,9 +423,9 @@ class AdjointJacobian final
                     trainableParamNumber--;
                     ++tp_it;
 
-                    param_end = std::chrono::steady_clock::now();
-                    param_time += param_end - param_start;
-                    param_cnt++;
+                    jacob_end = std::chrono::steady_clock::now();
+                    jacob_time += jacob_end - jacob_start;
+                    jacob_cnt++;
                 }
                 current_param_idx--;
             }
@@ -451,8 +464,9 @@ class AdjointJacobian final
         {
             std::cout << "adjointJacobian::loop (ms) " << step_time.count() << std::endl;
             std::cout << "adjointJacobian::_updt (ms) " << updt_time.count() << " cnt=" << updt_cnt << std::endl;
+            std::cout << "adjointJacobian::_deriv (ms) " << deriv_time.count() << " cnt=" << deriv_cnt << std::endl;
+            std::cout << "adjointJacobian::_jacob (ms) " << jacob_time.count() << " cnt=" << jacob_cnt << std::endl;
             std::cout << "adjointJacobian::_adj_1 (ms) " << adj1_time.count() << " cnt=" << adj1_cnt << std::endl;
-            std::cout << "adjointJacobian::_param (ms) " << param_time.count() << " cnt=" << param_cnt << std::endl;
             std::cout << "adjointJacobian::_adj_2 (ms) " << adj2_time.count() << " cnt=" << adj2_cnt << std::endl;
             std::cout << "adjointJacobian::_trnsp (ms) " << trnsp_time.count() << " cnt=" << trnsp_cnt << std::endl;
             std::cout << "adjointJacobian::total (ms) " << total_time.count() << std::endl;
