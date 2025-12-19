@@ -91,6 +91,18 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
         """
         return StateVectorC128 if self.dtype == np.complex128 else StateVectorC64
 
+    def _copy_state_vector(self):
+        """Create a copy of the current state vector.
+
+        Returns:
+            LightningStateVector: A copy of the current state vector.
+        """
+        state_data = allocate_aligned_array(self._qubit_state.size(), np.dtype(self.dtype), True)
+        self._qubit_state.getState(state_data)
+        new_state = LightningStateVector(self._num_wires)
+        new_state._qubit_state.updateData(state_data)
+        return new_state
+
     @staticmethod
     def _operation_is_sparse(operation):
         """Check if the operation is a sparse matrix operation.

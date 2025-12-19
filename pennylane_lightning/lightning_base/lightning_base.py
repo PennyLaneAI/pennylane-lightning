@@ -75,6 +75,8 @@ class LightningBase(Device):
             computing the jacobian.
     """
 
+    _intermediate_states: dict | None = None
+
     # pylint: disable=too-many-instance-attributes
 
     def __init__(  # pylint: disable=too-many-arguments
@@ -162,6 +164,8 @@ class LightningBase(Device):
         Returns:
             TensorLike, tuple[TensorLike], tuple[tuple[TensorLike]]: A numeric result of the computation.
         """
+
+        self._intermediate_states = {} if execution_config.use_device_jacobian_product else None
 
     def simulate(  # pylint: disable=too-many-arguments
         self,
@@ -481,6 +485,13 @@ class LightningBase(Device):
         """
         if execution_config is None:
             execution_config = ExecutionConfig(gradient_method="adjoint")
+
+        def _state(circuit):
+            return (
+                None
+                if self._intermediate_states is None
+                else self._intermediate_states.get(circuit.hash, None)
+            )
 
         batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
         return tuple(
