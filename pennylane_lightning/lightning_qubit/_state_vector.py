@@ -14,6 +14,7 @@
 """
 Class implementation for lightning_qubit state-vector manipulation.
 """
+from datetime import datetime
 from warnings import warn
 
 try:
@@ -219,9 +220,10 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
         Returns:
             None
         """
-        state = self.state_vector
+        print("apply_lightning", len(operations))
+        t1 = datetime.now()
 
-        print("apply", len(operations))
+        state = self.state_vector
 
         # Skip over identity operations instead of performing
         # matrix multiplication with it.
@@ -287,3 +289,7 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
                 # Inverse can be set to False since qml.matrix(operation) is already in inverted form
                 method = getattr(state, "applyMatrix")
                 method(qml.matrix(operation), wires, False)
+
+        t2 = datetime.now()
+        t_apply = (t2 - t1).total_seconds()
+        print("apply_lightning %.6f s" % (t_apply))
