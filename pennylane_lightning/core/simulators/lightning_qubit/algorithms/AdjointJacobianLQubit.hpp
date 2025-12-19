@@ -364,20 +364,16 @@ class AdjointJacobian final
             if (tp_it == tp_rend) {
                 break; // All done
             }
-            updt_start = std::chrono::steady_clock::now();
-            mu.updateData(lambda.getData(), lambda.getLength());
-            updt_end = std::chrono::steady_clock::now();
-            updt_time += updt_end - updt_start;
-            updt_cnt++;
-
-            adj1_start = std::chrono::steady_clock::now();
-            BaseType::applyOperationAdj(lambda, ops, op_idx);
-            adj1_end = std::chrono::steady_clock::now();
-            adj1_time += adj1_end - adj1_start;
-            adj1_cnt++;
 
             if (ops.hasParams(op_idx)) {
                 if (current_param_idx == *tp_it) {
+
+                    updt_start = std::chrono::steady_clock::now();
+                    mu.updateData(lambda.getData(), lambda.getLength());
+                    updt_end = std::chrono::steady_clock::now();
+                    updt_time += updt_end - updt_start;
+                    updt_cnt++;
+
                     param_start = std::chrono::steady_clock::now();
                     // if current parameter is a trainable parameter
                     const PrecisionT scalingFactor =
@@ -420,6 +416,13 @@ class AdjointJacobian final
                 }
                 current_param_idx--;
             }
+
+            adj1_start = std::chrono::steady_clock::now();
+            BaseType::applyOperationAdj(lambda, ops, op_idx);
+            adj1_end = std::chrono::steady_clock::now();
+            adj1_time += adj1_end - adj1_start;
+            adj1_cnt++;
+
             adj2_start = std::chrono::steady_clock::now();
             applyOperationsAdj(*H_lambda, ops,
                                static_cast<std::size_t>(op_idx));
