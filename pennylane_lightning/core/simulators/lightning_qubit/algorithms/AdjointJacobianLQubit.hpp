@@ -404,6 +404,8 @@ class AdjointJacobian final
                     const std::size_t mat_row_idx =
                         trainableParamNumber * num_observables;
 
+                    jacob_start = std::chrono::steady_clock::now();
+
                     // clang-format off
 
                 #if defined(_OPENMP)
@@ -412,8 +414,6 @@ class AdjointJacobian final
                             num_observables)
                 #endif
                     // clang-format on
-
-                    jacob_start = std::chrono::steady_clock::now();
 
                     for (std::size_t obs_idx = 0; obs_idx < num_observables;
                          obs_idx++) {
