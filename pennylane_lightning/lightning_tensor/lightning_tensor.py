@@ -33,7 +33,6 @@ from pennylane.devices.preprocess import (
 )
 from pennylane.operation import Operator
 from pennylane.tape import QuantumScript, QuantumTape
-from pennylane.transforms.core import TransformProgram
 from pennylane.typing import Result, ResultBatch
 
 from pennylane_lightning.core._version import __version__
@@ -434,7 +433,7 @@ class LightningTensor(Device):
     def preprocess_transforms(
         self,
         execution_config: ExecutionConfig | None = None,
-    ) -> TransformProgram:
+    ) -> qml.CompilePipeline:
         """This function defines the device transform program to be applied and an updated device configuration.
 
         Args:
@@ -442,7 +441,7 @@ class LightningTensor(Device):
                 parameters needed to fully describe the execution.
 
         Returns:
-            TransformProgram, ExecutionConfig: A transform program that when called returns :class:`~.QuantumTape`'s that the
+            qml.CompilePipeline, ExecutionConfig: A compile pipeline that when called returns :class:`~.QuantumTape`'s that the
             device can natively execute as well as a postprocessing function to be called after execution, and a configuration
             with unset specifications filled in.
 
@@ -454,11 +453,11 @@ class LightningTensor(Device):
         if execution_config is None:
             execution_config = self.setup_execution_config(ExecutionConfig())
 
-        program = TransformProgram()
+        pipeline = qml.CompilePipeline()
 
-        program.add_transform(validate_measurements, name=self.name)
-        program.add_transform(validate_observables, accepted_observables, name=self.name)
-        program.add_transform(
+        pipeline.add_transform(validate_measurements, name=self.name)
+        pipeline.add_transform(validate_observables, accepted_observables, name=self.name)
+        pipeline.add_transform(
             decompose,
             stopping_condition=stopping_condition,
             skip_initial_state_prep=True,
@@ -466,9 +465,9 @@ class LightningTensor(Device):
             device_wires=self.wires,
             target_gates=self.operations,
         )
-        program.add_transform(device_resolve_dynamic_wires, wires=self.wires, allow_resets=False)
-        program.add_transform(validate_device_wires, self._wires, name=self.name)
-        return program
+        pipeline.add_transform(device_resolve_dynamic_wires, wires=self.wires, allow_resets=False)
+        pipeline.add_transform(validate_device_wires, self._wires, name=self.name)
+        return pipeline
 
     # pylint: disable=unused-argument
     def execute(

@@ -220,7 +220,7 @@ class TestHelpers:
     )
     def test_add_adjoint_transforms(self):
         """Test that the correct transforms are added to the program by _add_adjoint_transforms"""
-        expected_program = qml.transforms.core.TransformProgram()
+        expected_program = qml.CompilePipeline()
 
         name = f"adjoint + {device_name}"
         if device_name == "lightning.amdgpu":
@@ -243,7 +243,7 @@ class TestHelpers:
         )
         expected_program.add_transform(validate_adjoint_trainable_params)
 
-        actual_program = qml.transforms.core.TransformProgram()
+        actual_program = qml.CompilePipeline()
         _add_adjoint_transforms(actual_program)
         assert actual_program == expected_program
 
@@ -860,7 +860,7 @@ class TestExecution:
         """Test that the transform program returned by preprocess is correct"""
         device = LightningDevice(wires=2)
 
-        expected_program = qml.transforms.core.TransformProgram()
+        expected_program = qml.CompilePipeline()
         expected_program.add_transform(validate_measurements, name=device.name)
         expected_program.add_transform(validate_observables, accepted_observables, name=device.name)
         if mcm_method == "deferred":

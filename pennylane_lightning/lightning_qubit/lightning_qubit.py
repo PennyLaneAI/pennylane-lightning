@@ -43,7 +43,6 @@ from pennylane.measurements import MidMeasureMP, ShotsLike
 from pennylane.operation import Operator
 from pennylane.ops import Conditional, PauliRot, Prod, SProd, Sum
 from pennylane.transforms import defer_measurements, dynamic_one_shot
-from pennylane.transforms.core import TransformProgram
 
 from pennylane_lightning.lightning_base.lightning_base import (
     LightningBase,
@@ -127,7 +126,7 @@ def _supports_adjoint(circuit, device_wires=None):
     if circuit is None:
         return True
 
-    prog = TransformProgram()
+    prog = qml.CompilePipeline()
     _add_adjoint_transforms(prog, device_wires=device_wires)
 
     try:
@@ -146,12 +145,12 @@ def _adjoint_ops(op: qml.operation.Operator) -> bool:
     )
 
 
-def _add_adjoint_transforms(program: TransformProgram, device_wires=None) -> None:
+def _add_adjoint_transforms(pipeline: qml.CompilePipeline, device_wires=None) -> None:
     """Private helper function for ``preprocess`` that adds the transforms specific
     for adjoint differentiation.
 
     Args:
-        program (TransformProgram): where we will add the adjoint differentiation transforms
+        pipeline (qml.CompilePipeline): where we will add the adjoint differentiation transforms
 
     Side Effects:
         Adds transforms to the input program.
@@ -159,9 +158,9 @@ def _add_adjoint_transforms(program: TransformProgram, device_wires=None) -> Non
     """
 
     name = "adjoint + lightning.qubit"
-    program.add_transform(no_sampling, name=name)
-    program.add_transform(qml.transforms.broadcast_expand)
-    program.add_transform(
+    pipeline.add_transform(no_sampling, name=name)
+    pipeline.add_transform(qml.transforms.broadcast_expand)
+    pipeline.add_transform(
         decompose,
         stopping_condition=_adjoint_ops,
         name=name,
@@ -169,11 +168,11 @@ def _add_adjoint_transforms(program: TransformProgram, device_wires=None) -> Non
         device_wires=device_wires,
         target_gates=LightningQubit.capabilities.gate_set(differentiable=True),
     )
-    program.add_transform(validate_observables, accepted_observables, name=name)
-    program.add_transform(
+    pipeline.add_transform(validate_observables, accepted_observables, name=name)
+    pipeline.add_transform(
         validate_measurements, analytic_measurements=adjoint_measurements, name=name
     )
-    program.add_transform(validate_adjoint_trainable_params)
+    pipeline.add_transform(validate_adjoint_trainable_params)
 
 
 @simulator_tracking
@@ -344,7 +343,7 @@ class LightningQubit(LightningBase):
 
     def preprocess_transforms(
         self, execution_config: ExecutionConfig | None = None
-    ) -> TransformProgram:
+    ) -> qml.CompilePipeline:
         """This function defines the device transform program to be applied and an updated device configuration.
 
         Args:
@@ -352,7 +351,7 @@ class LightningQubit(LightningBase):
                 parameters needed to fully describe the execution.
 
         Returns:
-            TransformProgram, ExecutionConfig: A transform program that when called returns :class:`~.QuantumTape`'s that the
+            qml.CompilePipeline, ExecutionConfig: A compile pipeline that when called returns :class:`~.QuantumTape`'s that the
             device can natively execute as well as a postprocessing function to be called after execution, and a configuration
             with unset specifications filled in.
 
@@ -367,28 +366,28 @@ class LightningQubit(LightningBase):
             execution_config = ExecutionConfig()
 
         exec_config = execution_config
-        program = TransformProgram()
+        pipeline = qml.CompilePipeline()
 
         if qml.capture.enabled():
             if exec_config.mcm_config.mcm_method == "deferred":
-                program.add_transform(qml.defer_measurements, num_wires=len(self.wires))
+                pipeline.add_transform(qml.defer_measurements, num_wires=len(self.wires))
             # Using stopping_condition_shots because we don't want to decompose Conditionals or MCMs
-            program.add_transform(
+            pipeline.add_transform(
                 qml.transforms.decompose,
                 gate_set=self.capabilities.gate_set(),
                 stopping_condition=no_mcms_stopping_condition,
             )
-            return program
+            return pipeline
 
-        program.add_transform(validate_measurements, name=self.name)
-        program.add_transform(validate_observables, accepted_observables, name=self.name)
+        pipeline.add_transform(validate_measurements, name=self.name)
+        pipeline.add_transform(validate_observables, accepted_observables, name=self.name)
         if exec_config.mcm_config.mcm_method == "deferred":
-            program.add_transform(defer_measurements, allow_postselect=False)
+            pipeline.add_transform(defer_measurements, allow_postselect=False)
             _stopping_condition = no_mcms_stopping_condition
         else:
             _stopping_condition = allow_mcms_stopping_condition
 
-        program.add_transform(
+        pipeline.add_transform(
             decompose,
             stopping_condition=_stopping_condition,
             skip_initial_state_prep=True,
@@ -397,19 +396,19 @@ class LightningQubit(LightningBase):
             target_gates=self.capabilities.gate_set(),  # let's temporarily read the toml file to get the gate set
         )
         _allow_resets = exec_config.mcm_config.mcm_method != "deferred"
-        program.add_transform(
+        pipeline.add_transform(
             device_resolve_dynamic_wires, wires=self.wires, allow_resets=_allow_resets
         )
-        program.add_transform(validate_device_wires, self.wires, name=self.name)
+        pipeline.add_transform(validate_device_wires, self.wires, name=self.name)
         if exec_config.mcm_config.mcm_method == "one-shot":
-            program.add_transform(
+            pipeline.add_transform(
                 dynamic_one_shot, postselect_mode=exec_config.mcm_config.postselect_mode
             )
-        program.add_transform(qml.transforms.broadcast_expand)
+        pipeline.add_transform(qml.transforms.broadcast_expand)
 
         if exec_config.gradient_method == "adjoint":
-            _add_adjoint_transforms(program, device_wires=self.wires)
-        return program
+            _add_adjoint_transforms(pipeline, device_wires=self.wires)
+        return pipeline
 
     # pylint: disable=unused-argument
     def execute(
