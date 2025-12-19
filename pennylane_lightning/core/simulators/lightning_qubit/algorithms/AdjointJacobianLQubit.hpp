@@ -17,6 +17,8 @@
  * method.
  */
 #pragma once
+#include <chrono>
+#include <iostream>
 #include <span>
 #include <type_traits>
 #include <vector>
@@ -219,8 +221,28 @@ class AdjointJacobian final
                          const JacobianData<StateVectorT> &jd,
                          [[maybe_unused]] const StateVectorT &ref_data = {0},
                          bool apply_operations = false) {
+
+        auto total_start = std::chrono::steady_clock::now();
+        auto total_end = std::chrono::steady_clock::now();
+        std::chrono::duration<double, std::milli> total_time = total_end - total_start;
+
+        auto step_start = std::chrono::steady_clock::now();
+        auto step_end = std::chrono::steady_clock::now();
+        std::chrono::duration<double, std::milli> step_time = step_end - step_start;
+
+        {
+            std::cout << "adjointJacobian::start" << std::endl;
+        }
+
+        total_start = std::chrono::steady_clock::now();
+        step_start = std::chrono::steady_clock::now();
+
         const OpsData<StateVectorT> &ops = jd.getOperations();
         const std::vector<std::string> &ops_name = ops.getOpsName();
+
+        {
+            std::cout << "adjointJacobian::ops_name " << ops_name.size() << std::endl;
+        }
 
         const auto &obs = jd.getObservables();
         const std::size_t num_observables = obs.size();
@@ -288,7 +310,46 @@ class AdjointJacobian final
 
         StateVectorLQubitManaged<PrecisionT> mu(lambda_qubits);
 
+        step_end = std::chrono::steady_clock::now();
+        step_time = step_end - step_start;
+        {
+            std::cout << "adjointJacobian::allocate (ms) " << step_time.count() << std::endl;
+        }
+        step_start = std::chrono::steady_clock::now();
+
         applyObservables(*H_lambda, lambda, obs);
+
+        step_end = std::chrono::steady_clock::now();
+        step_time = step_end - step_start;
+        {
+            std::cout << "adjointJacobian::applyObs (ms) " << step_time.count() << std::endl;
+        }
+        step_start = std::chrono::steady_clock::now();
+
+        int adj1_cnt = 0;
+        auto adj1_start = std::chrono::steady_clock::now();
+        auto adj1_end = std::chrono::steady_clock::now();
+        std::chrono::duration<double, std::milli> adj1_time = adj1_end - adj1_start;
+
+        int adj2_cnt = 0;
+        auto adj2_start = std::chrono::steady_clock::now();
+        auto adj2_end = std::chrono::steady_clock::now();
+        std::chrono::duration<double, std::milli> adj2_time = adj2_end - adj2_start;
+
+        int updt_cnt = 0;
+        auto updt_start = std::chrono::steady_clock::now();
+        auto updt_end = std::chrono::steady_clock::now();
+        std::chrono::duration<double, std::milli> updt_time = updt_end - updt_start;
+
+        int param_cnt = 0;
+        auto param_start = std::chrono::steady_clock::now();
+        auto param_end = std::chrono::steady_clock::now();
+        std::chrono::duration<double, std::milli> param_time = param_end - param_start;
+
+        int trnsp_cnt = 0;
+        auto trnsp_start = std::chrono::steady_clock::now();
+        auto trnsp_end = std::chrono::steady_clock::now();
+        std::chrono::duration<double, std::milli> trnsp_time = trnsp_end - trnsp_start;
 
         for (int op_idx = static_cast<int>(ops_name.size() - 1); op_idx >= 0;
              op_idx--) {
@@ -303,11 +364,21 @@ class AdjointJacobian final
             if (tp_it == tp_rend) {
                 break; // All done
             }
+            updt_start = std::chrono::steady_clock::now();
             mu.updateData(lambda.getData(), lambda.getLength());
+            updt_end = std::chrono::steady_clock::now();
+            updt_time += updt_end - updt_start;
+            updt_cnt++;
+
+            adj1_start = std::chrono::steady_clock::now();
             BaseType::applyOperationAdj(lambda, ops, op_idx);
+            adj1_end = std::chrono::steady_clock::now();
+            adj1_time += adj1_end - adj1_start;
+            adj1_cnt++;
 
             if (ops.hasParams(op_idx)) {
                 if (current_param_idx == *tp_it) {
+                    param_start = std::chrono::steady_clock::now();
                     // if current parameter is a trainable parameter
                     const PrecisionT scalingFactor =
                         (ops.getOpsControlledWires()[op_idx].empty())
@@ -342,16 +413,48 @@ class AdjointJacobian final
                     }
                     trainableParamNumber--;
                     ++tp_it;
+
+                    param_end = std::chrono::steady_clock::now();
+                    param_time += param_end - param_start;
+                    param_cnt++;
                 }
                 current_param_idx--;
             }
+            adj2_start = std::chrono::steady_clock::now();
             applyOperationsAdj(*H_lambda, ops,
                                static_cast<std::size_t>(op_idx));
+            adj2_end = std::chrono::steady_clock::now();
+            adj2_time += adj2_end - adj2_start;
+            adj2_cnt++;
         }
+
+        trnsp_start = std::chrono::steady_clock::now();
+
         const auto jac_transpose = Transpose(std::span<const PrecisionT>{jac},
                                              tp_size, num_observables);
         std::copy(std::begin(jac_transpose), std::end(jac_transpose),
                   std::begin(jac));
+
+        trnsp_end = std::chrono::steady_clock::now();
+        trnsp_time += trnsp_end - trnsp_start;
+        trnsp_cnt++;
+
+        step_end = std::chrono::steady_clock::now();
+        step_time = step_end - step_start;
+
+        total_end = std::chrono::steady_clock::now();
+        total_time = total_end - total_start;
+
+        {
+            std::cout << "adjointJacobian::loop (ms) " << step_time.count() << std::endl;
+            std::cout << "adjointJacobian::_updt (ms) " << updt_time.count() << " cnt=" << updt_cnt << std::endl;
+            std::cout << "adjointJacobian::_adj_1 (ms) " << adj1_time.count() << " cnt=" << adj1_cnt << std::endl;
+            std::cout << "adjointJacobian::_param (ms) " << param_time.count() << " cnt=" << param_cnt << std::endl;
+            std::cout << "adjointJacobian::_adj_2 (ms) " << adj2_time.count() << " cnt=" << adj2_cnt << std::endl;
+            std::cout << "adjointJacobian::_trnsp (ms) " << trnsp_time.count() << " cnt=" << trnsp_cnt << std::endl;
+            std::cout << "adjointJacobian::total (ms) " << total_time.count() << std::endl;
+            std::cout << "adjointJacobian::end" << std::endl;
+        }
     }
 };
 } // namespace Pennylane::LightningQubit::Algorithms

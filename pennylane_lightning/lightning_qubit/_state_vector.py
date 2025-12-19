@@ -220,6 +220,9 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
             None
         """
         state = self.state_vector
+
+        print("apply", len(operations))
+
         # Skip over identity operations instead of performing
         # matrix multiplication with it.
         for operation in operations:
