@@ -34,13 +34,17 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Update references to `TransformProgram` with `CompilePipeline`
+  [(#1310)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1310)
+
 - Update `wheel_linux_aarch64.yml` workflow to run on a Blacksmith Arm runner. 
   [(#1307)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1307)
 
 - Update MacOS runner to use OSX 14.
   [(#1304)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1304)
 
-- Temporarily skip aarch64 CUDA wheel tests for Python 3.14 due to [networkx issue](https://github.com/networkx/networkx/issues/8362), also temporarily increased github action timeout limit to 90 min.
+- Temporarily increased github action timeout limit to 90 min.
+  [(#1303)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1303)
   [(#1301)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1301)
 
 - Update tests to accomodate new PennyLane MCM method validation.
