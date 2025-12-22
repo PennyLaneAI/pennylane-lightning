@@ -92,7 +92,8 @@ class AdjointJacobian final
                          const StateVectorT &ref_data,
                          bool apply_operations = false) {
 
-        std::chrono::duration<double, std::milli> zero_time = std::chrono::duration<double, std::milli>::zero();
+        std::chrono::duration<double, std::milli> zero_time =
+            std::chrono::duration<double, std::milli>::zero();
 
         auto total_start = std::chrono::steady_clock::now();
         auto total_end = std::chrono::steady_clock::now();
@@ -151,7 +152,8 @@ class AdjointJacobian final
         step_end = std::chrono::steady_clock::now();
         step_time = step_end - step_start;
         {
-            std::cout << "adjointJacobian::allocate (ms) " << step_time.count() << std::endl;
+            std::cout << "adjointJacobian::allocate (ms) " << step_time.count()
+                      << std::endl;
         }
         step_start = std::chrono::steady_clock::now();
 
@@ -163,7 +165,8 @@ class AdjointJacobian final
         step_end = std::chrono::steady_clock::now();
         step_time = step_end - step_start;
         {
-            std::cout << "adjointJacobian::applyObs (ms) " << step_time.count() << std::endl;
+            std::cout << "adjointJacobian::applyObs (ms) " << step_time.count()
+                      << std::endl;
         }
         step_start = std::chrono::steady_clock::now();
 
@@ -276,14 +279,22 @@ class AdjointJacobian final
         total_time = total_end - total_start;
 
         {
-            std::cout << "adjointJacobian::loop (ms) " << step_time.count() << std::endl;
-            std::cout << "adjointJacobian::_mu.updt (ms) " << updt_time.count() << " cnt=" << updt_cnt << std::endl;
-            std::cout << "adjointJacobian::_deriv (ms) " << deriv_time.count() << " cnt=" << deriv_cnt << std::endl;
-            std::cout << "adjointJacobian::_jacob (ms) " << jacob_time.count() << " cnt=" << jacob_cnt << std::endl;
-            std::cout << "adjointJacobian::_adj_1 (ms) " << adj1_time.count() << " cnt=" << adj1_cnt << std::endl;
-            std::cout << "adjointJacobian::_adj_2 (ms) " << adj2_time.count() << " cnt=" << adj2_cnt << std::endl;
-            std::cout << "adjointJacobian::_trnsp (ms) " << trnsp_time.count() << " cnt=" << trnsp_cnt << std::endl;
-            std::cout << "adjointJacobian::total (ms) " << total_time.count() << std::endl;
+            std::cout << "adjointJacobian::loop (ms) " << step_time.count()
+                      << std::endl;
+            std::cout << "adjointJacobian::_mu.updt (ms) " << updt_time.count()
+                      << " cnt=" << updt_cnt << std::endl;
+            std::cout << "adjointJacobian::_deriv (ms) " << deriv_time.count()
+                      << " cnt=" << deriv_cnt << std::endl;
+            std::cout << "adjointJacobian::_jacob (ms) " << jacob_time.count()
+                      << " cnt=" << jacob_cnt << std::endl;
+            std::cout << "adjointJacobian::_adj_1 (ms) " << adj1_time.count()
+                      << " cnt=" << adj1_cnt << std::endl;
+            std::cout << "adjointJacobian::_adj_2 (ms) " << adj2_time.count()
+                      << " cnt=" << adj2_cnt << std::endl;
+            std::cout << "adjointJacobian::_trnsp (ms) " << trnsp_time.count()
+                      << " cnt=" << trnsp_cnt << std::endl;
+            std::cout << "adjointJacobian::total (ms) " << total_time.count()
+                      << std::endl;
             std::cout << "adjointJacobian::end" << std::endl;
         }
     }
