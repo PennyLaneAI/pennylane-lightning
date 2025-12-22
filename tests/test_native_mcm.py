@@ -247,8 +247,8 @@ class TestSupportedConfigurationsMCM:
         if mcm_method == "one-shot" and shots is None:
             pytest.skip("Skip test for one-shot with None shots")
 
-        spy_deffered = mocker.spy(qml.defer_measurements, "_transform")
-        spy_one_shot = mocker.spy(qml.dynamic_one_shot, "_transform")
+        spy_deffered = mocker.spy(qml.defer_measurements, "tape_transform")
+        spy_one_shot = mocker.spy(qml.dynamic_one_shot, "tape_transform")
         spy_tree_traversal = mocker.patch(
             "pennylane_lightning.lightning_base.lightning_base.mcm_tree_traversal"
         )
@@ -277,8 +277,8 @@ class TestSupportedConfigurationsMCM:
     @pytest.mark.parametrize("shots", [None, 10])
     def test_qnode_default_mcm_method_device(self, shots, mocker):
         """Test the default mcm method is used for analytical simulation"""
-        spy_deferred = mocker.spy(qml.defer_measurements, "_transform")
-        spy_dynamic_one_shot = mocker.spy(qml.dynamic_one_shot, "_transform")
+        spy_deferred = mocker.spy(qml.defer_measurements, "tape_transform")
+        spy_dynamic_one_shot = mocker.spy(qml.dynamic_one_shot, "tape_transform")
         spy_tree_traversal = mocker.patch(
             "pennylane_lightning.lightning_base.lightning_base.mcm_tree_traversal"
         )
@@ -297,8 +297,8 @@ class TestSupportedConfigurationsMCM:
 
     def test_qnode_default_mcm_method_analytical(self, mocker):
         """Test the default mcm method is used for analytical simulation"""
-        spy_deferred = mocker.spy(qml.defer_measurements, "_transform")
-        spy_dynamic_one_shot = mocker.spy(qml.dynamic_one_shot, "_transform")
+        spy_deferred = mocker.spy(qml.defer_measurements, "tape_transform")
+        spy_dynamic_one_shot = mocker.spy(qml.dynamic_one_shot, "tape_transform")
         spy_tree_traversal = mocker.patch(
             "pennylane_lightning.lightning_base.lightning_base.mcm_tree_traversal"
         )
@@ -320,8 +320,8 @@ class TestSupportedConfigurationsMCM:
     def test_qnode_default_mcm_method_finite_shots(self, mocker):
         """Test the default mcm method is used for finite shots"""
 
-        spy_deferred = mocker.spy(qml.defer_measurements, "_transform")
-        spy_dynamic_one_shot = mocker.spy(qml.dynamic_one_shot, "_transform")
+        spy_deferred = mocker.spy(qml.defer_measurements, "tape_transform")
+        spy_dynamic_one_shot = mocker.spy(qml.dynamic_one_shot, "tape_transform")
         spy_tree_traversal = mocker.patch(
             "pennylane_lightning.lightning_base.lightning_base.mcm_tree_traversal"
         )
