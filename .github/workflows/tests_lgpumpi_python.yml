@@ -133,7 +133,8 @@ jobs:
           source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}
           python -m pip install -r requirements-tests.txt
           python -m pip install custatevec-cu12 # required for CUQUANTUM_SDK path
-          python -m pip install mpi4py openfermionpyscf
+          # pyscf is not compatible with numpy 2.4 yet
+          python -m pip install mpi4py openfermionpyscf numpy<2.4
           python scripts/configure_pyproject_toml.py || true
           python -m pip install . -vv
 
