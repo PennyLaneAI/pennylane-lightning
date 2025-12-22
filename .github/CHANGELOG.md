@@ -9,6 +9,9 @@
 
 <h3>Improvements 🛠</h3>
 
+- Device VJP has been optimized to avoid unecessary copying of temporary statevectors. `lightning.qubit` also has additional optimizations when using only a single observable.
+  [(#1311)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1298)
+
 - Handled `qml.GlobalPhase` with zero-qubit target wires in `lightning.gpu`.
   Supported `qml.GlobalPhase` with one controlled wire across state-vector devices.
   [(#1298)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1298)
@@ -37,7 +40,7 @@
 - Update references to `TransformProgram` with `CompilePipeline`
   [(#1310)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1310)
 
-- Update `wheel_linux_aarch64.yml` workflow to run on a Blacksmith Arm runner. 
+- Update `wheel_linux_aarch64.yml` workflow to run on a Blacksmith Arm runner.
   [(#1307)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1307)
 
 - Update MacOS runner to use OSX 14.
@@ -52,7 +55,7 @@
 
 - Pinned black, pylint, and isort versions in requirement files.
   [(#1288)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1288)
-  
+
 - Update Sphinx version to 8.1.
   [(#1291)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1291)
 
