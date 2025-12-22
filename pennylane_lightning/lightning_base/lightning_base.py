@@ -289,10 +289,14 @@ class LightningBase(Device):
             ).calculate_jacobian(circuit)
 
         state.reset_state()
+        final_state = state.get_final_state(circuit)
+        if self._intermediate_states is not None and hasattr(final_state, "copy_state_class"):
+            self._intermediate_states[circuit.hash] = final_state.copy_state_class()
+
         # pylint: disable=not-callable
-        return self.LightningAdjointJacobian(
-            state.get_final_state(circuit), batch_obs=batch_obs
-        ).calculate_jacobian(circuit)
+        return self.LightningAdjointJacobian(final_state, batch_obs=batch_obs).calculate_jacobian(
+            circuit
+        )
 
     def simulate_and_jacobian(
         self,
@@ -357,10 +361,13 @@ class LightningBase(Device):
             )
 
         state.reset_state()
+        final_state = state.get_final_state(circuit)
+        if self._intermediate_states is not None and hasattr(final_state, "copy_state_class"):
+            self._intermediate_states[circuit.hash] = final_state.copy_state_class()
         # pylint: disable=not-callable
-        return self.LightningAdjointJacobian(
-            state.get_final_state(circuit), batch_obs=batch_obs
-        ).calculate_vjp(circuit, cotangents)
+        return self.LightningAdjointJacobian(final_state, batch_obs=batch_obs).calculate_vjp(
+            circuit, cotangents
+        )
 
     def simulate_and_vjp(  # pylint: disable=too-many-arguments, too-many-positional-arguments
         self,
