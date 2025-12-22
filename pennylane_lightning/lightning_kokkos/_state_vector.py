@@ -294,6 +294,8 @@ class LightningKokkosStateVector(LightningBaseStateVector):
         """
         state = self.state_vector
 
+        print("apply_lightning")
+
         # Skip over identity operations instead of performing
         # matrix multiplication with it.
         for operation in operations:

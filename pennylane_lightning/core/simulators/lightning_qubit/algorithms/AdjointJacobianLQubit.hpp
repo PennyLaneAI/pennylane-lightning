@@ -400,7 +400,6 @@ class AdjointJacobian final
                                   ops.getOpsWires()[op_idx],
                                   !ops.getOpsInverses()[op_idx]) *
                                   (ops.getOpsInverses()[op_idx] ? -1 : 1);
-
                     deriv_end = std::chrono::steady_clock::now();
                     deriv_time += deriv_end - deriv_start;
                     deriv_cnt++;
