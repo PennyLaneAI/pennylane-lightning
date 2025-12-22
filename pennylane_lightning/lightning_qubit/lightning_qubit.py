@@ -16,12 +16,10 @@ This module contains the LightningQubit class, a PennyLane simulator device that
 interfaces with C++ for fast linear algebra calculations.
 """
 
-from copy import copy
 from dataclasses import replace
 from functools import partial, reduce
-from numbers import Number
 from pathlib import Path
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Union
 from warnings import warn
 
 import numpy as np
@@ -44,10 +42,8 @@ from pennylane.exceptions import DecompositionUndefinedError, DeviceError
 from pennylane.measurements import MidMeasureMP, ShotsLike
 from pennylane.operation import Operator
 from pennylane.ops import Conditional, PauliRot, Prod, SProd, Sum
-from pennylane.tape import QuantumScript, QuantumTape
 from pennylane.transforms import defer_measurements, dynamic_one_shot
 from pennylane.transforms.core import TransformProgram
-from pennylane.typing import Result
 
 from pennylane_lightning.lightning_base.lightning_base import (
     LightningBase,
@@ -219,9 +215,6 @@ class LightningQubit(LightningBase):
     """
 
     # pylint: disable=too-many-instance-attributes
-
-    # Intermediate states
-    _intermediate_states: dict | None = None
 
     # General device options
     _device_options = (
@@ -436,10 +429,7 @@ class LightningQubit(LightningBase):
         if execution_config is None:
             execution_config = ExecutionConfig()
 
-        print("execute in LightningQubit")
-        # TODO: move this to the base class
-        self._intermediate_states = {} if execution_config.use_device_jacobian_product else None
-        print("intermediate states:", self._intermediate_states is not None)
+        super().execute(circuits, execution_config)
 
         mcmc = {
             "mcmc": self._mcmc,
@@ -461,81 +451,6 @@ class LightningQubit(LightningBase):
             )
 
         return tuple(results)
-
-    def simulate(  # pylint: disable=too-many-arguments
-        self,
-        circuit: QuantumScript,
-        state,  # Lightning [Device] StateVector
-        *,
-        postselect_mode: str = None,
-        mcmc: dict = None,
-        mcm_method: str = None,
-    ) -> Result:
-        """Simulate a single quantum script.
-
-        Args:
-            circuit (QuantumTape): The single circuit to simulate
-            state (Lightning [Device] StateVector): A handle to the underlying Lightning state
-            postselect_mode (str): Configuration for handling shots with mid-circuit measurement
-                postselection. Use ``"hw-like"`` to discard invalid shots and ``"fill-shots"`` to
-                keep the same number of shots. Default is ``None``.
-            mcmc (dict): Dictionary containing the Markov Chain Monte Carlo
-                parameters: mcmc, kernel_name, num_burnin. Currently only supported for
-                ``lightning.qubit``, more detail can be found in :class:`~.LightningQubit`.
-            mcm_method (str): The method to use for mid-circuit measurements. Default is ``"one-shot"`` if ``circuit.shots`` is set, otherwise it defaults to ``"deferred"``.
-
-        Returns:
-            Tuple[TensorLike]: The results of the simulation
-
-        Note that this function can return measurements for non-commuting observables simultaneously.
-        """
-        if mcmc is None:
-            mcmc = {}
-
-        if any(isinstance(op, MidMeasureMP) for op in circuit.operations):
-            if self._mpi:
-                raise DeviceError(
-                    "Lightning Device with MPI does not support Mid-circuit measurements."
-                )
-
-        # Simulate with Mid Circuit Measurements
-        if any(isinstance(op, MidMeasureMP) for op in circuit.operations):
-            # If mcm_method is not specified and the circuit does not have shots, default to "deferred".
-            # It is not listed here because all mid-circuit measurements are replaced with additional wires.
-
-            if mcm_method == "tree-traversal":
-                # Using the tree traversal MCM method.
-                return mcm_tree_traversal(
-                    circuit, state, self.LightningMeasurements, postselect_mode
-                )
-
-            if mcm_method == "one-shot" or (mcm_method is None and circuit.shots):
-                # Using the one-shot MCM method.
-                results = []
-                aux_circ = qml.tape.QuantumScript(
-                    circuit.operations,
-                    circuit.measurements,
-                    shots=[1],
-                    trainable_params=circuit.trainable_params,
-                )
-                for _ in range(circuit.shots.total_shots):
-                    state.reset_state()
-                    mid_measurements = {}
-                    final_state = state.get_final_state(
-                        aux_circ, mid_measurements=mid_measurements, postselect_mode=postselect_mode
-                    )
-                    results.append(
-                        self.LightningMeasurements(final_state, **mcmc).measure_final_state(
-                            aux_circ, mid_measurements=mid_measurements
-                        )
-                    )
-                return tuple(results)
-
-        final_state = state.get_final_state(circuit)
-        if self._intermediate_states is not None:
-            print("Caching state for circuit hash:", circuit.hash)
-            self._intermediate_states[circuit.hash] = state._copy_state_vector()
-        return self.LightningMeasurements(final_state, **mcmc).measure_final_state(circuit)
 
     def supports_derivatives(
         self,
@@ -563,82 +478,6 @@ class LightningQubit(LightningBase):
             return _supports_adjoint(circuit=circuit, device_wires=self.wires)
 
         return False
-
-    def jacobian(
-        self,
-        circuit: QuantumTape,
-        state,  # Lightning [Device] StateVector
-        batch_obs: bool = False,
-        wire_map: dict = None,
-    ):
-        """Compute the Jacobian for a single quantum script.
-
-        Args:
-            circuit (QuantumTape): The single circuit to simulate
-            state (Lightning [Device] StateVector): A handle to the underlying Lightning state
-            batch_obs (bool): Determine whether we process observables in parallel when
-                computing the jacobian. Default is ``False``.
-            wire_map (Optional[dict]): an optional map from wire labels to simulation indices. Default is ``None``.
-
-        Returns:
-            TensorLike: The Jacobian of the quantum script
-        """
-        if wire_map is not None:
-            [circuit], _ = qml.map_wires(circuit, wire_map)
-
-        final_state = None
-        if self._intermediate_states is not None:
-            final_state = self._intermediate_states.get(circuit.hash, None)
-            print("Using cached state for jacobian:", final_state is not None)
-        else:
-            print("No cached state for jacobian")
-            state.reset_state()
-            final_state = state.get_final_state(circuit)
-
-        # pylint: disable=not-callable
-        return self.LightningAdjointJacobian(final_state, batch_obs=batch_obs).calculate_jacobian(
-            circuit
-        )
-
-    def vjp(  # pylint: disable=too-many-arguments, too-many-positional-arguments
-        self,
-        circuit: QuantumTape,
-        cotangents: Tuple[Number],
-        state,  # Lightning [Device] StateVector
-        batch_obs: bool = False,
-        wire_map: dict = None,
-    ):
-        """Compute the Vector-Jacobian Product (VJP) for a single quantum script.
-        Args:
-            circuit (QuantumTape): The single circuit to simulate
-            cotangents (Tuple[Number, Tuple[Number]]): Gradient-output vector. Must
-                have shape matching the output shape of the corresponding circuit. If
-                the circuit has a single output, ``cotangents`` may be a single number,
-                not an iterable of numbers.
-            state: A handle to the underlying Lightning state
-            batch_obs (bool): Determine whether we process observables in parallel when
-                computing the VJP. Default is ``False``.
-            wire_map (Optional[dict]): an optional map from wire labels to simulation indices. Default is ``None``.
-
-        Returns:
-            TensorLike: The VJP of the quantum script
-        """
-        if wire_map is not None:
-            [circuit], _ = qml.map_wires(circuit, wire_map)
-
-        final_state = None
-        if self._intermediate_states is not None:
-            final_state = self._intermediate_states.get(circuit.hash, None)
-            print("Using cached state for vjp:", final_state is not None)
-        else:
-            print("No cached state for vjp")
-            state.reset_state()
-            final_state = state.get_final_state(circuit)
-
-        # pylint: disable=not-callable
-        return self.LightningAdjointJacobian(final_state, batch_obs=batch_obs).calculate_vjp(
-            circuit, cotangents
-        )
 
     @staticmethod
     def get_c_interface():

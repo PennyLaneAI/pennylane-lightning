@@ -75,6 +75,7 @@ class LightningBase(Device):
             computing the jacobian.
     """
 
+    # Dictionary to store intermediate states for backward methods
     _intermediate_states: dict | None = None
 
     # pylint: disable=too-many-instance-attributes
@@ -164,7 +165,6 @@ class LightningBase(Device):
         Returns:
             TensorLike, tuple[TensorLike], tuple[tuple[TensorLike]]: A numeric result of the computation.
         """
-
         self._intermediate_states = {} if execution_config.use_device_jacobian_product else None
 
     def simulate(  # pylint: disable=too-many-arguments
@@ -237,6 +237,8 @@ class LightningBase(Device):
                 return tuple(results)
 
         final_state = state.get_final_state(circuit)
+        if self._intermediate_states is not None and hasattr(state, "copy_state_class"):
+            self._intermediate_states[circuit.hash] = state.copy_state_class()
         return self.LightningMeasurements(final_state, **mcmc).measure_final_state(circuit)
 
     @abstractmethod
@@ -277,12 +279,20 @@ class LightningBase(Device):
         """
         if wire_map is not None:
             [circuit], _ = qml.map_wires(circuit, wire_map)
+
+        if self._intermediate_states is not None and (
+            final_state := self._intermediate_states.get(circuit.hash, None)
+        ):
+            # pylint: disable=not-callable
+            return self.LightningAdjointJacobian(
+                final_state, batch_obs=batch_obs
+            ).calculate_jacobian(circuit)
+
         state.reset_state()
-        final_state = state.get_final_state(circuit)
         # pylint: disable=not-callable
-        return self.LightningAdjointJacobian(final_state, batch_obs=batch_obs).calculate_jacobian(
-            circuit
-        )
+        return self.LightningAdjointJacobian(
+            state.get_final_state(circuit), batch_obs=batch_obs
+        ).calculate_jacobian(circuit)
 
     def simulate_and_jacobian(
         self,
@@ -337,12 +347,20 @@ class LightningBase(Device):
         """
         if wire_map is not None:
             [circuit], _ = qml.map_wires(circuit, wire_map)
+
+        if self._intermediate_states is not None and (
+            final_state := self._intermediate_states.get(circuit.hash, None)
+        ):
+            # pylint: disable=not-callable
+            return self.LightningAdjointJacobian(final_state, batch_obs=batch_obs).calculate_vjp(
+                circuit, cotangents
+            )
+
         state.reset_state()
-        final_state = state.get_final_state(circuit)
         # pylint: disable=not-callable
-        return self.LightningAdjointJacobian(final_state, batch_obs=batch_obs).calculate_vjp(
-            circuit, cotangents
-        )
+        return self.LightningAdjointJacobian(
+            state.get_final_state(circuit), batch_obs=batch_obs
+        ).calculate_vjp(circuit, cotangents)
 
     def simulate_and_vjp(  # pylint: disable=too-many-arguments, too-many-positional-arguments
         self,
@@ -485,13 +503,6 @@ class LightningBase(Device):
         """
         if execution_config is None:
             execution_config = ExecutionConfig(gradient_method="adjoint")
-
-        def _state(circuit):
-            return (
-                None
-                if self._intermediate_states is None
-                else self._intermediate_states.get(circuit.hash, None)
-            )
 
         batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
         return tuple(
