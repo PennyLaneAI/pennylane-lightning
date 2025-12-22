@@ -9,7 +9,7 @@
 
 <h3>Improvements 🛠</h3>
 
-- Cache intermediate states in the adjoint-jacobian pipeline to eliminate redundant forward pass in backward in `lightning.qubit`.
+- Cache intermediate states in the adjoint-jacobian pipeline to eliminate redundant forward pass computed during backward pass in `lightning.qubit`.
   [(#1312)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1312)
 
 - Handled `qml.GlobalPhase` with zero-qubit target wires in `lightning.gpu`.
