@@ -34,6 +34,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Tidy up and remove unused vector-matrix helper methods at `LinearAlgebra.hpp`.
+  [(#)](https://github.com/PennyLaneAI/pennylane-lightning/pull/)
+
 - Update references to `TransformProgram` with `CompilePipeline`
   [(#1310)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1310)
 
