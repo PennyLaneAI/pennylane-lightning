@@ -9,8 +9,9 @@
 
 <h3>Improvements 🛠</h3>
 
-- Device VJP has been optimized to avoid unecessary copying of temporary statevectors. `lightning.qubit` also has additional optimizations when using only a single observable.
-  [(#1311)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1298)
+- Device VJP has been optimized to avoid unecessary copying of temporary statevectors.
+  `lightning.qubit` also has additional optimizations when using only a single observable.
+  [(#1311)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1311)
 
 - Handled `qml.GlobalPhase` with zero-qubit target wires in `lightning.gpu`.
   Supported `qml.GlobalPhase` with one controlled wire across state-vector devices.
