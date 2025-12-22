@@ -34,6 +34,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Update references to `TransformProgram` with `CompilePipeline`
+  [(#1310)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1310)
+
 - Update `wheel_linux_aarch64.yml` workflow to run on a Blacksmith Arm runner. 
   [(#1307)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1307)
 
