@@ -34,6 +34,12 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Pin NumPy `<2.4` on CIs as `pyscf` is not compatible with the new version of NumPy yet.
+  [(#1315)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1315)
+
+- Update references to the `transform` property of the `qml.transforms.core.Transform` and `qml.transforms.core.BoundTransform`.
+  [(#1315)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1315)
+
 - Update references to `TransformProgram` with `CompilePipeline`
   [(#1310)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1310)
 
