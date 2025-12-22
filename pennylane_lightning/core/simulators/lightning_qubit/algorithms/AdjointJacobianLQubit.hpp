@@ -77,6 +77,11 @@ class AdjointJacobian final
                                  sv.getLength()));
     }
 
+    /**
+     * @brief Utility method to update the Jacobian at a given index by
+     * calculating the overlap between two given states.
+     *
+     */
     template <class OtherStateVectorT>
     inline void updateJacobian(StateVectorT &state, OtherStateVectorT &sv,
                                std::span<PrecisionT> &jac,
@@ -205,8 +210,9 @@ class AdjointJacobian final
     /**
      * @brief Helper function to calculate the Jacobian for a single observale
      *
-     * In cases where there are only 1 observable, ``ajointJacobian`` dispatches
-     * to this function which has higher performance.
+     * This method is differnet from `adjointJacobian` in that it is optimized
+     * for the case where there is only a single observable in the circuit via
+     * the use of only two statevectors rather than a vector of statevectors.
      *
      * @param jac Preallocated vector for Jacobian data results.
      * @param ops The operations from the PennyLane tape
@@ -221,6 +227,7 @@ class AdjointJacobian final
         const std::vector<std::string> &ops_name,
         const std::vector<std::size_t> &tp, const Observable<StateVectorT> &ob,
         StateVectorLQubitManaged<PrecisionT> &lambda) {
+        // TODO: Remove boilerplate by refactoring with adjointJacobian method.
         const std::size_t tp_size = tp.size();
         const std::size_t num_param_ops = ops.getNumParOps();
 
@@ -329,6 +336,9 @@ class AdjointJacobian final
      * For example, `QubitUnitary` is not differentiable as there is no
      * generator defined for this gate.
      *
+     * @note For circuits with single observable, this method dispatches to
+     * `adjointJacobianSingleObservable` for higher performance.
+     *
      * @param jac Preallocated vector for Jacobian data results.
      * @param jd JacobianData represents the QuantumTape to differentiate.
      * @param apply_operations Indicate whether to apply operations to tape.psi
@@ -431,6 +441,7 @@ class AdjointJacobian final
 
             if (ops.hasParams(op_idx)) {
                 if (current_param_idx == *tp_it) {
+                    // only needs to be updated for parametric gates
                     mu.updateData(lambda.getData(), lambda.getLength());
 
                     // if current parameter is a trainable parameter
