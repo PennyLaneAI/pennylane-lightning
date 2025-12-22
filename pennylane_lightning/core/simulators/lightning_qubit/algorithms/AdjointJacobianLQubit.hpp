@@ -202,49 +202,32 @@ class AdjointJacobian final
   public:
     AdjointJacobian() = default;
 
+    /**
+     * @brief Helper function to calculate the Jacobian for a single observale
+     *
+     * In cases where there are only 1 observable, ``ajointJacobian`` dispatches
+     * to this function which has higher performance.
+     *
+     * @param jac Preallocated vector for Jacobian data results.
+     * @param ops The operations from the PennyLane tape
+     * @param ops_name The operation names from the PennyLane tape
+     * @param tp The trainable parameters retrieved from the JacobianData
+     * @param ob The (single) observable to apply
+     * @param lambda The final statevector of the forward pass of the circuit
+     * prior to calculation.
+     */
     void adjointJacobianSingleObservable(
-        std::span<PrecisionT> jac, const JacobianData<StateVectorT> &jd,
-        [[maybe_unused]] const StateVectorT &ref_data = {0},
-        bool apply_operations = false) {
-        const auto &_obs = jd.getObservables();
-        const std::size_t num_observables = _obs.size();
-        PL_ABORT_IF(num_observables != 1, "Requires 1 observable");
-
-        const auto &ob = *_obs[0];
-
-        const OpsData<StateVectorT> &ops = jd.getOperations();
-        const std::vector<std::string> &ops_name = ops.getOpsName();
-
-        // We can assume the trainable params are sorted (from Python)
-        const std::vector<std::size_t> &tp = jd.getTrainableParams();
+        std::span<PrecisionT> jac, const OpsData<StateVectorT> &ops,
+        const std::vector<std::string> &ops_name,
+        const std::vector<std::size_t> &tp, const Observable<StateVectorT> &ob,
+        StateVectorLQubitManaged<PrecisionT> &lambda) {
         const std::size_t tp_size = tp.size();
         const std::size_t num_param_ops = ops.getNumParOps();
-
-        if (!jd.hasTrainableParams()) {
-            return;
-        }
-
-        PL_ABORT_IF_NOT(
-            jac.size() == tp_size * num_observables,
-            "The size of preallocated jacobian must be same as "
-            "the number of trainable parameters times the number of "
-            "observables provided.");
 
         // Track positions within par and non-par operations
         std::size_t trainableParamNumber = tp_size - 1;
         std::size_t current_param_idx =
             num_param_ops - 1; // total number of parametric ops
-
-        // Create $U_{1:p}\vert \lambda \rangle$
-        StateVectorLQubitManaged<PrecisionT> lambda(jd.getPtrStateVec(),
-                                                    jd.getSizeStateVec());
-        // Apply given operations to statevector if requested
-        if (apply_operations) {
-            BaseType::applyOperations(lambda, ops);
-        }
-
-        const auto tp_rend = tp.rend();
-        auto tp_it = tp.rbegin();
 
         // Create observable-applied and mu state vectors
         std::unique_ptr<StateVectorT> H_lambda;
@@ -272,6 +255,9 @@ class AdjointJacobian final
 
         H_lambda->updateData(lambda.getData(), lambda.getLength());
         BaseType::applyObservable(*H_lambda, ob);
+
+        const auto tp_rend = tp.rend();
+        auto tp_it = tp.rbegin();
 
         for (int op_idx = static_cast<int>(ops_name.size() - 1); op_idx >= 0;
              op_idx--) {
@@ -319,8 +305,8 @@ class AdjointJacobian final
             BaseType::applyOperationAdj(*H_lambda, ops,
                                         static_cast<std::size_t>(op_idx));
         }
-        const auto jac_transpose = Transpose(std::span<const PrecisionT>{jac},
-                                             tp_size, num_observables);
+        const auto jac_transpose =
+            Transpose(std::span<const PrecisionT>{jac}, tp_size, 1);
         std::copy(std::begin(jac_transpose), std::end(jac_transpose),
                   std::begin(jac));
     }
@@ -355,12 +341,6 @@ class AdjointJacobian final
         const auto &obs = jd.getObservables();
         const std::size_t num_observables = obs.size();
 
-        if (num_observables == 1) {
-            adjointJacobianSingleObservable(jac, jd, ref_data,
-                                            apply_operations);
-            return;
-        }
-
         const OpsData<StateVectorT> &ops = jd.getOperations();
         const std::vector<std::string> &ops_name = ops.getOpsName();
 
@@ -390,6 +370,12 @@ class AdjointJacobian final
         // Apply given operations to statevector if requested
         if (apply_operations) {
             BaseType::applyOperations(lambda, ops);
+        }
+
+        if (num_observables == 1) {
+            adjointJacobianSingleObservable(jac, ops, ops_name, tp, *obs[0],
+                                            lambda);
+            return;
         }
 
         const auto tp_rend = tp.rend();
@@ -473,7 +459,6 @@ class AdjointJacobian final
                             num_observables)
                 #endif
                     // clang-format on
-
                     for (std::size_t obs_idx = 0; obs_idx < num_observables;
                          obs_idx++) {
                         updateJacobian(*H_lambda, mu, jac, scalingFactor,
