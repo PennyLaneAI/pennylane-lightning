@@ -237,8 +237,8 @@ class LightningBase(Device):
                 return tuple(results)
 
         final_state = state.get_final_state(circuit)
-        if self._intermediate_states is not None and hasattr(state, "copy_state_class"):
-            self._intermediate_states[circuit.hash] = state.copy_state_class()
+        if self._intermediate_states is not None and hasattr(state, "_copy_sv"):
+            self._intermediate_states[circuit.hash] = state._copy_sv()
         return self.LightningMeasurements(final_state, **mcmc).measure_final_state(circuit)
 
     @abstractmethod
@@ -290,8 +290,8 @@ class LightningBase(Device):
 
         state.reset_state()
         final_state = state.get_final_state(circuit)
-        if self._intermediate_states is not None and hasattr(final_state, "copy_state_class"):
-            self._intermediate_states[circuit.hash] = final_state.copy_state_class()
+        if self._intermediate_states is not None and hasattr(final_state, "_copy_sv"):
+            self._intermediate_states[circuit.hash] = final_state._copy_sv()
 
         # pylint: disable=not-callable
         return self.LightningAdjointJacobian(final_state, batch_obs=batch_obs).calculate_jacobian(
@@ -362,8 +362,8 @@ class LightningBase(Device):
 
         state.reset_state()
         final_state = state.get_final_state(circuit)
-        if self._intermediate_states is not None and hasattr(final_state, "copy_state_class"):
-            self._intermediate_states[circuit.hash] = final_state.copy_state_class()
+        if self._intermediate_states is not None and hasattr(final_state, "_copy_sv"):
+            self._intermediate_states[circuit.hash] = final_state._copy_sv()
         # pylint: disable=not-callable
         return self.LightningAdjointJacobian(final_state, batch_obs=batch_obs).calculate_vjp(
             circuit, cotangents
