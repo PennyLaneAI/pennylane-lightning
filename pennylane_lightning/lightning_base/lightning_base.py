@@ -165,7 +165,6 @@ class LightningBase(Device):
         Returns:
             TensorLike, tuple[TensorLike], tuple[tuple[TensorLike]]: A numeric result of the computation.
         """
-        self._intermediate_states = {} if execution_config.use_device_jacobian_product else None
 
     def simulate(  # pylint: disable=too-many-arguments
         self,

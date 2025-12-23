@@ -428,7 +428,7 @@ class LightningQubit(LightningBase):
         if execution_config is None:
             execution_config = ExecutionConfig()
 
-        super().execute(circuits, execution_config)
+        self._intermediate_states = {} if execution_config.use_device_jacobian_product else None
 
         mcmc = {
             "mcmc": self._mcmc,
