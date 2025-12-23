@@ -50,7 +50,6 @@ QuantumTape_or_Batch = Union[QuantumTape, QuantumTapeBatch]
 PostprocessingFn = Callable[[ResultBatch], Result_or_ResultBatch]
 
 
-# pylint: disable=too-many-instance-attributes
 @simulator_tracking
 @single_tape_support
 class LightningBase(Device):
@@ -76,10 +75,10 @@ class LightningBase(Device):
             computing the jacobian.
     """
 
+    # pylint: disable=too-many-instance-attributes
+
     # Dictionary to store intermediate states for backward methods
     _intermediate_states: dict | None = None
-
-    # pylint: disable=too-many-instance-attributes
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
