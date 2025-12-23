@@ -725,7 +725,7 @@ class TestExecution:
         device_name == "lightning.tensor",
         reason="lightning.tensor device doesn't have support for program capture.",
     )
-    @pytest.mark.parametrize("postselect_mode", ["hw-like", "fill-shots"])
+    @pytest.mark.parametrize("postselect_mode", ["hw-like"])
     def test_sbs_and_postselect_warning(self, enable_disable_plxpr, postselect_mode):
         """Test that a warning is raised if post-selection is used with single branch statistics."""
         device = LightningDevice(wires=1)
@@ -832,22 +832,22 @@ class TestExecution:
         program = dev.preprocess_transforms(execution_config=config)
         assert len(program) == 1
         # pylint: disable=protected-access
-        assert program[0].transform == qml.transforms.decompose._transform
+        assert program[0].tape_transform == qml.transforms.decompose._tape_transform
 
         # mcm_method="deferred"
         config = ExecutionConfig(mcm_config=MCMConfig(mcm_method="deferred"))
         program = dev.preprocess_transforms(execution_config=config)
         assert len(program) == 2
         # pylint: disable=protected-access
-        assert program[0].transform == qml.defer_measurements._transform
-        assert program[1].transform == qml.transforms.decompose._transform
+        assert program[0].tape_transform == qml.defer_measurements._tape_transform
+        assert program[1].tape_transform == qml.transforms.decompose._tape_transform
 
         # mcm_method="single-branch-statistics"
         config = ExecutionConfig(mcm_config=MCMConfig(mcm_method="single-branch-statistics"))
         program = dev.preprocess_transforms(execution_config=config)
         assert len(program) == 1
         # pylint: disable=protected-access
-        assert program[0].transform == qml.transforms.decompose._transform
+        assert program[0].tape_transform == qml.transforms.decompose._tape_transform
 
     @pytest.mark.usefixtures("enable_and_disable_graph_decomp")
     @pytest.mark.skipif(

@@ -172,7 +172,8 @@ jobs:
           WHEEL_NAME=$(cat ${{ github.workspace }}/${{ matrix.pl_backend }}-${{ matrix.blas }}_name.txt)
           mv ${{ github.workspace }}/wheel_${{ matrix.pl_backend }}-${{ matrix.blas }}.whl ${{ github.workspace }}/$WHEEL_NAME
           python -m pip install -r requirements-tests.txt
-          python -m pip install openfermionpyscf semantic-version
+          # pyscf is not compatible with numpy 2.4 yet
+          python -m pip install openfermionpyscf "numpy<2.4" semantic-version
           python -m pip install ${{ github.workspace }}/$WHEEL_NAME --no-deps --force-reinstall
 
       - name: Checkout PennyLane for release or latest build
