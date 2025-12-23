@@ -1,4 +1,4 @@
-# Copyright 2018-2024 Xanadu Quantum Technologies Inc.
+# Copyright 2018-2025 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -258,6 +258,34 @@ class TestVectorJacobianProduct:
             match="Adjoint differentiation method does not support",
         ):
             dev.compute_vjp(tape, dy)
+
+    def test_device_vjp(self, seed, tol, dev):
+        """Tests that the device vjp method works as expected"""
+        rng = np.random.default_rng(seed)
+        params = rng.random(3)
+
+        def circuit(params):
+            qml.RX(params[0], wires=[0])
+            qml.RY(params[1], wires=[1])
+            qml.RZ(params[2], wires=[0])
+            qml.CNOT(wires=[0, 1])
+            return [qml.expval(qml.PauliZ(0)), qml.expval(qml.PauliX(1))]
+
+        def make_loss_fxn(qnode):
+            def loss(params):
+                expval_by_class = qnode(params)
+                return sum(expval_by_class)  # Should be single dimensional
+
+            return loss
+
+        comparison_dev = qml.device("default.qubit")
+
+        expected_circuit = qml.qnode(comparison_dev, diff_method="adjoint")(circuit)
+        actual_circuit = qml.qnode(dev, diff_method="adjoint", device_vjp=True)(circuit)
+
+        expected = qml.grad(make_loss_fxn(expected_circuit))(params)
+        actual = qml.grad(make_loss_fxn(actual_circuit))(params)
+        assert np.allclose(actual, expected, atol=tol, rtol=0)
 
 
 class TestBatchVectorJacobianProduct:
