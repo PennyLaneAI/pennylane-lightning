@@ -23,6 +23,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11", 
     "Programming Language :: Python :: 3.12", 
     "Programming Language :: Python :: 3.13", 
+    "Programming Language :: Python :: 3.14", 
     "Topic :: Scientific/Engineering :: Physics",
 ]
 dependencies = ["pennylane>=0.42", "scipy-openblas32>=0.3.26"]
@@ -32,8 +33,9 @@ name = "Xanadu Quantum Technologies Inc."
 email = "software@xanadu.ai"
 
 [project.optional-dependencies]
-gpu = [ "pennylane-lightning-gpu",]
 kokkos = [ "pennylane-lightning-kokkos",]
+amdgpu = [ "pennylane-lightning-amdgpu",]
+gpu = [ "pennylane-lightning-gpu",]
 tensor = [ "pennylane-lightning-tensor",]
 
 [project.urls]

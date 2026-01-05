@@ -1,7 +1,7 @@
 name: Wheel::Linux::ARM
 
 # **What it does**: Builds python wheels for Linux (ubuntu-24.04) architecture ARM 64 and store it as artifacts.
-#                   Python versions: 3.11, 3.12, 3.13.
+#                   Python versions: 3.11, 3.12, 3.13, 3.14.
 # **Why we have it**: To build wheels for pennylane-lightning installation.
 # **Who does it impact**: Wheels to be uploaded to PyPI.
 
@@ -40,7 +40,7 @@ jobs:
     needs: [set_wheel_build_matrix]
     strategy:
       matrix:
-        os: [blacksmith-4vcpu-ubuntu-2404]
+        os: [blacksmith-4vcpu-ubuntu-2404-arm]
         arch: [aarch64]
         exec_model: ${{ fromJson(needs.set_wheel_build_matrix.outputs.exec_model) }}
         kokkos_version: ${{ fromJson(needs.set_wheel_build_matrix.outputs.kokkos_version) }}
@@ -62,14 +62,6 @@ jobs:
         run: |
           git clone --branch ${{ matrix.kokkos_version }} https://github.com/kokkos/kokkos.git
           pushd . &> /dev/null
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-        with:
-          # setup-qemu-action by default uses `tonistiigi/binfmt:latest` image, 
-          # which is out of date. This causes seg faults during build. 
-          # Here we manually fix the version.
-          image: tonistiigi/binfmt:qemu-v8.1.5
 
       - name: Build Kokkos core library
         if: steps.kokkos-cache.outputs.cache-hit != 'true'
@@ -102,7 +94,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [blacksmith-4vcpu-ubuntu-2404]
+        os: [blacksmith-4vcpu-ubuntu-2404-arm]
         arch: [aarch64]
         pl_backend: ["lightning_kokkos", "lightning_qubit"]
         cibw_build: ${{ fromJson(needs.set_wheel_build_matrix.outputs.python_version) }}
@@ -110,7 +102,7 @@ jobs:
         kokkos_version: ${{ fromJson(needs.set_wheel_build_matrix.outputs.kokkos_version) }}
         container_img: ["quay.io/pypa/manylinux_2_28_aarch64"]
     timeout-minutes: 45
-    name: ${{ matrix.os }}::${{ matrix.arch }} - ${{ matrix.pl_backend }} (Python ${{ fromJson('{ "cp311-*":"3.11", "cp312-*":"3.12", "cp313-*":"3.13" }')[matrix.cibw_build] }})
+    name: ${{ matrix.os }}::${{ matrix.arch }} - ${{ matrix.pl_backend }} (Python ${{ fromJson('{ "cp311-*":"3.11", "cp312-*":"3.12", "cp313-*":"3.13", "cp314-*":"3.14" }')[matrix.cibw_build] }})
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -141,14 +133,6 @@ jobs:
 
       - name: Configure pyproject.toml file
         run: PL_BACKEND="${{ matrix.pl_backend }}" python3.12 scripts/configure_pyproject_toml.py
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-        with:
-          # setup-qemu-action by default uses `tonistiigi/binfmt:latest` image, 
-          # which is out of date. This causes seg faults during build. 
-          # Here we manually fix the version.
-          image: tonistiigi/binfmt:qemu-v8.1.5
 
       - name: Build wheels
         env:
@@ -210,7 +194,7 @@ jobs:
           github.ref == 'refs/heads/master' ||
           steps.rc_build.outputs.match != ''
         with:
-          name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ fromJson('{ "cp311-*":"py311","cp312-*":"py312", "cp313-*":"py313" }')[matrix.cibw_build] }}-${{ matrix.arch }}.zip
+          name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ fromJson('{ "cp311-*":"py311","cp312-*":"py312", "cp313-*":"py313", "cp314-*":"py314" }')[matrix.cibw_build] }}-${{ matrix.arch }}.zip
           path: ./wheelhouse/*.whl
           retention-days: 1
           include-hidden-files: true
@@ -239,7 +223,7 @@ jobs:
           github.ref == 'refs/heads/master' || 
           steps.rc_build.outputs.match != ''
         with:
-          name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ fromJson('{ "cp311-*":"py311","cp312-*":"py312", "cp313-*":"py313" }')[matrix.cibw_build] }}-${{ matrix.arch }}.zip
+          name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ fromJson('{ "cp311-*":"py311","cp312-*":"py312", "cp313-*":"py313", "cp314-*":"py314" }')[matrix.cibw_build] }}-${{ matrix.arch }}.zip
           path: dist
 
       - name: Upload wheels to TestPyPI

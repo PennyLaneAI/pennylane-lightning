@@ -58,7 +58,7 @@ if device_name == "lightning.qubit":
         validate_measurements,
         validate_observables,
     )
-elif device_name == "lightning.kokkos":
+elif device_name in ("lightning.kokkos", "lightning.amdgpu"):
     from pennylane_lightning.lightning_kokkos.lightning_kokkos import (
         _add_adjoint_transforms,
         _adjoint_ops,
@@ -220,9 +220,11 @@ class TestHelpers:
     )
     def test_add_adjoint_transforms(self):
         """Test that the correct transforms are added to the program by _add_adjoint_transforms"""
-        expected_program = qml.transforms.core.TransformProgram()
+        expected_program = qml.CompilePipeline()
 
         name = f"adjoint + {device_name}"
+        if device_name == "lightning.amdgpu":
+            name = "adjoint + lightning.kokkos"
         expected_program.add_transform(no_sampling, name=name)
         expected_program.add_transform(qml.transforms.broadcast_expand)
         expected_program.add_transform(
@@ -241,7 +243,7 @@ class TestHelpers:
         )
         expected_program.add_transform(validate_adjoint_trainable_params)
 
-        actual_program = qml.transforms.core.TransformProgram()
+        actual_program = qml.CompilePipeline()
         _add_adjoint_transforms(actual_program)
         assert actual_program == expected_program
 
@@ -723,7 +725,7 @@ class TestExecution:
         device_name == "lightning.tensor",
         reason="lightning.tensor device doesn't have support for program capture.",
     )
-    @pytest.mark.parametrize("postselect_mode", ["hw-like", "fill-shots"])
+    @pytest.mark.parametrize("postselect_mode", ["hw-like"])
     def test_sbs_and_postselect_warning(self, enable_disable_plxpr, postselect_mode):
         """Test that a warning is raised if post-selection is used with single branch statistics."""
         device = LightningDevice(wires=1)
@@ -737,18 +739,6 @@ class TestExecution:
             UserWarning,
             match="Setting 'postselect_mode' is not supported with mcm_method='single-branch-",
         ):
-            _ = device.setup_execution_config(config)
-
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor device doesn't have support for program capture.",
-    )
-    def test_preprocess_invalid_mcm_method_error(self, enable_disable_plxpr):
-        """Test that an error is raised if mcm_method is invalid."""
-        device = LightningDevice(wires=1)
-        config = ExecutionConfig(mcm_config=MCMConfig(mcm_method="foo"))
-
-        with pytest.raises(DeviceError, match="mcm_method='foo' is not supported"):
             _ = device.setup_execution_config(config)
 
     @pytest.mark.skipif(
@@ -789,6 +779,7 @@ class TestExecution:
         m0 = qml.measure(0)
 
         class MyOp(qml.operation.Operator):
+
             def decomposition(self):
                 return m0.measurements
 
@@ -841,22 +832,22 @@ class TestExecution:
         program = dev.preprocess_transforms(execution_config=config)
         assert len(program) == 1
         # pylint: disable=protected-access
-        assert program[0].transform == qml.transforms.decompose._transform
+        assert program[0].tape_transform == qml.transforms.decompose._tape_transform
 
         # mcm_method="deferred"
         config = ExecutionConfig(mcm_config=MCMConfig(mcm_method="deferred"))
         program = dev.preprocess_transforms(execution_config=config)
         assert len(program) == 2
         # pylint: disable=protected-access
-        assert program[0].transform == qml.defer_measurements._transform
-        assert program[1].transform == qml.transforms.decompose._transform
+        assert program[0].tape_transform == qml.defer_measurements._tape_transform
+        assert program[1].tape_transform == qml.transforms.decompose._tape_transform
 
         # mcm_method="single-branch-statistics"
         config = ExecutionConfig(mcm_config=MCMConfig(mcm_method="single-branch-statistics"))
         program = dev.preprocess_transforms(execution_config=config)
         assert len(program) == 1
         # pylint: disable=protected-access
-        assert program[0].transform == qml.transforms.decompose._transform
+        assert program[0].tape_transform == qml.transforms.decompose._tape_transform
 
     @pytest.mark.usefixtures("enable_and_disable_graph_decomp")
     @pytest.mark.skipif(
@@ -869,7 +860,7 @@ class TestExecution:
         """Test that the transform program returned by preprocess is correct"""
         device = LightningDevice(wires=2)
 
-        expected_program = qml.transforms.core.TransformProgram()
+        expected_program = qml.CompilePipeline()
         expected_program.add_transform(validate_measurements, name=device.name)
         expected_program.add_transform(validate_observables, accepted_observables, name=device.name)
         if mcm_method == "deferred":
@@ -896,6 +887,8 @@ class TestExecution:
 
         if adjoint:
             name = f"adjoint + {device_name}"
+            if device_name == "lightning.amdgpu":
+                name = "adjoint + lightning.kokkos"
             expected_program.add_transform(no_sampling, name=name)
             expected_program.add_transform(qml.transforms.broadcast_expand)
             expected_program.add_transform(

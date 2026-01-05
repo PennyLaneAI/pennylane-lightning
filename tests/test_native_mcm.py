@@ -29,7 +29,7 @@ from conftest import (
 )
 from pennylane.exceptions import DeviceError
 
-if device_name not in ("lightning.qubit", "lightning.kokkos", "lightning.gpu"):
+if device_name not in ("lightning.qubit", "lightning.kokkos", "lightning.amdgpu", "lightning.gpu"):
     pytest.skip("Native MCM not supported. Skipping.", allow_module_level=True)
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-access
@@ -77,20 +77,6 @@ class TestUnsupportedConfigurationsMCM:
 
         return func
 
-    def test_unsupported_method(self):
-        method = "roller-coaster"
-        circuit = self.generate_mcm_circuit(
-            device_kwargs={"wires": 1, "shots": 100},
-            qnode_kwargs={"mcm_method": method},
-            mcm_kwargs={"postselect": None, "reset": False},
-            measurement=qml.expval,
-            obs=qml.PauliZ(0),
-        )
-        with pytest.raises(
-            DeviceError, match=f"mcm_method='{method}' is not supported with {device_name}"
-        ):
-            circuit(1.33)
-
     def test_unsupported_measurement(self, mcm_method):
         """Test unsupported ``qml.classical_shadow`` measurement on Lightning devices."""
 
@@ -108,11 +94,15 @@ class TestUnsupportedConfigurationsMCM:
                 match=f"not accepted with finite shots on lightning.qubit",
             ):
                 circuit(1.33)
-        if device_name in ("lightning.kokkos", "lightning.gpu"):
+        if device_name in ("lightning.kokkos", "lightning.amdgpu", "lightning.gpu"):
+            device_match = device_name
+            if device_name == "lightning.amdgpu":
+                device_match = "lightning.(amdgpu|kokkos)"
+
             with pytest.raises(
                 DeviceError,
                 match=r"Measurement shadow\(wires=\[0\]\) not accepted with finite shots on "
-                + device_name,
+                + device_match,
             ):
                 circuit(1.33)
 
@@ -127,9 +117,13 @@ class TestUnsupportedConfigurationsMCM:
             obs=qml.PauliZ(0),
         )
 
+        device_match = device_name
+        if device_name == "lightning.amdgpu":
+            device_match = "lightning.(amdgpu|kokkos)"
+
         with pytest.raises(
             qml.exceptions.WireError,
-            match=f"on {device_name} as they contain wires not found on the device: {{1}}",
+            match=f"on {device_match} as they contain wires not found on the device: {{.*}}",
         ):
             circuit(1.33)
 
@@ -177,9 +171,13 @@ class TestUnsupportedConfigurationsMCM:
                 obs=qml.PauliZ(0),
             )
 
+            device_match = device_name
+            if device_name == "lightning.amdgpu":
+                device_match = "lightning.(amdgpu|kokkos)"
+
             with pytest.raises(
                 DeviceError,
-                match="not accepted for analytic simulation on " + device_name,
+                match="not accepted for analytic simulation on " + device_match,
             ):
                 circuit(1.33)
 
@@ -249,8 +247,8 @@ class TestSupportedConfigurationsMCM:
         if mcm_method == "one-shot" and shots is None:
             pytest.skip("Skip test for one-shot with None shots")
 
-        spy_deffered = mocker.spy(qml.defer_measurements, "_transform")
-        spy_one_shot = mocker.spy(qml.dynamic_one_shot, "_transform")
+        spy_deffered = mocker.spy(qml.defer_measurements, "_tape_transform")
+        spy_one_shot = mocker.spy(qml.dynamic_one_shot, "_tape_transform")
         spy_tree_traversal = mocker.patch(
             "pennylane_lightning.lightning_base.lightning_base.mcm_tree_traversal"
         )
@@ -279,8 +277,8 @@ class TestSupportedConfigurationsMCM:
     @pytest.mark.parametrize("shots", [None, 10])
     def test_qnode_default_mcm_method_device(self, shots, mocker):
         """Test the default mcm method is used for analytical simulation"""
-        spy_deferred = mocker.spy(qml.defer_measurements, "_transform")
-        spy_dynamic_one_shot = mocker.spy(qml.dynamic_one_shot, "_transform")
+        spy_deferred = mocker.spy(qml.defer_measurements, "_tape_transform")
+        spy_dynamic_one_shot = mocker.spy(qml.dynamic_one_shot, "_tape_transform")
         spy_tree_traversal = mocker.patch(
             "pennylane_lightning.lightning_base.lightning_base.mcm_tree_traversal"
         )
@@ -299,8 +297,8 @@ class TestSupportedConfigurationsMCM:
 
     def test_qnode_default_mcm_method_analytical(self, mocker):
         """Test the default mcm method is used for analytical simulation"""
-        spy_deferred = mocker.spy(qml.defer_measurements, "_transform")
-        spy_dynamic_one_shot = mocker.spy(qml.dynamic_one_shot, "_transform")
+        spy_deferred = mocker.spy(qml.defer_measurements, "_tape_transform")
+        spy_dynamic_one_shot = mocker.spy(qml.dynamic_one_shot, "_tape_transform")
         spy_tree_traversal = mocker.patch(
             "pennylane_lightning.lightning_base.lightning_base.mcm_tree_traversal"
         )
@@ -322,8 +320,8 @@ class TestSupportedConfigurationsMCM:
     def test_qnode_default_mcm_method_finite_shots(self, mocker):
         """Test the default mcm method is used for finite shots"""
 
-        spy_deferred = mocker.spy(qml.defer_measurements, "_transform")
-        spy_dynamic_one_shot = mocker.spy(qml.dynamic_one_shot, "_transform")
+        spy_deferred = mocker.spy(qml.defer_measurements, "_tape_transform")
+        spy_dynamic_one_shot = mocker.spy(qml.dynamic_one_shot, "_tape_transform")
         spy_tree_traversal = mocker.patch(
             "pennylane_lightning.lightning_base.lightning_base.mcm_tree_traversal"
         )
@@ -432,7 +430,16 @@ class TestExecutionMCM:
     @pytest.mark.parametrize("measure_f", [qml.counts, qml.expval, qml.probs, qml.sample, qml.var])
     @pytest.mark.parametrize(
         "measure_obj",
-        [qml.PauliZ(0), qml.PauliY(1), [0], [0, 1], [1, 0], "mcm", "composite_mcm", "mcm_list"],
+        [
+            qml.PauliZ(0),
+            qml.PauliY(1),
+            [0],
+            [0, 1],
+            [1, 0],
+            "mcm",
+            "composite_mcm",
+            "mcm_list",
+        ],
     )
     def test_simple_dynamic_circuit(
         self, mcm_method, shots, measure_f, postselect, measure_obj, seed

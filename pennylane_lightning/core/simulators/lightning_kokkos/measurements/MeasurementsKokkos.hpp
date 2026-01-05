@@ -639,7 +639,20 @@ class Measurements final
         // Reducing over `d_probabilities` requires too much L0 scratch memory
         // on GPUs. If n_wires >= 20, this also requires quite a bit of memory
         // on CPUs, so we fallback to the next implementation
-        if (n_wires < MDRANGE_NWIRES_MAX && !is_gpu_scratch_limited) {
+        bool use_mdrange =
+            n_wires < MDRANGE_NWIRES_MAX && !is_gpu_scratch_limited;
+#ifdef KOKKOS_ENABLE_HIP
+        // On HIP, MDRangePolicy with ParallelReduce can fail to find a valid
+        // tile size for small shapes (e.g. all_offsets.size() <= 2). We
+        // fallback to parallel_for in these cases.
+        if (std::is_same_v<KokkosExecSpace, Kokkos::HIP>) {
+            if (all_offsets.size() <= 2) {
+                use_mdrange = false;
+            }
+        }
+#endif
+
+        if (use_mdrange) {
             using MDPolicyType_2D =
                 Kokkos::MDRangePolicy<Kokkos::Rank<2, Kokkos::Iterate::Left>>;
             auto md_policy = MDPolicyType_2D(

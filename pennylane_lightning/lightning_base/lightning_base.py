@@ -77,6 +77,9 @@ class LightningBase(Device):
 
     # pylint: disable=too-many-instance-attributes
 
+    # Dictionary to store intermediate states for backward methods
+    _intermediate_states: dict | None = None
+
     def __init__(  # pylint: disable=too-many-arguments
         self,
         wires: Union[int, List] = None,
@@ -233,6 +236,8 @@ class LightningBase(Device):
                 return tuple(results)
 
         final_state = state.get_final_state(circuit)
+        if self._intermediate_states is not None and hasattr(state, "copy_sv"):
+            self._intermediate_states[circuit.hash] = state.copy_sv()
         return self.LightningMeasurements(final_state, **mcmc).measure_final_state(circuit)
 
     @abstractmethod
@@ -273,8 +278,20 @@ class LightningBase(Device):
         """
         if wire_map is not None:
             [circuit], _ = qml.map_wires(circuit, wire_map)
+
+        if self._intermediate_states is not None and (
+            final_state := self._intermediate_states.get(circuit.hash, None)
+        ):
+            # pylint: disable=not-callable
+            return self.LightningAdjointJacobian(
+                final_state, batch_obs=batch_obs
+            ).calculate_jacobian(circuit)
+
         state.reset_state()
         final_state = state.get_final_state(circuit)
+        if self._intermediate_states is not None and hasattr(final_state, "copy_sv"):
+            self._intermediate_states[circuit.hash] = final_state.copy_sv()
+
         # pylint: disable=not-callable
         return self.LightningAdjointJacobian(final_state, batch_obs=batch_obs).calculate_jacobian(
             circuit
@@ -333,8 +350,19 @@ class LightningBase(Device):
         """
         if wire_map is not None:
             [circuit], _ = qml.map_wires(circuit, wire_map)
+
+        if self._intermediate_states is not None and (
+            final_state := self._intermediate_states.get(circuit.hash, None)
+        ):
+            # pylint: disable=not-callable
+            return self.LightningAdjointJacobian(final_state, batch_obs=batch_obs).calculate_vjp(
+                circuit, cotangents
+            )
+
         state.reset_state()
         final_state = state.get_final_state(circuit)
+        if self._intermediate_states is not None and hasattr(final_state, "copy_sv"):
+            self._intermediate_states[circuit.hash] = final_state.copy_sv()
         # pylint: disable=not-callable
         return self.LightningAdjointJacobian(final_state, batch_obs=batch_obs).calculate_vjp(
             circuit, cotangents
@@ -757,7 +785,7 @@ def resolve_mcm_method(mcm_config: MCMConfig, tape: QuantumScript | None, device
     mcm_supported_methods = (
         ("device", "deferred", "tree-traversal", "one-shot", None)
         if not qml.capture.enabled()
-        else ("deferred", "single-branch-statistics", None)
+        else ("device", "deferred", "single-branch-statistics", None)
     )
 
     if (mcm_method := mcm_config.mcm_method) not in mcm_supported_methods:

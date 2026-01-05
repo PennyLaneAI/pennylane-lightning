@@ -212,7 +212,8 @@ jobs:
         run: |
           cd main
           python -m pip install -r requirements-tests.txt
-          python -m pip install openfermionpyscf
+          # pyscf is not compatible with numpy 2.4 yet
+          python -m pip install openfermionpyscf "numpy<2.4"
 
       - name: Checkout PennyLane for release or latest build
         if: inputs.pennylane-version == 'release' || inputs.pennylane-version == 'latest'

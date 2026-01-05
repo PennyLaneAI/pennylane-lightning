@@ -164,10 +164,11 @@ class CMakeBuild(build_ext):
             destination = os.path.join(os.getcwd(), f"build_{backend}")
             shutil.copy(source, destination)
     
-        if backend in ("lightning_kokkos", "lightning_qubit"):
+        if backend in ("lightning_kokkos", "lightning_qubit", "lightning_amdgpu"):
             if platform.system() in ["Linux", "Darwin"]:
                 shared_lib_ext = {"Linux": ".so", "Darwin": ".dylib"}[platform.system()]
-                source = os.path.join(f"{extdir}", f"lib{backend}_catalyst{shared_lib_ext}")
+                lib_name = "lightning_kokkos" if backend == "lightning_amdgpu" else backend
+                source = os.path.join(f"{extdir}", f"lib{lib_name}_catalyst{shared_lib_ext}")
                 destination = os.path.join(os.getcwd(), self.build_temp)
                 shutil.copy(source, destination)
 
@@ -178,6 +179,9 @@ packages_list = ["pennylane_lightning." + backend]
 
 if backend == "lightning_qubit":
     packages_list += ["pennylane_lightning.core", "pennylane_lightning.lightning_base"]
+
+if backend == "lightning_amdgpu":
+    packages_list += ["pennylane_lightning.lightning_kokkos"]
 
 info = {
     "version": version,

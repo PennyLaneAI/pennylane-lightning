@@ -462,7 +462,7 @@ def test_qubit_unitary(n_wires, theta, phi, tol):
 
 
 @pytest.mark.skipif(
-    device_name not in ("lightning.qubit", "lightning.kokkos"),
+    device_name not in ("lightning.qubit", "lightning.kokkos", "lightning.amdgpu"),
     reason="PennyLane-like StatePrep only implemented in lightning.qubit and lightning.kokkos.",
 )
 @pytest.mark.parametrize("n_targets", list(range(2, 8)))
@@ -685,7 +685,7 @@ def test_controlled_qubit_unitary_from_op(tol):
 
 @pytest.mark.local_salt(42)
 @pytest.mark.skipif(
-    device_name not in ("lightning.qubit", "lightning.kokkos"),
+    device_name not in ("lightning.qubit", "lightning.kokkos", "lightning.amdgpu"),
     reason="PauliRot operations only implemented in lightning.qubit and lightning.kokkos.",
 )
 @pytest.mark.parametrize("n_wires", [1, 2, 3, 4, 5, 10, 15])
@@ -789,7 +789,7 @@ def test_controlled_globalphase(n_qubits, control_value, tol):
     reason="lightning.kokkos doesn't support zero wires on Windows.",
 )
 @pytest.mark.skipif(
-    device_name in ["lightning.gpu", "lightning.tensor"],
+    device_name in ["lightning.tensor"],
     reason=device_name + " doesn't support zero wires.",
 )
 @pytest.mark.parametrize("control_value", [False, True])
@@ -806,6 +806,65 @@ def test_controlled_globalphase_zero_targetwire(n_qubits, control_value, tol):
             qml.GlobalPhase(0.1234),
             control_wires,
             control_values=([control_value or bool(i % 2) for i, _ in enumerate(control_wires)]),
+        )
+        qml.GlobalPhase(0.512)
+        return qml.state()
+
+    circ = qml.QNode(circuit, dev)
+    circ_def = qml.QNode(circuit, dev_def)
+    assert np.allclose(circ(), circ_def(), tol)
+
+
+@pytest.mark.skipif(
+    (device_name == "lightning.kokkos" and sys.platform == "win32"),
+    reason="lightning.kokkos doesn't support zero wires on Windows.",
+)
+@pytest.mark.skipif(
+    device_name in ["lightning.tensor"],
+    reason=device_name + " cannot be initialized with less than 2 wires.",
+)
+@pytest.mark.parametrize("n_qubits", list(range(1, 3)))
+def test_controlled_globalphase_1ctrl_true_cornercase(n_qubits, tol):
+    """Test that single-controlled (value=True) GlobalPhase with zero-wire is correctly applied to a state"""
+    dev_def = qml.device("default.qubit", wires=n_qubits)
+    dev = qml.device(device_name, wires=n_qubits)
+    control_wires = [0]
+
+    def circuit():
+        qml.StatePrep(get_random_normalized_state(2**n_qubits), wires=range(n_qubits))
+        qml.ctrl(
+            qml.GlobalPhase(0.1234),
+            control_wires,
+            control_values=[True],
+        )
+        return qml.state()
+
+    circ = qml.QNode(circuit, dev)
+    circ_def = qml.QNode(circuit, dev_def)
+    assert np.allclose(circ(), circ_def(), tol)
+
+
+@pytest.mark.skipif(
+    (device_name == "lightning.kokkos" and sys.platform == "win32"),
+    reason="lightning.kokkos doesn't support zero wires on Windows.",
+)
+@pytest.mark.skipif(
+    device_name in ["lightning.tensor"],
+    reason=device_name + " cannot be initialized with less than 2 wires.",
+)
+@pytest.mark.parametrize("n_qubits", list(range(1, 3)))
+def test_controlled_globalphase_1ctrl_false_cornercase(n_qubits, tol):
+    """Test that single-controlled GlobalPhase (value=False) with zero-wire is correctly applied to a state"""
+    dev_def = qml.device("default.qubit", wires=n_qubits)
+    dev = qml.device(device_name, wires=n_qubits)
+    control_wires = [0]
+
+    def circuit():
+        qml.StatePrep(get_random_normalized_state(2**n_qubits), wires=range(n_qubits))
+        qml.ctrl(
+            qml.GlobalPhase(0.1234),
+            control_wires,
+            control_values=[False],
         )
         return qml.state()
 

@@ -179,11 +179,9 @@ class AdjointJacobianMPI final
                     break; // All done
                 }
 
-                mu.updateData(lambda);
-                BaseType::applyOperationAdj(lambda, ops, op_idx);
-
                 if (ops.hasParams(op_idx)) {
                     if (current_param_idx == *tp_it) {
+                        mu.updateData(lambda);
                         const PrecisionT scalingFactor =
                             this->applyGenerator(
                                 mu, ops.getOpsName()[op_idx],
@@ -197,6 +195,7 @@ class AdjointJacobianMPI final
                     }
                     current_param_idx--;
                 }
+                BaseType::applyOperationAdj(lambda, ops, op_idx);
                 BaseType::applyOperationAdj(H_lambda, ops,
                                             static_cast<std::size_t>(op_idx));
             }
