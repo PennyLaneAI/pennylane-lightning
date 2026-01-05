@@ -428,6 +428,10 @@ class LightningQubit(LightningBase):
         if execution_config is None:
             execution_config = ExecutionConfig()
 
+        # Cache intermediate states only if using adjoint differentiation with device VJP
+        # # pylint: disable=attribute-defined-outside-init
+        self._intermediate_states = {} if execution_config.use_device_jacobian_product else None
+
         mcmc = {
             "mcmc": self._mcmc,
             "kernel_name": self._kernel_name,

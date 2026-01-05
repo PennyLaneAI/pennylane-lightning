@@ -9,6 +9,13 @@
 
 <h3>Improvements 🛠</h3>
 
+- Cache intermediate states in the adjoint-jacobian pipeline to eliminate redundant forward pass computed during backward pass in `lightning.qubit`.
+  [(#1312)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1312)
+
+- Device VJP has been optimized to avoid unecessary copying of temporary statevectors.
+  `lightning.qubit` also has additional optimizations when using only a single observable.
+  [(#1311)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1311)
+
 - Handled `qml.GlobalPhase` with zero-qubit target wires in `lightning.gpu`.
   Supported `qml.GlobalPhase` with one controlled wire across state-vector devices.
   [(#1298)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1298)
@@ -34,10 +41,16 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Pin NumPy `<2.4` on CIs as `pyscf` is not compatible with the new version of NumPy yet.
+  [(#1315)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1315)
+
+- Update references to the `transform` property of the `qml.transforms.core.Transform` and `qml.transforms.core.BoundTransform`.
+  [(#1315)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1315)
+
 - Update references to `TransformProgram` with `CompilePipeline`
   [(#1310)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1310)
 
-- Update `wheel_linux_aarch64.yml` workflow to run on a Blacksmith Arm runner. 
+- Update `wheel_linux_aarch64.yml` workflow to run on a Blacksmith Arm runner.
   [(#1307)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1307)
 
 - Update MacOS runner to use OSX 14.
@@ -52,7 +65,7 @@
 
 - Pinned black, pylint, and isort versions in requirement files.
   [(#1288)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1288)
-  
+
 - Update Sphinx version to 8.1.
   [(#1291)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1291)
 

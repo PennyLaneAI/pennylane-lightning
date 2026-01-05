@@ -319,11 +319,10 @@ class AdjointJacobian final
             if (tp_it == tp_rend) {
                 break; // All done
             }
-            mu.updateData(lambda);
-            BaseType::applyOperationAdj(lambda, ops, op_idx);
 
             if (ops.hasParams(op_idx)) {
                 if (current_param_idx == *tp_it) {
+                    mu.updateData(lambda);
                     const PrecisionT scalingFactor =
                         (ops.getOpsControlledWires()[op_idx].empty())
                             ? BaseType::applyGenerator(
@@ -349,6 +348,7 @@ class AdjointJacobian final
                 }
                 current_param_idx--;
             }
+            BaseType::applyOperationAdj(lambda, ops, op_idx);
             this->applyOperationsAdj(H_lambda, ops,
                                      static_cast<std::size_t>(op_idx));
         }
