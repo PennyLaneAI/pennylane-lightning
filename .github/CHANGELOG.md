@@ -41,6 +41,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Fix OpenMP toggle for the `lightning.qubit` source builds.
+  [(#1313)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1313)
+
 - Pin NumPy `<2.4` on CIs as `pyscf` is not compatible with the new version of NumPy yet.
   [(#1315)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1315)
 
