@@ -42,7 +42,7 @@
 <h3>Internal changes ⚙️</h3>
 
 - Test Docker images for v0.44.0 RC branch.
-  [(#0000)](https://github.com/PennyLaneAI/pennylane-lightning/pull/0000)
+  [(#1319)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1319)
 
 - Pin NumPy `<2.4` on CIs as `pyscf` is not compatible with the new version of NumPy yet.
   [(#1315)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1315)
@@ -210,9 +210,6 @@ David Wierichs.
 
 <h3>Internal changes ⚙️</h3>
 
-- Test Docker images for v0.44.0 RC branch.
-  [(#0000)](https://github.com/PennyLaneAI/pennylane-lightning/pull/0000)
-
 - Updated test to skip MCM test for `lightning.tensor` and fix seed for deterministic test.
   [(#1281)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1281)
 
@@ -379,9 +376,6 @@ Jake Zaia.
 
 <h3>Internal changes ⚙️</h3>
 
-- Test Docker images for v0.44.0 RC branch.
-  [(#0000)](https://github.com/PennyLaneAI/pennylane-lightning/pull/0000)
-
 - Updated tests with `device(..., shots=...)` to use `qml.set_shots` to ensure compatibility with the latest version of PennyLane.
   [(#1173)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1173)
 
@@ -465,9 +459,6 @@ Jake Zaia
   [(#1131)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1131)
 
 <h3>Internal changes ⚙️</h3>
-
-- Test Docker images for v0.44.0 RC branch.
-  [(#0000)](https://github.com/PennyLaneAI/pennylane-lightning/pull/0000)
 
 - Updates for depending deprecations to `Observable`, `is_trainable`, and `AnyWires` in pennylane.
   [(#1138)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1138)
