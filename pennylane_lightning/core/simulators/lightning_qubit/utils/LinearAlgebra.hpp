@@ -82,7 +82,7 @@ enum class Trans : int {
  * @param data_size Size of data arrays.
  */
 template <class T,
-          std::size_t NTERMS = (1U << 19U)> // NOLINT(readability-magic-numbers)
+          std::size_t NTERMS = (1U << 17U)> // NOLINT(readability-magic-numbers)
 inline static void
 omp_innerProdC(const std::complex<T> *v1, const std::complex<T> *v2,
                std::complex<T> &result, const std::size_t data_size) {
@@ -121,7 +121,7 @@ omp_innerProdC(const std::complex<T> *v1, const std::complex<T> *v2,
  */
 template <class T,
           std::size_t STD_CROSSOVER =
-              (1U << 20U)> // NOLINT(readability-magic-numbers)
+              (1U << 18U)> // NOLINT(readability-magic-numbers)
 inline auto innerProdC(const std::complex<T> *v1, const std::complex<T> *v2,
                        const std::size_t data_size) -> std::complex<T> {
     std::complex<T> result(0, 0);
