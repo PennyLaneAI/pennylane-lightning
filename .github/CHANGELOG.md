@@ -68,6 +68,9 @@ Jake Zaia
 
 <h3>Internal changes ⚙️</h3>
 
+- Test Docker images for v0.44.0 RC branch.
+  [(#1319)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1319)
+
 - Pin NumPy `<2.4` on CIs as `pyscf` is not compatible with the new version of NumPy yet.
   [(#1315)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1315)
 
