@@ -100,10 +100,15 @@
 
 This release contains contributions from (in alphabetical order):
 
+Runor Agbaire,
 Ali Asadi,
+Astral Cai,
 Yushao Chen,
 Joseph Lee,
-David Wierichs.
+Luis Alfredo Nuñez Meneses,
+Andrija Paurevic,
+David Wierichs,
+Jake Zaia.
 
 ---
 
