@@ -14,7 +14,8 @@
 
 <h3>Internal changes ⚙️</h3>
 
-- Bump the version number to 0.45.0-dev. This also bumps the minimum version of PennyLane in the requirements.
+- Bump the version number to `0.45.0-dev`.
+  This also bumps the minimum version of PennyLane to `0.43`.
     [(#1320)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1320)
 
 <h3>Contributors ✍️</h3>
