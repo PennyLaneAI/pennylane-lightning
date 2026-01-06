@@ -858,5 +858,4 @@ TEST_CASE("LightningKokkosSimulator::GateSet", "[GateSet]") {
                                   {false}, {"XY"}),
             Catch::Contains("Controlled PauliRot is not supported"));
     }
-
 }
