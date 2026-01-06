@@ -347,8 +347,8 @@ void LightningSimulator::PartialProbs(DataView<double, 1> &probs,
     std::move(dv_probs.begin(), dv_probs.end(), probs.begin());
 }
 
-std::vector<size_t>
-LightningSimulator::GenerateSamplesMetropolis(size_t shots) {
+std::vector<size_t> LightningSimulator::GenerateSamplesMetropolis(
+    size_t shots, const std::vector<size_t> &dev_wires) {
     // generate_samples_metropolis is a member function of the Measures class.
     Pennylane::LightningQubit::Measures::Measurements<StateVectorT> m{
         *(this->device_sv)};
@@ -362,14 +362,18 @@ LightningSimulator::GenerateSamplesMetropolis(size_t shots) {
     // the number of qubits.
     //
     // Return Value Optimization (RVO)
-    return m.generate_samples_metropolis(this->kernel_name, this->num_burnin,
-                                         shots);
+    if (dev_wires.empty()) {
+        return m.generate_samples_metropolis(this->kernel_name,
+                                             this->num_burnin, shots);
+    } else {
+        return m.generate_samples_metropolis(dev_wires, this->kernel_name,
+                                             this->num_burnin, shots);
+    }
 }
 
-std::vector<size_t> LightningSimulator::GenerateSamples(size_t shots) {
-    if (this->mcmc) {
-        return this->GenerateSamplesMetropolis(shots);
-    }
+std::vector<size_t>
+LightningSimulator::GenerateSamples(size_t shots,
+                                    const std::vector<size_t> &wires) {
     // generate_samples is a member function of the Measures class.
     Pennylane::LightningQubit::Measures::Measurements<StateVectorT> m{
         *(this->device_sv)};
@@ -381,9 +385,11 @@ std::vector<size_t> LightningSimulator::GenerateSamples(size_t shots) {
     // Given the number of samples, returns 1-D vector of samples
     // in binary, each sample is separated by a stride equal to
     // the number of qubits.
-    //
-    // Return Value Optimization (RVO)
-    return m.generate_samples(shots);
+    if (wires.empty()) {
+        return m.generate_samples(shots);
+    } else {
+        return m.generate_samples(wires, shots);
+    }
 }
 
 void LightningSimulator::Sample(DataView<double, 2> &samples) {
@@ -417,10 +423,8 @@ void LightningSimulator::PartialSample(DataView<double, 2> &samples,
     RT_FAIL_IF(samples.size() != device_shots * numWires,
                "Invalid size for the pre-allocated partial-samples");
 
-    // get device wires
-    auto &&dev_wires = getDeviceWires(wires);
-
-    auto li_samples = this->GenerateSamples(device_shots);
+    auto dev_wires = getDeviceWires(wires);
+    auto li_samples = this->GenerateSamples(device_shots, dev_wires);
 
     // The lightning samples are layed out as a single vector of size
     // shots*qubits, where each element represents a single bit. The
@@ -478,10 +482,8 @@ void LightningSimulator::PartialCounts(DataView<double, 1> &eigvals,
     RT_FAIL_IF((eigvals.size() != numElements || counts.size() != numElements),
                "Invalid size for the pre-allocated partial-counts");
 
-    // get device wires
-    auto &&dev_wires = getDeviceWires(wires);
-
-    auto li_samples = this->GenerateSamples(device_shots);
+    auto dev_wires = getDeviceWires(wires);
+    auto li_samples = this->GenerateSamples(device_shots, dev_wires);
 
     // Fill the eigenvalues with the integer representation of the corresponding
     // computational basis bitstring. In the future, eigenvalues can also be

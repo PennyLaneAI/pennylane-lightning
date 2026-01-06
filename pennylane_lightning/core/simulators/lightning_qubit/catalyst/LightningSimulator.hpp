@@ -95,8 +95,12 @@ class LightningSimulator final : public Catalyst::Runtime::QuantumDevice {
         return std::nullopt;
     }
 
-    auto GenerateSamplesMetropolis(size_t shots) -> std::vector<size_t>;
-    auto GenerateSamples(size_t shots) -> std::vector<size_t>;
+    auto GenerateSamplesMetropolis(size_t shots,
+                                   const std::vector<size_t> &dev_wires = {})
+        -> std::vector<size_t>;
+    auto GenerateSamples(size_t shots,
+                         const std::vector<size_t> &dev_wires = {})
+        -> std::vector<size_t>;
 
   public:
     explicit LightningSimulator(
