@@ -426,6 +426,10 @@ void LightningSimulator::PartialSample(DataView<double, 2> &samples,
     auto dev_wires = getDeviceWires(wires);
     auto li_samples = this->GenerateSamples(device_shots, dev_wires);
 
+    // The lightning samples are layed out as a single vector of size
+    // shots*qubits, where each element represents a single bit. The
+    // corresponding shape is (shots, qubits). Gather the desired bits
+    // corresponding to the input wires into a bitstring.
     auto samplesIter = samples.begin();
     for (size_t shot = 0; shot < device_shots; shot++) {
         for (size_t wire_idx = 0; wire_idx < numWires; wire_idx++) {
