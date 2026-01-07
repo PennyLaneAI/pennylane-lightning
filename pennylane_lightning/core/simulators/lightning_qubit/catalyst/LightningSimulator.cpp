@@ -385,6 +385,8 @@ auto LightningSimulator::Var(ObsIdType obsKey) -> double {
 }
 
 void LightningSimulator::State(DataView<std::complex<double>, 1> &state) {
+    CompactStateVector();
+
     auto &&dv_state = this->device_sv->getDataVector();
     RT_FAIL_IF(state.size() != dv_state.size(),
                "Invalid size for the pre-allocated state vector");
