@@ -8,7 +8,8 @@
 
 <h3>Improvements 🛠</h3>
 
-- Cached intermediate states in the adjoint-jacobian pipeline to eliminate redundant forward pass computed during backward pass in `lightning.qubit`.
+- Added intermediate state cache in the adjoint-jacobian pipeline to eliminate
+  a redundant forward pass computed during backward pass in `lightning.qubit`.
   [(#1312)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1312)
 
 - Device VJP has been optimized to avoid unecessary copying of temporary statevectors.
@@ -99,11 +100,16 @@
 
 This release contains contributions from (in alphabetical order):
 
+Runor Agbaire,
 Ali Asadi,
+Astral Cai,
 Yushao Chen,
 Joseph Lee,
+Anton Naim Ibrahim,
+Luis Alfredo Nuñez Meneses,
+Andrija Paurevic,
 David Wierichs,
-and Jake Zaia.
+Jake Zaia.
 
 ---
 
