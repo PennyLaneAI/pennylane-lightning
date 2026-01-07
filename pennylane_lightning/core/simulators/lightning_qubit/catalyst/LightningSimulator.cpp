@@ -430,9 +430,11 @@ LightningSimulator::GenerateSamplesMetropolis(size_t shots) {
     auto m = getMeasurements();
     m.setSeed(this->generateSeed());
 
-    // PL-Lightning generates samples using the MCMC method.
-    // Reference:
-    // https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.105.050502
+    // PL-Lightning generates samples using the alias method.
+    // Reference: https://en.wikipedia.org/wiki/Alias_method
+    // Given the number of samples, returns 1-D vector of samples
+    // in binary, each sample is separated by a stride equal to
+    // the number of qubits.
     //
     // Return Value Optimization (RVO)
     return m.generate_samples_metropolis(this->kernel_name, this->num_burnin,
@@ -445,6 +447,11 @@ std::vector<size_t> LightningSimulator::GenerateSamples(size_t shots) {
 
     // PL-Lightning generates samples using the alias method.
     // Reference: https://en.wikipedia.org/wiki/Alias_method
+    // Given the number of samples, returns 1-D vector of samples
+    // in binary, each sample is separated by a stride equal to
+    // the number of qubits.
+    //
+    // Return Value Optimization (RVO)
     return m.generate_samples(shots);
 }
 
@@ -479,7 +486,8 @@ void LightningSimulator::PartialSample(DataView<double, 2> &samples,
     RT_FAIL_IF(samples.size() != device_shots * numWires,
                "Invalid size for the pre-allocated partial-samples");
 
-    auto dev_wires = getDeviceWires(wires);
+    // get device wires
+    auto &&dev_wires = getDeviceWires(wires);
 
     auto li_samples = this->GenerateSamples(device_shots);
 
@@ -539,6 +547,7 @@ void LightningSimulator::PartialCounts(DataView<double, 1> &eigvals,
     RT_FAIL_IF((eigvals.size() != numElements || counts.size() != numElements),
                "Invalid size for the pre-allocated partial-counts");
 
+    // get device wires
     auto &&dev_wires = getDeviceWires(wires);
 
     auto li_samples = this->GenerateSamples(device_shots);
