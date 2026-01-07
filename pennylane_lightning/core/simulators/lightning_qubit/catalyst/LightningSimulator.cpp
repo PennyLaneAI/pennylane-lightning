@@ -23,6 +23,24 @@
 
 namespace Catalyst::Runtime::Simulator {
 
+namespace {
+inline void normalizeStateVector(std::vector<std::complex<double>> &data) {
+    // squared norm of the state vector
+    double norm = 0.0;
+    for (const auto &amplitude : data) {
+        norm += std::norm(amplitude);
+    }
+    norm = std::sqrt(norm);
+
+    // TODO: Is it necessary to check if norm is greater than epsilon?
+    if (norm > std::numeric_limits<double>::epsilon()) {
+        for (auto &elem : data) {
+            elem /= norm;
+        }
+    }
+}
+} // anonymous namespace
+
 auto LightningSimulator::AllocateQubit() -> QubitIdType {
     const size_t num_qubits = GetNumQubits();
     if (num_qubits == 0U) {
@@ -101,26 +119,94 @@ void LightningSimulator::ReleaseQubits(const std::vector<QubitIdType> &ids) {
         if (deallocate_all) {
             this->qubit_manager.ReleaseAll();
             this->device_sv = std::make_unique<StateVectorT>(0);
+            this->needs_compaction = false;
             return;
         }
     }
 
     for (auto id : ids) {
-        this->qubit_manager.Release(id);
+        this->ReleaseQubit(id);
     }
 }
 
 void LightningSimulator::ReleaseQubit(QubitIdType q) {
-    // We do not deallocate physical memory in the statevector for this
-    // operation, instead we just mark the qubits as released.
-    // TODO: need to ensure the semantic behaviour of releasing qubits is still
-    // maintained,
-    //       in particular: measurements must not compute results for released
-    //       qubits, only for active/allocated qubits
+    RT_FAIL_IF(!this->qubit_manager.isValidQubitId(q),
+               "Invalid qubit to release");
+
+    // Measure the qubit to collapse it to a definite state
+    this->Measure(q, std::nullopt);
+
+    // Mark the qubit as released in the qubit manager
     this->qubit_manager.Release(q);
 
-    // TODO: We don't have to check whether the released qubit is pure, but it
-    // is something we can add easily to catch program errors.
+    // Mark that compaction is needed
+    this->needs_compaction = true;
+}
+
+auto LightningSimulator::getMeasurements()
+    -> Pennylane::LightningQubit::Measures::Measurements<StateVectorT> {
+    CompactStateVector();
+    return Pennylane::LightningQubit::Measures::Measurements<StateVectorT>{
+        *(this->device_sv)};
+}
+
+void LightningSimulator::CompactStateVector() {
+    if (!this->needs_compaction) {
+        return;
+    }
+
+    // Get active qubits
+    auto all_qubits = this->qubit_manager.getAllQubitIds();
+    std::vector<std::pair<size_t, QubitIdType>> wire_id_pairs;
+
+    for (auto qid : all_qubits) {
+        size_t device_wire = this->qubit_manager.getDeviceId(qid);
+        wire_id_pairs.push_back({device_wire, qid});
+    }
+
+    // Sort by device wire index
+    std::sort(wire_id_pairs.begin(), wire_id_pairs.end());
+
+    // Extract compacted state vector
+    auto &old_data = this->device_sv->getDataVector();
+    size_t num_qubits_after = wire_id_pairs.size();
+    size_t new_size = 1UL << num_qubits_after;
+
+    std::vector<std::complex<double>> new_data(new_size);
+
+    for (size_t new_idx = 0; new_idx < new_size; new_idx++) {
+        size_t old_idx = 0;
+        // Check each bit and map to the old index
+        for (size_t new_bit = 0; new_bit < num_qubits_after; new_bit++) {
+            if ((new_idx >> new_bit) & 1) {
+                size_t old_bit = wire_id_pairs[new_bit].first;
+                old_idx |= (1UL << old_bit);
+            }
+        }
+        new_data[new_idx] = old_data[old_idx];
+    }
+
+    // Normalize the state vector
+    normalizeStateVector(new_data);
+
+    // Replace the state vector
+    this->device_sv = std::make_unique<StateVectorT>(new_data);
+
+    // Remap device ids
+    std::unordered_map<size_t, size_t> old_to_new_device_id;
+    for (size_t new_idx = 0; new_idx < wire_id_pairs.size(); new_idx++) {
+        size_t old_device_id = wire_id_pairs[new_idx].first;
+        size_t new_device_id = new_idx;
+        if (old_device_id != new_device_id) {
+            old_to_new_device_id[old_device_id] = new_device_id;
+        }
+    }
+
+    if (!old_to_new_device_id.empty()) {
+        this->qubit_manager.RemapDeviceIds(old_to_new_device_id);
+    }
+
+    this->needs_compaction = false;
 }
 
 auto LightningSimulator::GetNumQubits() const -> size_t {
@@ -275,9 +361,7 @@ auto LightningSimulator::Expval(ObsIdType obsKey) -> double {
         this->cache_manager.addObservable(obsKey, MeasurementsT::Expval);
     }
 
-    Pennylane::LightningQubit::Measures::Measurements<StateVectorT> m{
-        *(this->device_sv)};
-
+    auto m = getMeasurements();
     m.setSeed(this->generateSeed());
 
     return (device_shots != 0U) ? m.expval(*obs, device_shots, {})
@@ -294,9 +378,7 @@ auto LightningSimulator::Var(ObsIdType obsKey) -> double {
         this->cache_manager.addObservable(obsKey, MeasurementsT::Var);
     }
 
-    Pennylane::LightningQubit::Measures::Measurements<StateVectorT> m{
-        *(this->device_sv)};
-
+    auto m = getMeasurements();
     m.setSeed(this->generateSeed());
 
     return (device_shots != 0U) ? m.var(*obs, device_shots) : m.var(*obs);
@@ -311,9 +393,7 @@ void LightningSimulator::State(DataView<std::complex<double>, 1> &state) {
 }
 
 void LightningSimulator::Probs(DataView<double, 1> &probs) {
-    Pennylane::LightningQubit::Measures::Measurements<StateVectorT> m{
-        *(this->device_sv)};
-
+    auto m = getMeasurements();
     m.setSeed(this->generateSeed());
 
     auto &&dv_probs = (device_shots != 0U) ? m.probs(device_shots) : m.probs();
@@ -333,9 +413,7 @@ void LightningSimulator::PartialProbs(DataView<double, 1> &probs,
     RT_FAIL_IF(!isValidQubits(wires), "Invalid given wires to measure");
 
     auto dev_wires = getDeviceWires(wires);
-    Pennylane::LightningQubit::Measures::Measurements<StateVectorT> m{
-        *(this->device_sv)};
-
+    auto m = getMeasurements();
     m.setSeed(this->generateSeed());
 
     auto &&dv_probs = (device_shots != 0U) ? m.probs(dev_wires, device_shots)
@@ -347,49 +425,27 @@ void LightningSimulator::PartialProbs(DataView<double, 1> &probs,
     std::move(dv_probs.begin(), dv_probs.end(), probs.begin());
 }
 
-std::vector<size_t> LightningSimulator::GenerateSamplesMetropolis(
-    size_t shots, const std::vector<size_t> &dev_wires) {
-    // generate_samples_metropolis is a member function of the Measures class.
-    Pennylane::LightningQubit::Measures::Measurements<StateVectorT> m{
-        *(this->device_sv)};
-
+std::vector<size_t>
+LightningSimulator::GenerateSamplesMetropolis(size_t shots) {
+    auto m = getMeasurements();
     m.setSeed(this->generateSeed());
 
-    // PL-Lightning generates samples using the alias method.
-    // Reference: https://en.wikipedia.org/wiki/Alias_method
-    // Given the number of samples, returns 1-D vector of samples
-    // in binary, each sample is separated by a stride equal to
-    // the number of qubits.
+    // PL-Lightning generates samples using the MCMC method.
+    // Reference:
+    // https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.105.050502
     //
     // Return Value Optimization (RVO)
-    if (dev_wires.empty()) {
-        return m.generate_samples_metropolis(this->kernel_name,
-                                             this->num_burnin, shots);
-    } else {
-        return m.generate_samples_metropolis(dev_wires, this->kernel_name,
-                                             this->num_burnin, shots);
-    }
+    return m.generate_samples_metropolis(this->kernel_name, this->num_burnin,
+                                         shots);
 }
 
-std::vector<size_t>
-LightningSimulator::GenerateSamples(size_t shots,
-                                    const std::vector<size_t> &wires) {
-    // generate_samples is a member function of the Measures class.
-    Pennylane::LightningQubit::Measures::Measurements<StateVectorT> m{
-        *(this->device_sv)};
-
+std::vector<size_t> LightningSimulator::GenerateSamples(size_t shots) {
+    auto m = getMeasurements();
     m.setSeed(this->generateSeed());
 
     // PL-Lightning generates samples using the alias method.
     // Reference: https://en.wikipedia.org/wiki/Alias_method
-    // Given the number of samples, returns 1-D vector of samples
-    // in binary, each sample is separated by a stride equal to
-    // the number of qubits.
-    if (wires.empty()) {
-        return m.generate_samples(shots);
-    } else {
-        return m.generate_samples(wires, shots);
-    }
+    return m.generate_samples(shots);
 }
 
 void LightningSimulator::Sample(DataView<double, 2> &samples) {
@@ -424,7 +480,8 @@ void LightningSimulator::PartialSample(DataView<double, 2> &samples,
                "Invalid size for the pre-allocated partial-samples");
 
     auto dev_wires = getDeviceWires(wires);
-    auto li_samples = this->GenerateSamples(device_shots, dev_wires);
+
+    auto li_samples = this->GenerateSamples(device_shots);
 
     // The lightning samples are layed out as a single vector of size
     // shots*qubits, where each element represents a single bit. The
@@ -432,9 +489,9 @@ void LightningSimulator::PartialSample(DataView<double, 2> &samples,
     // corresponding to the input wires into a bitstring.
     auto samplesIter = samples.begin();
     for (size_t shot = 0; shot < device_shots; shot++) {
-        for (size_t wire_idx = 0; wire_idx < numWires; wire_idx++) {
+        for (auto wire : dev_wires) {
             *(samplesIter++) =
-                static_cast<double>(li_samples[shot * numWires + wire_idx]);
+                static_cast<double>(li_samples[shot * numQubits + wire]);
         }
     }
 }
@@ -482,8 +539,9 @@ void LightningSimulator::PartialCounts(DataView<double, 1> &eigvals,
     RT_FAIL_IF((eigvals.size() != numElements || counts.size() != numElements),
                "Invalid size for the pre-allocated partial-counts");
 
-    auto dev_wires = getDeviceWires(wires);
-    auto li_samples = this->GenerateSamples(device_shots, dev_wires);
+    auto &&dev_wires = getDeviceWires(wires);
+
+    auto li_samples = this->GenerateSamples(device_shots);
 
     // Fill the eigenvalues with the integer representation of the corresponding
     // computational basis bitstring. In the future, eigenvalues can also be

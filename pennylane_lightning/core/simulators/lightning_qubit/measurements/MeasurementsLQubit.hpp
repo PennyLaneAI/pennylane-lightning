@@ -552,17 +552,7 @@ class Measurements final
                                 std::size_t num_burnin,
                                 std::size_t num_samples) {
         std::size_t num_qubits = this->_statevector.getNumQubits();
-        std::vector<std::size_t> wires(num_qubits);
-        std::iota(wires.begin(), wires.end(), 0);
-        return generate_samples_metropolis(wires, kernelname, num_burnin,
-                                           num_samples);
-    }
-
-    std::vector<std::size_t> generate_samples_metropolis(
-        const std::vector<std::size_t> &wires, const std::string &kernelname,
-        std::size_t num_burnin, std::size_t num_samples) {
         std::uniform_real_distribution<PrecisionT> distrib(0.0, 1.0);
-        std::size_t num_qubits = wires.size();
         std::vector<std::size_t> samples(num_samples * num_qubits, 0);
         std::unordered_map<std::size_t, std::size_t> cache;
         this->setSeed(this->_deviceseed);

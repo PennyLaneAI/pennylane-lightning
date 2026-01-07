@@ -163,5 +163,28 @@ class QubitManager final {
         this->qubit_id_map.clear();
         this->free_device_qubits.clear();
     }
+
+    void RemapDeviceIds(const std::unordered_map<DeviceQubitID, DeviceQubitID>
+                            &old_to_new_mapping) {
+        // Update each program_id's device_id according to the mapping
+        for (auto &[program_id, device_id] : this->qubit_id_map) {
+            auto it = old_to_new_mapping.find(device_id);
+            if (it != old_to_new_mapping.end()) {
+                device_id = it->second;
+            }
+        }
+
+        // Update free device qubits as well
+        std::unordered_set<DeviceQubitID> new_free_qubits;
+        for (auto old_device_id : this->free_device_qubits) {
+            auto it = old_to_new_mapping.find(old_device_id);
+            if (it != old_to_new_mapping.end()) {
+                new_free_qubits.insert(it->second);
+            } else {
+                new_free_qubits.insert(old_device_id);
+            }
+        }
+        this->free_device_qubits = std::move(new_free_qubits);
+    }
 };
 } // namespace Catalyst::Runtime::Simulator
