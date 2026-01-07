@@ -177,16 +177,24 @@ void LightningSimulator::CompactStateVector() {
 
     std::vector<std::complex<double>> new_data(new_size);
 
-    for (size_t new_idx = 0; new_idx < new_size; new_idx++) {
-        size_t old_idx = 0;
-        // Check each bit and map to the old index
-        for (size_t new_bit = 0; new_bit < num_qubits_after; new_bit++) {
-            if ((new_idx >> new_bit) & 1) {
-                size_t old_bit = wire_id_pairs[new_bit].first;
-                old_idx |= (1UL << old_bit);
+    // state[idx] = |q0 q1 ... q_{n-1}>
+    //   where q_i = (idx >> (n-1-i)) & 1
+    // So device wire 0 corresponds to the MSB (bit n-1)
+    size_t old_num_qubits = this->device_sv->getNumQubits();
+
+    for (size_t old_idx = 0; old_idx < old_data.size(); old_idx++) {
+        size_t new_idx = 0;
+        for (size_t i = 0; i < num_qubits_after; i++) {
+            size_t old_wire = wire_id_pairs[i].first;
+            size_t old_bit_pos = old_num_qubits - 1 - old_wire;
+            size_t new_bit_pos = num_qubits_after - 1 - i;
+
+            if ((old_idx >> old_bit_pos) & 1) {
+                new_idx |= (1UL << new_bit_pos);
             }
         }
-        new_data[new_idx] = old_data[old_idx];
+
+        new_data[new_idx] += old_data[old_idx];
     }
 
     // Normalize the state vector
