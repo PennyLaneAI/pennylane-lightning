@@ -130,11 +130,14 @@ void LightningSimulator::ReleaseQubits(const std::vector<QubitIdType> &ids) {
 }
 
 void LightningSimulator::ReleaseQubit(QubitIdType q) {
+    // We do not deallocate physical memory in the statevector for this
+    // operation, instead we just mark the qubits as released.
+    // TODO: need to ensure the semantic behaviour of releasing qubits is still
+    // maintained,
+    //       in particular: measurements must not compute results for released
+    //       qubits, only for active/allocated qubits
     RT_FAIL_IF(!this->qubit_manager.isValidQubitId(q),
                "Invalid qubit to release");
-
-    // Measure the qubit to collapse it to a definite state
-    this->Measure(q, std::nullopt);
 
     // Mark the qubit as released in the qubit manager
     this->qubit_manager.Release(q);
@@ -385,8 +388,6 @@ auto LightningSimulator::Var(ObsIdType obsKey) -> double {
 }
 
 void LightningSimulator::State(DataView<std::complex<double>, 1> &state) {
-    CompactStateVector();
-
     auto &&dv_state = this->device_sv->getDataVector();
     RT_FAIL_IF(state.size() != dv_state.size(),
                "Invalid size for the pre-allocated state vector");
