@@ -16,7 +16,7 @@
   `lightning.qubit` also has additional optimizations when using only a single observable.
   [(#1311)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1311)
 
-- Handled `qml.GlobalPhase` with zero-qubit target wires in `lightning.gpu`.
+- Added handling for `qml.GlobalPhase` with zero-qubit target wires in `lightning.gpu`.
   Added support for `qml.GlobalPhase` with one controlled wire across state-vector devices.
   [(#1298)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1298)
 
