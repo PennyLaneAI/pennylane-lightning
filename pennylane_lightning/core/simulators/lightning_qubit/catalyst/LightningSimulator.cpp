@@ -415,9 +415,10 @@ void LightningSimulator::PartialProbs(DataView<double, 1> &probs,
     RT_FAIL_IF(numWires > numQubits, "Invalid number of wires");
     RT_FAIL_IF(!isValidQubits(wires), "Invalid given wires to measure");
 
-    auto dev_wires = getDeviceWires(wires);
     auto m = getMeasurements();
     m.setSeed(this->generateSeed());
+
+    auto dev_wires = getDeviceWires(wires);
 
     auto &&dv_probs = (device_shots != 0U) ? m.probs(dev_wires, device_shots)
                                            : m.probs(dev_wires);
@@ -489,10 +490,10 @@ void LightningSimulator::PartialSample(DataView<double, 2> &samples,
     RT_FAIL_IF(samples.size() != device_shots * numWires,
                "Invalid size for the pre-allocated partial-samples");
 
-    // get device wires
-    auto &&dev_wires = getDeviceWires(wires);
-
     auto li_samples = this->GenerateSamples(device_shots);
+
+    // Get device wires
+    auto &&dev_wires = getDeviceWires(wires);
 
     // The lightning samples are layed out as a single vector of size
     // shots*qubits, where each element represents a single bit. The
@@ -550,10 +551,10 @@ void LightningSimulator::PartialCounts(DataView<double, 1> &eigvals,
     RT_FAIL_IF((eigvals.size() != numElements || counts.size() != numElements),
                "Invalid size for the pre-allocated partial-counts");
 
-    // get device wires
-    auto &&dev_wires = getDeviceWires(wires);
-
     auto li_samples = this->GenerateSamples(device_shots);
+
+    // Get device wires
+    auto &&dev_wires = getDeviceWires(wires);
 
     // Fill the eigenvalues with the integer representation of the corresponding
     // computational basis bitstring. In the future, eigenvalues can also be
