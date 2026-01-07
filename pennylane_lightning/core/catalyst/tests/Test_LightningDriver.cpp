@@ -332,6 +332,7 @@ TEST_CASE("Release Qubits", "[Driver]") {
     CHECK(sim->GetNumQubits() == 2);
 }
 
+#ifdef _ENABLE_PLQUBIT
 TEST_CASE("Sample after dynamic qubit release", "[Driver]") {
     // This test mirrors the Python code:
     // @qjit
@@ -372,3 +373,4 @@ TEST_CASE("Sample after dynamic qubit release", "[Driver]") {
         CHECK(samples[i] == 0.);
     }
 }
+#endif
