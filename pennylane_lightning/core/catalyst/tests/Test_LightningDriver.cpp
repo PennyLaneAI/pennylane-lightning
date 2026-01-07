@@ -331,3 +331,44 @@ TEST_CASE("Release Qubits", "[Driver]") {
 
     CHECK(sim->GetNumQubits() == 2);
 }
+
+TEST_CASE("Sample after dynamic qubit release", "[Driver]") {
+    // This test mirrors the Python code:
+    // @qjit
+    // @qml.qnode(qml.device("lightning.qubit", wires=3, shots=10))
+    // def circuit():
+    //     with qml.allocate(2) as qs:
+    //         qml.X(qs[1])
+    //     return qml.sample(wires=[0, 1])
+
+    std::unique_ptr<LSimulator> sim = std::make_unique<LSimulator>();
+
+    // Allocate 3 static qubits (wires 0, 1, 2) : all in |0>
+    std::vector<intptr_t> static_qubits = sim->AllocateQubits(3);
+
+    // Dynamically allocate 2 qubits
+    std::vector<intptr_t> dynamic_qubits = sim->AllocateQubits(2);
+
+    // Apply PauliX to dynamic_qubits[1]
+    sim->NamedOperation("PauliX", {}, {dynamic_qubits[1]}, false);
+
+    // Release the dynamic qubits
+    sim->ReleaseQubits(dynamic_qubits);
+
+    // Sample on static wires [0, 1]
+    // Since static qubits were never modified, they should all be |0>
+    constexpr size_t num_shots = 10;
+    constexpr size_t num_wires = 2;
+    sim->SetDeviceShots(num_shots);
+
+    std::vector<double> samples(num_shots * num_wires);
+    const size_t sizes[2] = {num_shots, num_wires};
+    const size_t strides[2] = {1, 1};
+    DataView<double, 2> samples_view(samples.data(), 0, sizes, strides);
+
+    sim->PartialSample(samples_view, {static_qubits[0], static_qubits[1]});
+
+    for (size_t i = 0; i < num_shots * num_wires; i++) {
+        CHECK(samples[i] == 0.);
+    }
+}
