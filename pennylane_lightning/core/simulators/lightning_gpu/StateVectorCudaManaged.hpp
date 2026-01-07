@@ -675,6 +675,26 @@ class StateVectorCudaManaged
     }
 
     /**
+     * @brief Apply a PauliRot gate to the state-vector.
+     *
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicates whether to use inverse of gate.
+     * @param params Rotation angle.
+     * @param word A Pauli word (e.g. "XYYX").
+     */
+    void applyPauliRot(const std::vector<std::size_t> &wires, bool inverse,
+                       const std::vector<PrecisionT> &params,
+                       const std::string &word) {
+        PL_ABORT_IF_NOT(wires.size() == word.size(),
+                        "wires and word have incompatible dimensions.");
+
+        applyParametricPauliGeneralGate_({word}, {}, {},
+                                         NormalizeCastIndices<std::size_t, int>(
+                                             wires, BaseType::getNumQubits()),
+                                         params.front(), inverse);
+    }
+
+    /**
      * @brief Apply a given matrix directly to the statevector using a
      * std vector.
      *

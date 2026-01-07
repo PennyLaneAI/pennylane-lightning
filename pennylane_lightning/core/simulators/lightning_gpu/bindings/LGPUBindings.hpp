@@ -284,6 +284,17 @@ void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
 
     pyclass.def(nb::init<std::size_t>());              // qubits, device
     pyclass.def(nb::init<std::size_t, DevTag<int>>()); // qubits, dev-tag
+
+    // Add Pauli rotation - LGPU specific implementation
+    pyclass.def(
+        "applyPauliRot",
+        [](StateVectorT &sv, const std::vector<std::size_t> &wires,
+           const bool inverse, const std::vector<PrecisionT> &params,
+           const std::string &word) {
+            sv.applyPauliRot(wires, inverse, params, word);
+        },
+        "Apply a Pauli rotation.");
+
     pyclass.def("__init__", [](PyClass *self, const ArrayComplexT &arr) {
         new (self) StateVectorT(arr.data(), arr.size());
     });
