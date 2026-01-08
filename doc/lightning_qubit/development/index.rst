@@ -2,6 +2,11 @@ Lightning Qubit
 ###############
 
 .. title-card::
+   :name: Kernel Performance Tuning
+   :description: Explain how to tune Lightning-Qubit's kernel performance using CMake flags for OpenMP threading and AVX streaming.
+   :link: ./kernel_tuning.html
+
+.. title-card::
    :name: Adding gate implementations
    :description: How to add additional gate implementations
    :link: ./add_gate_kernel.html
@@ -20,5 +25,6 @@ Lightning Qubit
 .. toctree::
    :hidden:
 
+   kernel_tuning
    add_gate_kernel
    avx_kernels/index

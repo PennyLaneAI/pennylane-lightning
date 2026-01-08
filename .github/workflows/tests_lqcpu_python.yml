@@ -106,7 +106,11 @@ jobs:
       - name: Create device wheel ${{ inputs.lightning-version }}
         run: |
           PL_BACKEND=${{ matrix.pl_backend }} python scripts/configure_pyproject_toml.py
-          CMAKE_ARGS="-DENABLE_BLAS=${{ matrix.blas }} -DENABLE_SCIPY_OPENBLAS=${{ matrix.blas }} -DLQ_ENABLE_KERNEL_OMP=ON -DENABLE_PYTHON=ON -DLIGHTNING_CATALYST_SRC_PATH=${{ github.workspace }}/catalyst" python -m build
+          CMAKE_ARGS="-DENABLE_BLAS=${{ matrix.blas }} \
+                -DENABLE_SCIPY_OPENBLAS=${{ matrix.blas }} \
+                -DLQ_ENABLE_KERNEL_OMP=ON \
+                -DENABLE_PYTHON=ON \
+                -DLIGHTNING_CATALYST_SRC_PATH=${{ github.workspace }}/catalyst" python -m build
           cd dist
           WHEEL_NAME=$(ls *.whl)
           cp $WHEEL_NAME ${{ github.workspace }}/wheel_${{ matrix.pl_backend }}-${{ matrix.blas }}.whl
