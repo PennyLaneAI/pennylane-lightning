@@ -9,15 +9,15 @@
 <h3>Improvements 🛠</h3>
 
 - Added intermediate state cache in the adjoint-jacobian pipeline to eliminate
-  a redundant forward pass computed during backward pass in ``lightning.qubit``.
+  a redundant forward pass computed during backward pass in `lightning.qubit`.
   [(#1312)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1312)
 
 - Device VJP has been optimized to avoid unecessary copying of temporary statevectors.
-  ``lightning.qubit`` also has additional optimizations when using only a single observable.
+  `lightning.qubit` also has additional optimizations when using only a single observable.
   [(#1311)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1311)
 
-- Added handling for ``qml.GlobalPhase`` with zero-qubit target wires in ``lightning.gpu``.
-  Added support for ``qml.GlobalPhase`` with one controlled wire across state-vector devices.
+- Added handling for `qml.GlobalPhase` with zero-qubit target wires in `lightning.gpu`.
+  Added support for `qml.GlobalPhase` with one controlled wire across state-vector devices.
   [(#1298)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1298)
 
 - Added support for Python 3.14 wheel builds.
@@ -37,16 +37,16 @@
 
 <h3>Internal changes ⚙️</h3>
 
-- Pinned NumPy ``<2.4`` on CIs as ``pyscf`` is not compatible with the new version of NumPy yet.
+- Pinned NumPy to versions preceding 2.4 on CIs as `pyscf` is not compatible with the new version of NumPy yet.
   [(#1315)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1315)
 
-- Updated references to the ``transform`` property of the ``qml.transforms.core.Transform`` and ``qml.transforms.core.BoundTransform``.
+- Updated references to the `transform` property of the `qml.transforms.core.Transform` and `qml.transforms.core.BoundTransform`.
   [(#1315)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1315)
 
-- Updated references to ``TransformProgram`` with ``CompilePipeline``
+- Updated references to `TransformProgram` with `CompilePipeline`
   [(#1310)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1310)
 
-- Updated ``wheel_linux_aarch64.yml`` workflow to run on a Blacksmith Arm runner.
+- Updated `wheel_linux_aarch64.yml` workflow to run on a Blacksmith Arm runner.
   [(#1307)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1307)
 
 - Updated MacOS runner to use OSX 14.
@@ -59,13 +59,13 @@
 - Updated tests to accommodate new PennyLane MCM method validation.
   [(#1295)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1295)
 
-- Pinned ``black``, ``pylint``, and ``isort`` versions in the requirement files.
+- Pinned `black`, `pylint`, and `isort` versions in the requirement files.
   [(#1288)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1288)
 
 - Updated Sphinx version to 8.1.
   [(#1291)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1291)
 
-- Updated release script to use the Catalyst ``rc`` branch in CIs.
+- Updated release script to use the Catalyst `rc` branch in CIs.
   [(#1285)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1285)
 
 - Updated CIs to use GCC 13.
@@ -74,7 +74,7 @@
 - Bumped the seed for pytests.
   [(#1276)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1276)
 
-- ``scipy-openblas32`` dependency can be set manually when installing from source using the ``ENABLE_SCIPY_OPENBLAS`` cmake flag.
+- `scipy-openblas32` dependency can be set manually when installing from source using the `ENABLE_SCIPY_OPENBLAS` cmake flag.
   [(#1220)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1220)
 
 - Merged v0.43.0 rc branch to master.
@@ -83,7 +83,7 @@
 - Removed the Catalyst version pin in stable CI tests.
   [(#1284)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1284)
 
-- Updated ``lightning.qubit`` CI Python tests to use ``rc`` branch for testing release candidates.
+- Updated `lightning.qubit` CI Python tests to use `rc` branch for testing release candidates.
   [(#1280)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1280)
 
 - Bumped the version to 0.44.0-dev.
