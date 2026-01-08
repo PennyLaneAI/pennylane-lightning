@@ -424,7 +424,6 @@ class TestExecutionMCM:
             assert np.all(np.isnan(r1))
             assert np.all(np.isnan(r2))
 
-    @pytest.mark.local_salt(44)
     @pytest.mark.parametrize("shots", [None, 5000, [4000, 4001]])
     @pytest.mark.parametrize("postselect", [None, 0, 1])
     @pytest.mark.parametrize("measure_f", [qml.counts, qml.expval, qml.probs, qml.sample, qml.var])
@@ -490,7 +489,6 @@ class TestExecutionMCM:
 
         validate_measurements(measure_f, shots, results1, results2, atol=0.04)
 
-    @pytest.mark.local_salt(42)
     @pytest.mark.parametrize("shots", [None, 4000])
     @pytest.mark.parametrize("postselect", [None, 0, 1])
     @pytest.mark.parametrize("reset", [False, True])
@@ -545,7 +543,6 @@ class TestExecutionMCM:
         for measure_f, r1, r2 in zip(measurements, results1, results2):
             validate_measurements(measure_f, shots, r1, r2)
 
-    @pytest.mark.local_salt(43)
     @pytest.mark.parametrize(
         "mcm_f",
         [
