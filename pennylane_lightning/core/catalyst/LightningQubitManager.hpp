@@ -177,12 +177,7 @@ class QubitManager final {
         // Update free device qubits as well
         std::unordered_set<DeviceQubitID> new_free_qubits;
         for (auto old_device_id : this->free_device_qubits) {
-            auto it = old_to_new_mapping.find(old_device_id);
-            if (it != old_to_new_mapping.end()) {
-                new_free_qubits.insert(it->second);
-            } else {
-                new_free_qubits.insert(old_device_id);
-            }
+            new_free_qubits.insert(old_device_id);
         }
         this->free_device_qubits = std::move(new_free_qubits);
     }
