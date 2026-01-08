@@ -14,6 +14,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Tidy up and remove unused vector-matrix helper methods at `LinearAlgebra.hpp`.
+  [(#1314)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1314)
+
 - Bump the version number to `0.45.0-dev`.
   This also bumps the minimum version of PennyLane to `0.43`.
     [(#1320)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1320)
@@ -22,7 +25,8 @@
 
 This release contains contributions from (in alphabetical order):
 
-Jake Zaia
+Ali Asadi,
+Jake Zaia.
 
 ---
 
