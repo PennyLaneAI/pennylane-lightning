@@ -1,4 +1,32 @@
-# Release 0.44.0-dev (development release)
+# Release 0.45.0-dev (development release)
+
+<h3>New features since last release</h3>
+
+<h3>Improvements 🛠</h3>
+
+<h3>Breaking changes 💔</h3>
+
+<h3>Deprecations 👋</h3>
+
+<h3>Documentation 📝</h3>
+
+<h3>Bug fixes 🐛</h3>
+
+<h3>Internal changes ⚙️</h3>
+
+- Bump the version number to `0.45.0-dev`.
+  This also bumps the minimum version of PennyLane to `0.43`.
+    [(#1320)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1320)
+
+<h3>Contributors ✍️</h3>
+
+This release contains contributions from (in alphabetical order):
+
+Jake Zaia
+
+---
+
+# Release 0.44.0
 
 <h3>New features since last release</h3>
 
@@ -8,6 +36,13 @@
 
 
 <h3>Improvements 🛠</h3>
+
+- Cache intermediate states in the adjoint-jacobian pipeline to eliminate redundant forward pass computed during backward pass in `lightning.qubit`.
+  [(#1312)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1312)
+
+- Device VJP has been optimized to avoid unecessary copying of temporary statevectors.
+  `lightning.qubit` also has additional optimizations when using only a single observable.
+  [(#1311)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1311)
 
 - Handled `qml.GlobalPhase` with zero-qubit target wires in `lightning.gpu`.
   Supported `qml.GlobalPhase` with one controlled wire across state-vector devices.
@@ -34,13 +69,26 @@
 
 <h3>Internal changes ⚙️</h3>
 
-- Update `wheel_linux_aarch64.yml` workflow to run on a Blacksmith Arm runner. 
+- Test Docker images for v0.44.0 RC branch.
+  [(#1319)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1319)
+
+- Pin NumPy `<2.4` on CIs as `pyscf` is not compatible with the new version of NumPy yet.
+  [(#1315)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1315)
+
+- Update references to the `transform` property of the `qml.transforms.core.Transform` and `qml.transforms.core.BoundTransform`.
+  [(#1315)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1315)
+
+- Update references to `TransformProgram` with `CompilePipeline`
+  [(#1310)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1310)
+
+- Update `wheel_linux_aarch64.yml` workflow to run on a Blacksmith Arm runner.
   [(#1307)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1307)
 
 - Update MacOS runner to use OSX 14.
   [(#1304)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1304)
 
-- Temporarily skip aarch64 CUDA wheel tests for Python 3.14 due to [networkx issue](https://github.com/networkx/networkx/issues/8362), also temporarily increased github action timeout limit to 90 min.
+- Temporarily increased github action timeout limit to 90 min.
+  [(#1303)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1303)
   [(#1301)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1301)
 
 - Update tests to accomodate new PennyLane MCM method validation.
@@ -48,7 +96,7 @@
 
 - Pinned black, pylint, and isort versions in requirement files.
   [(#1288)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1288)
-  
+
 - Update Sphinx version to 8.1.
   [(#1291)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1291)
 

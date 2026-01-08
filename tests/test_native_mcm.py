@@ -247,8 +247,8 @@ class TestSupportedConfigurationsMCM:
         if mcm_method == "one-shot" and shots is None:
             pytest.skip("Skip test for one-shot with None shots")
 
-        spy_deffered = mocker.spy(qml.defer_measurements, "_transform")
-        spy_one_shot = mocker.spy(qml.dynamic_one_shot, "_transform")
+        spy_deffered = mocker.spy(qml.defer_measurements, "_tape_transform")
+        spy_one_shot = mocker.spy(qml.dynamic_one_shot, "_tape_transform")
         spy_tree_traversal = mocker.patch(
             "pennylane_lightning.lightning_base.lightning_base.mcm_tree_traversal"
         )
@@ -277,8 +277,8 @@ class TestSupportedConfigurationsMCM:
     @pytest.mark.parametrize("shots", [None, 10])
     def test_qnode_default_mcm_method_device(self, shots, mocker):
         """Test the default mcm method is used for analytical simulation"""
-        spy_deferred = mocker.spy(qml.defer_measurements, "_transform")
-        spy_dynamic_one_shot = mocker.spy(qml.dynamic_one_shot, "_transform")
+        spy_deferred = mocker.spy(qml.defer_measurements, "_tape_transform")
+        spy_dynamic_one_shot = mocker.spy(qml.dynamic_one_shot, "_tape_transform")
         spy_tree_traversal = mocker.patch(
             "pennylane_lightning.lightning_base.lightning_base.mcm_tree_traversal"
         )
@@ -297,8 +297,8 @@ class TestSupportedConfigurationsMCM:
 
     def test_qnode_default_mcm_method_analytical(self, mocker):
         """Test the default mcm method is used for analytical simulation"""
-        spy_deferred = mocker.spy(qml.defer_measurements, "_transform")
-        spy_dynamic_one_shot = mocker.spy(qml.dynamic_one_shot, "_transform")
+        spy_deferred = mocker.spy(qml.defer_measurements, "_tape_transform")
+        spy_dynamic_one_shot = mocker.spy(qml.dynamic_one_shot, "_tape_transform")
         spy_tree_traversal = mocker.patch(
             "pennylane_lightning.lightning_base.lightning_base.mcm_tree_traversal"
         )
@@ -320,8 +320,8 @@ class TestSupportedConfigurationsMCM:
     def test_qnode_default_mcm_method_finite_shots(self, mocker):
         """Test the default mcm method is used for finite shots"""
 
-        spy_deferred = mocker.spy(qml.defer_measurements, "_transform")
-        spy_dynamic_one_shot = mocker.spy(qml.dynamic_one_shot, "_transform")
+        spy_deferred = mocker.spy(qml.defer_measurements, "_tape_transform")
+        spy_dynamic_one_shot = mocker.spy(qml.dynamic_one_shot, "_tape_transform")
         spy_tree_traversal = mocker.patch(
             "pennylane_lightning.lightning_base.lightning_base.mcm_tree_traversal"
         )
@@ -424,7 +424,6 @@ class TestExecutionMCM:
             assert np.all(np.isnan(r1))
             assert np.all(np.isnan(r2))
 
-    @pytest.mark.local_salt(44)
     @pytest.mark.parametrize("shots", [None, 5000, [4000, 4001]])
     @pytest.mark.parametrize("postselect", [None, 0, 1])
     @pytest.mark.parametrize("measure_f", [qml.counts, qml.expval, qml.probs, qml.sample, qml.var])
@@ -490,7 +489,6 @@ class TestExecutionMCM:
 
         validate_measurements(measure_f, shots, results1, results2, atol=0.04)
 
-    @pytest.mark.local_salt(42)
     @pytest.mark.parametrize("shots", [None, 4000])
     @pytest.mark.parametrize("postselect", [None, 0, 1])
     @pytest.mark.parametrize("reset", [False, True])
@@ -545,7 +543,6 @@ class TestExecutionMCM:
         for measure_f, r1, r2 in zip(measurements, results1, results2):
             validate_measurements(measure_f, shots, r1, r2)
 
-    @pytest.mark.local_salt(43)
     @pytest.mark.parametrize(
         "mcm_f",
         [
