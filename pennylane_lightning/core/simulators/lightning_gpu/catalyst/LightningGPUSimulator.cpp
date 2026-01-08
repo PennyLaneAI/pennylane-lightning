@@ -18,6 +18,22 @@
 
 namespace Catalyst::Runtime::Simulator {
 
+namespace {
+inline void normalizeStateVector(std::vector<std::complex<double>> &data) {
+    double norm = 0.0;
+    for (const auto &amplitude : data) {
+        norm += std::norm(amplitude);
+    }
+    norm = std::sqrt(norm);
+
+    if (norm > std::numeric_limits<double>::epsilon()) {
+        for (auto &elem : data) {
+            elem /= norm;
+        }
+    }
+}
+} // anonymous namespace
+
 auto LightningGPUSimulator::AllocateQubit() -> QubitIdType {
     const size_t num_qubits = GetNumQubits();
     if (num_qubits == 0U) {
@@ -82,9 +98,14 @@ auto LightningGPUSimulator::AllocateQubits(std::size_t num_qubits)
 }
 
 void LightningGPUSimulator::ReleaseQubit(QubitIdType q) {
-    // We do not deallocate physical memory in the statevector for this
-    // operation, instead we just mark the qubits as released.
+    RT_FAIL_IF(!this->qubit_manager.isValidQubitId(q),
+               "Invalid qubit to release");
+
+    // Mark the qubit as released in the qubit manager
     this->qubit_manager.Release(q);
+
+    // Mark that compaction is needed
+    this->needs_compaction = true;
 }
 
 void LightningGPUSimulator::ReleaseQubits(const std::vector<QubitIdType> &ids) {
@@ -101,17 +122,93 @@ void LightningGPUSimulator::ReleaseQubits(const std::vector<QubitIdType> &ids) {
         if (deallocate_all) {
             this->qubit_manager.ReleaseAll();
             this->device_sv = std::make_unique<StateVectorT>(0);
+            this->needs_compaction = false;
             return;
         }
     }
 
     for (auto id : ids) {
-        this->qubit_manager.Release(id);
+        this->ReleaseQubit(id);
     }
 }
 
 auto LightningGPUSimulator::GetNumQubits() const -> std::size_t {
     return this->qubit_manager.getNumQubits();
+}
+
+auto LightningGPUSimulator::getMeasurements()
+    -> Pennylane::LightningGPU::Measures::Measurements<StateVectorT> {
+    CompactStateVector();
+    return Pennylane::LightningGPU::Measures::Measurements<StateVectorT>{
+        *(this->device_sv)};
+}
+
+void LightningGPUSimulator::CompactStateVector() {
+    if (!this->needs_compaction) {
+        return;
+    }
+
+    // Get active qubits
+    auto all_qubits = this->qubit_manager.getAllQubitIds();
+    std::vector<std::pair<size_t, QubitIdType>> wire_id_pairs;
+
+    for (auto qid : all_qubits) {
+        size_t device_wire = this->qubit_manager.getDeviceId(qid);
+        wire_id_pairs.push_back({device_wire, qid});
+    }
+
+    // Sort by device wire index
+    std::sort(wire_id_pairs.begin(), wire_id_pairs.end());
+
+    // Extract compacted state vector - need to copy from GPU first
+    auto old_data = this->device_sv->getDataVector();
+    size_t num_qubits_after = wire_id_pairs.size();
+    size_t new_size = 1UL << num_qubits_after;
+
+    std::vector<std::complex<double>> new_data(new_size);
+
+    // state[idx] = |q0 q1 ... q_{n-1}>
+    //   where q_i = (idx >> (n-1-i)) & 1
+    // So device wire 0 corresponds to the MSB (bit n-1)
+    size_t old_num_qubits = this->device_sv->getNumQubits();
+
+    for (size_t old_idx = 0; old_idx < old_data.size(); old_idx++) {
+        size_t new_idx = 0;
+        for (size_t i = 0; i < num_qubits_after; i++) {
+            size_t old_wire = wire_id_pairs[i].first;
+            size_t old_bit_pos = old_num_qubits - 1 - old_wire;
+            size_t new_bit_pos = num_qubits_after - 1 - i;
+
+            if ((old_idx >> old_bit_pos) & 1) {
+                new_idx |= (1UL << new_bit_pos);
+            }
+        }
+
+        new_data[new_idx] += old_data[old_idx];
+    }
+
+    // Normalize the state vector
+    normalizeStateVector(new_data);
+
+    // Replace the state vector
+    this->device_sv =
+        std::make_unique<StateVectorT>(new_data.data(), new_data.size());
+
+    // Remap device ids
+    std::unordered_map<size_t, size_t> old_to_new_device_id;
+    for (size_t new_idx = 0; new_idx < wire_id_pairs.size(); new_idx++) {
+        size_t old_device_id = wire_id_pairs[new_idx].first;
+        size_t new_device_id = new_idx;
+        if (old_device_id != new_device_id) {
+            old_to_new_device_id[old_device_id] = new_device_id;
+        }
+    }
+
+    if (!old_to_new_device_id.empty()) {
+        this->qubit_manager.RemapDeviceIds(old_to_new_device_id);
+    }
+
+    this->needs_compaction = false;
 }
 
 void LightningGPUSimulator::StartTapeRecording() {
@@ -264,9 +361,7 @@ auto LightningGPUSimulator::Expval(ObsIdType obsKey) -> double {
 
     auto &&obs = this->obs_manager.getObservable(obsKey);
 
-    Pennylane::LightningGPU::Measures::Measurements<StateVectorT> m{
-        *(this->device_sv)};
-
+    auto m = getMeasurements();
     m.setSeed(this->generateSeed());
 
     return device_shots ? m.expval(*obs, device_shots, {}) : m.expval(*obs);
@@ -283,9 +378,7 @@ auto LightningGPUSimulator::Var(ObsIdType obsKey) -> double {
 
     auto &&obs = this->obs_manager.getObservable(obsKey);
 
-    Pennylane::LightningGPU::Measures::Measurements<StateVectorT> m{
-        *(this->device_sv)};
-
+    auto m = getMeasurements();
     m.setSeed(this->generateSeed());
 
     return device_shots ? m.var(*obs, device_shots) : m.var(*obs);
@@ -307,9 +400,7 @@ void LightningGPUSimulator::State(DataView<std::complex<double>, 1> &state) {
 }
 
 void LightningGPUSimulator::Probs(DataView<double, 1> &probs) {
-    Pennylane::LightningGPU::Measures::Measurements<StateVectorT> m{
-        *(this->device_sv)};
-
+    auto m = getMeasurements();
     m.setSeed(this->generateSeed());
 
     auto &&dv_probs = device_shots ? m.probs(device_shots) : m.probs();
@@ -328,11 +419,10 @@ void LightningGPUSimulator::PartialProbs(
     RT_FAIL_IF(numWires > numQubits, "Invalid number of wires");
     RT_FAIL_IF(!isValidQubits(wires), "Invalid given wires to measure");
 
-    auto dev_wires = getDeviceWires(wires);
-    Pennylane::LightningGPU::Measures::Measurements<StateVectorT> m{
-        *(this->device_sv)};
-
+    auto m = getMeasurements();
     m.setSeed(this->generateSeed());
+
+    auto dev_wires = getDeviceWires(wires);
 
     auto &&dv_probs =
         device_shots ? m.probs(dev_wires, device_shots) : m.probs(dev_wires);
@@ -344,10 +434,7 @@ void LightningGPUSimulator::PartialProbs(
 }
 
 std::vector<size_t> LightningGPUSimulator::GenerateSamples(size_t shots) {
-    // generate_samples is a member function of the Measures class.
-    Pennylane::LightningGPU::Measures::Measurements<StateVectorT> m{
-        *(this->device_sv)};
-
+    auto m = getMeasurements();
     m.setSeed(this->generateSeed());
 
     return m.generate_samples(shots);
@@ -383,10 +470,10 @@ void LightningGPUSimulator::PartialSample(
     RT_FAIL_IF(samples.size() != device_shots * numWires,
                "Invalid size for the pre-allocated partial-samples");
 
-    // get device wires
-    auto &&dev_wires = getDeviceWires(wires);
-
     auto li_samples = this->GenerateSamples(device_shots);
+
+    // Get device wires
+    auto &&dev_wires = getDeviceWires(wires);
 
     // The lightning samples are layed out as a single vector of size
     // shots*qubits, where each element represents a single bit. The
@@ -444,10 +531,10 @@ void LightningGPUSimulator::PartialCounts(
     RT_FAIL_IF((eigvals.size() != numElements || counts.size() != numElements),
                "Invalid size for the pre-allocated partial-counts");
 
-    // get device wires
-    auto &&dev_wires = getDeviceWires(wires);
-
     auto li_samples = this->GenerateSamples(device_shots);
+
+    // Get device wires
+    auto &&dev_wires = getDeviceWires(wires);
 
     // Fill the eigenvalues with the integer representation of the
     // corresponding computational basis bitstring. In the future,

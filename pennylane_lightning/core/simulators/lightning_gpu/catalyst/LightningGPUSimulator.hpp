@@ -67,6 +67,9 @@ class LightningGPUSimulator final : public Catalyst::Runtime::QuantumDevice {
     std::unique_ptr<StateVectorT> device_sv = std::make_unique<StateVectorT>(0);
     LightningGPUObsManager<double> obs_manager{};
 
+    // Flag to indicate if state vector needs compaction
+    bool needs_compaction{false};
+
     inline auto isValidQubit(QubitIdType wire) -> bool {
         return this->qubit_manager.isValidQubitId(wire);
     }
@@ -103,6 +106,13 @@ class LightningGPUSimulator final : public Catalyst::Runtime::QuantumDevice {
     }
 
     auto GenerateSamples(size_t shots) -> std::vector<size_t>;
+
+    // Compact state vector by removing released qubits
+    void CompactStateVector();
+
+    // Helper to get Measurements object with compacted state vector
+    auto getMeasurements()
+        -> Pennylane::LightningGPU::Measures::Measurements<StateVectorT>;
 
   public:
     explicit LightningGPUSimulator(const std::string &kwargs = "{}") {

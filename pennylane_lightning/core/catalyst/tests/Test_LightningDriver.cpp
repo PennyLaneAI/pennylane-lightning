@@ -332,7 +332,6 @@ TEST_CASE("Release Qubits", "[Driver]") {
     CHECK(sim->GetNumQubits() == 2);
 }
 
-#ifdef _ENABLE_PLQUBIT
 TEST_CASE("Sample after dynamic qubit release", "[Driver]") {
     // This test mirrors the Python code:
     // @qjit
@@ -364,7 +363,7 @@ TEST_CASE("Sample after dynamic qubit release", "[Driver]") {
 
     std::vector<double> samples(num_shots * num_wires);
     const size_t sizes[2] = {num_shots, num_wires};
-    const size_t strides[2] = {1, 1};
+    const size_t strides[2] = {num_wires, 1}; // row-major: stride[0]=num_wires
     DataView<double, 2> samples_view(samples.data(), 0, sizes, strides);
 
     sim->PartialSample(samples_view, {static_qubits[0], static_qubits[1]});
@@ -373,4 +372,44 @@ TEST_CASE("Sample after dynamic qubit release", "[Driver]") {
         CHECK(samples[i] == 0.);
     }
 }
-#endif
+
+TEST_CASE("Sample after releasing middle qubit (triggers remap)", "[Driver]") {
+    // Scenario:
+    // 1. Allocate 3 qubits -> device IDs: 0, 1, 2
+    // 2. Apply X to qubit 2 (device ID 2) -> state |001>
+    // 3. Release qubit 1 (device ID 1) -> remaining device IDs: 0, 2
+    // 4. CompactStateVector remaps: device ID 2 -> 1
+    // 5. Sample qubit 2 (now device ID 1) -> should get |1>
+
+    std::unique_ptr<LSimulator> sim = std::make_unique<LSimulator>();
+
+    // Allocate 3 qubits: device IDs 0, 1, 2
+    std::vector<intptr_t> qubits = sim->AllocateQubits(3);
+
+    // Apply X to qubit[2] (device ID 2): state becomes |001>
+    sim->NamedOperation("PauliX", {}, {qubits[2]}, false);
+
+    // Release qubit[1] (device ID 1), this creates a gap in device IDs
+    // Remaining: qubit[0] (device 0), qubit[2] (device 2)
+    // After compaction: qubit[0] -> device 0, qubit[2] -> device 1
+    sim->ReleaseQubit(qubits[1]);
+
+    // Sample on qubit[0] and qubit[2]
+    // qubit[0] should be |0>, qubit[2] should be |1>
+    constexpr size_t num_shots = 10;
+    constexpr size_t num_wires = 2;
+    sim->SetDeviceShots(num_shots);
+
+    std::vector<double> samples(num_shots * num_wires);
+    const size_t sizes[2] = {num_shots, num_wires};
+    const size_t strides[2] = {num_wires, 1}; // row-major: stride[0]=num_wires
+    DataView<double, 2> samples_view(samples.data(), 0, sizes, strides);
+
+    sim->PartialSample(samples_view, {qubits[0], qubits[2]});
+
+    // each shot should be [0, 1] (qubit[0]=0, qubit[2]=1)
+    for (size_t shot = 0; shot < num_shots; shot++) {
+        CHECK(samples[shot * num_wires + 0] == 0.); // qubit[0] is |0>
+        CHECK(samples[shot * num_wires + 1] == 1.); // qubit[2] is |1>
+    }
+}
