@@ -1,4 +1,36 @@
-# Release 0.44.0-dev (development release)
+# Release 0.45.0-dev (development release)
+
+<h3>New features since last release</h3>
+
+<h3>Improvements 🛠</h3>
+
+- Linux and MacOS `lightning.qubit` wheels are now built with OpenMP support for all kernel types (LM, AVX2, and AVX512), enabling better performance tuning for CPU simulations.
+  [(#1133)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1133)
+
+<h3>Breaking changes 💔</h3>
+
+<h3>Deprecations 👋</h3>
+
+<h3>Documentation 📝</h3>
+
+<h3>Bug fixes 🐛</h3>
+
+<h3>Internal changes ⚙️</h3>
+
+- Bump the version number to `0.45.0-dev`.
+  This also bumps the minimum version of PennyLane to `0.43`.
+    [(#1320)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1320)
+
+<h3>Contributors ✍️</h3>
+
+This release contains contributions from (in alphabetical order):
+
+Ali Asadi,
+Jake Zaia.
+
+---
+
+# Release 0.44.0
 
 <h3>New features since last release</h3>
 
@@ -8,9 +40,6 @@
 
 
 <h3>Improvements 🛠</h3>
-
-- Linux and MacOS `lightning.qubit` wheels are now built with OpenMP support for all kernel types (LM, AVX2, and AVX512), enabling better performance tuning for CPU simulations.
-  [(#1133)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1133)
 
 - Cache intermediate states in the adjoint-jacobian pipeline to eliminate redundant forward pass computed during backward pass in `lightning.qubit`.
   [(#1312)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1312)
