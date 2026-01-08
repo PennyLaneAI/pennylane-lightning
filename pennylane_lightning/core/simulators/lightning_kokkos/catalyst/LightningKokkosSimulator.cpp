@@ -164,7 +164,7 @@ void LightningKokkosSimulator::CompactStateVector() {
     std::sort(wire_id_pairs.begin(), wire_id_pairs.end());
 
     // Extract compacted state vector
-    auto &old_data = this->device_sv->getDataVector();
+    auto old_data = this->device_sv->getDataVector();
     size_t num_qubits_after = wire_id_pairs.size();
     size_t new_size = 1UL << num_qubits_after;
 
