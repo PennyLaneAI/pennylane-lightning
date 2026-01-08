@@ -14,6 +14,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Fix OpenMP toggle for the `lightning.qubit` source builds.
+  [(#1313)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1313)
+
 - Bump the version number to `0.45.0-dev`.
   This also bumps the minimum version of PennyLane to `0.43`.
     [(#1320)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1320)
@@ -22,7 +25,8 @@
 
 This release contains contributions from (in alphabetical order):
 
-Jake Zaia
+Ali Asadi,
+Jake Zaia.
 
 ---
 
