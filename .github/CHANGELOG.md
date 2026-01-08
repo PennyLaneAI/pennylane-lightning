@@ -28,10 +28,6 @@
 - MacOS x86 wheels are no longer built, and the PennyLane ecosystem will no longer support Intel MacOS platforms for v0.44. If needed, MacOS x86 wheels can be built from source. See the [PennyLane deprecations page](https://pennylane.ai/blog/2025/10/pennylane-release-0.43/#deprecations-and-breaking-changes-) for more information.
   [(#1287)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1287)
 
-<h3>Deprecations 👋</h3>
-
-<h3>Documentation 📝</h3>
-
 <h3>Bug fixes 🐛</h3>
 
 - Corrected an issue in tests where a PennyLane operator was used within a QNode to compute a
