@@ -164,7 +164,7 @@ class QubitManager final {
         this->free_device_qubits.clear();
     }
 
-    void RemapDeviceIds([[maybe_unused]] const std::unordered_map<DeviceQubitID, DeviceQubitID>
+    void RemapDeviceIds(const std::unordered_map<DeviceQubitID, DeviceQubitID>
                             &old_to_new_mapping) {
         // Update each program_id's device_id according to the mapping
         for (auto &[program_id, device_id] : this->qubit_id_map) {
