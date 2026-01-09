@@ -89,8 +89,8 @@ void LightningGPUSimulator::ReleaseQubit(QubitIdType q) {
     // Mark the qubit as released in the qubit manager
     this->qubit_manager.Release(q);
 
-    // Mark that compaction is needed
-    this->needs_compaction = true;
+    // Mark that reduction is needed
+    this->needs_reduction = true;
 }
 
 void LightningGPUSimulator::ReleaseQubits(const std::vector<QubitIdType> &ids) {
@@ -107,7 +107,7 @@ void LightningGPUSimulator::ReleaseQubits(const std::vector<QubitIdType> &ids) {
         if (deallocate_all) {
             this->qubit_manager.ReleaseAll();
             this->device_sv = std::make_unique<StateVectorT>(0);
-            this->needs_compaction = false;
+            this->needs_reduction = false;
             return;
         }
     }
@@ -123,13 +123,13 @@ auto LightningGPUSimulator::GetNumQubits() const -> std::size_t {
 
 auto LightningGPUSimulator::getMeasurements()
     -> Pennylane::LightningGPU::Measures::Measurements<StateVectorT> {
-    CompactStateVector();
+    reduceStateVector();
     return Pennylane::LightningGPU::Measures::Measurements<StateVectorT>{
         *(this->device_sv)};
 }
 
-void LightningGPUSimulator::CompactStateVector() {
-    if (!this->needs_compaction) {
+void LightningGPUSimulator::reduceStateVector() {
+    if (!this->needs_reduction) {
         return;
     }
 
@@ -145,7 +145,7 @@ void LightningGPUSimulator::CompactStateVector() {
     // Sort by device wire index
     std::sort(wire_id_pairs.begin(), wire_id_pairs.end());
 
-    // Extract compacted state vector - need to copy from GPU first
+    // Extract reduced state vector - need to copy from GPU first
     auto old_data = this->device_sv->getDataVector();
     size_t num_qubits_after = wire_id_pairs.size();
     size_t new_size = 1UL << num_qubits_after;
@@ -193,7 +193,7 @@ void LightningGPUSimulator::CompactStateVector() {
         this->qubit_manager.RemapDeviceIds(old_to_new_device_id);
     }
 
-    this->needs_compaction = false;
+    this->needs_reduction = false;
 }
 
 void LightningGPUSimulator::StartTapeRecording() {

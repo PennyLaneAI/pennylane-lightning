@@ -378,7 +378,7 @@ TEST_CASE("Sample after releasing middle qubit (triggers remap)", "[Driver]") {
     // 1. Allocate 3 qubits -> device IDs: 0, 1, 2
     // 2. Apply X to qubit 2 (device ID 2) -> state |001>
     // 3. Release qubit 1 (device ID 1) -> remaining device IDs: 0, 2
-    // 4. CompactStateVector remaps: device ID 2 -> 1
+    // 4. reduceStateVector remaps: device ID 2 -> 1
     // 5. Sample qubit 2 (now device ID 1) -> should get |1>
 
     std::unique_ptr<LSimulator> sim = std::make_unique<LSimulator>();
@@ -391,7 +391,7 @@ TEST_CASE("Sample after releasing middle qubit (triggers remap)", "[Driver]") {
 
     // Release qubit[1] (device ID 1), this creates a gap in device IDs
     // Remaining: qubit[0] (device 0), qubit[2] (device 2)
-    // After compaction: qubit[0] -> device 0, qubit[2] -> device 1
+    // After reduceStateVector: qubit[0] -> device 0, qubit[2] -> device 1
     sim->ReleaseQubit(qubits[1]);
 
     // Sample on qubit[0] and qubit[2]
