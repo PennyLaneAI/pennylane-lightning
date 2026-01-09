@@ -41,7 +41,6 @@
   matrix, which would lead to wrongful queuing as of PennyLane
   pull request [#8131](https://github.com/PennyLaneAI/pennylane/pull/8131).
   [(#1292)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1292)
-｀｀
 <h3>Internal changes ⚙️</h3>
 
 - Pin NumPy `<2.4` on CIs as `pyscf` is not compatible with the new version of NumPy yet.
