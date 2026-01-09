@@ -20,6 +20,7 @@
 #include "JacobianData.hpp"
 #include "LinearAlgebra.hpp"
 #include "MeasurementsLQubit.hpp"
+#include "Util.hpp"
 
 namespace Catalyst::Runtime::Simulator {
 
@@ -101,12 +102,13 @@ void LightningSimulator::ReleaseQubits(const std::vector<QubitIdType> &ids) {
         if (deallocate_all) {
             this->qubit_manager.ReleaseAll();
             this->device_sv = std::make_unique<StateVectorT>(0);
+            this->needs_reduction = false;
             return;
         }
     }
 
     for (auto id : ids) {
-        this->qubit_manager.Release(id);
+        this->ReleaseQubit(id);
     }
 }
 
@@ -117,10 +119,88 @@ void LightningSimulator::ReleaseQubit(QubitIdType q) {
     // maintained,
     //       in particular: measurements must not compute results for released
     //       qubits, only for active/allocated qubits
+    RT_FAIL_IF(!this->qubit_manager.isValidQubitId(q),
+               "Invalid qubit to release");
+
+    // Mark the qubit as released in the qubit manager
     this->qubit_manager.Release(q);
 
-    // TODO: We don't have to check whether the released qubit is pure, but it
-    // is something we can add easily to catch program errors.
+    // Mark that reduction is needed
+    this->needs_reduction = true;
+}
+
+auto LightningSimulator::getMeasurements()
+    -> Pennylane::LightningQubit::Measures::Measurements<StateVectorT> {
+    reduceStateVector();
+    return Pennylane::LightningQubit::Measures::Measurements<StateVectorT>{
+        *(this->device_sv)};
+}
+
+void LightningSimulator::reduceStateVector() {
+    if (!this->needs_reduction) {
+        return;
+    }
+
+    // Get active qubits
+    auto all_qubits = this->qubit_manager.getAllQubitIds();
+    std::vector<std::pair<size_t, QubitIdType>> wire_id_pairs;
+
+    for (auto qid : all_qubits) {
+        size_t device_wire = this->qubit_manager.getDeviceId(qid);
+        wire_id_pairs.push_back({device_wire, qid});
+    }
+
+    // Sort by device wire index
+    std::sort(wire_id_pairs.begin(), wire_id_pairs.end());
+
+    // Extract reduced state vector
+    auto &old_data = this->device_sv->getDataVector();
+    size_t num_qubits_after = wire_id_pairs.size();
+    size_t new_size = 1UL << num_qubits_after;
+
+    std::vector<std::complex<double>> new_data(new_size);
+
+    // state[idx] = |q0 q1 ... q_{n-1}>
+    //   where q_i = (idx >> (n-1-i)) & 1
+    // So device wire 0 corresponds to the MSB (bit n-1)
+    size_t old_num_qubits = this->device_sv->getNumQubits();
+
+    for (size_t old_idx = 0; old_idx < old_data.size(); old_idx++) {
+        size_t new_idx = 0;
+        for (size_t i = 0; i < num_qubits_after; i++) {
+            size_t old_wire = wire_id_pairs[i].first;
+            size_t old_bit_pos = old_num_qubits - 1 - old_wire;
+            size_t new_bit_pos = num_qubits_after - 1 - i;
+
+            if ((old_idx >> old_bit_pos) & 1) {
+                new_idx |= (1UL << new_bit_pos);
+            }
+        }
+
+        new_data[new_idx] += old_data[old_idx];
+    }
+
+    // Normalize the state vector
+    Pennylane::Util::normalizeStateVector(new_data);
+
+    // Replace the state vector
+    this->device_sv = std::make_unique<StateVectorT>(new_data);
+
+    // Remap device ids
+    std::unordered_map<size_t, size_t> old_to_new_device_id;
+    for (size_t new_idx = 0; new_idx < wire_id_pairs.size(); new_idx++) {
+        size_t old_device_id = wire_id_pairs[new_idx].first;
+        size_t new_device_id = new_idx;
+        if (old_device_id != new_device_id) {
+            old_to_new_device_id[old_device_id] = new_device_id;
+        }
+    }
+
+    if (!old_to_new_device_id.empty()) {
+        this->qubit_manager.RemapDeviceIds(old_to_new_device_id);
+    }
+
+    this->needs_reduction = false;
 }
 
 auto LightningSimulator::GetNumQubits() const -> size_t {
@@ -275,9 +355,7 @@ auto LightningSimulator::Expval(ObsIdType obsKey) -> double {
         this->cache_manager.addObservable(obsKey, MeasurementsT::Expval);
     }
 
-    Pennylane::LightningQubit::Measures::Measurements<StateVectorT> m{
-        *(this->device_sv)};
-
+    auto m = getMeasurements();
     m.setSeed(this->generateSeed());
 
     return (device_shots != 0U) ? m.expval(*obs, device_shots, {})
@@ -294,9 +372,7 @@ auto LightningSimulator::Var(ObsIdType obsKey) -> double {
         this->cache_manager.addObservable(obsKey, MeasurementsT::Var);
     }
 
-    Pennylane::LightningQubit::Measures::Measurements<StateVectorT> m{
-        *(this->device_sv)};
-
+    auto m = getMeasurements();
     m.setSeed(this->generateSeed());
 
     return (device_shots != 0U) ? m.var(*obs, device_shots) : m.var(*obs);
@@ -311,9 +387,7 @@ void LightningSimulator::State(DataView<std::complex<double>, 1> &state) {
 }
 
 void LightningSimulator::Probs(DataView<double, 1> &probs) {
-    Pennylane::LightningQubit::Measures::Measurements<StateVectorT> m{
-        *(this->device_sv)};
-
+    auto m = getMeasurements();
     m.setSeed(this->generateSeed());
 
     auto &&dv_probs = (device_shots != 0U) ? m.probs(device_shots) : m.probs();
@@ -332,11 +406,10 @@ void LightningSimulator::PartialProbs(DataView<double, 1> &probs,
     RT_FAIL_IF(numWires > numQubits, "Invalid number of wires");
     RT_FAIL_IF(!isValidQubits(wires), "Invalid given wires to measure");
 
-    auto dev_wires = getDeviceWires(wires);
-    Pennylane::LightningQubit::Measures::Measurements<StateVectorT> m{
-        *(this->device_sv)};
-
+    auto m = getMeasurements();
     m.setSeed(this->generateSeed());
+
+    auto dev_wires = getDeviceWires(wires);
 
     auto &&dv_probs = (device_shots != 0U) ? m.probs(dev_wires, device_shots)
                                            : m.probs(dev_wires);
@@ -349,10 +422,7 @@ void LightningSimulator::PartialProbs(DataView<double, 1> &probs,
 
 std::vector<size_t>
 LightningSimulator::GenerateSamplesMetropolis(size_t shots) {
-    // generate_samples_metropolis is a member function of the Measures class.
-    Pennylane::LightningQubit::Measures::Measurements<StateVectorT> m{
-        *(this->device_sv)};
-
+    auto m = getMeasurements();
     m.setSeed(this->generateSeed());
 
     // PL-Lightning generates samples using the alias method.
@@ -367,13 +437,7 @@ LightningSimulator::GenerateSamplesMetropolis(size_t shots) {
 }
 
 std::vector<size_t> LightningSimulator::GenerateSamples(size_t shots) {
-    if (this->mcmc) {
-        return this->GenerateSamplesMetropolis(shots);
-    }
-    // generate_samples is a member function of the Measures class.
-    Pennylane::LightningQubit::Measures::Measurements<StateVectorT> m{
-        *(this->device_sv)};
-
+    auto m = getMeasurements();
     m.setSeed(this->generateSeed());
 
     // PL-Lightning generates samples using the alias method.
@@ -417,10 +481,10 @@ void LightningSimulator::PartialSample(DataView<double, 2> &samples,
     RT_FAIL_IF(samples.size() != device_shots * numWires,
                "Invalid size for the pre-allocated partial-samples");
 
-    // get device wires
-    auto &&dev_wires = getDeviceWires(wires);
-
     auto li_samples = this->GenerateSamples(device_shots);
+
+    // Get device wires
+    auto &&dev_wires = getDeviceWires(wires);
 
     // The lightning samples are layed out as a single vector of size
     // shots*qubits, where each element represents a single bit. The
@@ -478,10 +542,10 @@ void LightningSimulator::PartialCounts(DataView<double, 1> &eigvals,
     RT_FAIL_IF((eigvals.size() != numElements || counts.size() != numElements),
                "Invalid size for the pre-allocated partial-counts");
 
-    // get device wires
-    auto &&dev_wires = getDeviceWires(wires);
-
     auto li_samples = this->GenerateSamples(device_shots);
+
+    // Get device wires
+    auto &&dev_wires = getDeviceWires(wires);
 
     // Fill the eigenvalues with the integer representation of the corresponding
     // computational basis bitstring. In the future, eigenvalues can also be
