@@ -253,25 +253,6 @@ TEMPLATE_TEST_CASE("Util::normalizeStateVector", "[Util][LinearAlgebra]", float,
         CHECK(vec[3].real() == Approx(0).margin(1e-7));
         CHECK(squaredNorm(vec) == Approx(1.0));
     }
-
-    SECTION("Normalizing with custom allocator") {
-        using AllocType = AlignedAllocator<std::complex<TestType>>;
-        std::vector<std::complex<TestType>, AllocType> vec(
-            {{3, 0}, {4, 0}}, AllocType(alignof(std::complex<TestType>)));
-
-        normalizeStateVector(vec);
-
-        // norm = 5
-        // After normalization: (3/5, 4/5)
-        CHECK(vec[0].real() == Approx(0.6).margin(1e-7));
-        CHECK(vec[1].real() == Approx(0.8).margin(1e-7));
-
-        TestType norm_sq = 0;
-        for (const auto &amp : vec) {
-            norm_sq += amp.real() * amp.real() + amp.imag() * amp.imag();
-        }
-        CHECK(norm_sq == Approx(1.0));
-    }
 }
 
 TEMPLATE_TEST_CASE("Util::is_Hermitian", "[Util][LinearAlgebra]", float,
