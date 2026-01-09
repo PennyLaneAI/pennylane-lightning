@@ -701,7 +701,7 @@ inline auto PL_reinterpret_cast(SrcType *src_ptr) -> DestType * {
  */
 template <class ComplexT, class Alloc = std::allocator<ComplexT>>
 inline void normalizeStateVector(std::vector<ComplexT, Alloc> &data) {
-    using PrecisionT = decltype(std::declval<ComplexT>().real());
+    using PrecisionT = std::decay_t<decltype(std::declval<ComplexT>().real())>;
     PrecisionT norm_squared = 0;
     for (const auto &amplitude : data) {
         norm_squared += amplitude.real() * amplitude.real() +
