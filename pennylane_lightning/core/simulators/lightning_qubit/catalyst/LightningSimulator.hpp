@@ -61,8 +61,8 @@ class LightningSimulator final : public Catalyst::Runtime::QuantumDevice {
     std::unique_ptr<StateVectorT> device_sv = std::make_unique<StateVectorT>(0);
     LightningObsManager<double> obs_manager{};
 
-    // Flag to indicate if state vector needs compaction
-    bool needs_compaction{false};
+    // Flag to indicate if state vector needs reduction
+    bool needs_reduction{false};
 
     inline auto isValidQubit(QubitIdType wire) -> bool {
         return this->qubit_manager.isValidQubitId(wire);
@@ -102,10 +102,10 @@ class LightningSimulator final : public Catalyst::Runtime::QuantumDevice {
     auto GenerateSamplesMetropolis(size_t shots) -> std::vector<size_t>;
     auto GenerateSamples(size_t shots) -> std::vector<size_t>;
 
-    // Compact state vector by removing released qubits
-    void reducedStateVector();
+    // Reduce state vector by removing released qubits
+    void reduceStateVector();
 
-    // Helper to get Measurements object with compacted state vector
+    // Helper to get Measurements object with reduced state vector
     auto getMeasurements()
         -> Pennylane::LightningQubit::Measures::Measurements<StateVectorT>;
 

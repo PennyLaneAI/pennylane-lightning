@@ -102,7 +102,7 @@ void LightningSimulator::ReleaseQubits(const std::vector<QubitIdType> &ids) {
         if (deallocate_all) {
             this->qubit_manager.ReleaseAll();
             this->device_sv = std::make_unique<StateVectorT>(0);
-            this->needs_compaction = false;
+            this->needs_reduction = false;
             return;
         }
     }
@@ -125,19 +125,19 @@ void LightningSimulator::ReleaseQubit(QubitIdType q) {
     // Mark the qubit as released in the qubit manager
     this->qubit_manager.Release(q);
 
-    // Mark that compaction is needed
-    this->needs_compaction = true;
+    // Mark that reduction is needed
+    this->needs_reduction = true;
 }
 
 auto LightningSimulator::getMeasurements()
     -> Pennylane::LightningQubit::Measures::Measurements<StateVectorT> {
-    reducedStateVector();
+    reduceStateVector();
     return Pennylane::LightningQubit::Measures::Measurements<StateVectorT>{
         *(this->device_sv)};
 }
 
-void LightningSimulator::reducedStateVector() {
-    if (!this->needs_compaction) {
+void LightningSimulator::reduceStateVector() {
+    if (!this->needs_reduction) {
         return;
     }
 
@@ -153,7 +153,7 @@ void LightningSimulator::reducedStateVector() {
     // Sort by device wire index
     std::sort(wire_id_pairs.begin(), wire_id_pairs.end());
 
-    // Extract compacted state vector
+    // Extract reduced state vector
     auto &old_data = this->device_sv->getDataVector();
     size_t num_qubits_after = wire_id_pairs.size();
     size_t new_size = 1UL << num_qubits_after;
@@ -200,7 +200,7 @@ void LightningSimulator::reducedStateVector() {
         this->qubit_manager.RemapDeviceIds(old_to_new_device_id);
     }
 
-    this->needs_compaction = false;
+    this->needs_reduction = false;
 }
 
 auto LightningSimulator::GetNumQubits() const -> size_t {
