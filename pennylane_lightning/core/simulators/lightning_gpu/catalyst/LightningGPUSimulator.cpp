@@ -15,24 +15,9 @@
 #include <unordered_set>
 
 #include "LightningGPUSimulator.hpp"
+#include "Util.hpp"
 
 namespace Catalyst::Runtime::Simulator {
-
-namespace {
-inline void normalizeStateVector(std::vector<std::complex<double>> &data) {
-    double norm = 0.0;
-    for (const auto &amplitude : data) {
-        norm += std::norm(amplitude);
-    }
-    norm = std::sqrt(norm);
-
-    if (norm > std::numeric_limits<double>::epsilon()) {
-        for (auto &elem : data) {
-            elem /= norm;
-        }
-    }
-}
-} // anonymous namespace
 
 auto LightningGPUSimulator::AllocateQubit() -> QubitIdType {
     const size_t num_qubits = GetNumQubits();
@@ -188,7 +173,7 @@ void LightningGPUSimulator::CompactStateVector() {
     }
 
     // Normalize the state vector
-    normalizeStateVector(new_data);
+    Pennylane::Util::normalizeStateVector(new_data);
 
     // Replace the state vector
     this->device_sv =

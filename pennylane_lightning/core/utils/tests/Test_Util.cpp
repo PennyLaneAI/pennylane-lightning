@@ -183,6 +183,97 @@ TEMPLATE_TEST_CASE("Util::squaredNorm", "[Util][LinearAlgebra]", float,
     }
 }
 
+TEMPLATE_TEST_CASE("Util::normalizeStateVector", "[Util][LinearAlgebra]", float,
+                   double) {
+    SECTION("Normalizing an already normalized vector") {
+        // 1/sqrt(2) * (|0> + |1>)
+        const TestType inv_sqrt2 = TestType{1} / std::sqrt(TestType{2});
+        std::vector<std::complex<TestType>> vec{{inv_sqrt2, 0}, {inv_sqrt2, 0}};
+
+        normalizeStateVector(vec);
+
+        // Should remain unchanged with tolerance
+        CHECK(vec[0].real() == Approx(inv_sqrt2).margin(1e-7));
+        CHECK(vec[0].imag() == Approx(0).margin(1e-7));
+        CHECK(vec[1].real() == Approx(inv_sqrt2).margin(1e-7));
+        CHECK(vec[1].imag() == Approx(0).margin(1e-7));
+        CHECK(squaredNorm(vec) == Approx(1.0));
+    }
+
+    SECTION("Normalizing an unnormalized vector") {
+        // Unnormalized vector: (1, 1)
+        // After normalization: (1/sqrt(2), 1/sqrt(2))
+        std::vector<std::complex<TestType>> vec{{1, 0}, {1, 0}};
+
+        normalizeStateVector(vec);
+
+        const TestType inv_sqrt2 = TestType{1} / std::sqrt(TestType{2});
+        CHECK(vec[0].real() == Approx(inv_sqrt2).margin(1e-7));
+        CHECK(vec[0].imag() == Approx(0).margin(1e-7));
+        CHECK(vec[1].real() == Approx(inv_sqrt2).margin(1e-7));
+        CHECK(vec[1].imag() == Approx(0).margin(1e-7));
+        CHECK(squaredNorm(vec) == Approx(1.0));
+    }
+
+    SECTION("Normalizing a vector with complex amplitudes") {
+        // Vector: (1+i, 1-i)
+        // squared norm = 2 + 2 = 4, norm = 2
+        std::vector<std::complex<TestType>> vec{{1, 1}, {1, -1}};
+
+        normalizeStateVector(vec);
+
+        CHECK(vec[0].real() == Approx(0.5).margin(1e-7));
+        CHECK(vec[0].imag() == Approx(0.5).margin(1e-7));
+        CHECK(vec[1].real() == Approx(0.5).margin(1e-7));
+        CHECK(vec[1].imag() == Approx(-0.5).margin(1e-7));
+        CHECK(squaredNorm(vec) == Approx(1.0));
+    }
+
+    SECTION("Normalizing a zero vector (edge case)") {
+        std::vector<std::complex<TestType>> vec{{0, 0}, {0, 0}};
+        // remain zero
+        normalizeStateVector(vec);
+
+        CHECK(vec[0].real() == Approx(0).margin(1e-7));
+        CHECK(vec[0].imag() == Approx(0).margin(1e-7));
+        CHECK(vec[1].real() == Approx(0).margin(1e-7));
+        CHECK(vec[1].imag() == Approx(0).margin(1e-7));
+    }
+
+    SECTION("Normalizing a larger state vector") {
+        // 2 qubits: (2, 0, 0, 0) -> (1, 0, 0, 0)
+        std::vector<std::complex<TestType>> vec{{2, 0}, {0, 0}, {0, 0}, {0, 0}};
+
+        normalizeStateVector(vec);
+
+        CHECK(vec[0].real() == Approx(1.0).margin(1e-7));
+        CHECK(vec[0].imag() == Approx(0).margin(1e-7));
+        CHECK(vec[1].real() == Approx(0).margin(1e-7));
+        CHECK(vec[2].real() == Approx(0).margin(1e-7));
+        CHECK(vec[3].real() == Approx(0).margin(1e-7));
+        CHECK(squaredNorm(vec) == Approx(1.0));
+    }
+
+    SECTION("Normalizing with custom allocator") {
+        using AllocType = AlignedAllocator<std::complex<TestType>>;
+        std::vector<std::complex<TestType>, AllocType> vec(
+            {{3, 0}, {4, 0}}, AllocType(alignof(std::complex<TestType>)));
+
+        normalizeStateVector(vec);
+
+        // norm = 5
+        // After normalization: (3/5, 4/5)
+        CHECK(vec[0].real() == Approx(0.6).margin(1e-7));
+        CHECK(vec[1].real() == Approx(0.8).margin(1e-7));
+
+        TestType norm_sq = 0;
+        for (const auto &amp : vec) {
+            norm_sq += amp.real() * amp.real() + amp.imag() * amp.imag();
+        }
+        CHECK(norm_sq == Approx(1.0));
+    }
+}
+
 TEMPLATE_TEST_CASE("Util::is_Hermitian", "[Util][LinearAlgebra]", float,
                    double) {
     SECTION("Test for a Hermitian matrix") {

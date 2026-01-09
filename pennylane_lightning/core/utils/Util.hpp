@@ -690,4 +690,29 @@ inline auto PL_reinterpret_cast(SrcType *src_ptr) -> DestType * {
     return reinterpret_cast<DestType *>(src_ptr);
 }
 
+/**
+ * @brief Normalize a complex state vector to unit norm.
+ *
+ * This function normalizes a state vector in-place
+ *
+ * @tparam ComplexT Complex number type (e.g., std::complex<double>).
+ * @tparam Alloc Allocator type.
+ * @param data State vector data to normalize.
+ */
+template <class ComplexT, class Alloc = std::allocator<ComplexT>>
+inline void normalizeStateVector(std::vector<ComplexT, Alloc> &data) {
+    using PrecisionT = decltype(std::declval<ComplexT>().real());
+    PrecisionT norm_squared = 0;
+    for (const auto &amplitude : data) {
+        norm_squared += amplitude.real() * amplitude.real() +
+                        amplitude.imag() * amplitude.imag();
+    }
+    auto norm = std::sqrt(norm_squared);
+    if (norm > std::numeric_limits<PrecisionT>::epsilon()) {
+        for (auto &elem : data) {
+            elem /= norm;
+        }
+    }
+}
+
 } // namespace Pennylane::Util

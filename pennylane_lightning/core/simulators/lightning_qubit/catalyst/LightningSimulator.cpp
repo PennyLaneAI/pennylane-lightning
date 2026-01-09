@@ -20,26 +20,9 @@
 #include "JacobianData.hpp"
 #include "LinearAlgebra.hpp"
 #include "MeasurementsLQubit.hpp"
+#include "Util.hpp"
 
 namespace Catalyst::Runtime::Simulator {
-
-namespace {
-inline void normalizeStateVector(std::vector<std::complex<double>> &data) {
-    // squared norm of the state vector
-    double norm = 0.0;
-    for (const auto &amplitude : data) {
-        norm += std::norm(amplitude);
-    }
-    norm = std::sqrt(norm);
-
-    // TODO: Is it necessary to check if norm is greater than epsilon?
-    if (norm > std::numeric_limits<double>::epsilon()) {
-        for (auto &elem : data) {
-            elem /= norm;
-        }
-    }
-}
-} // anonymous namespace
 
 auto LightningSimulator::AllocateQubit() -> QubitIdType {
     const size_t num_qubits = GetNumQubits();
@@ -198,7 +181,7 @@ void LightningSimulator::reducedStateVector() {
     }
 
     // Normalize the state vector
-    normalizeStateVector(new_data);
+    Pennylane::Util::normalizeStateVector(new_data);
 
     // Replace the state vector
     this->device_sv = std::make_unique<StateVectorT>(new_data);
