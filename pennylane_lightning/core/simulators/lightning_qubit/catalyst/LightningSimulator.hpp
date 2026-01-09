@@ -103,7 +103,7 @@ class LightningSimulator final : public Catalyst::Runtime::QuantumDevice {
     auto GenerateSamples(size_t shots) -> std::vector<size_t>;
 
     // Compact state vector by removing released qubits
-    void CompactStateVector();
+    void reducedStateVector();
 
     // Helper to get Measurements object with compacted state vector
     auto getMeasurements()

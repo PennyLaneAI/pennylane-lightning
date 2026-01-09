@@ -148,12 +148,12 @@ void LightningSimulator::ReleaseQubit(QubitIdType q) {
 
 auto LightningSimulator::getMeasurements()
     -> Pennylane::LightningQubit::Measures::Measurements<StateVectorT> {
-    CompactStateVector();
+    reducedStateVector();
     return Pennylane::LightningQubit::Measures::Measurements<StateVectorT>{
         *(this->device_sv)};
 }
 
-void LightningSimulator::CompactStateVector() {
+void LightningSimulator::reducedStateVector() {
     if (!this->needs_compaction) {
         return;
     }
