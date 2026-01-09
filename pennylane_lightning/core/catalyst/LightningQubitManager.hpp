@@ -168,9 +168,8 @@ class QubitManager final {
                             &old_to_new_mapping) {
         // Update each program_id's device_id according to the mapping
         for (auto &[program_id, device_id] : this->qubit_id_map) {
-            auto it = old_to_new_mapping.find(device_id);
-            if (it != old_to_new_mapping.end()) {
-                device_id = it->second;
+            if (auto it = old_to_new_mapping.find(device_id); it != old_to_new_mapping.end()) {
+                    device_id = it->second;
             }
         }
     }
