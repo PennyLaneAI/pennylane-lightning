@@ -16,28 +16,28 @@ set -e
 # Run them in sequence:
 #
 # 1. Create Release Candidate (creates branches and PRs):
-#    bash scripts/create_lightning_rc.sh -s 0.42.0 -r 0.43.0 -n 0.44.0 --create_rc
+#    bash scripts/create_lightning_rc.sh -s 0.44.0 -r 0.45.0 -n 0.46.0 --create_rc
 #
 # 2. Test Lightning Installation (validates RC build):
-#    bash scripts/create_lightning_rc.sh -s 0.42.0 -r 0.43.0 -n 0.44.0 --lightning_test
+#    bash scripts/create_lightning_rc.sh -s 0.44.0 -r 0.45.0 -n 0.46.0 --lightning_test
 #
 # 3. Create Release (creates GitHub release):
-#    bash scripts/create_lightning_rc.sh -s 0.42.0 -r 0.43.0 -n 0.44.0 --release
+#    bash scripts/create_lightning_rc.sh -s 0.44.0 -r 0.45.0 -n 0.46.0 --release
 #
 # 4. Handle Release Assets (upload wheels and source distributions):
-#    bash scripts/create_lightning_rc.sh -s 0.42.0 -r 0.43.0 -n 0.44.0 --release_assets
+#    bash scripts/create_lightning_rc.sh -s 0.44.0 -r 0.45.0 -n 0.46.0 --release_assets
 #
 # Version flags:
-# -s/--stable_version: Current stable release (e.g., 0.42.0)
-# -r/--release_version: Version being released (e.g., 0.43.0)
-# -n/--next_version: Next development version (e.g., 0.44.0)
+# -s/--stable_version: Current stable release (e.g., 0.44.0)
+# -r/--release_version: Version being released (e.g., 0.45.0)
+# -n/--next_version: Next development version (e.g., 0.46.0)
 #
 # Use the --help option to see all available options.
 
 # Set version numbers
-STABLE_VERSION=0.42.0     # Current stable version | https://github.com/PennyLaneAI/pennylane-lightning/releases
-RELEASE_VERSION=0.43.0    # Upcoming release version | https://test.pypi.org/project/pennylane-lightning/#history
-NEXT_VERSION=0.44.0       # Next version to be developed | RELEASE_VERSION + 1
+STABLE_VERSION=0.44.0     # Current stable version | https://github.com/PennyLaneAI/pennylane-lightning/releases
+RELEASE_VERSION=0.45.0    # Upcoming release version | https://test.pypi.org/project/pennylane-lightning/#history
+NEXT_VERSION=0.46.0       # Next version to be developed | RELEASE_VERSION + 1
 
 IS_TEST=true
 
@@ -48,6 +48,17 @@ LOCAL_TEST=true
 # Check if gh CLI, and jq are installed
 if ! command -v gh &> /dev/null; then
     echo "gh CLI could not be found"
+    exit 1
+fi
+
+if ! gh auth status >/dev/null 2>&1; then
+    echo "You need to login: gh auth login"
+    exit 1
+fi
+
+GH_VERSION=$(gh --version | sed 's/gh version \([[:digit:]]\+\.[[:digit:]]\+\.[[:digit:]]\+\).*/\1/')
+if [ "$(printf '%s\n' "2.83.0" "$GH_VERSION" | sort -V | head -n1)" != "2.83.0" ]; then
+    echo "gh CLI version must be >= 2.83.0. Current version: $GH_VERSION"
     exit 1
 fi
 
@@ -75,7 +86,7 @@ help(){
     echo "  -h, --help                        Show this help message"
 }
 
-ROOT_DIR="."
+ROOT_DIR="$(pwd)"
 
 if [ ! -d "${ROOT_DIR}/.git" ]; then
     echo "You should to run the script on the root directory of the repository"
@@ -345,7 +356,7 @@ create_version_bump_PR(){
         --body "Bump version to v${NEXT_VERSION}-dev." \
         --head $(branch_name ${RELEASE_VERSION} bump) \
         --base master \
-        --label 'urgent'
+        --label 'ci:build_wheels','ci:use-multi-gpu-runner','ci:use-gpu-runner','urgent'
     fi
 
     if [ "$LOCAL_TEST" == "true" ]; then
