@@ -1,28 +1,18 @@
-# Release 0.45.0-dev (development release)
+# Release 0.45.0-dev
 
-<h3>New features since last release</h3>
+### New features since last release
 
-<h3>Improvements 🛠</h3>
+### Breaking changes
 
-<h3>Breaking changes 💔</h3>
+### Improvements
 
-<h3>Deprecations 👋</h3>
+### Documentation
 
-<h3>Documentation 📝</h3>
+### Bug fixes
 
-<h3>Bug fixes 🐛</h3>
-
-<h3>Internal changes ⚙️</h3>
-
-- Bump the version number to `0.45.0-dev`.
-  This also bumps the minimum version of PennyLane to `0.43`.
-    [(#1320)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1320)
-
-<h3>Contributors ✍️</h3>
+### Contributors
 
 This release contains contributions from (in alphabetical order):
-
-Jake Zaia
 
 ---
 
