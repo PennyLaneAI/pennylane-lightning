@@ -567,7 +567,7 @@ create_sdist(){
 
 upload_release_assets_gh(){
     # Upload the release assets
-    gh release upload $(branch_name ${RELEASE_VERSION}) ${ROOT_DIR}/Release_Assets/*.whl --clobber
+    gh release upload $(branch_name ${RELEASE_VERSION}) ${ROOT_DIR}/Release_Assets/*.zip/*.whl --clobber
     gh release upload $(branch_name ${RELEASE_VERSION}) ${ROOT_DIR}/Release_Assets/*.tar.gz --clobber
 }
 
