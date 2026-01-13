@@ -49,13 +49,16 @@ option(ENABLE_WARNINGS "Enable warnings" ON)
 option(ENABLE_NATIVE "Enable native CPU build tuning" OFF)
 option(ENABLE_PYTHON "Enable compilation of the Python module" ON)
 option(ENABLE_SCIPY_OPENBLAS "Enable SciPy OpenBLAS support" ON)
+option(ENABLE_OPENMP "Enable OpenMP" ON)
 
 # OpenMP
-find_package(OpenMP)
-if (OpenMP_CXX_FOUND)
-    option(ENABLE_OPENMP "Enable OpenMP" ON)
-else()
-    option(ENABLE_OPENMP "Enable OpenMP" OFF)
+if (ENABLE_OPENMP)
+    find_package(OpenMP)
+    if (OpenMP_CXX_FOUND)
+        set(ENABLE_OPENMP ON CACHE BOOL "Enable OpenMP" FORCE)
+    else()
+        set(ENABLE_OPENMP OFF CACHE BOOL "Enable OpenMP" FORCE)
+    endif()
 endif()
 
 # Other build options

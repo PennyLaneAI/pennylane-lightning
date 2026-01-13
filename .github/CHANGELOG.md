@@ -14,6 +14,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Fix OpenMP toggle for the `lightning.qubit` source builds.
+  [(#1313)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1313)
+
 - Update the helper scripts for release.
   [(#1328)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1328)
 
@@ -27,7 +30,8 @@
 
 This release contains contributions from (in alphabetical order):
 
-Jake Zaia
+Ali Asadi,
+Jake Zaia.
 
 ---
 
