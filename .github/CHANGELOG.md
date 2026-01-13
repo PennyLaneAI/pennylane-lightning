@@ -14,6 +14,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Update the release scripts with lessons learned from `0.44.0` release.
+  [(#1328)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1328)
+
 - Bump the version number to `0.45.0-dev`.
   This also bumps the minimum version of PennyLane to `0.43`.
     [(#1320)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1320)
