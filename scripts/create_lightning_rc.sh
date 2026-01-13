@@ -195,6 +195,7 @@ create_release_candidate_branch() {
         fi
     done
     git checkout $(branch_name ${RELEASE_VERSION} rc)
+    git pull
 
     # Update lightning version
     sed -i "/__version__/d" $PL_VERSION_FILE
@@ -233,6 +234,7 @@ create_release_candidate_PR(){
     # Create a PR for the release candidate branch
 
     git checkout $(branch_name ${RELEASE_VERSION} rc)
+    git pull
     if [ "$LOCAL_TEST" == "false" ]; then
     gh pr create $(use_dry_run) \
         --title "Create v${RELEASE_VERSION} RC branch" \
@@ -247,6 +249,7 @@ create_docs_review_PR(){
     # Create a PR for the docs review
 
     git checkout $(branch_name ${RELEASE_VERSION} docs)
+    git pull
 
     git commit -m "Modify docs for v${RELEASE_VERSION}" --allow-empty
 
@@ -269,6 +272,7 @@ create_docker_PR(){
     # Create a PR for the Docker test in PTM
 
     git checkout master
+    git pull origin master
     git checkout -b $(branch_name ${RELEASE_VERSION} docker)
 
     sed -i "s|v${STABLE_VERSION}|v${RELEASE_VERSION}|g" ${ROOT_DIR}/.github/workflows/compat-docker-release.yml
@@ -335,6 +339,7 @@ create_version_bump_PR(){
     # Create a PR for the new version
 
     git checkout master
+    git pull origin master
     git checkout -b $(branch_name ${RELEASE_VERSION} bump)
 
     # Update lightning version
@@ -408,8 +413,8 @@ create_version_bump_PR(){
 test_install_lightning(){
     # Test Lightning installation
 
-    git checkout master
     git checkout $(branch_name ${RELEASE_VERSION} rc)
+    git pull
 
     # Test installation of lightning default backends
     pip install -r requirements-dev.txt
@@ -487,6 +492,7 @@ create_release_branch(){
     # Create the release branch
 
     git checkout $(branch_name ${RELEASE_VERSION} rc)
+    git pull
 
     if [ "$LOCAL_TEST" == "false" ]; then
     gh pr comment $(branch_name ${RELEASE_VERSION} rc) \
@@ -514,6 +520,7 @@ create_release_branch(){
 create_GitHub_release(){
     # Create the GitHub release as draft
     git checkout $(branch_name ${RELEASE_VERSION} release)
+    git pull
 
     create_release_notes
 
@@ -554,6 +561,7 @@ create_sdist(){
     # Create the source distribution
 
     git checkout $(branch_name ${RELEASE_VERSION} "release")
+    git pull
 
     mkdir -p ${ROOT_DIR}/Release_Assets
 
@@ -575,6 +583,7 @@ create_merge_branch(){
     # Create the merge branch to merge the RC into master and bump the version with NEXT_VERSION-dev
 
     git checkout $(branch_name ${RELEASE_VERSION} "release")
+    git pull
     git checkout -b $(branch_name ${RELEASE_VERSION} "rc_merge")
 
     pushd $ROOT_DIR
@@ -617,6 +626,7 @@ create_merge_PR(){
     # Create a PR to merge the RC into master and bump the version with NEXT_VERSION-dev
     if [ "$LOCAL_TEST" == "false" ]; then
     git checkout $(branch_name ${RELEASE_VERSION} "rc_merge")
+    git pull
 
     gh pr create $(use_dry_run) \
     --title "Merge RC v${RELEASE_VERSION}_rc to v${NEXT_VERSION}-dev" \
@@ -717,6 +727,7 @@ if [ "$CREATE_RC" == "true" ]; then
     create_docker_PR
     create_version_bump_PR
     git checkout master
+    git pull origin master
 fi
 
 if [ "$LIGHTNING_TEST" == "true" ]; then
