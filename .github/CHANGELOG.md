@@ -14,10 +14,10 @@
 
 <h3>Internal changes ⚙️</h3>
 
-- Merge RC v0.44.0 rc to master
+- Merged RC v0.44.0 rc to master. Updated minimum version of PennyLane to `0.44.0`.
   [(#1325)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1325)
 
-- Bump the version number to `0.45.0-dev`. This also bumps the minimum version of PennyLane to `0.43`.
+- Bumped the version number to `0.45.0-dev`. Bumped the minimum version of PennyLane to `0.43`.
   [(#1320)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1320)
 
 <h3>Contributors ✍️</h3>
