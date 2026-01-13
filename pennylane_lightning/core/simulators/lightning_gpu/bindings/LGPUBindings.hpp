@@ -282,7 +282,6 @@ void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
 
     pyclass.def(nb::init<std::size_t>());              // qubits, device
     pyclass.def(nb::init<std::size_t, DevTag<int>>()); // qubits, dev-tag
-
     pyclass.def("__init__", [](PyClass *self, const ArrayComplexT &arr) {
         new (self) StateVectorT(arr.data(), arr.size());
     });
@@ -405,6 +404,7 @@ void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
             sv.applyPauliRot(wires, inverse, params, word);
         },
         "Apply a Pauli rotation.");
+
 } // registerBackendSpecificStateVectorMethods
 
 /**
