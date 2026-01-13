@@ -61,8 +61,7 @@ auto LightningSimulator::AllocateQubit() -> QubitIdType {
         new_program_idx = this->qubit_manager.Allocate(device_idx);
         Result mres = this->Measure(new_program_idx);
         if (*mres) {
-            this->NamedOperation("PauliX", {}, {new_program_idx}, false, {},
-                                 {});
+            this->NamedOperation("PauliX", {}, {new_program_idx});
         }
     }
 
@@ -177,7 +176,8 @@ void LightningSimulator::NamedOperation(
     const std::string &name, const std::vector<double> &params,
     const std::vector<QubitIdType> &wires, bool inverse,
     const std::vector<QubitIdType> &controlled_wires,
-    const std::vector<bool> &controlled_values) {
+    const std::vector<bool> &controlled_values,
+    [[maybe_unused]] const std::vector<std::string> &optional_params) {
     // Check the validity of number of qubits and parameters
     RT_FAIL_IF(controlled_wires.size() != controlled_values.size(),
                "Controlled wires/values size mismatch");
@@ -523,6 +523,90 @@ auto LightningSimulator::Measure(QubitIdType wire,
     return mres ? const_cast<Result>(&GLOBAL_RESULT_TRUE_CONST)
                 : const_cast<Result>(&GLOBAL_RESULT_FALSE_CONST);
 }
+
+auto LightningSimulator::PauliMeasure(const std::string &pauli_word,
+                                      const std::vector<QubitIdType> &wires)
+    -> Result {
+    RT_FAIL_IF(pauli_word.size() != wires.size(),
+               "Pauli word length must match number of wires");
+
+    auto dev_wires = getDeviceWires(wires);
+
+    for (size_t i = 0; i < pauli_word.size(); i++) {
+        const char p = pauli_word[i];
+        const QubitIdType wire = wires[i];
+        switch (p) {
+        case 'I':
+            // No basis change needed for Identity
+            break;
+        case 'X':
+            this->NamedOperation("Hadamard", {}, {wire});
+            break;
+        case 'Y':
+            this->NamedOperation("S", {}, {wire}, true);
+            this->NamedOperation("Hadamard", {}, {wire});
+            break;
+        case 'Z':
+            // No basis change needed for Z
+            break;
+        default:
+            RT_FAIL("Invalid character in Pauli word");
+        }
+    }
+
+    for (std::size_t i = 1; i < pauli_word.size(); i++) {
+        this->NamedOperation("CNOT", {}, {wires[i], wires[0]});
+    }
+
+    // Measure in the computational basis
+    bool mres = true;
+    for (const auto &wire : wires) {
+        Result res = this->Measure(wire);
+        mres = mres && (*res);
+    }
+
+    for (std::size_t i = 1; i < pauli_word.size(); i++) {
+        this->NamedOperation("CNOT", {}, {wires[i], wires[0]});
+    }
+
+    for (size_t i = 0; i < pauli_word.size(); i++) {
+        const char p = pauli_word[i];
+        const QubitIdType wire = wires[i];
+        switch (p) {
+        case 'I':
+            // No basis change needed for Identity
+            break;
+        case 'X':
+            this->NamedOperation("Hadamard", {}, {wire});
+            break;
+        case 'Y':
+            this->NamedOperation("Hadamard", {}, {wire});
+            this->NamedOperation("S", {}, {wire});
+            break;
+        case 'Z':
+            // No basis change needed for Z
+            break;
+        default:
+            RT_FAIL("Invalid character in Pauli word");
+        }
+    }
+
+    return mres ? const_cast<Result>(&GLOBAL_RESULT_TRUE_CONST)
+                : const_cast<Result>(&GLOBAL_RESULT_FALSE_CONST);
+}
+
+// Test measure and pauli_measure using the following circuit:
+// @qml.qnode(dev)
+// def circuit(x, y):
+//     qml.RY(x, wires=0)
+//     qml.CNOT(wires=[0, 1])
+//     m_0 = qml.measure(1)
+//     # m_0 = pauli_measurement("Z", [1])
+
+//     qml.cond(m_0, qml.RY)(y, wires=0)
+//     return qml.probs(wires=[0])
+
+// print(circuit(0.5, 0.3))
 
 // Gradient
 void LightningSimulator::Gradient(std::vector<DataView<double, 1>> &gradients,
