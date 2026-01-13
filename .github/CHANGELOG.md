@@ -14,7 +14,7 @@
 
 <h3>Internal changes ⚙️</h3>
 
-- Update the release scripts with lessons learned from `0.44.0` release.
+- Update the helper scripts for release.
   [(#1328)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1328)
 
 - Bump the version number to `0.45.0-dev`.
