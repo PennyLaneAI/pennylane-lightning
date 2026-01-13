@@ -568,7 +568,7 @@ upload_release_assets_gh(){
     gh release upload $(branch_name ${RELEASE_VERSION}) ${ROOT_DIR}/Release_Assets/*.tar.gz --clobber
 }
 
-create_merge_branch(){
+create_merge_PR(){
     # Create the merge branch to merge the RC into master and bump the version with NEXT_VERSION-dev
 
     git checkout $(branch_name ${RELEASE_VERSION} "release")
@@ -613,9 +613,20 @@ create_merge_branch(){
 
     git commit -m "Update minimum PennyLane version to ${RELEASE_VERSION%??}"
 
+    # Create a PR to merge the RC into master
     if [ "$LOCAL_TEST" == "true" ]; then
         PR_number="0000"
     else
+
+        git push --set-upstream origin $(branch_name ${RELEASE_VERSION} "rc_merge")
+
+        gh pr create $(use_dry_run) \
+        --title "Merge RC v${RELEASE_VERSION}_rc to v${NEXT_VERSION}-dev" \
+        --body "v${RELEASE_VERSION} RC merge branch. This PR was created by an automated script." \
+        --head $(branch_name ${RELEASE_VERSION} "rc_merge") \
+        --base master \
+        --label 'ci:build_wheels','ci:use-multi-gpu-runner','ci:use-gpu-runner','urgent'
+
         PR_number=$(gh pr view --json number --jq .number)
     fi
 
@@ -624,25 +635,9 @@ create_merge_branch(){
     git commit -m "Add CHANGELOG entry for RC merge"
 
     if [ "$LOCAL_TEST" == "false" ]; then
-    git push --set-upstream origin $(branch_name ${RELEASE_VERSION} "rc_merge")
+        git push origin $(branch_name ${RELEASE_VERSION} "rc_merge")
     fi
 }
-
-create_merge_PR(){
-    # Create a PR to merge the RC into master and bump the version with NEXT_VERSION-dev
-    if [ "$LOCAL_TEST" == "false" ]; then
-    git checkout $(branch_name ${RELEASE_VERSION} "rc_merge")
-    git pull
-
-    gh pr create $(use_dry_run) \
-    --title "Merge RC v${RELEASE_VERSION}_rc to v${NEXT_VERSION}-dev" \
-    --body "v${RELEASE_VERSION} RC merge branch. This PR was created by an automated script." \
-    --head $(branch_name ${RELEASE_VERSION} "rc_merge") \
-    --base master \
-    --label 'ci:build_wheels','ci:use-multi-gpu-runner','ci:use-gpu-runner','urgent'
-    fi
-}
-
 
 # --------------------------------------------------------------------------------------------------
 # Script body
@@ -745,7 +740,6 @@ fi
 if [ "$RELEASE_ACTION" == "true" ]; then
     create_release_branch
     create_GitHub_release
-    create_merge_branch
     create_merge_PR
 fi
 
