@@ -139,7 +139,7 @@ def _supports_adjoint(circuit, device_wires=None):
 def _adjoint_ops(op: qml.operation.Operator) -> bool:
     """Specify whether or not an Operator is supported by adjoint differentiation."""
 
-    return not isinstance(op, (Conditional, MidMeasureMP, PauliRot)) and (
+    return not isinstance(op, (Conditional, MidMeasureMP)) and (
         not any(qml.math.requires_grad(d) for d in op.data)
         or (op.num_params == 1 and op.has_generator)
     )
