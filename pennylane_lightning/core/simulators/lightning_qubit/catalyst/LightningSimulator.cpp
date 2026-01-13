@@ -178,7 +178,7 @@ void LightningSimulator::NamedOperation(
     const std::vector<QubitIdType> &wires, bool inverse,
     const std::vector<QubitIdType> &controlled_wires,
     const std::vector<bool> &controlled_values,
-    const std::vector<std::string> &optional) {
+    const std::vector<std::string> &optional_params) {
     // Check the validity of number of qubits and parameters
     RT_FAIL_IF(controlled_wires.size() != controlled_values.size(),
                "Controlled wires/values size mismatch");

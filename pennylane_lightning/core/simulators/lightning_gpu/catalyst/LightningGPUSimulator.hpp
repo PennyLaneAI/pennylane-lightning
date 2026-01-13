@@ -131,13 +131,12 @@ class LightningGPUSimulator final : public Catalyst::Runtime::QuantumDevice {
                        std::vector<QubitIdType> &) override;
     [[nodiscard]] auto GetDeviceShots() const -> std::size_t override;
 
-    void NamedOperation(const std::string &name,
-                        const std::vector<double> &params,
-                        const std::vector<QubitIdType> &wires,
-                        bool inverse = false,
-                        const std::vector<QubitIdType> &controlled_wires = {},
-                        const std::vector<bool> &controlled_values = {},
-                        const std::vector<std::string> &optional = {}) override;
+    void NamedOperation(
+        const std::string &name, const std::vector<double> &params,
+        const std::vector<QubitIdType> &wires, bool inverse = false,
+        const std::vector<QubitIdType> &controlled_wires = {},
+        const std::vector<bool> &controlled_values = {},
+        const std::vector<std::string> &optional_params = {}) override;
     using Catalyst::Runtime::QuantumDevice::MatrixOperation;
     void
     MatrixOperation(const std::vector<std::complex<double>> &matrix,
