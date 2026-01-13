@@ -14,9 +14,11 @@
 
 <h3>Internal changes ⚙️</h3>
 
-- Bump the version number to `0.45.0-dev`.
-  This also bumps the minimum version of PennyLane to `0.43`.
-    [(#1320)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1320)
+- Merge RC v0.44.0 rc to master
+  [(#1325)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1325)
+
+- Bump the version number to `0.45.0-dev`. This also bumps the minimum version of PennyLane to `0.43`.
+  [(#1320)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1320)
 
 <h3>Contributors ✍️</h3>
 
@@ -69,13 +71,8 @@ Jake Zaia
 
 <h3>Internal changes ⚙️</h3>
 
-<<<<<<< HEAD
-- Merge RC v0.44.0 rc to master
-  [(#0000)](https://github.com/PennyLaneAI/pennylane-lightning/pull/0000)
-=======
 - Test Docker images for v0.44.0 RC branch.
   [(#1319)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1319)
->>>>>>> master
 
 - Pin NumPy `<2.4` on CIs as `pyscf` is not compatible with the new version of NumPy yet.
   [(#1315)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1315)
