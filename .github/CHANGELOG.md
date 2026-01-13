@@ -17,6 +17,9 @@
 - Fix OpenMP toggle for the `lightning.qubit` source builds.
   [(#1313)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1313)
 
+- Update the helper scripts for release.
+  [(#1328)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1328)
+
 - Merged RC v0.44.0 rc to master. Updated minimum version of PennyLane to `0.44.0`.
   [(#1325)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1325)
 
