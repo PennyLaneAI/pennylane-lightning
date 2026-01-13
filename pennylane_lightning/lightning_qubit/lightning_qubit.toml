@@ -44,6 +44,7 @@ MultiRZ                = { properties = [ "invertible", "controllable", "differe
 PauliX                 = { properties = [ "invertible", "controllable", "differentiable" ] }
 PauliY                 = { properties = [ "invertible", "controllable", "differentiable" ] }
 PauliZ                 = { properties = [ "invertible", "controllable", "differentiable" ] }
+PauliRot               = { properties = [ "invertible",                                  ] }
 PhaseShift             = { properties = [ "invertible", "controllable", "differentiable" ] }
 PSWAP                  = { properties = [ "invertible", "controllable", "differentiable" ] }
 QubitUnitary           = { properties = [ "invertible", "controllable",                  ] }
