@@ -386,17 +386,6 @@ create_version_bump_PR(){
     git add $CHANGELOG_FILE
     git commit -m "Update CHANGELOG.md with new version entry."
 
-    # Update minimum PennLane version in requirements.txt and configure_pyproject_toml.py
-    sed -i "s/pennylane>=v\?[0-9\.]\+/pennylane>=${STABLE_VERSION%??}/" ${ROOT_DIR}/requirements.txt
-    sed -i "s/pennylane>=v\?[0-9\.]\+/pennylane>=${STABLE_VERSION%??}/" ${ROOT_DIR}/scripts/configure_pyproject_toml.py
-    sed -i "s/pennylane>=v\?[0-9\.]\+/pennylane>=${STABLE_VERSION%??}/" ${ROOT_DIR}/pyproject.toml
-
-    git add ${ROOT_DIR}/requirements.txt
-    git add ${ROOT_DIR}/scripts/configure_pyproject_toml.py
-    git add ${ROOT_DIR}/pyproject.toml
-
-    git commit -m "Update minimum PennyLane version to ${RELEASE_VERSION%??}"
-
     # Update RNG salt
     for i in ${ROOT_DIR}/tests/pytest.ini ${ROOT_DIR}/mpitests/pytest.ini ; do
         sed -i "/rng_salt = /d" $i
