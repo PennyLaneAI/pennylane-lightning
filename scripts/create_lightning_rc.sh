@@ -45,7 +45,7 @@ IS_TEST=true
 # To avoid pushing any branch or PR to GitHub. Set to true
 LOCAL_TEST=true
 
-# Check if gh CLI, and jq are installed
+# Check if gh CLI, and jq are installed, authenticated, and the correct version
 if ! command -v gh &> /dev/null; then
     echo "gh CLI could not be found"
     exit 1
@@ -601,6 +601,18 @@ create_merge_branch(){
         git add ${ROOT_DIR}/.github/workflows/compat-docker-${i}.yml
     done
     git commit -m "Update Docker workflows for new release version"
+
+    # Update PennyLane minimum version (may be unneeded, but good to have as a reminder)
+    sed -i "s/pennylane>=v\?[0-9\.]\+/pennylane>=${RELEASE_VERSION%??}/" ${ROOT_DIR}/requirements.txt
+    sed -i "s/pennylane>=v\?[0-9\.]\+/pennylane>=${RELEASE_VERSION%??}/" ${ROOT_DIR}/scripts/configure_pyproject_toml.py
+    sed -i "s/pennylane>=v\?[0-9\.]\+/pennylane>=${RELEASE_VERSION%??}/" ${ROOT_DIR}/pyproject.toml
+
+    git add ${ROOT_DIR}/requirements.txt
+    git add ${ROOT_DIR}/scripts/configure_pyproject_toml.py
+    git add ${ROOT_DIR}/pyproject.toml
+
+    git commit -m "Update minimum PennyLane version to ${RELEASE_VERSION%??}"
+
 
     add_CHANGELOG_entry "Merge RC v${RELEASE_VERSION} rc to master" "0000"
     git add $CHANGELOG_FILE
