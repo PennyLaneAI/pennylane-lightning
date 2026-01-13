@@ -45,6 +45,12 @@ IS_TEST=true
 # To avoid pushing any branch or PR to GitHub. Set to true
 LOCAL_TEST=true
 
+# Exit if not running on Linux
+if [[ "$OSTYPE" != "linux-gnu"* ]]; then
+    echo "This script must be run from a Linux environment."
+    exit 1
+fi
+
 # Check if gh CLI, and jq are installed, authenticated, and the correct version
 if ! command -v gh &> /dev/null; then
     echo "gh CLI could not be found"
