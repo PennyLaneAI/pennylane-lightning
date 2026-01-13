@@ -23,13 +23,11 @@
 #include <algorithm>
 #include <complex>
 #include <cstdio>
-#include <optional>
 #include <random>
 #include <type_traits>
 #include <unordered_map>
 #include <vector>
 
-#include "Error.hpp"
 #include "ExpValFunc.hpp"
 #include "LinearAlgebra.hpp"
 #include "MeasurementKernels.hpp"
@@ -680,113 +678,6 @@ class Measurements final
         return samples;
     }
 
-    /**
-     * @brief mid-circuit measurement
-     *
-     * Immediate random projective measurement and producing a classical result
-     * as output.
-     *
-     * @param wires Wires to be measured.
-     * @param collapse Whether to collapse the statevector after measurement.
-     * Default true.
-     * @param postselect Optional postselection value. If provided, the
-     * measurement outcome must match this value; otherwise, an error is raised.
-     *
-     * @return Measurement result as a boolean value.
-     */
-    auto measure(const std::vector<std::size_t> &wires, bool collapse = true,
-                 std::optional<bool> postselect = std::nullopt) -> bool {
-        this->setSeed(this->_deviceseed);
-        std::vector<PrecisionT> probabilities =
-            this->probs(wires, /*num_shots*/ 0);
-        bool mres = simulate_draw(probabilities, postselect, this->_rng);
-        if (collapse) {
-            this->_statevector.collapse(wires, mres);
-        }
-        return mres;
-    }
-
-    /**
-     * @brief pauli basis mid-circuit measurement
-     *
-     * Perform a mid-circuit measurement in the Pauli basis specified by
-     * `pauli_bases` on the given `wires`.
-     *
-     * @param wires Wires to be measured.
-     * @param pauli_bases Vector of characters specifying the Pauli bases
-     * ('X', 'Y', 'Z', 'I') for each wire.
-     * @param collapse Whether to collapse the statevector after measurement.
-     * Default true.
-     * @param postselect Optional postselection value. If provided, the
-     * measurement outcome must match this value; otherwise, an error is raised.
-     *
-     * @return Measurement result as a boolean value.
-     */
-    auto pauli_measure(const std::vector<std::size_t> &wires,
-                       const std::vector<char> &pauli_bases,
-                       bool collapse = true,
-                       std::optional<bool> postselect = std::nullopt) -> bool {
-
-        PL_ABORT_IF(wires.size() != pauli_bases.size(),
-                    "The size of wires and pauli_bases must be the same.");
-
-        const std::size_t num_wires = wires.size();
-
-        auto sv =
-            collapse ? this->_statevector
-                     : StateVectorLQubitManaged<PrecisionT>(this->_statevector);
-
-        for (std::size_t i = 0; i < num_wires; i++) {
-            switch (pauli_bases[i]) {
-            case 'X':
-                // qml.Hadamard(wire)
-                sv.applyOperation("Hadamard", {wires[i]});
-                break;
-            case 'Y':
-                // qml.adjoint(qml.S(wire))
-                // qml.Hadamard(wire)
-                sv.applyOperation("S", {wires[i]}, true);
-                sv.applyOperation("Hadamard", {wires[i]});
-                break;
-            default:
-                // Supported bases are 'X', 'Y', 'Z', 'I'
-                // Should we raise an error for unsupported bases here?
-                break;
-            }
-        }
-
-        for (std::size_t i = 1; i < num_wires; i++) {
-            sv.applyOperation("CNOT", {wires[i]}, {wires[0]});
-        }
-
-        auto meas = this->measure(wires, collapse, postselect);
-
-        for (std::size_t i = 1; i < num_wires; i++) {
-            sv.applyOperation("CNOT", {wires[i]}, {wires[0]});
-        }
-
-        for (std::size_t i = 0; i < num_wires; i++) {
-            switch (pauli_bases[i]) {
-            case 'X':
-                // qml.Hadamard(wire)
-                sv.applyOperation("Hadamard", {wires[i]});
-                break;
-            case 'Y':
-                // qml.adjoint(qml.S(wire))
-                // qml.Hadamard(wire)
-                sv.applyOperation("Hadamard", {wires[i]});
-                sv.applyOperation("S", {wires[i]});
-                break;
-            default:
-                // Supported bases are 'X', 'Y', 'Z', 'I'
-                // Should we raise an error for unsupported bases here?
-                break;
-            }
-        }
-
-        return meas;
-    }
-
   private:
     std::unordered_map<std::string, ExpValFunc> expval_funcs_ = {
         {"Identity", ExpValFunc::Identity},
@@ -845,11 +736,12 @@ class Measurements final
      * @param distrib Random number distribution.
      * @param init_idx Init index of basis state.
      */
-    auto inline metropolis_step(
-        const StateVectorT &sv,
-        const std::unique_ptr<TransitionKernel<PrecisionT>> &tk,
-        std::mt19937 &gen, std::uniform_real_distribution<PrecisionT> &distrib,
-        std::size_t init_idx) -> std::size_t {
+    std::size_t
+    metropolis_step(const StateVectorT &sv,
+                    const std::unique_ptr<TransitionKernel<PrecisionT>> &tk,
+                    std::mt19937 &gen,
+                    std::uniform_real_distribution<PrecisionT> &distrib,
+                    std::size_t init_idx) {
         auto init_plog = std::log(
             (sv.getData()[init_idx] * std::conj(sv.getData()[init_idx]))
                 .real());
@@ -873,45 +765,5 @@ class Measurements final
         }
         return init_idx;
     }
-
-    /**
-     * @brief Simulate a single measurement draw based on given probabilities
-     * and optional postselection.
-     *
-     * @param probabilities Vector of probabilities for measurement outcomes.
-     * @param postselect Optional postselection value. If provided,
-     * the measurement outcome must match this value (true: 1 or false: 0).
-     * @param gen Optional random number generator. If not provided, a new one
-     * will be created.
-     *
-     * @return Measurement result as a boolean value.
-     */
-    auto inline simulate_draw(
-        const std::vector<PrecisionT> &probabilities,
-        const std::optional<bool> &postselect,
-        std::mt19937 *gen = nullptr) // NOLINT(readability-non-const-parameter)
-        -> bool {
-        if (postselect) {
-            auto postselect_value = postselect.value() ? 1 : 0;
-            PL_ABORT_IF(probabilities[postselect_value] == 0,
-                        "Probability of postselect value is 0");
-            return static_cast<bool>(postselect_value == 1);
-        }
-
-        std::uniform_real_distribution<> dis(0., 1.);
-
-        float draw;
-        if (gen != nullptr) {
-            draw = dis(*gen);
-            (*gen)();
-        } else {
-            std::random_device rd;
-            std::mt19937 gen_no_seed(rd());
-            draw = dis(gen_no_seed);
-        }
-
-        return draw > probabilities[0];
-    }
-
 }; // class Measurements
 } // namespace Pennylane::LightningQubit::Measures
