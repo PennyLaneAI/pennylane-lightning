@@ -675,6 +675,32 @@ class StateVectorCudaManaged
     }
 
     /**
+     * @brief Apply a PauliRot gate to the state-vector.
+     *
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicates whether to use inverse of gate.
+     * @param params Rotation angle.
+     * @param word A Pauli word (e.g. "XYYX").
+     */
+    void applyPauliRot(const std::vector<std::size_t> &wires, bool inverse,
+                       const std::vector<PrecisionT> &params,
+                       const std::string &word) {
+        PL_ABORT_IF_NOT(wires.size() == word.size(),
+                        "wires and word have incompatible dimensions.");
+
+        std::vector<::string> extract_pauli_word;
+        extract_pauli_word.reserve(word.size());
+        for (const char c : word) {
+            extract_pauli_word.emplace_back(1, c);
+        }
+
+        applyParametricPauliGeneralGate_(extract_pauli_word, {}, {},
+                                         NormalizeCastIndices<std::size_t, int>(
+                                             wires, BaseType::getNumQubits()),
+                                         params.front(), inverse);
+    }
+
+    /**
      * @brief Apply a given matrix directly to the statevector using a
      * std vector.
      *
@@ -2092,10 +2118,13 @@ class StateVectorCudaManaged
     };
 
     const std::unordered_map<std::string, custatevecPauli_t> native_gates_{
-        {"RX", CUSTATEVEC_PAULI_X},       {"RY", CUSTATEVEC_PAULI_Y},
-        {"RZ", CUSTATEVEC_PAULI_Z},       {"CRX", CUSTATEVEC_PAULI_X},
-        {"CRY", CUSTATEVEC_PAULI_Y},      {"CRZ", CUSTATEVEC_PAULI_Z},
-        {"Identity", CUSTATEVEC_PAULI_I}, {"I", CUSTATEVEC_PAULI_I}};
+        {"X", CUSTATEVEC_PAULI_X},        {"Y", CUSTATEVEC_PAULI_Y},
+        {"Z", CUSTATEVEC_PAULI_Z},        {"I", CUSTATEVEC_PAULI_I},
+        {"Identity", CUSTATEVEC_PAULI_I}, {"RX", CUSTATEVEC_PAULI_X},
+        {"RY", CUSTATEVEC_PAULI_Y},       {"RZ", CUSTATEVEC_PAULI_Z},
+        {"CRX", CUSTATEVEC_PAULI_X},      {"CRY", CUSTATEVEC_PAULI_Y},
+        {"CRZ", CUSTATEVEC_PAULI_Z},
+    };
 
     // Holds the mapping from gate labels to associated generator functions.
     const GMap generator_map_{

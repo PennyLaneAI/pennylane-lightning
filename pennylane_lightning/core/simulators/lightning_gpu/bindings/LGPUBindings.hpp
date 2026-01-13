@@ -152,8 +152,6 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
  */
 template <class StateVectorT>
 void registerBackendSpecificObservables(nb::module_ &m) {
-    using PrecisionT =
-        typename StateVectorT::PrecisionT; // Statevector's precision.
     using ComplexT =
         typename StateVectorT::ComplexT; // Statevector's complex type.
     using ArrayComplexT = nb::ndarray<ComplexT, nb::c_contig>;
@@ -396,6 +394,17 @@ void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
             sv.CopyGpuDataToHost(state.data(), state.size());
         },
         "Copy state vector data to a numpy array.", nb::arg("state"));
+
+    // Add Pauli rotation - LGPU specific implementation
+    pyclass.def(
+        "applyPauliRot",
+        [](StateVectorT &sv, const std::vector<std::size_t> &wires,
+           const bool inverse, const std::vector<PrecisionT> &params,
+           const std::string &word) {
+            sv.applyPauliRot(wires, inverse, params, word);
+        },
+        "Apply a Pauli rotation.");
+
 } // registerBackendSpecificStateVectorMethods
 
 /**
