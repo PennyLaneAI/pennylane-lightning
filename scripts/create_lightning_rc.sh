@@ -238,7 +238,7 @@ create_release_candidate_PR(){
     if [ "$LOCAL_TEST" == "false" ]; then
     gh pr create $(use_dry_run) \
         --title "Create v${RELEASE_VERSION} RC branch" \
-        --body "v${RELEASE_VERSION} RC branch." \
+        --body "v${RELEASE_VERSION} RC branch. This PR was created by an automated script." \
         --head $(branch_name ${RELEASE_VERSION} rc) \
         --base $(branch_name ${RELEASE_VERSION} base) \
         --label 'do not merge','ci:build_wheels','ci:use-multi-gpu-runner','ci:use-gpu-runner','urgent'
@@ -260,7 +260,7 @@ create_docs_review_PR(){
     if [ "$LOCAL_TEST" == "false" ]; then
     gh pr create $(use_dry_run) \
         --title "Create v${RELEASE_VERSION} Doc branch" \
-        --body "v${RELEASE_VERSION} Doc branch." \
+        --body "v${RELEASE_VERSION} Doc branch. This PR was created by an automated script." \
         --head $(branch_name ${RELEASE_VERSION} docs) \
         --base $(branch_name ${RELEASE_VERSION} rc) \
         --draft \
@@ -289,7 +289,7 @@ create_docker_PR(){
 
     gh pr create $(use_dry_run) \
         --title "Docker test for v${RELEASE_VERSION} RC branch" \
-        --body "Docker test for v${RELEASE_VERSION} RC branch." \
+        --body "Docker test for v${RELEASE_VERSION} RC branch. This PR was created by an automated script." \
         --head $(branch_name ${RELEASE_VERSION} docker) \
         --base master \
         --label 'urgent'
@@ -358,7 +358,7 @@ create_version_bump_PR(){
 
     gh pr create $(use_dry_run) \
         --title "Bump version to v${NEXT_VERSION}-dev" \
-        --body "Bump version to v${NEXT_VERSION}-dev." \
+        --body "Bump version to v${NEXT_VERSION}-dev. This PR was created by an automated script." \
         --head $(branch_name ${RELEASE_VERSION} bump) \
         --base master \
         --label 'ci:build_wheels','ci:use-multi-gpu-runner','ci:use-gpu-runner','urgent'
@@ -613,8 +613,13 @@ create_merge_branch(){
 
     git commit -m "Update minimum PennyLane version to ${RELEASE_VERSION%??}"
 
+    if [ "$LOCAL_TEST" == "true" ]; then
+        PR_number="0000"
+    else
+        PR_number=$(gh pr view --json number --jq .number)
+    fi
 
-    add_CHANGELOG_entry "Merge RC v${RELEASE_VERSION} rc to master" "0000"
+    add_CHANGELOG_entry "Merge RC v${RELEASE_VERSION} rc to master" "${PR_number}"
     git add $CHANGELOG_FILE
     git commit -m "Add CHANGELOG entry for RC merge"
 
@@ -631,7 +636,7 @@ create_merge_PR(){
 
     gh pr create $(use_dry_run) \
     --title "Merge RC v${RELEASE_VERSION}_rc to v${NEXT_VERSION}-dev" \
-    --body "v${RELEASE_VERSION} RC merge branch." \
+    --body "v${RELEASE_VERSION} RC merge branch. This PR was created by an automated script." \
     --head $(branch_name ${RELEASE_VERSION} "rc_merge") \
     --base master \
     --label 'ci:build_wheels','ci:use-multi-gpu-runner','ci:use-gpu-runner','urgent'
