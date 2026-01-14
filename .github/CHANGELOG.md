@@ -17,6 +17,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Tidy up and remove unused vector-matrix helper methods at `LinearAlgebra.hpp`.
+  [(#1314)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1314)
+
 - Fix OpenMP toggle for the `lightning.qubit` source builds.
   [(#1313)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1313)
 
