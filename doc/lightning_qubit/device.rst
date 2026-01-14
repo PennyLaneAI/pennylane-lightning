@@ -141,6 +141,14 @@ If you are computing a large number of expectation values, or if you are using a
     dev = qml.device("lightning.qubit", wires=2, batch_obs=True)
 
 
+**OpenMP acceleration of the gate kernels:**
+
+OpenMP acceleration of gate kernels across all kernel types (LM, AVX2, and AVX512) is enabled
+by default on Linux and MacOS wheels in Lightning-Qubit.
+
+To learn more about this feature, check out the :doc:`/lightning_qubit/development/kernel_tuning` guide.
+
+
 **Markov Chain Monte Carlo sampling support:**
 
 The ``lightning.qubit`` device allows users to use the Markov Chain Monte Carlo (MCMC) sampling method to generate approximate samples. To enable the MCMC sampling method for sample generation, initialize a ``lightning.qubit`` device with the ``mcmc=True`` keyword argument, as:
@@ -158,4 +166,3 @@ The ``lightning.qubit`` device also supports a ``"NonZeroRandom"`` kernel. This 
 
     import pennylane as qml
     dev = qml.device("lightning.qubit", wires=2, shots=1000, mcmc=True, kernel_name="NonZeroRandom", num_burnin=200)
-

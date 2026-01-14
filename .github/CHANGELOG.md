@@ -4,6 +4,9 @@
 
 <h3>Improvements 🛠</h3>
 
+- Linux and MacOS `lightning.qubit` wheels are now built with OpenMP support for all kernel types (LM, AVX2, and AVX512), enabling better performance tuning for CPU simulations.
+  [(#1133)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1133)
+
 <h3>Breaking changes 💔</h3>
 
 <h3>Deprecations 👋</h3>
