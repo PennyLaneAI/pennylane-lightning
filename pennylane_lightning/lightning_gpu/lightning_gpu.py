@@ -21,7 +21,7 @@ from __future__ import annotations
 
 from ctypes.util import find_library
 from dataclasses import replace
-from functools import partial, reduce
+from functools import partial
 from importlib import util as imp_util
 from pathlib import Path
 from typing import List, Optional, Union
@@ -95,10 +95,6 @@ def stopping_condition(op: Operator, allow_mcms: bool = True) -> bool:
     if isinstance(op, MidMeasureMP):
         # Conditional and MidMeasureMP should not be decomposed
         return allow_mcms
-    if isinstance(op, qml.PauliRot):
-        word = op._hyperparameters["pauli_word"]  # pylint: disable=protected-access
-        # decomposes to IsingXX, etc. for n <= 2
-        return reduce(lambda x, y: x + (y != "I"), word, 0) > 2
 
     return _supports_operation(op.name)
 

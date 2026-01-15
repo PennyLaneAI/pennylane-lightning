@@ -404,7 +404,6 @@ void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
             sv.applyPauliRot(wires, inverse, params, word);
         },
         "Apply a Pauli rotation.");
-
 } // registerBackendSpecificStateVectorMethods
 
 /**

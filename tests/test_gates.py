@@ -685,8 +685,8 @@ def test_controlled_qubit_unitary_from_op(tol):
 
 @pytest.mark.local_salt(42)
 @pytest.mark.skipif(
-    device_name not in ("lightning.qubit", "lightning.kokkos", "lightning.amdgpu"),
-    reason="PauliRot operations only implemented in lightning.qubit and lightning.kokkos.",
+    device_name in ("lightning.tensor",),
+    reason="PauliRot is not supported on lightning.tensor.",
 )
 @pytest.mark.parametrize("n_wires", [1, 2, 3, 4, 5, 10, 15])
 @pytest.mark.parametrize("n_targets", [1, 2, 3, 4, 5, 10, 15])
@@ -789,7 +789,7 @@ def test_controlled_globalphase(n_qubits, control_value, tol):
     reason="lightning.kokkos doesn't support zero wires on Windows.",
 )
 @pytest.mark.skipif(
-    device_name in ["lightning.tensor"],
+    device_name in ("lightning.tensor",),
     reason=device_name + " doesn't support zero wires.",
 )
 @pytest.mark.parametrize("control_value", [False, True])
@@ -820,7 +820,7 @@ def test_controlled_globalphase_zero_targetwire(n_qubits, control_value, tol):
     reason="lightning.kokkos doesn't support zero wires on Windows.",
 )
 @pytest.mark.skipif(
-    device_name in ["lightning.tensor"],
+    device_name in ("lightning.tensor",),
     reason=device_name + " cannot be initialized with less than 2 wires.",
 )
 @pytest.mark.parametrize("n_qubits", list(range(1, 3)))
@@ -849,7 +849,7 @@ def test_controlled_globalphase_1ctrl_true_cornercase(n_qubits, tol):
     reason="lightning.kokkos doesn't support zero wires on Windows.",
 )
 @pytest.mark.skipif(
-    device_name in ["lightning.tensor"],
+    device_name in ("lightning.tensor",),
     reason=device_name + " cannot be initialized with less than 2 wires.",
 )
 @pytest.mark.parametrize("n_qubits", list(range(1, 3)))
