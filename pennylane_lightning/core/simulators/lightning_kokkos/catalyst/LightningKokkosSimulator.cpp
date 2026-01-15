@@ -534,6 +534,77 @@ auto LightningKokkosSimulator::Measure(QubitIdType wire,
                 : const_cast<Result>(&GLOBAL_RESULT_FALSE_CONST);
 }
 
+auto LightningKokkosSimulator::PauliMeasure(
+    const std::string &pauli_word, const std::vector<QubitIdType> &wires)
+    -> Result {
+    RT_FAIL_IF(pauli_word.size() != wires.size(),
+               "Pauli word length must match number of wires");
+
+    auto dev_wires = getDeviceWires(wires);
+
+    for (size_t i = 0; i < pauli_word.size(); i++) {
+        const char p = pauli_word[i];
+        const QubitIdType wire = wires[i];
+        switch (p) {
+        case 'I':
+            // No basis change needed for Identity
+            break;
+        case 'X':
+            this->NamedOperation("Hadamard", {}, {wire});
+            break;
+        case 'Y':
+            this->NamedOperation("S", {}, {wire}, true);
+            this->NamedOperation("Hadamard", {}, {wire});
+            break;
+        case 'Z':
+            // No basis change needed for Z
+            break;
+        default:
+            RT_FAIL("Invalid character in Pauli word");
+        }
+    }
+
+    for (std::size_t i = 1; i < pauli_word.size(); i++) {
+        this->NamedOperation("CNOT", {}, {wires[i], wires[0]});
+    }
+
+    // Measure in the computational basis
+    bool mres = true;
+    for (const auto &wire : wires) {
+        Result res = this->Measure(wire);
+        mres = mres && (*res);
+    }
+
+    for (std::size_t i = 1; i < pauli_word.size(); i++) {
+        this->NamedOperation("CNOT", {}, {wires[i], wires[0]});
+    }
+
+    for (size_t i = 0; i < pauli_word.size(); i++) {
+        const char p = pauli_word[i];
+        const QubitIdType wire = wires[i];
+        switch (p) {
+        case 'I':
+            // No basis change needed for Identity
+            break;
+        case 'X':
+            this->NamedOperation("Hadamard", {}, {wire});
+            break;
+        case 'Y':
+            this->NamedOperation("Hadamard", {}, {wire});
+            this->NamedOperation("S", {}, {wire});
+            break;
+        case 'Z':
+            // No basis change needed for Z
+            break;
+        default:
+            RT_FAIL("Invalid character in Pauli word");
+        }
+    }
+
+    return mres ? const_cast<Result>(&GLOBAL_RESULT_TRUE_CONST)
+                : const_cast<Result>(&GLOBAL_RESULT_FALSE_CONST);
+}
+
 void LightningKokkosSimulator::Gradient(
     std::vector<DataView<double, 1>> &gradients,
     const std::vector<std::size_t> &trainParams) {
