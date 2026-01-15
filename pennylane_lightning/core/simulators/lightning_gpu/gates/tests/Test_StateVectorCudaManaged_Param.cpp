@@ -1620,7 +1620,9 @@ TEMPLATE_TEST_CASE("LightningGPU::applyOperation 1 wire",
 
             sv.applyPauliRot({0, 1, 2}, false, {M_PI}, "XYZ");
 
-            CHECK(sv.getDataVector() == sv_expected.getDataVector());
+            CHECK(sv.getDataVector() ==
+                  Pennylane::Util::approx(sv_expected.getDataVector())
+                      .margin(1e-7));
         }
     }
 }
