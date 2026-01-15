@@ -688,6 +688,9 @@ class StateVectorCudaManaged
         PL_ABORT_IF_NOT(wires.size() == word.size(),
                         "wires and word have incompatible dimensions.");
 
+        // Extract each character in the Pauli word
+        // following the expected input format of
+        // custatevec parametric Pauli gate API.
         std::vector<std::string> extract_pauli_word;
         extract_pauli_word.reserve(word.size());
         for (const char c : word) {
