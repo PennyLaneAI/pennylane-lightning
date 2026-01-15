@@ -4,6 +4,9 @@
 
 <h3>Improvements 🛠</h3>
 
+- Linux and MacOS `lightning.qubit` wheels are now built with OpenMP support for all kernel types (LM, AVX2, and AVX512), enabling better performance tuning for CPU simulations.
+  [(#1133)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1133)
+
 <h3>Breaking changes 💔</h3>
 
 <h3>Deprecations 👋</h3>
@@ -14,15 +17,27 @@
 
 <h3>Internal changes ⚙️</h3>
 
-- Bump the version number to `0.45.0-dev`.
-  This also bumps the minimum version of PennyLane to `0.43`.
-    [(#1320)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1320)
+- Tidy up and remove unused vector-matrix helper methods at `LinearAlgebra.hpp`.
+  [(#1314)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1314)
+
+- Fix OpenMP toggle for the `lightning.qubit` source builds.
+  [(#1313)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1313)
+
+- Update the helper scripts for release.
+  [(#1328)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1328)
+
+- Merged RC v0.44.0 rc to master. Updated minimum version of PennyLane to `0.44.0`.
+  [(#1325)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1325)
+
+- Bumped the version number to `0.45.0-dev`. Bumped the minimum version of PennyLane to `0.43`.
+  [(#1320)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1320)
 
 <h3>Contributors ✍️</h3>
 
 This release contains contributions from (in alphabetical order):
 
-Jake Zaia
+Ali Asadi,
+Jake Zaia.
 
 ---
 
@@ -30,77 +45,70 @@ Jake Zaia
 
 <h3>New features since last release</h3>
 
-- Introduced a new Lightning-AMDGPU device, which is an alias of Lightning-Kokkos specifically for AMD GPUs.
+- Introduced a new Lightning-AMDGPU device, which uses Lightning-Kokkos specifically geared for AMD GPUs.
   [(#1300)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1300)
   [(#1305)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1305)
 
-
 <h3>Improvements 🛠</h3>
 
-- Cache intermediate states in the adjoint-jacobian pipeline to eliminate redundant forward pass computed during backward pass in `lightning.qubit`.
+- Added intermediate state cache in the adjoint-jacobian pipeline to eliminate
+  a redundant forward pass computed during backward pass in `lightning.qubit`.
   [(#1312)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1312)
 
 - Device VJP has been optimized to avoid unecessary copying of temporary statevectors.
   `lightning.qubit` also has additional optimizations when using only a single observable.
   [(#1311)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1311)
 
-- Handled `qml.GlobalPhase` with zero-qubit target wires in `lightning.gpu`.
-  Supported `qml.GlobalPhase` with one controlled wire across state-vector devices.
+- Added handling for `qml.GlobalPhase` with zero-qubit target wires in `lightning.gpu`.
+  Added support for `qml.GlobalPhase` with one controlled wire across state-vector devices.
   [(#1298)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1298)
 
-- Supported Python 3.14 wheel builds.
+- Added support for Python 3.14 wheel builds.
   [(#1294)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1294)
 
 <h3>Breaking changes 💔</h3>
 
-- MacOS x86 wheels are no longer built, and the PennyLane ecosystem will no longer support Intel MacOS platforms for v0.44. If needed, MacOS x86 wheels can be built from source. See [PennyLane deprecations page](https://pennylane.ai/blog/2025/10/pennylane-release-0.43/#deprecations-and-breaking-changes-) for more information.
+- MacOS x86 wheels are no longer built, and the PennyLane ecosystem will no longer support Intel MacOS platforms for v0.44. If needed, MacOS x86 wheels can be built from source. See the [PennyLane deprecations page](https://pennylane.ai/blog/2025/10/pennylane-release-0.43/#deprecations-and-breaking-changes-) for more information.
   [(#1287)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1287)
-
-<h3>Deprecations 👋</h3>
-
-<h3>Documentation 📝</h3>
 
 <h3>Bug fixes 🐛</h3>
 
 - Corrected an issue in tests where a PennyLane operator was used within a QNode to compute a
-  matrix, which would lead to wrongful queuing as of PennyLane
+  matrix, which would lead to incorrect queuing as of PennyLane
   pull request [#8131](https://github.com/PennyLaneAI/pennylane/pull/8131).
   [(#1292)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1292)
 
 <h3>Internal changes ⚙️</h3>
 
-- Test Docker images for v0.44.0 RC branch.
-  [(#1319)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1319)
-
-- Pin NumPy `<2.4` on CIs as `pyscf` is not compatible with the new version of NumPy yet.
+- Pinned NumPy to versions preceding 2.4 on CIs as `pyscf` is not compatible with the new version of NumPy yet.
   [(#1315)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1315)
 
-- Update references to the `transform` property of the `qml.transforms.core.Transform` and `qml.transforms.core.BoundTransform`.
+- Updated references to the `transform` property of the `qml.transforms.core.Transform` and `qml.transforms.core.BoundTransform`.
   [(#1315)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1315)
 
-- Update references to `TransformProgram` with `CompilePipeline`
+- Updated references to `TransformProgram` with `CompilePipeline`
   [(#1310)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1310)
 
-- Update `wheel_linux_aarch64.yml` workflow to run on a Blacksmith Arm runner.
+- Updated `wheel_linux_aarch64.yml` workflow to run on a Blacksmith Arm runner.
   [(#1307)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1307)
 
-- Update MacOS runner to use OSX 14.
+- Updated MacOS runner to use OSX 14.
   [(#1304)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1304)
 
-- Temporarily increased github action timeout limit to 90 min.
+- Temporarily increased GitHub action timeout limit to 90 min.
   [(#1303)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1303)
   [(#1301)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1301)
 
-- Update tests to accomodate new PennyLane MCM method validation.
+- Updated tests to accommodate new PennyLane MCM method validation.
   [(#1295)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1295)
 
-- Pinned black, pylint, and isort versions in requirement files.
+- Pinned `black`, `pylint`, and `isort` versions in the requirement files.
   [(#1288)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1288)
 
-- Update Sphinx version to 8.1.
+- Updated Sphinx version to 8.1.
   [(#1291)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1291)
 
-- Update release script and use the Catalyst `rc` branch in CIs in the release season.
+- Updated release script to use the Catalyst `rc` branch in CIs.
   [(#1285)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1285)
 
 - Updated CIs to use GCC 13.
@@ -112,13 +120,13 @@ Jake Zaia
 - `scipy-openblas32` dependency can be set manually when installing from source using the `ENABLE_SCIPY_OPENBLAS` cmake flag.
   [(#1220)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1220)
 
-- Merge v0.43.0 rc branch to master.
+- Merged v0.43.0 rc branch to master.
   [(#1282)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1282)
 
-- Removed Catalyst version pin in stable CI tests.
+- Removed the Catalyst version pin in stable CI tests.
   [(#1284)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1284)
 
-- `lightning.qubit` CI Python tests now use rc branch for testing release candidates.
+- Updated `lightning.qubit` CI Python tests to use `rc` branch for testing release candidates.
   [(#1280)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1280)
 
 - Bumped the version to 0.44.0-dev.
@@ -131,10 +139,15 @@ Jake Zaia
 
 This release contains contributions from (in alphabetical order):
 
+Runor Agbaire,
 Ali Asadi,
+Astral Cai,
 Yushao Chen,
 Joseph Lee,
-David Wierichs.
+Luis Alfredo Nuñez Meneses,
+Andrija Paurevic,
+David Wierichs,
+Jake Zaia.
 
 ---
 
