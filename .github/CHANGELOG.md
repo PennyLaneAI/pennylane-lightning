@@ -2,6 +2,10 @@
 
 <h3>New features since last release</h3>
 
+- Added support for `qml.pauli_measure` simulation for Catalyst.
+  [(#1327)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1327)
+
+
 <h3>Improvements 🛠</h3>
 
 - Linux and MacOS `lightning.qubit` wheels are now built with OpenMP support for all kernel types (LM, AVX2, and AVX512), enabling better performance tuning for CPU simulations.
@@ -37,6 +41,7 @@
 This release contains contributions from (in alphabetical order):
 
 Ali Asadi,
+Jeffrey Kam,
 Jake Zaia.
 
 ---
