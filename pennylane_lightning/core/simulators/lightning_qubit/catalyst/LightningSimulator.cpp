@@ -199,7 +199,8 @@ void LightningSimulator::NamedOperation(
         RT_FAIL_IF(this->tape_recording,
                    "PauliRot operation is not supported when tape "
                    "recording is active"); // TODO: support caching
-        this->device_sv->applyPauliRot(dev_wires, inverse, params, optional_params[0]);
+        this->device_sv->applyPauliRot(dev_wires, inverse, params,
+                                       optional_params[0]);
         return;
     }
 
