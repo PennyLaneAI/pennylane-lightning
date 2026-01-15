@@ -170,6 +170,8 @@ class LightningKokkosSimulator final : public Catalyst::Runtime::QuantumDevice {
     auto Measure(QubitIdType wire,
                  std::optional<int32_t> postselect = std::nullopt)
         -> Result override;
+    auto PauliMeasure(const std::string &pauli_word,
+                      const std::vector<QubitIdType> &wires) -> Result override;
     void Gradient(std::vector<DataView<double, 1>> &gradients,
                   const std::vector<std::size_t> &trainParams) override;
 

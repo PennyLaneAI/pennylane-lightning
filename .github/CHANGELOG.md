@@ -2,6 +2,9 @@
 
 <h3>New features since last release</h3>
 
+- Added support for `qml.pauli_measure` simulation for Catalyst.
+  [(#1327)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1327)
+
 - Added support for `qml.PauliRot` simulation for Catalyst.
   [(#1322)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1322)
 
