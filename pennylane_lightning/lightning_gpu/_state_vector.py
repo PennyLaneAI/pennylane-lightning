@@ -341,7 +341,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
                 paulis = operation._hyperparameters[  # pylint: disable=protected-access
                     "pauli_word"
                 ]
-                wires = [i for i, w in zip(wires, paulis) if w != "I"]
+                wires = [w for w, p in zip(wires, paulis) if p != "I"]
                 word = "".join(p for p in paulis if p != "I")
                 method(wires, invert_param, operation.parameters, word)
             elif method is not None:  # apply specialized gate
