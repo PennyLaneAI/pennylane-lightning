@@ -7,6 +7,9 @@
 
 <h3>Improvements 🛠</h3>
 
+- Added a C++ kernel for the `qml.PauliRot` simulation on `lightning.gpu`.
+  [(#1329)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1329)
+
 - Linux and MacOS `lightning.qubit` wheels are now built with OpenMP support for all kernel types (LM, AVX2, and AVX512), enabling better performance tuning for CPU simulations.
   [(#1133)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1133)
 
@@ -20,13 +23,13 @@
 
 <h3>Internal changes ⚙️</h3>
 
-- Tidy up and remove unused vector-matrix helper methods at `LinearAlgebra.hpp`.
+- Cleaned up vector-matrix methods used by Lightning devices at `LinearAlgebra.hpp`.
   [(#1314)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1314)
 
-- Fix OpenMP toggle for the `lightning.qubit` source builds.
+- Fixed OpenMP toggle for the `lightning.qubit` source builds.
   [(#1313)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1313)
 
-- Update the helper scripts for release.
+- Updated the helper scripts for release.
   [(#1328)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1328)
 
 - Merged RC v0.44.0 rc to master. Updated minimum version of PennyLane to `0.44.0`.
