@@ -2,7 +2,7 @@
 
 <h3>New features since last release</h3>
 
-- Added support for PauliRot simulation for Catalyst
+- Added support for `qml.PauliRot` simulation for Catalyst.
   [(#1322)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1322)
 
 <h3>Improvements 🛠</h3>
@@ -42,7 +42,9 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Jeffrey Kam, Jake Zaia
+Ali Asadi,
+Jeffrey Kam,
+Jake Zaia.
 
 ---
 
