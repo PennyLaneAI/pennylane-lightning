@@ -94,6 +94,7 @@ extensions = [
     "sphinx_automodapi.automodapi",
     "sphinx_automodapi.smart_resolver",
     "sphinxext.opengraph",
+    "sphinx_sitemap",
 ]
 
 # Open Graph metadata
@@ -106,7 +107,7 @@ ogp_social_cards = {
 ogp_image = "_static/pennylane_lightning.png"
 
 # The base URL with a proper language and version.
-html_baseurl = os.environ.get("READTHEDOCS_CANONICAL_URL", "/")
+html_baseurl = os.environ.get("READTHEDOCS_CANONICAL_URL", "https://docs.pennylane.ai/projects/lightning/")
 
 intersphinx_mapping = {'pennylane':("https://docs.pennylane.ai/en/stable/", None)}
 
@@ -236,6 +237,10 @@ html_theme_options = {
 
 edit_on_github_project = "PennyLaneAI/pennylane-lightning"
 edit_on_github_branch = "master/doc"
+
+# -- Sitemap settings -----------------------------------------------------
+sitemap_url_scheme = "{link}"
+sitemap_excludes = []  # Explicitly set to empty to avoid accidental excludes
 
 # ============================================================
 
