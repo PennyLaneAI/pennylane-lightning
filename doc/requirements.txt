@@ -20,4 +20,5 @@ sphinxcontrib-htmlhelp==2.0.6
 sphinxcontrib-serializinghtml==2.0.0
 pennylane-sphinx-theme
 sphinxext-opengraph
+sphinx-sitemap
 matplotlib
