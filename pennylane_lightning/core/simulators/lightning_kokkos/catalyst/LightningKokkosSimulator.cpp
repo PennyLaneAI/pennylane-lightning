@@ -46,7 +46,11 @@ auto LightningKokkosSimulator::AllocateQubit() -> QubitIdType {
         for (size_t i = 0; i < original_data.size(); i++) {
             new_data[2 * i] = original_data[i];
         }
+#ifndef _ENABLE_PLKOKKOS_MPI
         this->device_sv = std::make_unique<StateVectorT>(new_data);
+#else
+        RT_FAIL("Dynamic qubit allocation is not supported with MPI backend.");
+#endif
         new_program_idx = this->qubit_manager.Allocate(device_idx);
     } else {
         device_idx = candidate.value();
@@ -103,7 +107,11 @@ void LightningKokkosSimulator::ReleaseQubits(
             });
         if (deallocate_all) {
             this->qubit_manager.ReleaseAll();
+#ifdef _ENABLE_PLKOKKOS_MPI
+            this->device_sv = nullptr;
+#else
             this->device_sv = std::make_unique<StateVectorT>(0);
+#endif
             return;
         }
     }
@@ -171,6 +179,7 @@ void LightningKokkosSimulator::NamedOperation(
     const std::vector<QubitIdType> &controlled_wires,
     const std::vector<bool> &controlled_values,
     [[maybe_unused]] const std::vector<std::string> &optional_params) {
+        std::cout << "Applied NamedOperation: " << name << std::endl;
     // Check the validity of number of qubits and parameters
     RT_FAIL_IF(controlled_wires.size() != controlled_values.size(),
                "Controlled wires/values size mismatch");
@@ -245,11 +254,12 @@ void LightningKokkosSimulator::MatrixOperation(
 
     // Update the state-vector
     if (controlled_wires.empty()) {
-        this->device_sv->applyMultiQubitOp(gate_matrix, dev_wires, inverse);
+        this->device_sv->applyOperation("Matrix", dev_wires, inverse, {},
+                                        matrix_kok);
     } else {
-        this->device_sv->applyNCMultiQubitOp(gate_matrix, dev_controlled_wires,
-                                             controlled_values, dev_wires,
-                                             inverse);
+        this->device_sv->applyOperation("Matrix", dev_controlled_wires,
+                                        controlled_values, dev_wires, inverse,
+                                        {}, matrix_kok);
     }
 
     // Update tape caching if required

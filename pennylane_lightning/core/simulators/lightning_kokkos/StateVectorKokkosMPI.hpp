@@ -24,6 +24,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+#include <memory>
 
 #include <Kokkos_Core.hpp>
 #include <Kokkos_Random.hpp>
@@ -90,6 +91,10 @@ class StateVectorKokkosMPI final
     using KokkosExecSpace = typename SVK::KokkosExecSpace;
     using HostExecSpace = typename SVK::HostExecSpace;
 
+    using ScratchViewComplex = typename SVK::ScratchViewComplex;
+    using TeamPolicy = typename SVK::TeamPolicy;
+    using MemoryStorageT = typename SVK::MemoryStorageT;
+
     using BaseType = StateVectorBase<fp_t, StateVectorKokkosMPI<fp_t>>;
 
   private:
@@ -125,6 +130,10 @@ class StateVectorKokkosMPI final
           num_qubits_(num_global_qubits + num_local_qubits),
           numGlobalQubits_(num_global_qubits),
           numLocalQubits_(num_local_qubits) {
+            std::cout << "Initialized StateVectorKokkosMPI with "
+                      << num_global_qubits << " global qubits and "
+                      << num_local_qubits << " local qubits."
+                      << std::endl;
         Kokkos::InitializationSettings settings = kokkos_args;
 
         global_wires_.resize(numGlobalQubits_); // set to constructor line
