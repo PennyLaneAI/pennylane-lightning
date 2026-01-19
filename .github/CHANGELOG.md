@@ -10,6 +10,9 @@
 
 <h3>Improvements 🛠</h3>
 
+- Added sitemap configuration and SEO improvements to documentation, including noindex meta tags for C++ API reference pages.
+  [(#1331)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1331)
+
 - Added a C++ kernel for the `qml.PauliRot` simulation on `lightning.gpu`.
   [(#1329)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1329)
 
@@ -46,6 +49,7 @@
 This release contains contributions from (in alphabetical order):
 
 Ali Asadi,
+Ashish Kanwar Singh
 Jeffrey Kam,
 Jake Zaia.
 
