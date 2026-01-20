@@ -17,7 +17,29 @@
 #include <Kokkos_Complex.hpp>
 #include <Kokkos_Core.hpp>
 
+#ifdef _ENABLE_PLKOKKOS_MPI
+#include <mpi.h>
+#endif
+
 #include "LightningKokkosSimulator.hpp"
+
+namespace {
+#ifdef _ENABLE_PLKOKKOS_MPI
+struct LifeCycleManager {
+    ~LifeCycleManager() {
+        int initialized = 0;
+        int finalized = 0;
+        MPI_Initialized(&initialized);
+        MPI_Finalized(&finalized);
+        if (initialized && !finalized) {
+            MPI_Finalize();
+        }
+    }
+};
+
+static LifeCycleManager life_cycle_manager;
+#endif
+} // namespace
 
 namespace Catalyst::Runtime::Simulator {
 
