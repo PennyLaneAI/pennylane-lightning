@@ -329,7 +329,7 @@ auto LightningKokkosSimulator::Expval(ObsIdType obsKey) -> double {
 
     auto &&obs = this->obs_manager.getObservable(obsKey);
 
-    Pennylane::LightningKokkos::Measures::Measurements<StateVectorT> m{
+    Pennylane::LightningKokkos::Measures::MeasurementsMPI<StateVectorT> m{
         *(this->device_sv)};
 
     m.setSeed(this->generateSeed());
@@ -348,7 +348,7 @@ auto LightningKokkosSimulator::Var(ObsIdType obsKey) -> double {
 
     auto &&obs = this->obs_manager.getObservable(obsKey);
 
-    Pennylane::LightningKokkos::Measures::Measurements<StateVectorT> m{
+    Pennylane::LightningKokkos::Measures::MeasurementsMPI<StateVectorT> m{
         *(this->device_sv)};
 
     m.setSeed(this->generateSeed());
@@ -380,7 +380,7 @@ void LightningKokkosSimulator::State(DataView<std::complex<double>, 1> &state) {
 }
 
 void LightningKokkosSimulator::Probs(DataView<double, 1> &probs) {
-    Pennylane::LightningKokkos::Measures::Measurements<StateVectorT> m{
+    Pennylane::LightningKokkos::Measures::MeasurementsMPI<StateVectorT> m{
         *(this->device_sv)};
 
     m.setSeed(this->generateSeed());
@@ -402,14 +402,13 @@ void LightningKokkosSimulator::PartialProbs(
     RT_FAIL_IF(!isValidQubits(wires), "Invalid given wires to measure");
 
     auto dev_wires = getDeviceWires(wires);
-    Pennylane::LightningKokkos::Measures::Measurements<StateVectorT> m{
+    Pennylane::LightningKokkos::Measures::MeasurementsMPI<StateVectorT> m{
         *(this->device_sv)};
 
     m.setSeed(this->generateSeed());
 
     auto &&dv_probs =
         device_shots ? m.probs(dev_wires, device_shots) : m.probs(dev_wires);
-
     RT_FAIL_IF(probs.size() != dv_probs.size(),
                "Invalid size for the pre-allocated partial-probabilities");
 

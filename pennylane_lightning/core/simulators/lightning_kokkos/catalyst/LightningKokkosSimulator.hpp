@@ -35,6 +35,7 @@
 #include "StateVectorKokkos.hpp"
 #ifdef _ENABLE_PLKOKKOS_MPI
 #include "StateVectorKokkosMPI.hpp"
+#include "MeasurementsKokkosMPI.hpp"
 #endif
 
 #include "CacheManager.hpp"

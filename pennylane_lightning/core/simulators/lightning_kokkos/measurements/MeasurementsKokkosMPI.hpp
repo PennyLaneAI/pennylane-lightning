@@ -487,16 +487,25 @@ class MeasurementsMPI final
         auto sub_mpi_manager =
             mpi_manager_.split(subCommGroupId, mpi_manager_.getRank());
 
-        if (sub_mpi_manager.getSize() == 1) {
-            return local_probabilities;
-        }
         std::vector<PrecisionT> subgroup_probabilities;
-        if (sub_mpi_manager.getRank() == 0) {
-            subgroup_probabilities.resize(exp2(local_wires.size()));
+        subgroup_probabilities.resize(exp2(local_wires.size()));
+        sub_mpi_manager.Allreduce<PrecisionT>(local_probabilities,
+            subgroup_probabilities, "sum");
+
+        if (global_wires.size() == 0)
+        {
+            return subgroup_probabilities;
         }
-        sub_mpi_manager.Reduce<PrecisionT>(local_probabilities,
-                                           subgroup_probabilities, 0, "sum");
-        return subgroup_probabilities;
+        auto gathering_mpi_manager = mpi_manager_.split(sub_mpi_manager.getRank(), mpi_manager_.getRank());
+        std::vector<PrecisionT> full_probabilities;
+
+        full_probabilities.resize(exp2(wires.size()));
+
+        gathering_mpi_manager.Allgather<PrecisionT>(
+            subgroup_probabilities, full_probabilities);
+
+        return full_probabilities;
+
     }
 
     /**
