@@ -25,8 +25,8 @@
 
 namespace {
 #ifdef _ENABLE_PLKOKKOS_MPI
-struct LifeCycleManager {
-    ~LifeCycleManager() {
+struct MPILifetimeManagerTemp {
+    ~MPILifetimeManagerTemp() {
         int initialized = 0;
         int finalized = 0;
         MPI_Initialized(&initialized);
@@ -37,7 +37,7 @@ struct LifeCycleManager {
     }
 };
 
-static LifeCycleManager life_cycle_manager;
+static MPILifetimeManagerTemp mpi_lifetime_manager;
 #endif
 } // namespace
 
@@ -201,7 +201,6 @@ void LightningKokkosSimulator::NamedOperation(
     const std::vector<QubitIdType> &controlled_wires,
     const std::vector<bool> &controlled_values,
     [[maybe_unused]] const std::vector<std::string> &optional_params) {
-        std::cout << "Applied NamedOperation: " << name << std::endl;
     // Check the validity of number of qubits and parameters
     RT_FAIL_IF(controlled_wires.size() != controlled_values.size(),
                "Controlled wires/values size mismatch");
@@ -329,8 +328,12 @@ auto LightningKokkosSimulator::Expval(ObsIdType obsKey) -> double {
 
     auto &&obs = this->obs_manager.getObservable(obsKey);
 
-    Pennylane::LightningKokkos::Measures::MeasurementsMPI<StateVectorT> m{
-        *(this->device_sv)};
+#ifdef _ENABLE_PLKOKKOS_MPI
+    Pennylane::LightningKokkos::Measures::MeasurementsMPI<StateVectorT> m{*(this->device_sv)};
+#else
+    Pennylane::LightningKokkos::Measures::Measurements<StateVectorT> m{*(this->device_sv)};
+#endif
+
 
     m.setSeed(this->generateSeed());
 
@@ -348,8 +351,12 @@ auto LightningKokkosSimulator::Var(ObsIdType obsKey) -> double {
 
     auto &&obs = this->obs_manager.getObservable(obsKey);
 
-    Pennylane::LightningKokkos::Measures::MeasurementsMPI<StateVectorT> m{
-        *(this->device_sv)};
+
+#ifdef _ENABLE_PLKOKKOS_MPI
+    Pennylane::LightningKokkos::Measures::MeasurementsMPI<StateVectorT> m{*(this->device_sv)};
+#else
+    Pennylane::LightningKokkos::Measures::Measurements<StateVectorT> m{*(this->device_sv)};
+#endif
 
     m.setSeed(this->generateSeed());
 
@@ -380,8 +387,12 @@ void LightningKokkosSimulator::State(DataView<std::complex<double>, 1> &state) {
 }
 
 void LightningKokkosSimulator::Probs(DataView<double, 1> &probs) {
-    Pennylane::LightningKokkos::Measures::MeasurementsMPI<StateVectorT> m{
-        *(this->device_sv)};
+
+#ifdef _ENABLE_PLKOKKOS_MPI
+    Pennylane::LightningKokkos::Measures::MeasurementsMPI<StateVectorT> m{*(this->device_sv)};
+#else
+    Pennylane::LightningKokkos::Measures::Measurements<StateVectorT> m{*(this->device_sv)};
+#endif
 
     m.setSeed(this->generateSeed());
 
@@ -402,8 +413,12 @@ void LightningKokkosSimulator::PartialProbs(
     RT_FAIL_IF(!isValidQubits(wires), "Invalid given wires to measure");
 
     auto dev_wires = getDeviceWires(wires);
-    Pennylane::LightningKokkos::Measures::MeasurementsMPI<StateVectorT> m{
-        *(this->device_sv)};
+
+#ifdef _ENABLE_PLKOKKOS_MPI
+    Pennylane::LightningKokkos::Measures::MeasurementsMPI<StateVectorT> m{*(this->device_sv)};
+#else
+    Pennylane::LightningKokkos::Measures::Measurements<StateVectorT> m{*(this->device_sv)};
+#endif
 
     m.setSeed(this->generateSeed());
 
