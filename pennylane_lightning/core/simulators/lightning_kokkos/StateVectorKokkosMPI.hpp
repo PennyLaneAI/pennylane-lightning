@@ -926,7 +926,8 @@ class StateVectorKokkosMPI final
                 Kokkos::parallel_for(
                     "copy_sendbuf", send_size,
                     KOKKOS_LAMBDA(std::size_t buffer_index) {
-                        sendbuf_view(buffer_index) = sv_view(buffer_index + offset);
+                        sendbuf_view(buffer_index) =
+                            sv_view(buffer_index + offset);
                     });
                 Kokkos::fence();
                 // SENDRECV
@@ -936,7 +937,8 @@ class StateVectorKokkosMPI final
                 Kokkos::parallel_for(
                     "copy_recvbuf", send_size,
                     KOKKOS_LAMBDA(std::size_t buffer_index) {
-                        sv_view(buffer_index + offset) = recvbuf_view(buffer_index);
+                        sv_view(buffer_index + offset) =
+                            recvbuf_view(buffer_index);
                     });
             }
         }

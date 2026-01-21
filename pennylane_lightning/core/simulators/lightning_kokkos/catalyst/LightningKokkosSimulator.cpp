@@ -329,11 +329,12 @@ auto LightningKokkosSimulator::Expval(ObsIdType obsKey) -> double {
     auto &&obs = this->obs_manager.getObservable(obsKey);
 
 #ifdef _ENABLE_PLKOKKOS_MPI
-    Pennylane::LightningKokkos::Measures::MeasurementsMPI<StateVectorT> m{*(this->device_sv)};
+    Pennylane::LightningKokkos::Measures::MeasurementsMPI<StateVectorT> m{
+        *(this->device_sv)};
 #else
-    Pennylane::LightningKokkos::Measures::Measurements<StateVectorT> m{*(this->device_sv)};
+    Pennylane::LightningKokkos::Measures::Measurements<StateVectorT> m{
+        *(this->device_sv)};
 #endif
-
 
     m.setSeed(this->generateSeed());
 
@@ -351,11 +352,12 @@ auto LightningKokkosSimulator::Var(ObsIdType obsKey) -> double {
 
     auto &&obs = this->obs_manager.getObservable(obsKey);
 
-
 #ifdef _ENABLE_PLKOKKOS_MPI
-    Pennylane::LightningKokkos::Measures::MeasurementsMPI<StateVectorT> m{*(this->device_sv)};
+    Pennylane::LightningKokkos::Measures::MeasurementsMPI<StateVectorT> m{
+        *(this->device_sv)};
 #else
-    Pennylane::LightningKokkos::Measures::Measurements<StateVectorT> m{*(this->device_sv)};
+    Pennylane::LightningKokkos::Measures::Measurements<StateVectorT> m{
+        *(this->device_sv)};
 #endif
 
     m.setSeed(this->generateSeed());
@@ -389,9 +391,11 @@ void LightningKokkosSimulator::State(DataView<std::complex<double>, 1> &state) {
 void LightningKokkosSimulator::Probs(DataView<double, 1> &probs) {
 
 #ifdef _ENABLE_PLKOKKOS_MPI
-    Pennylane::LightningKokkos::Measures::MeasurementsMPI<StateVectorT> m{*(this->device_sv)};
+    Pennylane::LightningKokkos::Measures::MeasurementsMPI<StateVectorT> m{
+        *(this->device_sv)};
 #else
-    Pennylane::LightningKokkos::Measures::Measurements<StateVectorT> m{*(this->device_sv)};
+    Pennylane::LightningKokkos::Measures::Measurements<StateVectorT> m{
+        *(this->device_sv)};
 #endif
 
     m.setSeed(this->generateSeed());
@@ -415,9 +419,11 @@ void LightningKokkosSimulator::PartialProbs(
     auto dev_wires = getDeviceWires(wires);
 
 #ifdef _ENABLE_PLKOKKOS_MPI
-    Pennylane::LightningKokkos::Measures::MeasurementsMPI<StateVectorT> m{*(this->device_sv)};
+    Pennylane::LightningKokkos::Measures::MeasurementsMPI<StateVectorT> m{
+        *(this->device_sv)};
 #else
-    Pennylane::LightningKokkos::Measures::Measurements<StateVectorT> m{*(this->device_sv)};
+    Pennylane::LightningKokkos::Measures::Measurements<StateVectorT> m{
+        *(this->device_sv)};
 #endif
 
     m.setSeed(this->generateSeed());

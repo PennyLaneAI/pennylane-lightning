@@ -34,8 +34,8 @@
 #include "MeasurementsKokkos.hpp"
 #include "StateVectorKokkos.hpp"
 #ifdef _ENABLE_PLKOKKOS_MPI
-#include "StateVectorKokkosMPI.hpp"
 #include "MeasurementsKokkosMPI.hpp"
+#include "StateVectorKokkosMPI.hpp"
 #endif
 
 #include "CacheManager.hpp"
@@ -55,7 +55,8 @@ namespace Catalyst::Runtime::Simulator {
 class LightningKokkosSimulator final : public Catalyst::Runtime::QuantumDevice {
   private:
 #ifdef _ENABLE_PLKOKKOS_MPI
-    using StateVectorT = Pennylane::LightningKokkos::StateVectorKokkosMPI<double>;
+    using StateVectorT =
+        Pennylane::LightningKokkos::StateVectorKokkosMPI<double>;
 #else
     using StateVectorT = Pennylane::LightningKokkos::StateVectorKokkos<double>;
 #endif
