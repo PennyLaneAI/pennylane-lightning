@@ -83,27 +83,27 @@ base = [
     "pylint~=4.0.0"
 ]
 docs = [
-    build
-    wheel
-    tomlkit
-    custatevec-cu12; sys_platform == "linux"
-    cutensornet-cu12; sys_platform == "linux"
-    git+https://github.com/PennyLaneAI/pennylane.git@master
-    breathe
-    docutils==0.21.2
-    exhale>=0.3.3
-    graphviz
-    sphinx==8.1
-    sphinx-automodapi
-    sphinxcontrib-applehelp==2.0.0
-    sphinxcontrib-devhelp==2.0.0
-    sphinxcontrib-qthelp==2.0.0
-    sphinxcontrib-htmlhelp==2.0.6
-    sphinxcontrib-serializinghtml==2.0.0
-    pennylane-sphinx-theme
-    sphinxext-opengraph
-    sphinx-sitemap
-    matplotlib
+    "build",
+    "wheel",
+    "tomlkit",
+    "custatevec-cu12; sys_platform == 'linux'",
+    "cutensornet-cu12; sys_platform == 'linux'",
+    "git+https://github.com/PennyLaneAI/pennylane.git@master",
+    "breathe",
+    "docutils==0.21.2",
+    "exhale>=0.3.3",
+    "graphviz",
+    "sphinx==8.1",
+    "sphinx-automodapi",
+    "sphinxcontrib-applehelp==2.0.0",
+    "sphinxcontrib-devhelp==2.0.0",
+    "sphinxcontrib-qthelp==2.0.0",
+    "sphinxcontrib-htmlhelp==2.0.6",
+    "sphinxcontrib-serializinghtml==2.0.0",
+    "pennylane-sphinx-theme",
+    "sphinxext-opengraph",
+    "sphinx-sitemap",
+    "matplotlib"
 ]
 
 [project.optional-dependencies]
