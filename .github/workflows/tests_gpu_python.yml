@@ -151,7 +151,7 @@ jobs:
 
       - name: Install required packages
         run: |
-          python -m pip install -r requirements-tests.txt
+          python -m pip install --group tests
           # pyscf is not compatible with numpy 2.4 yet
           python -m pip install cmake openfermionpyscf "numpy<2.4"
 

@@ -211,7 +211,7 @@ jobs:
       - name: Get required Python packages
         run: |
           cd main
-          python -m pip install -r requirements-tests.txt
+          python -m pip install --group tests
           # pyscf is not compatible with numpy 2.4 yet
           python -m pip install openfermionpyscf "numpy<2.4"
 

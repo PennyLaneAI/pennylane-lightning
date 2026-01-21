@@ -138,7 +138,7 @@ jobs:
       - name: Test wheels
         run: |
           python -m ensurepip --upgrade
-          python -m pip install -r requirements-tests.txt
+          python -m pip install --group tests
           PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
           SKIP_COMPILATION=True python -m pip install . -vv
           python -m pip install ./wheelhouse/*.whl
