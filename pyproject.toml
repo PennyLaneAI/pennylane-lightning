@@ -39,7 +39,7 @@ dev = [
     "cmake",
     "custatevec-cu12; sys_platform == 'linux'",
     "cutensornet-cu12; sys_platform == 'linux'",
-    "git+https://github.com/PennyLaneAI/pennylane.git@master",
+    "pennylane @ git+https://github.com/PennyLaneAI/pennylane.git@master",
     "pytest>=8.4.1",
     "pytest-benchmark",
     "pytest-cov>=3.0.0",
@@ -65,7 +65,7 @@ tests = [
     "pytest-xdist>=2.5.0",
     "pytest-split",
     "flaky>=3.7.0", # For pl-device-test
-    "git+https://github.com/PennyLaneAI/pennylane.git@master"
+    "pennylane @ git+https://github.com/PennyLaneAI/pennylane.git@master"
 ]
 base = [
     "ninja",
@@ -94,7 +94,7 @@ docs = [
     "tomlkit",
     "custatevec-cu12; sys_platform == 'linux'",
     "cutensornet-cu12; sys_platform == 'linux'",
-    "git+https://github.com/PennyLaneAI/pennylane.git@master",
+    "pennylane @ git+https://github.com/PennyLaneAI/pennylane.git@master",
     "breathe",
     "docutils==0.21.2",
     "exhale>=0.3.3",
