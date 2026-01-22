@@ -65,6 +65,7 @@ jobs:
         with:
           repository: PennyLaneAI/catalyst
           path: ${{ github.workspace}}/catalyst
+          ref: ${{ (inputs.pennylane-version == 'stable' && 'v0.14.0') || 'main' }} # FIXME: remove after v0.45 release
 
       - name: Switch to release build of Catalyst
         if: inputs.lightning-version == 'release'
@@ -152,6 +153,7 @@ jobs:
         with:
           repository: PennyLaneAI/catalyst
           path: ${{ github.workspace}}/catalyst
+          ref: ${{ (inputs.pennylane-version == 'stable' && 'v0.14.0') || 'main' }} # FIXME: remove after v0.45 release
 
       - name: Switch to release build of Catalyst
         if: inputs.lightning-version == 'release'
@@ -247,6 +249,7 @@ jobs:
         with:
           repository: PennyLaneAI/catalyst
           path: ${{ github.workspace}}/catalyst
+          ref: ${{ (inputs.pennylane-version == 'stable' && 'v0.14.0') || 'main' }} # FIXME: remove after v0.45 release
 
       - name: Switch to release build of Catalyst
         if: inputs.lightning-version == 'release'
@@ -372,6 +375,7 @@ jobs:
         with:
           repository: PennyLaneAI/catalyst
           path: ${{ github.workspace}}/catalyst
+          ref: ${{ (inputs.pennylane-version == 'stable' && 'v0.14.0') || 'main' }} # FIXME: remove after v0.45 release
 
       - name: Switch to release build of Catalyst
         if: inputs.lightning-version == 'release'

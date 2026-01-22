@@ -152,7 +152,12 @@ jobs:
             PATH="/opt/rh/gcc-toolset-13/root/usr/bin:$PATH"
 
           CIBW_ENVIRONMENT: |
-            PATH="/opt/rh/gcc-toolset-13/root/usr/bin:$PATH" CMAKE_ARGS="-DCMAKE_BUILD_TYPE=Release"
+            PATH="/opt/rh/gcc-toolset-13/root/usr/bin:$PATH"
+            CMAKE_ARGS="-DCMAKE_BUILD_TYPE=Release"
+            if ${{ matrix.pl_backend == 'lightning_qubit'}}
+            then
+              CMAKE_ARGS="-DCMAKE_BUILD_TYPE=Release -DLQ_ENABLE_KERNEL_OMP=ON"
+            fi
 
           CIBW_MANYLINUX_AARCH64_IMAGE: manylinux_2_28
 
