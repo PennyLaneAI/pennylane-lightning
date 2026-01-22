@@ -3,6 +3,14 @@ version: 2
 sphinx:
   configuration: doc/conf.py
 
+python:
+  install:
+    - requirements: doc/requirements.txt
+    - method: pip
+      path: .
+      extra_requirements:
+        - 'docs'
+
 build:
   os: ubuntu-24.04
   tools:
@@ -11,7 +19,7 @@ build:
     - graphviz
   jobs:
     post_install:
-      - python -m pip install --exists-action=w --no-cache-dir  -e '.[docs]'
+      # - python -m pip install --exists-action=w --no-cache-dir  -e '.[docs]'
       - PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py && SKIP_COMPILATION=True python -m build
       - rm -rf ./build && PL_BACKEND="lightning_gpu" python scripts/configure_pyproject_toml.py && SKIP_COMPILATION=True python -m build
       - rm -rf ./build && PL_BACKEND="lightning_amdgpu" python scripts/configure_pyproject_toml.py && SKIP_COMPILATION=True python -m build
