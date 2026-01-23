@@ -346,7 +346,6 @@ void LightningKokkosSimulator::SetDevicePRNG(std::mt19937 *gen) {
 
 void LightningKokkosSimulator::SetState(DataView<std::complex<double>, 1> &data,
                                         std::vector<QubitIdType> &wires) {
-
     reduceStateVector();
 
     std::size_t expected_wires = static_cast<std::size_t>(log2(data.size()));
