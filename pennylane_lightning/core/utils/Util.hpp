@@ -691,28 +691,69 @@ inline auto PL_reinterpret_cast(SrcType *src_ptr) -> DestType * {
 }
 
 /**
- * @brief Normalize a complex state vector to unit norm.
+ * @brief Compute the purity of a reduced density matrix
  *
- * This function normalizes a state vector in-place
+ * Tr(ρ^2) = Sum_i,j ρ_ij x ρ_ji
  *
- * @tparam ComplexT Complex number type (e.g., std::complex<double>).
- * @tparam Alloc Allocator type.
- * @param data State vector data to normalize.
+ * @tparam ComplexT Complex number type
+ * @param rho Reduced density matrix
+ * @return Purity value
  */
-template <class ComplexT, class Alloc = std::allocator<ComplexT>>
-inline void normalizeStateVector(std::vector<ComplexT, Alloc> &data) {
-    using PrecisionT = std::decay_t<decltype(std::declval<ComplexT>().real())>;
-    PrecisionT norm_squared = 0;
-    for (const auto &amplitude : data) {
-        norm_squared += amplitude.real() * amplitude.real() +
-                        amplitude.imag() * amplitude.imag();
+template <class ComplexT>
+inline auto computePurity(const std::vector<std::vector<ComplexT>> &rho)
+    -> std::decay_t<decltype(std::declval<ComplexT>().real())> {
+    if (rho.empty()) {
+        return 0.0;
     }
-    auto norm = std::sqrt(norm_squared);
-    if (norm > std::numeric_limits<PrecisionT>::epsilon()) {
-        for (auto &elem : data) {
-            elem /= norm;
+
+    using PrecisionT = std::decay_t<decltype(std::declval<ComplexT>().real())>;
+    PrecisionT purity = 0.0;
+    const size_t n = rho.size();
+
+    for (size_t i = 0; i < n; i++) {
+        for (size_t j = 0; j < n; j++) {
+            purity += std::real(rho[i][j] * rho[j][i]);
         }
     }
+
+    return purity;
 }
 
+/**
+ * @brief Compute purity from released parts
+ *
+ * Tr(ρ^2) = Σ_i,j |Sum_a(released_a[i] x conj(released_a[j]))|^2
+ *
+ * @tparam ComplexT Complex number type
+ * @param released_parts Vector of released parts
+ * @return Purity value
+ */
+template <class ComplexT>
+inline auto
+computePurityFromParts(const std::vector<std::vector<ComplexT>> &released_parts)
+    -> std::decay_t<decltype(std::declval<ComplexT>().real())> {
+    if (released_parts.empty()) {
+        return 0.0;
+    }
+
+    using PrecisionT = std::decay_t<decltype(std::declval<ComplexT>().real())>;
+    const size_t active_space_size = released_parts.size();
+
+    const size_t released_space_size = released_parts[0].size();
+
+    PrecisionT purity = 0.0;
+
+    for (size_t i = 0; i < released_space_size; i++) {
+        for (size_t j = 0; j < released_space_size; j++) {
+            ComplexT rho_ij{0.0, 0.0};
+            for (size_t a = 0; a < active_space_size; a++) {
+                rho_ij +=
+                    released_parts[a][i] * std::conj(released_parts[a][j]);
+            }
+            purity += std::norm(rho_ij);
+        }
+    }
+
+    return purity;
+}
 } // namespace Pennylane::Util

@@ -109,6 +109,9 @@ class LightningSimulator final : public Catalyst::Runtime::QuantumDevice {
     auto getMeasurements()
         -> Pennylane::LightningQubit::Measures::Measurements<StateVectorT>;
 
+    // Check if released qubits are disentangled from active qubits
+    void checkReleasedQubitsDisentangled();
+
   public:
     explicit LightningSimulator(
         const std::string &kwargs = "{}") // NOLINT(hicpp-member-init)

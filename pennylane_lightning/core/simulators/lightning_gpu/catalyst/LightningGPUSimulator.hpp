@@ -114,6 +114,9 @@ class LightningGPUSimulator final : public Catalyst::Runtime::QuantumDevice {
     auto getMeasurements()
         -> Pennylane::LightningGPU::Measures::Measurements<StateVectorT>;
 
+    // Check if released qubits are disentangled from active qubits
+    void checkReleasedQubitsDisentangled();
+
   public:
     explicit LightningGPUSimulator(const std::string &kwargs = "{}") {
         auto &&args = Catalyst::Runtime::parse_kwargs(kwargs);

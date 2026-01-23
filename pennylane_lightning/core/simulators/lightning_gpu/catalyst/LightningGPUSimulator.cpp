@@ -54,6 +54,26 @@ auto LightningGPUSimulator::AllocateQubit() -> QubitIdType {
         // The collapse is performed by a measurement followed by an X gate if
         // measured 1.
         new_program_idx = this->qubit_manager.Allocate(device_idx);
+
+        // If state vector size doesn't match active qubits, expand it
+        const size_t expected_num_qubits = GetNumQubits();
+        const size_t current_num_qubits = this->device_sv->getNumQubits();
+        if (current_num_qubits < expected_num_qubits) {
+            const auto &old_data = this->device_sv->getDataVector();
+            const size_t old_size = old_data.size();
+            const size_t new_size =
+                old_size << (expected_num_qubits - current_num_qubits);
+            std::vector<std::complex<double>,
+                        AlignedAllocator<std::complex<double>>>
+                new_data(new_size, old_data.get_allocator());
+
+            for (size_t i = 0; i < old_size; i++) {
+                new_data[i << (expected_num_qubits - current_num_qubits)] =
+                    old_data[i];
+            }
+            this->device_sv = std::make_unique<StateVectorT>(new_data);
+        }
+
         Result mres = this->Measure(new_program_idx);
         if (*mres) {
             this->NamedOperation("PauliX", {}, {new_program_idx}, false, {},
@@ -133,6 +153,8 @@ void LightningGPUSimulator::reduceStateVector() {
         return;
     }
 
+    checkReleasedQubitsDisentangled();
+
     // Get active qubits
     auto all_qubits = this->qubit_manager.getAllQubitIds();
     std::vector<std::pair<size_t, QubitIdType>> wire_id_pairs;
@@ -172,12 +194,12 @@ void LightningGPUSimulator::reduceStateVector() {
         new_data[new_idx] += old_data[old_idx];
     }
 
-    // Normalize the state vector
-    Pennylane::Util::normalizeStateVector(new_data);
-
     // Replace the state vector
     this->device_sv =
         std::make_unique<StateVectorT>(new_data.data(), new_data.size());
+
+    // Normalize the state vector
+    this->device_sv->normalize();
 
     // Remap device ids
     std::unordered_map<size_t, size_t> old_to_new_device_id;
@@ -194,6 +216,96 @@ void LightningGPUSimulator::reduceStateVector() {
     }
 
     this->needs_reduction = false;
+}
+
+void LightningGPUSimulator::checkReleasedQubitsDisentangled() {
+    const size_t num_qubits = this->device_sv->getNumQubits();
+    const size_t num_active = this->qubit_manager.getNumQubits();
+
+    // Skip check if no qubits to release or all qubits are active
+    if (num_qubits == num_active || num_active == 0) {
+        return;
+    }
+
+    // Collect active qubit device IDs
+    auto active_qubits = this->qubit_manager.getAllQubitIds();
+    std::unordered_set<size_t> active_device_ids;
+    for (auto qid : active_qubits) {
+        active_device_ids.insert(this->qubit_manager.getDeviceId(qid));
+    }
+
+    // Collect released qubit device IDs
+    std::vector<size_t> released_device_ids;
+    for (size_t i = 0; i < num_qubits; i++) {
+        if (!active_device_ids.contains(i)) {
+            released_device_ids.push_back(i);
+        }
+    }
+
+    if (released_device_ids.empty()) {
+        return;
+    }
+
+    // Check if released qubits are disentangled from active qubits using purity
+    // If separable, then |phi> = |released> x |active>
+    //     then ρ_released = Tr_active(|phi><phi|) = |released><released|
+    //     and Tr(ρ_released^2) = 1 (pure state)
+    const auto &state_data = this->device_sv->getDataVector();
+    const size_t num_released = released_device_ids.size();
+    const size_t released_space_size = 1UL << num_released;
+    const size_t active_space_size = 1UL << num_active;
+
+    // function for mapping indices
+    auto get_idx = [&](size_t released_idx, size_t active_idx) -> size_t {
+        size_t idx = 0;
+        size_t released_bit = 0;
+        size_t active_bit = 0;
+        for (size_t i = 0; i < num_qubits; i++) {
+            bool is_released = std::find(released_device_ids.begin(),
+                                         released_device_ids.end(),
+                                         i) != released_device_ids.end();
+            if (is_released) {
+                const size_t bit_pos = num_qubits - 1 - i;
+                const size_t new_bit_pos = num_released - 1 - released_bit;
+                if ((released_idx >> new_bit_pos) & 1) {
+                    idx |= (1UL << bit_pos);
+                }
+                released_bit++;
+            } else {
+                const size_t bit_pos = num_qubits - 1 - i;
+                const size_t new_bit_pos = num_active - 1 - active_bit;
+                if ((active_idx >> new_bit_pos) & 1) {
+                    idx |= (1UL << bit_pos);
+                }
+                active_bit++;
+            }
+        }
+        return idx;
+    };
+
+    // Extract released parts for each active state
+    std::vector<std::vector<std::complex<double>>> released_parts(
+        active_space_size);
+    for (size_t active_idx = 0; active_idx < active_space_size; active_idx++) {
+        released_parts[active_idx].resize(released_space_size);
+        for (size_t released_idx = 0; released_idx < released_space_size;
+             released_idx++) {
+            const size_t full_idx = get_idx(released_idx, active_idx);
+            released_parts[active_idx][released_idx] = state_data[full_idx];
+        }
+    }
+
+    double purity = Pennylane::Util::computePurityFromParts(released_parts);
+
+    // Check if purity is close to 1
+    constexpr double epsilon = 1e-6;
+    if (std::abs(purity - 1.0) > epsilon) {
+        const std::string error_msg =
+            "Cannot release qubits: released qubits are "
+            "entangled with remaining qubits (purity = " +
+            std::to_string(purity) + ")";
+        RT_FAIL(error_msg.c_str());
+    }
 }
 
 void LightningGPUSimulator::StartTapeRecording() {
@@ -385,6 +497,8 @@ auto LightningGPUSimulator::Var(ObsIdType obsKey) -> double {
 }
 
 void LightningGPUSimulator::State(DataView<std::complex<double>, 1> &state) {
+    reduceStateVector();
+
     const std::size_t num_qubits = this->device_sv->getNumQubits();
     const std::size_t size = Pennylane::Util::exp2(num_qubits);
     RT_FAIL_IF(state.size() != size,

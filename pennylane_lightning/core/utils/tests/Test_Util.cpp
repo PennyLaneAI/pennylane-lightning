@@ -183,78 +183,6 @@ TEMPLATE_TEST_CASE("Util::squaredNorm", "[Util][LinearAlgebra]", float,
     }
 }
 
-TEMPLATE_TEST_CASE("Util::normalizeStateVector", "[Util][LinearAlgebra]", float,
-                   double) {
-    SECTION("Normalizing an already normalized vector") {
-        // 1/sqrt(2) * (|0> + |1>)
-        const TestType inv_sqrt2 = TestType{1} / std::sqrt(TestType{2});
-        std::vector<std::complex<TestType>> vec{{inv_sqrt2, 0}, {inv_sqrt2, 0}};
-
-        normalizeStateVector(vec);
-
-        // Should remain unchanged with tolerance
-        CHECK(vec[0].real() == Approx(inv_sqrt2).margin(1e-7));
-        CHECK(vec[0].imag() == Approx(0).margin(1e-7));
-        CHECK(vec[1].real() == Approx(inv_sqrt2).margin(1e-7));
-        CHECK(vec[1].imag() == Approx(0).margin(1e-7));
-        CHECK(squaredNorm(vec) == Approx(1.0));
-    }
-
-    SECTION("Normalizing an unnormalized vector") {
-        // Unnormalized vector: (1, 1)
-        // After normalization: (1/sqrt(2), 1/sqrt(2))
-        std::vector<std::complex<TestType>> vec{{1, 0}, {1, 0}};
-
-        normalizeStateVector(vec);
-
-        const TestType inv_sqrt2 = TestType{1} / std::sqrt(TestType{2});
-        CHECK(vec[0].real() == Approx(inv_sqrt2).margin(1e-7));
-        CHECK(vec[0].imag() == Approx(0).margin(1e-7));
-        CHECK(vec[1].real() == Approx(inv_sqrt2).margin(1e-7));
-        CHECK(vec[1].imag() == Approx(0).margin(1e-7));
-        CHECK(squaredNorm(vec) == Approx(1.0));
-    }
-
-    SECTION("Normalizing a vector with complex amplitudes") {
-        // Vector: (1+i, 1-i)
-        // squared norm = 2 + 2 = 4, norm = 2
-        std::vector<std::complex<TestType>> vec{{1, 1}, {1, -1}};
-
-        normalizeStateVector(vec);
-
-        CHECK(vec[0].real() == Approx(0.5).margin(1e-7));
-        CHECK(vec[0].imag() == Approx(0.5).margin(1e-7));
-        CHECK(vec[1].real() == Approx(0.5).margin(1e-7));
-        CHECK(vec[1].imag() == Approx(-0.5).margin(1e-7));
-        CHECK(squaredNorm(vec) == Approx(1.0));
-    }
-
-    SECTION("Normalizing a zero vector (edge case)") {
-        std::vector<std::complex<TestType>> vec{{0, 0}, {0, 0}};
-        // remain zero
-        normalizeStateVector(vec);
-
-        CHECK(vec[0].real() == Approx(0).margin(1e-7));
-        CHECK(vec[0].imag() == Approx(0).margin(1e-7));
-        CHECK(vec[1].real() == Approx(0).margin(1e-7));
-        CHECK(vec[1].imag() == Approx(0).margin(1e-7));
-    }
-
-    SECTION("Normalizing a larger state vector") {
-        // 2 qubits: (2, 0, 0, 0) -> (1, 0, 0, 0)
-        std::vector<std::complex<TestType>> vec{{2, 0}, {0, 0}, {0, 0}, {0, 0}};
-
-        normalizeStateVector(vec);
-
-        CHECK(vec[0].real() == Approx(1.0).margin(1e-7));
-        CHECK(vec[0].imag() == Approx(0).margin(1e-7));
-        CHECK(vec[1].real() == Approx(0).margin(1e-7));
-        CHECK(vec[2].real() == Approx(0).margin(1e-7));
-        CHECK(vec[3].real() == Approx(0).margin(1e-7));
-        CHECK(squaredNorm(vec) == Approx(1.0));
-    }
-}
-
 TEMPLATE_TEST_CASE("Util::is_Hermitian", "[Util][LinearAlgebra]", float,
                    double) {
     SECTION("Test for a Hermitian matrix") {
@@ -400,4 +328,114 @@ TEST_CASE("Util::getRevWireIndex", "[getRevWireIndex]") {
     REQUIRE(getRevWireIndex(wires, 3UL) == 0);
     PL_REQUIRE_THROWS_MATCHES(getRevWireIndex(wires, 4UL), LightningException,
                               "out of bounds");
+}
+
+TEMPLATE_TEST_CASE("Util::computePurity", "[Util][DensityMatrix]", float,
+                   double) {
+    using ComplexT = std::complex<TestType>;
+    using PrecisionT = TestType;
+
+    SECTION("Empty matrix returns zero") {
+        std::vector<std::vector<ComplexT>> rho;
+        PrecisionT purity = computePurity(rho);
+        CHECK(purity == Approx(0.0).margin(1e-6));
+    }
+
+    SECTION("Pure state |0><0| has purity 1") {
+        // ρ = |0><0| = [[1, 0], [0, 0]]
+        std::vector<std::vector<ComplexT>> rho = {
+            {ComplexT{1.0, 0.0}, ComplexT{0.0, 0.0}},
+            {ComplexT{0.0, 0.0}, ComplexT{0.0, 0.0}}};
+        PrecisionT purity = computePurity(rho);
+        CHECK(purity == Approx(1.0).margin(1e-6));
+    }
+
+    SECTION("Pure state |1><1| has purity 1") {
+        // ρ = |1><1| = [[0, 0], [0, 1]]
+        std::vector<std::vector<ComplexT>> rho = {
+            {ComplexT{0.0, 0.0}, ComplexT{0.0, 0.0}},
+            {ComplexT{0.0, 0.0}, ComplexT{1.0, 0.0}}};
+        PrecisionT purity = computePurity(rho);
+        CHECK(purity == Approx(1.0).margin(1e-6));
+    }
+
+    SECTION("Pure state |+><+| has purity 1") {
+        // |+> = (|0> + |1>)/sqrt(2)
+        // ρ = |+><+| = [[0.5, 0.5], [0.5, 0.5]]
+        std::vector<std::vector<ComplexT>> rho = {
+            {ComplexT{0.5, 0.0}, ComplexT{0.5, 0.0}},
+            {ComplexT{0.5, 0.0}, ComplexT{0.5, 0.0}}};
+        PrecisionT purity = computePurity(rho);
+        CHECK(purity == Approx(1.0).margin(1e-5));
+    }
+
+    SECTION("Mixed state has purity 0.5") {
+        // ρ = I/2 = [[0.5, 0], [0, 0.5]]
+        std::vector<std::vector<ComplexT>> rho = {
+            {ComplexT{0.5, 0.0}, ComplexT{0.0, 0.0}},
+            {ComplexT{0.0, 0.0}, ComplexT{0.5, 0.0}}};
+        PrecisionT purity = computePurity(rho);
+        CHECK(purity == Approx(0.5).margin(1e-6));
+    }
+
+    SECTION("Mixed state has purity < 1") {
+        // ρ = 0.7|0><0| + 0.3|1><1| = [[0.7, 0], [0, 0.3]]
+        std::vector<std::vector<ComplexT>> rho = {
+            {ComplexT{0.7, 0.0}, ComplexT{0.0, 0.0}},
+            {ComplexT{0.0, 0.0}, ComplexT{0.3, 0.0}}};
+        PrecisionT purity = computePurity(rho);
+        PrecisionT expected = 0.7 * 0.7 + 0.3 * 0.3;
+        CHECK(purity == Approx(expected).margin(1e-6));
+        CHECK(purity < 1.0);
+    }
+}
+
+TEMPLATE_TEST_CASE("Util::computePurityFromParts", "[Util][DensityMatrix]",
+                   float, double) {
+    using ComplexT = std::complex<TestType>;
+    using PrecisionT = TestType;
+
+    SECTION("Empty vector returns zero") {
+        std::vector<std::vector<ComplexT>> released_parts;
+        PrecisionT purity = computePurityFromParts(released_parts);
+        CHECK(purity == Approx(0.0).margin(1e-6));
+    }
+
+    SECTION("Single part corresponding to pure state |0>") {
+        // released_parts = [[1, 0]] corresponds to |0>
+        std::vector<std::vector<ComplexT>> released_parts = {
+            {ComplexT{1.0, 0.0}, ComplexT{0.0, 0.0}}};
+        PrecisionT purity = computePurityFromParts(released_parts);
+        CHECK(purity == Approx(1.0).margin(1e-6));
+    }
+
+    SECTION("Single part corresponding to pure state |1>") {
+        // released_parts = [[0, 1]] corresponds to |1>
+        std::vector<std::vector<ComplexT>> released_parts = {
+            {ComplexT{0.0, 0.0}, ComplexT{1.0, 0.0}}};
+        PrecisionT purity = computePurityFromParts(released_parts);
+        CHECK(purity == Approx(1.0).margin(1e-6));
+    }
+
+    SECTION("Single part corresponding to pure state |+>") {
+        // |+> = (|0> + |1>)/sqrt(2)
+        const PrecisionT inv_sqrt2 =
+            static_cast<PrecisionT>(1.0 / std::sqrt(2.0));
+        std::vector<std::vector<ComplexT>> released_parts = {
+            {ComplexT{inv_sqrt2, 0.0}, ComplexT{inv_sqrt2, 0.0}}};
+        PrecisionT purity = computePurityFromParts(released_parts);
+        CHECK(purity == Approx(1.0).margin(1e-5));
+    }
+
+    SECTION("Two parts with mixed state") {
+        // released_parts = [[1/sqrt(2), 0], [0, 1/sqrt(2)]]
+        // corresponds to ρ = (|0><0| + |1><1|)/2 = I/2
+        const PrecisionT inv_sqrt2 =
+            static_cast<PrecisionT>(1.0 / std::sqrt(2.0));
+        std::vector<std::vector<ComplexT>> released_parts = {
+            {ComplexT{inv_sqrt2, 0.0}, ComplexT{0.0, 0.0}},
+            {ComplexT{0.0, 0.0}, ComplexT{inv_sqrt2, 0.0}}};
+        PrecisionT purity = computePurityFromParts(released_parts);
+        CHECK(purity == Approx(0.5).margin(1e-5));
+    }
 }

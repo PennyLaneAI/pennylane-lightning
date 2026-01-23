@@ -114,6 +114,9 @@ class LightningKokkosSimulator final : public Catalyst::Runtime::QuantumDevice {
     auto getMeasurements()
         -> Pennylane::LightningKokkos::Measures::Measurements<StateVectorT>;
 
+    // Check if released qubits are disentangled from active qubits
+    void checkReleasedQubitsDisentangled();
+
   public:
     explicit LightningKokkosSimulator(
         const std::string &kwargs = "{}") noexcept {

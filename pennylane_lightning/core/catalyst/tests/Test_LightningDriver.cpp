@@ -20,6 +20,7 @@
 
 #ifdef _ENABLE_PLQUBIT
 
+[[maybe_unused]]
 constexpr bool BACKEND_FOUND = true;
 #include "LightningSimulator.hpp"
 using LSimulator = Catalyst::Runtime::Simulator::LightningSimulator;
@@ -200,22 +201,25 @@ TEST_CASE("Check dynamic qubit reuse", "[Driver]") {
         sim->NamedOperation("PauliX", {}, {tempQs1[0]}, false);
         sim->ReleaseQubits(tempQs1);
 
-        // Check that internal device state vector is still |01> after release
-        std::vector<std::complex<double>> state(4);
+        // Original state was |01>, but after releasing qubit 1, only qubit 0
+        // remains
+        std::vector<std::complex<double>> state(1U << sim->GetNumQubits());
         DataView<std::complex<double>, 1> view(state);
         sim->State(view);
-        CHECK(state[0b00].real() == Approx(0.).epsilon(1e-5));
-        CHECK(state[0b10].real() == Approx(0.).epsilon(1e-5));
-        CHECK(state[0b01].real() == Approx(1.).epsilon(1e-5));
-        CHECK(state[0b11].real() == Approx(0.).epsilon(1e-5));
+        CHECK(state.size() == 2);
+        CHECK(state[0b0].real() == Approx(1.).epsilon(1e-5)); // |0>
+        CHECK(state[0b1].real() == Approx(0.).epsilon(1e-5)); // |1>
 
         std::vector<intptr_t> tempQs2 = sim->AllocateQubits(1);
         // Check that program ID is different for every allocation
         CHECK(tempQs2[0] == 2);
 
-        // Check that the second allocation reuses bit 1, and device sv resets
-        // back to |00>
-        sim->State(view);
+        // After allocating new qubit, state vector expands back to 2 qubits
+        // The new qubit is initialized to |0>, so state is |00>
+        state.resize(1U << sim->GetNumQubits());
+        DataView<std::complex<double>, 1> view_after_alloc(state);
+        sim->State(view_after_alloc);
+        CHECK(state.size() == 4);
         CHECK(state[0b00].real() == Approx(1.).epsilon(1e-5));
         CHECK(state[0b10].real() == Approx(0.).epsilon(1e-5));
         CHECK(state[0b01].real() == Approx(0.).epsilon(1e-5));
@@ -241,16 +245,24 @@ TEST_CASE("Check dynamic qubit reuse", "[Driver]") {
 
         sim->ReleaseQubit(qubits[1]);
 
-        sim->State(view);
-        CHECK(state[0b00].real() == Approx(0.).epsilon(1e-5));
-        CHECK(state[0b10].real() == Approx(0.707107).epsilon(1e-5));
-        CHECK(state[0b01].real() == Approx(0.).epsilon(1e-5));
-        CHECK(state[0b11].real() == Approx(0.707107).epsilon(1e-5));
+        // Only qubit 0 remains and in |1> state
+        state.resize(1U << sim->GetNumQubits());
+        DataView<std::complex<double>, 1> view_after_release(state);
+        sim->State(view_after_release);
+        CHECK(state.size() == 2);
+        CHECK(state[0b0].real() == Approx(0.).epsilon(1e-5)); // |0>
+        CHECK(state[0b1].real() == Approx(1.).epsilon(1e-5)); // |1>
 
         auto new_qubit = sim->AllocateQubit();
         CHECK(new_qubit != qubits[1]);
 
-        sim->State(view);
+        // After allocating new qubit, state vector expands back to 2 qubits
+        // qubit 0 is |1>, new qubit is |0>, so state is |10>
+        state.resize(1U << sim->GetNumQubits());
+
+        DataView<std::complex<double>, 1> view_after_alloc(state);
+        sim->State(view_after_alloc);
+        CHECK(state.size() == 4);
         CHECK(state[0b00].real() == Approx(0.).epsilon(1e-5));
         CHECK(state[0b10].real() == Approx(1.).epsilon(1e-5));
         CHECK(state[0b01].real() == Approx(0.).epsilon(1e-5));
@@ -260,9 +272,6 @@ TEST_CASE("Check dynamic qubit reuse", "[Driver]") {
     SECTION("Multi qubit gates on dynamically and statically allocated qubits "
             "together") {
         std::unique_ptr<LSimulator> sim = std::make_unique<LSimulator>();
-        std::vector<std::complex<double>> state(16);
-        DataView<std::complex<double>, 1> state_view(state);
-
         std::vector<intptr_t> Qs = sim->AllocateQubits(3); // |000>
 
         std::vector<intptr_t> tempQs1 = sim->AllocateQubits(1); // |000> and |0>
@@ -271,6 +280,8 @@ TEST_CASE("Check dynamic qubit reuse", "[Driver]") {
         sim->NamedOperation("CNOT", {}, {tempQs1[0], Qs[1]},
                             false); // |010> and |1>
 
+        std::vector<std::complex<double>> state(1U << sim->GetNumQubits());
+        DataView<std::complex<double>, 1> state_view(state);
         sim->State(state_view);
         CHECK(state[0b0101].real() == Approx(1.).epsilon(1e-5));
         CHECK(std::accumulate(state.begin(), state.end(),
@@ -280,7 +291,10 @@ TEST_CASE("Check dynamic qubit reuse", "[Driver]") {
         sim->ReleaseQubits(tempQs1); // |010>
 
         std::vector<intptr_t> tempQs2 = sim->AllocateQubits(1); // |010> and |0>
-        sim->State(state_view);
+        state.resize(1U << sim->GetNumQubits());
+        DataView<std::complex<double>, 1> view_after_alloc_1(state);
+        sim->State(view_after_alloc_1);
+        CHECK(state.size() == 16); // 2^4 = 16
         CHECK(state[0b0100].real() == Approx(1.).epsilon(1e-5));
         CHECK(std::accumulate(state.begin(), state.end(),
                               std::complex<double>{0.0, 0.0}) ==
@@ -293,7 +307,10 @@ TEST_CASE("Check dynamic qubit reuse", "[Driver]") {
         sim->ReleaseQubits(tempQs2); // |000>
 
         std::vector<intptr_t> tempQs3 = sim->AllocateQubits(1); // |000> and |0>
-        sim->State(state_view);
+        state.resize(1U << sim->GetNumQubits());
+        DataView<std::complex<double>, 1> view_after_alloc_2(state);
+        sim->State(view_after_alloc_2);
+        CHECK(state.size() == 16); // 2^4 = 16
         CHECK(state[0b0000].real() == Approx(1.).epsilon(1e-5));
         CHECK(std::accumulate(state.begin(), state.end(),
                               std::complex<double>{0.0, 0.0}) ==
@@ -305,8 +322,10 @@ TEST_CASE("Check dynamic qubit reuse", "[Driver]") {
                             false);  // |010> and |1>
         sim->ReleaseQubits(tempQs3); // |010>
 
-        sim->State(state_view);
-        CHECK(state[0b0101].real() == Approx(1.).epsilon(1e-5));
+        state.resize(1U << sim->GetNumQubits());
+        DataView<std::complex<double>, 1> view_after_release_3(state);
+        sim->State(view_after_release_3);
+        CHECK(state[0b010].real() == Approx(1.).epsilon(1e-5));
         CHECK(std::accumulate(state.begin(), state.end(),
                               std::complex<double>{0.0, 0.0}) ==
               PLApproxComplex(std::complex<double>{1.0, 0.0}).epsilon(1e-5));
@@ -412,4 +431,74 @@ TEST_CASE("Sample after releasing middle qubit (triggers remap)", "[Driver]") {
         CHECK(samples[shot * num_wires + 0] == 0.); // qubit[0] is |0>
         CHECK(samples[shot * num_wires + 1] == 1.); // qubit[2] is |1>
     }
+}
+
+TEST_CASE("Release one qubit from entangled qubits", "[Driver]") {
+    // 1. Allocate 2 static qubits (wires 0, 1) and apply PauliX to each
+    // 2. Dynamically allocate 2 qubits and apply CNOT to create entanglement
+    // 3. Try to release only 1 entangled qubit
+    std::unique_ptr<LSimulator> sim = std::make_unique<LSimulator>();
+    std::vector<intptr_t> static_qubits = sim->AllocateQubits(2);
+
+    sim->NamedOperation("PauliX", {}, {static_qubits[0]}, false);
+    sim->NamedOperation("PauliX", {}, {static_qubits[1]}, false);
+
+    std::vector<intptr_t> dynamic_qubits = sim->AllocateQubits(2);
+
+    sim->NamedOperation("Hadamard", {}, {dynamic_qubits[0]}, false);
+    sim->NamedOperation("CNOT", {}, {dynamic_qubits[0], dynamic_qubits[1]},
+                        false);
+
+    // Try to release only one entangled qubit
+    sim->ReleaseQubit(dynamic_qubits[0]);
+
+    constexpr size_t num_shots = 10;
+    sim->SetDeviceShots(num_shots);
+
+    std::vector<double> probs(4); // 2^2 for remaining 2 qubits
+    DataView<double, 1> probs_view(probs);
+
+    REQUIRE_THROWS_WITH(
+        sim->PartialProbs(probs_view, {static_qubits[0], static_qubits[1]}),
+        Catch::Contains("Cannot release qubits: released qubits are entangled "
+                        "with remaining qubits"));
+}
+
+TEST_CASE("Release all entangled qubits", "[Driver]") {
+    // 1. Allocate 2 static qubits (wires 0, 1) and apply PauliX to each
+    // 2. Dynamically allocate 2 qubits and apply CNOT to create entanglement
+    // 3. Release all entangled qubits
+    std::unique_ptr<LSimulator> sim = std::make_unique<LSimulator>();
+    std::vector<intptr_t> static_qubits = sim->AllocateQubits(2);
+
+    sim->NamedOperation("PauliX", {}, {static_qubits[0]}, false); // |10>
+    sim->NamedOperation("PauliX", {}, {static_qubits[1]}, false); // |11>
+
+    std::vector<intptr_t> dynamic_qubits = sim->AllocateQubits(2); // |1100>
+
+    // (|1100> + |1110>)/sqrt(2)
+    sim->NamedOperation("Hadamard", {}, {dynamic_qubits[0]}, false);
+
+    // (|1100> + |1111>)/sqrt(2)
+    sim->NamedOperation("CNOT", {}, {dynamic_qubits[0], dynamic_qubits[1]},
+                        false);
+
+    // Release all entangled qubits
+    sim->ReleaseQubits(dynamic_qubits);
+
+    constexpr size_t num_shots = 10;
+    sim->SetDeviceShots(num_shots);
+
+    std::vector<double> probs(4); // 2^2 = 4 for 2 qubits
+    DataView<double, 1> probs_view(probs);
+
+    // <00|11><11|00> = 0
+    // <01|11><11|01> = 0
+    // <10|11><11|10> = 0
+    // <11|11><11|11> = 1
+    sim->PartialProbs(probs_view, {static_qubits[0], static_qubits[1]});
+    CHECK(probs[0] == Approx(0.0).margin(1e-6));
+    CHECK(probs[1] == Approx(0.0).margin(1e-6));
+    CHECK(probs[2] == Approx(0.0).margin(1e-6));
+    CHECK(probs[3] == Approx(1.0).margin(1e-6));
 }
