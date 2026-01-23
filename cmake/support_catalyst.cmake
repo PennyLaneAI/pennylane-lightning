@@ -26,9 +26,7 @@ macro(FindCatalyst target_name)
 
     else()
         if(NOT CATALYST_GIT_TAG)
-            # TODO: Revert to main after merging PR 2348
-            # https://github.com/PennyLaneAI/catalyst/pull/2348
-            set(CATALYST_GIT_TAG "rt_pprm" CACHE STRING "GIT_TAG value to build Catalyst")
+            set(CATALYST_GIT_TAG "main" CACHE STRING "GIT_TAG value to build Catalyst")
         endif()
         message(INFO " Building against Catalyst GIT TAG ${CATALYST_GIT_TAG}")
 
