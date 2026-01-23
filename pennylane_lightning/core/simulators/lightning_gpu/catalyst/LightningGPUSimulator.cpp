@@ -63,15 +63,14 @@ auto LightningGPUSimulator::AllocateQubit() -> QubitIdType {
             const size_t old_size = old_data.size();
             const size_t new_size =
                 old_size << (expected_num_qubits - current_num_qubits);
-            std::vector<std::complex<double>,
-                        AlignedAllocator<std::complex<double>>>
-                new_data(new_size, old_data.get_allocator());
+            std::vector<std::complex<double>> new_data(new_size);
 
             for (size_t i = 0; i < old_size; i++) {
                 new_data[i << (expected_num_qubits - current_num_qubits)] =
                     old_data[i];
             }
-            this->device_sv = std::make_unique<StateVectorT>(new_data);
+            this->device_sv =
+                std::make_unique<StateVectorT>(new_data.data(), new_data.size());
         }
 
         Result mres = this->Measure(new_program_idx);
@@ -197,9 +196,6 @@ void LightningGPUSimulator::reduceStateVector() {
     // Replace the state vector
     this->device_sv =
         std::make_unique<StateVectorT>(new_data.data(), new_data.size());
-
-    // Normalize the state vector
-    this->device_sv->normalize();
 
     // Remap device ids
     std::unordered_map<size_t, size_t> old_to_new_device_id;
