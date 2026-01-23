@@ -69,8 +69,8 @@ auto LightningGPUSimulator::AllocateQubit() -> QubitIdType {
                 new_data[i << (expected_num_qubits - current_num_qubits)] =
                     old_data[i];
             }
-            this->device_sv =
-                std::make_unique<StateVectorT>(new_data.data(), new_data.size());
+            this->device_sv = std::make_unique<StateVectorT>(new_data.data(),
+                                                             new_data.size());
         }
 
         Result mres = this->Measure(new_program_idx);

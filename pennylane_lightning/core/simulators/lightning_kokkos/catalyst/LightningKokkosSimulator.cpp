@@ -65,9 +65,7 @@ auto LightningKokkosSimulator::AllocateQubit() -> QubitIdType {
             const size_t old_size = old_data.size();
             const size_t new_size =
                 old_size << (expected_num_qubits - current_num_qubits);
-            std::vector<std::complex<double>,
-                        AlignedAllocator<std::complex<double>>>
-                new_data(new_size, old_data.get_allocator());
+            std::vector<Kokkos::complex<double>> new_data(new_size);
 
             for (size_t i = 0; i < old_size; i++) {
                 new_data[i << (expected_num_qubits - current_num_qubits)] =
