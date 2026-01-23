@@ -514,6 +514,8 @@ auto LightningKokkosSimulator::Var(ObsIdType obsKey) -> double {
 }
 
 void LightningKokkosSimulator::State(DataView<std::complex<double>, 1> &state) {
+    reduceStateVector();
+
     using UnmanagedComplexHostView =
         Kokkos::View<Kokkos::complex<double> *, Kokkos::HostSpace,
                      Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
