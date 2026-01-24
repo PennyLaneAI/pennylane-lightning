@@ -197,6 +197,9 @@ void LightningGPUSimulator::reduceStateVector() {
     this->device_sv =
         std::make_unique<StateVectorT>(new_data.data(), new_data.size());
 
+    // Normalize the state vector
+    this->device_sv->normalize();
+
     // Remap device ids
     std::unordered_map<size_t, size_t> old_to_new_device_id;
     for (size_t new_idx = 0; new_idx < wire_id_pairs.size(); new_idx++) {

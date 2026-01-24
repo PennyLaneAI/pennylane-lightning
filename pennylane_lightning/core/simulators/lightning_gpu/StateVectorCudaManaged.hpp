@@ -17,6 +17,7 @@
 #pragma once
 
 #include <algorithm>
+#include <limits>
 #include <random>
 #include <set>
 #include <type_traits>
@@ -1950,6 +1951,34 @@ class StateVectorCudaManaged
         std::vector<std::complex<PrecisionT>> data_host(BaseType::getLength());
         BaseType::CopyGpuDataToHost(data_host.data(), data_host.size());
         return data_host;
+    }
+
+    /**
+     * @brief Normalize vector (to have norm 1).
+     */
+    void normalize() {
+        auto device_id = BaseType::getDataBuffer().getDevTag().getDeviceID();
+        auto stream_id = BaseType::getDataBuffer().getDevTag().getStreamID();
+
+        const CFP_t inner_prod =
+            Pennylane::LightningGPU::Util::innerProdC_CUDA<CFP_t>(
+                BaseType::getData(), BaseType::getData(), BaseType::getLength(),
+                device_id, stream_id, cublascaller_);
+
+        // norm = sqrt(real(<sv|sv>))
+        PrecisionT norm_squared = inner_prod.x;
+        PrecisionT norm = std::sqrt(norm_squared);
+
+        // TODO: Waiting the decision from PL core about how to solve the issue
+        // https://github.com/PennyLaneAI/pennylane/issues/6504
+        PL_ABORT_IF(norm < std::numeric_limits<PrecisionT>::epsilon() * 1e2,
+                    "Vector has norm close to zero and cannot be normalized");
+
+        // normalize
+        const ComplexT inv_norm = 1. / norm;
+        Pennylane::LightningGPU::Util::scaleC_CUDA<ComplexT, CFP_t>(
+            inv_norm, BaseType::getData(), BaseType::getLength(), device_id,
+            stream_id, cublascaller_);
     }
 
   private:
