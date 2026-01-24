@@ -1963,7 +1963,7 @@ class StateVectorCudaManaged
         const CFP_t inner_prod =
             Pennylane::LightningGPU::Util::innerProdC_CUDA<CFP_t>(
                 BaseType::getData(), BaseType::getData(), BaseType::getLength(),
-                device_id, stream_id, cublascaller_);
+                device_id, stream_id, getCublasCaller());
 
         // norm = sqrt(real(<sv|sv>))
         PrecisionT norm_squared = inner_prod.x;
@@ -1978,7 +1978,7 @@ class StateVectorCudaManaged
         const ComplexT inv_norm = 1. / norm;
         Pennylane::LightningGPU::Util::scaleC_CUDA<ComplexT, CFP_t>(
             inv_norm, BaseType::getData(), BaseType::getLength(), device_id,
-            stream_id, cublascaller_);
+            stream_id, getCublasCaller());
     }
 
   private:
