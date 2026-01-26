@@ -101,7 +101,7 @@ class StateVectorKokkosMPI final
     std::shared_ptr<KokkosVector> recvbuf_;
     std::shared_ptr<KokkosVector> sendbuf_;
     MPIManagerKokkos mpi_manager_;
-    static constexpr std::size_t COMM_BUFFER_RATIO = 1;
+    static constexpr std::size_t COMM_BUFFER_RATIO = 4;
 
     std::size_t num_qubits_;
     std::size_t numGlobalQubits_;
