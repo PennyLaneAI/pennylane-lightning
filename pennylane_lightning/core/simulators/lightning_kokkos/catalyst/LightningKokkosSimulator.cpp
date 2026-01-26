@@ -428,8 +428,14 @@ void LightningKokkosSimulator::PartialProbs(
 
     m.setSeed(this->generateSeed());
 
+#ifdef _ENABLE_PLKOKKOS_MPI
+    auto &&dv_probs =
+        device_shots ? m.probs(dev_wires, device_shots) : m.probs_no_reorder(dev_wires);
+#else
     auto &&dv_probs =
         device_shots ? m.probs(dev_wires, device_shots) : m.probs(dev_wires);
+#endif
+
     RT_FAIL_IF(probs.size() != dv_probs.size(),
                "Invalid size for the pre-allocated partial-probabilities");
 
