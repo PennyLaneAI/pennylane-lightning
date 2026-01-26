@@ -101,6 +101,7 @@ class StateVectorKokkosMPI final
     std::shared_ptr<KokkosVector> recvbuf_;
     std::shared_ptr<KokkosVector> sendbuf_;
     MPIManagerKokkos mpi_manager_;
+    static constexpr std::size_t COMM_BUFFER_RATIO = 1;
 
     std::size_t num_qubits_;
     std::size_t numGlobalQubits_;
@@ -356,13 +357,18 @@ class StateVectorKokkosMPI final
      * @brief Allocate send and recv buffers for MPI communication.
      */
     void allocateBuffers() {
+        std::size_t buffer_size = exp2(getNumLocalWires() - 1);
+        if constexpr (COMM_BUFFER_RATIO > 1) {
+            buffer_size /= COMM_BUFFER_RATIO;
+        }
+
         if (!sendbuf_) {
             sendbuf_ = std::make_shared<KokkosVector>(
-                "sendbuf_", exp2(getNumLocalWires() - 1));
+                "sendbuf_", buffer_size);
         }
         if (!recvbuf_) {
             recvbuf_ = std::make_shared<KokkosVector>(
-                "recvbuf_", exp2(getNumLocalWires() - 1));
+                "recvbuf_", buffer_size);
         }
     }
 
@@ -777,45 +783,55 @@ class StateVectorKokkosMPI final
             std::size_t send_size =
                 exp2((getNumLocalWires() - local_wires_to_swap.size()));
 
-            // Copy to send buffer
-            Kokkos::parallel_for(
-                "copy_sendbuf", send_size,
-                KOKKOS_LAMBDA(std::size_t buffer_index) {
-                    std::size_t SV_index = swap_wire_mask;
-                    for (std::size_t i = 0; i < not_swapping_local_wire_size;
-                         i++) {
-                        SV_index |=
-                            (((buffer_index >> i) & 1)
-                             << rev_local_wires_index_not_swapping_view(i));
-                    }
-                    sendbuf_view(buffer_index) = sv_view(SV_index);
-                });
-            Kokkos::fence();
+            std::size_t allocated_size = sendbuf_->extent(0);
+            std::size_t chunk_size = std::min(send_size, allocated_size);
+            std::size_t num_chunks = send_size / chunk_size;
 
-            // MPI Sendrecv
-            std::size_t other_global_index = batch_index ^ global_index;
-            std::size_t other_mpi_rank =
-                getMPIRankFromGlobalIndex(other_global_index);
+            for (std::size_t chunk_i = 0; chunk_i < num_chunks; chunk_i++) {
+                std::size_t offset = chunk_i * chunk_size;
 
-            sendrecvBuffers(other_mpi_rank, other_mpi_rank, send_size,
-                            batch_index);
+                // Copy to send buffer
+                Kokkos::parallel_for(
+                    "copy_sendbuf", chunk_size,
+                    KOKKOS_LAMBDA(std::size_t buffer_index) {
+                        std::size_t idx = buffer_index + offset;
+                        std::size_t SV_index = swap_wire_mask;
+                        for (std::size_t i = 0;
+                             i < not_swapping_local_wire_size; i++) {
+                            SV_index |=
+                                (((idx >> i) & 1)
+                                 << rev_local_wires_index_not_swapping_view(i));
+                        }
+                        sendbuf_view(buffer_index) = sv_view(SV_index);
+                    });
+                Kokkos::fence();
 
-            // Copy from recv buffer
-            Kokkos::parallel_for(
-                "copy_recvbuf", send_size,
-                KOKKOS_LAMBDA(std::size_t buffer_index) {
-                    std::size_t SV_index = swap_wire_mask;
+                // MPI Sendrecv
+                std::size_t other_global_index = batch_index ^ global_index;
+                std::size_t other_mpi_rank =
+                    getMPIRankFromGlobalIndex(other_global_index);
 
-                    for (std::size_t i = 0; i < not_swapping_local_wire_size;
-                         i++) {
-                        SV_index |=
-                            (((buffer_index >> i) & 1)
-                             << rev_local_wires_index_not_swapping_view(i));
-                    }
+                sendrecvBuffers(other_mpi_rank, other_mpi_rank, chunk_size,
+                                batch_index);
 
-                    sv_view(SV_index) = recvbuf_view(buffer_index);
-                });
-            Kokkos::fence();
+                // Copy from recv buffer
+                Kokkos::parallel_for(
+                    "copy_recvbuf", chunk_size,
+                    KOKKOS_LAMBDA(std::size_t buffer_index) {
+                        std::size_t idx = buffer_index + offset;
+                        std::size_t SV_index = swap_wire_mask;
+
+                        for (std::size_t i = 0;
+                             i < not_swapping_local_wire_size; i++) {
+                            SV_index |=
+                                (((idx >> i) & 1)
+                                 << rev_local_wires_index_not_swapping_view(i));
+                        }
+
+                        sv_view(SV_index) = recvbuf_view(buffer_index);
+                    });
+                Kokkos::fence();
+            }
         }
 
         // Swap global and local wires labels
@@ -913,29 +929,33 @@ class StateVectorKokkosMPI final
             mpi_rank_to_global_index_map_target, dest_global_index);
 
         if (dest_mpi_rank != mpi_manager_.getRank()) {
-            std::size_t send_size = exp2(getNumLocalWires() - 1);
+            std::size_t allocated_size = sendbuf_->extent(0);
+            std::size_t total_size = exp2(getNumLocalWires());
+            std::size_t num_chunks = total_size / allocated_size;
+            std::size_t chunk_size = allocated_size;
+
             auto sendbuf_view = (*sendbuf_);
             auto recvbuf_view = (*recvbuf_);
             auto sv_view = (*sv_).getView();
 
             // Since the buffer is half the size of the state vector, we need to
             // do two copies
-            for (std::size_t i = 0; i < 2; i++) {
-                std::size_t offset = i * send_size;
+            for (std::size_t i = 0; i < num_chunks; i++) {
+                std::size_t offset = i * chunk_size;
                 // COPY to buffer
                 Kokkos::parallel_for(
-                    "copy_sendbuf", send_size,
+                    "copy_sendbuf", chunk_size,
                     KOKKOS_LAMBDA(std::size_t buffer_index) {
                         sendbuf_view(buffer_index) =
                             sv_view(buffer_index + offset);
                     });
                 Kokkos::fence();
                 // SENDRECV
-                sendrecvBuffers(dest_mpi_rank, dest_mpi_rank, send_size, 0);
+                sendrecvBuffers(dest_mpi_rank, dest_mpi_rank, chunk_size, 0);
                 // COPY FROM BUFFER
 
                 Kokkos::parallel_for(
-                    "copy_recvbuf", send_size,
+                    "copy_recvbuf", chunk_size,
                     KOKKOS_LAMBDA(std::size_t buffer_index) {
                         sv_view(buffer_index + offset) =
                             recvbuf_view(buffer_index);
