@@ -1,3 +1,8 @@
+# How to? replace this toml file with the targeted lightning toml file
+#         lightning.qubit: https://github.com/PennyLaneAI/pennylane-lightning/blob/master/pennylane_lightning/lightning_qubit/lightning_qubit.toml
+#         lightning.amdgpu: https://github.com/PennyLaneAI/pennylane-lightning/blob/master/pennylane_lightning/lightning_kokkos/lightning_kokkos.toml
+
+
 schema = 3
 
 # The set of all gate types supported at the runtime execution interface of the
@@ -47,7 +52,6 @@ PauliZ                 = { properties = [ "invertible", "controllable", "differe
 PauliRot               = { properties = [ "invertible",                                  ] }
 PhaseShift             = { properties = [ "invertible", "controllable", "differentiable" ] }
 PSWAP                  = { properties = [ "invertible", "controllable", "differentiable" ] }
-QubitUnitary           = { properties = [ "invertible", "controllable",                  ] }
 Rot                    = { properties = [ "invertible", "controllable",                  ] }
 RX                     = { properties = [ "invertible", "controllable", "differentiable" ] }
 RY                     = { properties = [ "invertible", "controllable", "differentiable" ] }
@@ -60,7 +64,7 @@ SWAP                   = { properties = [ "invertible", "controllable", "differe
 Toffoli                = { properties = [ "invertible",                 "differentiable" ] }
 T                      = { properties = [ "invertible", "controllable", "differentiable" ] }
 SX                     = { properties = [ "invertible", "controllable", "differentiable" ] }
-PCPhase                = { properties = [ "invertible", "controllable"                   ] }
+CH                     = { properties = [ "invertible", "controllable", "differentiable" ] }
 
 # Operations supported by the execution in Python but not directly supported by the backend
 [pennylane.operators.gates]
@@ -75,6 +79,7 @@ QubitSum               = {}
 SISWAP                 = {}
 SQISW                  = {}
 MultiControlledX       = {}
+
 
 # Observables supported by the device
 [operators.observables]
@@ -130,3 +135,4 @@ non_commuting_observables = true
 
 # Whether the device supports initial state preparation.
 initial_state_prep = true
+

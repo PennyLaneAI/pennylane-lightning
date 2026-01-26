@@ -23,6 +23,7 @@
 #include <cstdint>
 #include <iostream>
 #include <limits>
+#include <memory>
 #include <optional>
 #include <random>
 #include <span>
@@ -32,6 +33,10 @@
 #include "AdjointJacobianKokkos.hpp"
 #include "MeasurementsKokkos.hpp"
 #include "StateVectorKokkos.hpp"
+#ifdef _ENABLE_PLKOKKOS_MPI
+#include "MeasurementsKokkosMPI.hpp"
+#include "StateVectorKokkosMPI.hpp"
+#endif
 
 #include "CacheManager.hpp"
 #include "Exception.hpp"
@@ -49,7 +54,12 @@ namespace Catalyst::Runtime::Simulator {
  */
 class LightningKokkosSimulator final : public Catalyst::Runtime::QuantumDevice {
   private:
+#ifdef _ENABLE_PLKOKKOS_MPI
+    using StateVectorT =
+        Pennylane::LightningKokkos::StateVectorKokkosMPI<double>;
+#else
     using StateVectorT = Pennylane::LightningKokkos::StateVectorKokkos<double>;
+#endif
 
     // static constants for RESULT values
     static constexpr bool GLOBAL_RESULT_TRUE_CONST = true;
@@ -64,7 +74,11 @@ class LightningKokkosSimulator final : public Catalyst::Runtime::QuantumDevice {
 
     std::mt19937 *gen{nullptr};
 
+#ifdef _ENABLE_PLKOKKOS_MPI
+    std::unique_ptr<StateVectorT> device_sv = nullptr;
+#else
     std::unique_ptr<StateVectorT> device_sv = std::make_unique<StateVectorT>(0);
+#endif
     LightningKokkosObsManager<double> obs_manager{};
 
     inline auto isValidQubit(QubitIdType wire) -> bool {

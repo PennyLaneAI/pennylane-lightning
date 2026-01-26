@@ -17,7 +17,29 @@
 #include <Kokkos_Complex.hpp>
 #include <Kokkos_Core.hpp>
 
+#ifdef _ENABLE_PLKOKKOS_MPI
+#include <mpi.h>
+#endif
+
 #include "LightningKokkosSimulator.hpp"
+
+namespace {
+#ifdef _ENABLE_PLKOKKOS_MPI
+struct MPILifetimeManagerTemp {
+    ~MPILifetimeManagerTemp() {
+        int initialized = 0;
+        int finalized = 0;
+        MPI_Initialized(&initialized);
+        MPI_Finalized(&finalized);
+        if (initialized && !finalized) {
+            MPI_Finalize();
+        }
+    }
+};
+
+static MPILifetimeManagerTemp mpi_lifetime_manager;
+#endif
+} // namespace
 
 namespace Catalyst::Runtime::Simulator {
 
@@ -46,7 +68,11 @@ auto LightningKokkosSimulator::AllocateQubit() -> QubitIdType {
         for (size_t i = 0; i < original_data.size(); i++) {
             new_data[2 * i] = original_data[i];
         }
+#ifndef _ENABLE_PLKOKKOS_MPI
         this->device_sv = std::make_unique<StateVectorT>(new_data);
+#else
+        RT_FAIL("Dynamic qubit allocation is not supported with MPI backend.");
+#endif
         new_program_idx = this->qubit_manager.Allocate(device_idx);
     } else {
         device_idx = candidate.value();
@@ -103,7 +129,11 @@ void LightningKokkosSimulator::ReleaseQubits(
             });
         if (deallocate_all) {
             this->qubit_manager.ReleaseAll();
+#ifdef _ENABLE_PLKOKKOS_MPI
+            this->device_sv = nullptr;
+#else
             this->device_sv = std::make_unique<StateVectorT>(0);
+#endif
             return;
         }
     }
@@ -245,11 +275,12 @@ void LightningKokkosSimulator::MatrixOperation(
 
     // Update the state-vector
     if (controlled_wires.empty()) {
-        this->device_sv->applyMultiQubitOp(gate_matrix, dev_wires, inverse);
+        this->device_sv->applyOperation("Matrix", dev_wires, inverse, {},
+                                        matrix_kok);
     } else {
-        this->device_sv->applyNCMultiQubitOp(gate_matrix, dev_controlled_wires,
-                                             controlled_values, dev_wires,
-                                             inverse);
+        this->device_sv->applyOperation("Matrix", dev_controlled_wires,
+                                        controlled_values, dev_wires, inverse,
+                                        {}, matrix_kok);
     }
 
     // Update tape caching if required
@@ -297,8 +328,13 @@ auto LightningKokkosSimulator::Expval(ObsIdType obsKey) -> double {
 
     auto &&obs = this->obs_manager.getObservable(obsKey);
 
+#ifdef _ENABLE_PLKOKKOS_MPI
+    Pennylane::LightningKokkos::Measures::MeasurementsMPI<StateVectorT> m{
+        *(this->device_sv)};
+#else
     Pennylane::LightningKokkos::Measures::Measurements<StateVectorT> m{
         *(this->device_sv)};
+#endif
 
     m.setSeed(this->generateSeed());
 
@@ -316,8 +352,13 @@ auto LightningKokkosSimulator::Var(ObsIdType obsKey) -> double {
 
     auto &&obs = this->obs_manager.getObservable(obsKey);
 
+#ifdef _ENABLE_PLKOKKOS_MPI
+    Pennylane::LightningKokkos::Measures::MeasurementsMPI<StateVectorT> m{
+        *(this->device_sv)};
+#else
     Pennylane::LightningKokkos::Measures::Measurements<StateVectorT> m{
         *(this->device_sv)};
+#endif
 
     m.setSeed(this->generateSeed());
 
@@ -348,8 +389,14 @@ void LightningKokkosSimulator::State(DataView<std::complex<double>, 1> &state) {
 }
 
 void LightningKokkosSimulator::Probs(DataView<double, 1> &probs) {
+
+#ifdef _ENABLE_PLKOKKOS_MPI
+    Pennylane::LightningKokkos::Measures::MeasurementsMPI<StateVectorT> m{
+        *(this->device_sv)};
+#else
     Pennylane::LightningKokkos::Measures::Measurements<StateVectorT> m{
         *(this->device_sv)};
+#endif
 
     m.setSeed(this->generateSeed());
 
@@ -370,13 +417,24 @@ void LightningKokkosSimulator::PartialProbs(
     RT_FAIL_IF(!isValidQubits(wires), "Invalid given wires to measure");
 
     auto dev_wires = getDeviceWires(wires);
+
+#ifdef _ENABLE_PLKOKKOS_MPI
+    Pennylane::LightningKokkos::Measures::MeasurementsMPI<StateVectorT> m{
+        *(this->device_sv)};
+#else
     Pennylane::LightningKokkos::Measures::Measurements<StateVectorT> m{
         *(this->device_sv)};
+#endif
 
     m.setSeed(this->generateSeed());
 
+#ifdef _ENABLE_PLKOKKOS_MPI
+    auto &&dv_probs =
+        device_shots ? m.probs(dev_wires, device_shots) : m.probs_no_reorder(dev_wires);
+#else
     auto &&dv_probs =
         device_shots ? m.probs(dev_wires, device_shots) : m.probs(dev_wires);
+#endif
 
     RT_FAIL_IF(probs.size() != dv_probs.size(),
                "Invalid size for the pre-allocated partial-probabilities");
