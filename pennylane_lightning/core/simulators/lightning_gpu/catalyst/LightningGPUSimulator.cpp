@@ -241,10 +241,6 @@ void LightningGPUSimulator::checkReleasedQubitsDisentangled() {
         }
     }
 
-    if (released_device_ids.empty()) {
-        return;
-    }
-
     // Check if released qubits are disentangled from active qubits using purity
     // If separable, then |phi> = |released> x |active>
     //     then ρ_released = Tr_active(|phi><phi|) = |released><released|
