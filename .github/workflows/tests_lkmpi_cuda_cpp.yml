@@ -80,7 +80,7 @@ jobs:
           git fetch tags --force
           git checkout latest_release
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         id: setup_python
         name: Install Python
         with:
