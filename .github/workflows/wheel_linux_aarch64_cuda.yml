@@ -59,6 +59,9 @@ jobs:
       - name: Configure pyproject.toml file
         run: PL_BACKEND="${{ matrix.pl_backend }}" python scripts/configure_pyproject_toml.py
 
+      - name: check docker pull
+        run: docker pull quay.io/pypa/manylinux_2_28_aarch64:2025.08.15-1
+
       - name: Build wheels
         env:
           CIBW_ARCHS_LINUX: ${{matrix.arch}}
