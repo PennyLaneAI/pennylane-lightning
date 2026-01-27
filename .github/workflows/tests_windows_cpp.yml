@@ -135,7 +135,6 @@ jobs:
         name: Install Python
         with:
           python-version: '3.12'
-          pip-version: '25.3'
 
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4

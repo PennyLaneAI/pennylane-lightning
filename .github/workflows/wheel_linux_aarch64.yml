@@ -127,7 +127,6 @@ jobs:
         uses: actions/setup-python@v6
         with:
           python-version: '3.12'
-          pip-version: '25.3'
 
       - name: Install dependencies
         run: python3.12 -m pip install cibuildwheel~=3.1.4 tomlkit

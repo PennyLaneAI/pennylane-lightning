@@ -102,7 +102,6 @@ jobs:
         name: Install Python
         with:
           python-version: '3.12'
-          pip-version: '25.3'
 
       - name: Restoring cached dependencies
         id: kokkos-cache
@@ -122,6 +121,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION
+          python -m pip install --upgrade pip          
           python -m pip install scipy-openblas32 wheel
 
       - name: Get required Python packages
@@ -175,7 +175,6 @@ jobs:
         name: Install Python
         with:
           python-version: '3.12'
-          pip-version: '25.3'
 
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4

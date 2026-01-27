@@ -52,7 +52,6 @@ jobs:
         uses: actions/setup-python@v6
         with:
           python-version: '3.12'
-          pip-version: '25.3'
 
       - name: Install cibuildwheel
         run: python3.12 -m pip install cibuildwheel~=3.1.4 tomlkit
@@ -98,11 +97,12 @@ jobs:
         run: |
           echo "version=$(echo  ${{ matrix.cibw_build }} | tr -cd '[:digit:].' | sed 's/./&./1')" >> $GITHUB_OUTPUT
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         id: setup_python
         name: Install Python
         with:
           python-version: ${{ steps.pyvs.outputs.version }}
+          pip-version: '25.3'
 
       - name: Setup Python virtual environment
         id: setup_venv

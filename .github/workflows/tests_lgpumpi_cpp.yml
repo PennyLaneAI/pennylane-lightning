@@ -83,7 +83,6 @@ jobs:
         name: Install Python
         with:
           python-version: '3.12'
-          pip-version: '25.3'
 
       # Since the self-hosted runner can be re-used. It is best to set up all package
       # installations in a virtual environment that gets cleaned at the end of each workflow run
@@ -107,6 +106,9 @@ jobs:
           echo "Python_ROOT_DIR=${{ env.VENV_NAME }}" >> $GITHUB_ENV
           echo "Python3_ROOT_DIR=${{ env.VENV_NAME }}" >> $GITHUB_ENV
 
+          # Upgrade pip
+          python -m pip install --upgrade pip
+          
       - name: Display Python-Path
         id: python_path
         run: |
