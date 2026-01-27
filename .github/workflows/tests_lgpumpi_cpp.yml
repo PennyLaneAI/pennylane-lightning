@@ -94,6 +94,9 @@ jobs:
           # Clear any pre-existing venvs
           rm -rf venv_*
 
+          # Upgrade pip
+          python -m pip install --upgrade pip
+
           # Create new venv for this workflow_run
           python --version
           python -m venv ${{ env.VENV_NAME }}
@@ -106,9 +109,6 @@ jobs:
           echo "Python_ROOT_DIR=${{ env.VENV_NAME }}" >> $GITHUB_ENV
           echo "Python3_ROOT_DIR=${{ env.VENV_NAME }}" >> $GITHUB_ENV
 
-          # Upgrade pip
-          python -m pip install --upgrade pip
-          
       - name: Display Python-Path
         id: python_path
         run: |

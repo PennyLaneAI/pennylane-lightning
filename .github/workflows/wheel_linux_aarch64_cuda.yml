@@ -111,12 +111,12 @@ jobs:
           # Clear any pre-existing venvs
           rm -rf venv_*
 
+          # Upgrade pip
+          python -m pip install --upgrade pip
+          
           # Create new venv for this workflow_run
           python --version
           python -m venv ${{ env.VENV_NAME }}
-
-          # Upgrade pip
-          python -m pip install --upgrade pip  
 
           # Add the venv to PATH for subsequent steps
           echo ${{ env.VENV_NAME }}/bin >> $GITHUB_PATH
