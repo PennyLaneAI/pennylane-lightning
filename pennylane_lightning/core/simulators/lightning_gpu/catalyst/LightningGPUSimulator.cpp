@@ -195,7 +195,8 @@ void LightningGPUSimulator::reduceStateVector() {
     }
 
     // Replace the state vector
-    this->device_sv = std::make_unique<StateVectorT>(new_data);
+    this->device_sv =
+        std::make_unique<StateVectorT>(new_data.data(), new_data.size());
 
     // Normalize the state vector
     this->device_sv->normalize();
