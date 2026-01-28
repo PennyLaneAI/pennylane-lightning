@@ -83,6 +83,7 @@ class MPIManagerKokkos final : public MPIManager {
         return cpp_mpi_type_map_with_kokkos;
     }
 
+    static constexpr size_t MPI_CHUNK_SIZE = 1073741824; // 2^30
   public:
     MPIManagerKokkos(MPI_Comm communicator = MPI_COMM_WORLD)
         : MPIManager(communicator) {}
@@ -112,10 +113,22 @@ class MPIManagerKokkos final : public MPIManager {
         int recvtag = static_cast<int>(tag);
         int destInt = static_cast<int>(dest);
         int sourceInt = static_cast<int>(source);
-        int sizeInt = static_cast<int>(size);
-        PL_MPI_IS_SUCCESS(MPI_Sendrecv(
-            sendBuf.data(), sizeInt, datatype, destInt, sendtag, recvBuf.data(),
-            sizeInt, datatype, sourceInt, recvtag, this->getComm(), &status));
+
+        std::size_t processed = 0;
+
+        // Loop to send data in chunks safe for 32-bit MPI counts
+        while (processed < size) {
+            std::size_t remaining = size - processed;
+            std::size_t current_chunk = std::min(remaining, MPI_CHUNK_SIZE);
+            int current_chunk_int = static_cast<int>(current_chunk);
+
+            PL_MPI_IS_SUCCESS(MPI_Sendrecv(
+                sendBuf.data() + processed, current_chunk_int, datatype, destInt, sendtag,
+                recvBuf.data() + processed, current_chunk_int, datatype, sourceInt, recvtag,
+                this->getComm(), &status));
+
+            processed += current_chunk;
+        }
     }
 
     /**

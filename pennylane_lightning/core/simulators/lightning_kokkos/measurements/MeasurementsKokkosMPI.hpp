@@ -569,6 +569,7 @@ class MeasurementsMPI final
                                         local_wires.begin(), local_wires.end());
 
         std::vector<PrecisionT> reordered_full_probabilities;
+        reordered_full_probabilities.resize(full_probabilities.size());
 
         std::vector<std::size_t> mapping_indices;
         std::size_t wires_size = wires.size();
