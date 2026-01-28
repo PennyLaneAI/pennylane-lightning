@@ -64,6 +64,7 @@ class MeasurementsMPI final
 
     MPIManagerKokkos mpi_manager_;
 
+  static constexpr size_t MPI_CHUNK_SIZE = 1073741824; // 2^30
   public:
     explicit MeasurementsMPI(StateVectorT &statevector)
         : BaseType{statevector}, mpi_manager_(statevector.getMPIManager()) {};
@@ -569,6 +570,7 @@ class MeasurementsMPI final
                                         local_wires.begin(), local_wires.end());
 
         std::vector<PrecisionT> reordered_full_probabilities;
+        reordered_full_probabilities.resize(full_probabilities.size());
 
         std::vector<std::size_t> mapping_indices;
         std::size_t wires_size = wires.size();
