@@ -107,7 +107,7 @@ jobs:
           git log -1 --format='%H'
           cd ${{ github.workspace }}
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v5
         id: setup_python
         name: Install Python
         with:

@@ -86,7 +86,7 @@ jobs:
           git fetch --tags --force
           git checkout latest_release
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v5
         id: setup_python
         name: Install Python
         with:
@@ -117,7 +117,7 @@ jobs:
 
           # Upgrade pip
           python -m pip install --upgrade pip
-          
+
       - name: Display Python-Path
         id: python_path
         run: |

@@ -172,7 +172,7 @@ jobs:
           git log -1 --format='%H'
           git status
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v5
         id: setup_python
         name: Install Python
         with:
@@ -213,6 +213,7 @@ jobs:
       - name: Get required Python packages
         run: |
           cd main
+          python -m pip install --upgrade pip
           python -m pip install --group tests
           # pyscf is not compatible with numpy 2.4 yet
           python -m pip install openfermionpyscf "numpy<2.4"
