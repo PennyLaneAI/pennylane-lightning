@@ -605,11 +605,9 @@ create_merge_PR(){
     git commit -m "Update Docker workflows for new release version"
 
     # Update PennyLane minimum version (may be unneeded, but good to have as a reminder)
-    sed -i "s/pennylane>=v\?[0-9\.]\+/pennylane>=${RELEASE_VERSION%??}/" ${ROOT_DIR}/requirements.txt
     sed -i "s/pennylane>=v\?[0-9\.]\+/pennylane>=${RELEASE_VERSION%??}/" ${ROOT_DIR}/scripts/configure_pyproject_toml.py
     sed -i "s/pennylane>=v\?[0-9\.]\+/pennylane>=${RELEASE_VERSION%??}/" ${ROOT_DIR}/pyproject.toml
 
-    git add ${ROOT_DIR}/requirements.txt
     git add ${ROOT_DIR}/scripts/configure_pyproject_toml.py
     git add ${ROOT_DIR}/pyproject.toml
 
