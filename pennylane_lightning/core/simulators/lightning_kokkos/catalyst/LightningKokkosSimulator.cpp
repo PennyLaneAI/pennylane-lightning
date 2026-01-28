@@ -154,18 +154,18 @@ void LightningKokkosSimulator::reduceStateVector() {
     std::sort(wire_id_pairs.begin(), wire_id_pairs.end());
 
     // Extract reduced state vector
-    auto &old_data = this->device_sv->getDataVector();
+    auto old_data = this->device_sv->getDataVector();
     size_t num_qubits_after = wire_id_pairs.size();
     size_t new_size = 1UL << num_qubits_after;
 
-    std::vector<std::complex<double>> new_data(new_size);
+    std::vector<Kokkos::complex<double>> new_data(new_size);
 
     size_t old_num_qubits = this->device_sv->getNumQubits();
 
     // Find a reference old_idx with non-zero amplitude
     size_t reference_old_idx = 0;
     for (size_t old_idx = 0; old_idx < old_data.size(); old_idx++) {
-        if (std::abs(old_data[old_idx]) > 1e-15) {
+        if (Kokkos::abs(old_data[old_idx]) > 1e-15) {
             reference_old_idx = old_idx;
             break;
         }
