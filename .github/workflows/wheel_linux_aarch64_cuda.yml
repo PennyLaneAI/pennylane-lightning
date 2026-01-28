@@ -141,7 +141,7 @@ jobs:
 
       - name: Test wheels
         run: |
-          python -m pip --upgrade
+          python -m pip install --upgrade pip
           python -m ensurepip --upgrade
           python -m pip install --group tests
           PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
