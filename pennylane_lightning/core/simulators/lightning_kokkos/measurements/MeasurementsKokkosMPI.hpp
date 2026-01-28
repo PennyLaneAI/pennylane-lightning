@@ -64,7 +64,6 @@ class MeasurementsMPI final
 
     MPIManagerKokkos mpi_manager_;
 
-  static constexpr size_t MPI_CHUNK_SIZE = 1073741824; // 2^30
   public:
     explicit MeasurementsMPI(StateVectorT &statevector)
         : BaseType{statevector}, mpi_manager_(statevector.getMPIManager()) {};
