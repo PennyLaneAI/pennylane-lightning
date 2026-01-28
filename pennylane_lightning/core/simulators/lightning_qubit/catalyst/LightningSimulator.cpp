@@ -58,6 +58,12 @@ auto LightningSimulator::AllocateQubit() -> QubitIdType {
     } else {
         device_idx = candidate.value();
 
+        // Check if the qubit to be reused is disentangled before reusing
+        if (!checkSingleQubitDisentangled(device_idx)) {
+            RT_FAIL("Cannot reuse qubit: qubit is entangled with remaining "
+                    "qubits. Release qubits must be disentangled.");
+        }
+
         // Reuse existing space in the statevector by collapsing onto |0>.
         // The collapse is performed by a measurement followed by an X gate if
         // measured 1.
@@ -221,6 +227,52 @@ void LightningSimulator::reduceStateVector() {
     this->qubit_manager.ClearFreeQubits();
 
     this->needs_reduction = false;
+}
+
+/**
+ * @brief Check if a single qubit is disentangled from the rest
+ *
+ * Computes Tr(ρ^2) for the reduced density matrix
+ *
+ * @param wire Device wire index of the qubit to check
+ * @return true if purity is close to 1 (disentangled), false otherwise
+ */
+bool LightningSimulator::checkSingleQubitDisentangled(size_t wire) {
+    const auto &state_data = this->device_sv->getDataVector();
+    const size_t sv_size = state_data.size();
+    const size_t num_qubits = this->device_sv->getNumQubits();
+
+    PL_ABORT_IF(wire >= num_qubits, "Invalid wire: wire must be < num_qubits");
+
+    const size_t lower_mask = (1UL << wire) - 1;
+    const size_t upper_mask = sv_size - lower_mask - 1;
+
+    // The resulting 2x2 reduced density matrix of the complement system to
+    // qubit `wire`.
+    std::vector<std::complex<double>> rho(4, {0.0, 0.0});
+
+    for (uint8_t i = 0; i < 2; i++) {
+        for (uint8_t j = 0; j < 2; j++) {
+            std::complex<double> sum{0.0, 0.0};
+            for (size_t k = 0; k < (sv_size / 2); k++) {
+                size_t idx_wire_0 =
+                    ((upper_mask & k) << 1UL) + (lower_mask & k);
+                size_t idx_i = idx_wire_0 + (i << wire);
+                size_t idx_j = idx_wire_0 + (j << wire);
+
+                sum += state_data[idx_i] * std::conj(state_data[idx_j]);
+            }
+            rho[2 * i + j] = sum;
+        }
+    }
+
+    std::complex<double> purity =
+        (rho[0] * rho[0]) + (std::complex<double>{2.0, 0.0} * rho[1] * rho[2]) +
+        (rho[3] * rho[3]);
+
+    constexpr double epsilon = 1e-6;
+    return std::abs(purity.real() - 1.0) < epsilon &&
+           std::abs(purity.imag()) < epsilon;
 }
 
 void LightningSimulator::checkReleasedQubitsDisentangled() {

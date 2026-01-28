@@ -691,41 +691,13 @@ inline auto PL_reinterpret_cast(SrcType *src_ptr) -> DestType * {
 }
 
 /**
- * @brief Compute the purity of a reduced density matrix
- *
- * Tr(ρ^2) = Sum_i,j ρ_ij x ρ_ji
- *
- * @tparam ComplexT Complex number type
- * @param rho Reduced density matrix
- * @return Purity value
- */
-template <class ComplexT>
-inline auto computePurity(const std::vector<std::vector<ComplexT>> &rho)
-    -> std::decay_t<decltype(std::declval<ComplexT>().real())> {
-    if (rho.empty()) {
-        return 0.0;
-    }
-
-    using PrecisionT = std::decay_t<decltype(std::declval<ComplexT>().real())>;
-    PrecisionT purity = 0.0;
-    const size_t n = rho.size();
-
-    for (size_t i = 0; i < n; i++) {
-        for (size_t j = 0; j < n; j++) {
-            purity += std::real(rho[i][j] * rho[j][i]);
-        }
-    }
-
-    return purity;
-}
-
-/**
  * @brief Compute purity from released parts
  *
  * Tr(ρ^2) = Σ_i,j |Sum_a(released_a[i] x conj(released_a[j]))|^2
  *
  * @tparam ComplexT Complex number type
  * @param released_parts Vector of released parts
+ *                       {active -> [released] for all active \in active states}
  * @return Purity value
  */
 template <class ComplexT>

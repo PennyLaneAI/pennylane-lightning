@@ -330,66 +330,6 @@ TEST_CASE("Util::getRevWireIndex", "[getRevWireIndex]") {
                               "out of bounds");
 }
 
-TEMPLATE_TEST_CASE("Util::computePurity", "[Util][DensityMatrix]", float,
-                   double) {
-    using ComplexT = std::complex<TestType>;
-    using PrecisionT = TestType;
-
-    SECTION("Empty matrix returns zero") {
-        std::vector<std::vector<ComplexT>> rho;
-        PrecisionT purity = computePurity(rho);
-        CHECK(purity == Approx(0.0).margin(1e-6));
-    }
-
-    SECTION("Pure state |0><0| has purity 1") {
-        // ρ = |0><0| = [[1, 0], [0, 0]]
-        std::vector<std::vector<ComplexT>> rho = {
-            {ComplexT{1.0, 0.0}, ComplexT{0.0, 0.0}},
-            {ComplexT{0.0, 0.0}, ComplexT{0.0, 0.0}}};
-        PrecisionT purity = computePurity(rho);
-        CHECK(purity == Approx(1.0).margin(1e-6));
-    }
-
-    SECTION("Pure state |1><1| has purity 1") {
-        // ρ = |1><1| = [[0, 0], [0, 1]]
-        std::vector<std::vector<ComplexT>> rho = {
-            {ComplexT{0.0, 0.0}, ComplexT{0.0, 0.0}},
-            {ComplexT{0.0, 0.0}, ComplexT{1.0, 0.0}}};
-        PrecisionT purity = computePurity(rho);
-        CHECK(purity == Approx(1.0).margin(1e-6));
-    }
-
-    SECTION("Pure state |+><+| has purity 1") {
-        // |+> = (|0> + |1>)/sqrt(2)
-        // ρ = |+><+| = [[0.5, 0.5], [0.5, 0.5]]
-        std::vector<std::vector<ComplexT>> rho = {
-            {ComplexT{0.5, 0.0}, ComplexT{0.5, 0.0}},
-            {ComplexT{0.5, 0.0}, ComplexT{0.5, 0.0}}};
-        PrecisionT purity = computePurity(rho);
-        CHECK(purity == Approx(1.0).margin(1e-5));
-    }
-
-    SECTION("Mixed state has purity 0.5") {
-        // ρ = I/2 = [[0.5, 0], [0, 0.5]]
-        std::vector<std::vector<ComplexT>> rho = {
-            {ComplexT{0.5, 0.0}, ComplexT{0.0, 0.0}},
-            {ComplexT{0.0, 0.0}, ComplexT{0.5, 0.0}}};
-        PrecisionT purity = computePurity(rho);
-        CHECK(purity == Approx(0.5).margin(1e-6));
-    }
-
-    SECTION("Mixed state has purity < 1") {
-        // ρ = 0.7|0><0| + 0.3|1><1| = [[0.7, 0], [0, 0.3]]
-        std::vector<std::vector<ComplexT>> rho = {
-            {ComplexT{0.7, 0.0}, ComplexT{0.0, 0.0}},
-            {ComplexT{0.0, 0.0}, ComplexT{0.3, 0.0}}};
-        PrecisionT purity = computePurity(rho);
-        PrecisionT expected = 0.7 * 0.7 + 0.3 * 0.3;
-        CHECK(purity == Approx(expected).margin(1e-6));
-        CHECK(purity < 1.0);
-    }
-}
-
 TEMPLATE_TEST_CASE("Util::computePurityFromParts", "[Util][DensityMatrix]",
                    float, double) {
     using ComplexT = std::complex<TestType>;

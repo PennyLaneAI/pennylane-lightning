@@ -112,6 +112,9 @@ class LightningSimulator final : public Catalyst::Runtime::QuantumDevice {
     // Check if released qubits are disentangled from active qubits
     void checkReleasedQubitsDisentangled();
 
+    // Check if a single qubit is disentangled from the rest
+    bool checkSingleQubitDisentangled(size_t wire);
+
   public:
     explicit LightningSimulator(
         const std::string &kwargs = "{}") // NOLINT(hicpp-member-init)
