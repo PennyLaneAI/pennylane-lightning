@@ -599,9 +599,10 @@ class Measurements final
         const std::size_t n_wires = wires.size();
 
 #ifndef _ENABLE_MPI
-        if (n_wires == 0) {
             return {1.0};
-        }
+#else
+            return {getRealOfComplexInnerProduct(this->_statevector.getView(),
+                                                 this->_statevector.getView())};
 #endif
         const std::size_t num_qubits = this->_statevector.getNumQubits();
         // is_equal_to_all_wires is True if `wires` includes all wires in order
