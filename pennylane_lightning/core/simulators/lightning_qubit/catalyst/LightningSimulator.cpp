@@ -691,14 +691,10 @@ void LightningSimulator::Gradient(std::vector<DataView<double, 1>> &gradients,
                         /* ref_data */ *this->device_sv,
                         /* apply_operations */ false);
 
-    // convert jacobians to a list of lists for each observable
-    std::vector<double> jacobian_t = Pennylane::LightningQubit::Util::Transpose(
-        jacobian, num_train_params, num_observables);
-
     std::vector<double> cur_buffer(num_train_params);
-    auto begin_loc_iter = jacobian_t.begin();
+    auto begin_loc_iter = jacobian.begin();
     for (size_t obs_idx = 0; obs_idx < num_observables; obs_idx++) {
-        RT_ASSERT(begin_loc_iter != jacobian_t.end());
+        RT_ASSERT(begin_loc_iter != jacobian.end());
         RT_ASSERT(num_train_params <= gradients[obs_idx].size());
         std::move(begin_loc_iter, begin_loc_iter + num_train_params,
                   cur_buffer.begin());
