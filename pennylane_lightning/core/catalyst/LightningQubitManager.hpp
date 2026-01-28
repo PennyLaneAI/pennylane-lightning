@@ -174,5 +174,12 @@ class QubitManager final {
             }
         }
     }
+
+    void ClearFreeQubits() { this->free_device_qubits.clear(); }
+
+    auto getFreeDeviceQubits() const
+        -> const std::unordered_set<DeviceQubitID> & {
+        return this->free_device_qubits;
+    }
 };
 } // namespace Catalyst::Runtime::Simulator

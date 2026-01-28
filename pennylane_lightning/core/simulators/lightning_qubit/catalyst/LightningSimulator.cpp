@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <algorithm>
+#include <cmath>
 #include <unordered_set>
 
 #include "LightningSimulator.hpp"
@@ -60,25 +62,6 @@ auto LightningSimulator::AllocateQubit() -> QubitIdType {
         // The collapse is performed by a measurement followed by an X gate if
         // measured 1.
         new_program_idx = this->qubit_manager.Allocate(device_idx);
-
-        // If state vector size doesn't match active qubits, expand it
-        const size_t expected_num_qubits = GetNumQubits();
-        const size_t current_num_qubits = this->device_sv->getNumQubits();
-        if (current_num_qubits < expected_num_qubits) {
-            const auto &old_data = this->device_sv->getDataVector();
-            const size_t old_size = old_data.size();
-            const size_t new_size =
-                old_size << (expected_num_qubits - current_num_qubits);
-            std::vector<std::complex<double>,
-                        AlignedAllocator<std::complex<double>>>
-                new_data(new_size, old_data.get_allocator());
-
-            for (size_t i = 0; i < old_size; i++) {
-                new_data[i << (expected_num_qubits - current_num_qubits)] =
-                    old_data[i];
-            }
-            this->device_sv = std::make_unique<StateVectorT>(new_data);
-        }
 
         Result mres = this->Measure(new_program_idx);
         if (*mres) {
@@ -177,24 +160,41 @@ void LightningSimulator::reduceStateVector() {
 
     std::vector<std::complex<double>> new_data(new_size);
 
+    size_t old_num_qubits = this->device_sv->getNumQubits();
+
+    // Find a reference old_idx with non-zero amplitude
+    size_t reference_old_idx = 0;
+    for (size_t old_idx = 0; old_idx < old_data.size(); old_idx++) {
+        if (std::abs(old_data[old_idx]) > 1e-15) {
+            reference_old_idx = old_idx;
+            break;
+        }
+    }
+
+    std::vector<size_t> active_bit_positions(num_qubits_after);
+    for (size_t i = 0; i < num_qubits_after; i++) {
+        size_t old_wire = wire_id_pairs[i].first;
+        active_bit_positions[i] = old_num_qubits - 1 - old_wire;
+    }
+
     // state[idx] = |q0 q1 ... q_{n-1}>
     //   where q_i = (idx >> (n-1-i)) & 1
     // So device wire 0 corresponds to the MSB (bit n-1)
-    size_t old_num_qubits = this->device_sv->getNumQubits();
+    for (size_t new_idx = 0; new_idx < new_size; new_idx++) {
+        size_t old_idx = reference_old_idx;
 
-    for (size_t old_idx = 0; old_idx < old_data.size(); old_idx++) {
-        size_t new_idx = 0;
         for (size_t i = 0; i < num_qubits_after; i++) {
-            size_t old_wire = wire_id_pairs[i].first;
-            size_t old_bit_pos = old_num_qubits - 1 - old_wire;
+            size_t old_bit_pos = active_bit_positions[i];
             size_t new_bit_pos = num_qubits_after - 1 - i;
 
-            if ((old_idx >> old_bit_pos) & 1) {
-                new_idx |= (1UL << new_bit_pos);
+            if ((new_idx >> new_bit_pos) & 1) {
+                old_idx |= (1UL << old_bit_pos);
+            } else {
+                old_idx &= ~(1UL << old_bit_pos);
             }
         }
 
-        new_data[new_idx] += old_data[old_idx];
+        new_data[new_idx] = old_data[old_idx];
     }
 
     // Replace the state vector
@@ -217,6 +217,8 @@ void LightningSimulator::reduceStateVector() {
         this->qubit_manager.RemapDeviceIds(old_to_new_device_id);
     }
 
+    this->qubit_manager.ClearFreeQubits();
+
     this->needs_reduction = false;
 }
 
@@ -229,27 +231,15 @@ void LightningSimulator::checkReleasedQubitsDisentangled() {
         return;
     }
 
-    // Collect active qubit device IDs
-    auto active_qubits = this->qubit_manager.getAllQubitIds();
-    std::unordered_set<size_t> active_device_ids;
-    for (auto qid : active_qubits) {
-        active_device_ids.insert(this->qubit_manager.getDeviceId(qid));
-    }
-
     // Collect released qubit device IDs
-    std::vector<size_t> released_device_ids;
-    for (size_t i = 0; i < num_qubits; i++) {
-        if (!active_device_ids.contains(i)) {
-            released_device_ids.push_back(i);
-        }
-    }
+    const auto &free_device_qubits = this->qubit_manager.getFreeDeviceQubits();
 
     // Check if released qubits are disentangled from active qubits using purity
     // If separable, then |phi> = |released> x |active>
     //     then ρ_released = Tr_active(|phi><phi|) = |released><released|
     //     and Tr(ρ_released^2) = 1 (pure state)
     const auto &state_data = this->device_sv->getDataVector();
-    const size_t num_released = released_device_ids.size();
+    const size_t num_released = free_device_qubits.size();
     const size_t released_space_size = 1UL << num_released;
     const size_t active_space_size = 1UL << num_active;
 
@@ -259,9 +249,7 @@ void LightningSimulator::checkReleasedQubitsDisentangled() {
         size_t released_bit = 0;
         size_t active_bit = 0;
         for (size_t i = 0; i < num_qubits; i++) {
-            bool is_released = std::find(released_device_ids.begin(),
-                                         released_device_ids.end(),
-                                         i) != released_device_ids.end();
+            bool is_released = free_device_qubits.contains(i);
             if (is_released) {
                 const size_t bit_pos = num_qubits - 1 - i;
                 const size_t new_bit_pos = num_released - 1 - released_bit;
