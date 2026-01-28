@@ -156,9 +156,6 @@ jobs:
           path: main
           fetch-tags: true
 
-      - name: check docker pull
-        run: docker pull quay.io/pypa/manylinux_2_28_aarch64
-        
       - name: Switch to release build of Lightning
         if: inputs.lightning-version == 'release'
         run: |
@@ -193,7 +190,7 @@ jobs:
 
           # Upgrade pip
           python -m pip install --upgrade pip
-
+          
           # Create new venv for this workflow_run
           python --version
           python -m venv ${{ env.VENV_NAME }}
