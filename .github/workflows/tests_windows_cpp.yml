@@ -131,7 +131,7 @@ jobs:
     name: C++ Tests (${{ matrix.pl_backend }}, on-${{ matrix.os }})
 
     steps:
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v4
         name: Install Python
         with:
           python-version: '3.12'
