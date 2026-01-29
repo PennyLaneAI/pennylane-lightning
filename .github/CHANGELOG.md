@@ -44,12 +44,16 @@
 - Bumped the version number to `0.45.0-dev`. Bumped the minimum version of PennyLane to `0.43`.
   [(#1320)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1320)
 
+- Updated `pyproject.toml` with project dependencies to replace the requirements files. Updated workflows to use installations from `pyproject.toml`.
+  [(1334)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1334)
+
 <h3>Contributors ✍️</h3>
 
 This release contains contributions from (in alphabetical order):
 
+Runor Agbaire,
 Ali Asadi,
-Ashish Kanwar Singh
+Ashish Kanwar Singh,
 Jeffrey Kam,
 Jake Zaia.
 

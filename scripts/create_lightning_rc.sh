@@ -218,12 +218,10 @@ create_release_candidate_branch() {
 
     # Update PennyLane dependency
     pushd $ROOT_DIR
-    for file in requirements-dev.txt requirements-tests.txt; do
-        sed -i "s|pennylane.git@master|pennylane.git@v${RELEASE_VERSION}-rc0|g" $file
-        git add $file
-    done
+    sed -i "s|pennylane.git@master|pennylane.git@v${RELEASE_VERSION}-rc0|g" pyproject.toml
+    git add pyproject.toml
     popd
-    git commit -m "Target PennyLane v${RELEASE_VERSION}-rc0 in requirements-[dev|tests].txt."
+    git commit -m "Target PennyLane v${RELEASE_VERSION}-rc0 in pyproject.toml."
 
     # Update Catalyst dependency
     last_catalyst_commit=$(git ls-remote git@github.com:PennyLaneAI/catalyst.git HEAD | cut -f 1)
@@ -412,7 +410,7 @@ test_install_lightning(){
     git pull
 
     # Test installation of lightning default backends
-    pip install -r requirements-dev.txt
+    pip install --group dev
     for backend in qubit gpu kokkos amdgpu tensor; do
         PL_BACKEND=lightning_${backend} python ${ROOT_DIR}/scripts/configure_pyproject_toml.py
         PL_BACKEND=lightning_${backend} python -m pip install . -v
@@ -582,12 +580,10 @@ create_merge_PR(){
     git checkout -b $(branch_name ${RELEASE_VERSION} "rc_merge")
 
     pushd $ROOT_DIR
-    for file in requirements-dev.txt requirements-tests.txt; do
-        sed -i "s|pennylane.git@v${RELEASE_VERSION}-rc0|pennylane.git@master|g" $file
-        git add $file
-    done
+    sed -i "s|pennylane.git@v${RELEASE_VERSION}-rc0|pennylane.git@master|g" pyproject.toml  
+    git add pyproject.toml
     popd
-    git commit -m "Target PennyLane master in requirements-[dev|tests].txt."
+    git commit -m "Target PennyLane master in pyproject.toml."
 
     sed -i "/__version__/d" $PL_VERSION_FILE
     if [ "$IS_TEST" == "true" ]; then
@@ -609,11 +605,9 @@ create_merge_PR(){
     git commit -m "Update Docker workflows for new release version"
 
     # Update PennyLane minimum version (may be unneeded, but good to have as a reminder)
-    sed -i "s/pennylane>=v\?[0-9\.]\+/pennylane>=${RELEASE_VERSION%??}/" ${ROOT_DIR}/requirements.txt
     sed -i "s/pennylane>=v\?[0-9\.]\+/pennylane>=${RELEASE_VERSION%??}/" ${ROOT_DIR}/scripts/configure_pyproject_toml.py
     sed -i "s/pennylane>=v\?[0-9\.]\+/pennylane>=${RELEASE_VERSION%??}/" ${ROOT_DIR}/pyproject.toml
 
-    git add ${ROOT_DIR}/requirements.txt
     git add ${ROOT_DIR}/scripts/configure_pyproject_toml.py
     git add ${ROOT_DIR}/pyproject.toml
 

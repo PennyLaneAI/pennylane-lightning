@@ -67,7 +67,7 @@ Install Lightning-AMDGPU
 
     git clone https://github.com/PennyLaneAI/pennylane-lightning.git
     cd pennylane-lightning
-    pip install -r requirements.txt
+    python -m pip install --group base
     pip install git+https://github.com/PennyLaneAI/pennylane.git@master
     
     # First Install Lightning-Qubit

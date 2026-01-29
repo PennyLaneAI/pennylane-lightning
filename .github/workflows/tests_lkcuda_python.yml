@@ -188,6 +188,9 @@ jobs:
           # Clear any pre-existing venvs
           rm -rf venv_*
 
+          # Upgrade pip
+          python -m pip install --upgrade pip
+          
           # Create new venv for this workflow_run
           python --version
           python -m venv ${{ env.VENV_NAME }}
@@ -204,14 +207,14 @@ jobs:
           # Adding venv site-packages to output for subsequent step to referecen if needed
           echo "site_packages_dir=$(${{ env.VENV_NAME }}/bin/python -c 'import sysconfig; print(sysconfig.get_path("platlib"))')" >> $GITHUB_OUTPUT
 
-
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION
 
       - name: Get required Python packages
         run: |
           cd main
-          python -m pip install -r requirements-tests.txt
+          python -m pip install --upgrade pip
+          python -m pip install --group tests
           # pyscf is not compatible with numpy 2.4 yet
           python -m pip install openfermionpyscf "numpy<2.4"
 
