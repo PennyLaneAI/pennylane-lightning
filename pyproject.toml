@@ -82,18 +82,13 @@ base = [
     "isort~=7.0.0",
     "pylint~=4.0.0"
 ]
-
-[project.optional-dependencies]
-kokkos = [ "pennylane-lightning-kokkos",]
-amdgpu = [ "pennylane-lightning-amdgpu",]
-gpu = [ "pennylane-lightning-gpu",]
-tensor = [ "pennylane-lightning-tensor",]
 docs = [
     "build",
     "wheel",
     "tomlkit",
     "custatevec-cu12; sys_platform == 'linux'",
     "cutensornet-cu12; sys_platform == 'linux'",
+    "pennylane @ git+https://github.com/PennyLaneAI/pennylane.git@master",
     "breathe",
     "docutils==0.21.2",
     "exhale>=0.3.3",
@@ -110,6 +105,12 @@ docs = [
     "sphinx-sitemap",
     "matplotlib"
 ]
+
+[project.optional-dependencies]
+kokkos = [ "pennylane-lightning-kokkos",]
+amdgpu = [ "pennylane-lightning-amdgpu",]
+gpu = [ "pennylane-lightning-gpu",]
+tensor = [ "pennylane-lightning-tensor",]
 
 [project.urls]
 Homepage = "https://github.com/PennyLaneAI/pennylane-lightning"
