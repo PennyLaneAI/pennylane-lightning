@@ -72,7 +72,7 @@ The simplest way to install Lightning-Kokkos (OpenMP backend) through ``pip``.
 
     git clone https://github.com/PennyLaneAI/pennylane-lightning.git
     cd pennylane-lightning
-    pip install -r requirements.txt
+    python -m pip install --group base
     pip install git+https://github.com/PennyLaneAI/pennylane.git@master
     
     # Lightning-Qubit needs to be 'installed' by pip before Lightning-Kokkos 
@@ -127,7 +127,7 @@ Then Lightning-Kokkos with MPI support can be installed in the *editable* mode b
 
     git clone https://github.com/PennyLaneAI/pennylane-lightning.git
     cd pennylane-lightning
-    pip install -r requirements.txt
+    python -m pip install --group base
     pip install git+https://github.com/PennyLaneAI/pennylane.git@master
 
     # Lightning-Qubit needs to be 'installed' by pip before Lightning-Kokkos 
@@ -155,7 +155,7 @@ After installing Lightning-Kokkos with MPI, you can test the Python layer of the
 
 .. code-block:: bash
 
-    pip install -r requirements-tests.txt
+    python -m pip install --group tests
     PL_DEVICE="lightning_kokkos" mpirun -np 2 python -m pytest mpitests --tb=short
 
 To compile and test the C++ code, you can use the following command:
