@@ -94,7 +94,6 @@ docs = [
     "tomlkit",
     "custatevec-cu12; sys_platform == 'linux'",
     "cutensornet-cu12; sys_platform == 'linux'",
-    "pennylane @ git+https://github.com/PennyLaneAI/pennylane.git@master",
     "breathe",
     "docutils==0.21.2",
     "exhale>=0.3.3",
