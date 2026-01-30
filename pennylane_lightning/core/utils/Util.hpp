@@ -691,12 +691,17 @@ inline auto PL_reinterpret_cast(SrcType *src_ptr) -> DestType * {
 }
 
 /**
- * @brief Compute purity from released parts
+ * @brief Compute purity of the released subsystem from released parts.
  *
- * Tr(ρ^2) = Σ_i,j |Sum_a(released_a[i] x conj(released_a[j]))|^2
+ * Purity Tr(ρ^2) measures how pure a quantum state is:
+ *   - Tr(ρ^2) = 1: pure state (not entangled with active qubits)
+ *   - Tr(ρ^2) < 1: mixed state (entangled)
+ *
+ * Formula: Tr(ρ^2) = Σ_i,j |Σ_a released_parts[a][i] *
+ * conj(released_parts[a][j])|^2 Where a indexes over active states.
  *
  * @tparam ComplexT Complex number type
- * @param released_parts Vector of released parts
+ * @param released_parts Vector of released parts indexed by active state
  *                       {active -> [released] for all active \in active states}
  * @return Purity value
  */
