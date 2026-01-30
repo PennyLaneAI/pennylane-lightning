@@ -32,6 +32,80 @@ dynamic = [ "version",]
 name = "Xanadu Quantum Technologies Inc."
 email = "software@xanadu.ai"
 
+[dependency-groups]
+dev = [
+    "build",
+    "ninja",
+    "cmake",
+    "custatevec-cu12; sys_platform == 'linux'",
+    "cutensornet-cu12; sys_platform == 'linux'",
+    "pennylane @ git+https://github.com/PennyLaneAI/pennylane.git@master",
+    "pytest>=8.4.1",
+    "pytest-benchmark",
+    "pytest-cov>=3.0.0",
+    "pytest-mock>=3.7.0",
+    "pytest-rng",
+    "pytest-xdist>=2.5.0",
+    "pytest-split",
+    "flaky>=3.7.0", # For pl-device-test
+    "pre-commit>=2.19.0",
+    "black==25.9.0",
+    "clang-tidy~=20.1",
+    "clang-format~=20.1",
+    "isort~=7.0.0",
+    "pylint~=4.0.0",
+    "click==8.2.1"
+]
+tests = [
+    "pytest>=8.4.1",
+    "pytest-benchmark",
+    "pytest-cov>=3.0.0",
+    "pytest-mock>=3.7.0",
+    "pytest-rng",
+    "pytest-xdist>=2.5.0",
+    "pytest-split",
+    "flaky>=3.7.0", # For pl-device-test
+    "pennylane @ git+https://github.com/PennyLaneAI/pennylane.git@master"
+]
+base = [
+    "ninja",
+    "pytest>=8.4.1",
+    "pytest-cov>=3.0.0",
+    "pytest-mock>=3.7.0",
+    "pytest-rng",
+    "pytest-xdist>=2.5.0",
+    "flaky>=3.7.0", # For pl-device-test
+    "pennylane>=0.44",
+    "black==25.9.0",
+    "clang-tidy~=20.1",
+    "clang-format~=20.1",
+    "isort~=7.0.0",
+    "pylint~=4.0.0"
+]
+docs = [
+    "build",
+    "wheel",
+    "tomlkit",
+    "custatevec-cu12; sys_platform == 'linux'",
+    "cutensornet-cu12; sys_platform == 'linux'",
+    "pennylane @ git+https://github.com/PennyLaneAI/pennylane.git@master",
+    "breathe",
+    "docutils==0.21.2",
+    "exhale>=0.3.3",
+    "graphviz",
+    "sphinx==8.1",
+    "sphinx-automodapi",
+    "sphinxcontrib-applehelp==2.0.0",
+    "sphinxcontrib-devhelp==2.0.0",
+    "sphinxcontrib-qthelp==2.0.0",
+    "sphinxcontrib-htmlhelp==2.0.6",
+    "sphinxcontrib-serializinghtml==2.0.0",
+    "pennylane-sphinx-theme",
+    "sphinxext-opengraph",
+    "sphinx-sitemap",
+    "matplotlib"
+]
+
 [project.optional-dependencies]
 kokkos = [ "pennylane-lightning-kokkos",]
 amdgpu = [ "pennylane-lightning-amdgpu",]

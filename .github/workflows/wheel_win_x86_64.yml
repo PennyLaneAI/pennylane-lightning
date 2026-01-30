@@ -182,7 +182,7 @@ jobs:
         run: |
           python -m ensurepip --upgrade
           python -m pip install setuptools
-          python -m pip install -r requirements-tests.txt
+          python -m pip install --group tests
           pushd wheelhouse
           $wheels = Get-ChildItem "./" -Filter *.whl
           foreach ($i in $wheels){

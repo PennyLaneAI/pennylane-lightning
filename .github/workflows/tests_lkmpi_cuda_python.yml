@@ -117,6 +117,9 @@ jobs:
           echo "Python_ROOT_DIR=${{ env.VENV_NAME }}" >> $GITHUB_ENV
           echo "Python3_ROOT_DIR=${{ env.VENV_NAME }}" >> $GITHUB_ENV
 
+          # Upgrade pip
+          python -m pip install --upgrade pip
+
 
       - name: Display Python-Path
         id: python_path
@@ -124,7 +127,7 @@ jobs:
           py_path=$(which python)
           echo "Python Interpreter Path => $py_path"
           echo "python=$py_path" >> $GITHUB_OUTPUT
-
+          python -m pip --version
           pip_path=$(which python)
           echo "PIP Path => $pip_path"
           echo "pip=$pip_path" >> $GITHUB_OUTPUT
@@ -134,7 +137,7 @@ jobs:
           PL_BACKEND: lightning_qubit
         run: |
           source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}
-          python -m pip install -r requirements-tests.txt
+          python -m pip install --group tests
           # pyscf is not compatible with numpy 2.4 yet
           python -m pip install mpi4py openfermionpyscf "numpy<2.4"
           python scripts/configure_pyproject_toml.py || true
