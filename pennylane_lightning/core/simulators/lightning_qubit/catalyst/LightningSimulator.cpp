@@ -302,7 +302,7 @@ void LightningSimulator::checkReleasedQubitsDisentangled() {
     const size_t num_qubits = this->device_sv->getNumQubits();
     const size_t num_active = this->qubit_manager.getNumQubits();
 
-    // Skip check if no qubits to release or all qubits are active
+    // Skip check if no qubits to release or no qubits are active
     if (num_qubits == num_active || num_active == 0) {
         return;
     }
