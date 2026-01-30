@@ -156,7 +156,7 @@ void LightningGPUSimulator::reduceStateVector() {
     // Sort by device wire index
     std::sort(wire_id_pairs.begin(), wire_id_pairs.end());
 
-    // Extract reduced state vector
+    // Create a new state vector with reduced size
     auto old_data = this->device_sv->getDataVector();
     size_t num_qubits_after = wire_id_pairs.size();
     size_t new_size = 1UL << num_qubits_after;
@@ -165,7 +165,19 @@ void LightningGPUSimulator::reduceStateVector() {
 
     size_t old_num_qubits = this->device_sv->getNumQubits();
 
-    // Find a reference old_idx with non-zero amplitude
+    // For a separable state |phi⟩ = |active> x |released>, we extract |active>
+    // by taking a slice where released qubits have a fixed value. We need to
+    // find a reference index with non-zero amplitude to determine which
+    // released qubit values to use for the slice.
+    //
+    // If we pick a zero-amplitude index, the extracted slice would
+    // also be zero (since c_{(a,b)} = alpha_a * beta_b, and if beta_b = 0 then
+    // all slices with that b are zero). By choosing a non-zero reference, we
+    // ensure the extracted slice is proportional to |active> (up to
+    // normalization).
+    //
+    // And for separable states, all non-zero slices give the same result, so
+    // any non-zero reference works.
     size_t reference_old_idx = 0;
     for (size_t old_idx = 0; old_idx < old_data.size(); old_idx++) {
         if (std::abs(old_data[old_idx]) > 1e-15) {
@@ -174,20 +186,31 @@ void LightningGPUSimulator::reduceStateVector() {
         }
     }
 
+    // Precompute bit positions for active qubits in the old state vector
+    // This maps each new qubit position to its corresponding bit position in
+    // the old state vector
     std::vector<size_t> active_bit_positions(num_qubits_after);
     for (size_t i = 0; i < num_qubits_after; i++) {
         size_t old_wire = wire_id_pairs[i].first;
         active_bit_positions[i] = old_num_qubits - 1 - old_wire;
     }
 
-    // state[idx] = |q0 q1 ... q_{n-1}>
-    //   where q_i = (idx >> (n-1-i)) & 1
-    // So device wire 0 corresponds to the MSB (bit n-1)
+    // For each new_idx, compute corresponding old_idx by replacing
+    // active qubit bits in reference_old_idx with bits from new_idx
+    // Example: 3-qubit |01>x|1>, release qubit 2, keep qubits 0,1
+    //   reference_old_idx = 0b011 (first non-zero amplitude)
+    //   new_idx = 0b00 -> old_idx = 0b001 (replace bits for q0,q1)
+    //   new_idx = 0b01 -> old_idx = 0b011
+    //   new_idx = 0b10 -> old_idx = 0b101
+    //   new_idx = 0b11 -> old_idx = 0b111
     for (size_t new_idx = 0; new_idx < new_size; new_idx++) {
         size_t old_idx = reference_old_idx;
 
         for (size_t i = 0; i < num_qubits_after; i++) {
             size_t old_bit_pos = active_bit_positions[i];
+            // state[idx] = |q0 q1 ... q_{n-1}>
+            //   where q_i = (idx >> (n-1-i)) & 1
+            // So device wire 0 corresponds to the MSB (bit n-1)
             size_t new_bit_pos = num_qubits_after - 1 - i;
 
             if ((new_idx >> new_bit_pos) & 1) {
