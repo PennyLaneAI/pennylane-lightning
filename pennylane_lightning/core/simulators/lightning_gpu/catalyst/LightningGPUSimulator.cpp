@@ -316,7 +316,11 @@ void LightningGPUSimulator::checkReleasedQubitsDisentangled() {
     const size_t released_space_size = 1UL << num_released;
     const size_t active_space_size = 1UL << num_active;
 
-    // function for mapping indices
+    // Map (released_idx, active_idx) to full state vector index.
+    // The state vector uses interleaved indexing where released and active
+    // qubits are mixed based on their device wire positions.
+    // Example: 3 qubits, qubit 1 released, qubits 0,2 active
+    //   get_idx(released=0, active=0b01) -> full index with q0=0, q1=0, q2=1
     auto get_idx = [&](size_t released_idx, size_t active_idx) -> size_t {
         size_t idx = 0;
         size_t released_bit = 0;

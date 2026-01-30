@@ -320,22 +320,25 @@ void LightningKokkosSimulator::checkReleasedQubitsDisentangled() {
     const size_t released_space_size = 1UL << num_released;
     const size_t active_space_size = 1UL << num_active;
 
-    // function for mapping indices
+    // Map (released_idx, active_idx) to full state vector index.
+    // The state vector uses interleaved indexing where released and active
+    // qubits are mixed based on their device wire positions.
+    // Example: 3 qubits, qubit 1 released, qubits 0,2 active
+    //   get_idx(released=0, active=0b01) -> full index with q0=0, q1=0, q2=1
     auto get_idx = [&](size_t released_idx, size_t active_idx) -> size_t {
         size_t idx = 0;
         size_t released_bit = 0;
         size_t active_bit = 0;
         for (size_t i = 0; i < num_qubits; i++) {
             bool is_released = free_device_qubits.contains(i);
+            const size_t bit_pos = num_qubits - 1 - i;
             if (is_released) {
-                const size_t bit_pos = num_qubits - 1 - i;
                 const size_t new_bit_pos = num_released - 1 - released_bit;
                 if ((released_idx >> new_bit_pos) & 1) {
                     idx |= (1UL << bit_pos);
                 }
                 released_bit++;
             } else {
-                const size_t bit_pos = num_qubits - 1 - i;
                 const size_t new_bit_pos = num_active - 1 - active_bit;
                 if ((active_idx >> new_bit_pos) & 1) {
                     idx |= (1UL << bit_pos);
