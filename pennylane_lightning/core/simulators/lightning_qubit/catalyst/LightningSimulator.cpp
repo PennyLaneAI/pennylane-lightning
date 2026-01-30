@@ -294,8 +294,7 @@ bool LightningSimulator::checkSingleQubitDisentangled(size_t wire) {
         (rho[3] * rho[3]);
 
     constexpr double epsilon = 1e-6;
-    return std::abs(purity.real() - 1.0) < epsilon &&
-           std::abs(purity.imag()) < epsilon;
+    return std::abs(purity - 1.0) < epsilon;
 }
 
 void LightningSimulator::checkReleasedQubitsDisentangled() {
