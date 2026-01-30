@@ -232,9 +232,11 @@ void LightningGPUSimulator::reduceStateVector() {
  * Computes Tr(ρ^2) for the reduced density matrix
  *
  * @param wire Device wire index of the qubit to check
+ * @param epsilon Tolerance for purity check (default: 1e-6)
  * @return true if purity is close to 1 (disentangled), false otherwise
  */
-bool LightningGPUSimulator::checkSingleQubitDisentangled(size_t wire) {
+bool LightningGPUSimulator::checkSingleQubitDisentangled(size_t wire,
+                                                         double epsilon) {
     auto state_data = this->device_sv->getDataVector();
     const size_t sv_size = state_data.size();
     const size_t num_qubits = this->device_sv->getNumQubits();
@@ -267,9 +269,7 @@ bool LightningGPUSimulator::checkSingleQubitDisentangled(size_t wire) {
         (rho[0] * rho[0]) + (std::complex<double>{2.0, 0.0} * rho[1] * rho[2]) +
         (rho[3] * rho[3]);
 
-    constexpr double epsilon = 1e-6;
-    return std::abs(purity.real() - 1.0) < epsilon &&
-           std::abs(purity.imag()) < epsilon;
+    return std::abs(purity - 1.0) < epsilon;
 }
 
 void LightningGPUSimulator::checkReleasedQubitsDisentangled() {

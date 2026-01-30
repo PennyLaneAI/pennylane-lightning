@@ -118,7 +118,7 @@ class LightningKokkosSimulator final : public Catalyst::Runtime::QuantumDevice {
     void checkReleasedQubitsDisentangled();
 
     // Check if a single qubit is disentangled from the rest
-    bool checkSingleQubitDisentangled(size_t wire);
+    bool checkSingleQubitDisentangled(size_t wire, double epsilon = 1e-6);
 
   public:
     explicit LightningKokkosSimulator(
