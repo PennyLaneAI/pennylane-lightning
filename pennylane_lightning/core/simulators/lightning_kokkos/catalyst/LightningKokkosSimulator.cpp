@@ -140,7 +140,7 @@ auto LightningKokkosSimulator::getMeasurements()
         *(this->device_sv)};
 }
 
-void LightningSimulator::reduceStateVector() {
+void LightningKokkosSimulator::reduceStateVector() {
     if (!this->needs_reduction) {
         return;
     }
