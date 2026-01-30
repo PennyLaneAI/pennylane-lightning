@@ -323,15 +323,14 @@ void LightningGPUSimulator::checkReleasedQubitsDisentangled() {
         size_t active_bit = 0;
         for (size_t i = 0; i < num_qubits; i++) {
             bool is_released = free_device_qubits.contains(i);
+            const size_t bit_pos = num_qubits - 1 - i;
             if (is_released) {
-                const size_t bit_pos = num_qubits - 1 - i;
                 const size_t new_bit_pos = num_released - 1 - released_bit;
                 if ((released_idx >> new_bit_pos) & 1) {
                     idx |= (1UL << bit_pos);
                 }
                 released_bit++;
             } else {
-                const size_t bit_pos = num_qubits - 1 - i;
                 const size_t new_bit_pos = num_active - 1 - active_bit;
                 if ((active_idx >> new_bit_pos) & 1) {
                     idx |= (1UL << bit_pos);
