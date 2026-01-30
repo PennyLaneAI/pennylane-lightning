@@ -697,6 +697,8 @@ inline auto PL_reinterpret_cast(SrcType *src_ptr) -> DestType * {
  *   - Tr(ρ^2) = 1: pure state (not entangled with active qubits)
  *   - Tr(ρ^2) < 1: mixed state (entangled)
  *
+ * See https://en.wikipedia.org/wiki/Purity_(quantum_mechanics) for details.
+ *
  * Formula: Tr(ρ^2) = Σ_i,j |Σ_a released_parts[a][i] *
  * conj(released_parts[a][j])|^2 Where a indexes over active states.
  *
