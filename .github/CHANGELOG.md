@@ -33,7 +33,7 @@
 <h3>Internal changes ⚙️</h3>
 
 - Temporarily updated CI for stable versions to install from `requirements-tests.txt`.
-  [(#XXXX)](https://github.com/PennyLaneAI/pennylane-lightning/pull/XXXX)
+  [(#1340)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1340)
 
 - Cleaned up vector-matrix methods used by Lightning devices at `LinearAlgebra.hpp`.
   [(#1314)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1314)
