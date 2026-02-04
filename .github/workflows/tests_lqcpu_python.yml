@@ -101,11 +101,7 @@ jobs:
 
       - name: Get required Python packages
         run: |
-          if [[ "${{ inputs.lightning-version }}" == "stable" ]]; then # FIXME: remove after v0.45 release
-            python -m pip install -r requirements-tests.txt
-          else
-            python -m pip install --group tests
-          fi
+          python -m pip install --group tests
           python -m pip install build wheel
 
       - name: Create device wheel ${{ inputs.lightning-version }}
