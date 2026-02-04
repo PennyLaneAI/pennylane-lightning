@@ -119,9 +119,9 @@ class TestSparseExpvalQChem:
     singles, doubles = qchem.excitations(active_electrons, qubits)
     excitations = singles + doubles
 
-    @pytest.fixture(
-        params=[np.complex64, np.complex128] if device_name != "lightning.gpu" else [np.complex128]
-    )
+    _dtypes = [np.complex64, np.complex128] if device_name != "lightning.gpu" else [np.complex64]
+
+    @pytest.mark.parametrize("dtype", _dtypes)
     @pytest.mark.parametrize(
         "qubits, wires, H, hf_state, excitations",
         [
@@ -135,12 +135,12 @@ class TestSparseExpvalQChem:
             ],
         ],
     )
-    def test_sparse_Pauli_words(self, qubits, wires, H, hf_state, excitations, tol, request):
+    def test_sparse_Pauli_words(self, qubits, wires, H, hf_state, excitations, tol, dtype):
         """Test expval of some simple sparse Hamiltonian"""
 
         H_sparse = H.sparse_matrix(wires)
 
-        dev = qml.device(device_name, mpi=True, wires=wires, c_dtype=request.param)
+        dev = qml.device(device_name, mpi=True, wires=wires, c_dtype=dtype)
 
         @qml.qnode(dev, diff_method="parameter-shift")
         def circuit():
