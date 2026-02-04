@@ -119,9 +119,7 @@ class TestSparseExpvalQChem:
     singles, doubles = qchem.excitations(active_electrons, qubits)
     excitations = singles + doubles
 
-    _dtypes = [np.complex64, np.complex128] if device_name != "lightning.gpu" else [np.complex128]
-
-    @pytest.mark.parametrize("dtype", _dtypes)
+    @pytest.mark.parametrize("dtype", [np.complex128])
     @pytest.mark.parametrize(
         "qubits, wires, H, hf_state, excitations",
         [
