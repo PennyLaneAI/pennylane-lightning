@@ -234,7 +234,11 @@ jobs:
         run: |
           WHEEL_NAME=$(cat ${{ github.workspace }}/${{ matrix.pl_backend }}-${{ matrix.exec_model }}_name.txt)
           mv ${{ github.workspace }}/wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}.whl ${{ github.workspace }}/$WHEEL_NAME
-          python -m pip install --group tests
+          if [[ "${{ inputs.lightning-version }}" == "stable" ]]; then # FIXME: remove after v0.45 release
+            python -m pip install -r requirements-tests.txt
+          else
+            python -m pip install --group tests
+          fi
           # pyscf is not compatible with numpy 2.4 yet
           python -m pip install openfermionpyscf "numpy<2.4"
           if [ '${{ inputs.lightning-version }}' != 'stable' ]; then
