@@ -136,6 +136,7 @@ jobs:
           source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}
           if [[ "${{ inputs.lightning-version }}" == "stable" ]]; then # FIXME: remove after v0.45 release
             python -m pip install -r requirements-tests.txt
+            python -m pip install pytest==8.4.2
           else
             python -m pip install --group tests
           fi
