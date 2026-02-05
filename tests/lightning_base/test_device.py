@@ -164,11 +164,11 @@ class TestHelpers:
     @pytest.mark.parametrize(
         "obs, expected",
         [
-            (qml.prod(qml.Projector([0], 0), qml.PauliZ(1)), False),
-            (qml.prod(qml.Projector([0], 0), qml.PauliZ(1)), False),
-            (qml.s_prod(1.5, qml.Projector([0], 0)), False),
-            (qml.sum(qml.Projector([0], 0), qml.Hadamard(1)), False),
-            (qml.sum(qml.prod(qml.Projector([0], 0), qml.Y(1)), qml.PauliX(1)), False),
+            (qml.prod(qml.Projector([0], 0), qml.PauliZ(1)), True),
+            (qml.prod(qml.Projector([0], 0), qml.PauliZ(1)), True),
+            (qml.s_prod(1.5, qml.Projector([0], 0)), True),
+            (qml.sum(qml.Projector([0], 0), qml.Hadamard(1)), True),
+            (qml.sum(qml.prod(qml.Projector([0], 0), qml.Y(1)), qml.PauliX(1)), True),
             (qml.prod(qml.Y(0), qml.Z(1)), True),
             (qml.prod(qml.Y(0), qml.PauliZ(1)), True),
             (qml.s_prod(1.5, qml.Y(1)), True),
