@@ -122,7 +122,7 @@ class TestSparseExpvalQChem:
             [qubits, range(qubits), H, hf_state, excitations],
             [
                 qubits,
-                list(np.random.permutation(np.arange(qubits))),
+                [2, 10, 5, 6, 9, 3, 4, 1, 0, 8, 11, 7],
                 H,
                 hf_state,
                 excitations,
