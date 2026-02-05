@@ -33,8 +33,19 @@ from numpy.random import BitGenerator, Generator, SeedSequence
 from numpy.typing import ArrayLike
 from pennylane.devices import Device, ExecutionConfig, MCMConfig
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
-from pennylane.exceptions import DeviceError
-from pennylane.measurements import MidMeasureMP, Shots, ShotsLike
+from pennylane.devices.preprocess import (
+    decompose,
+    no_sampling,
+    validate_adjoint_trainable_params,
+    validate_measurements,
+    validate_observables,
+)
+from pennylane.exceptions import DecompositionUndefinedError, DeviceError
+from pennylane.measurements import Shots, ShotsLike
+from pennylane.measurements.expval import ExpectationMP
+from pennylane.measurements.measurements import MeasurementProcess
+from pennylane.operation import Operator
+from pennylane.ops import Conditional, MidMeasure, PauliRot
 from pennylane.tape import QuantumScript, QuantumTape
 from pennylane.typing import Result, ResultBatch, TensorLike
 
@@ -196,14 +207,14 @@ class LightningBase(Device):
         if mcmc is None:
             mcmc = {}
 
-        if any(isinstance(op, MidMeasureMP) for op in circuit.operations):
+        if any(isinstance(op, MidMeasure) for op in circuit.operations):
             if self._mpi:
                 raise DeviceError(
                     "Lightning Device with MPI does not support Mid-circuit measurements."
                 )
 
         # Simulate with Mid Circuit Measurements
-        if any(isinstance(op, MidMeasureMP) for op in circuit.operations):
+        if any(isinstance(op, MidMeasure) for op in circuit.operations):
             # If mcm_method is not specified and the circuit does not have shots, default to "deferred".
             # It is not listed here because all mid-circuit measurements are replaced with additional wires.
 
@@ -819,3 +830,52 @@ def resolve_mcm_method(mcm_config: MCMConfig, tape: QuantumScript | None, device
         mcm_config = replace(mcm_config, **mcm_updated_values)
 
     return mcm_config
+
+
+def _adjoint_stopping_condition(op: Operator) -> bool:
+    return not isinstance(op, (Conditional, MidMeasure, PauliRot)) and (
+        not any(qml.math.requires_grad(d) for d in op.data)
+        or (op.num_params == 1 and op.has_generator)
+    )
+
+
+def _adjoint_measurement(mp: MeasurementProcess) -> bool:
+    return isinstance(mp, ExpectationMP)
+
+
+def adjoint_transforms(device: LightningBase, allow_mcms: bool = False) -> qml.CompilePipeline:
+    """Return a compile pipeline that prepares the circuit for adjoint differentiation."""
+
+    name = f"adjoint + {device.name}"
+    capabilities = device.capabilities
+    gate_set = capabilities.gate_set(differentiable=True)
+    if allow_mcms:
+        gate_set |= {"MidMeasureMP"}
+    return (
+        no_sampling(name=name)
+        + qml.transforms.broadcast_expand
+        + decompose(
+            stopping_condition=_adjoint_stopping_condition,
+            skip_initial_state_prep=False,
+            device_wires=device.wires,
+            target_gates=gate_set,
+            name=name,
+        )
+        + validate_observables(stopping_condition=capabilities.supports_observable, name=name)
+        + validate_measurements(analytic_measurements=_adjoint_measurement, name=name)
+        + validate_adjoint_trainable_params
+    )
+
+
+def supports_adjoint(device, circuit) -> bool:
+    """Returns True iff the device supports adjoint differentiation of the given circuit."""
+
+    if circuit is None:
+        return True
+
+    prog = adjoint_transforms(device, allow_mcms=True)
+    try:
+        prog((circuit,))
+        return True
+    except (DecompositionUndefinedError, DeviceError, AttributeError):
+        return False
