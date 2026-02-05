@@ -24,11 +24,10 @@ from pennylane import qchem
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
+if device_name == "lightning.tensor":
+    pytest.skip("Lightning.tensor does not support Sparse Hamiltonians.", allow_module_level=True)
 
-@pytest.mark.skipif(
-    device_name == "lightning.tensor",
-    reason="lightning.tensor does not support Sparse Hamiltonians",
-)
+
 class TestSparseExpval:
     """Tests for the expval function"""
 
