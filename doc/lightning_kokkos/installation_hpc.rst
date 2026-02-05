@@ -89,7 +89,6 @@ Then to install Lightning-Kokkos with MPI support:
     export CMAKE_ARGS="-DENABLE_MPI=ON -DCMAKE_CXX_COMPILER=hipcc"
 
     # Extra variables to avoid hipcc linking issues
-    export CMAKE_ARGS="${CMAKE_ARGS} -DCMAKE_CXX_COMPILER_CLANG_SCAN_DEPS:FILEPATH=/opt/rocm-6.2.4/lib/llvm/bin/clang-scan-deps"
 
     PL_BACKEND="lightning_kokkos" python scripts/configure_pyproject_toml.py
     python -m pip install . -vv
