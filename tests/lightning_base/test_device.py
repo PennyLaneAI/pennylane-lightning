@@ -213,7 +213,7 @@ class TestHelpers:
         )
         expected_program.add_transform(
             validate_observables,
-            partial(adjoint_observables, capabilities=dev.capabilities),
+            stopping_condition=partial(adjoint_observables, capabilities=dev.capabilities),
             name=name,
         )
         expected_program.add_transform(
@@ -891,7 +891,7 @@ class TestExecution:
             )
             expected_program.add_transform(
                 validate_observables,
-                partial(adjoint_observables, capabilities=device.capabilities),
+                stopping_condition=partial(adjoint_observables, capabilities=device.capabilities),
                 name=name,
             )
             expected_program.add_transform(
