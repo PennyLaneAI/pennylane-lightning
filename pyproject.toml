@@ -8,29 +8,103 @@ description = "PennyLane-Lightning plugin"
 readme = "README.md"
 requires-python = ">=3.11"
 license = "Apache-2.0"
-classifiers = [ 
-    "Development Status :: 4 - Beta", 
-    "Environment :: Console", 
-    "Intended Audience :: Science/Research", 
-    "Natural Language :: English", 
-    "Operating System :: MacOS :: MacOS X", 
-    "Operating System :: Microsoft :: Windows", 
-    "Operating System :: POSIX", 
-    "Operating System :: POSIX :: Linux", 
-    "Programming Language :: Python", 
-    "Programming Language :: Python :: 3", 
-    "Programming Language :: Python :: 3 :: Only", 
-    "Programming Language :: Python :: 3.11", 
-    "Programming Language :: Python :: 3.12", 
-    "Programming Language :: Python :: 3.13", 
-    "Programming Language :: Python :: 3.14", 
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Science/Research",
+    "Natural Language :: English",
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Scientific/Engineering :: Physics",
 ]
-dependencies = ["pennylane>=0.43", "scipy-openblas32>=0.3.26"]
+dependencies = ["pennylane>=0.44", "scipy-openblas32>=0.3.26"]
 dynamic = [ "version",]
 [[project.maintainers]]
 name = "Xanadu Quantum Technologies Inc."
 email = "software@xanadu.ai"
+
+[dependency-groups]
+dev = [
+    "build",
+    "ninja",
+    "cmake",
+    "custatevec-cu12; sys_platform == 'linux'",
+    "cutensornet-cu12; sys_platform == 'linux'",
+    "pennylane @ git+https://github.com/PennyLaneAI/pennylane.git@master",
+    "pytest>=8.4.1",
+    "pytest-benchmark",
+    "pytest-cov>=3.0.0",
+    "pytest-mock>=3.7.0",
+    "pytest-rng",
+    "pytest-xdist>=2.5.0",
+    "pytest-split",
+    "flaky>=3.7.0", # For pl-device-test
+    "pre-commit>=2.19.0",
+    "black==25.9.0",
+    "clang-tidy~=20.1",
+    "clang-format~=20.1",
+    "isort~=7.0.0",
+    "pylint~=4.0.0",
+    "click==8.2.1"
+]
+tests = [
+    "pytest>=8.4.1",
+    "pytest-benchmark",
+    "pytest-cov>=3.0.0",
+    "pytest-mock>=3.7.0",
+    "pytest-rng",
+    "pytest-xdist>=2.5.0",
+    "pytest-split",
+    "flaky>=3.7.0", # For pl-device-test
+    "pennylane @ git+https://github.com/PennyLaneAI/pennylane.git@master"
+]
+base = [
+    "ninja",
+    "pytest>=8.4.1",
+    "pytest-cov>=3.0.0",
+    "pytest-mock>=3.7.0",
+    "pytest-rng",
+    "pytest-xdist>=2.5.0",
+    "flaky>=3.7.0", # For pl-device-test
+    "pennylane>=0.44",
+    "black==25.9.0",
+    "clang-tidy~=20.1",
+    "clang-format~=20.1",
+    "isort~=7.0.0",
+    "pylint~=4.0.0"
+]
+docs = [
+    "build",
+    "wheel",
+    "tomlkit",
+    "custatevec-cu12; sys_platform == 'linux'",
+    "cutensornet-cu12; sys_platform == 'linux'",
+    "pennylane @ git+https://github.com/PennyLaneAI/pennylane.git@master",
+    "breathe",
+    "docutils==0.21.2",
+    "exhale>=0.3.3",
+    "graphviz",
+    "sphinx==8.1",
+    "sphinx-automodapi",
+    "sphinxcontrib-applehelp==2.0.0",
+    "sphinxcontrib-devhelp==2.0.0",
+    "sphinxcontrib-qthelp==2.0.0",
+    "sphinxcontrib-htmlhelp==2.0.6",
+    "sphinxcontrib-serializinghtml==2.0.0",
+    "pennylane-sphinx-theme",
+    "sphinxext-opengraph",
+    "sphinx-sitemap",
+    "matplotlib"
+]
 
 [project.optional-dependencies]
 kokkos = [ "pennylane-lightning-kokkos",]

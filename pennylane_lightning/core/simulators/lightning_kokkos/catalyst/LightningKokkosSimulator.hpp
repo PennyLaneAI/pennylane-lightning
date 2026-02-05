@@ -133,11 +133,12 @@ class LightningKokkosSimulator final : public Catalyst::Runtime::QuantumDevice {
                        std::vector<QubitIdType> &) override;
     [[nodiscard]] auto GetDeviceShots() const -> std::size_t override;
 
-    void
-    NamedOperation(const std::string &name, const std::vector<double> &params,
-                   const std::vector<QubitIdType> &wires, bool inverse = false,
-                   const std::vector<QubitIdType> &controlled_wires = {},
-                   const std::vector<bool> &controlled_values = {}) override;
+    void NamedOperation(
+        const std::string &name, const std::vector<double> &params,
+        const std::vector<QubitIdType> &wires, bool inverse = false,
+        const std::vector<QubitIdType> &controlled_wires = {},
+        const std::vector<bool> &controlled_values = {},
+        const std::vector<std::string> &optional_params = {}) override;
     using Catalyst::Runtime::QuantumDevice::MatrixOperation;
     void
     MatrixOperation(const std::vector<std::complex<double>> &matrix,
@@ -169,6 +170,8 @@ class LightningKokkosSimulator final : public Catalyst::Runtime::QuantumDevice {
     auto Measure(QubitIdType wire,
                  std::optional<int32_t> postselect = std::nullopt)
         -> Result override;
+    auto PauliMeasure(const std::string &pauli_word,
+                      const std::vector<QubitIdType> &wires) -> Result override;
     void Gradient(std::vector<DataView<double, 1>> &gradients,
                   const std::vector<std::size_t> &trainParams) override;
 

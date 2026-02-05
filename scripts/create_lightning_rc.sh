@@ -16,28 +16,28 @@ set -e
 # Run them in sequence:
 #
 # 1. Create Release Candidate (creates branches and PRs):
-#    bash scripts/create_lightning_rc.sh -s 0.42.0 -r 0.43.0 -n 0.44.0 --create_rc
+#    bash scripts/create_lightning_rc.sh -s 0.44.0 -r 0.45.0 -n 0.46.0 --create_rc
 #
 # 2. Test Lightning Installation (validates RC build):
-#    bash scripts/create_lightning_rc.sh -s 0.42.0 -r 0.43.0 -n 0.44.0 --lightning_test
+#    bash scripts/create_lightning_rc.sh -s 0.44.0 -r 0.45.0 -n 0.46.0 --lightning_test
 #
 # 3. Create Release (creates GitHub release):
-#    bash scripts/create_lightning_rc.sh -s 0.42.0 -r 0.43.0 -n 0.44.0 --release
+#    bash scripts/create_lightning_rc.sh -s 0.44.0 -r 0.45.0 -n 0.46.0 --release
 #
 # 4. Handle Release Assets (upload wheels and source distributions):
-#    bash scripts/create_lightning_rc.sh -s 0.42.0 -r 0.43.0 -n 0.44.0 --release_assets
+#    bash scripts/create_lightning_rc.sh -s 0.44.0 -r 0.45.0 -n 0.46.0 --release_assets
 #
 # Version flags:
-# -s/--stable_version: Current stable release (e.g., 0.42.0)
-# -r/--release_version: Version being released (e.g., 0.43.0)
-# -n/--next_version: Next development version (e.g., 0.44.0)
+# -s/--stable_version: Current stable release (e.g., 0.44.0)
+# -r/--release_version: Version being released (e.g., 0.45.0)
+# -n/--next_version: Next development version (e.g., 0.46.0)
 #
 # Use the --help option to see all available options.
 
 # Set version numbers
-STABLE_VERSION=0.42.0     # Current stable version | https://github.com/PennyLaneAI/pennylane-lightning/releases
-RELEASE_VERSION=0.43.0    # Upcoming release version | https://test.pypi.org/project/pennylane-lightning/#history
-NEXT_VERSION=0.44.0       # Next version to be developed | RELEASE_VERSION + 1
+STABLE_VERSION=0.44.0     # Current stable version | https://github.com/PennyLaneAI/pennylane-lightning/releases
+RELEASE_VERSION=0.45.0    # Upcoming release version | https://test.pypi.org/project/pennylane-lightning/#history
+NEXT_VERSION=0.46.0       # Next version to be developed | RELEASE_VERSION + 1
 
 IS_TEST=true
 
@@ -45,9 +45,26 @@ IS_TEST=true
 # To avoid pushing any branch or PR to GitHub. Set to true
 LOCAL_TEST=true
 
-# Check if gh CLI, and jq are installed
+# Exit if not running on Linux
+if [[ "$OSTYPE" != "linux-gnu"* ]]; then
+    echo "This script must be run from a Linux environment."
+    exit 1
+fi
+
+# Check if gh CLI, and jq are installed, authenticated, and the correct version
 if ! command -v gh &> /dev/null; then
     echo "gh CLI could not be found"
+    exit 1
+fi
+
+if ! gh auth status >/dev/null 2>&1; then
+    echo "You need to login: gh auth login"
+    exit 1
+fi
+
+GH_VERSION=$(gh --version | sed 's/gh version \([[:digit:]]\+\.[[:digit:]]\+\.[[:digit:]]\+\).*/\1/')
+if [ "$(printf '%s\n' "2.83.0" "$GH_VERSION" | sort -V | head -n1)" != "2.83.0" ]; then
+    echo "gh CLI version must be >= 2.83.0. Current version: $GH_VERSION"
     exit 1
 fi
 
@@ -75,7 +92,7 @@ help(){
     echo "  -h, --help                        Show this help message"
 }
 
-ROOT_DIR="."
+ROOT_DIR="$(pwd)"
 
 if [ ! -d "${ROOT_DIR}/.git" ]; then
     echo "You should to run the script on the root directory of the repository"
@@ -184,6 +201,7 @@ create_release_candidate_branch() {
         fi
     done
     git checkout $(branch_name ${RELEASE_VERSION} rc)
+    git pull
 
     # Update lightning version
     sed -i "/__version__/d" $PL_VERSION_FILE
@@ -200,12 +218,10 @@ create_release_candidate_branch() {
 
     # Update PennyLane dependency
     pushd $ROOT_DIR
-    for file in requirements-dev.txt requirements-tests.txt; do
-        sed -i "s|pennylane.git@master|pennylane.git@v${RELEASE_VERSION}-rc0|g" $file
-        git add $file
-    done
+    sed -i "s|pennylane.git@master|pennylane.git@v${RELEASE_VERSION}-rc0|g" pyproject.toml
+    git add pyproject.toml
     popd
-    git commit -m "Target PennyLane v${RELEASE_VERSION}-rc0 in requirements-[dev|tests].txt."
+    git commit -m "Target PennyLane v${RELEASE_VERSION}-rc0 in pyproject.toml."
 
     # Update Catalyst dependency
     last_catalyst_commit=$(git ls-remote git@github.com:PennyLaneAI/catalyst.git HEAD | cut -f 1)
@@ -222,10 +238,11 @@ create_release_candidate_PR(){
     # Create a PR for the release candidate branch
 
     git checkout $(branch_name ${RELEASE_VERSION} rc)
+    git pull
     if [ "$LOCAL_TEST" == "false" ]; then
     gh pr create $(use_dry_run) \
         --title "Create v${RELEASE_VERSION} RC branch" \
-        --body "v${RELEASE_VERSION} RC branch." \
+        --body "v${RELEASE_VERSION} RC branch. This PR was created by an automated script." \
         --head $(branch_name ${RELEASE_VERSION} rc) \
         --base $(branch_name ${RELEASE_VERSION} base) \
         --label 'do not merge','ci:build_wheels','ci:use-multi-gpu-runner','ci:use-gpu-runner','urgent'
@@ -236,6 +253,7 @@ create_docs_review_PR(){
     # Create a PR for the docs review
 
     git checkout $(branch_name ${RELEASE_VERSION} docs)
+    git pull
 
     git commit -m "Modify docs for v${RELEASE_VERSION}" --allow-empty
 
@@ -246,7 +264,7 @@ create_docs_review_PR(){
     if [ "$LOCAL_TEST" == "false" ]; then
     gh pr create $(use_dry_run) \
         --title "Create v${RELEASE_VERSION} Doc branch" \
-        --body "v${RELEASE_VERSION} Doc branch." \
+        --body "v${RELEASE_VERSION} Doc branch. This PR was created by an automated script." \
         --head $(branch_name ${RELEASE_VERSION} docs) \
         --base $(branch_name ${RELEASE_VERSION} rc) \
         --draft \
@@ -258,6 +276,7 @@ create_docker_PR(){
     # Create a PR for the Docker test in PTM
 
     git checkout master
+    git pull origin master
     git checkout -b $(branch_name ${RELEASE_VERSION} docker)
 
     sed -i "s|v${STABLE_VERSION}|v${RELEASE_VERSION}|g" ${ROOT_DIR}/.github/workflows/compat-docker-release.yml
@@ -274,7 +293,7 @@ create_docker_PR(){
 
     gh pr create $(use_dry_run) \
         --title "Docker test for v${RELEASE_VERSION} RC branch" \
-        --body "Docker test for v${RELEASE_VERSION} RC branch." \
+        --body "Docker test for v${RELEASE_VERSION} RC branch. This PR was created by an automated script." \
         --head $(branch_name ${RELEASE_VERSION} docker) \
         --base master \
         --label 'urgent'
@@ -324,6 +343,7 @@ create_version_bump_PR(){
     # Create a PR for the new version
 
     git checkout master
+    git pull origin master
     git checkout -b $(branch_name ${RELEASE_VERSION} bump)
 
     # Update lightning version
@@ -342,10 +362,10 @@ create_version_bump_PR(){
 
     gh pr create $(use_dry_run) \
         --title "Bump version to v${NEXT_VERSION}-dev" \
-        --body "Bump version to v${NEXT_VERSION}-dev." \
+        --body "Bump version to v${NEXT_VERSION}-dev. This PR was created by an automated script." \
         --head $(branch_name ${RELEASE_VERSION} bump) \
         --base master \
-        --label 'urgent'
+        --label 'ci:build_wheels','ci:use-multi-gpu-runner','ci:use-gpu-runner','urgent'
     fi
 
     if [ "$LOCAL_TEST" == "true" ]; then
@@ -370,17 +390,6 @@ create_version_bump_PR(){
     git add $CHANGELOG_FILE
     git commit -m "Update CHANGELOG.md with new version entry."
 
-    # Update minimum PennLane version in requirements.txt and configure_pyproject_toml.py
-    sed -i "s/pennylane>=v\?[0-9\.]\+/pennylane>=${STABLE_VERSION%??}/" ${ROOT_DIR}/requirements.txt
-    sed -i "s/pennylane>=v\?[0-9\.]\+/pennylane>=${STABLE_VERSION%??}/" ${ROOT_DIR}/scripts/configure_pyproject_toml.py
-    sed -i "s/pennylane>=v\?[0-9\.]\+/pennylane>=${STABLE_VERSION%??}/" ${ROOT_DIR}/pyproject.toml
-
-    git add ${ROOT_DIR}/requirements.txt
-    git add ${ROOT_DIR}/scripts/configure_pyproject_toml.py
-    git add ${ROOT_DIR}/pyproject.toml
-
-    git commit -m "Update minimum PennyLane version to ${RELEASE_VERSION%??}"
-
     # Update RNG salt
     for i in ${ROOT_DIR}/tests/pytest.ini ${ROOT_DIR}/mpitests/pytest.ini ; do
         sed -i "/rng_salt = /d" $i
@@ -397,11 +406,11 @@ create_version_bump_PR(){
 test_install_lightning(){
     # Test Lightning installation
 
-    git checkout master
     git checkout $(branch_name ${RELEASE_VERSION} rc)
+    git pull
 
     # Test installation of lightning default backends
-    pip install -r requirements-dev.txt
+    pip install --group dev
     for backend in qubit gpu kokkos amdgpu tensor; do
         PL_BACKEND=lightning_${backend} python ${ROOT_DIR}/scripts/configure_pyproject_toml.py
         PL_BACKEND=lightning_${backend} python -m pip install . -v
@@ -476,6 +485,7 @@ create_release_branch(){
     # Create the release branch
 
     git checkout $(branch_name ${RELEASE_VERSION} rc)
+    git pull
 
     if [ "$LOCAL_TEST" == "false" ]; then
     gh pr comment $(branch_name ${RELEASE_VERSION} rc) \
@@ -503,6 +513,7 @@ create_release_branch(){
 create_GitHub_release(){
     # Create the GitHub release as draft
     git checkout $(branch_name ${RELEASE_VERSION} release)
+    git pull
 
     create_release_notes
 
@@ -543,6 +554,7 @@ create_sdist(){
     # Create the source distribution
 
     git checkout $(branch_name ${RELEASE_VERSION} "release")
+    git pull
 
     mkdir -p ${ROOT_DIR}/Release_Assets
 
@@ -556,23 +568,22 @@ create_sdist(){
 
 upload_release_assets_gh(){
     # Upload the release assets
-    gh release upload $(branch_name ${RELEASE_VERSION}) ${ROOT_DIR}/Release_Assets/*.whl --clobber
+    gh release upload $(branch_name ${RELEASE_VERSION}) ${ROOT_DIR}/Release_Assets/*.zip/*.whl --clobber
     gh release upload $(branch_name ${RELEASE_VERSION}) ${ROOT_DIR}/Release_Assets/*.tar.gz --clobber
 }
 
-create_merge_branch(){
+create_merge_PR(){
     # Create the merge branch to merge the RC into master and bump the version with NEXT_VERSION-dev
 
     git checkout $(branch_name ${RELEASE_VERSION} "release")
+    git pull
     git checkout -b $(branch_name ${RELEASE_VERSION} "rc_merge")
 
     pushd $ROOT_DIR
-    for file in requirements-dev.txt requirements-tests.txt; do
-        sed -i "s|pennylane.git@v${RELEASE_VERSION}-rc0|pennylane.git@master|g" $file
-        git add $file
-    done
+    sed -i "s|pennylane.git@v${RELEASE_VERSION}-rc0|pennylane.git@master|g" pyproject.toml  
+    git add pyproject.toml
     popd
-    git commit -m "Target PennyLane master in requirements-[dev|tests].txt."
+    git commit -m "Target PennyLane master in pyproject.toml."
 
     sed -i "/__version__/d" $PL_VERSION_FILE
     if [ "$IS_TEST" == "true" ]; then
@@ -593,29 +604,40 @@ create_merge_branch(){
     done
     git commit -m "Update Docker workflows for new release version"
 
-    add_CHANGELOG_entry "Merge RC v${RELEASE_VERSION} rc to master" "0000"
+    # Update PennyLane minimum version (may be unneeded, but good to have as a reminder)
+    sed -i "s/pennylane>=v\?[0-9\.]\+/pennylane>=${RELEASE_VERSION%??}/" ${ROOT_DIR}/scripts/configure_pyproject_toml.py
+    sed -i "s/pennylane>=v\?[0-9\.]\+/pennylane>=${RELEASE_VERSION%??}/" ${ROOT_DIR}/pyproject.toml
+
+    git add ${ROOT_DIR}/scripts/configure_pyproject_toml.py
+    git add ${ROOT_DIR}/pyproject.toml
+
+    git commit -m "Update minimum PennyLane version to ${RELEASE_VERSION%??}"
+
+    # Create a PR to merge the RC into master
+    if [ "$LOCAL_TEST" == "true" ]; then
+        PR_number="0000"
+    else
+
+        git push --set-upstream origin $(branch_name ${RELEASE_VERSION} "rc_merge")
+
+        gh pr create $(use_dry_run) \
+        --title "Merge RC v${RELEASE_VERSION}_rc to v${NEXT_VERSION}-dev" \
+        --body "v${RELEASE_VERSION} RC merge branch. This PR was created by an automated script." \
+        --head $(branch_name ${RELEASE_VERSION} "rc_merge") \
+        --base master \
+        --label 'ci:build_wheels','ci:use-multi-gpu-runner','ci:use-gpu-runner','urgent'
+
+        PR_number=$(gh pr view --json number --jq .number)
+    fi
+
+    add_CHANGELOG_entry "Merge RC v${RELEASE_VERSION} rc to master" "${PR_number}"
     git add $CHANGELOG_FILE
     git commit -m "Add CHANGELOG entry for RC merge"
 
     if [ "$LOCAL_TEST" == "false" ]; then
-    git push --set-upstream origin $(branch_name ${RELEASE_VERSION} "rc_merge")
+        git push origin $(branch_name ${RELEASE_VERSION} "rc_merge")
     fi
 }
-
-create_merge_PR(){
-    # Create a PR to merge the RC into master and bump the version with NEXT_VERSION-dev
-    if [ "$LOCAL_TEST" == "false" ]; then
-    git checkout $(branch_name ${RELEASE_VERSION} "rc_merge")
-
-    gh pr create $(use_dry_run) \
-    --title "Merge RC v${RELEASE_VERSION}_rc to v${NEXT_VERSION}-dev" \
-    --body "v${RELEASE_VERSION} RC merge branch." \
-    --head $(branch_name ${RELEASE_VERSION} "rc_merge") \
-    --base master \
-    --label 'ci:build_wheels','ci:use-multi-gpu-runner','ci:use-gpu-runner','urgent'
-    fi
-}
-
 
 # --------------------------------------------------------------------------------------------------
 # Script body
@@ -706,6 +728,7 @@ if [ "$CREATE_RC" == "true" ]; then
     create_docker_PR
     create_version_bump_PR
     git checkout master
+    git pull origin master
 fi
 
 if [ "$LIGHTNING_TEST" == "true" ]; then
@@ -717,7 +740,6 @@ fi
 if [ "$RELEASE_ACTION" == "true" ]; then
     create_release_branch
     create_GitHub_release
-    create_merge_branch
     create_merge_PR
 fi
 

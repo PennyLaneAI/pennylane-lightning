@@ -12,10 +12,6 @@ AVX2/AVX512 kernels
    :description: Explain how AVX2/512 Kernels works with Lightning's CMake build system
    :link: ./build_system.html
 
-.. title-card::
-   :name: Kernel Performance Tuning
-   :description: Explain how to tune Lightning-Qubit's kernel performance using CMake flags for OpenMP threading and AVX streaming.
-   :link: ./kernel_tuning.html
 
 .. raw:: html
 
@@ -27,4 +23,3 @@ AVX2/AVX512 kernels
 
    implementation
    build_system
-   kernel_tuning

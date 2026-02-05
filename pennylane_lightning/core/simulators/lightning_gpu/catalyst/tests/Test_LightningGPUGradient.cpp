@@ -296,3 +296,70 @@ TEST_CASE("Test Gradient with QubitUnitary", "[Gradient]") {
 
     sim->StopTapeRecording();
 }
+
+TEST_CASE("Test Gradient with Adjoing Jacobian Multi Obs", "[Gradient]") {
+    // Circuit:
+    // n_wires = 2
+    // data = qml.numpy.array([0.1, 0.2])
+    // weights = qml.numpy.array([0.3, 0.4])
+
+    // @qml.qnode(qml.device("lightning.qubit", wires=n_wires),
+    // diff_method="adjoint") def circuit(weights, data):
+    //     for i in range(n_wires):
+    //         qml.RY(data[i], wires=i)
+    //         qml.RX(weights[i], wires=i)
+    //     return [qml.expval(qml.PauliZ(i)) for i in range(n_wires)]
+
+    // def loss_fn(weights, data):
+    //     return jnp.array(circuit(weights, data))
+
+    // @qjit
+    // def grad_fn(weights, data):
+    //     return jacobian(loss_fn, argnums=[0, 1])(weights, data)
+
+    // results = grad_fn(weights, data)
+    // print(f"Jacobian for arg0:\n{jnp.round(results[0], decimals=8)}")
+    // print(f"Jacobian for arg1:\n{jnp.round(results[1], decimals=8)}")
+
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
+
+    // Each gradient DataView corresponds to one observable
+    std::vector<double> buffer_0(4);
+    std::vector<double> buffer_1(4);
+    std::vector<DataView<double, 1>> gradients;
+    gradients.emplace_back(buffer_0);
+    gradients.emplace_back(buffer_1);
+
+    const std::vector<std::size_t> trainParams{};
+
+    const std::vector<double> expected_0{-0.09537451, -0.29404384, 0.0, 0.0};
+    const std::vector<double> expected_1{0.0, 0.0, -0.18298657, -0.3816559};
+
+    const auto Qs = sim->AllocateQubits(2);
+
+    sim->StartTapeRecording();
+
+    sim->NamedOperation("RY", {0.1}, {Qs[0]}, false);
+    sim->NamedOperation("RX", {0.3}, {Qs[0]}, false);
+    sim->NamedOperation("RY", {0.2}, {Qs[1]}, false);
+    sim->NamedOperation("RX", {0.4}, {Qs[1]}, false);
+
+    // Observables: PauliZ on wire 0, PauliZ on wire 1
+    auto obs_0 = sim->Observable(ObsId::PauliZ, {}, {Qs[0]});
+    auto obs_1 = sim->Observable(ObsId::PauliZ, {}, {Qs[1]});
+    sim->Expval(obs_0);
+    sim->Expval(obs_1);
+
+    sim->Gradient(gradients, trainParams);
+
+    // Check gradients for observable 0
+    for (std::size_t i = 0; i < expected_0.size(); i++) {
+        CHECK(expected_0[i] == Approx(buffer_0[i]).margin(1e-5));
+    }
+    // Check gradients for observable 1
+    for (std::size_t i = 0; i < expected_1.size(); i++) {
+        CHECK(expected_1[i] == Approx(buffer_1[i]).margin(1e-5));
+    }
+
+    sim->StopTapeRecording();
+}

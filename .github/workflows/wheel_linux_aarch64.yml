@@ -145,6 +145,7 @@ jobs:
           # Python build settings
           CIBW_BEFORE_BUILD: |
             cat /etc/yum.conf | sed "s/\[main\]/\[main\]\ntimeout=5/g" > /etc/yum.conf
+            python -m pip install --upgrade pip
             python -m pip install ninja cmake
             dnf clean all -y
             dnf install gcc-toolset-13 -y
@@ -152,14 +153,19 @@ jobs:
             PATH="/opt/rh/gcc-toolset-13/root/usr/bin:$PATH"
 
           CIBW_ENVIRONMENT: |
-            PATH="/opt/rh/gcc-toolset-13/root/usr/bin:$PATH" CMAKE_ARGS="-DCMAKE_BUILD_TYPE=Release"
+            PATH="/opt/rh/gcc-toolset-13/root/usr/bin:$PATH"
+            CMAKE_ARGS="-DCMAKE_BUILD_TYPE=Release"
+            if ${{ matrix.pl_backend == 'lightning_qubit'}}
+            then
+              CMAKE_ARGS="-DCMAKE_BUILD_TYPE=Release -DLQ_ENABLE_KERNEL_OMP=ON"
+            fi
 
           CIBW_MANYLINUX_AARCH64_IMAGE: manylinux_2_28
 
           CIBW_BUILD_VERBOSITY: 3
 
           CIBW_BEFORE_TEST: |
-            python -m pip install -r requirements-tests.txt
+            python -m pip install --group tests
             if ${{ matrix.pl_backend == 'lightning_kokkos'}}
             then
               PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py

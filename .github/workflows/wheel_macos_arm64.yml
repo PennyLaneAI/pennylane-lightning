@@ -77,10 +77,14 @@ jobs:
             python -m pip install ninja cmake setuptools
 
           CIBW_ENVIRONMENT: |
-            CMAKE_ARGS="-DCMAKE_CXX_COMPILER_TARGET=arm64-apple-macos11 -DCMAKE_SYSTEM_NAME=Darwin -DCMAKE_SYSTEM_PROCESSOR=ARM64 -DENABLE_OPENMP=OFF -DCMAKE_BUILD_TYPE=Release"
+            CMAKE_ARGS="-DCMAKE_CXX_COMPILER_TARGET=arm64-apple-macos11 -DCMAKE_SYSTEM_NAME=Darwin -DCMAKE_SYSTEM_PROCESSOR=ARM64 -DCMAKE_BUILD_TYPE=Release"
+            if ${{ matrix.pl_backend == 'lightning_qubit'}}
+            then
+              CMAKE_ARGS="-DCMAKE_CXX_COMPILER_TARGET=arm64-apple-macos11 -DCMAKE_SYSTEM_NAME=Darwin -DCMAKE_SYSTEM_PROCESSOR=ARM64 -DCMAKE_BUILD_TYPE=Release -DLQ_ENABLE_KERNEL_OMP=ON"
+            fi
 
           CIBW_BEFORE_TEST: |
-            python -m pip install -r requirements-tests.txt
+            python -m pip install --group tests
             if ${{ matrix.pl_backend == 'lightning_kokkos'}}
             then
               PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py

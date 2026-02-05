@@ -336,6 +336,14 @@ class LightningGPUStateVector(LightningBaseStateVector):
                     mid_measurements,
                     postselect_mode=postselect_mode,
                 )
+            elif isinstance(operation, qml.PauliRot):
+                method = getattr(state, "applyPauliRot")
+                paulis = operation._hyperparameters[  # pylint: disable=protected-access
+                    "pauli_word"
+                ]
+                wires = [w for w, p in zip(wires, paulis) if p != "I"]
+                word = "".join(p for p in paulis if p != "I")
+                method(wires, invert_param, operation.parameters, word)
             elif method is not None:  # apply specialized gate
                 param = operation.parameters
                 if isinstance(op_adjoint_base, qml.PCPhase):

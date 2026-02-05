@@ -71,7 +71,7 @@ It can be installed from source as follows:
     # Install Lightning-Qubit
     git clone https://github.com/PennyLaneAI/pennylane-lightning.git
     cd pennylane-lightning
-    pip install -r requirements.txt
+    python -m pip install --group base
     pip install git+https://github.com/PennyLaneAI/pennylane.git@master
     PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
     CMAKE_ARGS="-DCMAKE_CXX_COMPILER=CC" pip install .

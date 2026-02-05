@@ -167,7 +167,8 @@ void LightningGPUSimulator::NamedOperation(
     const std::string &name, const std::vector<double> &params,
     const std::vector<QubitIdType> &wires, bool inverse,
     const std::vector<QubitIdType> &controlled_wires,
-    const std::vector<bool> &controlled_values) {
+    const std::vector<bool> &controlled_values,
+    [[maybe_unused]] const std::vector<std::string> &optional_params) {
     // Check the validity of number of qubits and parameters
     RT_FAIL_IF(controlled_wires.size() != controlled_values.size(),
                "Controlled wires/values size mismatch");
@@ -178,6 +179,20 @@ void LightningGPUSimulator::NamedOperation(
     // Convert wires to device wires
     auto &&dev_wires = getDeviceWires(wires);
     auto &&dev_controlled_wires = getDeviceWires(controlled_wires);
+
+    if (name == "PauliRot") {
+        RT_FAIL_IF(optional_params.size() != 1,
+                   "PauliRot operation requires one string "
+                   "parameter for the Pauli word");
+        RT_FAIL_IF(!controlled_wires.empty(),
+                   "Controlled PauliRot is not supported");
+        RT_FAIL_IF(this->tape_recording,
+                   "PauliRot operation is not supported when tape "
+                   "recording is active"); // TODO: support caching
+        this->device_sv->applyPauliRot(dev_wires, inverse, params,
+                                       optional_params[0]);
+        return;
+    }
 
     // Update the state-vector
     if (controlled_wires.empty()) {
@@ -487,6 +502,74 @@ auto LightningGPUSimulator::Measure(QubitIdType wire,
     bool mres = Lightning::simulateDraw(probs, postselect, this->gen);
     auto dev_wires = getDeviceWires(wires);
     this->device_sv->collapse(dev_wires[0], mres ? 1 : 0);
+    return mres ? const_cast<Result>(&GLOBAL_RESULT_TRUE_CONST)
+                : const_cast<Result>(&GLOBAL_RESULT_FALSE_CONST);
+}
+
+auto LightningGPUSimulator::PauliMeasure(const std::string &pauli_word,
+                                         const std::vector<QubitIdType> &wires)
+    -> Result {
+    RT_FAIL_IF(pauli_word.size() != wires.size(),
+               "Pauli word length must match number of wires");
+
+    auto dev_wires = getDeviceWires(wires);
+
+    for (size_t i = 0; i < pauli_word.size(); i++) {
+        const char p = pauli_word[i];
+        const QubitIdType wire = wires[i];
+        switch (p) {
+        case 'I':
+            // No basis change needed for Identity
+            break;
+        case 'X':
+            this->NamedOperation("Hadamard", {}, {wire});
+            break;
+        case 'Y':
+            this->NamedOperation("S", {}, {wire}, true);
+            this->NamedOperation("Hadamard", {}, {wire});
+            break;
+        case 'Z':
+            // No basis change needed for Z
+            break;
+        default:
+            RT_FAIL("Invalid character in Pauli word");
+        }
+    }
+
+    for (std::size_t i = 1; i < pauli_word.size(); i++) {
+        this->NamedOperation("CNOT", {}, {wires[i], wires[0]});
+    }
+
+    // Measure in the computational basis
+    Result res = this->Measure(wires[0]);
+    bool mres = *res;
+
+    for (std::size_t i = 1; i < pauli_word.size(); i++) {
+        this->NamedOperation("CNOT", {}, {wires[i], wires[0]});
+    }
+
+    for (size_t i = 0; i < pauli_word.size(); i++) {
+        const char p = pauli_word[i];
+        const QubitIdType wire = wires[i];
+        switch (p) {
+        case 'I':
+            // No basis change needed for Identity
+            break;
+        case 'X':
+            this->NamedOperation("Hadamard", {}, {wire});
+            break;
+        case 'Y':
+            this->NamedOperation("Hadamard", {}, {wire});
+            this->NamedOperation("S", {}, {wire});
+            break;
+        case 'Z':
+            // No basis change needed for Z
+            break;
+        default:
+            RT_FAIL("Invalid character in Pauli word");
+        }
+    }
+
     return mres ? const_cast<Result>(&GLOBAL_RESULT_TRUE_CONST)
                 : const_cast<Result>(&GLOBAL_RESULT_FALSE_CONST);
 }

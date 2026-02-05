@@ -74,7 +74,7 @@ jobs:
       - name: Get required Python packages
         run: |
           rm -fr $(python -m pip cache dir)/selfcheck/
-          python -m pip install -r requirements-tests.txt
+          python -m pip install --group tests
 
       - name: Checkout PennyLane for release or latest build
         if: inputs.pennylane-version == 'release' || inputs.pennylane-version == 'latest'
@@ -108,6 +108,7 @@ jobs:
         with:
           repository: PennyLaneAI/catalyst
           path: ${{ github.workspace}}/catalyst
+          ref: ${{ (inputs.pennylane-version == 'stable' && 'v0.14.0') || 'main' }} # FIXME: remove after v0.45 release
 
       - name: Switch to release build of Catalyst
         if: inputs.lightning-version == 'release'
