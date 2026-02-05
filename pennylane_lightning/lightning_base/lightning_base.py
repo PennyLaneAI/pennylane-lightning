@@ -846,8 +846,6 @@ def _adjoint_measurement(mp: MeasurementProcess) -> bool:
 
 def adjoint_observables(obs: Operator, capabilities: DeviceCapabilities) -> bool:
     """Returns True for observables supported in the adjoint differentiation method."""
-    if isinstance(obs, qml.Projector):
-        return False
     if isinstance(obs, qml.ops.SProd):
         return adjoint_observables(obs.base, capabilities)
     if isinstance(obs, (qml.ops.Sum, qml.ops.Prod)):
