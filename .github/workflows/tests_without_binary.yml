@@ -74,7 +74,11 @@ jobs:
       - name: Get required Python packages
         run: |
           rm -fr $(python -m pip cache dir)/selfcheck/
-          python -m pip install --group tests
+          if [[ "${{ inputs.lightning-version }}" == "stable" ]]; then # FIXME: remove after v0.45 release
+            python -m pip install -r requirements-tests.txt
+          else
+            python -m pip install --group tests
+          fi
 
       - name: Checkout PennyLane for release or latest build
         if: inputs.pennylane-version == 'release' || inputs.pennylane-version == 'latest'
