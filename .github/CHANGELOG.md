@@ -32,7 +32,7 @@
 
 <h3>Internal changes ⚙️</h3>
 
-- Upgraded Kokkos to from v4.5.0 to v5.0.0.
+- Upgraded Kokkos from v4.5.0 to v5.0.0.
   [(#1308)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1308)
 
 - Cleaned up vector-matrix methods used by Lightning devices at `LinearAlgebra.hpp`.
