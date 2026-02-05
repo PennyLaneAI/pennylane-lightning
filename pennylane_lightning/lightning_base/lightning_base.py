@@ -32,6 +32,7 @@ import pennylane as qml
 from numpy.random import BitGenerator, Generator, SeedSequence
 from numpy.typing import ArrayLike
 from pennylane.devices import Device, ExecutionConfig, MCMConfig
+from pennylane.devices.capabilities import DeviceCapabilities
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
 from pennylane.devices.preprocess import (
     decompose,
@@ -843,6 +844,17 @@ def _adjoint_measurement(mp: MeasurementProcess) -> bool:
     return isinstance(mp, ExpectationMP)
 
 
+def adjoint_observables(obs: Operator, capabilities: DeviceCapabilities) -> bool:
+    """Returns True for observables supported in the adjoint differentiation method."""
+    if isinstance(obs, qml.Projector):
+        return False
+    if isinstance(obs, qml.ops.SProd):
+        return adjoint_observables(obs.base, capabilities)
+    if isinstance(obs, (qml.ops.Sum, qml.ops.Prod)):
+        return all(adjoint_observables(o, capabilities) for o in obs)
+    return capabilities.supports_observable(obs)
+
+
 def adjoint_transforms(device: LightningBase, allow_mcms: bool = False) -> qml.CompilePipeline:
     """Return a compile pipeline that prepares the circuit for adjoint differentiation."""
 
@@ -851,6 +863,7 @@ def adjoint_transforms(device: LightningBase, allow_mcms: bool = False) -> qml.C
     gate_set = capabilities.gate_set(differentiable=True)
     if allow_mcms:
         gate_set |= {"MidMeasureMP"}
+    _adjoint_observables = partial(adjoint_observables, capabilities=capabilities)
     return (
         no_sampling(name=name)
         + qml.transforms.broadcast_expand
@@ -861,7 +874,7 @@ def adjoint_transforms(device: LightningBase, allow_mcms: bool = False) -> qml.C
             target_gates=gate_set,
             name=name,
         )
-        + validate_observables(stopping_condition=capabilities.supports_observable, name=name)
+        + validate_observables(stopping_condition=_adjoint_observables, name=name)
         + validate_measurements(analytic_measurements=_adjoint_measurement, name=name)
         + validate_adjoint_trainable_params
     )

@@ -18,6 +18,7 @@ This module contains unit tests for new device API Lightning classes.
 # pylint: disable=too-many-arguments, unused-argument
 import itertools
 from dataclasses import replace
+from functools import partial
 
 import numpy as np
 import pennylane as qml
@@ -50,6 +51,7 @@ from pennylane.transforms import defer_measurements, dynamic_one_shot
 from pennylane_lightning.lightning_base.lightning_base import (
     _adjoint_measurement,
     _adjoint_stopping_condition,
+    adjoint_observables,
     adjoint_transforms,
     supports_adjoint,
 )
@@ -175,9 +177,10 @@ class TestHelpers:
             (qml.Hermitian(np.eye(4), [0, 1]), True),
         ],
     )
-    def test_observables(self, obs, expected):
-        """Test that suppors_observable returns the expected result for a given observable"""
-        assert LightningDevice.capabilities.supports_observable(obs) == expected
+    def test_adjoint_observables(self, obs, expected):
+        """Test that adjoint_observables returns the expected result for a given observable"""
+        validator = partial(adjoint_observables, capabilities=LightningDevice.capabilities)
+        assert validator(obs) == expected
 
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
@@ -880,7 +883,11 @@ class TestExecution:
                     else device.capabilities.gate_set(differentiable=True) | {"MidMeasureMP"}
                 ),
             )
-            expected_program.add_transform(validate_observables, accepted_observables, name=name)
+            expected_program.add_transform(
+                validate_observables,
+                partial(adjoint_observables, capabilities=device.capabilities),
+                name=name,
+            )
             expected_program.add_transform(
                 validate_measurements,
                 analytic_measurements=_adjoint_measurement,
