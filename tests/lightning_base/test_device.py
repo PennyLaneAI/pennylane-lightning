@@ -196,11 +196,10 @@ class TestHelpers:
         if device_name == "lightning.amdgpu":
             name = "adjoint + lightning.kokkos"
 
-        capabilities = LightningDevice.capabilities
-        gate_set = capabilities.gate_set(differentiable=True)
+        dev = LightningDevice(wires=2)
+        gate_set = dev.capabilities.gate_set(differentiable=True)
         if allow_mcms:
             gate_set |= {"MidMeasureMP"}
-        dev = LightningDevice(wires=2)
 
         expected_program.add_transform(no_sampling, name=name)
         expected_program.add_transform(qml.transforms.broadcast_expand)
@@ -209,12 +208,12 @@ class TestHelpers:
             stopping_condition=_adjoint_stopping_condition,
             name=name,
             skip_initial_state_prep=False,
-            device_wires=2,
+            device_wires=dev.wires,
             target_gates=gate_set,
         )
         expected_program.add_transform(
             validate_observables,
-            partial(adjoint_observables, capabilities=capabilities),
+            partial(adjoint_observables, capabilities=dev.capabilities),
             name=name,
         )
         expected_program.add_transform(
