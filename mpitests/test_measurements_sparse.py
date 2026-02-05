@@ -115,7 +115,7 @@ class TestSparseExpvalQChem:
     singles, doubles = qchem.excitations(active_electrons, qubits)
     excitations = singles + doubles
 
-    @pytest.mark.parametrize("dtype", [np.complex128])
+    @pytest.mark.parametrize("dtype", [np.complex64, np.complex128])
     @pytest.mark.parametrize(
         "qubits, wires, H, hf_state, excitations",
         [
