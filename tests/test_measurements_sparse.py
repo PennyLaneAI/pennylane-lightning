@@ -24,11 +24,10 @@ from pennylane import qchem
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
+if device_name == "lightning.tensor":
+    pytest.skip("Lightning.tensor does not support Sparse Hamiltonians.", allow_module_level=True)
 
-@pytest.mark.skipif(
-    device_name == "lightning.tensor",
-    reason="lightning.tensor does not support Sparse Hamiltonians",
-)
+
 class TestSparseExpval:
     """Tests for the expval function"""
 
@@ -47,7 +46,7 @@ class TestSparseExpval:
             [qml.Identity(0) @ qml.PauliZ(1), 0.98006657784124170, 0.039469480514526367],
         ],
     )
-    def test_sparse_Pauli_words(self, cases, tol, dev):
+    def test_sparse_pauli_words(self, cases, tol, dev):
         """Test expval of some simple sparse Hamiltonian"""
 
         # Compute the sparse matrix of the input operator
@@ -89,26 +88,26 @@ class TestSparseExpvalQChem:
     singles, doubles = qchem.excitations(active_electrons, qubits)
     excitations = singles + doubles
 
-    @pytest.fixture(params=[np.complex64, np.complex128])
+    @pytest.mark.parametrize("dtype", [np.complex64, np.complex128])
     @pytest.mark.parametrize(
         "qubits, wires, H, hf_state, excitations",
         [
             [qubits, range(qubits), H, hf_state, excitations],
             [
                 qubits,
-                np.random.permutation(np.arange(qubits)),
+                list(np.random.permutation(np.arange(qubits))),
                 H,
                 hf_state,
                 excitations,
             ],
         ],
     )
-    def test_sparse_Pauli_words(self, qubits, wires, H, hf_state, excitations, tol, request):
+    def test_sparse_pauli_words(self, qubits, wires, H, hf_state, excitations, tol, dtype):
         """Test expval of some simple sparse Hamiltonian"""
 
         H_sparse = H.sparse_matrix(wires)
 
-        dev = qml.device(device_name, wires=wires, c_dtype=request.param)
+        dev = qml.device(device_name, wires=wires, c_dtype=dtype)
 
         @qml.qnode(dev, diff_method="parameter-shift")
         def circuit():

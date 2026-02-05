@@ -219,7 +219,7 @@ class TestSparseHExpval:
             [qml.Identity(0) @ qml.PauliZ(1), 0.980066577, 0.039469480],
         ],
     )
-    def test_sparse_Pauli_words(self, cases, qubit_device, method):
+    def test_sparse_pauli_words(self, cases, qubit_device, method):
         """Test expval of some simple sparse Hamiltonian"""
         dev = qml.device(device_name, wires=4, **method)
 
