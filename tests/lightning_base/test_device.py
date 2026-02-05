@@ -212,7 +212,11 @@ class TestHelpers:
             device_wires=2,
             target_gates=gate_set,
         )
-        expected_program.add_transform(validate_observables, accepted_observables, name=name)
+        expected_program.add_transform(
+            validate_observables,
+            partial(adjoint_observables, capabilities=capabilities),
+            name=name,
+        )
         expected_program.add_transform(
             validate_measurements,
             analytic_measurements=_adjoint_measurement,
