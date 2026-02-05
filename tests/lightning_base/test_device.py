@@ -224,7 +224,10 @@ class TestHelpers:
         expected_program.add_transform(validate_adjoint_trainable_params)
 
         actual_program = adjoint_transforms(dev, allow_mcms)
-        assert actual_program == expected_program
+        for transform, expected_transform in zip(actual_program, expected_program, strict=True):
+            assert transform.tape_transform == expected_transform.tape_transform
+            assert transform.args == expected_transform.args
+            assert transform.kwargs == expected_transform.kwargs
 
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
@@ -903,7 +906,10 @@ class TestExecution:
             gradient_method=gradient_method, mcm_config=MCMConfig(mcm_method=mcm_method)
         )
         actual_program = device.preprocess_transforms(config)
-        assert actual_program == expected_program
+        for transform, expected_transform in zip(actual_program, expected_program, strict=True):
+            assert transform.tape_transform == expected_transform.tape_transform
+            assert transform.args == expected_transform.args
+            assert transform.kwargs == expected_transform.kwargs
 
     @pytest.mark.usefixtures("enable_and_disable_graph_decomp")
     @pytest.mark.parametrize(
