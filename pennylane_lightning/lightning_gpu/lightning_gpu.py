@@ -19,9 +19,9 @@ interfaces with the NVIDIA cuQuantum cuStateVec simulator library for GPU-enable
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from ctypes.util import find_library
 from dataclasses import replace
-from functools import partial
 from importlib import util as imp_util
 from pathlib import Path
 from typing import List, Optional, Union
@@ -31,29 +31,28 @@ import numpy as np
 import pennylane as qml
 from numpy.random import BitGenerator, Generator, SeedSequence
 from numpy.typing import ArrayLike
+from pennylane.decomposition.gate_set import GateSet
 from pennylane.devices import ExecutionConfig
 from pennylane.devices.capabilities import OperatorProperties
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
 from pennylane.devices.preprocess import (
     decompose,
     device_resolve_dynamic_wires,
-    no_sampling,
-    validate_adjoint_trainable_params,
     validate_device_wires,
     validate_measurements,
     validate_observables,
 )
-from pennylane.exceptions import DecompositionUndefinedError, DeviceError
-from pennylane.measurements import MidMeasureMP
+from pennylane.exceptions import DeviceError
 from pennylane.operation import Operator
-from pennylane.ops import Conditional, PauliRot, Prod, SProd, Sum
 from pennylane.transforms import defer_measurements, dynamic_one_shot
 
 from pennylane_lightning.lightning_base.lightning_base import (
     LightningBase,
     QuantumTape_or_Batch,
     Result_or_ResultBatch,
+    adjoint_transforms,
     resolve_mcm_method,
+    supports_adjoint,
 )
 
 try:
@@ -90,96 +89,13 @@ _to_matrix_ops = {
 }
 
 
-def stopping_condition(op: Operator, allow_mcms: bool = True) -> bool:
-    """A function that determines whether or not an operation is supported by ``lightning.gpu``."""
-    if isinstance(op, MidMeasureMP):
-        # Conditional and MidMeasureMP should not be decomposed
-        return allow_mcms
+def make_stopping_condition(gate_set: GateSet) -> Callable[[Operator], bool]:
+    """Turn a gate set into a stopping condition."""
 
-    return _supports_operation(op.name)
+    def _stopping_condition(op: Operator):
+        return op in gate_set
 
-
-# need to create these once so we can compare in tests
-allow_mcms_stopping_condition = partial(stopping_condition, allow_mcms=True)
-no_mcms_stopping_condition = partial(stopping_condition, allow_mcms=False)
-
-
-def accepted_observables(obs: Operator) -> bool:
-    """A function that determines whether or not an observable is supported by ``lightning.gpu``."""
-    return _supports_observable(obs.name)
-
-
-def adjoint_observables(obs: Operator) -> bool:
-    """A function that determines whether or not an observable is supported by ``lightning.gpu``
-    when using the adjoint differentiation method."""
-    if isinstance(obs, qml.Projector):
-        return False
-
-    if isinstance(obs, SProd):
-        return adjoint_observables(obs.base)
-
-    if isinstance(obs, (Sum, Prod)):
-        return all(adjoint_observables(o) for o in obs)
-
-    return _supports_observable(obs.name)
-
-
-def adjoint_measurements(mp: qml.measurements.MeasurementProcess) -> bool:
-    """Specifies whether or not an observable is compatible with adjoint differentiation on DefaultQubit."""
-    return isinstance(mp, qml.measurements.ExpectationMP)
-
-
-def _supports_adjoint(circuit, device_wires=None):
-    if circuit is None:
-        return True
-
-    prog = qml.CompilePipeline()
-    _add_adjoint_transforms(prog, device_wires=device_wires)
-
-    try:
-        prog((circuit,))
-    except (DecompositionUndefinedError, DeviceError, AttributeError):
-        return False
-    return True
-
-
-def _adjoint_ops(op: qml.operation.Operator) -> bool:
-    """Specify whether or not an Operator is supported by adjoint differentiation."""
-
-    return not isinstance(op, (Conditional, MidMeasureMP, PauliRot)) and (
-        not any(qml.math.requires_grad(d) for d in op.data)
-        or (op.num_params == 1 and op.has_generator)
-    )
-
-
-def _add_adjoint_transforms(pipeline: qml.CompilePipeline, device_wires=None) -> None:
-    """Private helper function for ``preprocess`` that adds the transforms specific
-    for adjoint differentiation.
-
-    Args:
-        pipeline (qml.CompilePipeline): where we will add the adjoint differentiation transforms
-
-    Side Effects:
-        Adds transforms to the input program.
-
-    """
-
-    name = "adjoint + lightning.gpu"
-    pipeline.add_transform(no_sampling, name=name)
-    pipeline.add_transform(qml.transforms.broadcast_expand)
-    pipeline.add_transform(
-        decompose,
-        stopping_condition=_adjoint_ops,
-        name=name,
-        skip_initial_state_prep=False,
-        device_wires=device_wires,
-        target_gates=LightningGPU.capabilities.gate_set(differentiable=True),
-    )
-    pipeline.add_transform(validate_observables, accepted_observables, name=name)
-    pipeline.add_transform(
-        validate_measurements, analytic_measurements=adjoint_measurements, name=name
-    )
-    pipeline.add_transform(validate_adjoint_trainable_params)
+    return _stopping_condition
 
 
 # LightningGPU specific methods
@@ -376,28 +292,35 @@ class LightningGPU(LightningBase):
         """
         if execution_config is None:
             execution_config = ExecutionConfig()
-        exec_config = execution_config
 
+        exec_config = execution_config
         pipeline = qml.CompilePipeline()
+
+        gate_set = self.capabilities.gate_set()
+        allow_mcms = False
+        if exec_config.mcm_config.mcm_method != "deferred":
+            gate_set |= {"MidMeasureMP"}
+            allow_mcms = True
+        _stopping_condition = make_stopping_condition(gate_set)
 
         if qml.capture.enabled():
             if exec_config.mcm_config.mcm_method == "deferred":
                 pipeline.add_transform(qml.defer_measurements, num_wires=len(self.wires))
-            # Using stopping_condition_shots because we don't want to decompose Conditionals or MCMs
             pipeline.add_transform(
                 qml.transforms.decompose,
-                gate_set=self.capabilities.gate_set(),
-                stopping_condition=no_mcms_stopping_condition,
+                gate_set=gate_set,
+                stopping_condition=_stopping_condition,
             )
             return pipeline
 
         pipeline.add_transform(validate_measurements, name=self.name)
-        pipeline.add_transform(validate_observables, accepted_observables, name=self.name)
+        pipeline.add_transform(
+            validate_observables,
+            self.capabilities.supports_observable,
+            name=self.name,
+        )
         if exec_config.mcm_config.mcm_method == "deferred":
             pipeline.add_transform(defer_measurements, allow_postselect=False)
-            _stopping_condition = no_mcms_stopping_condition
-        else:
-            _stopping_condition = allow_mcms_stopping_condition
 
         pipeline.add_transform(
             decompose,
@@ -405,7 +328,7 @@ class LightningGPU(LightningBase):
             skip_initial_state_prep=True,
             name=self.name,
             device_wires=self.wires,
-            target_gates=self.capabilities.gate_set(),
+            target_gates=gate_set,
         )
         _allow_resets = exec_config.mcm_config.mcm_method != "deferred"
         pipeline.add_transform(
@@ -419,7 +342,8 @@ class LightningGPU(LightningBase):
         pipeline.add_transform(qml.transforms.broadcast_expand)
 
         if exec_config.gradient_method == "adjoint":
-            _add_adjoint_transforms(pipeline, device_wires=self.wires)
+            adjoint_transforms(self, allow_mcms)
+
         return pipeline
 
     # pylint: disable=unused-argument
@@ -476,9 +400,7 @@ class LightningGPU(LightningBase):
             return True
 
         if execution_config and execution_config.gradient_method in {"adjoint", "best"}:
-            if circuit is None:
-                return True
-            return _supports_adjoint(circuit=circuit, device_wires=self.wires)
+            return supports_adjoint(self, circuit)
 
         return False
 
@@ -489,7 +411,3 @@ class LightningGPU(LightningBase):
         """
 
         return LightningBase.get_c_interface_impl("LightningGPUSimulator", "lightning_gpu")
-
-
-_supports_operation = LightningGPU.capabilities.supports_operation
-_supports_observable = LightningGPU.capabilities.supports_observable
