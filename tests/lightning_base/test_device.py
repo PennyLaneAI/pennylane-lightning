@@ -14,8 +14,8 @@
 """
 This module contains unit tests for new device API Lightning classes.
 """
-# pylint: disable=too-many-arguments, unused-argument
 
+# pylint: disable=too-many-arguments, unused-argument
 import itertools
 from dataclasses import replace
 
@@ -32,82 +32,69 @@ from conftest import (
     LightningStateVector,
     device_name,
 )
+from pennylane.decomposition.gate_set import GateSet
 from pennylane.devices import DefaultQubit, ExecutionConfig, MCMConfig
-from pennylane.devices.default_qubit import adjoint_ops
-from pennylane.devices.preprocess import device_resolve_dynamic_wires
+from pennylane.devices.preprocess import (
+    decompose,
+    device_resolve_dynamic_wires,
+    no_sampling,
+    validate_adjoint_trainable_params,
+    validate_device_wires,
+    validate_measurements,
+    validate_observables,
+)
 from pennylane.exceptions import DeviceError, QuantumFunctionError
-from pennylane.measurements import ProbabilityMP
 from pennylane.tape import QuantumScript
 from pennylane.transforms import defer_measurements, dynamic_one_shot
 
+from pennylane_lightning.lightning_base.lightning_base import (
+    _adjoint_measurement,
+    _adjoint_stopping_condition,
+    adjoint_transforms,
+    supports_adjoint,
+)
+
 if device_name == "lightning.qubit":
     from pennylane_lightning.lightning_qubit.lightning_qubit import (
-        _add_adjoint_transforms,
-        _adjoint_ops,
-        _supports_adjoint,
-        accepted_observables,
-        adjoint_measurements,
-        adjoint_observables,
         allow_mcms_stopping_condition,
-        decompose,
         no_mcms_stopping_condition,
-        no_sampling,
         stopping_condition,
-        validate_adjoint_trainable_params,
-        validate_device_wires,
-        validate_measurements,
-        validate_observables,
     )
+
+    accepted_observables = LightningDevice.capabilities.supports_observable
+
 elif device_name in ("lightning.kokkos", "lightning.amdgpu"):
     from pennylane_lightning.lightning_kokkos.lightning_kokkos import (
-        _add_adjoint_transforms,
-        _adjoint_ops,
-        _supports_adjoint,
-        accepted_observables,
-        adjoint_measurements,
-        adjoint_observables,
         allow_mcms_stopping_condition,
-        decompose,
         no_mcms_stopping_condition,
-        no_sampling,
         stopping_condition,
-        validate_adjoint_trainable_params,
-        validate_device_wires,
-        validate_measurements,
-        validate_observables,
     )
+
+    accepted_observables = LightningDevice.capabilities.supports_observable
+
 elif device_name == "lightning.gpu":
-    from pennylane_lightning.lightning_gpu.lightning_gpu import (
-        _add_adjoint_transforms,
-        _adjoint_ops,
-        _supports_adjoint,
-        accepted_observables,
-        adjoint_measurements,
-        adjoint_observables,
-        allow_mcms_stopping_condition,
-        decompose,
-        no_mcms_stopping_condition,
-        no_sampling,
-        stopping_condition,
-        validate_adjoint_trainable_params,
-        validate_device_wires,
-        validate_measurements,
-        validate_observables,
-    )
+    from pennylane_lightning.lightning_gpu.lightning_gpu import make_stopping_condition
+
+    accepted_observables = LightningDevice.capabilities.supports_observable
+    _gate_set = LightningDevice.capabilities.gate_set()
+    stopping_condition = make_stopping_condition(GateSet(_gate_set))
+    no_mcms_stopping_condition = stopping_condition
+    allow_mcms_stopping_condition = make_stopping_condition(GateSet(_gate_set | {"MidMeasureMP"}))
+
 elif device_name == "lightning.tensor":
     from pennylane_lightning.lightning_tensor.lightning_tensor import (
         accepted_observables,
         stopping_condition,
     )
+
 else:
     raise TypeError(f"The device name: {device_name} is not a valid name")
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-access
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
-fixture_params = list(
-    itertools.product([3, None], [np.complex64, np.complex128])
-)  # wires x c_dtype
+# wires x c_dtype
+fixture_params = list(itertools.product([3, None], [np.complex64, np.complex128]))
 
 
 @pytest.fixture(params=fixture_params)
@@ -133,25 +120,9 @@ def enable_and_disable_graph_decomp(request):
     It automatically handles the setup (enabling/disabling) before the
     test runs and the teardown (always disabling) after the test completes.
     """
-    try:
-        use_graph_decomp = request.param
-
-        # --- Setup Phase ---
-        # This code runs before the test function is executed.
-        if use_graph_decomp:
-            qml.decomposition.enable_graph()
-        else:
-            # Explicitly disable to ensure a clean state
-            qml.decomposition.disable_graph()
-
-        # Yield control to the test function
-        yield use_graph_decomp
-
-    finally:
-        # --- Teardown Phase ---
-        # This code runs after the test function has finished,
-        # regardless of whether it passed or failed.
-        qml.decomposition.disable_graph()
+    use_graph_decomp = request.param
+    with qml.decomposition.toggle_graph_ctx(use_graph_decomp):
+        yield
 
 
 class TestHelpers:
@@ -162,12 +133,7 @@ class TestHelpers:
 
         num_wires = 1
 
-    @pytest.mark.parametrize(
-        "valid_op",
-        [
-            qml.RX(1.23, 0),
-        ],
-    )
+    @pytest.mark.parametrize("valid_op", [qml.RX(1.23, 0)])
     def test_stopping_condition_valid(self, valid_op):
         """Test that stopping_condition returns True for operations unsupported by the device."""
 
@@ -209,42 +175,49 @@ class TestHelpers:
             (qml.Hermitian(np.eye(4), [0, 1]), True),
         ],
     )
-    def test_adjoint_observables(self, obs, expected):
-        """Test that adjoint_observables returns the expected boolean result for
-        a given observable"""
-        assert adjoint_observables(obs) == expected
+    def test_observables(self, obs, expected):
+        """Test that suppors_observable returns the expected result for a given observable"""
+        assert LightningDevice.capabilities.supports_observable(obs) == expected
 
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
         reason="lightning.tensor device does not support adjoint",
     )
-    def test_add_adjoint_transforms(self):
+    @pytest.mark.parametrize("allow_mcms", [True, False])
+    def test_add_adjoint_transforms(self, allow_mcms):
         """Test that the correct transforms are added to the program by _add_adjoint_transforms"""
+
         expected_program = qml.CompilePipeline()
 
         name = f"adjoint + {device_name}"
         if device_name == "lightning.amdgpu":
             name = "adjoint + lightning.kokkos"
+
+        capabilities = LightningDevice.capabilities
+        gate_set = capabilities.gate_set(differentiable=True)
+        if allow_mcms:
+            gate_set |= {"MidMeasureMP"}
+        dev = LightningDevice(wires=2)
+
         expected_program.add_transform(no_sampling, name=name)
         expected_program.add_transform(qml.transforms.broadcast_expand)
         expected_program.add_transform(
             decompose,
-            stopping_condition=_adjoint_ops,
+            stopping_condition=_adjoint_stopping_condition,
             name=name,
             skip_initial_state_prep=False,
-            device_wires=None,
-            target_gates=LightningDevice.capabilities.gate_set(differentiable=True),
+            device_wires=2,
+            target_gates=gate_set,
         )
         expected_program.add_transform(validate_observables, accepted_observables, name=name)
         expected_program.add_transform(
             validate_measurements,
-            analytic_measurements=adjoint_measurements,
+            analytic_measurements=_adjoint_measurement,
             name=name,
         )
         expected_program.add_transform(validate_adjoint_trainable_params)
 
-        actual_program = qml.CompilePipeline()
-        _add_adjoint_transforms(actual_program)
+        actual_program = adjoint_transforms(dev, allow_mcms)
         assert actual_program == expected_program
 
     @pytest.mark.skipif(
@@ -266,7 +239,8 @@ class TestHelpers:
     )
     def test_supports_adjoint(self, circuit, expected):
         """Test that _supports_adjoint returns the correct boolean value."""
-        assert _supports_adjoint(circuit) == expected
+        dev = LightningDevice(wires=5)
+        assert supports_adjoint(dev, circuit) == expected
 
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
@@ -779,7 +753,6 @@ class TestExecution:
         m0 = qml.measure(0)
 
         class MyOp(qml.operation.Operator):
-
             def decomposition(self):
                 return m0.measurements
 
@@ -875,7 +848,11 @@ class TestExecution:
             skip_initial_state_prep=True,
             name=device.name,
             device_wires=device.wires,
-            target_gates=device.capabilities.gate_set(),
+            target_gates=(
+                device.capabilities.gate_set()
+                if mcm_method == "deferred"
+                else device.capabilities.gate_set() | {"MidMeasureMP"}
+            ),
         )
         expected_program.add_transform(
             device_resolve_dynamic_wires, wires=device.wires, allow_resets=mcm_method != "deferred"
@@ -893,16 +870,20 @@ class TestExecution:
             expected_program.add_transform(qml.transforms.broadcast_expand)
             expected_program.add_transform(
                 decompose,
-                stopping_condition=_adjoint_ops,
+                stopping_condition=_adjoint_stopping_condition,
                 name=name,
                 skip_initial_state_prep=False,
                 device_wires=device.wires,
-                target_gates=device.capabilities.gate_set(differentiable=True),
+                target_gates=(
+                    device.capabilities.gate_set(differentiable=True)
+                    if mcm_method == "deferred"
+                    else device.capabilities.gate_set(differentiable=True) | {"MidMeasureMP"}
+                ),
             )
             expected_program.add_transform(validate_observables, accepted_observables, name=name)
             expected_program.add_transform(
                 validate_measurements,
-                analytic_measurements=adjoint_measurements,
+                analytic_measurements=_adjoint_measurement,
                 name=name,
             )
             expected_program.add_transform(validate_adjoint_trainable_params)

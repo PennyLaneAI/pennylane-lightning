@@ -32,15 +32,13 @@ from pennylane.devices.modifiers import simulator_tracking, single_tape_support
 from pennylane.devices.preprocess import (
     decompose,
     device_resolve_dynamic_wires,
-    no_sampling,
-    validate_adjoint_trainable_params,
     validate_device_wires,
     validate_measurements,
     validate_observables,
 )
-from pennylane.exceptions import DecompositionUndefinedError, DeviceError
+from pennylane.exceptions import DeviceError
 from pennylane.operation import Operator
-from pennylane.ops import Conditional, MidMeasure, PauliRot, Prod, SProd, Sum
+from pennylane.ops import MidMeasure
 from pennylane.transforms import defer_measurements, dynamic_one_shot
 
 from pennylane_lightning.lightning_base.lightning_base import (
