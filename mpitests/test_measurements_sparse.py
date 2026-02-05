@@ -14,7 +14,7 @@
 """
 Unit tests for sparse measurements on :mod:`pennylane_lightning` MPI-enabled devices.
 """
-# pylint: disable=protected-access,too-few-public-methods,unused-import,missing-function-docstring,too-many-arguments
+# pylint: disable=protected-access,too-few-public-methods,unused-import,missing-function-docstring,too-many-arguments,too-many-positional-arguments
 
 import numpy as np
 import pennylane as qml
@@ -73,18 +73,18 @@ class TestSparseExpval:
             ],
         ],
     )
-    def test_sparse_Pauli_words(self, cases, tol, dev):
+    def test_sparse_pauli_words(self, cases, tol, dev):
         """Test expval of some simple sparse Hamiltonian"""
+
+        # Compute the sparse matrix of the input operator
+        # This is done outside of the QNode to avoid queuing the `Hamiltonian`
+        matrix = qml.Hamiltonian([1], [cases[0]]).sparse_matrix()
 
         @qml.qnode(dev, diff_method="parameter-shift")
         def circuit_expval():
             qml.RX(0.4, wires=[0])
             qml.RY(-0.2, wires=[1])
-            return qml.expval(
-                qml.SparseHamiltonian(
-                    qml.Hamiltonian([1], [cases[0]]).sparse_matrix(), wires=[0, 1]
-                )
-            )
+            return qml.expval(qml.SparseHamiltonian(matrix, wires=[0, 1]))
 
         assert np.allclose(circuit_expval(), cases[1], atol=tol, rtol=0)
 
@@ -92,11 +92,7 @@ class TestSparseExpval:
         def circuit_var():
             qml.RX(0.4, wires=[0])
             qml.RY(-0.2, wires=[1])
-            return qml.var(
-                qml.SparseHamiltonian(
-                    qml.Hamiltonian([1], [cases[0]]).sparse_matrix(), wires=[0, 1]
-                )
-            )
+            return qml.var(qml.SparseHamiltonian(matrix, wires=[0, 1]))
 
         assert np.allclose(circuit_var(), cases[2], atol=tol, rtol=0)
 
@@ -119,28 +115,26 @@ class TestSparseExpvalQChem:
     singles, doubles = qchem.excitations(active_electrons, qubits)
     excitations = singles + doubles
 
-    @pytest.fixture(
-        params=[np.complex64, np.complex128] if device_name != "lightning.gpu" else [np.complex128]
-    )
+    @pytest.mark.parametrize("dtype", [np.complex64, np.complex128])
     @pytest.mark.parametrize(
         "qubits, wires, H, hf_state, excitations",
         [
             [qubits, range(qubits), H, hf_state, excitations],
             [
                 qubits,
-                np.random.permutation(np.arange(qubits)),
+                [2, 10, 5, 6, 9, 3, 4, 1, 0, 8, 11, 7],
                 H,
                 hf_state,
                 excitations,
             ],
         ],
     )
-    def test_sparse_Pauli_words(self, qubits, wires, H, hf_state, excitations, tol, request):
+    def test_sparse_pauli_words(self, qubits, wires, H, hf_state, excitations, tol, dtype):
         """Test expval of some simple sparse Hamiltonian"""
 
         H_sparse = H.sparse_matrix(wires)
 
-        dev = qml.device(device_name, mpi=True, wires=wires, c_dtype=request.param)
+        dev = qml.device(device_name, mpi=True, wires=wires, c_dtype=dtype)
 
         @qml.qnode(dev, diff_method="parameter-shift")
         def circuit():

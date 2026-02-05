@@ -190,7 +190,7 @@ jobs:
 
           # Upgrade pip
           python -m pip install --upgrade pip
-          
+
           # Create new venv for this workflow_run
           python --version
           python -m venv ${{ env.VENV_NAME }}
@@ -214,7 +214,11 @@ jobs:
         run: |
           cd main
           python -m pip install --upgrade pip
-          python -m pip install --group tests
+          if [[ "${{ inputs.lightning-version }}" == "stable" ]]; then # FIXME: remove after v0.45 release
+            python -m pip install -r requirements-tests.txt
+          else
+            python -m pip install --group tests
+          fi
           # pyscf is not compatible with numpy 2.4 yet
           python -m pip install openfermionpyscf "numpy<2.4"
 
