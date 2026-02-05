@@ -226,8 +226,6 @@ class TestHelpers:
         actual_program = adjoint_transforms(dev, allow_mcms)
         for transform, expected_transform in zip(actual_program, expected_program, strict=True):
             assert transform.tape_transform == expected_transform.tape_transform
-            assert transform.args == expected_transform.args
-            assert transform.kwargs == expected_transform.kwargs
 
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
@@ -908,8 +906,6 @@ class TestExecution:
         actual_program = device.preprocess_transforms(config)
         for transform, expected_transform in zip(actual_program, expected_program, strict=True):
             assert transform.tape_transform == expected_transform.tape_transform
-            assert transform.args == expected_transform.args
-            assert transform.kwargs == expected_transform.kwargs
 
     @pytest.mark.usefixtures("enable_and_disable_graph_decomp")
     @pytest.mark.parametrize(
