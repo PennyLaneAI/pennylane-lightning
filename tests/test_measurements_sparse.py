@@ -47,7 +47,7 @@ class TestSparseExpval:
             [qml.Identity(0) @ qml.PauliZ(1), 0.98006657784124170, 0.039469480514526367],
         ],
     )
-    def test_sparse_Pauli_words(self, cases, tol, dev):
+    def test_sparse_pauli_words(self, cases, tol, dev):
         """Test expval of some simple sparse Hamiltonian"""
 
         # Compute the sparse matrix of the input operator
@@ -103,7 +103,7 @@ class TestSparseExpvalQChem:
             ],
         ],
     )
-    def test_sparse_Pauli_words(self, qubits, wires, H, hf_state, excitations, tol, dtype):
+    def test_sparse_pauli_words(self, qubits, wires, H, hf_state, excitations, tol, dtype):
         """Test expval of some simple sparse Hamiltonian"""
 
         H_sparse = H.sparse_matrix(wires)
