@@ -32,6 +32,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Upgraded Kokkos from v4.5.0 to v5.0.0 and simplified `lightning.amdgpu` installation instructions.
+  [(#1308)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1308)
+
 - Temporarily updated CI for stable versions to install from `requirements-tests.txt`, and fixed tests to work with pytest 9.0 and updated `queue_category` in PennyLane.
   [(#1340)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1340)
 
