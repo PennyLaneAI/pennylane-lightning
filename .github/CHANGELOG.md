@@ -32,6 +32,12 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Remove MPICH checks from CI pipelines for Lightning devices with MPI distributed support.
+  [(#1342)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1342)
+
+- Temporarily updated CI for stable versions to install from `requirements-tests.txt`, and fixed tests to work with pytest 9.0 and updated `queue_category` in PennyLane.
+  [(#1340)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1340)
+
 - Cleaned up vector-matrix methods used by Lightning devices at `LinearAlgebra.hpp`.
   [(#1314)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1314)
 

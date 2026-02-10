@@ -47,7 +47,7 @@ jobs:
     strategy:
       max-parallel: 1
       matrix:
-        mpilib: ["mpich", "openmpi"]
+        mpilib: ["openmpi"]
         kokkos_version: ["4.5.00"]
         exec_model: ["CUDA"]
         cuda_version_maj: ["12"]
@@ -137,7 +137,11 @@ jobs:
           PL_BACKEND: lightning_qubit
         run: |
           source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}
-          python -m pip install --group tests
+          if [[ "${{ inputs.lightning-version }}" == "stable" ]]; then # FIXME: remove after v0.45 release
+            python -m pip install -r requirements-tests.txt
+          else
+            python -m pip install --group tests
+          fi
           # pyscf is not compatible with numpy 2.4 yet
           python -m pip install mpi4py openfermionpyscf "numpy<2.4"
           python scripts/configure_pyproject_toml.py || true
