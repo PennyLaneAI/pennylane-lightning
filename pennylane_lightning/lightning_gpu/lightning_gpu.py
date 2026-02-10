@@ -21,6 +21,7 @@ from __future__ import annotations
 
 from ctypes.util import find_library
 from dataclasses import replace
+from functools import partial
 from importlib import util as imp_util
 from pathlib import Path
 from typing import List, Optional, Union
@@ -49,6 +50,7 @@ from pennylane_lightning.lightning_base.lightning_base import (
     LightningBase,
     QuantumTape_or_Batch,
     Result_or_ResultBatch,
+    adjoint_transforms,
     resolve_mcm_method,
     supports_adjoint,
 )
