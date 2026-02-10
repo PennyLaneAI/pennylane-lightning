@@ -92,6 +92,9 @@ _to_matrix_ops = {
 def make_stopping_condition(gate_set: GateSet) -> Callable[[Operator], bool]:
     """Turn a gate set into a stopping condition."""
 
+    if not isinstance(gate_set, GateSet):
+        gate_set = GateSet(gate_set)
+
     def _stopping_condition(op: Operator):
         return op in gate_set
 
