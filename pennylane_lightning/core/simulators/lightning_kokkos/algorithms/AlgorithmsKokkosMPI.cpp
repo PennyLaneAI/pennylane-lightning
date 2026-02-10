@@ -21,6 +21,7 @@ using namespace Pennylane::LightningKokkos;
 using Pennylane::LightningKokkos::StateVectorKokkosMPI;
 
 // explicit instantiation
+#ifndef __HIP_DEVICE_COMPILE__
 template class Pennylane::Algorithms::OpsData<StateVectorKokkosMPI<float>>;
 template class Pennylane::Algorithms::OpsData<StateVectorKokkosMPI<double>>;
 
@@ -30,3 +31,4 @@ template class Pennylane::Algorithms::JacobianData<
 
 template class Algorithms::AdjointJacobianMPI<StateVectorKokkosMPI<float>>;
 template class Algorithms::AdjointJacobianMPI<StateVectorKokkosMPI<double>>;
+#endif

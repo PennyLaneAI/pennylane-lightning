@@ -369,7 +369,9 @@ void applyGenMultiRZ(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                                             Pennylane::Util::exp2(num_qubits)),
         KOKKOS_LAMBDA(std::size_t k) {
             arr_(k) *= static_cast<PrecisionT>(
-                1 - 2 * int(Kokkos::Impl::bit_count(k & wires_parity) % 2));
+                1 - 2 * int(Kokkos::Experimental::popcount_builtin(
+                                k & wires_parity) %
+                            2));
         });
 }
 
@@ -951,7 +953,9 @@ void applyNCGenMultiRZ(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
         KOKKOS_LAMBDA(std::size_t k) {
             if (ctrls_mask == (ctrls_parity & k)) {
                 arr_(k) *= static_cast<PrecisionT>(
-                    1 - 2 * int(Kokkos::Impl::bit_count(k & wires_parity) % 2));
+                    1 - 2 * int(Kokkos::Experimental::popcount_builtin(
+                                    k & wires_parity) %
+                                2));
             } else {
                 arr_(k) = 0.0;
             }

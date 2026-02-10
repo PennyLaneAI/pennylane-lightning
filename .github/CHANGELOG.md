@@ -32,6 +32,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Upgraded Kokkos from v4.5.0 to v5.0.0.
+  [(#1308)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1308)
+
 - Remove MPICH checks from CI pipelines for Lightning devices with MPI distributed support.
   [(#1342)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1342)
 

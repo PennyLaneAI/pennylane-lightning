@@ -216,8 +216,7 @@ RUN pip uninstall -y pennylane-lightning
 RUN python scripts/configure_pyproject_toml.py || true
 RUN CMAKE_ARGS="-DKokkos_ENABLE_SERIAL:BOOL=ON \
     -DKokkos_ENABLE_HIP:BOOL=ON \
-    -DKokkos_ARCH_${AMD_ARCH}=ON \
-    -DCMAKE_CXX_FLAGS='--gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/11/'" \
+    -DKokkos_ARCH_${AMD_ARCH}=ON" \
     python -m build --wheel
 
 # Install lightning-amdgpu HIP backend
