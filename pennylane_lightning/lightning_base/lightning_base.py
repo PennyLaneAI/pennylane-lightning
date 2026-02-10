@@ -879,7 +879,7 @@ def adjoint_transforms(device: LightningBase, allow_mcms: bool = False) -> qml.C
 
 
 def supports_adjoint(device, circuit) -> bool:
-    """Returns True iff the device supports adjoint differentiation of the given circuit."""
+    """Returns True if the device supports adjoint differentiation of the given circuit."""
 
     if circuit is None:
         return True

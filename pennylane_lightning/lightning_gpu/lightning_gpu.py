@@ -342,7 +342,7 @@ class LightningGPU(LightningBase):
         pipeline.add_transform(qml.transforms.broadcast_expand)
 
         if exec_config.gradient_method == "adjoint":
-            adjoint_transforms(self, allow_mcms)
+            pipeline += adjoint_transforms(self, allow_mcms)
 
         return pipeline
 
