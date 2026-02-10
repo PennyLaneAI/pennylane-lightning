@@ -33,7 +33,7 @@ Install Lightning-AMDGPU
 
     # Install Lightning-AMDGPU
     PL_BACKEND="lightning_amdgpu" python scripts/configure_pyproject_toml.py
-    export CMAKE_ARGS="-DCMAKE_CXX_COMPILER=hipcc -DKokkos_ENABLE_HIP=ON -DKokkos_ARCH_AMD_GFX942=ON"
+    export CMAKE_ARGS="-DCMAKE_CXX_COMPILER=hipcc -DKokkos_ENABLE_HIP=ON -DKokkos_ARCH_AMD_GFX942=ON -DCMAKE_PREFIX_PATH=/opt/rocm"
     python -m pip install . -vv
 
 
