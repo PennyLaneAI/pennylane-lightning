@@ -33,7 +33,6 @@ from conftest import (
     LightningStateVector,
     device_name,
 )
-from pennylane.decomposition.gate_set import GateSet
 from pennylane.devices import DefaultQubit, ExecutionConfig, MCMConfig
 from pennylane.devices.preprocess import (
     decompose,
@@ -75,13 +74,13 @@ elif device_name in ("lightning.kokkos", "lightning.amdgpu"):
     accepted_observables = LightningDevice.capabilities.supports_observable
 
 elif device_name == "lightning.gpu":
-    from pennylane_lightning.lightning_gpu.lightning_gpu import make_stopping_condition
+    from pennylane_lightning.lightning_gpu.lightning_gpu import (
+        allow_mcms_stopping_condition,
+        no_mcms_stopping_condition,
+        stopping_condition,
+    )
 
     accepted_observables = LightningDevice.capabilities.supports_observable
-    _gate_set = LightningDevice.capabilities.gate_set()
-    stopping_condition = make_stopping_condition(GateSet(_gate_set))
-    no_mcms_stopping_condition = stopping_condition
-    allow_mcms_stopping_condition = make_stopping_condition(GateSet(_gate_set | {"MidMeasureMP"}))
 
 elif device_name == "lightning.tensor":
     from pennylane_lightning.lightning_tensor.lightning_tensor import (

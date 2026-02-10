@@ -19,7 +19,6 @@ interfaces with the NVIDIA cuQuantum cuStateVec simulator library for GPU-enable
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from ctypes.util import find_library
 from dataclasses import replace
 from importlib import util as imp_util
@@ -31,7 +30,6 @@ import numpy as np
 import pennylane as qml
 from numpy.random import BitGenerator, Generator, SeedSequence
 from numpy.typing import ArrayLike
-from pennylane.decomposition.gate_set import GateSet
 from pennylane.devices import ExecutionConfig
 from pennylane.devices.capabilities import OperatorProperties
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
@@ -44,13 +42,13 @@ from pennylane.devices.preprocess import (
 )
 from pennylane.exceptions import DeviceError
 from pennylane.operation import Operator
+from pennylane.ops import MidMeasure
 from pennylane.transforms import defer_measurements, dynamic_one_shot
 
 from pennylane_lightning.lightning_base.lightning_base import (
     LightningBase,
     QuantumTape_or_Batch,
     Result_or_ResultBatch,
-    adjoint_transforms,
     resolve_mcm_method,
     supports_adjoint,
 )
@@ -89,16 +87,19 @@ _to_matrix_ops = {
 }
 
 
-def make_stopping_condition(gate_set: GateSet) -> Callable[[Operator], bool]:
-    """Turn a gate set into a stopping condition."""
+def stopping_condition(op: Operator, allow_mcms: bool = True) -> bool:
+    """A function that determines whether or not an operation is supported by ``lightning.gpu``."""
 
-    if not isinstance(gate_set, GateSet):
-        gate_set = GateSet(gate_set)
+    if isinstance(op, MidMeasure):
+        # Conditional and MidMeasureMP should not be decomposed
+        return allow_mcms
 
-    def _stopping_condition(op: Operator):
-        return op in gate_set
+    return _supports_operation(op.name)
 
-    return _stopping_condition
+
+# need to create these once so we can compare in tests
+allow_mcms_stopping_condition = partial(stopping_condition, allow_mcms=True)
+no_mcms_stopping_condition = partial(stopping_condition, allow_mcms=False)
 
 
 # LightningGPU specific methods
@@ -301,10 +302,11 @@ class LightningGPU(LightningBase):
 
         gate_set = self.capabilities.gate_set()
         allow_mcms = False
+        _stopping_condition = no_mcms_stopping_condition
         if exec_config.mcm_config.mcm_method != "deferred":
             gate_set |= {"MidMeasureMP"}
             allow_mcms = True
-        _stopping_condition = make_stopping_condition(gate_set)
+            _stopping_condition = allow_mcms_stopping_condition
 
         if qml.capture.enabled():
             if exec_config.mcm_config.mcm_method == "deferred":
@@ -414,3 +416,6 @@ class LightningGPU(LightningBase):
         """
 
         return LightningBase.get_c_interface_impl("LightningGPUSimulator", "lightning_gpu")
+
+
+_supports_operation = LightningGPU.capabilities.supports_operation
