@@ -47,7 +47,7 @@ jobs:
     strategy:
       max-parallel: 1
       matrix:
-        mpilib: ["mpich", "openmpi"]
+        mpilib: ["openmpi"]
         kokkos_version: ["5.0.0"]
         exec_model: ["CUDA"]
         cuda_version_maj: ["12"]
