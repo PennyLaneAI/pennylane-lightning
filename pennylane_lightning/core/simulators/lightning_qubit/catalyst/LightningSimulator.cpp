@@ -364,10 +364,14 @@ void LightningSimulator::checkReleasedQubitsDisentangled() {
 
     // Sanity check: purity should be a finite, non-negative real number
     // (Tr(ρ^2) is always real for Hermitian density matrices)
-    RT_FAIL_IF(!std::isfinite(purity) || purity < 0.0,
-               "Invalid purity value computed: " + std::to_string(purity));
+    if (!std::isfinite(purity) || purity < 0.0) {
+        const std::string error_msg =
+            "Invalid purity value computed: " + std::to_string(purity);
+        RT_FAIL(error_msg.c_str());
+    }
 
-    // Check if purity is close to 1 (disentangled qubits should have purity = 1)
+    // Check if purity is close to 1 (disentangled qubits should have purity =
+    // 1)
     constexpr double epsilon = 1e-6;
     if (std::abs(purity - 1.0) > epsilon) {
         const std::string error_msg =
