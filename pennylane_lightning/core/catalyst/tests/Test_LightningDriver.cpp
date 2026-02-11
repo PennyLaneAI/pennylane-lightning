@@ -433,6 +433,24 @@ TEST_CASE("Sample after releasing middle qubit (triggers remap)", "[Driver]") {
     }
 }
 
+TEST_CASE("Cannot reuse entangled qubit when allocating", "[Driver]") {
+    // 1. Allocate 2 qubits and entangle them
+    // 2. Release one entangled qubit
+    // 3. AllocateQubit() tries to reuse the released qubit -> should fail
+    std::unique_ptr<LSimulator> sim = std::make_unique<LSimulator>();
+
+    std::vector<intptr_t> qubits = sim->AllocateQubits(2);
+    sim->NamedOperation("Hadamard", {}, {qubits[0]}, false);
+    sim->NamedOperation("CNOT", {}, {qubits[0], qubits[1]}, false);
+
+    sim->ReleaseQubit(qubits[1]);
+
+    REQUIRE_THROWS_WITH(
+        sim->AllocateQubit(),
+        Catch::Contains("Cannot reuse qubit: qubit is entangled with remaining "
+                        "qubits. Release qubits must be disentangled."));
+}
+
 TEST_CASE("Release one qubit from entangled qubits", "[Driver]") {
     // 1. Allocate 2 static qubits (wires 0, 1) and apply PauliX to each
     // 2. Dynamically allocate 2 qubits and apply CNOT to create entanglement
