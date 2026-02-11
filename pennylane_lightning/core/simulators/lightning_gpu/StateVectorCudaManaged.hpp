@@ -17,6 +17,7 @@
 #pragma once
 
 #include <algorithm>
+#include <limits>
 #include <random>
 #include <set>
 #include <type_traits>
@@ -1950,6 +1951,28 @@ class StateVectorCudaManaged
         std::vector<std::complex<PrecisionT>> data_host(BaseType::getLength());
         BaseType::CopyGpuDataToHost(data_host.data(), data_host.size());
         return data_host;
+    }
+
+    /**
+     * @brief Normalize vector (to have norm 1).
+     */
+    void normalize() {
+        auto data_host = getDataVector();
+
+        PrecisionT norm = std::sqrt(
+            Pennylane::Util::squaredNorm(data_host.data(), data_host.size()));
+
+        // TODO: Waiting the decision from PL core about how to solve the issue
+        // https://github.com/PennyLaneAI/pennylane/issues/6504
+        PL_ABORT_IF(norm < std::numeric_limits<PrecisionT>::epsilon() * 1e2,
+                    "Vector has norm close to zero and cannot be normalized");
+
+        const ComplexT inv_norm = 1. / norm;
+        for (std::size_t k = 0; k < data_host.size(); k++) {
+            data_host[k] *= inv_norm;
+        }
+
+        BaseType::CopyHostDataToGpu(data_host.data(), data_host.size(), false);
     }
 
   private:
