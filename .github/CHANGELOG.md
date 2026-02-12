@@ -105,6 +105,9 @@ Jake Zaia.
 
 <h3>Bug fixes 🐛</h3>
 
+- Fixed sampling with dynamically allocated and released qubits in Catalyst. The state vector is now reduced before measurements to correctly handle released qubits, ensuring `qml.sample()` and other measurement operations return correct results when using `qml.allocate()` and `qml.release()`.
+  [(#1321)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1321)
+
 - Corrected an issue in tests where a PennyLane operator was used within a QNode to compute a
   matrix, which would lead to incorrect queuing as of PennyLane
   pull request [#8131](https://github.com/PennyLaneAI/pennylane/pull/8131).
