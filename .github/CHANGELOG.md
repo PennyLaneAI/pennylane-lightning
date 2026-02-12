@@ -32,6 +32,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Cleaned up the preprocess transforms of the lightning devices, updating the calls to `decompose` with the correct gate set.
+  [(#1341)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1341)
+
 - Remove MPICH checks from CI pipelines for Lightning devices with MPI distributed support.
   [(#1342)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1342)
 
@@ -62,6 +65,7 @@ This release contains contributions from (in alphabetical order):
 
 Runor Agbaire,
 Ali Asadi,
+Astral Cai,
 Ashish Kanwar Singh,
 Jeffrey Kam,
 Joseph Lee,

@@ -32,23 +32,23 @@ from pennylane.devices.modifiers import simulator_tracking, single_tape_support
 from pennylane.devices.preprocess import (
     decompose,
     device_resolve_dynamic_wires,
-    no_sampling,
-    validate_adjoint_trainable_params,
     validate_device_wires,
     validate_measurements,
     validate_observables,
 )
-from pennylane.exceptions import DecompositionUndefinedError, DeviceError
-from pennylane.measurements import MidMeasureMP, ShotsLike
+from pennylane.exceptions import DeviceError
+from pennylane.measurements import ShotsLike
 from pennylane.operation import Operator
-from pennylane.ops import Conditional, PauliRot, Prod, SProd, Sum
+from pennylane.ops import MidMeasure
 from pennylane.transforms import defer_measurements, dynamic_one_shot
 
 from pennylane_lightning.lightning_base.lightning_base import (
     LightningBase,
     QuantumTape_or_Batch,
     Result_or_ResultBatch,
+    adjoint_transforms,
     resolve_mcm_method,
+    supports_adjoint,
 )
 
 try:
@@ -87,7 +87,7 @@ def stopping_condition(op: Operator, allow_mcms=True) -> bool:
         word = op._hyperparameters["pauli_word"]  # pylint: disable=protected-access
         # decomposes to IsingXX, etc. for n <= 2
         return reduce(lambda x, y: x + (y != "I"), word, 0) > 2
-    if isinstance(op, MidMeasureMP):
+    if isinstance(op, MidMeasure):
         return allow_mcms
     return _supports_operation(op.name)
 
@@ -95,84 +95,6 @@ def stopping_condition(op: Operator, allow_mcms=True) -> bool:
 # need to create these once so we can compare in tests
 allow_mcms_stopping_condition = partial(stopping_condition, allow_mcms=True)
 no_mcms_stopping_condition = partial(stopping_condition, allow_mcms=False)
-
-
-def accepted_observables(obs: Operator) -> bool:
-    """A function that determines whether or not an observable is supported by ``lightning.qubit``."""
-    return _supports_observable(obs.name)
-
-
-def adjoint_observables(obs: Operator) -> bool:
-    """A function that determines whether or not an observable is supported by ``lightning.qubit``
-    when using the adjoint differentiation method."""
-    if isinstance(obs, qml.Projector):
-        return False
-
-    if isinstance(obs, SProd):
-        return adjoint_observables(obs.base)
-
-    if isinstance(obs, (Sum, Prod)):
-        return all(adjoint_observables(o) for o in obs)
-
-    return _supports_observable(obs.name)
-
-
-def adjoint_measurements(mp: qml.measurements.MeasurementProcess) -> bool:
-    """Specifies whether or not an observable is compatible with adjoint differentiation on DefaultQubit."""
-    return isinstance(mp, qml.measurements.ExpectationMP)
-
-
-def _supports_adjoint(circuit, device_wires=None):
-    if circuit is None:
-        return True
-
-    prog = qml.CompilePipeline()
-    _add_adjoint_transforms(prog, device_wires=device_wires)
-
-    try:
-        prog((circuit,))
-    except (DecompositionUndefinedError, DeviceError, AttributeError):
-        return False
-    return True
-
-
-def _adjoint_ops(op: qml.operation.Operator) -> bool:
-    """Specify whether or not an Operator is supported by adjoint differentiation."""
-
-    return not isinstance(op, (Conditional, MidMeasureMP, PauliRot)) and (
-        not any(qml.math.requires_grad(d) for d in op.data)
-        or (op.num_params == 1 and op.has_generator)
-    )
-
-
-def _add_adjoint_transforms(pipeline: qml.CompilePipeline, device_wires=None) -> None:
-    """Private helper function for ``preprocess`` that adds the transforms specific
-    for adjoint differentiation.
-
-    Args:
-        pipeline (qml.CompilePipeline): where we will add the adjoint differentiation transforms
-
-    Side Effects:
-        Adds transforms to the input program.
-
-    """
-
-    name = "adjoint + lightning.qubit"
-    pipeline.add_transform(no_sampling, name=name)
-    pipeline.add_transform(qml.transforms.broadcast_expand)
-    pipeline.add_transform(
-        decompose,
-        stopping_condition=_adjoint_ops,
-        name=name,
-        skip_initial_state_prep=False,
-        device_wires=device_wires,
-        target_gates=LightningQubit.capabilities.gate_set(differentiable=True),
-    )
-    pipeline.add_transform(validate_observables, accepted_observables, name=name)
-    pipeline.add_transform(
-        validate_measurements, analytic_measurements=adjoint_measurements, name=name
-    )
-    pipeline.add_transform(validate_adjoint_trainable_params)
 
 
 @simulator_tracking
@@ -368,24 +290,32 @@ class LightningQubit(LightningBase):
         exec_config = execution_config
         pipeline = qml.CompilePipeline()
 
+        gate_set = self.capabilities.gate_set()
+        allow_mcms = False
+        _stopping_condition = no_mcms_stopping_condition
+        if exec_config.mcm_config.mcm_method != "deferred":
+            gate_set |= {"MidMeasureMP"}
+            allow_mcms = True
+            _stopping_condition = allow_mcms_stopping_condition
+
         if qml.capture.enabled():
             if exec_config.mcm_config.mcm_method == "deferred":
                 pipeline.add_transform(qml.defer_measurements, num_wires=len(self.wires))
-            # Using stopping_condition_shots because we don't want to decompose Conditionals or MCMs
             pipeline.add_transform(
                 qml.transforms.decompose,
-                gate_set=self.capabilities.gate_set(),
-                stopping_condition=no_mcms_stopping_condition,
+                gate_set=gate_set,
+                stopping_condition=_stopping_condition,
             )
             return pipeline
 
         pipeline.add_transform(validate_measurements, name=self.name)
-        pipeline.add_transform(validate_observables, accepted_observables, name=self.name)
+        pipeline.add_transform(
+            validate_observables,
+            self.capabilities.supports_observable,
+            name=self.name,
+        )
         if exec_config.mcm_config.mcm_method == "deferred":
             pipeline.add_transform(defer_measurements, allow_postselect=False)
-            _stopping_condition = no_mcms_stopping_condition
-        else:
-            _stopping_condition = allow_mcms_stopping_condition
 
         pipeline.add_transform(
             decompose,
@@ -393,7 +323,7 @@ class LightningQubit(LightningBase):
             skip_initial_state_prep=True,
             name=self.name,
             device_wires=self.wires,
-            target_gates=self.capabilities.gate_set(),  # let's temporarily read the toml file to get the gate set
+            target_gates=gate_set,
         )
         _allow_resets = exec_config.mcm_config.mcm_method != "deferred"
         pipeline.add_transform(
@@ -407,7 +337,8 @@ class LightningQubit(LightningBase):
         pipeline.add_transform(qml.transforms.broadcast_expand)
 
         if exec_config.gradient_method == "adjoint":
-            _add_adjoint_transforms(pipeline, device_wires=self.wires)
+            pipeline += adjoint_transforms(self, allow_mcms)
+
         return pipeline
 
     # pylint: disable=unused-argument
@@ -474,9 +405,7 @@ class LightningQubit(LightningBase):
             return True
 
         if execution_config and execution_config.gradient_method in {"adjoint", "best"}:
-            if circuit is None:
-                return True
-            return _supports_adjoint(circuit=circuit, device_wires=self.wires)
+            return supports_adjoint(self, circuit)
 
         return False
 
@@ -528,4 +457,3 @@ def _validate_mcmc_options(
 
 
 _supports_operation = LightningQubit.capabilities.supports_operation
-_supports_observable = LightningQubit.capabilities.supports_observable
