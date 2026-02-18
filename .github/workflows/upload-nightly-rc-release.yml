@@ -109,6 +109,6 @@ jobs:
   build-windows-x86_64:
     needs: setup-rc
     if: ${{ needs.setup-rc.outputs.branch_exists == 'true' }}
-    uses: ./.github/workflows/wheel_windows_x86_64.yml
+    uses: ./.github/workflows/wheel_win_x86_64.yml
     with:
       branch: ${{ needs.setup-rc.outputs.rc_branch }}
