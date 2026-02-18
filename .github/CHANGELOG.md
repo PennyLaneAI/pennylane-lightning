@@ -32,6 +32,10 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- A new AI policy document is now applied across the PennyLaneAI organization for all AI contributions.
+  [(#1345)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1345)
+
+
 - Cleaned up the preprocess transforms of the lightning devices, updating the calls to `decompose` with the correct gate set.
   [(#1341)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1341)
 
