@@ -43,7 +43,7 @@ jobs:
           echo "rc_branch=$RC_BRANCH" >> $GITHUB_OUTPUT
           echo "Found rc branch: $RC_BRANCH"
         else
-          echo "branch_exists=false" >> $GITHUB_OUTPUT
+          echo "branch_exists=true" >> $GITHUB_OUTPUT
         fi
 
     - name: Checkout Lightning repo
