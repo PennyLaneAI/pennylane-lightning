@@ -53,7 +53,8 @@ jobs:
     steps:
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
-        ref: ${{ inputs.branch }}
+        with:        
+          ref: ${{ inputs.branch }}
 
       - name: Install Python 3.12
         uses: actions/setup-python@v5

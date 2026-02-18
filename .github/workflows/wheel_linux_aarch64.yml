@@ -114,6 +114,8 @@ jobs:
     steps:
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
+        with:        
+          ref: ${{ inputs.branch }}        
 
       - name: Restoring cached dependencies
         id: kokkos-cache

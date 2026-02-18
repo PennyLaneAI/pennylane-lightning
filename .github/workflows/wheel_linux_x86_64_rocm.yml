@@ -129,7 +129,9 @@ jobs:
 
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
-
+        with:        
+          ref: ${{ inputs.branch }} 
+          
       - name: Copy cached libraries
         if: steps.kokkos-cache.outputs.cache-hit == 'true'
         run: |
