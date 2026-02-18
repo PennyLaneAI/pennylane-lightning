@@ -58,11 +58,11 @@ jobs:
       run: |
         echo "rc_branch is ${{ steps.check_rc.outputs.rc_branch }}"
         python $GITHUB_WORKSPACE/.github/workflows/set_nightly_version_rc.py
-        git config --global user.email '${{ secrets.AUTO_UPDATE_VERSION_RINGO_EMAIL }}'
-        git config --global user.name "ringo-but-quantum"
-        git add $GITHUB_WORKSPACE/pennylane/_version.py
-        git commit -m "[no ci] bump nightly version"
-        git push
+        # git config --global user.email '${{ secrets.AUTO_UPDATE_VERSION_RINGO_EMAIL }}'
+        # git config --global user.name "ringo-but-quantum"
+        # git add $GITHUB_WORKSPACE/pennylane/_version.py
+        # git commit -m "[no ci] bump nightly version"
+        # git push
 
   build-linux-aarch64-cuda:
     needs: setup-rc
@@ -92,13 +92,6 @@ jobs:
     with:
       branch: ${{ needs.setup-rc.outputs.rc_branch }}
 
-  build-macos-x86_64:
-    needs: setup-rc
-    if: ${{ needs.setup-rc.outputs.branch_exists == 'true' }}
-    uses: ./.github/workflows/wheel_macos_x86_64.yml
-    with:
-      branch: ${{ needs.setup-rc.outputs.rc_branch }}
-
   build-macos-arm64:
     needs: setup-rc
     if: ${{ needs.setup-rc.outputs.branch_exists == 'true' }}
@@ -110,5 +103,19 @@ jobs:
     needs: setup-rc
     if: ${{ needs.setup-rc.outputs.branch_exists == 'true' }}
     uses: ./.github/workflows/wheel_win_x86_64.yml
+    with:
+      branch: ${{ needs.setup-rc.outputs.rc_branch }}
+
+  build-windows-x86_64:
+    needs: setup-rc
+    if: ${{ needs.setup-rc.outputs.branch_exists == 'true' }}
+    uses: ./.github/workflows/wheel_linux_x86_64_rocm.yml
+    with:
+      branch: ${{ needs.setup-rc.outputs.rc_branch }}
+  
+  build-noarch:
+    needs: setup-rc
+    if: ${{ needs.setup-rc.outputs.branch_exists == 'true' }}
+    uses: ./.github/workflows/wheel_noarch.yml
     with:
       branch: ${{ needs.setup-rc.outputs.rc_branch }}
