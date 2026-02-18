@@ -13,6 +13,12 @@ on:
   release:
     types: [published]
   workflow_dispatch:
+  workflow_call:
+    inputs:
+      branch:
+        required: false
+        type: string
+        default: master        
 
 concurrency:
   group: wheel_linux_aarch64_cu12-${{ github.ref }}
@@ -47,6 +53,7 @@ jobs:
     steps:
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
+        ref: ${{ inputs.branch }}
 
       - name: Install Python 3.12
         uses: actions/setup-python@v5
