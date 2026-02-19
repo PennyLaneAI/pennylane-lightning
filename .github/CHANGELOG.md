@@ -35,6 +35,9 @@
 - Remove dependency for GCC-11 when building `lightning.amdgpu`.
   [(#1343)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1343)
 
+- Cleaned up the preprocess transforms of the lightning devices, updating the calls to `decompose` with the correct gate set.
+  [(#1341)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1341)
+
 - Remove MPICH checks from CI pipelines for Lightning devices with MPI distributed support.
   [(#1342)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1342)
 
@@ -65,6 +68,7 @@ This release contains contributions from (in alphabetical order):
 
 Runor Agbaire,
 Ali Asadi,
+Astral Cai,
 Ashish Kanwar Singh,
 Jeffrey Kam,
 Joseph Lee,
@@ -103,6 +107,9 @@ Jake Zaia.
   [(#1287)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1287)
 
 <h3>Bug fixes 🐛</h3>
+
+- Fixed sampling with dynamically allocated and released qubits in Catalyst. The state vector is now reduced before measurements to correctly handle released qubits, ensuring `qml.sample()` and other measurement operations return correct results when using `qml.allocate()` and `qml.release()`.
+  [(#1321)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1321)
 
 - Corrected an issue in tests where a PennyLane operator was used within a QNode to compute a
   matrix, which would lead to incorrect queuing as of PennyLane
