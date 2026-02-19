@@ -125,7 +125,7 @@ jobs:
       branch: ${{ needs.setup-rc.outputs.rc_branch }}
 
   check-wheel-uploads:
-    needs: [build-linux-aarch64-cuda, build-linux-x86_64, build-linux-x86_64-cuda, build-linux-aarch64, build-macos-arm64, build-windows-x86_64, build-windows-x86_64_rocm, build-noarch]
+    # needs: [build-linux-aarch64-cuda, build-linux-x86_64, build-linux-x86_64-cuda, build-linux-aarch64, build-macos-arm64, build-windows-x86_64, build-windows-x86_64_rocm, build-noarch]
     name: Check wheel uploads
     runs-on: ubuntu-24.04
     
