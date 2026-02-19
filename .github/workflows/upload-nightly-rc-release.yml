@@ -119,3 +119,19 @@ jobs:
     uses: ./.github/workflows/wheel_noarch.yml
     with:
       branch: ${{ needs.setup-rc.outputs.rc_branch }}
+
+  check-wheel-uploads:
+    needs: [build-linux-aarch64-cuda, build-linux-x86_64, build-linux-x86_64-cuda, build-linux-aarch64, build-macos-arm64, build-windows-x86_64, build-windows-x86_64_rocm, build-noarch]
+    name: Check wheel uploads
+    runs-on: ubuntu-24.04
+    
+    steps:
+      - name: Check for uploaded wheels
+        env:
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+        run: |
+          # Check if any wheel artifacts were uploaded
+          git config user.name "GitHub Actions Bot"
+          git config user.email "<>"         
+          gh workflow run "Build Release Branch Nightly for TestPyPI" --repo PennyLaneAI/catalyst --ref sc-111637-sync-rc
+          
