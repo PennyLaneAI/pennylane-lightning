@@ -10,7 +10,7 @@ The installation instruction here is specifically for AMD MI300 GPU (GFX942); fo
 
 .. note::
 
-    Lightning-Kokkos and Lightning-AMDGPU is tested with Kokkos version 4.5.00
+    Lightning-Kokkos and Lightning-AMDGPU are tested with Kokkos version 4.5.00
 
 
 Install Lightning-AMDGPU
