@@ -137,7 +137,7 @@ jobs:
 
       - name: Check for uploaded wheels
         env:
-          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+          GITHUB_TOKEN: "${{ secrets.PENNYLANE_TRIGGER_RC_WORKFLOW }}"
         run: |
           # Check if any wheel artifacts were uploaded
           git config user.name "GitHub Actions Bot"
