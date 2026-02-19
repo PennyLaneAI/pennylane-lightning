@@ -25,7 +25,7 @@ on:
         default: master        
 
 concurrency:
-  group: wheel_linux_x86_64_cu12-${{ github.ref }}
+  group: wheel_linux_x86_64_cu12-${{ github.ref }}-${{ inputs.branch }}
   cancel-in-progress: true
 
 jobs:

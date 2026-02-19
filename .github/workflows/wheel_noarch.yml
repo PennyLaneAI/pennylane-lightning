@@ -26,7 +26,7 @@ on:
         default: master        
 
 concurrency:
-  group: wheel_noarch-${{ github.ref }}
+  group: wheel_noarch-${{ github.ref }}-${{ inputs.branch }}
   cancel-in-progress: true
 
 jobs:

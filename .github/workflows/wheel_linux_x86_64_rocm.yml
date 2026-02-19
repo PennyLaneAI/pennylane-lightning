@@ -28,7 +28,7 @@ on:
         default: master        
 
 concurrency:
-  group: wheel_linux_x86_64_rocm-${{ github.ref }}
+  group: wheel_linux_x86_64_rocm-${{ github.ref }}-${{ inputs.branch }}
   cancel-in-progress: true
 
 jobs:
@@ -131,7 +131,7 @@ jobs:
         uses: actions/checkout@v4
         with:        
           ref: ${{ inputs.branch }} 
-          
+
       - name: Copy cached libraries
         if: steps.kokkos-cache.outputs.cache-hit == 'true'
         run: |
