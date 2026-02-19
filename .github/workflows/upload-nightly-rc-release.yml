@@ -130,6 +130,11 @@ jobs:
     runs-on: ubuntu-24.04
     
     steps:
+      - name: Checkout Lightning repo
+        uses: actions/checkout@v4
+        with:
+          ref: master
+
       - name: Check for uploaded wheels
         env:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
