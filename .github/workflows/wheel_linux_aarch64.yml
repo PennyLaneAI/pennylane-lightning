@@ -18,9 +18,15 @@ on:
   release:
     types: [published]
   workflow_dispatch:
+  workflow_call:
+    inputs:
+      branch:
+        required: false
+        type: string  
+        default: master        
 
 concurrency:
-  group: wheel_linux_aarch64-${{ github.ref }}
+  group: wheel_linux_aarch64-${{ github.ref }}-${{ inputs.branch }}
   cancel-in-progress: true
 
 env:
@@ -108,6 +114,8 @@ jobs:
     steps:
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
+        with:        
+          ref: ${{ inputs.branch }}        
 
       - name: Restoring cached dependencies
         id: kokkos-cache

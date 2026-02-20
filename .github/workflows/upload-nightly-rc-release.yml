@@ -1,0 +1,146 @@
+name: Build nightly Lightning RC releases for TestPyPI
+
+on:
+  schedule:
+    # Run every weekday at 5:50 EDT (cron is in UTC)
+    - cron: "50 9 * * 1-5"
+  workflow_dispatch:
+  push:
+
+concurrency:
+  group: nightly-rc-release-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  setup-rc:
+    name: Setup the release
+    runs-on: ubuntu-24.04
+    outputs:
+      rc_branch: ${{ steps.check_rc.outputs.rc_branch }}
+      branch_exists: ${{ steps.check_rc.outputs.branch_exists }}
+    steps:
+    - name: Checkout Lightning repo
+      uses: actions/checkout@v4
+      with:
+        ref: master
+
+    # Sets up Python environment
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+        
+    # Ensure setuptools is up-to-date for pyproject.toml processing
+    - name: Install latest setuptools 
+      run: |
+        python -m pip install --upgrade pip
+        pip install --upgrade setuptools        
+
+    - name: Check for rc branch
+      id: check_rc
+      run: |
+        VERSION=$(python setup.py --version)
+        IFS=. read MAJ MIN PAT <<< "${VERSION%-dev[0-9]*}"
+        RC_BRANCH="v${MAJ}.$((MIN-1)).${PAT}-rc0"
+        if git ls-remote --exit-code origin "refs/heads/$RC_BRANCH"; then
+          echo "branch_exists=true" >> $GITHUB_OUTPUT
+          echo "rc_branch=$RC_BRANCH" >> $GITHUB_OUTPUT
+          echo "Found rc branch: $RC_BRANCH"
+        else
+          echo "branch_exists=true" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Checkout Lightning repo
+      if: ${{ steps.check_rc.outputs.branch_exists == 'true' }}
+      uses: actions/checkout@v4
+      with:
+        ssh-key: ${{ secrets.NIGHTLY_VERSION_UPDATE_DEPLOY_KEY }}
+        ref: ${{ steps.check_rc.outputs.rc_branch }}
+
+    - name: Bump rc version
+      if: ${{ steps.check_rc.outputs.branch_exists == 'true' }}
+      run: |
+        echo "rc_branch is ${{ steps.check_rc.outputs.rc_branch }}"
+        python $GITHUB_WORKSPACE/.github/workflows/set_nightly_version_rc.py
+        # git config --global user.email '${{ secrets.AUTO_UPDATE_VERSION_RINGO_EMAIL }}'
+        # git config --global user.name "ringo-but-quantum"
+        # git add $GITHUB_WORKSPACE/pennylane/_version.py
+        # git commit -m "[no ci] bump nightly version"
+        # git push
+
+  build-linux-aarch64-cuda:
+    needs: setup-rc
+    if: ${{ needs.setup-rc.outputs.branch_exists == 'true' }}
+    uses: ./.github/workflows/wheel_linux_aarch64_cuda.yml
+    with:
+      branch: ${{ needs.setup-rc.outputs.rc_branch }}
+
+  build-linux-x86_64:
+    needs: setup-rc
+    if: ${{ needs.setup-rc.outputs.branch_exists == 'true' }}
+    uses: ./.github/workflows/wheel_linux_x86_64.yml
+    with:
+      branch: ${{ needs.setup-rc.outputs.rc_branch }}
+
+  build-linux-x86_64-cuda:
+    needs: setup-rc
+    if: ${{ needs.setup-rc.outputs.branch_exists == 'true' }}
+    uses: ./.github/workflows/wheel_linux_x86_64_cuda.yml
+    with:
+      branch: ${{ needs.setup-rc.outputs.rc_branch }}
+
+  build-linux-aarch64:
+    needs: setup-rc
+    if: ${{ needs.setup-rc.outputs.branch_exists == 'true' }}
+    uses: ./.github/workflows/wheel_linux_aarch64.yml
+    with:
+      branch: ${{ needs.setup-rc.outputs.rc_branch }}
+
+  build-macos-arm64:
+    needs: setup-rc
+    if: ${{ needs.setup-rc.outputs.branch_exists == 'true' }}
+    uses: ./.github/workflows/wheel_macos_arm64.yml
+    with:
+      branch: ${{ needs.setup-rc.outputs.rc_branch }}
+
+  build-windows-x86_64:
+    needs: setup-rc
+    if: ${{ needs.setup-rc.outputs.branch_exists == 'true' }}
+    uses: ./.github/workflows/wheel_win_x86_64.yml
+    with:
+      branch: ${{ needs.setup-rc.outputs.rc_branch }}
+
+  build-windows-x86_64_rocm:
+    needs: setup-rc
+    if: ${{ needs.setup-rc.outputs.branch_exists == 'true' }}
+    uses: ./.github/workflows/wheel_linux_x86_64_rocm.yml
+    with:
+      branch: ${{ needs.setup-rc.outputs.rc_branch }}
+  
+  build-noarch:
+    needs: setup-rc
+    if: ${{ needs.setup-rc.outputs.branch_exists == 'true' }}
+    uses: ./.github/workflows/wheel_noarch.yml
+    with:
+      branch: ${{ needs.setup-rc.outputs.rc_branch }}
+
+  check-wheel-uploads:
+    # needs: [build-linux-aarch64-cuda, build-linux-x86_64, build-linux-x86_64-cuda, build-linux-aarch64, build-macos-arm64, build-windows-x86_64, build-windows-x86_64_rocm, build-noarch]
+    name: Check wheel uploads
+    runs-on: ubuntu-24.04
+    
+    steps:
+      - name: Checkout Lightning repo
+        uses: actions/checkout@v4
+        with:
+          ref: master
+
+      - name: Check for uploaded wheels
+        env:
+          GITHUB_TOKEN: "${{ secrets.PENNYLANE_TRIGGER_RC_WORKFLOW }}"
+        run: |
+          # Check if any wheel artifacts were uploaded
+          git config user.name "GitHub Actions Bot"
+          git config user.email "<>"         
+          gh workflow run "Build Release Branch Nightly for TestPyPI" --repo PennyLaneAI/catalyst --ref sc-111637-sync-rc
+          

@@ -18,12 +18,18 @@ on:
   release:
     types: [published]
   workflow_dispatch:
+  workflow_call:
+    inputs:
+      branch:
+        required: false
+        type: string  
+        default: master        
 
 env:
   MACOSX_DEPLOYMENT_TARGET: 13.0
 
 concurrency:
-  group: wheel_macos_arm64-${{ github.ref }}
+  group: wheel_macos_arm64-${{ github.ref }}-${{ inputs.branch }}
   cancel-in-progress: true
 
 jobs:
@@ -52,6 +58,8 @@ jobs:
     steps:
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
+        with:        
+          ref: ${{ inputs.branch }}
 
       - uses: actions/setup-python@v5
         name: Install Python

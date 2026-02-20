@@ -18,13 +18,19 @@ on:
   release:
     types: [published]
   workflow_dispatch:
+  workflow_call:
+    inputs:
+      branch:
+        required: false
+        type: string  
+        default: master
 
 env:
   DISTUTILS_USE_SDK: 1
   MSSdk: 1
 
 concurrency:
-  group: wheel_win_x86_64-${{ github.ref }}
+  group: wheel_win_x86_64-${{ github.ref }}-${{ inputs.branch }}
   cancel-in-progress: true
 
 jobs:
@@ -110,6 +116,8 @@ jobs:
 
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
+        with:        
+          ref: ${{ inputs.branch }}
 
       - name: Copy cached libraries
         if: steps.kokkos-cache.outputs.cache-hit == 'true'
