@@ -23,7 +23,7 @@ Install Kokkos (Recommended)
 .. note::
 
     Lightning-Kokkos is tested with Kokkos version 4.5.00
-    
+
 We suggest first installing Kokkos with the desired configuration, following the instructions found in the Kokkos documentation.
 For example, the following instructions demonstrate building Kokkos for AMD MI210/250/250X GPUs:
 
@@ -57,7 +57,7 @@ Build Kokkos for AMD GPU (``GFX90A`` architecture), and append the install locat
         -DKokkos_ENABLE_TESTS:BOOL=OFF \
         -DKokkos_ENABLE_LIBDL:BOOL=OFF
     cmake --build build && cmake --install build
-    export CMAKE_PREFIX_PATH=$KOKKOS_INSTALL_PATH  
+    export CMAKE_PREFIX_PATH=$KOKKOS_INSTALL_PATH
 
 
 Install Lightning-Kokkos
@@ -89,8 +89,7 @@ Then to install Lightning-Kokkos with MPI support:
     export CMAKE_ARGS="-DENABLE_MPI=ON -DCMAKE_CXX_COMPILER=hipcc"
 
     # Extra variables to avoid hipcc linking issues
-    export CMAKE_ARGS="${CMAKE_ARGS} -DCMAKE_CXX_FLAGS='--gcc-install-dir=/opt/cray/pe/gcc/11.2.0/snos/lib/gcc/x86_64-suse-linux/11.2.0/'"
-    export CMAKE_ARGS="${CMAKE_ARGS} -DCMAKE_CXX_COMPILER_CLANG_SCAN_DEPS:FILEPATH=/opt/rocm-6.2.4/lib/llvm/bin/clang-scan-deps" 
+    export CMAKE_ARGS="${CMAKE_ARGS} -DCMAKE_CXX_COMPILER_CLANG_SCAN_DEPS:FILEPATH=/opt/rocm-6.2.4/lib/llvm/bin/clang-scan-deps"
 
     PL_BACKEND="lightning_kokkos" python scripts/configure_pyproject_toml.py
     python -m pip install .
@@ -116,4 +115,4 @@ To submit a job, for example on 2 nodes, the following SLURM script can be used:
     export HSA_ENABLE_PEER_SDMA=0
 
     srun --ntasks=16 --cpus-per-task=7 --gpus-per-task=1 --gpu-bind=closest python pennylane_quantum_script.py
-    
+
