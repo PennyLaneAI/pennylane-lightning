@@ -33,7 +33,7 @@
 <h3>Internal changes ⚙️</h3>
 
 - Updated Github docker build action to use relevant lightning branch.
-  [(#XXXX)](https://github.com/PennyLaneAI/pennylane-lightning/pull/XXXX)
+  [(#1346 )](https://github.com/PennyLaneAI/pennylane-lightning/pull/1346)
 
 - Remove dependency for GCC-11 when building `lightning.amdgpu`.
   [(#1343)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1343)
