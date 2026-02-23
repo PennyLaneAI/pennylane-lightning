@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.26)
 project(tensor_cuda LANGUAGES CXX)
 
 add_library(tensor_cuda INTERFACE)
