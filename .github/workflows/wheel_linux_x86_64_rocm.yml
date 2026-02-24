@@ -41,6 +41,7 @@ jobs:
     uses: ./.github/workflows/set_wheel_build_matrix.yml
     with:
       event_name: ${{ github.event_name }}
+      workflow_name: wheel_linux_x86_64_rocm
 
   build_dependencies:
     needs: [set_wheel_build_matrix]
