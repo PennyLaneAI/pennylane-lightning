@@ -9,7 +9,7 @@ on:
 
 concurrency:
   group: nightly-rc-release-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   setup-rc:
