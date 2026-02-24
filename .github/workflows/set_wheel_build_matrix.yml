@@ -25,7 +25,7 @@ on:
         value: ${{ jobs.set-builder-matrix.outputs.kokkos_version }}
 
 concurrency:
-  group: set_wheel_build_matrix-${{ github.ref }}-${{ github.workflow }}-${{ github.run_id }}
+  group: set_wheel_build_matrix-${{ github.run_id }}-${{ github.job }}
   cancel-in-progress: true
 
 jobs:
