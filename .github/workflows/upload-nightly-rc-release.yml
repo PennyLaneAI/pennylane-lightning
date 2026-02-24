@@ -82,47 +82,47 @@ jobs:
     with:
       branch: ${{ needs.setup-rc.outputs.rc_branch }}
 
-  # build-linux-x86_64-cuda:
-  #   needs: setup-rc
-  #   if: ${{ needs.setup-rc.outputs.branch_exists == 'true' }}
-  #   uses: ./.github/workflows/wheel_linux_x86_64_cuda.yml
-  #   with:
-  #     branch: ${{ needs.setup-rc.outputs.rc_branch }}
+  build-linux-x86_64-cuda:
+    needs: setup-rc
+    if: ${{ needs.setup-rc.outputs.branch_exists == 'true' }}
+    uses: ./.github/workflows/wheel_linux_x86_64_cuda.yml
+    with:
+      branch: ${{ needs.setup-rc.outputs.rc_branch }}
 
-  # build-linux-aarch64:
-  #   needs: setup-rc
-  #   if: ${{ needs.setup-rc.outputs.branch_exists == 'true' }}
-  #   uses: ./.github/workflows/wheel_linux_aarch64.yml
-  #   with:
-  #     branch: ${{ needs.setup-rc.outputs.rc_branch }}
+  build-linux-aarch64:
+    needs: setup-rc
+    if: ${{ needs.setup-rc.outputs.branch_exists == 'true' }}
+    uses: ./.github/workflows/wheel_linux_aarch64.yml
+    with:
+      branch: ${{ needs.setup-rc.outputs.rc_branch }}
 
-  # build-macos-arm64:
-  #   needs: setup-rc
-  #   if: ${{ needs.setup-rc.outputs.branch_exists == 'true' }}
-  #   uses: ./.github/workflows/wheel_macos_arm64.yml
-  #   with:
-  #     branch: ${{ needs.setup-rc.outputs.rc_branch }}
+  build-macos-arm64:
+    needs: setup-rc
+    if: ${{ needs.setup-rc.outputs.branch_exists == 'true' }}
+    uses: ./.github/workflows/wheel_macos_arm64.yml
+    with:
+      branch: ${{ needs.setup-rc.outputs.rc_branch }}
 
-  # build-windows-x86_64:
-  #   needs: setup-rc
-  #   if: ${{ needs.setup-rc.outputs.branch_exists == 'true' }}
-  #   uses: ./.github/workflows/wheel_win_x86_64.yml
-  #   with:
-  #     branch: ${{ needs.setup-rc.outputs.rc_branch }}
+  build-windows-x86_64:
+    needs: setup-rc
+    if: ${{ needs.setup-rc.outputs.branch_exists == 'true' }}
+    uses: ./.github/workflows/wheel_win_x86_64.yml
+    with:
+      branch: ${{ needs.setup-rc.outputs.rc_branch }}
 
-  # build-windows-x86_64_rocm:
-  #   needs: setup-rc
-  #   if: ${{ needs.setup-rc.outputs.branch_exists == 'true' }}
-  #   uses: ./.github/workflows/wheel_linux_x86_64_rocm.yml
-  #   with:
-  #     branch: ${{ needs.setup-rc.outputs.rc_branch }}
+  build-windows-x86_64_rocm:
+    needs: setup-rc
+    if: ${{ needs.setup-rc.outputs.branch_exists == 'true' }}
+    uses: ./.github/workflows/wheel_linux_x86_64_rocm.yml
+    with:
+      branch: ${{ needs.setup-rc.outputs.rc_branch }}
   
-  # build-noarch:
-  #   needs: setup-rc
-  #   if: ${{ needs.setup-rc.outputs.branch_exists == 'true' }}
-  #   uses: ./.github/workflows/wheel_noarch.yml
-  #   with:
-  #     branch: ${{ needs.setup-rc.outputs.rc_branch }}
+  build-noarch:
+    needs: setup-rc
+    if: ${{ needs.setup-rc.outputs.branch_exists == 'true' }}
+    uses: ./.github/workflows/wheel_noarch.yml
+    with:
+      branch: ${{ needs.setup-rc.outputs.rc_branch }}
 
   check-wheel-uploads:
     # needs: [build-linux-aarch64-cuda, build-linux-x86_64, build-linux-x86_64-cuda, build-linux-aarch64, build-macos-arm64, build-windows-x86_64, build-windows-x86_64_rocm, build-noarch]
