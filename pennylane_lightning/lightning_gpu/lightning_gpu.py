@@ -159,6 +159,9 @@ class LightningGPU(LightningBase):
     _CPP_BINARY_AVAILABLE = LGPU_CPP_BINARY_AVAILABLE
     _backend_info = backend_info if LGPU_CPP_BINARY_AVAILABLE else None
 
+    # This configuration file declares capabilities of the device
+    config_filepath = Path(__file__).parent / "lightning_gpu.toml"
+
     # TODO: This is to communicate to Catalyst in qjit-compiled workflows that these operations
     #       should be converted to QubitUnitary instead of their original decompositions. Remove
     #       this when the legacy decomposition system in Catalyst is integrated with the
@@ -169,9 +172,6 @@ class LightningGPU(LightningBase):
         in qml.devices.capabilities.load_toml_file(config_filepath)["operators"]["gates"]
         else None
     )
-
-    # This configuration file declares capabilities of the device
-    config_filepath = Path(__file__).parent / "lightning_gpu.toml"
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
