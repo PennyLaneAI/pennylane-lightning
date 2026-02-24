@@ -30,7 +30,7 @@ env:
   MSSdk: 1
 
 concurrency:
-  group: wheel_win_x86_64-${{ github.ref }}
+  group: wheel_win_x86_64-${{ inputs.branch || github.ref }}
   cancel-in-progress: true
 
 jobs:
