@@ -245,3 +245,14 @@ def test_supported_macos_platform_qubit():
 
     assert dev_name == "LightningSimulator"
     assert "liblightning_qubit_catalyst.dylib" in shared_lib_name
+
+
+@pytest.mark.skipif(
+    (device_name == "lightning.tensor"),
+    reason="Lightning-Tensor is not integrated with Catalyst and doesn't support to_matrix_ops.",
+)
+def test_device_to_matrix_ops():
+    """Test that the device's to_matrix_ops capability is correctly set based on the config file."""
+    dev = qml.device(device_name)
+    to_mat_ops = dev._to_matrix_ops
+    assert to_mat_ops is not None and isinstance(to_mat_ops, dict)
