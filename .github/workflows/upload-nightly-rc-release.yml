@@ -7,9 +7,9 @@ on:
   workflow_dispatch:
   push:
 
-concurrency:
-  group: nightly-rc-release-${{ github.ref }}
-  cancel-in-progress: false
+# concurrency:
+#   group: nightly-rc-release-${{ github.ref }}
+#   cancel-in-progress: false
 
 jobs:
   setup-rc:
