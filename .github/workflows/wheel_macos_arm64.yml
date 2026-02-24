@@ -6,12 +6,12 @@ name: Wheel::MacOS::ARM
 # **Who does it impact**: Wheels to be uploaded to PyPI.
 
 on:
-  pull_request:
-    types:
-      - opened
-      - reopened
-      - synchronize
-      - ready_for_review
+  # pull_request:
+  #   types:
+  #     - opened
+  #     - reopened
+  #     - synchronize
+  #     - ready_for_review
   push:
     branches:
       - master
