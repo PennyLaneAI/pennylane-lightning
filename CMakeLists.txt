@@ -93,8 +93,6 @@ if(ENABLE_PYTHON)
             "Path to Python executable")
     endif()
 
-    # Use Development.Module (not full Development) – extension modules do not
-    # need Development.Embed, and it may be absent in manylinux containers.
     find_package(Python COMPONENTS Interpreter Development.Module REQUIRED)
     message(STATUS "Enabling Nanobind Python bindings")
     message(STATUS "Using Python executable: ${Python_EXECUTABLE}")
