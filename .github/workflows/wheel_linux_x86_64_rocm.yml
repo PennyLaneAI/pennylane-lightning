@@ -28,7 +28,7 @@ on:
         default: master        
 
 concurrency:
-  group: wheel_linux_x86_64_rocm-${{ inputs.branch || github.ref }}
+  group: wheel_linux_x86_64_rocm-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
