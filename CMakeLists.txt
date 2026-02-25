@@ -88,8 +88,6 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/process_options.cmake")
 
 if(ENABLE_PYTHON)
-    # Translate old-style PYTHON_EXECUTABLE (from setup.py on Linux) to
-    # the modern hint variable that FindPython expects.
     if(DEFINED PYTHON_EXECUTABLE AND NOT DEFINED Python_EXECUTABLE)
         set(Python_EXECUTABLE "${PYTHON_EXECUTABLE}" CACHE FILEPATH
             "Path to Python executable")
