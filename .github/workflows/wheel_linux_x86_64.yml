@@ -36,6 +36,7 @@ jobs:
   set_wheel_build_matrix:
     if: |
       github.event_name != 'pull_request' ||
+      github.event_name == 'schedule' ||
       (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'ci:build_wheels')) ||
       github.event_name == 'workflow_dispatch'
     name: "Set wheel build matrix"
@@ -207,6 +208,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: |
           github.event_name == 'release' ||
+          github.event_name == 'schedule' ||
           github.event_name == 'workflow_dispatch' ||
           github.ref == 'refs/heads/master' ||
           steps.rc_build.outputs.match != ''
@@ -237,6 +239,7 @@ jobs:
       - uses: actions/download-artifact@v4
         if: |
           github.event_name == 'release' ||
+          github.event_name == 'schedule' ||
           github.ref == 'refs/heads/master' || 
           steps.rc_build.outputs.match != ''
         with:
@@ -247,6 +250,7 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         if: |
           github.event_name == 'release' ||
+          github.event_name == 'schedule' ||
           github.ref == 'refs/heads/master' || 
           steps.rc_build.outputs.match != ''
         with:

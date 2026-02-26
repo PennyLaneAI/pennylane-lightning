@@ -125,6 +125,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: |
           github.event_name == 'release' ||
+          github.event_name == 'schedule' ||
           github.event_name == 'workflow_dispatch' ||
           github.ref == 'refs/heads/master' || 
           steps.rc_build.outputs.match != ''
@@ -155,6 +156,7 @@ jobs:
       - uses: actions/download-artifact@v4
         if: |
           github.event_name == 'release' ||
+          github.event_name == 'schedule' ||
           github.ref == 'refs/heads/master' || 
           steps.rc_build.outputs.match != ''
         with:
@@ -165,6 +167,7 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         if: |
           github.event_name == 'release' ||
+          github.event_name == 'schedule' ||
           github.ref == 'refs/heads/master' || 
           steps.rc_build.outputs.match != ''
         with:
