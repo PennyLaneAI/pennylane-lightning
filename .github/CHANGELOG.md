@@ -10,6 +10,9 @@
 
 <h3>Improvements 🛠</h3>
 
+- Avoid decomposing unsupported gates and templates into `QubitUnitary` when not specified in the device TOML file of Lightning simulators from Catalyst.
+  [(#1348)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1348)
+
 - Added sitemap configuration and SEO improvements to documentation, including noindex meta tags for C++ API reference pages.
   [(#1331)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1331)
 
@@ -35,6 +38,11 @@
 - A new AI policy document is now applied across the PennyLaneAI organization for all AI contributions.
   [(#1345)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1345)
 
+- Updated Github docker build action to use relevant lightning branch.
+  [(#1346)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1346)
+
+- Remove dependency for GCC-11 when building `lightning.amdgpu`.
+  [(#1343)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1343)
 
 - Cleaned up the preprocess transforms of the lightning devices, updating the calls to `decompose` with the correct gate set.
   [(#1341)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1341)
