@@ -96,7 +96,7 @@ jobs:
         env:
           CMAKE_PREFIX_PATH: ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
         run: |
-          sudo apt-get update && sudo apt-get -y -q install gcc-$GCC_VERSION g++-$GCC_VERSION gfortran-$GCC_VERSION libgfortran-11-dev- libgfortran-12-dev-
+          sudo apt-get update && sudo apt-get upgrade -y && sudo apt-get -y -q install gfortran-$GCC_VERSION
           cd kokkos_${{ matrix.exec_model }}/example/build_cmake_installed
           which -a gfortran || which -a gfortran-$GCC_VERSION
           cmake -B build -DCMAKE_Fortran_COMPILER=gfortran-$GCC_VERSION
