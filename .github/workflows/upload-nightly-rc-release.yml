@@ -43,9 +43,8 @@ jobs:
           echo "rc_branch=$RC_BRANCH" >> $GITHUB_OUTPUT
           echo "Found rc branch: $RC_BRANCH"
         else
-          echo "branch_exists=true" >> $GITHUB_OUTPUT
+          echo "branch_exists=false" >> $GITHUB_OUTPUT
         fi
-        echo "Event name is ${{ github.event_name }}"
 
     - name: Checkout Lightning repo
       if: ${{ steps.check_rc.outputs.branch_exists == 'true' }}
@@ -138,5 +137,5 @@ jobs:
         run: |
           git config user.name "GitHub Actions Bot"
           git config user.email "<>"         
-          gh workflow run build-nightly-release-candidate.yaml --repo PennyLaneAI/catalyst --ref sc-111637-sync-rc #TODO remove ref
+          gh workflow run build-nightly-release-candidate.yaml --repo PennyLaneAI/catalyst
           
