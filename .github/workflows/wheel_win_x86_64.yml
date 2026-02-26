@@ -23,7 +23,6 @@ on:
       branch:
         required: false
         type: string  
-        default: master
 
 env:
   DISTUTILS_USE_SDK: 1

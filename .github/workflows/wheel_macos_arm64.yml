@@ -23,7 +23,6 @@ on:
       branch:
         required: false
         type: string  
-        default: master        
 
 env:
   MACOSX_DEPLOYMENT_TARGET: 13.0
