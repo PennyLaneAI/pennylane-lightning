@@ -106,6 +106,7 @@ jobs:
         shell: bash
         run: |
           echo "version=$(echo  ${{ matrix.cibw_build }} | tr -cd '[:digit:].' | sed 's/./&./1')" >> $GITHUB_OUTPUT
+          echo "Event name is ${{ github.event_name }}"
 
       - uses: actions/setup-python@v5
         id: setup_python

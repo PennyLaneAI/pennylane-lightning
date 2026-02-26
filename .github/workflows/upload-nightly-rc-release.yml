@@ -2,8 +2,8 @@ name: Build nightly Lightning RC releases for TestPyPI
 
 on:
   schedule:
-    # Run every weekday at 5:50 EDT (cron is in UTC)
-    - cron: "50 9 * * 1-5"
+    # Run every weekday at 3:30 AM EDT (cron is in UTC)
+      - cron: "30 7 * * 1-5"
   workflow_dispatch:
   push: # TODO remove
 
@@ -45,6 +45,7 @@ jobs:
         else
           echo "branch_exists=true" >> $GITHUB_OUTPUT
         fi
+        echo "Event name is ${{ github.event_name }}"
 
     - name: Checkout Lightning repo
       if: ${{ steps.check_rc.outputs.branch_exists == 'true' }}
