@@ -62,7 +62,7 @@ jobs:
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
         with:        
-          ref: ${{ inputs.branch }}         
+          ref: ${{ inputs.branch || github.ref }}         
 
       - name: Install dependencies (AlmaLinux)
         if: ${{ (matrix.container_img == 'quay.io/pypa/manylinux_2_28_x86_64') }}
