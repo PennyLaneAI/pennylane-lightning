@@ -21,7 +21,8 @@
 #include <variant>
 #include <vector>
 
-#include <catch2/catch_all.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/matchers/catch_matchers_string.hpp>
 
 #include "LightningGPUSimulator.hpp"
 #include "QuantumDevice.hpp"
@@ -78,9 +79,9 @@ TEST_CASE("LightningGPUSimulator::unit_tests", "[unit tests]") {
             std::make_unique<LGPUSimulator>();
         std::vector<intptr_t> Qs = LGPUsim->AllocateQubits(1);
         REQUIRE_NOTHROW(LGPUsim->StartTapeRecording());
-        REQUIRE_THROWS_WITH(
-            LGPUsim->StartTapeRecording(),
-            Catch::Matchers::ContainsSubstring("Cannot re-activate the cache manager"));
+        REQUIRE_THROWS_WITH(LGPUsim->StartTapeRecording(),
+                            Catch::Matchers::ContainsSubstring(
+                                "Cannot re-activate the cache manager"));
         REQUIRE_NOTHROW(LGPUsim->StopTapeRecording());
         REQUIRE_THROWS_WITH(
             LGPUsim->StopTapeRecording(),
@@ -753,14 +754,15 @@ TEST_CASE("LightningGPUSimulator::GateSet", "[GateSet]") {
         constexpr std::size_t n_qubits = 2;
         std::vector<intptr_t> Qs = LGPUsim->AllocateQubits(n_qubits);
 
-        REQUIRE_THROWS_WITH(
-            LGPUsim->NamedOperation("Hadamard", {}, {Qs[0]}, false, {Qs[1]},
-                                    {}),
-            Catch::Matchers::ContainsSubstring("Controlled wires/values size mismatch"));
+        REQUIRE_THROWS_WITH(LGPUsim->NamedOperation("Hadamard", {}, {Qs[0]},
+                                                    false, {Qs[1]}, {}),
+                            Catch::Matchers::ContainsSubstring(
+                                "Controlled wires/values size mismatch"));
         std::vector<std::complex<double>> matrix(4, {0.0, 0.0});
         REQUIRE_THROWS_WITH(
             LGPUsim->MatrixOperation(matrix, {Qs[0]}, false, {Qs[1]}, {}),
-            Catch::Matchers::ContainsSubstring("Controlled wires/values size mismatch"));
+            Catch::Matchers::ContainsSubstring(
+                "Controlled wires/values size mismatch"));
     }
 
     SECTION("Controlled GlobalPhase (multi-qubit)") {
@@ -873,14 +875,15 @@ TEST_CASE("LightningGPUSimulator::GateSet", "[GateSet]") {
         constexpr std::size_t n_qubits = 2;
         std::vector<intptr_t> Qs = LGPUsim->AllocateQubits(n_qubits);
 
-        REQUIRE_THROWS_WITH(
-            LGPUsim->NamedOperation("PauliRot", {0.5}, {Qs[0]}, false, {}, {},
-                                    {"X", "Y"}),
-            Catch::Matchers::ContainsSubstring("PauliRot operation requires one string"));
+        REQUIRE_THROWS_WITH(LGPUsim->NamedOperation("PauliRot", {0.5}, {Qs[0]},
+                                                    false, {}, {}, {"X", "Y"}),
+                            Catch::Matchers::ContainsSubstring(
+                                "PauliRot operation requires one string"));
 
-        REQUIRE_THROWS_WITH(
-            LGPUsim->NamedOperation("PauliRot", {0.5}, {Qs[0]}, false, {Qs[1]},
-                                    {false}, {"XY"}),
-            Catch::Matchers::ContainsSubstring("Controlled PauliRot is not supported"));
+        REQUIRE_THROWS_WITH(LGPUsim->NamedOperation("PauliRot", {0.5}, {Qs[0]},
+                                                    false, {Qs[1]}, {false},
+                                                    {"XY"}),
+                            Catch::Matchers::ContainsSubstring(
+                                "Controlled PauliRot is not supported"));
     }
 }

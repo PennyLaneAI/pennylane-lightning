@@ -13,7 +13,8 @@
 // limitations under the License.
 #include <tuple>
 
-#include <catch2/catch_all.hpp>
+#include <catch2/catch_template_test_macros.hpp>
+#include <catch2/matchers/catch_matchers_string.hpp>
 
 #include "MPSTNCuda.hpp"
 #include "ObservablesTNCuda.hpp"
@@ -96,8 +97,9 @@ TEMPLATE_TEST_CASE("[Hermitian]", "[Observables]", float, double) {
         REQUIRE_THROWS_WITH(
             HermitianObsT(std::vector<ComplexT>(16, ComplexT{0.0, 0.0}),
                           {0, 1}),
-            Catch::Matchers::ContainsSubstring("The number of Hermitian target wires "
-                                      "must be 1 for Lightning-Tensor."));
+            Catch::Matchers::ContainsSubstring(
+                "The number of Hermitian target wires "
+                "must be 1 for Lightning-Tensor."));
     }
 
     SECTION("Test get obs name") {

@@ -4,7 +4,8 @@
 #include <iostream>
 #include <vector>
 
-#include <catch2/catch_all.hpp>
+#include <catch2/catch_template_test_macros.hpp>
+#include <catch2/generators/catch_generators.hpp>
 
 #include "AdjointJacobianGPU.hpp"
 #include "JacobianData.hpp"

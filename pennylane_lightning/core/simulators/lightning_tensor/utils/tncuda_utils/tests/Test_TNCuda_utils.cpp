@@ -16,7 +16,8 @@
 #include <utility>
 #include <vector>
 
-#include <catch2/catch_all.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/matchers/catch_matchers_string.hpp>
 
 #include "tncuda_helpers.hpp"
 
@@ -44,10 +45,10 @@ TEST_CASE("MPSShapeCheck", "[TNCuda_utils]") {
         std::vector<std::vector<std::size_t>> incorrect_MPS_shape{
             {2, 2}, {2, 2, 2}, {2, 2, 2}, {2, 2}};
 
-        REQUIRE_THROWS_WITH(
-            MPSShapeCheck(MPS_shape_dest, incorrect_MPS_shape),
-            Catch::Matchers::ContainsSubstring("The incoming MPS does not have the "
-                                      "correct layout for lightning.tensor"));
+        REQUIRE_THROWS_WITH(MPSShapeCheck(MPS_shape_dest, incorrect_MPS_shape),
+                            Catch::Matchers::ContainsSubstring(
+                                "The incoming MPS does not have the "
+                                "correct layout for lightning.tensor"));
     }
     SECTION("Incorrect incoming MPS shape, physical dimension") {
         std::vector<std::vector<std::size_t>> MPS_shape_dest{
@@ -56,10 +57,10 @@ TEST_CASE("MPSShapeCheck", "[TNCuda_utils]") {
         std::vector<std::vector<std::size_t>> incorrect_shape{
             {4, 2}, {2, 4, 4}, {4, 4, 2}, {2, 4}};
 
-        REQUIRE_THROWS_WITH(
-            MPSShapeCheck(MPS_shape_dest, incorrect_shape),
-            Catch::Matchers::ContainsSubstring("The incoming MPS does not have the "
-                                      "correct layout for lightning.tensor"));
+        REQUIRE_THROWS_WITH(MPSShapeCheck(MPS_shape_dest, incorrect_shape),
+                            Catch::Matchers::ContainsSubstring(
+                                "The incoming MPS does not have the "
+                                "correct layout for lightning.tensor"));
     }
     SECTION("Incorrect incoming MPS shape, number sites") {
         std::vector<std::vector<std::size_t>> MPS_shape_dest{
@@ -68,9 +69,9 @@ TEST_CASE("MPSShapeCheck", "[TNCuda_utils]") {
         std::vector<std::vector<std::size_t>> incorrect_shape{
             {2, 2}, {2, 2, 2}, {2, 2}};
 
-        REQUIRE_THROWS_WITH(
-            MPSShapeCheck(MPS_shape_dest, incorrect_shape),
-            Catch::Matchers::ContainsSubstring("The incoming MPS does not have the "
-                                      "correct layout for lightning.tensor"));
+        REQUIRE_THROWS_WITH(MPSShapeCheck(MPS_shape_dest, incorrect_shape),
+                            Catch::Matchers::ContainsSubstring(
+                                "The incoming MPS does not have the "
+                                "correct layout for lightning.tensor"));
     }
 }

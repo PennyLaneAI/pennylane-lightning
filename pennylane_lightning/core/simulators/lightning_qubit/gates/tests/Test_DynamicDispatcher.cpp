@@ -19,7 +19,8 @@
 #include <utility>
 #include <vector>
 
-#include <catch2/catch_all.hpp>
+#include <catch2/catch_template_test_macros.hpp>
+#include <catch2/matchers/catch_matchers_string.hpp>
 
 #include "CPUMemoryModel.hpp"
 #include "DynamicDispatcher.hpp"
@@ -178,11 +179,12 @@ TEMPLATE_TEST_CASE("DynamicDispatcher::applyMatrix", "[DynamicDispatcher]",
 
         std::vector<std::complex<PrecisionT>> matrix(4, 0.0);
 
-        REQUIRE_THROWS_WITH(dispatcher.applyMatrix(
-                                Pennylane::Gates::KernelType::None, st.data(),
-                                num_qubits, matrix.data(), {0}, false),
-                            Catch::Matchers::ContainsSubstring("is not registered") &&
-                                Catch::Matchers::ContainsSubstring("SingleQubitOp"));
+        REQUIRE_THROWS_WITH(
+            dispatcher.applyMatrix(Pennylane::Gates::KernelType::None,
+                                   st.data(), num_qubits, matrix.data(), {0},
+                                   false),
+            Catch::Matchers::ContainsSubstring("is not registered") &&
+                Catch::Matchers::ContainsSubstring("SingleQubitOp"));
     }
 }
 
@@ -201,12 +203,12 @@ TEMPLATE_TEST_CASE("DynamicDispatcher::applySparseMatrix",
         std::vector<std::size_t> col_idx(4, 0.0);
         std::vector<std::size_t> row_map(5, 0.0);
 
-        REQUIRE_THROWS_WITH(dispatcher.applySparseMatrix(
-                                Pennylane::Gates::KernelType::None, st.data(),
-                                num_qubits, row_map.data(), col_idx.data(),
-                                values.data(), {0}, false),
-                            Catch::Matchers::ContainsSubstring("is not registered") &&
-                                Catch::Matchers::ContainsSubstring("SparseMultiQubitOp"));
+        REQUIRE_THROWS_WITH(
+            dispatcher.applySparseMatrix(
+                Pennylane::Gates::KernelType::None, st.data(), num_qubits,
+                row_map.data(), col_idx.data(), values.data(), {0}, false),
+            Catch::Matchers::ContainsSubstring("is not registered") &&
+                Catch::Matchers::ContainsSubstring("SparseMultiQubitOp"));
     }
 }
 
@@ -225,11 +227,12 @@ TEMPLATE_TEST_CASE("DynamicDispatcher::applyControlledSparseMatrix",
         std::vector<std::size_t> col_idx(4, 0.0);
         std::vector<std::size_t> row_map(5, 0.0);
 
-        REQUIRE_THROWS_WITH(dispatcher.applyControlledSparseMatrix(
-                                Pennylane::Gates::KernelType::None, st.data(),
-                                num_qubits, row_map.data(), col_idx.data(),
-                                values.data(), {1}, {true}, {0}, false),
-                            Catch::Matchers::ContainsSubstring("is not registered") &&
-                                Catch::Matchers::ContainsSubstring("NCSparseMultiQubitOp"));
+        REQUIRE_THROWS_WITH(
+            dispatcher.applyControlledSparseMatrix(
+                Pennylane::Gates::KernelType::None, st.data(), num_qubits,
+                row_map.data(), col_idx.data(), values.data(), {1}, {true}, {0},
+                false),
+            Catch::Matchers::ContainsSubstring("is not registered") &&
+                Catch::Matchers::ContainsSubstring("NCSparseMultiQubitOp"));
     }
 }

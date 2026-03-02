@@ -19,7 +19,8 @@
 #include <type_traits>
 #include <vector>
 
-#include <catch2/catch_all.hpp>
+#include <catch2/catch_template_test_macros.hpp>
+#include <catch2/matchers/catch_matchers_string.hpp>
 
 #include "DevTag.hpp"
 #include "MPIManagerGPU.hpp"
@@ -212,8 +213,9 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorCudaMPI::applyMatrix with a pointer",
         StateVectorT state_vector(mpi_manager, dt_local, mpi_buffersize,
                                   nGlobalIndexBits, nLocalIndexBits);
         state_vector.CopyHostDataToGpu(local_state, false);
-        REQUIRE_THROWS_WITH(state_vector.applyMatrix(m.data(), {}),
-                            Catch::Matchers::ContainsSubstring("must be larger than 0"));
+        REQUIRE_THROWS_WITH(
+            state_vector.applyMatrix(m.data(), {}),
+            Catch::Matchers::ContainsSubstring("must be larger than 0"));
     }
 
     SECTION("Test a matrix represent PauliX") {

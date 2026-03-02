@@ -14,7 +14,7 @@
 #include "TestHelpers.hpp"      // createProductState, createZeroState
 #include "TestHelpersWires.hpp" // CombinationGenerator, PermutationGenerator
 
-#include <catch2/catch_all.hpp>
+#include <catch2/catch_template_test_macros.hpp>
 
 #include <algorithm>
 #include <random>

@@ -21,7 +21,7 @@
 #include <variant>
 #include <vector>
 
-#include <catch2/catch_all.hpp>
+#include <catch2/catch_template_test_macros.hpp>
 
 #include "AdjointJacobianKokkos.hpp"
 #include "ObservablesKokkos.hpp"

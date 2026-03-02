@@ -19,7 +19,9 @@
 #include <utility>
 #include <vector>
 
-#include <catch2/catch_all.hpp>
+#include <catch2/catch_template_test_macros.hpp>
+#include <catch2/generators/catch_generators.hpp>
+#include <catch2/matchers/catch_matchers_vector.hpp>
 
 #include "MeasurementsKokkos.hpp"
 #include "StateVectorKokkos.hpp"
@@ -81,32 +83,38 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values", "[Measurements]",
         operations_list = {Identity, Identity, Identity};
         exp_values = Measurer.expval(operations_list, wires_list);
         exp_values_ref = {1.0, 1.0, 1.0};
-        REQUIRE_THAT(exp_values, Catch::Matchers::Approx(exp_values_ref).margin(1e-6));
+        REQUIRE_THAT(exp_values,
+                     Catch::Matchers::Approx(exp_values_ref).margin(1e-6));
 
         operations_list = {Identity2, Identity2};
         exp_values = Measurer.expval(operations_list, {{0, 1}, {1, 2}});
         exp_values_ref = {1.0, 1.0};
-        REQUIRE_THAT(exp_values, Catch::Matchers::Approx(exp_values_ref).margin(1e-6));
+        REQUIRE_THAT(exp_values,
+                     Catch::Matchers::Approx(exp_values_ref).margin(1e-6));
 
         operations_list = {PauliX, PauliX, PauliX};
         exp_values = Measurer.expval(operations_list, wires_list);
         exp_values_ref = {0.49272486, 0.42073549, 0.28232124};
-        REQUIRE_THAT(exp_values, Catch::Matchers::Approx(exp_values_ref).margin(1e-6));
+        REQUIRE_THAT(exp_values,
+                     Catch::Matchers::Approx(exp_values_ref).margin(1e-6));
 
         operations_list = {PauliY, PauliY, PauliY};
         exp_values = Measurer.expval(operations_list, wires_list);
         exp_values_ref = {-0.64421768, -0.47942553, -0.29552020};
-        REQUIRE_THAT(exp_values, Catch::Matchers::Approx(exp_values_ref).margin(1e-6));
+        REQUIRE_THAT(exp_values,
+                     Catch::Matchers::Approx(exp_values_ref).margin(1e-6));
 
         operations_list = {PauliZ, PauliZ, PauliZ};
         exp_values = Measurer.expval(operations_list, wires_list);
         exp_values_ref = {0.58498357, 0.77015115, 0.91266780};
-        REQUIRE_THAT(exp_values, Catch::Matchers::Approx(exp_values_ref).margin(1e-6));
+        REQUIRE_THAT(exp_values,
+                     Catch::Matchers::Approx(exp_values_ref).margin(1e-6));
 
         operations_list = {Hadamard, Hadamard, Hadamard};
         exp_values = Measurer.expval(operations_list, wires_list);
         exp_values_ref = {0.7620549436, 0.8420840225, 0.8449848566};
-        REQUIRE_THAT(exp_values, Catch::Matchers::Approx(exp_values_ref).margin(1e-6));
+        REQUIRE_THAT(exp_values,
+                     Catch::Matchers::Approx(exp_values_ref).margin(1e-6));
     }
 
     SECTION("Testing list of operators defined by its name:") {
@@ -118,27 +126,32 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values", "[Measurements]",
         operations_list = {"Identity", "Identity", "Identity"};
         exp_values = Measurer.expval(operations_list, wires_list);
         exp_values_ref = {1.0, 1.0, 1.0};
-        REQUIRE_THAT(exp_values, Catch::Matchers::Approx(exp_values_ref).margin(1e-6));
+        REQUIRE_THAT(exp_values,
+                     Catch::Matchers::Approx(exp_values_ref).margin(1e-6));
 
         operations_list = {"PauliX", "PauliX", "PauliX"};
         exp_values = Measurer.expval(operations_list, wires_list);
         exp_values_ref = {0.49272486, 0.42073549, 0.28232124};
-        REQUIRE_THAT(exp_values, Catch::Matchers::Approx(exp_values_ref).margin(1e-6));
+        REQUIRE_THAT(exp_values,
+                     Catch::Matchers::Approx(exp_values_ref).margin(1e-6));
 
         operations_list = {"PauliY", "PauliY", "PauliY"};
         exp_values = Measurer.expval(operations_list, wires_list);
         exp_values_ref = {-0.64421768, -0.47942553, -0.29552020};
-        REQUIRE_THAT(exp_values, Catch::Matchers::Approx(exp_values_ref).margin(1e-6));
+        REQUIRE_THAT(exp_values,
+                     Catch::Matchers::Approx(exp_values_ref).margin(1e-6));
 
         operations_list = {"PauliZ", "PauliZ", "PauliZ"};
         exp_values = Measurer.expval(operations_list, wires_list);
         exp_values_ref = {0.58498357, 0.77015115, 0.91266780};
-        REQUIRE_THAT(exp_values, Catch::Matchers::Approx(exp_values_ref).margin(1e-6));
+        REQUIRE_THAT(exp_values,
+                     Catch::Matchers::Approx(exp_values_ref).margin(1e-6));
 
         operations_list = {"Hadamard", "Hadamard", "Hadamard"};
         exp_values = Measurer.expval(operations_list, wires_list);
         exp_values_ref = {0.7620549436, 0.8420840225, 0.8449848566};
-        REQUIRE_THAT(exp_values, Catch::Matchers::Approx(exp_values_ref).margin(1e-6));
+        REQUIRE_THAT(exp_values,
+                     Catch::Matchers::Approx(exp_values_ref).margin(1e-6));
     }
 
     SECTION("Testing error cases for expectation values of Pauli Strings") {
@@ -544,17 +557,20 @@ TEMPLATE_PRODUCT_TEST_CASE("Variances", "[Measurements]", (StateVectorKokkos),
         operations_list = {PauliX, PauliX, PauliX};
         variances = Measurer.var(operations_list, wires_list);
         variances_ref = {0.7572222, 0.8229816, 0.9202947};
-        REQUIRE_THAT(variances, Catch::Matchers::Approx(variances_ref).margin(1e-6));
+        REQUIRE_THAT(variances,
+                     Catch::Matchers::Approx(variances_ref).margin(1e-6));
 
         operations_list = {PauliY, PauliY, PauliY};
         variances = Measurer.var(operations_list, wires_list);
         variances_ref = {0.5849835, 0.7701511, 0.9126678};
-        REQUIRE_THAT(variances, Catch::Matchers::Approx(variances_ref).margin(1e-6));
+        REQUIRE_THAT(variances,
+                     Catch::Matchers::Approx(variances_ref).margin(1e-6));
 
         operations_list = {PauliZ, PauliZ, PauliZ};
         variances = Measurer.var(operations_list, wires_list);
         variances_ref = {0.6577942, 0.4068672, 0.1670374};
-        REQUIRE_THAT(variances, Catch::Matchers::Approx(variances_ref).margin(1e-6));
+        REQUIRE_THAT(variances,
+                     Catch::Matchers::Approx(variances_ref).margin(1e-6));
     }
 
     SECTION("Testing list of operators defined by its name:") {
@@ -566,17 +582,20 @@ TEMPLATE_PRODUCT_TEST_CASE("Variances", "[Measurements]", (StateVectorKokkos),
         operations_list = {"PauliX", "PauliX", "PauliX"};
         variances = Measurer.var(operations_list, wires_list);
         variances_ref = {0.7572222, 0.8229816, 0.9202947};
-        REQUIRE_THAT(variances, Catch::Matchers::Approx(variances_ref).margin(1e-6));
+        REQUIRE_THAT(variances,
+                     Catch::Matchers::Approx(variances_ref).margin(1e-6));
 
         operations_list = {"PauliY", "PauliY", "PauliY"};
         variances = Measurer.var(operations_list, wires_list);
         variances_ref = {0.5849835, 0.7701511, 0.9126678};
-        REQUIRE_THAT(variances, Catch::Matchers::Approx(variances_ref).margin(1e-6));
+        REQUIRE_THAT(variances,
+                     Catch::Matchers::Approx(variances_ref).margin(1e-6));
 
         operations_list = {"PauliZ", "PauliZ", "PauliZ"};
         variances = Measurer.var(operations_list, wires_list);
         variances_ref = {0.6577942, 0.4068672, 0.1670374};
-        REQUIRE_THAT(variances, Catch::Matchers::Approx(variances_ref).margin(1e-6));
+        REQUIRE_THAT(variances,
+                     Catch::Matchers::Approx(variances_ref).margin(1e-6));
     }
 }
 
@@ -625,7 +644,8 @@ TEMPLATE_TEST_CASE("Probabilities", "[Measures]", float, double) {
             std::size_t target = GENERATE(0, num_qubits / 2, num_qubits - 1);
             statevector.applyOperation("Hadamard", {target}, false);
             auto probs = Measurer.probs({target}, device_wires);
-            CHECK_THAT(probs, Catch::Matchers::Approx(std::vector<PrecisionT>(2, 1.0 / 2))
+            CHECK_THAT(probs, Catch::Matchers::Approx(
+                                  std::vector<PrecisionT>(2, 1.0 / 2))
                                   .margin(1e-7));
         }
         SECTION("2 targets") {
@@ -634,31 +654,35 @@ TEMPLATE_TEST_CASE("Probabilities", "[Measures]", float, double) {
             if (target0 != target1) {
                 statevector.applyOperation("Hadamard", {target0}, false);
                 auto probs = Measurer.probs({target0, target1}, device_wires);
-                CHECK_THAT(probs, Catch::Matchers::Approx(std::vector<PrecisionT>{
-                                                    0.5, 0.0, 0.5, 0.0})
-                                      .margin(1e-7));
+                CHECK_THAT(probs,
+                           Catch::Matchers::Approx(
+                               std::vector<PrecisionT>{0.5, 0.0, 0.5, 0.0})
+                               .margin(1e-7));
                 probs = Measurer.probs({target1, target0}, device_wires);
-                CHECK_THAT(probs, Catch::Matchers::Approx(std::vector<PrecisionT>{
-                                                    0.5, 0.5, 0.0, 0.0})
-                                      .margin(1e-7));
+                CHECK_THAT(probs,
+                           Catch::Matchers::Approx(
+                               std::vector<PrecisionT>{0.5, 0.5, 0.0, 0.0})
+                               .margin(1e-7));
                 statevector.applyOperation("Hadamard", {target1}, false);
                 probs = Measurer.probs({target0, target1}, device_wires);
-                CHECK_THAT(probs,
-                           Catch::Matchers::Approx(std::vector<PrecisionT>(4, 1.0 / 4.0))
-                               .margin(1e-7));
+                CHECK_THAT(probs, Catch::Matchers::Approx(
+                                      std::vector<PrecisionT>(4, 1.0 / 4.0))
+                                      .margin(1e-7));
                 probs = Measurer.probs({target1, target0}, device_wires);
-                CHECK_THAT(probs,
-                           Catch::Matchers::Approx(std::vector<PrecisionT>(4, 1.0 / 4.0))
-                               .margin(1e-7));
+                CHECK_THAT(probs, Catch::Matchers::Approx(
+                                      std::vector<PrecisionT>(4, 1.0 / 4.0))
+                                      .margin(1e-7));
                 statevector.applyOperation("Hadamard", {target0}, false);
                 probs = Measurer.probs({target0, target1}, device_wires);
-                CHECK_THAT(probs, Catch::Matchers::Approx(std::vector<PrecisionT>{
-                                                    0.5, 0.5, 0.0, 0.0})
-                                      .margin(1e-7));
+                CHECK_THAT(probs,
+                           Catch::Matchers::Approx(
+                               std::vector<PrecisionT>{0.5, 0.5, 0.0, 0.0})
+                               .margin(1e-7));
                 probs = Measurer.probs({target1, target0}, device_wires);
-                CHECK_THAT(probs, Catch::Matchers::Approx(std::vector<PrecisionT>{
-                                                    0.5, 0.0, 0.5, 0.0})
-                                      .margin(1e-7));
+                CHECK_THAT(probs,
+                           Catch::Matchers::Approx(
+                               std::vector<PrecisionT>{0.5, 0.0, 0.5, 0.0})
+                               .margin(1e-7));
             }
         }
         SECTION("Many targets Hadamard(n)") {

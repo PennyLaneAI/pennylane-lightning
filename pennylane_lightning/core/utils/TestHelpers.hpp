@@ -25,7 +25,9 @@
 #include <unordered_set>
 #include <vector>
 
-#include <catch2/catch_all.hpp>
+#include <catch2/catch_approx.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/matchers/catch_matchers_string.hpp>
 
 using Catch::Approx;
 
@@ -639,7 +641,8 @@ inline auto samples_to_decimal(const std::vector<std::size_t> &samples,
 
 #define PL_REQUIRE_THROWS_MATCHES(expr, type, message_match)                   \
     REQUIRE_THROWS_AS(expr, type);                                             \
-    REQUIRE_THROWS_WITH(expr, Catch::Matchers::ContainsSubstring(message_match));
+    REQUIRE_THROWS_WITH(expr,                                                  \
+                        Catch::Matchers::ContainsSubstring(message_match));
 #define PL_CHECK_THROWS_MATCHES(expr, type, message_match)                     \
     CHECK_THROWS_AS(expr, type);                                               \
     CHECK_THROWS_WITH(expr, Catch::Matchers::ContainsSubstring(message_match));

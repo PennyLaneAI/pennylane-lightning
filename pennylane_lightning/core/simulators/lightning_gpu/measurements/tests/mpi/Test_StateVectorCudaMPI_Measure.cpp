@@ -19,7 +19,8 @@
 #include <utility>
 #include <vector>
 
-#include <catch2/catch_all.hpp>
+#include <catch2/catch_template_test_macros.hpp>
+#include <catch2/matchers/catch_matchers_vector.hpp>
 
 #include "MPIManagerGPU.hpp"
 #include "MeasurementsGPU.hpp"
@@ -119,17 +120,20 @@ TEMPLATE_TEST_CASE("Expected Values", "[MeasurementsMPI]", float, double) {
         operations_list = {PauliX, PauliX, PauliX};
         exp_values = Measurer.expval(operations_list, wires_list);
         exp_values_ref = {0.49272486, 0.42073549, 0.28232124};
-        REQUIRE_THAT(exp_values, Catch::Matchers::Approx(exp_values_ref).margin(1e-6));
+        REQUIRE_THAT(exp_values,
+                     Catch::Matchers::Approx(exp_values_ref).margin(1e-6));
 
         operations_list = {PauliY, PauliY, PauliY};
         exp_values = Measurer.expval(operations_list, wires_list);
         exp_values_ref = {-0.64421768, -0.47942553, -0.29552020};
-        REQUIRE_THAT(exp_values, Catch::Matchers::Approx(exp_values_ref).margin(1e-6));
+        REQUIRE_THAT(exp_values,
+                     Catch::Matchers::Approx(exp_values_ref).margin(1e-6));
 
         operations_list = {PauliZ, PauliZ, PauliZ};
         exp_values = Measurer.expval(operations_list, wires_list);
         exp_values_ref = {0.58498357, 0.77015115, 0.91266780};
-        REQUIRE_THAT(exp_values, Catch::Matchers::Approx(exp_values_ref).margin(1e-6));
+        REQUIRE_THAT(exp_values,
+                     Catch::Matchers::Approx(exp_values_ref).margin(1e-6));
     }
 
     SECTION("Testing list of operators defined by its name:") {
@@ -148,17 +152,20 @@ TEMPLATE_TEST_CASE("Expected Values", "[MeasurementsMPI]", float, double) {
         operations_list = {"PauliX", "PauliX", "PauliX"};
         exp_values = Measurer.expval(operations_list, wires_list);
         exp_values_ref = {0.49272486, 0.42073549, 0.28232124};
-        REQUIRE_THAT(exp_values, Catch::Matchers::Approx(exp_values_ref).margin(1e-6));
+        REQUIRE_THAT(exp_values,
+                     Catch::Matchers::Approx(exp_values_ref).margin(1e-6));
 
         operations_list = {"PauliY", "PauliY", "PauliY"};
         exp_values = Measurer.expval(operations_list, wires_list);
         exp_values_ref = {-0.64421768, -0.47942553, -0.29552020};
-        REQUIRE_THAT(exp_values, Catch::Matchers::Approx(exp_values_ref).margin(1e-6));
+        REQUIRE_THAT(exp_values,
+                     Catch::Matchers::Approx(exp_values_ref).margin(1e-6));
 
         operations_list = {"PauliZ", "PauliZ", "PauliZ"};
         exp_values = Measurer.expval(operations_list, wires_list);
         exp_values_ref = {0.58498357, 0.77015115, 0.91266780};
-        REQUIRE_THAT(exp_values, Catch::Matchers::Approx(exp_values_ref).margin(1e-6));
+        REQUIRE_THAT(exp_values,
+                     Catch::Matchers::Approx(exp_values_ref).margin(1e-6));
     }
 
     SECTION("Catch failures caused by unsupported named gates") {
@@ -369,17 +376,20 @@ TEMPLATE_TEST_CASE("Variances", "[MeasurementsMPI]", double) {
         operations_list = {PauliX, PauliX, PauliX};
         variances = Measurer.var(operations_list, wires_list);
         variances_ref = {0.7572222, 0.8229816, 0.9202947};
-        REQUIRE_THAT(variances, Catch::Matchers::Approx(variances_ref).margin(1e-6));
+        REQUIRE_THAT(variances,
+                     Catch::Matchers::Approx(variances_ref).margin(1e-6));
 
         operations_list = {PauliY, PauliY, PauliY};
         variances = Measurer.var(operations_list, wires_list);
         variances_ref = {0.5849835, 0.7701511, 0.9126678};
-        REQUIRE_THAT(variances, Catch::Matchers::Approx(variances_ref).margin(1e-6));
+        REQUIRE_THAT(variances,
+                     Catch::Matchers::Approx(variances_ref).margin(1e-6));
 
         operations_list = {PauliZ, PauliZ, PauliZ};
         variances = Measurer.var(operations_list, wires_list);
         variances_ref = {0.6577942, 0.4068672, 0.1670374};
-        REQUIRE_THAT(variances, Catch::Matchers::Approx(variances_ref).margin(1e-6));
+        REQUIRE_THAT(variances,
+                     Catch::Matchers::Approx(variances_ref).margin(1e-6));
     }
 
     SECTION("Testing list of operators defined by its name:") {
@@ -393,17 +403,20 @@ TEMPLATE_TEST_CASE("Variances", "[MeasurementsMPI]", double) {
         operations_list = {"PauliX", "PauliX", "PauliX"};
         variances = Measurer.var(operations_list, wires_list);
         variances_ref = {0.7572222, 0.8229816, 0.9202947};
-        REQUIRE_THAT(variances, Catch::Matchers::Approx(variances_ref).margin(1e-6));
+        REQUIRE_THAT(variances,
+                     Catch::Matchers::Approx(variances_ref).margin(1e-6));
 
         operations_list = {"PauliY", "PauliY", "PauliY"};
         variances = Measurer.var(operations_list, wires_list);
         variances_ref = {0.5849835, 0.7701511, 0.9126678};
-        REQUIRE_THAT(variances, Catch::Matchers::Approx(variances_ref).margin(1e-6));
+        REQUIRE_THAT(variances,
+                     Catch::Matchers::Approx(variances_ref).margin(1e-6));
 
         operations_list = {"PauliZ", "PauliZ", "PauliZ"};
         variances = Measurer.var(operations_list, wires_list);
         variances_ref = {0.6577942, 0.4068672, 0.1670374};
-        REQUIRE_THAT(variances, Catch::Matchers::Approx(variances_ref).margin(1e-6));
+        REQUIRE_THAT(variances,
+                     Catch::Matchers::Approx(variances_ref).margin(1e-6));
     }
 }
 
@@ -453,7 +466,8 @@ TEMPLATE_TEST_CASE("Probabilities", "[MeasuresMPI]", double) {
         auto m = MeasurementsMPI(sv);
         for (const auto &term : input) {
             auto probabilities = m.probs(term.first);
-            REQUIRE_THAT(prob_local, Catch::Matchers::Approx(probabilities).margin(1e-6));
+            REQUIRE_THAT(prob_local,
+                         Catch::Matchers::Approx(probabilities).margin(1e-6));
         }
     }
 }

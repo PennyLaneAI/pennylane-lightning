@@ -13,8 +13,9 @@
 // limitations under the License.
 
 #include "TestHelpers.hpp"
-#include <catch2/catch_all.hpp>
 #include <algorithm>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/matchers/catch_matchers_string.hpp>
 #include <numeric>
 #include <string>
 
@@ -447,8 +448,9 @@ TEST_CASE("Cannot reuse entangled qubit when allocating", "[Driver]") {
 
     REQUIRE_THROWS_WITH(
         sim->AllocateQubit(),
-        Catch::Matchers::ContainsSubstring("Cannot reuse qubit: qubit is entangled with remaining "
-                        "qubits. Release qubits must be disentangled."));
+        Catch::Matchers::ContainsSubstring(
+            "Cannot reuse qubit: qubit is entangled with remaining "
+            "qubits. Release qubits must be disentangled."));
 }
 
 TEST_CASE("Release one qubit from entangled qubits", "[Driver]") {
@@ -478,8 +480,9 @@ TEST_CASE("Release one qubit from entangled qubits", "[Driver]") {
 
     REQUIRE_THROWS_WITH(
         sim->PartialProbs(probs_view, {static_qubits[0], static_qubits[1]}),
-        Catch::Matchers::ContainsSubstring("Cannot release qubits: released qubits are entangled "
-                        "with remaining qubits"));
+        Catch::Matchers::ContainsSubstring(
+            "Cannot release qubits: released qubits are entangled "
+            "with remaining qubits"));
 }
 
 TEST_CASE("Release all entangled qubits", "[Driver]") {

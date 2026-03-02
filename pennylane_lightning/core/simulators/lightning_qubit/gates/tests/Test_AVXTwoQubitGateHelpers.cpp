@@ -13,7 +13,7 @@
 // limitations under the License.
 #include "cpu_kernels/avx_common/TwoQubitGateHelper.hpp"
 
-#include <catch2/catch_all.hpp>
+#include <catch2/catch_template_test_macros.hpp>
 #include <tuple>
 
 /// @cond DEV
