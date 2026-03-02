@@ -15,7 +15,7 @@
 #include <random>
 #include <vector>
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 
 #include "TestHelpers.hpp" // createZeroState, createRandomStateVectorData
 #include "TypeList.hpp"

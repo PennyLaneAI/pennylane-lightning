@@ -14,7 +14,7 @@
 #include "ObservablesGPU.hpp"
 #include "TestHelpers.hpp"
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 
 /// @cond DEV
 namespace {

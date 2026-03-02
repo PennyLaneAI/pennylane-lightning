@@ -13,7 +13,7 @@
 // limitations under the License.
 #include "BitUtil.hpp"
 #include "TestHelpers.hpp"
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 #include <cmath>
 
 /// @cond DEV

@@ -21,7 +21,7 @@
 #include <variant>
 #include <vector>
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 
 #include "LightningGPUSimulator.hpp"
 #include "QuantumDevice.hpp"
@@ -80,11 +80,11 @@ TEST_CASE("LightningGPUSimulator::unit_tests", "[unit tests]") {
         REQUIRE_NOTHROW(LGPUsim->StartTapeRecording());
         REQUIRE_THROWS_WITH(
             LGPUsim->StartTapeRecording(),
-            Catch::Matchers::Contains("Cannot re-activate the cache manager"));
+            Catch::Matchers::ContainsSubstring("Cannot re-activate the cache manager"));
         REQUIRE_NOTHROW(LGPUsim->StopTapeRecording());
         REQUIRE_THROWS_WITH(
             LGPUsim->StopTapeRecording(),
-            Catch::Matchers::Contains(
+            Catch::Matchers::ContainsSubstring(
                 "Cannot stop an already stopped cache manager"));
     }
 }
@@ -756,11 +756,11 @@ TEST_CASE("LightningGPUSimulator::GateSet", "[GateSet]") {
         REQUIRE_THROWS_WITH(
             LGPUsim->NamedOperation("Hadamard", {}, {Qs[0]}, false, {Qs[1]},
                                     {}),
-            Catch::Contains("Controlled wires/values size mismatch"));
+            Catch::Matchers::ContainsSubstring("Controlled wires/values size mismatch"));
         std::vector<std::complex<double>> matrix(4, {0.0, 0.0});
         REQUIRE_THROWS_WITH(
             LGPUsim->MatrixOperation(matrix, {Qs[0]}, false, {Qs[1]}, {}),
-            Catch::Contains("Controlled wires/values size mismatch"));
+            Catch::Matchers::ContainsSubstring("Controlled wires/values size mismatch"));
     }
 
     SECTION("Controlled GlobalPhase (multi-qubit)") {
@@ -876,11 +876,11 @@ TEST_CASE("LightningGPUSimulator::GateSet", "[GateSet]") {
         REQUIRE_THROWS_WITH(
             LGPUsim->NamedOperation("PauliRot", {0.5}, {Qs[0]}, false, {}, {},
                                     {"X", "Y"}),
-            Catch::Contains("PauliRot operation requires one string"));
+            Catch::Matchers::ContainsSubstring("PauliRot operation requires one string"));
 
         REQUIRE_THROWS_WITH(
             LGPUsim->NamedOperation("PauliRot", {0.5}, {Qs[0]}, false, {Qs[1]},
                                     {false}, {"XY"}),
-            Catch::Contains("Controlled PauliRot is not supported"));
+            Catch::Matchers::ContainsSubstring("Controlled PauliRot is not supported"));
     }
 }

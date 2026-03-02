@@ -25,7 +25,9 @@
 #include <unordered_set>
 #include <vector>
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
+
+using Catch::Approx;
 
 #include "CPUMemoryModel.hpp" // getBestAllocator
 #include "Error.hpp"          // PL_ABORT
@@ -637,10 +639,10 @@ inline auto samples_to_decimal(const std::vector<std::size_t> &samples,
 
 #define PL_REQUIRE_THROWS_MATCHES(expr, type, message_match)                   \
     REQUIRE_THROWS_AS(expr, type);                                             \
-    REQUIRE_THROWS_WITH(expr, Catch::Matchers::Contains(message_match));
+    REQUIRE_THROWS_WITH(expr, Catch::Matchers::ContainsSubstring(message_match));
 #define PL_CHECK_THROWS_MATCHES(expr, type, message_match)                     \
     CHECK_THROWS_AS(expr, type);                                               \
-    CHECK_THROWS_WITH(expr, Catch::Matchers::Contains(message_match));
+    CHECK_THROWS_WITH(expr, Catch::Matchers::ContainsSubstring(message_match));
 
 } // namespace Pennylane::Util
 /// @endcond

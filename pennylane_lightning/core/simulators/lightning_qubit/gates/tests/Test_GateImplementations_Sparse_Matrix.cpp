@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 
 #include "ConstantUtil.hpp"  // array_has_elem
 #include "Gates.hpp"         // getPauliX, getPauliY
@@ -61,7 +61,7 @@ TEST_CASE("GateImplementationsLM::applyNCMultiQubitSparseOp throws if inverse "
         GateImplementationsLM::applyNCMultiQubitSparseOp(
             state.data(), num_qubits, row_map.data(), col_idx.data(),
             values.data(), controlled_wires, controlled_values, wires, inverse),
-        Catch::Matchers::Contains("Inverse not implemented for sparse ops."));
+        Catch::Matchers::ContainsSubstring("Inverse not implemented for sparse ops."));
 }
 
 // Gate operation as a parameter

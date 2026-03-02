@@ -19,7 +19,7 @@
 #include <utility>
 #include <vector>
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 
 #include "MPIManagerKokkos.hpp"
 #include "UtilKokkos.hpp"
@@ -56,7 +56,7 @@ TEST_CASE("MPIManagerKokkos::getMPIDatatype", "[MPIManagerKokkos]") {
     SECTION("Test invalid type") {
         // This should throw an exception
         REQUIRE_THROWS_WITH(mpi_manager.getMPIDatatype<std::string>(),
-                            Catch::Matchers::Contains("Type not supported"));
+                            Catch::Matchers::ContainsSubstring("Type not supported"));
     }
 }
 

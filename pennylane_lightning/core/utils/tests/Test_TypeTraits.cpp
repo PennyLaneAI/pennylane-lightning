@@ -13,7 +13,7 @@
 // limitations under the License.
 #include "TypeTraits.hpp"
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 
 #include <tuple>
 #include <type_traits>

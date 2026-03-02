@@ -13,7 +13,8 @@
 // limitations under the License.
 
 #include "LightningGPUSimulator.hpp"
-#include "catch2/catch.hpp"
+#include <catch2/catch_all.hpp>
+using Catch::Approx;
 
 /// @cond DEV
 namespace {
@@ -78,11 +79,11 @@ TEST_CASE("Test Gradient with Var", "[Gradient]") {
 
     REQUIRE_THROWS_WITH(
         sim->Gradient(gradients, trainParams),
-        Catch::Contains("Unsupported measurements to compute gradient"));
+        Catch::Matchers::ContainsSubstring("Unsupported measurements to compute gradient"));
 
     REQUIRE_THROWS_WITH(
         sim->Gradient(gradients, {}),
-        Catch::Contains("Unsupported measurements to compute gradient"));
+        Catch::Matchers::ContainsSubstring("Unsupported measurements to compute gradient"));
 
     sim->StopTapeRecording();
 }

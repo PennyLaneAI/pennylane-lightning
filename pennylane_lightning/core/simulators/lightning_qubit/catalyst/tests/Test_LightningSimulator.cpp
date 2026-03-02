@@ -21,7 +21,7 @@
 #include <variant>
 #include <vector>
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 
 #include "LightningSimulator.hpp"
 #include "QuantumDevice.hpp"
@@ -79,11 +79,11 @@ TEST_CASE("LightningSimulator::unit_tests", "[unit tests]") {
         REQUIRE_NOTHROW(LQsim->StartTapeRecording());
         REQUIRE_THROWS_WITH(
             LQsim->StartTapeRecording(),
-            Catch::Matchers::Contains("Cannot re-activate the cache manager"));
+            Catch::Matchers::ContainsSubstring("Cannot re-activate the cache manager"));
         REQUIRE_NOTHROW(LQsim->StopTapeRecording());
         REQUIRE_THROWS_WITH(
             LQsim->StopTapeRecording(),
-            Catch::Matchers::Contains(
+            Catch::Matchers::ContainsSubstring(
                 "Cannot stop an already stopped cache manager"));
     }
 }
@@ -818,11 +818,11 @@ TEST_CASE("LightningSimulator::GateSet", "[GateSet]") {
         REQUIRE_THROWS_WITH(
             LQsim->NamedOperation("PauliRot", {0.5}, {Qs[0]}, false, {}, {},
                                   {"X", "Y"}),
-            Catch::Contains("PauliRot operation requires one string"));
+            Catch::Matchers::ContainsSubstring("PauliRot operation requires one string"));
 
         REQUIRE_THROWS_WITH(
             LQsim->NamedOperation("PauliRot", {0.5}, {Qs[0]}, false, {Qs[1]},
                                   {false}, {"XY"}),
-            Catch::Contains("Controlled PauliRot is not supported"));
+            Catch::Matchers::ContainsSubstring("Controlled PauliRot is not supported"));
     }
 }

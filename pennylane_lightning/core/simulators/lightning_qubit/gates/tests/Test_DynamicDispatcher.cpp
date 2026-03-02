@@ -19,7 +19,7 @@
 #include <utility>
 #include <vector>
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 
 #include "CPUMemoryModel.hpp"
 #include "DynamicDispatcher.hpp"
@@ -95,13 +95,13 @@ TEMPLATE_TEST_CASE("DynamicDispatcher::applyOperation", "[DynamicDispatcher]",
         REQUIRE_THROWS_WITH(dispatcher.applyOperation(
                                 Pennylane::Gates::KernelType::None, st.data(),
                                 num_qubits, "Toffoli", {0, 1, 2}, false),
-                            Catch::Contains("Cannot find"));
+                            Catch::Matchers::ContainsSubstring("Cannot find"));
 
         REQUIRE_THROWS_WITH(
             dispatcher.applyOperation(
                 Pennylane::Gates::KernelType::None, st.data(), num_qubits,
                 Pennylane::Gates::GateOperation::Toffoli, {0, 1, 2}, false),
-            Catch::Contains("Cannot find"));
+            Catch::Matchers::ContainsSubstring("Cannot find"));
     }
 
     SECTION("Test some gate operations") {
@@ -155,13 +155,13 @@ TEMPLATE_TEST_CASE("DynamicDispatcher::applyGenerator", "[DynamicDispatcher]",
         REQUIRE_THROWS_WITH(dispatcher.applyGenerator(
                                 Pennylane::Gates::KernelType::None, st.data(),
                                 num_qubits, "RX", {0, 1, 2}, false),
-                            Catch::Contains("Cannot find"));
+                            Catch::Matchers::ContainsSubstring("Cannot find"));
 
         REQUIRE_THROWS_WITH(
             dispatcher.applyGenerator(Pennylane::Gates::KernelType::None,
                                       st.data(), num_qubits,
                                       GeneratorOperation::RX, {0, 1, 2}, false),
-            Catch::Contains("Cannot find"));
+            Catch::Matchers::ContainsSubstring("Cannot find"));
     }
 }
 
@@ -181,8 +181,8 @@ TEMPLATE_TEST_CASE("DynamicDispatcher::applyMatrix", "[DynamicDispatcher]",
         REQUIRE_THROWS_WITH(dispatcher.applyMatrix(
                                 Pennylane::Gates::KernelType::None, st.data(),
                                 num_qubits, matrix.data(), {0}, false),
-                            Catch::Contains("is not registered") &&
-                                Catch::Contains("SingleQubitOp"));
+                            Catch::Matchers::ContainsSubstring("is not registered") &&
+                                Catch::Matchers::ContainsSubstring("SingleQubitOp"));
     }
 }
 
@@ -205,8 +205,8 @@ TEMPLATE_TEST_CASE("DynamicDispatcher::applySparseMatrix",
                                 Pennylane::Gates::KernelType::None, st.data(),
                                 num_qubits, row_map.data(), col_idx.data(),
                                 values.data(), {0}, false),
-                            Catch::Contains("is not registered") &&
-                                Catch::Contains("SparseMultiQubitOp"));
+                            Catch::Matchers::ContainsSubstring("is not registered") &&
+                                Catch::Matchers::ContainsSubstring("SparseMultiQubitOp"));
     }
 }
 
@@ -229,7 +229,7 @@ TEMPLATE_TEST_CASE("DynamicDispatcher::applyControlledSparseMatrix",
                                 Pennylane::Gates::KernelType::None, st.data(),
                                 num_qubits, row_map.data(), col_idx.data(),
                                 values.data(), {1}, {true}, {0}, false),
-                            Catch::Contains("is not registered") &&
-                                Catch::Contains("NCSparseMultiQubitOp"));
+                            Catch::Matchers::ContainsSubstring("is not registered") &&
+                                Catch::Matchers::ContainsSubstring("NCSparseMultiQubitOp"));
     }
 }

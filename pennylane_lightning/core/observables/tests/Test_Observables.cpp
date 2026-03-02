@@ -17,7 +17,7 @@
 #include "TypeList.hpp"
 #include "Util.hpp" // TestVector
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 
 #include <complex>
 #include <memory>
@@ -135,7 +135,7 @@ template <typename TypeList> void testNamedObsBase() {
 
             REQUIRE_THROWS_WITH(
                 obs.applyInPlaceShots(state_vector, eigenValues, ob_wires),
-                Catch::Matchers::Contains(
+                Catch::Matchers::ContainsSubstring(
                     "Provided NamedObs does not support shot measurement."));
 
             auto ob = obs.getObs();
@@ -223,7 +223,7 @@ template <typename TypeList> void testHermitianObsBase() {
 
             REQUIRE_THROWS_WITH(
                 obs.applyInPlaceShots(state_vector, eigenValues, ob_wires),
-                Catch::Matchers::Contains("The matrix passed to HermitianObs "
+                Catch::Matchers::ContainsSubstring("The matrix passed to HermitianObs "
                                           "is not a Hermitian matrix."));
         }
 
@@ -668,7 +668,7 @@ template <typename TypeList> void testSparseHamiltonianBase() {
 
             REQUIRE_THROWS_WITH(
                 sparseH->applyInPlaceShots(state_vector, eigenValues, ob_wires),
-                Catch::Matchers::Contains("SparseHamiltonian observables do "
+                Catch::Matchers::ContainsSubstring("SparseHamiltonian observables do "
                                           "not support shot measurement."));
         }
 

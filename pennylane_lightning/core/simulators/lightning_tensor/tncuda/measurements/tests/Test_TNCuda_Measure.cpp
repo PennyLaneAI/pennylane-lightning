@@ -21,7 +21,7 @@
 #include <utility>
 #include <vector>
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 
 #include "DevTag.hpp"
 #include "ExactTNCuda.hpp"
@@ -81,7 +81,7 @@ TEMPLATE_LIST_TEST_CASE("Probabilities", "[Measures]", TestTNBackends) {
         for (const auto &term : input) {
             auto probabilities = measure.probs(term.first);
             REQUIRE_THAT(term.second,
-                         Catch::Approx(probabilities).margin(1e-6));
+                         Catch::Matchers::Approx(probabilities).margin(1e-6));
         }
     }
 
@@ -157,7 +157,7 @@ TEMPLATE_LIST_TEST_CASE("Samples", "[TNCUDA_Measures]", TestTNBackends) {
         // compare estimated probabilities to real probabilities
         SECTION("No wires provided:") {
             REQUIRE_THAT(probabilities,
-                         Catch::Approx(expected_probabilities).margin(.1));
+                         Catch::Matchers::Approx(expected_probabilities).margin(.1));
         }
     }
 }

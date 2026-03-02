@@ -16,7 +16,7 @@
 #include <utility>
 #include <vector>
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 
 #include "tncuda_helpers.hpp"
 
@@ -46,7 +46,7 @@ TEST_CASE("MPSShapeCheck", "[TNCuda_utils]") {
 
         REQUIRE_THROWS_WITH(
             MPSShapeCheck(MPS_shape_dest, incorrect_MPS_shape),
-            Catch::Matchers::Contains("The incoming MPS does not have the "
+            Catch::Matchers::ContainsSubstring("The incoming MPS does not have the "
                                       "correct layout for lightning.tensor"));
     }
     SECTION("Incorrect incoming MPS shape, physical dimension") {
@@ -58,7 +58,7 @@ TEST_CASE("MPSShapeCheck", "[TNCuda_utils]") {
 
         REQUIRE_THROWS_WITH(
             MPSShapeCheck(MPS_shape_dest, incorrect_shape),
-            Catch::Matchers::Contains("The incoming MPS does not have the "
+            Catch::Matchers::ContainsSubstring("The incoming MPS does not have the "
                                       "correct layout for lightning.tensor"));
     }
     SECTION("Incorrect incoming MPS shape, number sites") {
@@ -70,7 +70,7 @@ TEST_CASE("MPSShapeCheck", "[TNCuda_utils]") {
 
         REQUIRE_THROWS_WITH(
             MPSShapeCheck(MPS_shape_dest, incorrect_shape),
-            Catch::Matchers::Contains("The incoming MPS does not have the "
+            Catch::Matchers::ContainsSubstring("The incoming MPS does not have the "
                                       "correct layout for lightning.tensor"));
     }
 }

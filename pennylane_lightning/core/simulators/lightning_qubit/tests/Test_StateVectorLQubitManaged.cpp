@@ -19,7 +19,7 @@
 #include <utility>
 #include <vector>
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 
 #include "CPUMemoryModel.hpp" // getBestAllocator
 #include "LinearAlgebra.hpp"  //randomUnitary
@@ -180,7 +180,7 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::normalize",
                                                 init_state.size()};
         REQUIRE_THROWS_WITH(
             sv.normalize(),
-            Catch::Contains(
+            Catch::Matchers::ContainsSubstring(
                 "Vector has norm close to zero and cannot be normalized"));
     }
 }

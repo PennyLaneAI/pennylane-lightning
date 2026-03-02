@@ -21,7 +21,7 @@
 #include <utility>
 #include <vector>
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 
 #include "ConstantUtil.hpp"
 #include "Error.hpp"
@@ -2645,7 +2645,7 @@ TEMPLATE_TEST_CASE("Sample", "[StateVectorKokkosManaged_Param]", float,
     // compare estimated probabilities to real probabilities
     SECTION("No wires provided:") {
         REQUIRE_THAT(probabilities,
-                     Catch::Approx(expected_probabilities).margin(.05));
+                     Catch::Matchers::Approx(expected_probabilities).margin(.05));
     }
 }
 

@@ -19,7 +19,7 @@
 #include <utility>
 #include <vector>
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 
 #include "ConstantUtil.hpp" // lookup, array_has_elem
 #include "DynamicDispatcher.hpp"

@@ -16,7 +16,7 @@
 #include <optional>
 #include <set>
 
-#include "catch2/catch.hpp"
+#include <catch2/catch_all.hpp>
 
 #include "LightningQubitManager.hpp"
 
@@ -99,11 +99,11 @@ TEST_CASE("Test lightning qubit manager invalid IDs", "[Utils]") {
 
     QubitIdType q = manager.Allocate(device_qubit_id);
     REQUIRE_THROWS_WITH(manager.getProgramId(device_qubit_id + 42),
-                        Catch::Contains("Invalid device qubit ID"));
+                        Catch::Matchers::ContainsSubstring("Invalid device qubit ID"));
     REQUIRE_THROWS_WITH(manager.getDeviceId(q + 42),
-                        Catch::Contains("Invalid program qubit ID"));
+                        Catch::Matchers::ContainsSubstring("Invalid program qubit ID"));
 
     REQUIRE_THROWS_WITH(
         manager.Release(q + 42),
-        Catch::Contains("Cannot release qubit, the given ID is invalid"));
+        Catch::Matchers::ContainsSubstring("Cannot release qubit, the given ID is invalid"));
 }

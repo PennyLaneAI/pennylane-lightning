@@ -13,7 +13,7 @@
 // limitations under the License.
 #include "cpu_kernels/avx_common/SingleQubitGateHelper.hpp"
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 #include <tuple>
 
 /// @cond DEV

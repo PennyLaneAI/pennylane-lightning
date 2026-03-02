@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 #include <random>
 
 #include "TestHelpers.hpp"
@@ -89,7 +89,7 @@ TEMPLATE_TEST_CASE("SparseMatrixCSR data structure", "[SparseMatrixCSR]", float,
 
         REQUIRE_THROWS_WITH(
             matrix.makeSparseUnitary(gen, 0, 0.5),
-            Catch::Matchers::Contains("Dimension must be greater than 0."));
+            Catch::Matchers::ContainsSubstring("Dimension must be greater than 0."));
     }
 
     SECTION("SparseMatrixCSR: makeSparseUnitary sparsity check") {
@@ -97,10 +97,10 @@ TEMPLATE_TEST_CASE("SparseMatrixCSR data structure", "[SparseMatrixCSR]", float,
 
         REQUIRE_THROWS_WITH(
             matrix.makeSparseUnitary(gen, 4, -0.1),
-            Catch::Matchers::Contains("Sparsity must be between 0 and 1."));
+            Catch::Matchers::ContainsSubstring("Sparsity must be between 0 and 1."));
         REQUIRE_THROWS_WITH(
             matrix.makeSparseUnitary(gen, 4, 1.1),
-            Catch::Matchers::Contains("Sparsity must be between 0 and 1."));
+            Catch::Matchers::ContainsSubstring("Sparsity must be between 0 and 1."));
     }
 
     SECTION("SparseMatrixCSR: Make sparse unitary") {

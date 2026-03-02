@@ -19,7 +19,7 @@
 #include <utility>
 #include <vector>
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 
 #include "DevTag.hpp"
 #include "MPOTNCuda.hpp"
@@ -72,7 +72,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::setIthMPSSite", "[MPSTNCuda]", float, double) {
         REQUIRE_THROWS_WITH(
             mps_state.updateSiteData(siteIdx, site_data.data(),
                                      site_data.size()),
-            Catch::Matchers::Contains(
+            Catch::Matchers::ContainsSubstring(
                 "The site index should be less than the number of qubits."));
     }
 
@@ -88,7 +88,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::setIthMPSSite", "[MPSTNCuda]", float, double) {
         REQUIRE_THROWS_WITH(
             mps_state.updateSiteData(siteIdx, site_data.data(),
                                      site_data.size()),
-            Catch::Matchers::Contains("The length of the host data should "
+            Catch::Matchers::ContainsSubstring("The length of the host data should "
                                       "match its copy on the device."));
     }
 
@@ -135,7 +135,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::SetBasisStates() & reset()", "[MPSTNCuda]",
 
         REQUIRE_THROWS_WITH(
             mps_state.setBasisState(basisState),
-            Catch::Matchers::Contains("The size of a basis state should be "
+            Catch::Matchers::ContainsSubstring("The size of a basis state should be "
                                       "equal to the number of qubits."));
     }
 
@@ -148,7 +148,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::SetBasisStates() & reset()", "[MPSTNCuda]",
 
         REQUIRE_THROWS_WITH(
             mps_state.setBasisState(basisState),
-            Catch::Matchers::Contains("Please ensure all elements of a basis "
+            Catch::Matchers::ContainsSubstring("Please ensure all elements of a basis "
                                       "state should be either 0 or 1."));
     }
 
@@ -236,7 +236,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::WorksizePref", "[MPSTNCuda]", float, double) {
         MPSTNCuda<TestType> mps_state{num_qubits, maxBondDim, dev_tag};
         REQUIRE_THROWS_WITH(
             mps_state.setWorksizePref("invalid_pref"),
-            Catch::Matchers::Contains("Invalid workspace preference"));
+            Catch::Matchers::ContainsSubstring("Invalid workspace preference"));
     }
 
     SECTION("Set and get workspace preference") {
@@ -290,7 +290,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::getDataVector()", "[MPSTNCuda]", float, double) {
 
         REQUIRE_THROWS_WITH(
             mps_state.getData(results.data(), length),
-            Catch::Matchers::Contains(
+            Catch::Matchers::ContainsSubstring(
                 "State tensor size exceeds the available GPU memory!"));
     }
 
@@ -305,7 +305,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::getDataVector()", "[MPSTNCuda]", float, double) {
         std::vector<cp_t> results(1);
 
         REQUIRE_THROWS_WITH(mps_state.getData(results.data(), length),
-                            Catch::Matchers::Contains(
+                            Catch::Matchers::ContainsSubstring(
                                 "The size of the result vector should be equal "
                                 "to the dimension of the quantum state."));
     }
@@ -317,7 +317,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::getDataVector()", "[MPSTNCuda]", float, double) {
 
         REQUIRE_THROWS_WITH(
             MPSTNCuda<TestType>(num_qubits, maxBondDim, dev_tag),
-            Catch::Matchers::Contains(
+            Catch::Matchers::ContainsSubstring(
                 "The number of qubits should be greater than 1."));
     }
 }

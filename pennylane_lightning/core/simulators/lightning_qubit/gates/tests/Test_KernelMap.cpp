@@ -19,7 +19,7 @@
 #include "TestHelpers.hpp"
 #include "Util.hpp" // for_each_enum
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 
 /// @cond DEV
 namespace {
@@ -27,7 +27,7 @@ using namespace Pennylane::LightningQubit;
 using namespace Pennylane::LightningQubit::KernelMap;
 using namespace Pennylane::Util;
 
-using Catch::Matchers::Contains;
+using Catch::Matchers::ContainsSubstring;
 using Pennylane::Util::for_each_enum;
 using Pennylane::Util::LightningException;
 } // namespace

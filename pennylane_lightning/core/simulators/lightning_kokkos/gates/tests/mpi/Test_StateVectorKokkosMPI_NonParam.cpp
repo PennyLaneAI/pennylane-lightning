@@ -19,7 +19,7 @@
 #include <type_traits>
 #include <vector>
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 
 #include "StateVectorKokkosMPI.hpp"
 #include "TestHelpers.hpp"             // createRandomStateVectorData
@@ -52,12 +52,12 @@ TEMPLATE_TEST_CASE("Apply op with wires more than local wires", "[LKMPI]",
     StateVectorKokkosMPI<TestType> sv(mpi_manager, num_qubits);
     REQUIRE_THROWS_WITH(
         sv.applyOperation("XXX", {0, 1, 2}),
-        Catch::Contains("smaller than or equal to the number of local wires."));
+        Catch::Matchers::ContainsSubstring("smaller than or equal to the number of local wires."));
 
     std::vector<Kokkos::complex<TestType>> matrix(64, {0.0, 0.0});
     REQUIRE_THROWS_WITH(
         sv.applyMatrix(matrix, {0, 1, 2}),
-        Catch::Contains("smaller than or equal to the number of local wires."));
+        Catch::Matchers::ContainsSubstring("smaller than or equal to the number of local wires."));
 }
 
 TEMPLATE_TEST_CASE("Apply non-trivial op", "[LKMPI]", double, float) {

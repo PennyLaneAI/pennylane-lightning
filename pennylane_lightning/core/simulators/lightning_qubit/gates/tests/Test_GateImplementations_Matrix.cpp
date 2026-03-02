@@ -13,7 +13,7 @@
 // limitations under the License.
 #include <unordered_set>
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 
 #include "ConstantUtil.hpp"  // array_has_elem
 #include "Gates.hpp"         // getPauliX, getPauliY

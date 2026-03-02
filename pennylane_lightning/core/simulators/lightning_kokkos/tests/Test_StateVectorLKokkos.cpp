@@ -18,7 +18,7 @@
 #include <type_traits>
 #include <vector>
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 
 #include "StateVectorKokkos.hpp"
 #include "TestHelpers.hpp" // createRandomStateVectorData
@@ -61,7 +61,7 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorKokkos::Constructibility",
         std::vector<ComplexT> st_data(14, 0.0);
         REQUIRE_THROWS_WITH(
             StateVectorT(st_data.data(), st_data.size()),
-            Catch::Contains("The size of provided data must be a power of 2."));
+            Catch::Matchers::ContainsSubstring("The size of provided data must be a power of 2."));
     }
     SECTION(
         "StateVectorBackend<TestType> {const StateVectorBackend<TestType>&}") {
@@ -93,7 +93,7 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorKokkos::applyMatrix with a std::vector",
                                   st_data.size());
         REQUIRE_THROWS_WITH(
             state_vector.applyMatrix(m, {0, 1}),
-            Catch::Contains(
+            Catch::Matchers::ContainsSubstring(
                 "The size of matrix does not match with the given"));
     }
 
@@ -107,7 +107,7 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorKokkos::applyMatrix with a std::vector",
                                   st_data.size());
         REQUIRE_THROWS_WITH(
             state_vector.applyMatrix(m, {0}),
-            Catch::Contains(
+            Catch::Matchers::ContainsSubstring(
                 "The size of matrix does not match with the given"));
     }
 
@@ -157,32 +157,32 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorKokkos::setState", "[errors]",
     SECTION("setBasisState incompatible dimensions") {
         REQUIRE_THROWS_WITH(
             sv.setBasisState({0}, {0, 1}),
-            Catch::Contains("state and wires must have equal dimensions."));
+            Catch::Matchers::ContainsSubstring("state and wires must have equal dimensions."));
     }
 
     SECTION("setBasisState high wire index") {
         REQUIRE_THROWS_WITH(
             sv.setBasisState({0, 0, 0}, {0, 1, 2}),
-            Catch::Contains(
+            Catch::Matchers::ContainsSubstring(
                 "wires must take values lower than the number of qubits."));
     }
 
     SECTION("setStateVector incompatible dimensions indices & values") {
         REQUIRE_THROWS_WITH(
             sv.setStateVector({0, 1}, std::vector<ComplexT>(4, 0.0)),
-            Catch::Contains("Inconsistent indices and values dimensions."));
+            Catch::Matchers::ContainsSubstring("Inconsistent indices and values dimensions."));
     }
 
     SECTION("setStateVector incompatible dimensions state & wires") {
         REQUIRE_THROWS_WITH(
             sv.setStateVector(std::vector<ComplexT>(2, 0.0), {0, 1}),
-            Catch::Contains("Inconsistent state and wires dimensions."));
+            Catch::Matchers::ContainsSubstring("Inconsistent state and wires dimensions."));
     }
 
     SECTION("setStateVector high wire index") {
         REQUIRE_THROWS_WITH(
             sv.setStateVector(std::vector<ComplexT>(8, 0.0), {0, 1, 2}),
-            Catch::Contains(
+            Catch::Matchers::ContainsSubstring(
                 "wires must take values lower than the number of qubits."));
     }
 }
@@ -209,7 +209,7 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorKokkos::applyMatrix with a pointer",
         StateVectorT state_vector(reinterpret_cast<ComplexT *>(st_data.data()),
                                   st_data.size());
         REQUIRE_THROWS_WITH(state_vector.applyMatrix(m.data(), {}),
-                            Catch::Contains("must be larger than 0"));
+                            Catch::Matchers::ContainsSubstring("must be larger than 0"));
     }
 
     SECTION("Test with different number of wires") {
@@ -267,7 +267,7 @@ TEMPLATE_PRODUCT_TEST_CASE(
                                   st_data.size());
         REQUIRE_THROWS_WITH(
             state_vector.applyControlledMatrix(m, {2}, {true}, {0, 1}),
-            Catch::Contains(
+            Catch::Matchers::ContainsSubstring(
                 "The size of matrix does not match with the given"));
     }
 
@@ -281,7 +281,7 @@ TEMPLATE_PRODUCT_TEST_CASE(
                                   st_data.size());
         REQUIRE_THROWS_WITH(
             state_vector.applyControlledMatrix(m, {2}, {true}, {0}),
-            Catch::Contains(
+            Catch::Matchers::ContainsSubstring(
                 "The size of matrix does not match with the given"));
     }
 
@@ -349,7 +349,7 @@ TEMPLATE_PRODUCT_TEST_CASE(
                                   st_data.size());
         REQUIRE_THROWS_WITH(
             state_vector.applyControlledMatrix(m.data(), {0}, {true}, {}),
-            Catch::Contains("must be larger than 0"));
+            Catch::Matchers::ContainsSubstring("must be larger than 0"));
     }
 
     SECTION("Test with different number of wires") {

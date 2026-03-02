@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #include "TestHelpers.hpp"
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 
 /// @cond DEV
 namespace {
@@ -130,7 +130,7 @@ template <typename TypeList> void testProbabilities() {
             for (const auto &term : input) {
                 probabilities = Measurer.probs(term.first);
                 REQUIRE_THAT(term.second,
-                             Catch::Approx(probabilities).margin(1e-6));
+                             Catch::Matchers::Approx(probabilities).margin(1e-6));
             }
         }
 
@@ -179,7 +179,7 @@ template <typename TypeList> void testProbabilitiesShots() {
             std::size_t num_shots = 10000;
             probabilities = Measurer.probs(num_shots);
             REQUIRE_THAT(input[0].second,
-                         Catch::Approx(probabilities).margin(5e-2));
+                         Catch::Matchers::Approx(probabilities).margin(5e-2));
         }
 
         DYNAMIC_SECTION(
@@ -189,7 +189,7 @@ template <typename TypeList> void testProbabilitiesShots() {
                 std::size_t num_shots = 10000;
                 probabilities = Measurer.probs(term.first, num_shots);
                 REQUIRE_THAT(term.second,
-                             Catch::Approx(probabilities).margin(5e-2));
+                             Catch::Matchers::Approx(probabilities).margin(5e-2));
             }
         }
 
@@ -232,7 +232,7 @@ template <typename TypeList> void testProbabilitiesObs() {
                 auto prob_obs = Measurer_obs.probs(obs);
                 auto prob = Measurer.probs(std::vector<std::size_t>({i}));
 
-                REQUIRE_THAT(prob_obs, Catch::Approx(prob).margin(1e-6));
+                REQUIRE_THAT(prob_obs, Catch::Matchers::Approx(prob).margin(1e-6));
             }
         }
 
@@ -250,7 +250,7 @@ template <typename TypeList> void testProbabilitiesObs() {
                 auto prob_obs = Measurer_obs.probs(obs);
                 auto prob = Measurer.probs(std::vector<std::size_t>({i}));
 
-                REQUIRE_THAT(prob_obs, Catch::Approx(prob).margin(1e-6));
+                REQUIRE_THAT(prob_obs, Catch::Matchers::Approx(prob).margin(1e-6));
             }
         }
 
@@ -265,7 +265,7 @@ template <typename TypeList> void testProbabilitiesObs() {
                 auto prob_obs = Measurer_obs.probs(obs);
                 auto prob = Measurer.probs(std::vector<std::size_t>({i}));
 
-                REQUIRE_THAT(prob_obs, Catch::Approx(prob).margin(1e-6));
+                REQUIRE_THAT(prob_obs, Catch::Matchers::Approx(prob).margin(1e-6));
             }
         }
 
@@ -282,7 +282,7 @@ template <typename TypeList> void testProbabilitiesObs() {
                 auto prob_obs = Measurer_obs.probs(obs);
                 auto prob = Measurer.probs(std::vector<std::size_t>({i}));
 
-                REQUIRE_THAT(prob_obs, Catch::Approx(prob).margin(1e-6));
+                REQUIRE_THAT(prob_obs, Catch::Matchers::Approx(prob).margin(1e-6));
             }
         }
 
@@ -297,7 +297,7 @@ template <typename TypeList> void testProbabilitiesObs() {
                 auto prob_obs = Measurer_obs.probs(obs);
                 auto prob = Measurer.probs(std::vector<std::size_t>({i}));
 
-                REQUIRE_THAT(prob_obs, Catch::Approx(prob).margin(1e-6));
+                REQUIRE_THAT(prob_obs, Catch::Matchers::Approx(prob).margin(1e-6));
             }
         }
 
@@ -322,7 +322,7 @@ template <typename TypeList> void testProbabilitiesObs() {
             auto prob_obs = Measurer_obs.probs(*obs);
             auto prob = Measurer.probs(std::vector<std::size_t>({0, 1, 2}));
 
-            REQUIRE_THAT(prob_obs, Catch::Approx(prob).margin(1e-6));
+            REQUIRE_THAT(prob_obs, Catch::Matchers::Approx(prob).margin(1e-6));
         }
 
         DYNAMIC_SECTION("Test TensorProd YHI"
@@ -347,7 +347,7 @@ template <typename TypeList> void testProbabilitiesObs() {
             auto prob_obs = Measurer_obs.probs(*obs);
             auto prob = Measurer.probs(std::vector<std::size_t>({0, 1, 2}));
 
-            REQUIRE_THAT(prob_obs, Catch::Approx(prob).margin(1e-6));
+            REQUIRE_THAT(prob_obs, Catch::Matchers::Approx(prob).margin(1e-6));
         }
 
         testProbabilitiesObs<typename TypeList::Next>();
@@ -396,7 +396,7 @@ template <typename TypeList> void testProbabilitiesObsShots() {
 
             auto prob = Measurer.probs(std::vector<std::size_t>({0, 1, 2}));
 
-            REQUIRE_THAT(prob_obs_shots, Catch::Approx(prob).margin(5e-2));
+            REQUIRE_THAT(prob_obs_shots, Catch::Matchers::Approx(prob).margin(5e-2));
         }
 
         DYNAMIC_SECTION("Test TensorProd YHI"
@@ -422,7 +422,7 @@ template <typename TypeList> void testProbabilitiesObsShots() {
             auto prob_obs_shots = Measurer_obs_shots.probs(*obs, num_shots);
             auto prob = Measurer.probs(std::vector<std::size_t>({0, 1, 2}));
 
-            REQUIRE_THAT(prob_obs_shots, Catch::Approx(prob).margin(5e-2));
+            REQUIRE_THAT(prob_obs_shots, Catch::Matchers::Approx(prob).margin(5e-2));
         }
 
         testProbabilitiesObsShots<typename TypeList::Next>();
@@ -1291,7 +1291,7 @@ void testSamples(const std::optional<std::size_t> &seed = std::nullopt) {
         DYNAMIC_SECTION("No wires provided - "
                         << StateVectorToName<StateVectorT>::name) {
             REQUIRE_THAT(probabilities,
-                         Catch::Approx(expected_probabilities).margin(.05));
+                         Catch::Matchers::Approx(expected_probabilities).margin(.05));
         }
         testSamples<typename TypeList::Next>(seed);
     }
@@ -1420,7 +1420,7 @@ template <typename TypeList> void testSamplesCountsObs() {
             }
 
             REQUIRE_THAT(probabilities,
-                         Catch::Approx(expected_probabilities).margin(.05));
+                         Catch::Matchers::Approx(expected_probabilities).margin(.05));
         }
 
         DYNAMIC_SECTION("counts() without obs"
@@ -1454,7 +1454,7 @@ template <typename TypeList> void testSamplesCountsObs() {
             }
 
             REQUIRE_THAT(probabilities,
-                         Catch::Approx(expected_probabilities).margin(.05));
+                         Catch::Matchers::Approx(expected_probabilities).margin(.05));
         }
 
         testSamplesCountsObs<typename TypeList::Next>();
@@ -1700,7 +1700,7 @@ template <typename TypeList> void testSparseHObsMeasureShot() {
             std::vector<std::size_t> shots_range = {};
             REQUIRE_THROWS_WITH(
                 Measurer.expval(*sparseH, num_shots, shots_range),
-                Catch::Matchers::Contains("SparseHamiltonian observables do "
+                Catch::Matchers::ContainsSubstring("SparseHamiltonian observables do "
                                           "not support shot measurement."));
         }
 
@@ -1710,7 +1710,7 @@ template <typename TypeList> void testSparseHObsMeasureShot() {
             std::vector<std::size_t> shots_range = {};
             REQUIRE_THROWS_WITH(
                 Measurer.var(*sparseH, num_shots),
-                Catch::Matchers::Contains("SparseHamiltonian observables do "
+                Catch::Matchers::ContainsSubstring("SparseHamiltonian observables do "
                                           "not support shot measurement."));
         }
 

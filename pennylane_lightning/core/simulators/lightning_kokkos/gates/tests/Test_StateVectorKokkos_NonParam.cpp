@@ -21,7 +21,7 @@
 #include <vector>
 
 #include <Kokkos_Core.hpp>
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 
 #include "Gates.hpp" // getHadamard
 #include "StateVectorKokkos.hpp"

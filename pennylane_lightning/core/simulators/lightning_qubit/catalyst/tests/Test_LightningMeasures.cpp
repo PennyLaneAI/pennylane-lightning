@@ -20,7 +20,8 @@
 #include "QuantumDevice.hpp"
 #include "Types.h"
 #include "Utils.hpp"
-#include "catch2/catch.hpp"
+#include <catch2/catch_all.hpp>
+using Catch::Approx;
 #include "cmath"
 
 /// @cond DEV
@@ -42,7 +43,7 @@ TEST_CASE("NameObs test with invalid number of wires", "[Measures]") {
     std::unique_ptr<LQSimulator> sim = std::make_unique<LQSimulator>();
 
     REQUIRE_THROWS_WITH(sim->Observable(ObsId::PauliX, {}, {1}),
-                        Catch::Contains("Invalid number of wires"));
+                        Catch::Matchers::ContainsSubstring("Invalid number of wires"));
 }
 
 TEST_CASE("NameObs test with invalid given wires for NamedObs", "[Measures]") {
@@ -51,14 +52,14 @@ TEST_CASE("NameObs test with invalid given wires for NamedObs", "[Measures]") {
     sim->AllocateQubit();
 
     REQUIRE_THROWS_WITH(sim->Observable(ObsId::PauliX, {}, {1}),
-                        Catch::Contains("Invalid given wires"));
+                        Catch::Matchers::ContainsSubstring("Invalid given wires"));
 }
 
 TEST_CASE("HermitianObs test with invalid number of wires", "[Measures]") {
     std::unique_ptr<LQSimulator> sim = std::make_unique<LQSimulator>();
 
     REQUIRE_THROWS_WITH(sim->Observable(ObsId::Hermitian, {}, {1}),
-                        Catch::Contains("Invalid number of wires"));
+                        Catch::Matchers::ContainsSubstring("Invalid number of wires"));
 }
 
 TEST_CASE("HermitianObs test with invalid given wires for HermitianObs",
@@ -67,14 +68,14 @@ TEST_CASE("HermitianObs test with invalid given wires for HermitianObs",
     sim->AllocateQubit();
 
     REQUIRE_THROWS_WITH(sim->Observable(ObsId::Hermitian, {}, {1}),
-                        Catch::Contains("Invalid given wires"));
+                        Catch::Matchers::ContainsSubstring("Invalid given wires"));
 }
 
 TEST_CASE("Check an unsupported observable", "[Measures]") {
     REQUIRE_THROWS_WITH(
         Lightning::lookup_obs<Lightning::simulator_observable_support_size>(
             Lightning::simulator_observable_support, static_cast<ObsId>(10)),
-        Catch::Contains(
+        Catch::Matchers::ContainsSubstring(
             "The given observable is not supported by the simulator"));
 }
 
@@ -188,7 +189,7 @@ TEST_CASE("Mid-circuit measurement test with invalid postselect value",
     sim->NamedOperation("Hadamard", {}, {q}, false);
 
     REQUIRE_THROWS_WITH(sim->Measure(q, 2),
-                        Catch::Contains("Invalid postselect value"));
+                        Catch::Matchers::ContainsSubstring("Invalid postselect value"));
 }
 
 TEST_CASE("Expval(ObsT) test with invalid key for cached observables",
@@ -196,7 +197,7 @@ TEST_CASE("Expval(ObsT) test with invalid key for cached observables",
     std::unique_ptr<LQSimulator> sim = std::make_unique<LQSimulator>();
 
     REQUIRE_THROWS_WITH(sim->Expval(0),
-                        Catch::Contains("Invalid key for cached observables"));
+                        Catch::Matchers::ContainsSubstring("Invalid key for cached observables"));
 }
 
 TEST_CASE("Expval(NamedObs) test", "[Measures]") {
@@ -408,7 +409,7 @@ TEST_CASE("Expval(TensorProd(NamedObs[])) test", "[Measures]") {
 
     REQUIRE_THROWS_WITH(
         sim->TensorObservable({px, py, pz}),
-        Catch::Contains("All wires in observables must be disjoint."));
+        Catch::Matchers::ContainsSubstring("All wires in observables must be disjoint."));
 
     CHECK(sim->Expval(tpxy) == Approx(0.0).margin(1e-5));
     CHECK(sim->Expval(tpxz) == Approx(-1.0).margin(1e-5));
@@ -1298,7 +1299,7 @@ TEST_CASE("State test with incorrect size", "[Measures]") {
     DataView<std::complex<double>, 1> view(state);
     REQUIRE_THROWS_WITH(
         sim->State(view),
-        Catch::Contains("Invalid size for the pre-allocated state vector"));
+        Catch::Matchers::ContainsSubstring("Invalid size for the pre-allocated state vector"));
 }
 
 TEST_CASE("State test with numWires=4", "[Measures]") {
@@ -1345,21 +1346,21 @@ TEST_CASE("PartialProbs test with incorrect numWires and numAlloc",
 
     REQUIRE_THROWS_WITH(
         sim->PartialProbs(probs_view, {Qs[0], Qs[1], Qs[2], Qs[3], Qs[0]}),
-        Catch::Contains("Invalid number of wires"));
+        Catch::Matchers::ContainsSubstring("Invalid number of wires"));
 
     REQUIRE_THROWS_WITH(
         sim->PartialProbs(probs_view, {Qs[0]}),
-        Catch::Contains(
+        Catch::Matchers::ContainsSubstring(
             "Invalid size for the pre-allocated partial-probabilities"));
 
     REQUIRE_THROWS_WITH(
         sim->Probs(probs_view),
-        Catch::Contains("Invalid size for the pre-allocated probabilities"));
+        Catch::Matchers::ContainsSubstring("Invalid size for the pre-allocated probabilities"));
 
     sim->ReleaseQubit(Qs[0]);
 
     REQUIRE_THROWS_WITH(sim->PartialProbs(probs_view, {Qs[0]}),
-                        Catch::Contains("Invalid given wires to measure"));
+                        Catch::Matchers::ContainsSubstring("Invalid given wires to measure"));
 }
 
 TEST_CASE("Probs and PartialProbs tests with numWires=0-4", "[Measures]") {
@@ -1506,20 +1507,20 @@ TEST_CASE("PartialSample test with incorrect numWires and numAlloc",
 
     REQUIRE_THROWS_WITH(
         sim->PartialSample(view, {Qs[0], Qs[1], Qs[2], Qs[3], Qs[0]}),
-        Catch::Contains("Invalid number of wires"));
+        Catch::Matchers::ContainsSubstring("Invalid number of wires"));
 
     REQUIRE_THROWS_WITH(
         sim->PartialSample(view, {Qs[0], Qs[1]}),
-        Catch::Contains("Invalid size for the pre-allocated partial-samples"));
+        Catch::Matchers::ContainsSubstring("Invalid size for the pre-allocated partial-samples"));
 
     REQUIRE_THROWS_WITH(
         sim->Sample(view),
-        Catch::Contains("Invalid size for the pre-allocated samples"));
+        Catch::Matchers::ContainsSubstring("Invalid size for the pre-allocated samples"));
 
     sim->ReleaseQubit(Qs[0]);
 
     REQUIRE_THROWS_WITH(sim->PartialSample(view, {Qs[0]}),
-                        Catch::Contains("Invalid given wires to measure"));
+                        Catch::Matchers::ContainsSubstring("Invalid given wires to measure"));
 }
 
 TEST_CASE("PartialCounts test with incorrect numWires and numAlloc",
@@ -1543,20 +1544,20 @@ TEST_CASE("PartialCounts test with incorrect numWires and numAlloc",
 
     REQUIRE_THROWS_WITH(sim->PartialCounts(eigvals_view, counts_view,
                                            {Qs[0], Qs[1], Qs[2], Qs[3], Qs[0]}),
-                        Catch::Contains("Invalid number of wires"));
+                        Catch::Matchers::ContainsSubstring("Invalid number of wires"));
 
     REQUIRE_THROWS_WITH(
         sim->PartialCounts(eigvals_view, counts_view, {Qs[0]}),
-        Catch::Contains("Invalid size for the pre-allocated partial-counts"));
+        Catch::Matchers::ContainsSubstring("Invalid size for the pre-allocated partial-counts"));
 
     REQUIRE_THROWS_WITH(
         sim->Counts(eigvals_view, counts_view),
-        Catch::Contains("Invalid size for the pre-allocated counts"));
+        Catch::Matchers::ContainsSubstring("Invalid size for the pre-allocated counts"));
 
     sim->ReleaseQubit(Qs[0]);
 
     REQUIRE_THROWS_WITH(sim->PartialCounts(eigvals_view, counts_view, {Qs[0]}),
-                        Catch::Contains("Invalid given wires to measure"));
+                        Catch::Matchers::ContainsSubstring("Invalid given wires to measure"));
 }
 
 TEST_CASE("Sample and PartialSample tests with numWires=0-4 shots=100",
