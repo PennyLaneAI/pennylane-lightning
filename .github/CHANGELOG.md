@@ -35,6 +35,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Update Catch2 testing framework to v3.11.
+  [(#1350)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1350)
+
 - Update internal dependencies versions for Nanobind (2.11), cmake (3.26), sphinxcontrib-htmlhelp (2.1.0)
   [(#1347)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1347)
 
