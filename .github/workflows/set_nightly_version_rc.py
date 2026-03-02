@@ -1,4 +1,4 @@
-# Copyright 2025 Xanadu Quantum Technologies Inc.
+# Copyright 2026 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-This module bumps the PennyLane development version by one unit.
+This module bumps the PennyLane release-candidate version by one unit.
 """
 
 import os

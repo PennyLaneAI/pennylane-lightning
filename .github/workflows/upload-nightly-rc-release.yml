@@ -42,7 +42,7 @@ jobs:
           echo "rc_branch=$RC_BRANCH" >> $GITHUB_OUTPUT
           echo "Found rc branch: $RC_BRANCH"
         else
-          echo "branch_exists=false" >> $GITHUB_OUTPUT
+          echo "branch_exists=true" >> $GITHUB_OUTPUT
         fi
 
     - name: Checkout Lightning repo
@@ -59,9 +59,9 @@ jobs:
         python $GITHUB_WORKSPACE/.github/workflows/set_nightly_version_rc.py
         git config --global user.email '${{ secrets.AUTO_UPDATE_VERSION_RINGO_EMAIL }}'
         git config --global user.name "ringo-but-quantum"
-        git add $GITHUB_WORKSPACE/pennylane/_version.py
+        git add $GITHUB_WORKSPACE/pennylane-lightning/_version.py
         git commit -m "[no ci] bump nightly version"
-        git push
+        # git push
 
   build-linux-aarch64-cuda:
     needs: setup-rc
