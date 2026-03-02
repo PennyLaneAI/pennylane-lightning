@@ -427,7 +427,7 @@ void registerBackendAgnosticAlgorithmsMPI(nb::module_ &m) {
  *
  * @param m Nanobind module
  */
-inline void registerInfoMPI(nb::module_ &m) {
+inline void registerInfoMPI([[maybe_unused]] nb::module_ &m) {
     // This function is now empty - MPI manager registration moved to
     // backend-specific
 }
