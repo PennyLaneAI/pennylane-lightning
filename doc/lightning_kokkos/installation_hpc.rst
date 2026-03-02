@@ -15,6 +15,12 @@ We can load the following modules to enable the relevant compilers and Python en
     # Load the required Python and compiler modules
     module load cray-python
     module load PrgEnv-amd
+    module load ninja cmake
+
+    # Create a python environment and upgrade pip
+    python -m venv venv-pennylane
+    source venv-pennylane/bin/activate
+    pip install --upgrade pip
 
 
 Install Kokkos (Recommended)
