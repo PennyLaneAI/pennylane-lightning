@@ -36,13 +36,13 @@ jobs:
       run: |
         VERSION=$(python setup.py --version)
         IFS=. read MAJ MIN PAT <<< "${VERSION%-dev[0-9]*}"
-        RC_BRANCH="v${MAJ}.$((MIN-1)).${PAT}-rc0"
+        RC_BRANCH="v${MAJ}.$((MIN-1)).${PAT}_rc0"
         if git ls-remote --exit-code origin "refs/heads/$RC_BRANCH"; then
           echo "branch_exists=true" >> $GITHUB_OUTPUT
           echo "rc_branch=$RC_BRANCH" >> $GITHUB_OUTPUT
           echo "Found rc branch: $RC_BRANCH"
         else
-          echo "branch_exists=true" >> $GITHUB_OUTPUT
+          echo "branch_exists=false" >> $GITHUB_OUTPUT
         fi
 
     - name: Checkout Lightning repo
@@ -61,7 +61,7 @@ jobs:
         git config --global user.name "ringo-but-quantum"
         git add $GITHUB_WORKSPACE/pennylane-lightning/_version.py
         git commit -m "[no ci] bump nightly version"
-        # git push
+        git push
 
   build-linux-aarch64-cuda:
     needs: setup-rc
