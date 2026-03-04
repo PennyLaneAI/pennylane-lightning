@@ -35,6 +35,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- A new AI policy document is now applied across the PennyLaneAI organization for all AI contributions.
+  [(#1345)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1345)
+
 - Updated Github docker build action to use relevant lightning branch.
   [(#1346)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1346)
 
