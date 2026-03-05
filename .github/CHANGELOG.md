@@ -35,6 +35,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Added workflow to create and upload nightly builds of the RC branch and trigger Catalyst's nightly RC builds.
+  [(#1344)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1344)
+
 - Updated Github docker build action to use relevant lightning branch.
   [(#1346)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1346)
 
