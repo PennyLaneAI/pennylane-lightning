@@ -38,6 +38,9 @@
 - Update internal dependencies versions for Nanobind (2.11), cmake (3.26), sphinxcontrib-htmlhelp (2.1.0)
   [(#1347)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1347)
 
+- Added workflow to create and upload nightly builds of the RC branch and trigger Catalyst's nightly RC builds.
+  [(#1344)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1344)
+
 - Updated Github docker build action to use relevant lightning branch.
   [(#1346)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1346)
 

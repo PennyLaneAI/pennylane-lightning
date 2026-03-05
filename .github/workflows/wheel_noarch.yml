@@ -18,6 +18,11 @@ on:
   release:
     types: [published]
   workflow_dispatch:
+  workflow_call:
+    inputs:
+      branch:
+        required: false
+        type: string  
 
 concurrency:
   group: wheel_noarch-${{ github.ref }}
@@ -27,6 +32,7 @@ jobs:
   build-pure-python-wheel:
     if: |
       github.event_name != 'pull_request' ||
+      github.event_name == 'schedule' ||
       (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'ci:build_wheels')) ||
       github.event_name == 'workflow_dispatch'
     strategy:
@@ -39,6 +45,8 @@ jobs:
     steps:
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
+        with:        
+          ref: ${{ inputs.branch || github.ref }}
 
       - uses: actions/setup-python@v5
         with:
@@ -76,6 +84,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: |
           github.event_name == 'release' || 
+          github.event_name == 'schedule' ||
           github.event_name == 'workflow_dispatch' || 
           github.ref == 'refs/heads/master' ||
           steps.rc_build.outputs.match != ''
