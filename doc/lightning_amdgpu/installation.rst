@@ -10,7 +10,7 @@ The installation instruction here is specifically for AMD MI300 GPU (GFX942); fo
 
 .. note::
 
-    Lightning-Kokkos and Lightning-AMDGPU are tested with Kokkos version 4.5.00
+    Lightning-Kokkos and Lightning-AMDGPU is tested with Kokkos version 5.0.0
 
 
 Install Lightning-AMDGPU
@@ -33,10 +33,7 @@ Install Lightning-AMDGPU
 
     # Install Lightning-AMDGPU
     PL_BACKEND="lightning_amdgpu" python scripts/configure_pyproject_toml.py
-    export CMAKE_ARGS="-DCMAKE_CXX_COMPILER=hipcc \
-                       -DKokkos_ENABLE_HIP=ON \
-                       -DKokkos_ARCH_AMD_GFX942=ON \
-                       -DCMAKE_PREFIX_PATH=/opt/rocm"
+    export CMAKE_ARGS="-DCMAKE_CXX_COMPILER=hipcc -DKokkos_ENABLE_HIP=ON -DKokkos_ARCH_AMD_GFX942=ON"
     python -m pip install . -vv
 
 

@@ -28,7 +28,7 @@ Install Kokkos (Recommended)
 
 .. note::
 
-    Lightning-Kokkos is tested with Kokkos version 4.5.00
+    Lightning-Kokkos is tested with Kokkos version 5.0.0
 
 We suggest first installing Kokkos with the desired configuration, following the instructions found in the Kokkos documentation.
 For example, the following instructions demonstrate building Kokkos for AMD MI210/250/250X GPUs:
@@ -38,9 +38,9 @@ Download the `Kokkos code <https://github.com/kokkos/kokkos/releases>`_.
 .. code-block:: bash
 
     # Replace x, y, and z by the correct version
-    wget https://github.com/kokkos/kokkos/archive/refs/tags/4.x.yz.tar.gz
-    tar -xvf 4.x.y.z.tar.gz
-    cd kokkos-4.x.y.z
+    wget https://github.com/kokkos/kokkos/archive/refs/tags/5.0.0.tar.gz
+    tar -xvf 5.0.0.tar.gz
+    cd kokkos-5.0.0/
 
 Build Kokkos for AMD GPU (``GFX90A`` architecture), and append the install location to ``CMAKE_PREFIX_PATH``.
 
@@ -80,7 +80,7 @@ It can be installed from source as follows:
     python -m pip install --group base
     pip install git+https://github.com/PennyLaneAI/pennylane.git@master
     PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
-    CMAKE_ARGS="-DCMAKE_CXX_COMPILER=CC" pip install .
+    CMAKE_ARGS="-DCMAKE_CXX_COMPILER=CC" pip install . -vv
 
 Then to install Lightning-Kokkos with MPI support:
 
@@ -95,7 +95,7 @@ Then to install Lightning-Kokkos with MPI support:
     export CMAKE_ARGS="-DENABLE_MPI=ON -DCMAKE_CXX_COMPILER=hipcc"
 
     PL_BACKEND="lightning_kokkos" python scripts/configure_pyproject_toml.py
-    python -m pip install .
+    python -m pip install . -vv
 
 .. note::
 

@@ -19,7 +19,7 @@ Install Kokkos (Optional)
 
 .. note::
 
-    Lightning-Kokkos is tested with Kokkos version 4.5.00
+    Lightning-Kokkos is tested with Kokkos version 5.0.0
 
 We suggest first installing Kokkos with the wanted configuration following the instructions found in the `Kokkos documentation <https://kokkos.github.io/kokkos-core-wiki/building.html>`_.
 For example, the following will build Kokkos for NVIDIA A100 cards:
@@ -29,16 +29,16 @@ Download the `Kokkos code <https://github.com/kokkos/kokkos/releases>`_.
 .. code-block:: bash
 
     # Replace x, y, and z by the correct version
-    wget https://github.com/kokkos/kokkos/archive/refs/tags/4.x.yz.tar.gz
-    tar -xvf 4.x.y.z.tar.gz
-    cd kokkos-4.x.y.z
+    wget https://github.com/kokkos/kokkos/archive/refs/tags/5.0.0.tar.gz
+    tar -xvf 5.0.0.tar.gz
+    cd kokkos-5.0.0
 
 Build Kokkos for NVIDIA A100 cards (``SM80`` architecture), and append the install location to ``CMAKE_PREFIX_PATH``.
 
 .. code-block:: bash
 
     # Replace <install-path> with the path to install Kokkos
-    # e.g. $HOME/kokkos-install/4.5.0/AMPERE80
+    # e.g. $HOME/kokkos-install/5.0.0/AMPERE80
     export KOKKOS_INSTALL_PATH=<install-path>
     mkdir -p ${KOKKOS_INSTALL_PATH}
 
@@ -74,8 +74,8 @@ The simplest way to install Lightning-Kokkos (OpenMP backend) through ``pip``.
     cd pennylane-lightning
     python -m pip install --group base
     pip install git+https://github.com/PennyLaneAI/pennylane.git@master
-    
-    # Lightning-Qubit needs to be 'installed' by pip before Lightning-Kokkos 
+
+    # Lightning-Qubit needs to be 'installed' by pip before Lightning-Kokkos
     # (compilation is not necessary)
     PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
     SKIP_COMPILATION=True pip install -e . --config-settings editable_mode=compat
@@ -113,7 +113,7 @@ Install Lightning-Kokkos with MPI
 
 .. note::
 
-    Building Lightning-Kokkos with MPI requires an MPI library and ``mpi4py``. 
+    Building Lightning-Kokkos with MPI requires an MPI library and ``mpi4py``.
     If building for GPU, please ensure that MPI is built with GPU support - for example, see the guide to
     build OpenMPI with `CUDA <https://docs.open-mpi.org/en/v5.0.x/tuning-apps/networking/cuda.html>`_
     and `ROCm <https://docs.open-mpi.org/en/v5.0.x/tuning-apps/networking/rocm.html>`_ support.
@@ -130,7 +130,7 @@ Then Lightning-Kokkos with MPI support can be installed in the *editable* mode b
     python -m pip install --group base
     pip install git+https://github.com/PennyLaneAI/pennylane.git@master
 
-    # Lightning-Qubit needs to be 'installed' by pip before Lightning-Kokkos 
+    # Lightning-Qubit needs to be 'installed' by pip before Lightning-Kokkos
     # (compilation is not necessary)
     PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
     SKIP_COMPILATION=True pip install -e . --config-settings editable_mode=compat

@@ -46,7 +46,7 @@ jobs:
       max-parallel: 1
       matrix:
         mpilib: ["openmpi"]
-        kokkos_version: ["4.5.00"]
+        kokkos_version: ["5.0.0"]
         exec_model: ["CUDA"]
         cuda_version_maj: ["12"]
         cuda_version_min: ["4"]
@@ -106,7 +106,7 @@ jobs:
           # Adding venv name as an output for subsequent steps to reference if needed
           echo "venv_name=${{ env.VENV_NAME }}" >> $GITHUB_OUTPUT
           echo "Python_ROOT_DIR=${{ env.VENV_NAME }}" >> $GITHUB_ENV
-          echo "Python3_ROOT_DIR=${{ env.VENV_NAME }}" >> $GITHUB_ENV        
+          echo "Python3_ROOT_DIR=${{ env.VENV_NAME }}" >> $GITHUB_ENV
 
       - name: Display Python-Path
         id: python_path
@@ -121,7 +121,7 @@ jobs:
 
       - name: Install required packages
         run: |
-          python -m pip install --upgrade pip      # Upgrade pip    
+          python -m pip install --upgrade pip      # Upgrade pip
           python -m pip install --group tests
           python -m pip install cmake scipy
 

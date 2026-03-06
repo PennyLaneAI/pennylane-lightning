@@ -35,6 +35,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Upgraded Kokkos from v4.5.0 to v5.0.0.
+  [(#1308)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1308)
+
 - Added workflow to create and upload nightly builds of the RC branch and trigger Catalyst's nightly RC builds.
   [(#1344)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1344)
 
