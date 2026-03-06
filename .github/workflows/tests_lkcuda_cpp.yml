@@ -200,8 +200,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-            sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION  ninja-build gcovr lcov
-            python -m pip install scipy-openblas32
+            sudo apt-get update && sudo apt-get -y -q install gcc-$GCC_VERSION  g++-$GCC_VERSION  ninja-build gcovr lcov
+            python -m pip install scipy-openblas32 cmake
 
       - name: Build and run unit tests
         run: |
