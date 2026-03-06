@@ -10,6 +10,9 @@
 
 <h3>Improvements 🛠</h3>
 
+- Avoid decomposing unsupported gates and templates into `QubitUnitary` when not specified in the device TOML file of Lightning simulators from Catalyst.
+  [(#1348)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1348)
+
 - Added sitemap configuration and SEO improvements to documentation, including noindex meta tags for C++ API reference pages.
   [(#1331)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1331)
 
@@ -34,6 +37,19 @@
 
 - Upgraded Kokkos from v4.5.0 to v5.0.0.
   [(#1308)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1308)
+
+- Added workflow to create and upload nightly builds of the RC branch and trigger Catalyst's nightly RC builds.
+  [(#1344)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1344)
+
+- Updated Github docker build action to use relevant lightning branch.
+  [(#1346)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1346)
+
+- Remove dependency for GCC-11 when building `lightning.amdgpu`.
+  [(#1343)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1343)
+  [(#1349)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1349)
+
+- Cleaned up the preprocess transforms of the lightning devices, updating the calls to `decompose` with the correct gate set.
+  [(#1341)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1341)
 
 - Remove MPICH checks from CI pipelines for Lightning devices with MPI distributed support.
   [(#1342)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1342)
@@ -65,6 +81,7 @@ This release contains contributions from (in alphabetical order):
 
 Runor Agbaire,
 Ali Asadi,
+Astral Cai,
 Ashish Kanwar Singh,
 Jeffrey Kam,
 Joseph Lee,
@@ -103,6 +120,9 @@ Jake Zaia.
   [(#1287)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1287)
 
 <h3>Bug fixes 🐛</h3>
+
+- Fixed sampling with dynamically allocated and released qubits in Catalyst. The state vector is now reduced before measurements to correctly handle released qubits, ensuring `qml.sample()` and other measurement operations return correct results when using `qml.allocate()` and `qml.release()`.
+  [(#1321)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1321)
 
 - Corrected an issue in tests where a PennyLane operator was used within a QNode to compute a
   matrix, which would lead to incorrect queuing as of PennyLane

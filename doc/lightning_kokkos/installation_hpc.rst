@@ -15,6 +15,12 @@ We can load the following modules to enable the relevant compilers and Python en
     # Load the required Python and compiler modules
     module load cray-python
     module load PrgEnv-amd
+    module load ninja cmake
+
+    # Create a python environment and upgrade pip
+    python -m venv venv-pennylane
+    source venv-pennylane/bin/activate
+    pip install --upgrade pip
 
 
 Install Kokkos (Recommended)
@@ -87,8 +93,6 @@ Then to install Lightning-Kokkos with MPI support:
 
     # CMAKE variables for building Lightning-Kokkos with MPI
     export CMAKE_ARGS="-DENABLE_MPI=ON -DCMAKE_CXX_COMPILER=hipcc"
-
-    # Extra variables to avoid hipcc linking issues
 
     PL_BACKEND="lightning_kokkos" python scripts/configure_pyproject_toml.py
     python -m pip install . -vv
