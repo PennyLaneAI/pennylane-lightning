@@ -131,6 +131,9 @@ Jake Zaia.
 
 <h3>Internal changes ⚙️</h3>
 
+- Updated references to Pennylane's `master` to reference `main`.
+  [(#1351)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1351)
+
 - Pinned NumPy to versions preceding 2.4 on CIs as `pyscf` is not compatible with the new version of NumPy yet.
   [(#1315)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1315)
 

@@ -49,7 +49,7 @@ For development and testing, you can install by cloning the repository:
     cd pennylane-lightning
     
     python -m pip install --group base
-    pip install git+https://github.com/PennyLaneAI/pennylane.git@master
+    pip install git+https://github.com/PennyLaneAI/pennylane.git@main
 
     PL_BACKEND=${PL_BACKEND} python scripts/configure_pyproject_toml.py
     pip install -e . --config-settings editable_mode=compat -vv
