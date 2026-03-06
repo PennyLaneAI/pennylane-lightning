@@ -18,6 +18,11 @@ on:
   release:
     types: [published]
   workflow_dispatch:
+  workflow_call:
+    inputs:
+      branch:
+        required: false
+        type: string  
 
 env:
   DISTUTILS_USE_SDK: 1
@@ -31,11 +36,12 @@ jobs:
   set_wheel_build_matrix:
     if: |
       github.event_name != 'pull_request' ||
-      (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'ci:build_wheels'))
+      (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'ci:build_wheels')) 
     name: "Set wheel build matrix"
     uses: ./.github/workflows/set_wheel_build_matrix.yml
     with:
       event_name: ${{ github.event_name }}
+      workflow_name: wheel_win_x86_64
 
   build_dependencies:
     needs: [set_wheel_build_matrix]
@@ -110,6 +116,8 @@ jobs:
 
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
+        with:        
+          ref: ${{ inputs.branch || github.ref }}
 
       - name: Copy cached libraries
         if: steps.kokkos-cache.outputs.cache-hit == 'true'
@@ -206,6 +214,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: |
           github.event_name == 'release' ||
+          github.event_name == 'schedule' ||
           github.event_name == 'workflow_dispatch' ||
           github.ref == 'refs/heads/master' ||
           steps.rc_build.outputs.match != ''
@@ -234,6 +243,7 @@ jobs:
       - uses: actions/download-artifact@v4
         if: |
           github.event_name == 'release' ||
+          github.event_name == 'schedule' ||
           github.ref == 'refs/heads/master' || 
           steps.rc_build.outputs.match != ''
         with:
@@ -244,6 +254,7 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         if: |
           github.event_name == 'release' ||
+          github.event_name == 'schedule' ||
           github.ref == 'refs/heads/master' || 
           steps.rc_build.outputs.match != ''
         with:

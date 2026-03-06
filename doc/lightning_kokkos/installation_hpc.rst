@@ -78,7 +78,7 @@ It can be installed from source as follows:
     git clone https://github.com/PennyLaneAI/pennylane-lightning.git
     cd pennylane-lightning
     python -m pip install --group base
-    pip install git+https://github.com/PennyLaneAI/pennylane.git@master
+    pip install git+https://github.com/PennyLaneAI/pennylane.git@main
     PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
     CMAKE_ARGS="-DCMAKE_CXX_COMPILER=CC" pip install .
 
@@ -118,4 +118,3 @@ To submit a job, for example on 2 nodes, the following SLURM script can be used:
     export HSA_ENABLE_PEER_SDMA=0
 
     srun --ntasks=16 --cpus-per-task=7 --gpus-per-task=1 --gpu-bind=closest python pennylane_quantum_script.py
-
