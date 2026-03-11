@@ -20,7 +20,8 @@
 #include <type_traits>
 #include <vector>
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_template_test_macros.hpp>
+#include <catch2/generators/catch_generators.hpp>
 
 #include "StateVectorKokkosMPI.hpp"
 #include "TestHelpers.hpp"             // createRandomStateVectorData

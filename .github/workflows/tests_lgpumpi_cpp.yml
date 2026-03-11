@@ -167,7 +167,7 @@ jobs:
           mkdir -p ./tests/results
           test_status=0
           for file in *runner ; do ./$file  --reporter junit --out ./tests/results/report_$file.xml && echo "Test $file Success!" || { cat ./tests/results/report_$file.xml; test_status=1; } done;
-          for file in *runner_mpi ; do mpirun -np 2 ./$file --reporter junit --out ./tests/results/report_$file.xml && echo "Test $file Success!" || { cat ./tests/results/report_$file.xml; test_status=1; } done;
+          for file in *runner_mpi ; do mpirun -np 2 ./$file --order decl --reporter junit --out ./tests/results/report_$file.xml && echo "Test $file Success!" || { cat ./tests/results/report_$file.xml; test_status=1; } done;
           if [ $test_status -ne 0 ]; then
             echo "Tests failed. Exiting with error code."
             exit 1

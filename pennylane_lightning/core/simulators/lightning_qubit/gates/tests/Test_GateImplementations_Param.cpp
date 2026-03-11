@@ -19,7 +19,9 @@
 #include <utility>
 #include <vector>
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_template_test_macros.hpp>
+#include <catch2/generators/catch_generators.hpp>
+#include <catch2/matchers/catch_matchers_string.hpp>
 
 #include "CPUMemoryModel.hpp"
 #include "Gates.hpp"
@@ -2499,9 +2501,10 @@ void testApplyPCPhase() {
         REQUIRE_THROWS_WITH(
             GateImplementation::applyPCPhase(st.data(), num_qubits, {0, 1},
                                              inverse, angle, wrong_dim),
-            Catch::Contains("The dimension of the PCPhase gate must be a "
-                            "positive integer and less than or equal to "
-                            "statevector size."));
+            Catch::Matchers::ContainsSubstring(
+                "The dimension of the PCPhase gate must be a "
+                "positive integer and less than or equal to "
+                "statevector size."));
     }
 
     SECTION("Testing multiples dimensions") {

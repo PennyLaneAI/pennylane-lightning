@@ -18,7 +18,8 @@
 
 #include "TestHelpers.hpp"
 #include "Util.hpp"
-#include <catch2/catch.hpp>
+#include <catch2/catch_template_test_macros.hpp>
+#include <catch2/matchers/catch_matchers_string.hpp>
 
 /// @cond DEV
 namespace {
@@ -262,7 +263,7 @@ TEST_CASE("Util::createRandomWiresSubset", "[createRandomWiresSubset]") {
 
         REQUIRE_THROWS_WITH(
             createRandomWiresSubset(re, sv_num_qubits, unitary_num_qubits),
-            Catch::Matchers::Contains(
+            Catch::Matchers::ContainsSubstring(
                 "If unitary_num_qubits > sv_num_qubits, the "
                 "internal while loop will go on forever."));
     }

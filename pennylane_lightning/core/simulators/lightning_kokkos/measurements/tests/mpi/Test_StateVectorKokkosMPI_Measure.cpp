@@ -19,7 +19,10 @@
 #include <type_traits>
 #include <vector>
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_template_test_macros.hpp>
+#include <catch2/generators/catch_generators.hpp>
+#include <catch2/matchers/catch_matchers_string.hpp>
+#include <catch2/matchers/catch_matchers_vector.hpp>
 
 #include "MeasurementsKokkosMPI.hpp"
 #include "ObservablesKokkosMPI.hpp"
@@ -66,7 +69,8 @@ TEMPLATE_TEST_CASE("Expval - raise error", "[LKMPI_Expval]", float, double) {
 
     REQUIRE_THROWS_WITH(
         m.expval(mat_ob, {0, 1, 2}),
-        Catch::Contains("Not enough local wires to swap with global wires."));
+        Catch::Matchers::ContainsSubstring(
+            "Not enough local wires to swap with global wires."));
 }
 
 TEMPLATE_TEST_CASE("Expval - named string", "[LKMPI_Expval]", float, double) {
@@ -594,7 +598,8 @@ TEMPLATE_TEST_CASE("probs - 1 wires", "[LKMPI_Expval]", float, double) {
                                    displacements);
 
         if (sv.getMPIManager().getRank() == 0) {
-            CHECK_THAT(res_gather, Catch::Approx(res_ref).margin(1e-7));
+            CHECK_THAT(res_gather,
+                       Catch::Matchers::Approx(res_ref).margin(1e-7));
         }
     }
 }
@@ -635,7 +640,8 @@ TEMPLATE_TEST_CASE("probs - 2 wires", "[LKMPI_Expval]", float, double) {
                                        displacements);
 
             if (sv.getMPIManager().getRank() == 0) {
-                CHECK_THAT(res_gather, Catch::Approx(res_ref).margin(1e-7));
+                CHECK_THAT(res_gather,
+                           Catch::Matchers::Approx(res_ref).margin(1e-7));
             }
         }
     }
@@ -677,7 +683,8 @@ TEMPLATE_TEST_CASE("probs - 3 wires", "[LKMPI_Expval]", float, double) {
                                        displacements);
 
             if (sv.getMPIManager().getRank() == 0) {
-                CHECK_THAT(res_gather, Catch::Approx(res_ref).margin(1e-7));
+                CHECK_THAT(res_gather,
+                           Catch::Matchers::Approx(res_ref).margin(1e-7));
             }
         }
     }
@@ -721,7 +728,8 @@ TEMPLATE_TEST_CASE("probs - 4 wires", "[LKMPI_Expval]", float, double) {
                                        displacements);
 
             if (sv.getMPIManager().getRank() == 0) {
-                CHECK_THAT(res_gather, Catch::Approx(res_ref).margin(1e-7));
+                CHECK_THAT(res_gather,
+                           Catch::Matchers::Approx(res_ref).margin(1e-7));
             }
         }
     }
@@ -767,7 +775,8 @@ TEMPLATE_TEST_CASE("probs - 5 wires", "[LKMPI_Expval]", float, double) {
                                        displacements);
 
             if (sv.getMPIManager().getRank() == 0) {
-                CHECK_THAT(res_gather, Catch::Approx(res_ref).margin(1e-7));
+                CHECK_THAT(res_gather,
+                           Catch::Matchers::Approx(res_ref).margin(1e-7));
             }
         }
     }
@@ -780,8 +789,8 @@ TEMPLATE_TEST_CASE("probs - raise wire error", "[LKMPI_Expval]", float,
     auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
     auto m = MeasurementsMPI(sv);
 
-    REQUIRE_THROWS_WITH(m.probs({0, 3, 2}),
-                        Catch::Contains("out-of-order wire"));
+    REQUIRE_THROWS_WITH(m.probs({0, 3, 2}), Catch::Matchers::ContainsSubstring(
+                                                "out-of-order wire"));
 }
 
 TEMPLATE_TEST_CASE("probs - all wires", "[LKMPI_Expval]", float, double) {
@@ -800,7 +809,7 @@ TEMPLATE_TEST_CASE("probs - all wires", "[LKMPI_Expval]", float, double) {
     sv.getMPIManager().Gather(res, res_gather, 0);
 
     if (sv.getMPIManager().getRank() == 0) {
-        CHECK_THAT(res_gather, Catch::Approx(res_ref).margin(1e-7));
+        CHECK_THAT(res_gather, Catch::Matchers::Approx(res_ref).margin(1e-7));
     }
 }
 
@@ -846,5 +855,5 @@ TEMPLATE_TEST_CASE("Generate Samples", "[LKMPI_Expval]", float, double) {
     for (std::size_t i = 0; i < counts.size(); i++) {
         probabilities[i] = counts[i] / (TestType)num_samples;
     }
-    REQUIRE_THAT(probabilities, Catch::Approx(prob_ref).margin(.05));
+    REQUIRE_THAT(probabilities, Catch::Matchers::Approx(prob_ref).margin(.05));
 }

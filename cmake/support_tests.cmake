@@ -13,7 +13,7 @@ macro(FetchAndIncludeCatch)
     FetchContent_Declare(
     Catch2
     GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-    GIT_TAG        v2.13.10
+    GIT_TAG        v3.11.0
     )
 
     FetchContent_MakeAvailable(Catch2)
@@ -22,7 +22,7 @@ macro(FetchAndIncludeCatch)
     set_target_properties(Catch2 PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${CATCH2_IID}")
 
     # Required for catch_discover_tests() and include(Catch)
-    list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/contrib)
+    list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
 
     include(Catch)
 endmacro()

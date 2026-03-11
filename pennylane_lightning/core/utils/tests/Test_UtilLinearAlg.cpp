@@ -19,7 +19,7 @@
 
 #include "TestHelpers.hpp"
 #include "UtilLinearAlg.hpp"
-#include <catch2/catch.hpp>
+#include <catch2/catch_template_test_macros.hpp>
 
 /// @cond DEV
 namespace {

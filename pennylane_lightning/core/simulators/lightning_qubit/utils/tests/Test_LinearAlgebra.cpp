@@ -15,7 +15,8 @@
 #include <complex>
 #include <vector>
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_template_test_macros.hpp>
+#include <catch2/matchers/catch_matchers_string.hpp>
 
 #include "LinearAlgebra.hpp"
 #include "TestHelpers.hpp"
@@ -202,7 +203,7 @@ TEMPLATE_TEST_CASE("Transpose", "[Util][LinearAlgebra]", float, double) {
                 std::invalid_argument);
             CHECK_THROWS_WITH(
                 Util::Transpose(mat, 2, 2),
-                Contains(
+                ContainsSubstring(
                     "Invalid number of rows and columns for the input matrix"));
         }
     }
@@ -255,7 +256,7 @@ TEMPLATE_TEST_CASE("Transpose", "[Util][LinearAlgebra]", float, double) {
             CHECK_THROWS_AS(Util::Transpose(mat, 2, 2), std::invalid_argument);
             CHECK_THROWS_WITH(
                 Util::Transpose(mat, 2, 2),
-                Contains(
+                ContainsSubstring(
                     "Invalid number of rows and columns for the input matrix"));
         }
     }

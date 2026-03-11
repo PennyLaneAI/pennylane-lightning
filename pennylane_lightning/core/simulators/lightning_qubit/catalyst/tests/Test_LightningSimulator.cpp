@@ -21,7 +21,8 @@
 #include <variant>
 #include <vector>
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/matchers/catch_matchers_string.hpp>
 
 #include "LightningSimulator.hpp"
 #include "QuantumDevice.hpp"
@@ -77,13 +78,13 @@ TEST_CASE("LightningSimulator::unit_tests", "[unit tests]") {
         std::unique_ptr<LQSimulator> LQsim = std::make_unique<LQSimulator>();
         std::vector<intptr_t> Qs = LQsim->AllocateQubits(1);
         REQUIRE_NOTHROW(LQsim->StartTapeRecording());
-        REQUIRE_THROWS_WITH(
-            LQsim->StartTapeRecording(),
-            Catch::Matchers::Contains("Cannot re-activate the cache manager"));
+        REQUIRE_THROWS_WITH(LQsim->StartTapeRecording(),
+                            Catch::Matchers::ContainsSubstring(
+                                "Cannot re-activate the cache manager"));
         REQUIRE_NOTHROW(LQsim->StopTapeRecording());
         REQUIRE_THROWS_WITH(
             LQsim->StopTapeRecording(),
-            Catch::Matchers::Contains(
+            Catch::Matchers::ContainsSubstring(
                 "Cannot stop an already stopped cache manager"));
     }
 }
@@ -815,14 +816,15 @@ TEST_CASE("LightningSimulator::GateSet", "[GateSet]") {
         constexpr std::size_t n_qubits = 2;
         std::vector<intptr_t> Qs = LQsim->AllocateQubits(n_qubits);
 
-        REQUIRE_THROWS_WITH(
-            LQsim->NamedOperation("PauliRot", {0.5}, {Qs[0]}, false, {}, {},
-                                  {"X", "Y"}),
-            Catch::Contains("PauliRot operation requires one string"));
+        REQUIRE_THROWS_WITH(LQsim->NamedOperation("PauliRot", {0.5}, {Qs[0]},
+                                                  false, {}, {}, {"X", "Y"}),
+                            Catch::Matchers::ContainsSubstring(
+                                "PauliRot operation requires one string"));
 
-        REQUIRE_THROWS_WITH(
-            LQsim->NamedOperation("PauliRot", {0.5}, {Qs[0]}, false, {Qs[1]},
-                                  {false}, {"XY"}),
-            Catch::Contains("Controlled PauliRot is not supported"));
+        REQUIRE_THROWS_WITH(LQsim->NamedOperation("PauliRot", {0.5}, {Qs[0]},
+                                                  false, {Qs[1]}, {false},
+                                                  {"XY"}),
+                            Catch::Matchers::ContainsSubstring(
+                                "Controlled PauliRot is not supported"));
     }
 }

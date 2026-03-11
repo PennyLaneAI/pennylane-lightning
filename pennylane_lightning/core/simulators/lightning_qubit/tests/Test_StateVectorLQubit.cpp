@@ -18,7 +18,9 @@
 #include <type_traits>
 #include <vector>
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_template_test_macros.hpp>
+#include <catch2/generators/catch_generators.hpp>
+#include <catch2/matchers/catch_matchers_string.hpp>
 
 #include "LinearAlgebra.hpp" //randomUnitary
 #include "StateVectorLQubitManaged.hpp"
@@ -190,7 +192,8 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorLQubit::Constructibility",
         std::vector<ComplexT> st_data(14, 0.0);
         REQUIRE_THROWS_WITH(
             StateVectorT(st_data.data(), st_data.size()),
-            Catch::Contains("The size of provided data must be a power of 2."));
+            Catch::Matchers::ContainsSubstring(
+                "The size of provided data must be a power of 2."));
     }
     SECTION(
         "StateVectorBackend<TestType> {const StateVectorBackend<TestType>&}") {
@@ -220,7 +223,7 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorLQubit::applyMatrix with a std::vector",
         StateVectorT state_vector(st_data.data(), st_data.size());
         REQUIRE_THROWS_WITH(
             state_vector.applyMatrix(m, {0, 1}),
-            Catch::Contains(
+            Catch::Matchers::ContainsSubstring(
                 "The size of matrix does not match with the given"));
     }
 
@@ -233,7 +236,7 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorLQubit::applyMatrix with a std::vector",
         StateVectorT state_vector(st_data.data(), st_data.size());
         REQUIRE_THROWS_WITH(
             state_vector.applyMatrix(m, {0}),
-            Catch::Contains(
+            Catch::Matchers::ContainsSubstring(
                 "The size of matrix does not match with the given"));
     }
 }
@@ -255,8 +258,9 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorLQubit::applyMatrix with a pointer",
             createRandomStateVectorData<PrecisionT>(re, num_qubits);
 
         StateVectorT state_vector(st_data.data(), st_data.size());
-        REQUIRE_THROWS_WITH(state_vector.applyMatrix(m.data(), {}),
-                            Catch::Contains("must be larger than 0"));
+        REQUIRE_THROWS_WITH(
+            state_vector.applyMatrix(m.data(), {}),
+            Catch::Matchers::ContainsSubstring("must be larger than 0"));
     }
 }
 
