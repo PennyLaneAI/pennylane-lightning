@@ -53,7 +53,7 @@ jobs:
         kokkos_version: ["4.5.00"]
         exec_model: ["CUDA"]
         cuda_version_maj: ["12"]
-        cuda_version_min: ["4"]
+        cuda_version_min: ["9"]
 
     steps:
       - name: Validate GPU version and installed compiler
@@ -119,7 +119,7 @@ jobs:
         kokkos_version: ["4.5.00"]
         exec_model: ["CUDA"]
         cuda_version_maj: ["12"]
-        cuda_version_min: ["4"]
+        cuda_version_min: ["9"]
 
     name: Python Tests (${{ matrix.pl_backend }}, kokkos-${{ matrix.kokkos_version }}, model-${{ matrix.exec_model }})
     runs-on:
