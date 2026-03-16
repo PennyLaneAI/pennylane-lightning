@@ -85,6 +85,9 @@ jobs:
         run: |
           git fetch --tags --force
           git checkout latest_release
+          # FIXME: remove after v0.45 release:
+          sed -i "2068i\            PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());" $PWD/pennylane_lightning/core/simulators/lightning_gpu/StateVectorCudaMPI.hpp
+
 
       - uses: actions/setup-python@v5
         id: setup_python
