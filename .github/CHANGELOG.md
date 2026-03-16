@@ -35,6 +35,10 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Upgrade CIs to use CUDA 12.9.
+  [(#1353)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1353)
+  [(#1354)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1354)
+
 - Update Catch2 testing framework to v3.11.
   [(#1350)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1350)
 
