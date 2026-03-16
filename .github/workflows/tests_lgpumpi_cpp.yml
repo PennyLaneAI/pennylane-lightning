@@ -138,9 +138,6 @@ jobs:
           mpirun --version
           which -a mpicxx
           mpicxx --version
-          ompi_info --parsable --all | grep -i cuda
-          ompi_info --parsable --all | grep mpi_built_with_cuda_support
-          ldd $(which mpirun) | grep -i cuda
           module unload ${{ matrix.mpilib }}
 
       - name: Build and run unit tests
