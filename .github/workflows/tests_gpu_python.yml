@@ -39,7 +39,7 @@ jobs:
       max-parallel: 1
       matrix:
         cuda_version_maj: ["12"]
-        cuda_version_min: ["4"]
+        cuda_version_min: ["9"]
 
     steps:
       - name: Validate GPU version and installed compiler

@@ -49,7 +49,7 @@ jobs:
         kokkos_version: ["4.5.00"]
         exec_model: ["CUDA"]
         cuda_version_maj: ["12"]
-        cuda_version_min: ["4"]
+        cuda_version_min: ["9"]
     timeout-minutes: 60
 
     steps:
