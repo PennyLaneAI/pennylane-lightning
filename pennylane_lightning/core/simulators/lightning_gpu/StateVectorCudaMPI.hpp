@@ -2065,6 +2065,7 @@ class StateVectorCudaMPI final
             /* custatevecComputeType_t */ compute_type,
             /* void* */ extraWorkspace,
             /* std::size_t */ extraWorkspaceSizeInBytes));
+        PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
         // LCOV_EXCL_START
         if (extraWorkspaceSizeInBytes) {
             PL_CUDA_IS_SUCCESS(cudaFree(extraWorkspace));
