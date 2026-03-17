@@ -26,6 +26,7 @@
 #include "cuda_helpers.hpp"
 
 #include <nanobind/nanobind.h>
+#include <nanobind/stl/pair.h>
 
 /// @cond DEV
 namespace {
