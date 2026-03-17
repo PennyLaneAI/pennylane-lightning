@@ -38,6 +38,17 @@
 - Upgraded Kokkos from v4.5.0 to v5.0.0.
   [(#1308)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1308)
 
+- Upgrade CIs to use CUDA 12.9.
+  [(#1353)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1353)
+  [(#1354)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1354)
+  [(#1355)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1355)
+
+- Update Catch2 testing framework to v3.11.
+  [(#1350)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1350)
+
+- Update internal dependencies versions for Nanobind (2.11), cmake (3.26), sphinxcontrib-htmlhelp (2.1.0)
+  [(#1347)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1347)
+
 - Added workflow to create and upload nightly builds of the RC branch and trigger Catalyst's nightly RC builds.
   [(#1344)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1344)
 
@@ -130,6 +141,9 @@ Jake Zaia.
   [(#1292)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1292)
 
 <h3>Internal changes ⚙️</h3>
+
+- Updated references to Pennylane's `master` to reference `main`.
+  [(#1351)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1351)
 
 - Pinned NumPy to versions preceding 2.4 on CIs as `pyscf` is not compatible with the new version of NumPy yet.
   [(#1315)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1315)

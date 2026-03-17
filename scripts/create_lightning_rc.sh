@@ -218,7 +218,7 @@ create_release_candidate_branch() {
 
     # Update PennyLane dependency
     pushd $ROOT_DIR
-    sed -i "s|pennylane.git@master|pennylane.git@v${RELEASE_VERSION}-rc0|g" pyproject.toml
+    sed -i "s|pennylane.git@main|pennylane.git@v${RELEASE_VERSION}-rc0|g" pyproject.toml
     git add pyproject.toml
     popd
     git commit -m "Target PennyLane v${RELEASE_VERSION}-rc0 in pyproject.toml."
@@ -580,7 +580,7 @@ create_merge_PR(){
     git checkout -b $(branch_name ${RELEASE_VERSION} "rc_merge")
 
     pushd $ROOT_DIR
-    sed -i "s|pennylane.git@v${RELEASE_VERSION}-rc0|pennylane.git@master|g" pyproject.toml  
+    sed -i "s|pennylane.git@v${RELEASE_VERSION}-rc0|pennylane.git@main|g" pyproject.toml  
     git add pyproject.toml
     popd
     git commit -m "Target PennyLane master in pyproject.toml."

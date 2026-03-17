@@ -13,7 +13,7 @@
 // limitations under the License.
 #include <tuple>
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_template_test_macros.hpp>
 
 #include "MPSTNCuda.hpp"
 #include "ObservablesTNCuda.hpp"

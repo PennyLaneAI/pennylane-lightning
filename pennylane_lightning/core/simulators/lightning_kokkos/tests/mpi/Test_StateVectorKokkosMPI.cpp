@@ -19,7 +19,9 @@
 #include <type_traits>
 #include <vector>
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_template_test_macros.hpp>
+#include <catch2/generators/catch_generators.hpp>
+#include <catch2/matchers/catch_matchers_string.hpp>
 
 #include "StateVectorKokkosMPI.hpp"
 #include "TestHelpers.hpp"             // createRandomStateVectorData
@@ -568,15 +570,15 @@ TEMPLATE_TEST_CASE("setStateVector error", "[LKMPI]", double, float) {
     StateVectorKokkosMPI<TestType> sv(mpi_manager, num_qubits);
 
     SECTION("setBasisState incompatible dimensions") {
-        REQUIRE_THROWS_WITH(
-            sv.setBasisState({0}, {0, 1}),
-            Catch::Contains("state and wires must have equal dimensions."));
+        REQUIRE_THROWS_WITH(sv.setBasisState({0}, {0, 1}),
+                            Catch::Matchers::ContainsSubstring(
+                                "state and wires must have equal dimensions."));
     }
 
     SECTION("setBasisState high wire index") {
         REQUIRE_THROWS_WITH(
             sv.setBasisState({0, 0, 0}, {0, 1, 6}),
-            Catch::Contains(
+            Catch::Matchers::ContainsSubstring(
                 "wires must take values lower than the number of qubits."));
     }
 
@@ -584,14 +586,15 @@ TEMPLATE_TEST_CASE("setStateVector error", "[LKMPI]", double, float) {
         REQUIRE_THROWS_WITH(
             sv.setStateVector(std::vector<Kokkos::complex<TestType>>(2, 0.0),
                               {0, 1}),
-            Catch::Contains("Inconsistent state and wires dimensions."));
+            Catch::Matchers::ContainsSubstring(
+                "Inconsistent state and wires dimensions."));
     }
 
     SECTION("setStateVector high wire index") {
         REQUIRE_THROWS_WITH(
             sv.setStateVector(std::vector<Kokkos::complex<TestType>>(8, 0.0),
                               {0, 1, 6}),
-            Catch::Contains(
+            Catch::Matchers::ContainsSubstring(
                 "wires must take values lower than the number of qubits."));
     }
 }
