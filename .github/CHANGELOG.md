@@ -35,6 +35,8 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Change default branch references from `master` to `main`
+
 - Upgrade CIs to use CUDA 12.9.
   [(#1353)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1353)
   [(#1354)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1354)

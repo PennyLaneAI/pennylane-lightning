@@ -2,7 +2,7 @@ name: Update dev version automatically
 on:
   pull_request_target:
     branches:
-      - master
+      - main
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -15,10 +15,10 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
 
-      - name: Checkout PennyLane-Lightning master
+      - name: Checkout PennyLane-Lightning main
         uses: actions/checkout@v4
         with:
-          ref: master
+          ref: main
           path: main
 
       - name: Checkout PennyLane-Lightning PR

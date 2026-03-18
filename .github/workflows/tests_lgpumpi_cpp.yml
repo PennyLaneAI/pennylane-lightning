@@ -5,11 +5,11 @@ on:
       lightning-version:
         type: string
         required: true
-        description: The version of lightning to use. Valid values are either 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
+        description: The version of lightning to use. Valid values are either 'stable' (most recent git-tag) or 'latest' (most recent commit from main)
       pennylane-version:
         type: string
         required: true
-        description: The version of PennyLane to use. Valid values are either 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
+        description: The version of PennyLane to use. Valid values are either 'stable' (most recent git-tag) or 'latest' (most recent commit from main)
   push:
     branches:
       - main

@@ -83,7 +83,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--pr-path", dest="pr", type=Path, required=True, help="Path to the PR dir")
     parser.add_argument(
-        "--master-path", dest="master", type=Path, required=True, help="Path to the master dir"
+        "--master-path", dest="main", type=Path, required=True, help="Path to the main dir"
     )
 
     args = parser.parse_args()
@@ -91,7 +91,7 @@ if __name__ == "__main__":
     pr_version = extract_version(args.pr)
     master_version = extract_version(args.master)
 
-    print("Got Package Version from 'master' ->", str(master_version))
+    print("Got Package Version from 'main' ->", str(master_version))
     print("Got Package Version from 'PR' ->", str(pr_version))
 
     # Only attempt to bump the version if the pull_request is:
