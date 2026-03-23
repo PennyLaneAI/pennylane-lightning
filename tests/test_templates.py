@@ -770,7 +770,7 @@ class TestQFT:
     def test_preprocess_qft_decomposition(self, wires):
         """Test that qml.QFT is always decomposed for any wires."""
         tape = qml.tape.QuantumScript(
-            [qml.QFT(wires=list(range(wires)))], [qml.expval(qml.PauliZ(0))]
+            [qml.QFT.operator(wires=list(range(wires)))], [qml.expval(qml.PauliZ(0))]
         )
         dev = LightningDevice(wires=wires)
 
@@ -779,7 +779,7 @@ class TestQFT:
 
         # assert all(not isinstance(op, qml.QFT) for op in new_tape.operations)
         # else:
-        assert tape.operations == [qml.QFT(wires=list(range(wires)))]
+        assert tape.operations == [qml.QFT.operator(wires=list(range(wires)))]
 
 
 class TestAQFT:

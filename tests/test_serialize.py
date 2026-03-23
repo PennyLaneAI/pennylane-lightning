@@ -932,7 +932,7 @@ class TestSerializeOps:
                     mat,
                     mat,
                     np.array([qml.matrix(qml.QubitUnitary(np.eye(4, dtype=dtype), wires=[0, 1]))]),
-                    np.array([qml.matrix(qml.templates.QFT(wires=[0, 1, 2]))]),
+                    np.array([qml.matrix(qml.templates.QFT, wire_order=[0, 1, 2])([0, 1, 2])]),
                     mat,
                     mat,
                     mat,
