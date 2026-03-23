@@ -1841,7 +1841,7 @@ template <typename PrecisionT> class applyMultiRZFunctor {
 
     KOKKOS_FUNCTION void operator()(const std::size_t k) const {
         arr(k) *=
-            (Kokkos::Experimental::popcount_builtin(k & wires_parity) % 2 == 0)
+            (Kokkos::popcount(k & wires_parity) % 2 == 0)
                 ? shift_0
                 : shift_1;
     }
@@ -1881,7 +1881,7 @@ void applyNCMultiRZ(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
         Kokkos::View<Kokkos::complex<PrecisionT> *> arr, std::size_t i,
         Kokkos::View<std::size_t *> indices, std::size_t offset) {
         std::size_t index = indices(i);
-        arr(index + offset) *= (Kokkos::Experimental::popcount_builtin(
+        arr(index + offset) *= (Kokkos::popcount(
                                     (index + offset) & wires_parity) %
                                     2 ==
                                 0)
@@ -1936,9 +1936,9 @@ void applyPauliRot(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
             std::size_t i1 = i0 ^ mask_xy;
             if (i0 <= i1) {
                 const auto count_y =
-                    Kokkos::Experimental::popcount_builtin(i0 & mask_y) * 2;
+                    Kokkos::popcount(i0 & mask_y) * 2;
                 const auto count_z =
-                    Kokkos::Experimental::popcount_builtin(i0 & mask_z) * 2;
+                    Kokkos::popcount(i0 & mask_z) * 2;
                 const auto sign_i0 = count_z + count_mask_y * 3 - count_y;
                 const auto sign_i1 = count_z + count_mask_y + count_y;
                 const ComplexT v0 = arr_(i0);
