@@ -49,7 +49,7 @@ jobs:
           python3 \
            main/.github/workflows/dev_version_script.py \
            --pr-path "${{ github.workspace }}/pr" \
-           --master-path "${{ github.workspace }}/main"
+           --main-path "${{ github.workspace }}/main"
 
       - name: Capture Changed version
         id: new_version

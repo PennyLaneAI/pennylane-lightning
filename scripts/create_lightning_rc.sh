@@ -6,13 +6,13 @@ set -e
 # This script automates the creation of a release candidate branch for PennyLane-Lightning.
 #
 # Prerequisites:
-# - Be on the latest master branch in the root directory of pennylane-lightning/
+# - Be on the latest main branch in the root directory of pennylane-lightning/
 # - Have 'gh' CLI installed and authenticated with GitHub
 # - Have 'jq' installed for JSON processing
 #
 # Usage Instructions:
 # The script supports different phases of the release process. The script should run on the root
-# directory of the pennylane-lightning repository and in master branch.
+# directory of the pennylane-lightning repository and in main branch.
 # Run them in sequence:
 #
 # 1. Create Release Candidate (creates branches and PRs):
