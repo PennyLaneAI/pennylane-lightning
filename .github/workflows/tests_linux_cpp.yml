@@ -5,11 +5,11 @@ on:
       lightning-version:
         type: string
         required: true
-        description: The version of Lightning to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
+        description: The version of Lightning to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from main)
       pennylane-version:
         type: string
         required: true
-        description: The version of PennyLane to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
+        description: The version of PennyLane to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from main)
   pull_request:
     types:
       - opened
@@ -24,7 +24,7 @@ on:
 
   push:
     branches:
-      - master
+      - main
 
 env:
   COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing -p no:warnings --tb=native"

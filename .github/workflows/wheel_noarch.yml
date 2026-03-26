@@ -14,7 +14,7 @@ on:
       - ready_for_review
   push:
     branches:
-      - master
+      - main
   release:
     types: [published]
   workflow_dispatch:
@@ -86,7 +86,7 @@ jobs:
           github.event_name == 'release' || 
           github.event_name == 'schedule' ||
           github.event_name == 'workflow_dispatch' || 
-          github.ref == 'refs/heads/master' ||
+          github.ref == 'refs/heads/main' ||
           steps.rc_build.outputs.match != ''
         with:
           name: pure-python-wheels-${{ matrix.pl_backend }}.zip
