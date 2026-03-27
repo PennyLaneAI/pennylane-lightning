@@ -65,6 +65,7 @@ Build Kokkos for AMD GPU (``GFX90A`` architecture), and append the install locat
     cmake --build build && cmake --install build
     export CMAKE_PREFIX_PATH=$KOKKOS_INSTALL_PATH
 
+A C++ compiler supporting C++20 is required.
 
 Install Lightning-Kokkos
 ^^^^^^^^^^^^^^^^^^^^^^^^

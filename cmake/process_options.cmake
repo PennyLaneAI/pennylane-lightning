@@ -18,8 +18,8 @@ endif ()
 
 # Check GCC version
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-    if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 10.0)
-        message(FATAL_ERROR "GCC version must be at least 10.0")
+    if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 10.4)
+        message(FATAL_ERROR "GCC version must be at least 10.4")
     endif()
 endif()
 
