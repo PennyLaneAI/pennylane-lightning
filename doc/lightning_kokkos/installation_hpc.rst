@@ -28,7 +28,7 @@ Install Kokkos (Recommended)
 
 .. note::
 
-    Lightning-Kokkos is tested with Kokkos version 5.0.0
+    Lightning-Kokkos is tested with Kokkos version 5.1.0
 
 We suggest first installing Kokkos with the desired configuration, following the instructions found in the Kokkos documentation.
 For example, the following instructions demonstrate building Kokkos for AMD MI210/250/250X GPUs:
@@ -38,9 +38,9 @@ Download the `Kokkos code <https://github.com/kokkos/kokkos/releases>`_.
 .. code-block:: bash
 
     # Replace x, y, and z by the correct version
-    wget https://github.com/kokkos/kokkos/archive/refs/tags/5.0.0.tar.gz
-    tar -xvf 5.0.0.tar.gz
-    cd kokkos-5.0.0/
+    wget https://github.com/kokkos/kokkos/archive/refs/tags/5.1.0.tar.gz
+    tar -xvf 5.1.0.tar.gz
+    cd kokkos-5.1.0/
 
 Build Kokkos for AMD GPU (``GFX90A`` architecture), and append the install location to ``CMAKE_PREFIX_PATH``.
 

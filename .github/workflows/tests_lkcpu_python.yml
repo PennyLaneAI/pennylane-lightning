@@ -48,7 +48,7 @@ jobs:
     uses: ./.github/workflows/build_and_cache_Kokkos_linux.yml
     with:
       os: ubuntu-24.04
-      kokkos_version: ${{ (inputs.lightning-version == 'stable' && '4.5.00') || '5.0.0' }} # FIXME: remove after v0.45 release
+      kokkos_version: ${{ (inputs.lightning-version == 'stable' && '4.5.00') || '5.1.0' }} # FIXME: remove after v0.45 release
 
   build_lightning_kokkos_wheels:
     needs: [build_and_cache_Kokkos]
