@@ -27,9 +27,8 @@ endif()
 add_library(lightning_compile_options INTERFACE)
 add_library(lightning_external_libs INTERFACE)
 
-# We use C++20 experimentally. As we still set CMAKE_CXX_STANDARD, the following line is not essential.
-# It will be uncommented when we move to a newer set-up.
-# target_compile_features(lightning_compile_options INTERFACE cxx_std_20)
+# C++20 is required.
+target_compile_features(lightning_compile_options INTERFACE cxx_std_20)
 
 if(MSVC) # For M_PI
     target_compile_options(lightning_compile_options INTERFACE /D_USE_MATH_DEFINES)
