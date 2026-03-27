@@ -213,6 +213,7 @@ jobs:
           CMAKE_ARGS="-DCMAKE_C_COMPILER=$(which gcc-$GCC_VERSION) \
                       -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
                       -DCMAKE_CUDA_HOST_COMPILER=$(which gcc-$GCC_VERSION) \
+                      -DCMAKE_CUDA_ARCHITECTURES=${{ env.CI_CUDA_ARCH }} \
                       -DLIGHTNING_CATALYST_SRC_PATH=${{ github.workspace }}/catalyst" \
           PL_BACKEND=${{ matrix.pl_backend }} python -m pip install . -vv
 
