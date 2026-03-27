@@ -38,6 +38,9 @@
 - Upgraded Kokkos from v4.5.0 to v5.1.0.
   [(#1308)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1308)
 
+- Change default branch references from `master` to `main`.
+  [(#1356)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1356)
+
 - Upgrade CIs to use CUDA 12.9.
   [(#1353)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1353)
   [(#1354)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1354)

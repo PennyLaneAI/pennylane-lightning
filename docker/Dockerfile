@@ -13,8 +13,8 @@
 # limitations under the License.
 
 # Define global build defaults
-ARG PENNYLANE_VERSION=master
-ARG LIGHTNING_VERSION=master
+ARG PENNYLANE_VERSION=main
+ARG LIGHTNING_VERSION=main
 ARG GCC_VERSION=13
 ARG CUDA_INSTALLER=https://developer.download.nvidia.com/compute/cuda/12.9.1/local_installers/cuda_12.9.1_575.57.08_linux.run
 ARG ROCM_INSTALLER=https://repo.radeon.com/amdgpu-install/7.0.3/ubuntu/jammy/amdgpu-install_7.0.3.70003-1_all.deb

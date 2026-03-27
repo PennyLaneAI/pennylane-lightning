@@ -14,7 +14,7 @@ on:
       - ready_for_review
   push:
     branches:
-      - master
+      - main
   release:
     types: [published]
   workflow_dispatch:
@@ -125,7 +125,7 @@ jobs:
           github.event_name == 'release' ||
           github.event_name == 'schedule' ||
           github.event_name == 'workflow_dispatch' ||
-          github.ref == 'refs/heads/master' || 
+          github.ref == 'refs/heads/main' || 
           steps.rc_build.outputs.match != ''
         with:
           name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ fromJson('{ "cp311-*":"py311","cp312-*":"py312", "cp313-*":"py313", "cp314-*":"py314" }')[matrix.cibw_build] }}-${{ matrix.arch }}.zip
@@ -155,7 +155,7 @@ jobs:
         if: |
           github.event_name == 'release' ||
           github.event_name == 'schedule' ||
-          github.ref == 'refs/heads/master' || 
+          github.ref == 'refs/heads/main' || 
           steps.rc_build.outputs.match != ''
         with:
           name: macOS-wheels-${{ matrix.pl_backend }}-${{ fromJson('{ "cp311-*":"py311","cp312-*":"py312", "cp313-*":"py313", "cp314-*":"py314" }')[matrix.cibw_build] }}-${{ matrix.arch }}.zip
@@ -166,7 +166,7 @@ jobs:
         if: |
           github.event_name == 'release' ||
           github.event_name == 'schedule' ||
-          github.ref == 'refs/heads/master' || 
+          github.ref == 'refs/heads/main' || 
           steps.rc_build.outputs.match != ''
         with:
           verbose: true

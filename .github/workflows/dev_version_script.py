@@ -83,15 +83,15 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--pr-path", dest="pr", type=Path, required=True, help="Path to the PR dir")
     parser.add_argument(
-        "--master-path", dest="master", type=Path, required=True, help="Path to the master dir"
+        "--main-path", dest="main", type=Path, required=True, help="Path to the main dir"
     )
 
     args = parser.parse_args()
 
     pr_version = extract_version(args.pr)
-    master_version = extract_version(args.master)
+    main_version = extract_version(args.main)
 
-    print("Got Package Version from 'master' ->", str(master_version))
+    print("Got Package Version from 'main' ->", str(main_version))
     print("Got Package Version from 'PR' ->", str(pr_version))
 
     # Only attempt to bump the version if the pull_request is:
@@ -102,7 +102,7 @@ if __name__ == "__main__":
     #  This captures the case during release where we might bump the release version
     #  within a PR and reset tag back to dev0
     if (
-        pr_version > master_version
+        pr_version > main_version
         and pr_version.prerelease
         and pr_version.prerelease == DEV_PRERELEASE_TAG_START
     ):
@@ -111,22 +111,22 @@ if __name__ == "__main__":
         )
         print("If this is happening in error, please report it to the PennyLane team!")
     elif pr_version.prerelease and pr_version.prerelease.startswith(DEV_PRERELEASE_TAG_PREFIX):
-        # If master branch does not have a prerelease (for any reason) OR does not have an ending number
+        # If main branch does not have a prerelease (for any reason) OR does not have an ending number
         # Then default to the starting tag
-        if not master_version.prerelease or master_version.prerelease == DEV_PRERELEASE_TAG_PREFIX:
+        if not main_version.prerelease or main_version.prerelease == DEV_PRERELEASE_TAG_PREFIX:
             next_prerelease_version = DEV_PRERELEASE_TAG_START
         else:
-            # If master branch does not have a prerelease (for any reason) OR does not have an ending number
+            # If main branch does not have a prerelease (for any reason) OR does not have an ending number
             # Then default to the starting tag
             if (
-                not master_version.prerelease
-                or master_version.prerelease == DEV_PRERELEASE_TAG_PREFIX
+                not main_version.prerelease
+                or main_version.prerelease == DEV_PRERELEASE_TAG_PREFIX
             ):
                 next_prerelease_version = DEV_PRERELEASE_TAG_START
             else:
-                # Generate the next prerelease version (eg: dev1 -> dev2). Sourcing from master version.
-                next_prerelease_version = master_version.next_version("prerelease").prerelease
-            new_version = master_version.replace(prerelease=next_prerelease_version)
+                # Generate the next prerelease version (eg: dev1 -> dev2). Sourcing from main version.
+                next_prerelease_version = main_version.next_version("prerelease").prerelease
+            new_version = main_version.replace(prerelease=next_prerelease_version)
             if pr_version != new_version:
                 print(f"Updating PR package version from -> '{pr_version}', to -> {new_version}")
                 update_prerelease_version(args.pr, new_version)
