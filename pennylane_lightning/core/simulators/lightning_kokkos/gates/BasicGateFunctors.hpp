@@ -628,6 +628,23 @@ void applyNCGlobalPhase(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
         }
     }
 
+    // Special cases for single controlled wires
+    if (controlled_wires.size() == 1 && controlled_values[0]) {
+        std::vector<PrecisionT> neg_params = {-params[0]};
+        applyNCPhaseShift<ExecutionSpace, PrecisionT>(
+            arr_, num_qubits, {}, {}, controlled_wires, inverse, neg_params);
+        return;
+    }
+
+    if (num_qubits == 1 && controlled_wires.size() == 1 &&
+        !controlled_values[0]) {
+        applyNCPhaseShift<ExecutionSpace, PrecisionT>(
+            arr_, num_qubits, {}, {}, controlled_wires, inverse, params);
+        applyNCGlobalPhase<ExecutionSpace, PrecisionT>(arr_, num_qubits, {}, {},
+                                                       {}, inverse, params);
+        return;
+    }
+
     if (num_qubits) [[likely]] {
         auto core_function =
             KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
@@ -647,7 +664,8 @@ void applyNCGlobalPhase(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
     } else {
         auto core_function =
             KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
-                          std::size_t i0, [[maybe_unused]] std::size_t i1) {
+                          std::size_t i0, std::size_t i1) {
+            [[maybe_unused]] const auto i1_ = i1;
             arr(i0) *= phase;
         };
 

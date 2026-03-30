@@ -3,17 +3,23 @@ version: 2
 sphinx:
   configuration: doc/conf.py
 
+python:
+  install:
+    - method: pip
+      path: .
+
 build:
   os: ubuntu-24.04
   tools:
-    python: "3.11"
+    python: "3.12"
   apt_packages:
     - graphviz
   jobs:
     post_install:
-      - python -m pip install --exists-action=w --no-cache-dir -r doc/requirements.txt
+      - pip install --group docs
       - PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py && SKIP_COMPILATION=True python -m build
       - rm -rf ./build && PL_BACKEND="lightning_gpu" python scripts/configure_pyproject_toml.py && SKIP_COMPILATION=True python -m build
+      - rm -rf ./build && PL_BACKEND="lightning_amdgpu" python scripts/configure_pyproject_toml.py && SKIP_COMPILATION=True python -m build
       - rm -rf ./build && PL_BACKEND="lightning_kokkos" python scripts/configure_pyproject_toml.py && SKIP_COMPILATION=True python -m build
       - rm -rf ./build && PL_BACKEND="lightning_tensor" python scripts/configure_pyproject_toml.py && SKIP_COMPILATION=True python -m build
       - python -m pip install ./dist/*.whl

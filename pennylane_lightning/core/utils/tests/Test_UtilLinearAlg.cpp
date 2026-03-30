@@ -19,7 +19,7 @@
 
 #include "TestHelpers.hpp"
 #include "UtilLinearAlg.hpp"
-#include <catch2/catch.hpp>
+#include <catch2/catch_template_test_macros.hpp>
 
 /// @cond DEV
 namespace {
@@ -28,6 +28,7 @@ using namespace Pennylane::Util;
 } // namespace
 /// @endcond
 
+#ifdef SCIPY_OPENBLAS_ENABLED
 TEMPLATE_TEST_CASE("Util::compute_diagonalizing_gates", "[Util][LinearAlgebra]",
                    float, double) {
     SECTION("For complex type") {
@@ -57,3 +58,4 @@ TEMPLATE_TEST_CASE("Util::compute_diagonalizing_gates", "[Util][LinearAlgebra]",
         }
     }
 }
+#endif // SCIPY_OPENBLAS_ENABLED

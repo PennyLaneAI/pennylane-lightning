@@ -1,7 +1,7 @@
 name: Build and Cache Kokkos
 
 env:
-  GCC_VERSION: 11
+  GCC_VERSION: 13
 
 on:
   workflow_call:

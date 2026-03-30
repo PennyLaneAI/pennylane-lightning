@@ -1,7 +1,7 @@
 name: Wheel::Linux::x86_64
 
 # **What it does**: Builds python wheels for Linux (ubuntu-24.04) architecture x86_64 and store it as artifacts.
-#                   Python versions: 3.11, 3.12, 3.13.
+#                   Python versions: 3.11, 3.12, 3.13, 3.14.
 # **Why we have it**: To build wheels for pennylane-lightning installation.
 # **Who does it impact**: Wheels to be uploaded to PyPI.
 
@@ -17,10 +17,15 @@ on:
       - ready_for_review
   push:
     branches:
-      - master
+      - main
   release:
     types: [published]
   workflow_dispatch:
+  workflow_call:
+    inputs:
+      branch:
+        required: false
+        type: string  
 
 concurrency:
   group: wheel_linux_x86_64-${{ github.ref }}
@@ -30,11 +35,12 @@ jobs:
   set_wheel_build_matrix:
     if: |
       github.event_name != 'pull_request' ||
-      (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'ci:build_wheels'))
+      (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'ci:build_wheels')) 
     name: "Set wheel build matrix"
     uses: ./.github/workflows/set_wheel_build_matrix.yml
     with:
       event_name: ${{ github.event_name }}
+      workflow_name: wheel_linux_x86_64
 
   build_dependencies:
     needs: [set_wheel_build_matrix]
@@ -45,7 +51,7 @@ jobs:
         container_img: ["quay.io/pypa/manylinux_2_28_x86_64"]
     timeout-minutes: 30
     name: Kokkos core (${{ matrix.exec_model }})
-    runs-on: pl-4-core-large-runner
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     container: ${{ matrix.container_img }}
 
     steps:
@@ -60,7 +66,7 @@ jobs:
         if: ${{ (matrix.container_img == 'ubuntu-24.04') && (steps.kokkos-cache.outputs.cache-hit != 'true') }}
         run: |
           apt-get update && DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y -q install cmake gcc-$GCC_VERSION g++-$GCC_VERSION ninja-build git
-          echo "COMPILER=g++-13" >> $GITHUB_ENV
+          echo "COMPILER=g++-${GCC_VERSION}" >> $GITHUB_ENV
 
       - name: Install dependencies (AlmaLinux)
         if: ${{ (matrix.container_img == 'quay.io/pypa/manylinux_2_28_x86_64') && (steps.kokkos-cache.outputs.cache-hit != 'true') }}
@@ -104,8 +110,8 @@ jobs:
         kokkos_version: ${{ fromJson(needs.set_wheel_build_matrix.outputs.kokkos_version) }}
         container_img: ["quay.io/pypa/manylinux_2_28_x86_64"]
     timeout-minutes: 30
-    name: Linux::${{ matrix.arch }} - ${{ matrix.pl_backend }} (Python ${{ fromJson('{ "cp311-*":"3.11","cp312-*":"3.12", "cp313-*":"3.13" }')[matrix.cibw_build] }})
-    runs-on: pl-4-core-large-runner
+    name: Linux::${{ matrix.arch }} - ${{ matrix.pl_backend }} (Python ${{ fromJson('{ "cp311-*":"3.11","cp312-*":"3.12", "cp313-*":"3.13", "cp314-*":"3.14" }')[matrix.cibw_build] }})
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     container:
       image: ${{ matrix.container_img }}
       options: --privileged
@@ -120,6 +126,8 @@ jobs:
 
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
+        with:        
+          ref: ${{ inputs.branch || github.ref }}         
 
       - name: Copy cached libraries
         if: steps.kokkos-cache.outputs.cache-hit == 'true'
@@ -133,10 +141,10 @@ jobs:
           dnf update -y && dnf install -y podman
 
       - name: Install dependencies
-        run: python3.11 -m pip install cibuildwheel~=2.21.0 tomlkit
+        run: python3.12 -m pip install cibuildwheel~=3.1.4 tomlkit
 
       - name: Configure pyproject.toml file
-        run: PL_BACKEND="${{ matrix.pl_backend }}" python3.11 scripts/configure_pyproject_toml.py
+        run: PL_BACKEND="${{ matrix.pl_backend }}" python3.12 scripts/configure_pyproject_toml.py
 
       - name: Build wheels
         env:
@@ -158,10 +166,15 @@ jobs:
             PATH="/opt/rh/gcc-toolset-13/root/usr/bin:$PATH"
 
           CIBW_ENVIRONMENT: |
-            PATH="/opt/rh/gcc-toolset-13/root/usr/bin:$PATH" CMAKE_ARGS="-DCMAKE_BUILD_TYPE=Release"
+            PATH="/opt/rh/gcc-toolset-13/root/usr/bin:$PATH"
+            CMAKE_ARGS="-DCMAKE_BUILD_TYPE=Release"
+            if ${{ matrix.pl_backend == 'lightning_qubit'}}
+            then
+              CMAKE_ARGS="-DCMAKE_BUILD_TYPE=Release -DLQ_ENABLE_KERNEL_OMP=ON"
+            fi
 
           CIBW_BEFORE_TEST: |
-            python -m pip install -r requirements-tests.txt
+            python -m pip install --group tests
             if ${{ matrix.pl_backend == 'lightning_kokkos'}}
             then
               PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
@@ -176,27 +189,28 @@ jobs:
 
           CIBW_BUILD_VERBOSITY: 3
 
-        run: python3.11 -m cibuildwheel --output-dir wheelhouse
+        run: python3.12 -m cibuildwheel --output-dir wheelhouse
 
       - name: Validate wheels
         run: |
-          python3.11 -m pip install twine
-          python3.11 -m twine check ./wheelhouse/*.whl
+          python3.12 -m pip install twine
+          python3.12 -m twine check ./wheelhouse/*.whl
 
       - uses: actions-ecosystem/action-regex-match@main
         id: rc_build
         with:
           text: ${{ github.event.pull_request.head.ref }}
-          regex: '.*[0-9]+.[0-9]+.[0-9]+[-_]?rc[0-9]+'
+          regex: '^v[0-9]+\.[0-9]+\.[0-9]+[-_]rc$'
 
       - uses: actions/upload-artifact@v4
         if: |
           github.event_name == 'release' ||
+          github.event_name == 'schedule' ||
           github.event_name == 'workflow_dispatch' ||
-          github.ref == 'refs/heads/master' ||
+          github.ref == 'refs/heads/main' ||
           steps.rc_build.outputs.match != ''
         with:
-          name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ fromJson('{ "cp311-*":"py311","cp312-*":"py312", "cp313-*":"py313" }')[matrix.cibw_build] }}-${{ matrix.arch }}.zip
+          name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ fromJson('{ "cp311-*":"py311","cp312-*":"py312", "cp313-*":"py313", "cp314-*":"py314" }')[matrix.cibw_build] }}-${{ matrix.arch }}.zip
           path: ./wheelhouse/*.whl
           retention-days: 1
           include-hidden-files: true
@@ -211,18 +225,31 @@ jobs:
     runs-on: ubuntu-24.04
     permissions:
       id-token: write
-    if: |
-      github.event_name == 'release' ||
-      github.ref == 'refs/heads/master'
 
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions-ecosystem/action-regex-match@main
+        id: rc_build
         with:
-          name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ fromJson('{ "cp311-*":"py311","cp312-*":"py312", "cp313-*":"py313" }')[matrix.cibw_build] }}-${{ matrix.arch }}.zip
+          text: ${{ github.event.pull_request.head.ref }}
+          regex: '^v[0-9]+\.[0-9]+\.[0-9]+[-_]rc$'
+
+      - uses: actions/download-artifact@v4
+        if: |
+          github.event_name == 'release' ||
+          github.event_name == 'schedule' ||
+          github.ref == 'refs/heads/main' || 
+          steps.rc_build.outputs.match != ''
+        with:
+          name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ fromJson('{ "cp311-*":"py311","cp312-*":"py312", "cp313-*":"py313", "cp314-*":"py314" }')[matrix.cibw_build] }}-${{ matrix.arch }}.zip
           path: dist
 
       - name: Upload wheels to TestPyPI
         uses: pypa/gh-action-pypi-publish@release/v1
+        if: |
+          github.event_name == 'release' ||
+          github.event_name == 'schedule' ||
+          github.ref == 'refs/heads/main' || 
+          steps.rc_build.outputs.match != ''
         with:
           verbose: true
           repository-url: https://test.pypi.org/legacy/

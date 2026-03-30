@@ -17,10 +17,14 @@ As Kokkos enables support for many different HPC-targeted hardware platforms, ``
 Install Kokkos (Optional)
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
+.. note::
+
+    Lightning-Kokkos is tested with Kokkos version 4.5.00
+
 We suggest first installing Kokkos with the wanted configuration following the instructions found in the `Kokkos documentation <https://kokkos.github.io/kokkos-core-wiki/building.html>`_.
 For example, the following will build Kokkos for NVIDIA A100 cards:
 
-Download the `Kokkos code <https://github.com/kokkos/kokkos/releases>`_. Lightning-Kokkos was tested with Kokkos version <= 4.5.0
+Download the `Kokkos code <https://github.com/kokkos/kokkos/releases>`_.
 
 .. code-block:: bash
 
@@ -47,6 +51,7 @@ Build Kokkos for NVIDIA A100 cards (``SM80`` architecture), and append the insta
         -DKokkos_ENABLE_SERIAL:BOOL=ON \
         -DKokkos_ENABLE_CUDA:BOOL=ON \
         -DKokkos_ARCH_AMPERE80:BOOL=ON \
+        -DKokkos_ENABLE_COMPLEX_ALIGN:BOOL=OFF \
         -DKokkos_ENABLE_EXAMPLES:BOOL=OFF \
         -DKokkos_ENABLE_TESTS:BOOL=OFF \
         -DKokkos_ENABLE_LIBDL:BOOL=OFF
@@ -67,8 +72,8 @@ The simplest way to install Lightning-Kokkos (OpenMP backend) through ``pip``.
 
     git clone https://github.com/PennyLaneAI/pennylane-lightning.git
     cd pennylane-lightning
-    pip install -r requirements.txt
-    pip install git+https://github.com/PennyLaneAI/pennylane.git@master
+    python -m pip install --group base
+    pip install git+https://github.com/PennyLaneAI/pennylane.git@main
     
     # Lightning-Qubit needs to be 'installed' by pip before Lightning-Kokkos 
     # (compilation is not necessary)
@@ -122,8 +127,8 @@ Then Lightning-Kokkos with MPI support can be installed in the *editable* mode b
 
     git clone https://github.com/PennyLaneAI/pennylane-lightning.git
     cd pennylane-lightning
-    pip install -r requirements.txt
-    pip install git+https://github.com/PennyLaneAI/pennylane.git@master
+    python -m pip install --group base
+    pip install git+https://github.com/PennyLaneAI/pennylane.git@main
 
     # Lightning-Qubit needs to be 'installed' by pip before Lightning-Kokkos 
     # (compilation is not necessary)
@@ -150,7 +155,7 @@ After installing Lightning-Kokkos with MPI, you can test the Python layer of the
 
 .. code-block:: bash
 
-    pip install -r requirements-tests.txt
+    python -m pip install --group tests
     PL_DEVICE="lightning_kokkos" mpirun -np 2 python -m pytest mpitests --tb=short
 
 To compile and test the C++ code, you can use the following command:

@@ -18,7 +18,8 @@
 
 #include "TestHelpers.hpp"
 #include "Util.hpp"
-#include <catch2/catch.hpp>
+#include <catch2/catch_template_test_macros.hpp>
+#include <catch2/matchers/catch_matchers_string.hpp>
 
 /// @cond DEV
 namespace {
@@ -262,7 +263,7 @@ TEST_CASE("Util::createRandomWiresSubset", "[createRandomWiresSubset]") {
 
         REQUIRE_THROWS_WITH(
             createRandomWiresSubset(re, sv_num_qubits, unitary_num_qubits),
-            Catch::Matchers::Contains(
+            Catch::Matchers::ContainsSubstring(
                 "If unitary_num_qubits > sv_num_qubits, the "
                 "internal while loop will go on forever."));
     }
@@ -328,4 +329,54 @@ TEST_CASE("Util::getRevWireIndex", "[getRevWireIndex]") {
     REQUIRE(getRevWireIndex(wires, 3UL) == 0);
     PL_REQUIRE_THROWS_MATCHES(getRevWireIndex(wires, 4UL), LightningException,
                               "out of bounds");
+}
+
+TEMPLATE_TEST_CASE("Util::computePurityFromParts", "[Util][DensityMatrix]",
+                   float, double) {
+    using ComplexT = std::complex<TestType>;
+    using PrecisionT = TestType;
+
+    SECTION("Empty vector returns zero") {
+        std::vector<std::vector<ComplexT>> released_parts;
+        PrecisionT purity = computePurityFromParts(released_parts);
+        CHECK(purity == Approx(0.0).margin(1e-6));
+    }
+
+    SECTION("Single part corresponding to pure state |0>") {
+        // released_parts = [[1, 0]] corresponds to |0>
+        std::vector<std::vector<ComplexT>> released_parts = {
+            {ComplexT{1.0, 0.0}, ComplexT{0.0, 0.0}}};
+        PrecisionT purity = computePurityFromParts(released_parts);
+        CHECK(purity == Approx(1.0).margin(1e-6));
+    }
+
+    SECTION("Single part corresponding to pure state |1>") {
+        // released_parts = [[0, 1]] corresponds to |1>
+        std::vector<std::vector<ComplexT>> released_parts = {
+            {ComplexT{0.0, 0.0}, ComplexT{1.0, 0.0}}};
+        PrecisionT purity = computePurityFromParts(released_parts);
+        CHECK(purity == Approx(1.0).margin(1e-6));
+    }
+
+    SECTION("Single part corresponding to pure state |+>") {
+        // |+> = (|0> + |1>)/sqrt(2)
+        const PrecisionT inv_sqrt2 =
+            static_cast<PrecisionT>(1.0 / std::sqrt(2.0));
+        std::vector<std::vector<ComplexT>> released_parts = {
+            {ComplexT{inv_sqrt2, 0.0}, ComplexT{inv_sqrt2, 0.0}}};
+        PrecisionT purity = computePurityFromParts(released_parts);
+        CHECK(purity == Approx(1.0).margin(1e-5));
+    }
+
+    SECTION("Two parts with mixed state") {
+        // released_parts = [[1/sqrt(2), 0], [0, 1/sqrt(2)]]
+        // corresponds to ρ = (|0><0| + |1><1|)/2 = I/2
+        const PrecisionT inv_sqrt2 =
+            static_cast<PrecisionT>(1.0 / std::sqrt(2.0));
+        std::vector<std::vector<ComplexT>> released_parts = {
+            {ComplexT{inv_sqrt2, 0.0}, ComplexT{0.0, 0.0}},
+            {ComplexT{0.0, 0.0}, ComplexT{inv_sqrt2, 0.0}}};
+        PrecisionT purity = computePurityFromParts(released_parts);
+        CHECK(purity == Approx(0.5).margin(1e-5));
+    }
 }

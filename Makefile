@@ -1,9 +1,11 @@
 PYTHON := python3
 COMPILER_LAUNCHER ?= $(shell which ccache)
 COVERAGE := --cov=pennylane_lightning --cov-report term-missing --cov-report=html:coverage_html_report
-TESTRUNNER := -m pytest tests --tb=short
+TESTRUNNER := -m pytest tests --tb=short -vv -s
 
 PL_BACKEND ?= "$(if $(backend:-=),$(backend),lightning_qubit)"
+PL_DEVICE ?= $(if $(device:-=),$(device),lightning.qubit)
+PL_DEVICE_MPI ?= $(if $(filter lightning.qubit,$(PL_DEVICE)),lightning.gpu,$(PL_DEVICE))
 SCIPY_OPENBLAS :=$(shell $(PYTHON) -c "import scipy_openblas32; print(scipy_openblas32.get_lib_dir())")
 
 ifdef check
@@ -86,10 +88,10 @@ wheel:
 
 .PHONY: coverage coverage-cpp
 coverage:
-	@echo "Generating coverage report for $(if $(device:-=),$(device),lightning.qubit) device:"
+	@echo "Generating coverage report for $(PL_DEVICE) device:"
 	$(PYTHON) $(TESTRUNNER) $(COVERAGE)
-	pl-device-test --device $(if $(device:-=),$(device),lightning.qubit) --skip-ops --shots=10000 $(COVERAGE) --cov-append
-	pl-device-test --device $(if $(device:-=),$(device),lightning.qubit) --shots=None --skip-ops $(COVERAGE) --cov-append
+	pl-device-test --device $(PL_DEVICE) --skip-ops --shots=10000 $(COVERAGE) --cov-append
+	pl-device-test --device $(PL_DEVICE) --shots=None --skip-ops $(COVERAGE) --cov-append
 
 coverage-cpp:
 	@echo "Generating cpp coverage report in BuildCov/out for $(PL_BACKEND) backend"
@@ -112,14 +114,14 @@ coverage-cpp:
 test-python: test-builtin test-suite
 
 test-builtin:
-	PL_DEVICE=$(if $(device:-=),$(device),lightning.qubit) $(PYTHON) -I $(TESTRUNNER)
+	PL_DEVICE=$(PL_DEVICE) $(PYTHON) -I $(TESTRUNNER)
 
 test-suite:
-	pl-device-test --device $(if $(device:-=),$(device),lightning.qubit) --skip-ops --shots=10000
-	pl-device-test --device $(if $(device:-=),$(device),lightning.qubit) --shots=None --skip-ops
+	pl-device-test --device $(PL_DEVICE) --skip-ops --shots=10000
+	pl-device-test --device $(PL_DEVICE) --shots=None --skip-ops
 
 test-python-mpi:
-	PL_DEVICE=$(if $(device:-=),$(device),lightning.gpu) mpirun -n 2 $(PYTHON) -I  -m pytest mpitests --tb=short
+	PL_DEVICE=$(PL_DEVICE_MPI) mpirun -n 2 $(PYTHON) -I  -m pytest mpitests --tb=short
 
 test-cpp:
 	rm -rf ./BuildTests
@@ -128,9 +130,9 @@ test-cpp:
 		  -DBUILD_TESTS=ON \
 		  -DENABLE_WARNINGS=ON \
 		  -DPL_BACKEND=$(PL_BACKEND) \
-		  -DSCIPY_OPENBLAS=$(SCIPY_OPENBLAS) \
 		  -DCMAKE_C_COMPILER_LAUNCHER=$(COMPILER_LAUNCHER) \
 		  -DCMAKE_CXX_COMPILER_LAUNCHER=$(COMPILER_LAUNCHER) \
+		  -DSCIPY_OPENBLAS=$(SCIPY_OPENBLAS) \
 		  $(OPTIONS)
 ifdef target
 	cmake --build ./BuildTests $(VERBOSE) --target $(target)
@@ -154,23 +156,23 @@ test-cpp-mpi:
 		  $(OPTIONS)
 ifdef target
 	cmake --build ./BuildTests $(VERBOSE) --target $(target)
-	mpirun -np 2 ./BuildTests/$(target)
+	mpirun -np 2 ./BuildTests/$(target) --order decl
 else
 	cmake --build ./BuildTests $(VERBOSE)
-	
+
 	if [ "$(PL_BACKEND)" = "lightning_gpu" ]; then \
 		for file in ./BuildTests/*_test_runner_mpi; do \
 			echo "Running $$file"; \
-			mpirun -np 2 $$file ; \
+			mpirun -np 2 $$file --order decl ; \
 		done ; \
 	elif [ "$(PL_BACKEND)" = "lightning_kokkos" ]; then \
 		for file in ./BuildTests/lightning_kokkos*test_runner_mpi; do \
 			echo "Running $$file"; \
-			mpirun -np 4 $$file ; \
+			mpirun -np 4 $$file --order decl ; \
 		done ; \
 		for file in ./BuildTests/utils_test_runner_mpi; do \
 			echo "Running $$file"; \
-			mpirun -np 2 $$file ; \
+			mpirun -np 2 $$file --order decl ; \
 		done; \
 	fi
 endif
@@ -220,12 +222,12 @@ endif
 ifdef version
     VERSION := $(version)
 else
-    VERSION := master
+    VERSION := main
 endif
 ifdef pl_version
     PL_VERSION := $(pl_version)
 else
-    PL_VERSION := master
+    PL_VERSION := main
 endif
 
 docker-build:
@@ -250,3 +252,18 @@ docker-push-all:
 docker-all:
 	$(MAKE) docker-build-all
 	$(MAKE) docker-push-all
+
+.PHONY: build-nanobind
+build-nanobind:
+	$(MAKE) clean
+	PL_BACKEND=$(PL_BACKEND) python scripts/configure_pyproject_toml.py
+	python -m pip install -e . --config-settings editable_mode=compat -vv
+
+.PHONY: test-bindings
+test-bindings:
+	$(PYTHON) -m pytest tests/bindings -vv -s
+
+.PHONY: build-test-bindings
+build-test-bindings:
+	$(MAKE) build-nanobind
+	$(MAKE) test-bindings

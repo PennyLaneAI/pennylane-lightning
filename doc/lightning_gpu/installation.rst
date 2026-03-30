@@ -12,11 +12,11 @@ Install Lightning-GPU from source
 
     The section below contains instructions for installing Lightning-GPU **from source**. For most cases, *this is not required* and one can simply use the installation instructions at `pennylane.ai/install <https://pennylane.ai/install/#high-performance-computing-and-gpus>`__. If those instructions do not work for you, or you have a more complex build environment that requires building from source, then consider reading on.
 
-Since you will be installing PennyLane-Lightning from the master branch, it is recommended to install PennyLane from master:
+Since you will be installing PennyLane-Lightning from the main branch, it is recommended to install PennyLane from main:
 
 .. code-block:: bash
 
-    pip install git+https://github.com/PennyLaneAI/pennylane.git@master
+    pip install git+https://github.com/PennyLaneAI/pennylane.git@main
 
 To install Lightning-GPU from the package sources using the direct SDK path first install Lightning-Qubit (compilation is not necessary):
 
@@ -24,9 +24,9 @@ To install Lightning-GPU from the package sources using the direct SDK path firs
 
     git clone https://github.com/PennyLaneAI/pennylane-lightning.git
     cd pennylane-lightning
-    pip install -r requirements.txt
+    python -m pip install --group base
     pip install custatevec-cu12
-    pip install git+https://github.com/PennyLaneAI/pennylane.git@master
+    pip install git+https://github.com/PennyLaneAI/pennylane.git@main
     PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
     SKIP_COMPILATION=True pip install -e . --config-settings editable_mode=compat -vv
 
@@ -82,7 +82,7 @@ You can test the Python layer of the MPI enabled plugin as follows:
 
 .. code-block:: bash
 
-    pip install -r requirements-tests.txt
+    python -m pip install --group tests
     mpirun -np 2 python -m pytest mpitests --tb=short
 
 The C++ code can be tested with:

@@ -5,11 +5,11 @@ on:
       lightning-version:
         type: string
         required: true
-        description: The version of Lightning to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
+        description: The version of Lightning to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from main)
       pennylane-version:
         type: string
         required: true
-        description: The version of PennyLane to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
+        description: The version of PennyLane to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from main)
   pull_request:
     types:
       - opened
@@ -28,12 +28,12 @@ on:
       - pennylane_lightning/lightning_qubit/**
   push:
     branches:
-      - master
+      - main
 
 env:
   TORCH_VERSION: 2.5.1
   COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing -p no:warnings --tb=native"
-  GCC_VERSION: 11
+  GCC_VERSION: 13
   OMP_NUM_THREADS: "2"
   OMP_PROC_BIND: "false"
 
@@ -60,7 +60,7 @@ jobs:
         kokkos_version: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.kokkos_version) }}
     timeout-minutes: 60
     name: Build (${{ matrix.pl_backend }}, kokkos-${{ matrix.kokkos_version }}, model-${{ matrix.exec_model }})
-    runs-on: pl-4-core-large-runner
+    runs-on: blacksmith-4vcpu-ubuntu-2404
 
     steps:
       - name: Checkout PennyLane-Lightning
@@ -73,6 +73,16 @@ jobs:
         with:
           repository: PennyLaneAI/catalyst
           path: ${{ github.workspace}}/catalyst
+          ref: ${{ (inputs.pennylane-version == 'stable' && 'v0.14.0') || 'main' }} # FIXME: remove after v0.45 release
+
+      - name: Switch to release build of Catalyst
+        if: inputs.lightning-version == 'release'
+        run: |
+          cd ${{ github.workspace}}/catalyst
+          git fetch --all
+          git checkout $(git branch -a --list "origin/v0.*rc*" | sort | tail -1)
+          git log -1 --format='%H'
+          cd ${{ github.workspace }}
 
       - name: Switch to release build of Lightning
         if: inputs.lightning-version == 'release'
@@ -91,7 +101,7 @@ jobs:
       - uses: actions/setup-python@v5
         name: Install Python
         with:
-          python-version: '3.11'
+          python-version: '3.12'
 
       - name: Restoring cached dependencies
         id: kokkos-cache
@@ -111,11 +121,16 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION
+          python -m pip install --upgrade pip
           python -m pip install scipy-openblas32 wheel
 
       - name: Get required Python packages
         run: |
-          python -m pip install -r requirements-tests.txt
+          if [[ "${{ inputs.lightning-version }}" == "stable" ]]; then # FIXME: remove after v0.45 release
+            python -m pip install -r requirements-tests.txt
+          else
+            python -m pip install --group tests
+          fi
           python -m pip install build
 
       - name: Create device wheel ${{ inputs.lightning-version }}
@@ -157,13 +172,13 @@ jobs:
         kokkos_version: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.kokkos_version) }}
     timeout-minutes: 60
     name: Python Tests (${{ matrix.pl_backend }}, kokkos-${{ matrix.kokkos_version }}, model-${{ matrix.exec_model }}, test-group-${{ matrix.group }})
-    runs-on: pl-4-core-large-runner
+    runs-on: blacksmith-4vcpu-ubuntu-2404
 
     steps:
       - uses: actions/setup-python@v5
         name: Install Python
         with:
-          python-version: '3.11'
+          python-version: '3.12'
 
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
@@ -189,6 +204,22 @@ jobs:
           git log -1 --format='%H'
           git status
 
+      - name: Checkout Catalyst
+        uses: actions/checkout@v4
+        with:
+          repository: PennyLaneAI/catalyst
+          path: ${{ github.workspace}}/catalyst
+          ref: ${{ (inputs.pennylane-version == 'stable' && 'v0.14.0') || 'main' }} # FIXME: remove after v0.45 release
+
+      - name: Switch to release build of Catalyst
+        if: inputs.lightning-version == 'release'
+        run: |
+          cd ${{ github.workspace}}/catalyst
+          git fetch --all
+          git checkout $(git branch -a --list "origin/v0.*rc*" | sort | tail -1)
+          git log -1 --format='%H'
+          cd ${{ github.workspace }}
+
       - uses: actions/download-artifact@v4
         with:
           name: ${{ matrix.pl_backend }}-${{ matrix.exec_model }}_name.txt
@@ -203,8 +234,13 @@ jobs:
         run: |
           WHEEL_NAME=$(cat ${{ github.workspace }}/${{ matrix.pl_backend }}-${{ matrix.exec_model }}_name.txt)
           mv ${{ github.workspace }}/wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}.whl ${{ github.workspace }}/$WHEEL_NAME
-          python -m pip install -r requirements-tests.txt
-          python -m pip install openfermionpyscf
+          if [[ "${{ inputs.lightning-version }}" == "stable" ]]; then # FIXME: remove after v0.45 release
+            python -m pip install -r requirements-tests.txt
+          else
+            python -m pip install --group tests
+          fi
+          # pyscf is not compatible with numpy 2.4 yet
+          python -m pip install openfermionpyscf "numpy<2.4"
           if [ '${{ inputs.lightning-version }}' != 'stable' ]; then
             python scripts/configure_pyproject_toml.py
             SKIP_COMPILATION=True python -m pip install . -vv
@@ -222,7 +258,7 @@ jobs:
         if: inputs.pennylane-version == 'latest'
         run: |
           cd pennylane
-          git checkout master
+          git checkout main
           python -m pip uninstall -y pennylane && python -m pip install . -vv --no-deps
 
       - name: Switch to release build of PennyLane
@@ -271,7 +307,7 @@ jobs:
           SKIP_COMPILATION=True python -m pip install -e . --config-settings editable_mode=compat
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
           PL_BACKEND=${DEVICENAME} python scripts/configure_pyproject_toml.py
-          python -m pip install -e . --config-settings editable_mode=compat -vv
+          CMAKE_ARGS="-DLIGHTNING_CATALYST_SRC_PATH=${{ github.workspace }}/catalyst" python -m pip install -e . --config-settings editable_mode=compat -vv
           PL_DEVICE=${DEVICENAME} python -m pytest tests/test_device.py $COVERAGE_FLAGS --cov-append
 
       - name: Upload test durations
@@ -305,7 +341,7 @@ jobs:
       - uses: actions/setup-python@v5
         name: Install Python
         with:
-          python-version: '3.11'
+          python-version: '3.12'
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -321,7 +357,7 @@ jobs:
       - name: Combine coverage files
         run: |
           # Update .coveragerc to include sources for combining equivalent paths
-          wheelpath=$Python_ROOT_DIR/lib/python3.11/site-packages
+          wheelpath=$Python_ROOT_DIR/lib/python3.12/site-packages
           echo "" >> .coveragerc
           echo "[paths]" >> .coveragerc
           echo "source =" >> .coveragerc

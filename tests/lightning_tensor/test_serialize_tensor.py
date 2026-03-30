@@ -17,7 +17,7 @@ Unit tests for the serialization helper functions.
 import numpy as np
 import pennylane as qml
 import pytest
-from conftest import LightningDevice, device_name
+from conftest import LightningDevice, compare_serialized_ops, device_name
 from pennylane.exceptions import DeviceError
 
 from pennylane_lightning.lightning_base._serialize import (
@@ -582,13 +582,13 @@ class TestSerializeOps:
                 [np.array([0.4]), np.array([0.6]), []],
                 [[0], [1], [0, 1]],
                 [False, False, False],
-                [[], [], []],
+                [np.array([]), np.array([]), np.array([])],
                 [[], [], []],
                 [[], [], []],
             ),
             False,
         )
-        assert s == s_expected
+        assert compare_serialized_ops(s, s_expected)
 
     def test_Rot_in_circuit(self, use_csingle, wires_map):
         """Test expected serialization for a circuit with Rot which should be decomposed"""
@@ -607,13 +607,13 @@ class TestSerializeOps:
                 [np.array([0.1]), np.array([0.2]), np.array([0.3])],
                 [[0], [0], [0]],
                 [False, False, False],
-                [[], [], []],
+                [np.array([]), np.array([]), np.array([])],
                 [[], [], []],
                 [[], [], []],
             ),
             False,
         )
-        assert s == s_expected
+        assert compare_serialized_ops(s, s_expected)
 
     def test_basic_circuit_not_implemented_ctrl_ops(self, use_csingle, wires_map):
         """Test expected serialization for a simple circuit"""
@@ -661,13 +661,13 @@ class TestSerializeOps:
                 [np.array([0.4]), np.array([0.6]), []],
                 [[0], [1], [0]],
                 [False, False, False],
-                [[], [], []],
+                [np.array([]), np.array([]), np.array([])],
                 [[], [], [1, 2, 3]],
                 [[], [], [True, False, False]],
             ),
             False,
         )
-        assert s == s_expected
+        assert compare_serialized_ops(s, s_expected)
 
     def test_skips_prep_circuit(self, use_csingle, wires_map):
         """Test expected serialization for a simple circuit with state preparation, such that
@@ -688,13 +688,13 @@ class TestSerializeOps:
                 [[0.4], [0.6], []],
                 [[0], [1], [0, 1]],
                 [False, False, False],
-                [[], [], []],
+                [np.array([]), np.array([]), np.array([])],
                 [[], [], []],
                 [[], [], []],
             ),
             True,
         )
-        assert s == s_expected
+        assert compare_serialized_ops(s, s_expected)
 
     def test_unsupported_kernel_circuit(self, use_csingle, wires_map):
         """Test expected serialization for a circuit including gates that do not have a dedicated
@@ -745,13 +745,20 @@ class TestSerializeOps:
                 [[0.4], [0.6], [], [0.5], [0.4], [-0.5]],
                 [[0], [1], [0, 1], [0, 1], [0, 1], [0, 1]],
                 [False, False, False, False, False, False],
-                [[], [], [], [], [], []],
+                [
+                    np.array([]),
+                    np.array([]),
+                    np.array([]),
+                    np.array([]),
+                    np.array([]),
+                    np.array([]),
+                ],
                 [[], [], [], [], [], []],
                 [[], [], [], [], [], []],
             ),
             False,
         )
-        assert s == s_expected
+        assert compare_serialized_ops(s, s_expected)
 
     def test_integration(self, use_csingle, wires_map):
         """Test expected serialization for a random circuit"""

@@ -16,22 +16,37 @@ r"""
 This module contains the :class:`~.LightningBase` class, that serves as a base class for Lightning simulator devices that
 interfaces with C++ for fast linear algebra calculations.
 """
+
 import os
 import sys
 from abc import abstractmethod
+from dataclasses import replace
 from functools import partial
 from numbers import Number
 from pathlib import Path
 from typing import Callable, List, Optional, Sequence, Tuple, Union
+from warnings import warn
 
 import numpy as np
 import pennylane as qml
 from numpy.random import BitGenerator, Generator, SeedSequence
 from numpy.typing import ArrayLike
-from pennylane.devices import Device, ExecutionConfig
+from pennylane.devices import Device, ExecutionConfig, MCMConfig
+from pennylane.devices.capabilities import DeviceCapabilities
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
-from pennylane.exceptions import DeviceError
-from pennylane.measurements import MidMeasureMP
+from pennylane.devices.preprocess import (
+    decompose,
+    no_sampling,
+    validate_adjoint_trainable_params,
+    validate_measurements,
+    validate_observables,
+)
+from pennylane.exceptions import DecompositionUndefinedError, DeviceError
+from pennylane.measurements import Shots, ShotsLike
+from pennylane.measurements.expval import ExpectationMP
+from pennylane.measurements.measurements import MeasurementProcess
+from pennylane.operation import Operator
+from pennylane.ops import Conditional, MidMeasure, PauliRot
 from pennylane.tape import QuantumScript, QuantumTape
 from pennylane.typing import Result, ResultBatch, TensorLike
 
@@ -73,6 +88,9 @@ class LightningBase(Device):
     """
 
     # pylint: disable=too-many-instance-attributes
+
+    # Dictionary to store intermediate states for backward methods
+    _intermediate_states: dict | None = None
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
@@ -118,19 +136,6 @@ class LightningBase(Device):
     def _set_lightning_classes(self):
         """Load the LightningStateVector, LightningMeasurements, LightningAdjointJacobian as class attribute"""
 
-    @abstractmethod
-    def _setup_execution_config(self, config: ExecutionConfig):
-        """
-        Update the execution config with choices for how the device should be used and the device options.
-
-        Args:
-            config (ExecutionConfig): A data structure describing the parameters needed to fully describe the execution.
-
-        Returns:
-            ExecutionConfig: An updated execution config with device options set.
-
-        """
-
     def dynamic_wires_from_circuit(self, circuit):
         """Allocate the underlying quantum state from the pre-defined wires or a given circuit if applicable. Circuit wires will be mapped to Pennylane ``default.qubit`` standard wire order.
 
@@ -156,27 +161,6 @@ class LightningBase(Device):
             self._statevector.reset_state()
 
         return circuit
-
-    @abstractmethod
-    def preprocess(self, execution_config: ExecutionConfig | None = None):
-        """This function defines the device transform program to be applied and an updated device configuration.
-
-        Args:
-            execution_config (Union[ExecutionConfig, Sequence[ExecutionConfig]]): A data structure describing the
-                parameters needed to fully describe the execution.
-
-        Returns:
-            TransformProgram, ExecutionConfig: A transform program that when called returns :class:`~.QuantumTape`'s that the
-            device can natively execute as well as a postprocessing function to be called after execution, and a configuration
-            with unset specifications filled in.
-
-        This device:
-
-        * Supports any qubit operations that provide a matrix
-        * Currently does not support finite shots
-        * Currently does not intrinsically support parameter broadcasting
-
-        """
 
     @abstractmethod
     def execute(
@@ -224,15 +208,14 @@ class LightningBase(Device):
         if mcmc is None:
             mcmc = {}
 
-        if any(isinstance(op, MidMeasureMP) for op in circuit.operations):
+        if any(isinstance(op, MidMeasure) for op in circuit.operations):
             if self._mpi:
                 raise DeviceError(
                     "Lightning Device with MPI does not support Mid-circuit measurements."
                 )
 
         # Simulate with Mid Circuit Measurements
-        if any(isinstance(op, MidMeasureMP) for op in circuit.operations):
-
+        if any(isinstance(op, MidMeasure) for op in circuit.operations):
             # If mcm_method is not specified and the circuit does not have shots, default to "deferred".
             # It is not listed here because all mid-circuit measurements are replaced with additional wires.
 
@@ -265,6 +248,8 @@ class LightningBase(Device):
                 return tuple(results)
 
         final_state = state.get_final_state(circuit)
+        if self._intermediate_states is not None and hasattr(state, "copy_sv"):
+            self._intermediate_states[circuit.hash] = state.copy_sv()
         return self.LightningMeasurements(final_state, **mcmc).measure_final_state(circuit)
 
     @abstractmethod
@@ -305,8 +290,20 @@ class LightningBase(Device):
         """
         if wire_map is not None:
             [circuit], _ = qml.map_wires(circuit, wire_map)
+
+        if self._intermediate_states is not None and (
+            final_state := self._intermediate_states.get(circuit.hash, None)
+        ):
+            # pylint: disable=not-callable
+            return self.LightningAdjointJacobian(
+                final_state, batch_obs=batch_obs
+            ).calculate_jacobian(circuit)
+
         state.reset_state()
         final_state = state.get_final_state(circuit)
+        if self._intermediate_states is not None and hasattr(final_state, "copy_sv"):
+            self._intermediate_states[circuit.hash] = final_state.copy_sv()
+
         # pylint: disable=not-callable
         return self.LightningAdjointJacobian(final_state, batch_obs=batch_obs).calculate_jacobian(
             circuit
@@ -365,8 +362,19 @@ class LightningBase(Device):
         """
         if wire_map is not None:
             [circuit], _ = qml.map_wires(circuit, wire_map)
+
+        if self._intermediate_states is not None and (
+            final_state := self._intermediate_states.get(circuit.hash, None)
+        ):
+            # pylint: disable=not-callable
+            return self.LightningAdjointJacobian(final_state, batch_obs=batch_obs).calculate_vjp(
+                circuit, cotangents
+            )
+
         state.reset_state()
         final_state = state.get_final_state(circuit)
+        if self._intermediate_states is not None and hasattr(final_state, "copy_sv"):
+            self._intermediate_states[circuit.hash] = final_state.copy_sv()
         # pylint: disable=not-callable
         return self.LightningAdjointJacobian(final_state, batch_obs=batch_obs).calculate_vjp(
             circuit, cotangents
@@ -565,6 +573,7 @@ class LightningBase(Device):
         consts: list[TensorLike],
         *args: TensorLike,
         execution_config: ExecutionConfig | None = None,
+        shots: ShotsLike = None,
     ) -> list[TensorLike]:
         """Execute pennylane variant jaxpr using C++ simulation tools.
 
@@ -625,19 +634,20 @@ class LightningBase(Device):
             num_wires=len(self.wires), dtype=self._c_dtype, rng=self._rng
         )
 
+        shots = Shots(shots)
         interpreter = LightningInterpreter(
-            self._statevector, self.LightningMeasurements, shots=self.shots
+            self._statevector, self.LightningMeasurements, shots=shots
         )
         evaluator = partial(interpreter.eval, jaxpr)
 
-        def shape(var):
+        def shape(var, shots):
             if isinstance(var.aval, AbstractMeasurement):
-                shots = self.shots.total_shots
+                shots = shots.total_shots
                 s, dtype = var.aval.abstract_eval(num_device_wires=len(self.wires), shots=shots)
                 return jax.core.ShapedArray(s, dtype_map[dtype])
             return var.aval
 
-        shapes = [shape(var) for var in jaxpr.outvars]
+        shapes = [shape(var, shots) for var in jaxpr.outvars]
         return jax.pure_callback(evaluator, shapes, consts, *args, vmap_method="sequential")
 
     def jaxpr_jvp(
@@ -779,3 +789,104 @@ class LightningBase(Device):
                 return lightning_device_name, lib_location
 
         raise RuntimeError(f"'{lightning_device_name}' shared library not found")
+
+
+def resolve_mcm_method(mcm_config: MCMConfig, tape: QuantumScript | None, device_name: str):
+    """Resolve the mcm config for the Lightning device."""
+
+    mcm_supported_methods = (
+        ("device", "deferred", "tree-traversal", "one-shot", None)
+        if not qml.capture.enabled()
+        else ("device", "deferred", "single-branch-statistics", None)
+    )
+
+    if (mcm_method := mcm_config.mcm_method) not in mcm_supported_methods:
+        raise DeviceError(f"mcm_method='{mcm_method}' is not supported with {device_name}.")
+
+    final_mcm_method = mcm_config.mcm_method
+    if mcm_config.mcm_method is None:
+        final_mcm_method = "one-shot" if getattr(tape, "shots", None) else "deferred"
+    elif mcm_config.mcm_method == "device":
+        final_mcm_method = "tree-traversal"
+
+    # TODO: Update this condition when postselection is natively supported in Lightning [sc-82462]
+    if mcm_config.postselect_mode == "fill-shots" and final_mcm_method != "deferred":
+        raise DeviceError("Using postselect_mode='fill-shots' is not supported.")
+
+    mcm_config = replace(mcm_config, mcm_method=final_mcm_method)
+
+    if qml.capture.enabled():
+        mcm_updated_values = {}
+
+        if mcm_method == "single-branch-statistics" and mcm_config.postselect_mode is not None:
+            warn(
+                "Setting 'postselect_mode' is not supported with mcm_method='single-branch-"
+                "statistics'. 'postselect_mode' will be ignored.",
+                UserWarning,
+            )
+            mcm_updated_values["postselect_mode"] = None
+        elif mcm_method is None:
+            mcm_updated_values["mcm_method"] = "deferred"
+
+        mcm_config = replace(mcm_config, **mcm_updated_values)
+
+    return mcm_config
+
+
+def _adjoint_stopping_condition(op: Operator) -> bool:
+    return not isinstance(op, (Conditional, MidMeasure, PauliRot)) and (
+        not any(qml.math.requires_grad(d) for d in op.data)
+        or (op.num_params == 1 and op.has_generator)
+    )
+
+
+def _adjoint_measurement(mp: MeasurementProcess) -> bool:
+    return isinstance(mp, ExpectationMP)
+
+
+def adjoint_observables(obs: Operator, capabilities: DeviceCapabilities) -> bool:
+    """Returns True for observables supported in the adjoint differentiation method."""
+    if isinstance(obs, qml.ops.SProd):
+        return adjoint_observables(obs.base, capabilities)
+    if isinstance(obs, (qml.ops.Sum, qml.ops.Prod)):
+        return all(adjoint_observables(o, capabilities) for o in obs)
+    return capabilities.supports_observable(obs)
+
+
+def adjoint_transforms(device: LightningBase, allow_mcms: bool = False) -> qml.CompilePipeline:
+    """Return a compile pipeline that prepares the circuit for adjoint differentiation."""
+
+    name = f"adjoint + {device.name}"
+    capabilities = device.capabilities
+    gate_set = capabilities.gate_set(differentiable=True)
+    if allow_mcms:
+        gate_set |= {"MidMeasureMP"}
+    _adjoint_observables = partial(adjoint_observables, capabilities=capabilities)
+    return (
+        no_sampling(name=name)
+        + qml.transforms.broadcast_expand
+        + decompose(
+            stopping_condition=_adjoint_stopping_condition,
+            skip_initial_state_prep=False,
+            device_wires=device.wires,
+            target_gates=gate_set,
+            name=name,
+        )
+        + validate_observables(stopping_condition=_adjoint_observables, name=name)
+        + validate_measurements(analytic_measurements=_adjoint_measurement, name=name)
+        + validate_adjoint_trainable_params
+    )
+
+
+def supports_adjoint(device, circuit) -> bool:
+    """Returns True if the device supports adjoint differentiation of the given circuit."""
+
+    if circuit is None:
+        return True
+
+    prog = adjoint_transforms(device, allow_mcms=True)
+    try:
+        prog((circuit,))
+        return True
+    except (DecompositionUndefinedError, DeviceError, AttributeError):
+        return False

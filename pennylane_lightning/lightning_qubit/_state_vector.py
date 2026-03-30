@@ -66,7 +66,7 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
         self._device_name = "lightning.qubit"
 
         # Initialize the state vector
-        self._qubit_state = self._state_dtype()(self._num_wires)
+        self._qubit_state = self._state_dtype()(num_wires)
 
     @property
     def state(self):
@@ -90,6 +90,18 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
         """
         return StateVectorC128 if self.dtype == np.complex128 else StateVectorC64
 
+    def copy_sv(self):
+        """Create a copy of the current state vector.
+
+        Returns:
+            LightningStateVector: A copy of the current state vector.
+        """
+        state_data = allocate_aligned_array(self._qubit_state.size(), np.dtype(self.dtype), True)
+        self._qubit_state.getState(state_data)
+        new_state = LightningStateVector(self._num_wires, self.dtype, self._rng)
+        new_state._qubit_state.updateData(state_data)  # pylint: disable=protected-access
+        return new_state
+
     @staticmethod
     def _operation_is_sparse(operation):
         """Check if the operation is a sparse matrix operation.
@@ -106,21 +118,25 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
         """Initialize the internal state vector in a specified state.
         Args:
             state (Union[array[complex], scipy.SparseABC]): normalized input state of length ``2**len(wires)`` as a dense array or Scipy sparse array.
-            device_wires (Wires): wires that get initialized in the state
+            device_wires (Wires): wires that get initialized in the state.
         """
 
         if sp.sparse.issparse(state):
             state = state.toarray().flatten()
         elif isinstance(state, self._qubit_state.__class__):
-            state_data = allocate_aligned_array(state.size, np.dtype(self.dtype), True)
+            state_data = allocate_aligned_array(state.size(), np.dtype(self.dtype), True)
             state.getState(state_data)
             state = state_data
+
+        # Convert PennyLane tensor to NumPy array if needed
+        if hasattr(state, "numpy"):
+            state = state.numpy()
 
         if len(device_wires) == self._num_wires and Wires(sorted(device_wires)) == device_wires:
             # Initialize the entire device state with the input state
             output_shape = (2,) * self._num_wires
             state = np.reshape(state, output_shape).ravel(order="C")
-            self._qubit_state.UpdateData(state)
+            self._qubit_state.updateData(state)
             return
 
         self._qubit_state.setStateVector(state, list(device_wires))

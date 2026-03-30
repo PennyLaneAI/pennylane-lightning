@@ -1,7 +1,7 @@
 name: Wheel::Any::None
 
 # **What it does**: Builds a pure python wheel for Linux (ubuntu-24.04) and store it as an artifact.
-#                   Python version: 3.11.
+#                   Python version: 3.12.
 # **Why we have it**: To test the wheel build in the python layer, with no compilation.
 # **Who does it impact**: Wheels to be uploaded to PyPI.
 
@@ -14,10 +14,15 @@ on:
       - ready_for_review
   push:
     branches:
-      - master
+      - main
   release:
     types: [published]
   workflow_dispatch:
+  workflow_call:
+    inputs:
+      branch:
+        required: false
+        type: string  
 
 concurrency:
   group: wheel_noarch-${{ github.ref }}
@@ -27,22 +32,25 @@ jobs:
   build-pure-python-wheel:
     if: |
       github.event_name != 'pull_request' ||
+      github.event_name == 'schedule' ||
       (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'ci:build_wheels')) ||
       github.event_name == 'workflow_dispatch'
     strategy:
       matrix:
         pl_backend: ["lightning_qubit"]
     timeout-minutes: 30
-    name: Linux - Pure Python wheels - ${{ matrix.pl_backend }} (Python 3.11)
-    runs-on: pl-4-core-large-runner
+    name: Linux - Pure Python wheels - ${{ matrix.pl_backend }} (Python 3.12)
+    runs-on: blacksmith-4vcpu-ubuntu-2404
 
     steps:
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
+        with:        
+          ref: ${{ inputs.branch || github.ref }}
 
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.12'
 
       - name: Upgrade pip
         run: |
@@ -67,9 +75,19 @@ jobs:
           python -m pip install twine
           python -m twine check dist/*.whl
 
+      - uses: actions-ecosystem/action-regex-match@main
+        id: rc_build
+        with:
+          text: ${{ github.event.pull_request.head.ref }}
+          regex: '^v[0-9]+\.[0-9]+\.[0-9]+[-_]rc$'
+
       - uses: actions/upload-artifact@v4
         if: |
-          (github.event_name == 'release' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/master')
+          github.event_name == 'release' || 
+          github.event_name == 'schedule' ||
+          github.event_name == 'workflow_dispatch' || 
+          github.ref == 'refs/heads/main' ||
+          steps.rc_build.outputs.match != ''
         with:
           name: pure-python-wheels-${{ matrix.pl_backend }}.zip
           path: dist/*.whl
@@ -84,14 +102,24 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
+      - uses: actions-ecosystem/action-regex-match@main
+        id: rc_build
+        with:
+          text: ${{ github.event.pull_request.head.ref }}
+          regex: '^v[0-9]+\.[0-9]+\.[0-9]+[-_]rc$'
+
       - uses: actions/download-artifact@v4
-        if: ${{ github.event_name == 'release' }}
+        if: |
+          github.event_name == 'release' || 
+          steps.rc_build.outputs.match != ''
         with:
           name: pure-python-wheels-${{ matrix.pl_backend }}.zip
           path: dist
 
       - name: Upload wheels to PyPI
-        if: ${{ github.event_name == 'release' }}
+        if: |
+          github.event_name == 'release' || 
+          steps.rc_build.outputs.match != ''
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__

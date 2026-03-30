@@ -681,6 +681,7 @@ class TestGenerateSample:
 
         assert np.array_equal(outcomes[0], outcomes[1])
 
+    @pytest.mark.local_salt(42)
     @pytest.mark.parametrize("c_dtype", [np.complex128, np.complex64])
     def test_paulix_pauliy(self, c_dtype, tol=TOL_STOCHASTIC):
         """Test that a tensor product involving PauliX and PauliY works correctly"""
@@ -722,6 +723,7 @@ class TestGenerateSample:
         ) / 16
         assert np.allclose(var, expected, atol=tol)
 
+    @pytest.mark.local_salt(42)
     @pytest.mark.parametrize("c_dtype", [np.complex128, np.complex64])
     def test_pauliz_hadamard(self, c_dtype, tol=TOL_STOCHASTIC):
         """Test that a tensor product involving PauliZ and PauliY and hadamard works correctly"""

@@ -24,22 +24,44 @@
 
 namespace Pennylane::Algorithms {
 /**
- * @brief Adjoint Jacobian evaluator following the method of arXiV:2009.02823.
+ * @brief Adjoint Jacobian evaluator following the method of arXiv:2009.02823.
+ *
+ * This class uses the Curiously Recurring Template Pattern (CRTP) to provide
+ * static polymorphism for the adjoint differentiation method. To use this
+ * class, derive from it passing your class as the Derived template parameter:
+ *
+ * @code
+ * class LThunderAdjointJacobian : public
+ * AdjointJacobianBase<LThunderStateVector, LThunderAdjointJacobian> { public:
+ *     // Must implement this method as required by the base class
+ *     void adjointJacobian(std::span<PrecisionT> jac,
+ *                          const JacobianData<StateVectorT> &jd,
+ *                          const StateVectorT &ref_data,
+ *                          bool apply_operations) {
+ *         // Your implementation here
+ *     }
+ * };
+ * @endcode
  *
  * @tparam StateVectorT State vector type.
+ * @tparam Derived The derived class implementing the concrete adjointJacobian
+ * method.
  */
 template <class StateVectorT, class Derived> class AdjointJacobianBase {
-  private:
+  protected:
     using ComplexT = typename StateVectorT::ComplexT;
     using PrecisionT = typename StateVectorT::PrecisionT;
 
-  protected:
     AdjointJacobianBase() = default;
     AdjointJacobianBase(const AdjointJacobianBase &) = default;
     AdjointJacobianBase(AdjointJacobianBase &&) noexcept = default;
     AdjointJacobianBase &operator=(const AdjointJacobianBase &) = default;
     AdjointJacobianBase &operator=(AdjointJacobianBase &&) noexcept = default;
 
+  public:
+    virtual ~AdjointJacobianBase() = default;
+
+  protected:
     /**
      * @brief Apply all operations from given
      * `%OpsData<StateVectorT>` object to `%UpdatedStateVectorT`.
@@ -131,9 +153,10 @@ template <class StateVectorT, class Derived> class AdjointJacobianBase {
      * @param adj Indicate whether to take the adjoint of the operation.
      * @return PrecisionT Generator scaling coefficient.
      */
-    inline auto applyGenerator(StateVectorT &sv, const std::string &op_name,
-                               const std::vector<std::size_t> &wires,
-                               const bool adj) -> PrecisionT {
+    [[nodiscard]] inline auto
+    applyGenerator(StateVectorT &sv, const std::string &op_name,
+                   const std::vector<std::size_t> &wires, const bool adj)
+        -> PrecisionT {
         return sv.applyGenerator(op_name, wires, adj);
     }
 
@@ -149,11 +172,12 @@ template <class StateVectorT, class Derived> class AdjointJacobianBase {
      * @param adj Indicate whether to take the adjoint of the operation.
      * @return PrecisionT Generator scaling coefficient.
      */
-    inline auto applyGenerator(StateVectorT &sv, const std::string &op_name,
-                               const std::vector<std::size_t> &controlled_wires,
-                               const std::vector<bool> &controlled_values,
-                               const std::vector<std::size_t> &wires,
-                               const bool adj) -> PrecisionT {
+    [[nodiscard]] inline auto
+    applyGenerator(StateVectorT &sv, const std::string &op_name,
+                   const std::vector<std::size_t> &controlled_wires,
+                   const std::vector<bool> &controlled_values,
+                   const std::vector<std::size_t> &wires, const bool adj)
+        -> PrecisionT {
         return sv.applyGenerator(op_name, controlled_wires, controlled_values,
                                  wires, adj);
     }
@@ -205,8 +229,5 @@ template <class StateVectorT, class Derived> class AdjointJacobianBase {
         return static_cast<Derived *>(this)->adjointJacobian(jac, jd, ref_data,
                                                              apply_operations);
     }
-
-  public:
-    ~AdjointJacobianBase() = default;
 };
 } // namespace Pennylane::Algorithms

@@ -134,7 +134,6 @@ def mcm_tree_traversal(
     depth = 0
 
     while stack.any_is_empty(1):
-
         ###########################################
         # Combine measurements & step up the tree #
         ###########################################
@@ -228,14 +227,7 @@ def mcm_tree_traversal(
             depth += 1
             # Update the active branch samples with `update_mcm_samples`
             if finite_shots:
-                if (
-                    mcms[depth]
-                    and mcms[depth].postselect is not None
-                    and postselect_mode == "fill-shots"
-                ):
-                    samples = mcms[depth].postselect * qml.math.ones_like(measurements)
-                else:
-                    samples = qml.math.atleast_1d(measurements)
+                samples = qml.math.atleast_1d(measurements)
                 stack.counts[depth] = samples_to_counts(samples)
                 stack.probs[depth] = counts_to_probs(stack.counts[depth])
             else:

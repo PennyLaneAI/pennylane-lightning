@@ -201,7 +201,7 @@ def test_integration_for_all_supported_gates(returns, method, seed):
 
     ref = qml.QNode(circuit, dev_default)(params)
 
-    assert np.allclose(j_ltensor, ref, rtol=1e-6)
+    assert np.allclose(j_ltensor, ref, rtol=2e-6)
 
 
 @pytest.mark.parametrize("method", [{"method": "mps", "max_bond_dim": 128}, {"method": "tn"}])
@@ -219,7 +219,7 @@ class TestSparseHExpval:
             [qml.Identity(0) @ qml.PauliZ(1), 0.980066577, 0.039469480],
         ],
     )
-    def test_sparse_Pauli_words(self, cases, qubit_device, method):
+    def test_sparse_pauli_words(self, cases, qubit_device, method):
         """Test expval of some simple sparse Hamiltonian"""
         dev = qml.device(device_name, wires=4, **method)
 

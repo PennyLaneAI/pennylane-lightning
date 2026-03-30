@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.26)
 
 project(lightning_qubit_catalyst LANGUAGES CXX)
 
@@ -16,6 +16,7 @@ target_link_libraries(lightning_qubit_catalyst PUBLIC  lightning_compile_options
                                                        lightning_qubit_algorithms
                                                        lightning_qubit_measurements
                                                        lightning_qubit_observables
+                                                       lightning_catalyst_core
 )
 
 set(CMAKE_BUILD_RPATH_USE_ORIGIN ON)

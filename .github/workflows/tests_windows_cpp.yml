@@ -5,14 +5,14 @@ on:
       lightning-version:
         type: string
         required: true
-        description: The version of Lightning to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
+        description: The version of Lightning to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from main)
       pennylane-version:
         type: string
         required: true
-        description: The version of PennyLane to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
+        description: The version of PennyLane to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from main)
   push:
     branches:
-      - master
+      - main
   pull_request:
     types:
       - opened
@@ -43,6 +43,16 @@ jobs:
         with:
           repository: PennyLaneAI/catalyst
           path: ${{ github.workspace}}/catalyst
+          ref: ${{ (inputs.pennylane-version == 'stable' && 'v0.14.0') || 'main' }} # FIXME: remove after v0.45 release
+
+      - name: Switch to release build of Catalyst
+        if: inputs.lightning-version == 'release'
+        run: |
+          cd ${{ github.workspace}}/catalyst
+          git fetch --all
+          git checkout $(git branch -a --list "origin/v0.*rc*" | sort | tail -1)
+          git log -1 --format='%H'
+          cd ${{ github.workspace }}
 
       - name: Kokkos execution strategy
         id: exec_model
@@ -104,8 +114,8 @@ jobs:
                           -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF `
                           -DCMAKE_CXX_STANDARD=20 `
                           -DCMAKE_POSITION_INDEPENDENT_CODE=ON `
-                          -DCMAKE_BUILD_TYPE=Debug 
-                          -DLIGHTNING_CATALYST_SRC_PATH=${{ github.workspace }}/catalyst`
+                          -DCMAKE_BUILD_TYPE=Debug `
+                          -DLIGHTNING_CATALYST_SRC_PATH=${{ github.workspace }}/catalyst `
                           -T clangcl
           cmake --build ./Build --config Debug --verbose
           cmake --install ./Build --config Debug --verbose
@@ -124,7 +134,7 @@ jobs:
       - uses: actions/setup-python@v4
         name: Install Python
         with:
-          python-version: '3.11'
+          python-version: '3.12'
 
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
@@ -204,7 +214,7 @@ jobs:
       - uses: actions/setup-python@v4
         name: Install Python
         with:
-          python-version: '3.11'
+          python-version: '3.12'
 
       - name: Restoring cached Kokkos
         id: kokkos-cache
@@ -234,7 +244,7 @@ jobs:
         run: |
           choco install OpenCppCoverage -y
           echo "C:\Program Files\OpenCppCoverage" >> $env:GITHUB_PATH
-      
+
       - name: Add path to scipy-openblas32 to environment variable
         run: |
           $scipy_openblas32_path = python -c "import scipy_openblas32; print(scipy_openblas32.get_lib_dir())"

@@ -36,8 +36,8 @@
 #include "CacheManager.hpp"
 #include "Exception.hpp"
 #include "LightningKokkosObsManager.hpp"
+#include "LightningQubitManager.hpp"
 #include "QuantumDevice.hpp"
-#include "QubitManager.hpp"
 
 namespace Catalyst::Runtime::Simulator {
 /**
@@ -55,7 +55,7 @@ class LightningKokkosSimulator final : public Catalyst::Runtime::QuantumDevice {
     static constexpr bool GLOBAL_RESULT_TRUE_CONST = true;
     static constexpr bool GLOBAL_RESULT_FALSE_CONST = false;
 
-    Catalyst::Runtime::QubitManager<QubitIdType, std::size_t> qubit_manager{};
+    QubitManager<QubitIdType, std::size_t> qubit_manager{};
     Catalyst::Runtime::CacheManager<Kokkos::complex<double>> cache_manager{};
     bool tape_recording{false};
 
@@ -66,6 +66,9 @@ class LightningKokkosSimulator final : public Catalyst::Runtime::QuantumDevice {
 
     std::unique_ptr<StateVectorT> device_sv = std::make_unique<StateVectorT>(0);
     LightningKokkosObsManager<double> obs_manager{};
+
+    // Flag to indicate if state vector needs reduction
+    bool needs_reduction{false};
 
     inline auto isValidQubit(QubitIdType wire) -> bool {
         return this->qubit_manager.isValidQubitId(wire);
@@ -104,6 +107,19 @@ class LightningKokkosSimulator final : public Catalyst::Runtime::QuantumDevice {
 
     auto GenerateSamples(size_t shots) -> std::vector<size_t>;
 
+    // Reduce state vector by removing released qubits
+    void reduceStateVector();
+
+    // Helper to get Measurements object with reduced state vector
+    auto getMeasurements()
+        -> Pennylane::LightningKokkos::Measures::Measurements<StateVectorT>;
+
+    // Check if released qubits are disentangled from active qubits
+    void checkReleasedQubitsDisentangled();
+
+    // Check if a single qubit is disentangled from the rest
+    bool checkSingleQubitDisentangled(size_t wire, double epsilon = 1e-6);
+
   public:
     explicit LightningKokkosSimulator(
         const std::string &kwargs = "{}") noexcept {
@@ -121,7 +137,7 @@ class LightningKokkosSimulator final : public Catalyst::Runtime::QuantumDevice {
     auto AllocateQubits(std::size_t num_qubits)
         -> std::vector<QubitIdType> override;
     void ReleaseQubit(QubitIdType q) override;
-    void ReleaseAllQubits() override;
+    void ReleaseQubits(const std::vector<QubitIdType> &ids) override;
     [[nodiscard]] auto GetNumQubits() const -> std::size_t override;
     void StartTapeRecording() override;
     void StopTapeRecording() override;
@@ -133,11 +149,12 @@ class LightningKokkosSimulator final : public Catalyst::Runtime::QuantumDevice {
                        std::vector<QubitIdType> &) override;
     [[nodiscard]] auto GetDeviceShots() const -> std::size_t override;
 
-    void
-    NamedOperation(const std::string &name, const std::vector<double> &params,
-                   const std::vector<QubitIdType> &wires, bool inverse = false,
-                   const std::vector<QubitIdType> &controlled_wires = {},
-                   const std::vector<bool> &controlled_values = {}) override;
+    void NamedOperation(
+        const std::string &name, const std::vector<double> &params,
+        const std::vector<QubitIdType> &wires, bool inverse = false,
+        const std::vector<QubitIdType> &controlled_wires = {},
+        const std::vector<bool> &controlled_values = {},
+        const std::vector<std::string> &optional_params = {}) override;
     using Catalyst::Runtime::QuantumDevice::MatrixOperation;
     void
     MatrixOperation(const std::vector<std::complex<double>> &matrix,
@@ -169,6 +186,8 @@ class LightningKokkosSimulator final : public Catalyst::Runtime::QuantumDevice {
     auto Measure(QubitIdType wire,
                  std::optional<int32_t> postselect = std::nullopt)
         -> Result override;
+    auto PauliMeasure(const std::string &pauli_word,
+                      const std::vector<QubitIdType> &wires) -> Result override;
     void Gradient(std::vector<DataView<double, 1>> &gradients,
                   const std::vector<std::size_t> &trainParams) override;
 

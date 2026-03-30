@@ -21,7 +21,8 @@
 #include <variant>
 #include <vector>
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/matchers/catch_matchers_string.hpp>
 
 #include "LightningGPUSimulator.hpp"
 #include "QuantumDevice.hpp"
@@ -68,25 +69,23 @@ TEST_CASE("LightningGPUSimulator::unit_tests", "[unit tests]") {
         LGPUsim->AllocateQubits(2);
         REQUIRE(LGPUsim->GetNumQubits() == 4);
         LGPUsim->ReleaseQubit(0);
-        REQUIRE(
-            LGPUsim->GetNumQubits() ==
-            4); // releasing only one qubit does not change the total number.
-        LGPUsim->ReleaseAllQubits();
-        REQUIRE(LGPUsim->GetNumQubits() ==
-                0); // releasing all qubits resets the simulator.
+        REQUIRE(LGPUsim->GetNumQubits() == 3);
+        Qs.insert(Qs.end(), {1, 2, 3});
+        LGPUsim->ReleaseQubits(Qs);
+        REQUIRE(LGPUsim->GetNumQubits() == 0);
     }
     SECTION("Tape recording") {
         std::unique_ptr<LGPUSimulator> LGPUsim =
             std::make_unique<LGPUSimulator>();
         std::vector<intptr_t> Qs = LGPUsim->AllocateQubits(1);
         REQUIRE_NOTHROW(LGPUsim->StartTapeRecording());
-        REQUIRE_THROWS_WITH(
-            LGPUsim->StartTapeRecording(),
-            Catch::Matchers::Contains("Cannot re-activate the cache manager"));
+        REQUIRE_THROWS_WITH(LGPUsim->StartTapeRecording(),
+                            Catch::Matchers::ContainsSubstring(
+                                "Cannot re-activate the cache manager"));
         REQUIRE_NOTHROW(LGPUsim->StopTapeRecording());
         REQUIRE_THROWS_WITH(
             LGPUsim->StopTapeRecording(),
-            Catch::Matchers::Contains(
+            Catch::Matchers::ContainsSubstring(
                 "Cannot stop an already stopped cache manager"));
     }
 }
@@ -755,14 +754,55 @@ TEST_CASE("LightningGPUSimulator::GateSet", "[GateSet]") {
         constexpr std::size_t n_qubits = 2;
         std::vector<intptr_t> Qs = LGPUsim->AllocateQubits(n_qubits);
 
-        REQUIRE_THROWS_WITH(
-            LGPUsim->NamedOperation("Hadamard", {}, {Qs[0]}, false, {Qs[1]},
-                                    {}),
-            Catch::Contains("Controlled wires/values size mismatch"));
+        REQUIRE_THROWS_WITH(LGPUsim->NamedOperation("Hadamard", {}, {Qs[0]},
+                                                    false, {Qs[1]}, {}),
+                            Catch::Matchers::ContainsSubstring(
+                                "Controlled wires/values size mismatch"));
         std::vector<std::complex<double>> matrix(4, {0.0, 0.0});
         REQUIRE_THROWS_WITH(
             LGPUsim->MatrixOperation(matrix, {Qs[0]}, false, {Qs[1]}, {}),
-            Catch::Contains("Controlled wires/values size mismatch"));
+            Catch::Matchers::ContainsSubstring(
+                "Controlled wires/values size mismatch"));
+    }
+
+    SECTION("Controlled GlobalPhase (multi-qubit)") {
+        std::unique_ptr<LGPUSimulator> LGPUsim =
+            std::make_unique<LGPUSimulator>();
+
+        constexpr std::size_t n_qubits = 4;
+        std::vector<intptr_t> Qs;
+        Qs.reserve(n_qubits);
+
+        for (std::size_t i = 0; i < n_qubits; i++) {
+            Qs[i] = LGPUsim->AllocateQubit();
+        }
+
+        LGPUsim->NamedOperation("GlobalPhase", {M_PI}, {}, false);
+        LGPUsim->NamedOperation("GlobalPhase", {M_PI_2}, {}, true);
+        LGPUsim->NamedOperation("GlobalPhase", {M_PI_2}, {}, false, {Qs[3]},
+                                {true});
+        LGPUsim->NamedOperation("GlobalPhase", {M_PI_4}, {}, false,
+                                {Qs[1], Qs[0]}, {true, false});
+
+        ObsIdType pz = LGPUsim->Observable(ObsId::PauliZ, {}, {Qs[0]});
+        CHECK(LGPUsim->Expval(pz) == Approx(1.0).margin(1e-5));
+    }
+
+    SECTION("Controlled GlobalPhase (1-qubit)") {
+        std::unique_ptr<LGPUSimulator> LGPUsim =
+            std::make_unique<LGPUSimulator>();
+
+        std::vector<intptr_t> Qs{LGPUsim->AllocateQubit()};
+
+        LGPUsim->NamedOperation("GlobalPhase", {M_PI}, {}, false);
+        LGPUsim->NamedOperation("GlobalPhase", {M_PI_2}, {}, true);
+        LGPUsim->NamedOperation("GlobalPhase", {M_PI_2}, {}, false, {Qs[0]},
+                                {true});
+        LGPUsim->NamedOperation("GlobalPhase", {M_PI_2}, {}, false, {Qs[0]},
+                                {false});
+
+        ObsIdType pz = LGPUsim->Observable(ObsId::PauliZ, {}, {Qs[0]});
+        CHECK(LGPUsim->Expval(pz) == Approx(1.0).margin(1e-5));
     }
 
     SECTION("Test setStateVector") {
@@ -807,5 +847,43 @@ TEST_CASE("LightningGPUSimulator::GateSet", "[GateSet]") {
         std::complex<double> c2{0.0, 0.0};
         CHECK(state[0] == PLApproxComplex(c1).epsilon(1e-5));
         CHECK(state[1] == PLApproxComplex(c2).epsilon(1e-5));
+    }
+
+    SECTION("Test PauliRot") {
+        std::unique_ptr<LGPUSimulator> LGPUsim =
+            std::make_unique<LGPUSimulator>();
+        constexpr std::size_t n_qubits = 1;
+        std::vector<intptr_t> Qs = LGPUsim->AllocateQubits(n_qubits);
+
+        LGPUsim->NamedOperation("PauliRot", {0.5}, {Qs[0]}, false, {}, {},
+                                /*pauli_string=*/{"X"});
+
+        std::vector<std::complex<double>> state(1U << LGPUsim->GetNumQubits());
+        DataView<std::complex<double>, 1> view(state);
+        LGPUsim->State(view);
+
+        CHECK(
+            state[0] ==
+            PLApproxComplex(std::complex<double>{0.96891242, 0}).epsilon(1e-5));
+        CHECK(state[1] == PLApproxComplex(std::complex<double>{0, -0.24740396})
+                              .epsilon(1e-5));
+    }
+
+    SECTION("Test PauliRot runtime failures") {
+        std::unique_ptr<LGPUSimulator> LGPUsim =
+            std::make_unique<LGPUSimulator>();
+        constexpr std::size_t n_qubits = 2;
+        std::vector<intptr_t> Qs = LGPUsim->AllocateQubits(n_qubits);
+
+        REQUIRE_THROWS_WITH(LGPUsim->NamedOperation("PauliRot", {0.5}, {Qs[0]},
+                                                    false, {}, {}, {"X", "Y"}),
+                            Catch::Matchers::ContainsSubstring(
+                                "PauliRot operation requires one string"));
+
+        REQUIRE_THROWS_WITH(LGPUsim->NamedOperation("PauliRot", {0.5}, {Qs[0]},
+                                                    false, {Qs[1]}, {false},
+                                                    {"XY"}),
+                            Catch::Matchers::ContainsSubstring(
+                                "Controlled PauliRot is not supported"));
     }
 }

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.26)
 project(tncuda_test_utils LANGUAGES CXX)
 
 add_library(tncuda_test_utils INTERFACE)

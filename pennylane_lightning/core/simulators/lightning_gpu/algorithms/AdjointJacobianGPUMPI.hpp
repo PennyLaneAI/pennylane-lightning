@@ -45,7 +45,7 @@ namespace Pennylane::LightningGPU::Algorithms {
 
 /**
  * @brief GPU-enabled adjoint Jacobian evaluator following the method of
- * arXiV:2009.02823
+ * arXiv:2009.02823
  *
  * @tparam StateVectorT State vector type.
  */
@@ -54,11 +54,11 @@ class AdjointJacobianMPI final
     : public AdjointJacobianBase<StateVectorT,
                                  AdjointJacobianMPI<StateVectorT>> {
   private:
-    using ComplexT = typename StateVectorT::ComplexT;
-    using PrecisionT = typename StateVectorT::PrecisionT;
-    using CFP_t = decltype(cuUtil::getCudaType(PrecisionT{}));
     using BaseType =
         AdjointJacobianBase<StateVectorT, AdjointJacobianMPI<StateVectorT>>;
+    using typename BaseType::ComplexT;
+    using typename BaseType::PrecisionT;
+    using CFP_t = decltype(cuUtil::getCudaType(PrecisionT{}));
 
     /**
      * @brief Utility method to update the Jacobian at a given index by
@@ -179,11 +179,9 @@ class AdjointJacobianMPI final
                     break; // All done
                 }
 
-                mu.updateData(lambda);
-                BaseType::applyOperationAdj(lambda, ops, op_idx);
-
                 if (ops.hasParams(op_idx)) {
                     if (current_param_idx == *tp_it) {
+                        mu.updateData(lambda);
                         const PrecisionT scalingFactor =
                             this->applyGenerator(
                                 mu, ops.getOpsName()[op_idx],
@@ -197,6 +195,7 @@ class AdjointJacobianMPI final
                     }
                     current_param_idx--;
                 }
+                BaseType::applyOperationAdj(lambda, ops, op_idx);
                 BaseType::applyOperationAdj(H_lambda, ops,
                                             static_cast<std::size_t>(op_idx));
             }

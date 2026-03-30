@@ -466,7 +466,7 @@ class TestSparseExpval:
             qml.SparseHamiltonian,
         ],
     )
-    def test_sparse_Pauli_words(self, obs, ham_terms, expected, tol, lightning_sv):
+    def test_sparse_pauli_words(self, obs, ham_terms, expected, tol, lightning_sv):
         """Test expval of some simple sparse observables"""
 
         ops = [qml.RX(0.4, wires=[0]), qml.RY(-0.2, wires=[1])]

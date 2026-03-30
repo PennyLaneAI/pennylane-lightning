@@ -22,10 +22,9 @@ import numpy as np
 import pennylane as qml
 import pytest
 from conftest import LightningDevice as ld
-from conftest import LightningException, device_name, lightning_ops, validate_measurements
+from conftest import device_name, lightning_ops, validate_measurements
 from pennylane.exceptions import DeviceError, QuantumFunctionError
 from pennylane.measurements import ExpectationMP, Shots, VarianceMP
-from pennylane.wires import Wires
 
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
@@ -64,7 +63,7 @@ class TestProbs:
             return qml.probs(wires=[0, 1])
 
         if device_name == "lightning.tensor" and wire == 1 and dev.num_wires is None:
-            with pytest.raises(LightningException, match="Invalid wire indices order"):
+            with pytest.raises(RuntimeError, match="Invalid wire indices order"):
                 # With dynamic wires, in this case since wires appear in this order 1, 0
                 # The wires will map 1 -> 0 and 0 -> 1. Therefore the wires in the probs
                 # measurement will be [1, 0] which is out of order and invalid for LT.
@@ -527,7 +526,9 @@ def test_shots_single_measure_obs(shots, measure_f, obs, n_wires, mcmc, kernel_n
     """Tests that Lightning handles shots in a circuit where a single measurement of a common observable is performed at the end."""
 
     if (
-        shots is None or device_name in ("lightning.gpu", "lightning.kokkos", "lightning.tensor")
+        shots is None
+        or device_name
+        in ("lightning.gpu", "lightning.amdgpu", "lightning.kokkos", "lightning.tensor")
     ) and (mcmc or kernel_name != "Local"):
         pytest.skip(f"Device {device_name} does not have an mcmc option.")
 
@@ -540,7 +541,7 @@ def test_shots_single_measure_obs(shots, measure_f, obs, n_wires, mcmc, kernel_n
     if measure_f in (qml.expval, qml.var) and obs is None:
         pytest.skip("qml.expval, qml.var requires observable.")
 
-    if device_name in ("lightning.gpu", "lightning.kokkos"):
+    if device_name in ("lightning.gpu", "lightning.amdgpu", "lightning.kokkos"):
         dev = qml.device(device_name, wires=n_wires, seed=seed)
     elif device_name == "lightning.qubit":
         dev = qml.device(

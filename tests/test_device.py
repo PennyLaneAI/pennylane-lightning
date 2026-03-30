@@ -80,7 +80,7 @@ def test_create_device_with_unsupported_mpi_buf_size():
 
 @pytest.mark.skipif(
     device_name != "lightning.gpu",
-    reason="Check if the method is pickleable throught the cpp layer",
+    reason="Check if the method is pickleable through the cpp layer",
 )
 def test_devpool_is_pickleable():
     dev = qml.device(device_name, wires=2)
@@ -245,3 +245,14 @@ def test_supported_macos_platform_qubit():
 
     assert dev_name == "LightningSimulator"
     assert "liblightning_qubit_catalyst.dylib" in shared_lib_name
+
+
+@pytest.mark.skipif(
+    (device_name == "lightning.tensor"),
+    reason="Lightning-Tensor is not integrated with Catalyst and doesn't support to_matrix_ops.",
+)
+def test_device_to_matrix_ops():
+    """Test that the device's to_matrix_ops capability is correctly set based on the config file."""
+    dev = qml.device(device_name)
+    to_mat_ops = dev._to_matrix_ops
+    assert to_mat_ops is not None and isinstance(to_mat_ops, dict)

@@ -2,13 +2,16 @@ name: Set wheel build matrix
 
 env:
   PYTHON3_MIN_VERSION: "11"
-  PYTHON3_MAX_VERSION: "13"
+  PYTHON3_MAX_VERSION: "14"
 
 on:
   workflow_call:
     inputs:
       event_name:
         required: true
+        type: string
+      workflow_name:
+        required: false
         type: string
     outputs:
       python_version:
@@ -25,7 +28,7 @@ on:
         value: ${{ jobs.set-builder-matrix.outputs.kokkos_version }}
 
 concurrency:
-  group: set_wheel_build_matrix-${{ github.ref }}-${{ github.workflow }}
+  group: set_wheel_build_matrix-${{ inputs.workflow_name }}-${{ github.ref }}-${{ github.workflow }}
   cancel-in-progress: true
 
 jobs:
@@ -39,7 +42,14 @@ jobs:
       - name: Python version
         id: pyver
         run: |
-          if [[ ${{ inputs.event_name }} == 'pull_request' ]]; then
+          # Check if the branch name matches the release candidate pattern v0.X.Y_rc
+          branch_name="${{ github.head_ref }}"
+          is_rc="false"
+          if [[ $branch_name == ^v0\.\d+\.\d+_rc$ ]]; then
+            is_rc="true"
+          fi
+
+          if [[ ${{ inputs.event_name }} == 'pull_request' ]] && [[ "$is_rc" == "true" ]]; then
             echo "python_version=$(python3 scripts/gen_pyver_matrix.py \
               --min-version=3.${{ env.PYTHON3_MIN_VERSION }} \
               --max-version=3.${{ env.PYTHON3_MAX_VERSION }})" >> $GITHUB_OUTPUT
@@ -48,10 +58,18 @@ jobs:
               --min-version=3.${{ env.PYTHON3_MIN_VERSION }} \
               --max-version=3.${{ env.PYTHON3_MAX_VERSION }} --range)" >> $GITHUB_OUTPUT
           fi
+
       - name: Python version for GPU runners
         id: pyvergpu
         run: |
-          if [[ ${{ inputs.event_name }} == 'pull_request' ]]; then
+          # Check if the branch name matches the release candidate pattern v0.X.Y_rc
+          branch_name="${{ github.head_ref }}"
+          is_rc="false"
+          if [[ $branch_name == ^v0\.\d+\.\d+_rc$ ]]; then
+            is_rc="true"
+          fi
+
+          if [[ ${{ inputs.event_name }} == 'pull_request' ]] && [[ "$is_rc" == "true" ]]; then
             echo "python_version_gpu=$(python3 scripts/gen_pyver_matrix.py \
               --min-version=3.${{ env.PYTHON3_MIN_VERSION }} \
               --max-version=3.${{ env.PYTHON3_MAX_VERSION }})" >> $GITHUB_OUTPUT

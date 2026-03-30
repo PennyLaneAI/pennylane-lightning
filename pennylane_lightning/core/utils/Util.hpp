@@ -650,4 +650,89 @@ inline std::size_t getRevWireIndex(const std::vector<std::size_t> &wires,
     return wires.size() - 1 - element_index;
 }
 
+/**
+ * @brief Helper function to safely reinterpret const data pointers
+ *
+ * This function assumes that DestType and SrcType have compatible memory
+ * layouts
+ *
+ * @tparam DestType Destination type
+ * @tparam SrcType Source type
+ * @param src_ptr Pointer to source data
+ * @return const DestType* Reinterpreted pointer to the same data
+ */
+template <typename DestType, typename SrcType>
+inline auto PL_reinterpret_cast(const SrcType *src_ptr) -> const DestType * {
+    static_assert(sizeof(DestType) == sizeof(SrcType),
+                  "Types must have the same size for reinterpretation");
+    static_assert(alignof(DestType) == alignof(SrcType),
+                  "Types must have the same alignment for reinterpretation");
+    return reinterpret_cast<const DestType *>(src_ptr);
+}
+
+/**
+ * @brief Helper function to safely reinterpret non-const data pointers
+ *
+ * This function assumes that DestType and SrcType have compatible memory
+ * layouts
+ *
+ * @tparam DestType Destination type
+ * @tparam SrcType Source type
+ * @param src_ptr Pointer to source data
+ * @return DestType* Reinterpreted pointer to the same data
+ */
+template <typename DestType, typename SrcType>
+inline auto PL_reinterpret_cast(SrcType *src_ptr) -> DestType * {
+    static_assert(sizeof(DestType) == sizeof(SrcType),
+                  "Types must have the same size for reinterpretation");
+    static_assert(alignof(DestType) == alignof(SrcType),
+                  "Types must have the same alignment for reinterpretation");
+    return reinterpret_cast<DestType *>(src_ptr);
+}
+
+/**
+ * @brief Compute purity of the released subsystem from released parts.
+ *
+ * Purity Tr(ρ^2) measures how pure a quantum state is:
+ *   - Tr(ρ^2) = 1: pure state (not entangled with active qubits)
+ *   - Tr(ρ^2) < 1: mixed state (entangled)
+ *
+ * See https://en.wikipedia.org/wiki/Purity_(quantum_mechanics) for details.
+ *
+ * Formula: Tr(ρ^2) = Σ_i,j |Σ_a released_parts[a][i] *
+ * conj(released_parts[a][j])|^2 Where a indexes over active states.
+ *
+ * @tparam ComplexT Complex number type
+ * @param released_parts Vector of released parts indexed by active state
+ *                       {active -> [released] for all active \in active states}
+ * @return Purity value
+ */
+template <class ComplexT>
+inline auto
+computePurityFromParts(const std::vector<std::vector<ComplexT>> &released_parts)
+    -> std::decay_t<decltype(std::declval<ComplexT>().real())> {
+    if (released_parts.empty()) {
+        return 0.0;
+    }
+
+    using PrecisionT = std::decay_t<decltype(std::declval<ComplexT>().real())>;
+    const size_t active_space_size = released_parts.size();
+
+    const size_t released_space_size = released_parts[0].size();
+
+    PrecisionT purity = 0.0;
+
+    for (size_t i = 0; i < released_space_size; i++) {
+        for (size_t j = 0; j < released_space_size; j++) {
+            ComplexT rho_ij{0.0, 0.0};
+            for (size_t a = 0; a < active_space_size; a++) {
+                rho_ij +=
+                    released_parts[a][i] * std::conj(released_parts[a][j]);
+            }
+            purity += std::norm(rho_ij);
+        }
+    }
+
+    return purity;
+}
 } // namespace Pennylane::Util

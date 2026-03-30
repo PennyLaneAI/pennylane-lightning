@@ -67,6 +67,7 @@ Supported operations and observables
     ~pennylane.PauliX
     ~pennylane.PauliY
     ~pennylane.PauliZ
+    ~pennylane.PauliRot
     ~pennylane.PCPhase
     ~pennylane.PhaseShift
     ~pennylane.PSWAP

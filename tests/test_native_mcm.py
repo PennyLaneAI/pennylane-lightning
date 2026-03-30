@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Tests for default qubit preprocessing."""
-from functools import partial, reduce
+
+from functools import partial
 from typing import Sequence
 
 import numpy as np
@@ -28,7 +29,7 @@ from conftest import (
 )
 from pennylane.exceptions import DeviceError
 
-if device_name not in ("lightning.qubit", "lightning.kokkos", "lightning.gpu"):
+if device_name not in ("lightning.qubit", "lightning.kokkos", "lightning.amdgpu", "lightning.gpu"):
     pytest.skip("Native MCM not supported. Skipping.", allow_module_level=True)
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-access
@@ -76,21 +77,6 @@ class TestUnsupportedConfigurationsMCM:
 
         return func
 
-    def test_unsupported_method(self):
-
-        method = "roller-coaster"
-        circuit = self.generate_mcm_circuit(
-            device_kwargs={"wires": 1, "shots": 100},
-            qnode_kwargs={"mcm_method": method},
-            mcm_kwargs={"postselect": None, "reset": False},
-            measurement=qml.expval,
-            obs=qml.PauliZ(0),
-        )
-        with pytest.raises(
-            DeviceError, match=f"mcm_method='{method}' is not supported with {device_name}"
-        ):
-            circuit(1.33)
-
     def test_unsupported_measurement(self, mcm_method):
         """Test unsupported ``qml.classical_shadow`` measurement on Lightning devices."""
 
@@ -108,11 +94,15 @@ class TestUnsupportedConfigurationsMCM:
                 match=f"not accepted with finite shots on lightning.qubit",
             ):
                 circuit(1.33)
-        if device_name in ("lightning.kokkos", "lightning.gpu"):
+        if device_name in ("lightning.kokkos", "lightning.amdgpu", "lightning.gpu"):
+            device_match = device_name
+            if device_name == "lightning.amdgpu":
+                device_match = "lightning.(amdgpu|kokkos)"
+
             with pytest.raises(
                 DeviceError,
                 match=r"Measurement shadow\(wires=\[0\]\) not accepted with finite shots on "
-                + device_name,
+                + device_match,
             ):
                 circuit(1.33)
 
@@ -127,14 +117,17 @@ class TestUnsupportedConfigurationsMCM:
             obs=qml.PauliZ(0),
         )
 
+        device_match = device_name
+        if device_name == "lightning.amdgpu":
+            device_match = "lightning.(amdgpu|kokkos)"
+
         with pytest.raises(
             qml.exceptions.WireError,
-            match=f"on {device_name} as they contain wires not found on the device: {{1}}",
+            match=f"on {device_match} as they contain wires not found on the device: {{.*}}",
         ):
             circuit(1.33)
 
         for postsel in ["hw-like", "fill-shots"]:
-
             circuit = self.generate_mcm_circuit(
                 device_kwargs={"wires": 1, "shots": 100},
                 qnode_kwargs={"mcm_method": "deferred", "postselect_mode": postsel},
@@ -178,11 +171,31 @@ class TestUnsupportedConfigurationsMCM:
                 obs=qml.PauliZ(0),
             )
 
+            device_match = device_name
+            if device_name == "lightning.amdgpu":
+                device_match = "lightning.(amdgpu|kokkos)"
+
             with pytest.raises(
                 DeviceError,
-                match="not accepted for analytic simulation on " + device_name,
+                match="not accepted for analytic simulation on " + device_match,
             ):
                 circuit(1.33)
+
+    @pytest.mark.parametrize("mcm_method", ["one-shot", "tree-traversal"])
+    def test_unsupported_postselect_mode(self, mcm_method):
+        """Test raising an error for unsupported postselection in Lightning"""
+
+        circuit = self.generate_mcm_circuit(
+            device_kwargs={"wires": 1, "shots": 100},
+            qnode_kwargs={"mcm_method": mcm_method, "postselect_mode": "fill-shots"},
+            mcm_kwargs={"postselect": 1, "reset": False},
+            measurement=qml.expval,
+            obs=qml.Z(0),
+        )
+        with pytest.raises(
+            DeviceError, match="Using postselect_mode='fill-shots' is not supported."
+        ):
+            circuit(1.23)
 
     def test_impossible_state_for_TT(self):
         """Test impossible state with mid-circuit measurement for tree-traversal method."""
@@ -207,7 +220,6 @@ class TestUnsupportedConfigurationsMCM:
 
 
 class TestSupportedConfigurationsMCM:
-
     def generate_mcm_circuit(
         self,
         device_kwargs={},
@@ -235,8 +247,8 @@ class TestSupportedConfigurationsMCM:
         if mcm_method == "one-shot" and shots is None:
             pytest.skip("Skip test for one-shot with None shots")
 
-        spy_deffered = mocker.spy(qml.defer_measurements, "_transform")
-        spy_one_shot = mocker.spy(qml.dynamic_one_shot, "_transform")
+        spy_deffered = mocker.spy(qml.defer_measurements, "_tape_transform")
+        spy_one_shot = mocker.spy(qml.dynamic_one_shot, "_tape_transform")
         spy_tree_traversal = mocker.patch(
             "pennylane_lightning.lightning_base.lightning_base.mcm_tree_traversal"
         )
@@ -265,8 +277,8 @@ class TestSupportedConfigurationsMCM:
     @pytest.mark.parametrize("shots", [None, 10])
     def test_qnode_default_mcm_method_device(self, shots, mocker):
         """Test the default mcm method is used for analytical simulation"""
-        spy_deferred = mocker.spy(qml.defer_measurements, "_transform")
-        spy_dynamic_one_shot = mocker.spy(qml.dynamic_one_shot, "_transform")
+        spy_deferred = mocker.spy(qml.defer_measurements, "_tape_transform")
+        spy_dynamic_one_shot = mocker.spy(qml.dynamic_one_shot, "_tape_transform")
         spy_tree_traversal = mocker.patch(
             "pennylane_lightning.lightning_base.lightning_base.mcm_tree_traversal"
         )
@@ -285,8 +297,8 @@ class TestSupportedConfigurationsMCM:
 
     def test_qnode_default_mcm_method_analytical(self, mocker):
         """Test the default mcm method is used for analytical simulation"""
-        spy_deferred = mocker.spy(qml.defer_measurements, "_transform")
-        spy_dynamic_one_shot = mocker.spy(qml.dynamic_one_shot, "_transform")
+        spy_deferred = mocker.spy(qml.defer_measurements, "_tape_transform")
+        spy_dynamic_one_shot = mocker.spy(qml.dynamic_one_shot, "_tape_transform")
         spy_tree_traversal = mocker.patch(
             "pennylane_lightning.lightning_base.lightning_base.mcm_tree_traversal"
         )
@@ -308,8 +320,8 @@ class TestSupportedConfigurationsMCM:
     def test_qnode_default_mcm_method_finite_shots(self, mocker):
         """Test the default mcm method is used for finite shots"""
 
-        spy_deferred = mocker.spy(qml.defer_measurements, "_transform")
-        spy_dynamic_one_shot = mocker.spy(qml.dynamic_one_shot, "_transform")
+        spy_deferred = mocker.spy(qml.defer_measurements, "_tape_transform")
+        spy_dynamic_one_shot = mocker.spy(qml.dynamic_one_shot, "_tape_transform")
         spy_tree_traversal = mocker.patch(
             "pennylane_lightning.lightning_base.lightning_base.mcm_tree_traversal"
         )
@@ -328,8 +340,7 @@ class TestSupportedConfigurationsMCM:
         spy_dynamic_one_shot.assert_called_once()
         spy_tree_traversal.assert_not_called()
 
-    @pytest.mark.parametrize("postselect_mode", ["hw-like", "fill-shots"])
-    def test_qnode_postselect_mode(self, mcm_method, postselect_mode):
+    def test_qnode_postselect_mode(self, mcm_method):
         """Test that user specified qnode arg for discarding invalid shots is used correctly"""
 
         if mcm_method == "deferred":
@@ -340,7 +351,7 @@ class TestSupportedConfigurationsMCM:
         postselect = 1
 
         @partial(qml.set_shots, shots=shots)
-        @qml.qnode(device, postselect_mode=postselect_mode, mcm_method=mcm_method)
+        @qml.qnode(device, postselect_mode="hw-like", mcm_method=mcm_method)
         def f(x):
             qml.RX(x, 0)
             _ = qml.measure(0, postselect=postselect)
@@ -351,15 +362,11 @@ class TestSupportedConfigurationsMCM:
         # original number of shots. This helps avoid stochastic failures for the assertion below
         res = f(np.pi / 2)
 
-        if postselect_mode == "hw-like":
-            assert len(res) < shots
-        else:
-            assert len(res) == shots
+        assert len(res) < shots
         assert np.allclose(res, postselect)
 
 
 class TestExecutionMCM:
-
     # pylint: disable=unused-argument
     def obs_tape(x, y, z, reset=False, postselect=None):
         qml.RX(x, 0)
@@ -417,13 +424,21 @@ class TestExecutionMCM:
             assert np.all(np.isnan(r1))
             assert np.all(np.isnan(r2))
 
-    @pytest.mark.local_salt(42)
     @pytest.mark.parametrize("shots", [None, 5000, [4000, 4001]])
     @pytest.mark.parametrize("postselect", [None, 0, 1])
     @pytest.mark.parametrize("measure_f", [qml.counts, qml.expval, qml.probs, qml.sample, qml.var])
     @pytest.mark.parametrize(
         "measure_obj",
-        [qml.PauliZ(0), qml.PauliY(1), [0], [0, 1], [1, 0], "mcm", "composite_mcm", "mcm_list"],
+        [
+            qml.PauliZ(0),
+            qml.PauliY(1),
+            [0],
+            [0, 1],
+            [1, 0],
+            "mcm",
+            "composite_mcm",
+            "mcm_list",
+        ],
     )
     def test_simple_dynamic_circuit(
         self, mcm_method, shots, measure_f, postselect, measure_obj, seed
@@ -474,7 +489,6 @@ class TestExecutionMCM:
 
         validate_measurements(measure_f, shots, results1, results2, atol=0.04)
 
-    @pytest.mark.local_salt(42)
     @pytest.mark.parametrize("shots", [None, 4000])
     @pytest.mark.parametrize("postselect", [None, 0, 1])
     @pytest.mark.parametrize("reset", [False, True])
@@ -529,7 +543,6 @@ class TestExecutionMCM:
         for measure_f, r1, r2 in zip(measurements, results1, results2):
             validate_measurements(measure_f, shots, r1, r2)
 
-    @pytest.mark.local_salt(43)
     @pytest.mark.parametrize(
         "mcm_f",
         [

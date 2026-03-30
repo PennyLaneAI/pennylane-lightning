@@ -29,6 +29,7 @@ doc/code/api/
 kokkos/
 pennylane_lightning.egg-info/
 pennylane_lightning_kokkos.egg-info/
+pennylane_lightning_amdgpu.egg-info/
 pennylane_lightning_gpu.egg-info/
 pennylane_lightning_tensor.egg-info/
 prototypes/

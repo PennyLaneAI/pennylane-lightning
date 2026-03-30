@@ -17,7 +17,7 @@ It is a device to perform tensor network simulations of quantum circuits using `
 """
 from dataclasses import replace
 from numbers import Number
-from typing import Callable, Optional, Sequence, Tuple, Union
+from typing import Callable, Optional, Sequence, Tuple
 from warnings import warn
 
 import numpy as np
@@ -26,13 +26,13 @@ from pennylane.devices import Device, ExecutionConfig
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
 from pennylane.devices.preprocess import (
     decompose,
+    device_resolve_dynamic_wires,
     validate_device_wires,
     validate_measurements,
     validate_observables,
 )
 from pennylane.operation import Operator
 from pennylane.tape import QuantumScript, QuantumTape
-from pennylane.transforms.core import TransformProgram
 from pennylane.typing import Result, ResultBatch
 
 from pennylane_lightning.core._version import __version__
@@ -57,9 +57,9 @@ except ImportError as ex:
     warn(str(ex), UserWarning)
     LT_CPP_BINARY_AVAILABLE = False
 
-Result_or_ResultBatch = Union[Result, ResultBatch]
+Result_or_ResultBatch = Result | ResultBatch
 QuantumTapeBatch = Sequence[QuantumTape]
-QuantumTape_or_Batch = Union[QuantumTape, QuantumTapeBatch]
+QuantumTape_or_Batch = QuantumTape | QuantumTapeBatch
 PostprocessingFn = Callable[[ResultBatch], Result_or_ResultBatch]
 
 
@@ -72,7 +72,6 @@ _methods = frozenset({"mps", "tn"})
 _operations = frozenset(
     {
         "Identity",
-        "BasisState",
         "MPSPrep",
         "QubitUnitary",
         "ControlledQubitUnitary",
@@ -175,9 +174,6 @@ def stopping_condition(op: Operator) -> bool:
     if isinstance(op, qml.MPSPrep):
         return True
 
-    if op.name in ("C(SProd)", "C(Exp)"):
-        return True
-
     return op.has_matrix and op.name in _operations
 
 
@@ -245,6 +241,7 @@ class LightningTensor(Device):
         cutoff (float): (Only for ``method=mps``) The threshold used to truncate the singular values of the MPS tensors. The default is 0.
         cutoff_mode (str): (Only for ``method=mps``) Singular value truncation mode for MPS tensors. The options are ``"rel"`` and ``"abs"``. Default is ``"abs"``.
         backend (str): Supported backend. Currently, only ``cutensornet`` is supported. Default is ``cutensornet``.
+        worksize_pref (str): Preference for workspace size for cutensornet backend. The options are ``recommended``, ``min``, and ``max``. Default is ``recommended``.
 
     **Example for the MPS method**
 
@@ -290,12 +287,10 @@ class LightningTensor(Device):
     """
 
     # pylint: disable=too-many-instance-attributes
-    pennylane_requires = ">=0.41"
-    version = __version__
 
     _device_options = {
-        "mps": ("backend", "max_bond_dim", "cutoff", "cutoff_mode"),
-        "tn": ("backend"),
+        "mps": ("backend", "max_bond_dim", "cutoff", "cutoff_mode", "worksize_pref"),
+        "tn": ("backend", "worksize_pref"),
     }
 
     _CPP_BINARY_AVAILABLE = LT_CPP_BINARY_AVAILABLE
@@ -340,6 +335,7 @@ class LightningTensor(Device):
         self._c_dtype = c_dtype
 
         self._backend = kwargs.get("backend", "cutensornet")
+        self._worksize_pref = kwargs.get("worksize_pref", "recommended")
 
         for arg in kwargs:
             if arg not in self._device_options[self._method]:
@@ -397,15 +393,21 @@ class LightningTensor(Device):
                 max_bond_dim=self._max_bond_dim,
                 cutoff=self._cutoff,
                 cutoff_mode=self._cutoff_mode,
+                worksize_pref=self._worksize_pref,
             )
         return LightningTensorNet(num_wires, self._method, self._c_dtype, device_name=self.name)
 
     dtype = c_dtype
 
-    def _setup_execution_config(self, config: ExecutionConfig | None = None) -> ExecutionConfig:
+    # pylint: disable=unused-argument
+    def setup_execution_config(
+        self, config: ExecutionConfig | None = None, circuit=None
+    ) -> ExecutionConfig:
         """
         Update the execution config with choices for how the device should be used and the device options.
         """
+        if config is None:
+            config = ExecutionConfig()
         # TODO: add options for gradients next quarter
         updated_values = {}
 
@@ -428,10 +430,10 @@ class LightningTensor(Device):
 
         return circuit.map_to_standard_wires() if self.num_wires is None else circuit
 
-    def preprocess(
+    def preprocess_transforms(
         self,
         execution_config: ExecutionConfig | None = None,
-    ):
+    ) -> qml.CompilePipeline:
         """This function defines the device transform program to be applied and an updated device configuration.
 
         Args:
@@ -439,7 +441,7 @@ class LightningTensor(Device):
                 parameters needed to fully describe the execution.
 
         Returns:
-            TransformProgram, ExecutionConfig: A transform program that when called returns :class:`~.QuantumTape`'s that the
+            qml.CompilePipeline, ExecutionConfig: A compile pipeline that when called returns :class:`~.QuantumTape`'s that the
             device can natively execute as well as a postprocessing function to be called after execution, and a configuration
             with unset specifications filled in.
 
@@ -449,23 +451,23 @@ class LightningTensor(Device):
         * Does not support vector-Jacobian products.
         """
         if execution_config is None:
-            execution_config = ExecutionConfig()
+            execution_config = self.setup_execution_config(ExecutionConfig())
 
-        config = self._setup_execution_config(execution_config)
+        pipeline = qml.CompilePipeline()
 
-        program = TransformProgram()
-
-        program.add_transform(validate_measurements, name=self.name)
-        program.add_transform(validate_observables, accepted_observables, name=self.name)
-        program.add_transform(validate_device_wires, self._wires, name=self.name)
-        program.add_transform(
+        pipeline.add_transform(validate_measurements, name=self.name)
+        pipeline.add_transform(validate_observables, accepted_observables, name=self.name)
+        pipeline.add_transform(
             decompose,
             stopping_condition=stopping_condition,
-            stopping_condition_shots=stopping_condition,
             skip_initial_state_prep=True,
             name=self.name,
+            device_wires=self.wires,
+            target_gates=self.operations,
         )
-        return program, config
+        pipeline.add_transform(device_resolve_dynamic_wires, wires=self.wires, allow_resets=False)
+        pipeline.add_transform(validate_device_wires, self._wires, name=self.name)
+        return pipeline
 
     # pylint: disable=unused-argument
     def execute(

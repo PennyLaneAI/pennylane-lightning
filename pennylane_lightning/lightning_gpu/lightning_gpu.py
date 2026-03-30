@@ -16,10 +16,12 @@ r"""
 This module contains the :class:`~.LightningGPU` class, a PennyLane simulator device that
 interfaces with the NVIDIA cuQuantum cuStateVec simulator library for GPU-enabled calculations.
 """
+
 from __future__ import annotations
 
 from ctypes.util import find_library
 from dataclasses import replace
+from functools import partial
 from importlib import util as imp_util
 from pathlib import Path
 from typing import List, Optional, Union
@@ -29,28 +31,28 @@ import numpy as np
 import pennylane as qml
 from numpy.random import BitGenerator, Generator, SeedSequence
 from numpy.typing import ArrayLike
-from pennylane.devices import ExecutionConfig, MCMConfig
+from pennylane.devices import ExecutionConfig
 from pennylane.devices.capabilities import OperatorProperties
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
 from pennylane.devices.preprocess import (
     decompose,
-    mid_circuit_measurements,
-    no_sampling,
-    validate_adjoint_trainable_params,
+    device_resolve_dynamic_wires,
     validate_device_wires,
     validate_measurements,
     validate_observables,
 )
-from pennylane.exceptions import DecompositionUndefinedError, DeviceError
-from pennylane.measurements import MidMeasureMP
+from pennylane.exceptions import DeviceError
 from pennylane.operation import Operator
-from pennylane.ops import Conditional, PauliRot, Prod, SProd, Sum
-from pennylane.transforms.core import TransformProgram
+from pennylane.ops import MidMeasure
+from pennylane.transforms import defer_measurements, dynamic_one_shot
 
 from pennylane_lightning.lightning_base.lightning_base import (
     LightningBase,
     QuantumTape_or_Batch,
     Result_or_ResultBatch,
+    adjoint_transforms,
+    resolve_mcm_method,
+    supports_adjoint,
 )
 
 try:
@@ -87,108 +89,25 @@ _to_matrix_ops = {
 }
 
 
-def stopping_condition(op: Operator) -> bool:
+def stopping_condition(op: Operator, allow_mcms: bool = True) -> bool:
     """A function that determines whether or not an operation is supported by ``lightning.gpu``."""
-    if op.name in ("C(SProd)", "C(Exp)"):
-        return True
 
-    if (isinstance(op, Conditional) and stopping_condition(op.base)) or isinstance(
-        op, MidMeasureMP
-    ):
+    if isinstance(op, MidMeasure):
         # Conditional and MidMeasureMP should not be decomposed
-        return True
+        return allow_mcms
 
     return _supports_operation(op.name)
 
 
-def stopping_condition_shots(op: Operator) -> bool:
-    """A function that determines whether or not an operation is supported by ``lightning.gpu``
-    with finite shots."""
-    return stopping_condition(op) or isinstance(op, (MidMeasureMP, qml.ops.op_math.Conditional))
-
-
-def accepted_observables(obs: Operator) -> bool:
-    """A function that determines whether or not an observable is supported by ``lightning.gpu``."""
-    return _supports_observable(obs.name)
-
-
-def adjoint_observables(obs: Operator) -> bool:
-    """A function that determines whether or not an observable is supported by ``lightning.gpu``
-    when using the adjoint differentiation method."""
-    if isinstance(obs, qml.Projector):
-        return False
-
-    if isinstance(obs, SProd):
-        return adjoint_observables(obs.base)
-
-    if isinstance(obs, (Sum, Prod)):
-        return all(adjoint_observables(o) for o in obs)
-
-    return _supports_observable(obs.name)
-
-
-def adjoint_measurements(mp: qml.measurements.MeasurementProcess) -> bool:
-    """Specifies whether or not an observable is compatible with adjoint differentiation on DefaultQubit."""
-    return isinstance(mp, qml.measurements.ExpectationMP)
-
-
-def _supports_adjoint(circuit):
-    if circuit is None:
-        return True
-
-    prog = TransformProgram()
-    _add_adjoint_transforms(prog)
-
-    try:
-        prog((circuit,))
-    except (DecompositionUndefinedError, DeviceError, AttributeError):
-        return False
-    return True
-
-
-def _adjoint_ops(op: qml.operation.Operator) -> bool:
-    """Specify whether or not an Operator is supported by adjoint differentiation."""
-
-    return not isinstance(op, (Conditional, MidMeasureMP, PauliRot)) and (
-        not any(qml.math.requires_grad(d) for d in op.data)
-        or (op.num_params == 1 and op.has_generator)
-    )
-
-
-def _add_adjoint_transforms(program: TransformProgram) -> None:
-    """Private helper function for ``preprocess`` that adds the transforms specific
-    for adjoint differentiation.
-
-    Args:
-        program (TransformProgram): where we will add the adjoint differentiation transforms
-
-    Side Effects:
-        Adds transforms to the input program.
-
-    """
-
-    name = "adjoint + lightning.gpu"
-    program.add_transform(no_sampling, name=name)
-    program.add_transform(qml.transforms.broadcast_expand)
-    program.add_transform(
-        decompose,
-        stopping_condition=_adjoint_ops,
-        stopping_condition_shots=stopping_condition_shots,
-        name=name,
-        skip_initial_state_prep=False,
-    )
-    program.add_transform(validate_observables, accepted_observables, name=name)
-    program.add_transform(
-        validate_measurements, analytic_measurements=adjoint_measurements, name=name
-    )
-    program.add_transform(validate_adjoint_trainable_params)
+# need to create these once so we can compare in tests
+allow_mcms_stopping_condition = partial(stopping_condition, allow_mcms=True)
+no_mcms_stopping_condition = partial(stopping_condition, allow_mcms=False)
 
 
 # LightningGPU specific methods
 def check_gpu_resources() -> None:
     """Check the available resources of each Nvidia GPU"""
     if find_library("custatevec") is None and not imp_util.find_spec("cuquantum"):
-
         raise ImportError(
             "cuStateVec libraries not found. Please pip install the appropriate cuStateVec library in a virtual environment."
         )
@@ -240,13 +159,19 @@ class LightningGPU(LightningBase):
     _CPP_BINARY_AVAILABLE = LGPU_CPP_BINARY_AVAILABLE
     _backend_info = backend_info if LGPU_CPP_BINARY_AVAILABLE else None
 
-    # TODO: This is to communicate to Catalyst in qjit-compiled workflows that these operations
-    #       should be converted to QubitUnitary instead of their original decompositions. Remove
-    #       this when customizable multiple decomposition pathways are implemented
-    _to_matrix_ops = _to_matrix_ops
-
     # This configuration file declares capabilities of the device
     config_filepath = Path(__file__).parent / "lightning_gpu.toml"
+
+    # TODO: This is to communicate to Catalyst in qjit-compiled workflows that these operations
+    #       should be converted to QubitUnitary instead of their original decompositions. Remove
+    #       this when the legacy decomposition system in Catalyst is integrated with the
+    #       graph-based decomposition system, which will allow for customizable multi-pathway.
+    _to_matrix_ops = (
+        _to_matrix_ops
+        if "QubitUnitary"
+        in qml.devices.capabilities.load_toml_file(config_filepath)["operators"]["gates"]
+        else None
+    )
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
@@ -313,10 +238,14 @@ class LightningGPU(LightningBase):
         self.LightningMeasurements = LightningGPUMeasurements
         self.LightningAdjointJacobian = LightningGPUAdjointJacobian
 
-    def _setup_execution_config(self, config):
+    def setup_execution_config(
+        self, config: ExecutionConfig | None = None, circuit: qml.tape.QuantumScript | None = None
+    ) -> ExecutionConfig:
         """
         Update the execution config with choices for how the device should be used and the device options.
         """
+        if config is None:
+            config = ExecutionConfig()
         updated_values = {}
 
         # It is necessary to set the mcmc default configuration to complete the requirements of ExecuteConfig
@@ -349,10 +278,13 @@ class LightningGPU(LightningBase):
 
         new_device_options.update(mcmc_default)
 
-        updated_values["mcm_config"] = _resolve_mcm_method(config.mcm_config)
+        mcm_config = resolve_mcm_method(config.mcm_config, circuit, "lightning.gpu")
+        updated_values["mcm_config"] = mcm_config
         return replace(config, **updated_values, device_options=new_device_options)
 
-    def preprocess(self, execution_config: ExecutionConfig | None = None):
+    def preprocess_transforms(
+        self, execution_config: ExecutionConfig | None = None
+    ) -> qml.CompilePipeline:
         """This function defines the device transform program to be applied and an updated device configuration.
 
         Args:
@@ -360,9 +292,8 @@ class LightningGPU(LightningBase):
                 parameters needed to fully describe the execution.
 
         Returns:
-            TransformProgram, ExecutionConfig: A transform program that when called returns :class:`~.QuantumTape`'s that the
-            device can natively execute as well as a postprocessing function to be called after execution, and a configuration
-            with unset specifications filled in.
+            qml.CompilePipeline: A transform program that when called returns :class:`~.QuantumTape`'s that the
+            device can natively execute as well as a postprocessing function to be called after execution.
 
         This device:
 
@@ -374,36 +305,59 @@ class LightningGPU(LightningBase):
         if execution_config is None:
             execution_config = ExecutionConfig()
 
-        exec_config = self._setup_execution_config(execution_config)
-        program = TransformProgram()
+        exec_config = execution_config
+        pipeline = qml.CompilePipeline()
+
+        gate_set = self.capabilities.gate_set()
+        allow_mcms = False
+        _stopping_condition = no_mcms_stopping_condition
+        if exec_config.mcm_config.mcm_method != "deferred":
+            gate_set |= {"MidMeasureMP"}
+            allow_mcms = True
+            _stopping_condition = allow_mcms_stopping_condition
 
         if qml.capture.enabled():
-
             if exec_config.mcm_config.mcm_method == "deferred":
-                program.add_transform(qml.defer_measurements, num_wires=len(self.wires))
-            # Using stopping_condition_shots because we don't want to decompose Conditionals or MCMs
-            program.add_transform(qml.transforms.decompose, gate_set=stopping_condition_shots)
-            return program, exec_config
+                pipeline.add_transform(qml.defer_measurements, num_wires=len(self.wires))
+            pipeline.add_transform(
+                qml.transforms.decompose,
+                gate_set=gate_set,
+                stopping_condition=_stopping_condition,
+            )
+            return pipeline
 
-        program.add_transform(validate_measurements, name=self.name)
-        program.add_transform(validate_observables, accepted_observables, name=self.name)
-        program.add_transform(
-            mid_circuit_measurements, device=self, mcm_config=exec_config.mcm_config
-        )
-        program.add_transform(validate_device_wires, self.wires, name=self.name)
-
-        program.add_transform(
-            decompose,
-            stopping_condition=stopping_condition,
-            stopping_condition_shots=stopping_condition_shots,
-            skip_initial_state_prep=True,
+        pipeline.add_transform(validate_measurements, name=self.name)
+        pipeline.add_transform(
+            validate_observables,
+            self.capabilities.supports_observable,
             name=self.name,
         )
-        program.add_transform(qml.transforms.broadcast_expand)
+        if exec_config.mcm_config.mcm_method == "deferred":
+            pipeline.add_transform(defer_measurements, allow_postselect=False)
+
+        pipeline.add_transform(
+            decompose,
+            stopping_condition=_stopping_condition,
+            skip_initial_state_prep=True,
+            name=self.name,
+            device_wires=self.wires,
+            target_gates=gate_set,
+        )
+        _allow_resets = exec_config.mcm_config.mcm_method != "deferred"
+        pipeline.add_transform(
+            device_resolve_dynamic_wires, wires=self.wires, allow_resets=_allow_resets
+        )
+        pipeline.add_transform(validate_device_wires, self.wires, name=self.name)
+        if exec_config.mcm_config.mcm_method == "one-shot":
+            pipeline.add_transform(
+                dynamic_one_shot, postselect_mode=exec_config.mcm_config.postselect_mode
+            )
+        pipeline.add_transform(qml.transforms.broadcast_expand)
 
         if exec_config.gradient_method == "adjoint":
-            _add_adjoint_transforms(program)
-        return program, exec_config
+            pipeline += adjoint_transforms(self, allow_mcms)
+
+        return pipeline
 
     # pylint: disable=unused-argument
     def execute(
@@ -459,9 +413,7 @@ class LightningGPU(LightningBase):
             return True
 
         if execution_config and execution_config.gradient_method in {"adjoint", "best"}:
-            if circuit is None:
-                return True
-            return _supports_adjoint(circuit=circuit)
+            return supports_adjoint(self, circuit)
 
         return False
 
@@ -474,39 +426,4 @@ class LightningGPU(LightningBase):
         return LightningBase.get_c_interface_impl("LightningGPUSimulator", "lightning_gpu")
 
 
-def _resolve_mcm_method(mcm_config: MCMConfig):
-    """Resolve the mcm config for the LightningGPU device."""
-
-    mcm_supported_methods = (
-        ("device", "deferred", "tree-traversal", "one-shot", None)
-        if not qml.capture.enabled()
-        else ("deferred", "single-branch-statistics", None)
-    )
-
-    if (mcm_method := mcm_config.mcm_method) not in mcm_supported_methods:
-        raise DeviceError(f"mcm_method='{mcm_method}' is not supported with lightning.gpu.")
-
-    if mcm_config.mcm_method == "device":
-        mcm_config = replace(mcm_config, mcm_method="tree-traversal")
-
-    if qml.capture.enabled():
-
-        mcm_updated_values = {}
-
-        if mcm_method == "single-branch-statistics" and mcm_config.postselect_mode is not None:
-            warn(
-                "Setting 'postselect_mode' is not supported with mcm_method='single-branch-"
-                "statistics'. 'postselect_mode' will be ignored.",
-                UserWarning,
-            )
-            mcm_updated_values["postselect_mode"] = None
-        elif mcm_method is None:
-            mcm_updated_values["mcm_method"] = "deferred"
-
-        mcm_config = replace(mcm_config, **mcm_updated_values)
-
-    return mcm_config
-
-
 _supports_operation = LightningGPU.capabilities.supports_operation
-_supports_observable = LightningGPU.capabilities.supports_observable

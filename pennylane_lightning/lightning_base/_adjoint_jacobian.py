@@ -273,12 +273,10 @@ class LightningBaseAdjointJacobian(ABC):
                 "tape is returning an expectation value"
             )
 
-        ham = qml.simplify(qml.dot(grad_vec, [m.obs for m in tape.measurements]))
-
-        num_params = len(tape.trainable_params)
-
-        if num_params == 0:
+        if len(tape.trainable_params) == 0:
             return np.array([], dtype=self.qubit_state.dtype)
+
+        ham = qml.simplify(qml.dot(grad_vec, [m.obs for m in tape.measurements]))
 
         new_tape = qml.tape.QuantumScript(
             tape.operations,

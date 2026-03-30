@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.26)
 
 set(LOGO [=[
 ░█░░░▀█▀░█▀▀░█░█░▀█▀░█▀█░▀█▀░█▀█░█▀▀░
@@ -15,6 +15,8 @@ project(pennylane_lightning
     DESCRIPTION "C++ suite of state-vector and tensor network simulators bindings for PennyLane. "
     LANGUAGES CXX
 )
+
+include(FetchContent)
 
 # Read and set pennylane_lightning version
 function(set_pennylane_lightning_version VERSION_FILE_PATH)
@@ -46,13 +48,17 @@ option(ENABLE_COVERAGE "Enable code coverage" OFF)
 option(ENABLE_WARNINGS "Enable warnings" ON)
 option(ENABLE_NATIVE "Enable native CPU build tuning" OFF)
 option(ENABLE_PYTHON "Enable compilation of the Python module" ON)
+option(ENABLE_SCIPY_OPENBLAS "Enable SciPy OpenBLAS support" ON)
+option(ENABLE_OPENMP "Enable OpenMP" ON)
 
 # OpenMP
-find_package(OpenMP)
-if (OpenMP_CXX_FOUND)
-    option(ENABLE_OPENMP "Enable OpenMP" ON)
-else()
-    option(ENABLE_OPENMP "Enable OpenMP" OFF)
+if (ENABLE_OPENMP)
+    find_package(OpenMP)
+    if (OpenMP_CXX_FOUND)
+        set(ENABLE_OPENMP ON CACHE BOOL "Enable OpenMP" FORCE)
+    else()
+        set(ENABLE_OPENMP OFF CACHE BOOL "Enable OpenMP" FORCE)
+    endif()
 endif()
 
 # Other build options
@@ -81,41 +87,55 @@ endforeach()
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/process_options.cmake")
 
-set(CMAKE_POLICY_DEFAULT_CMP0127 NEW) # To suppress pybind11 CMP0127 warning
-# Add pybind11
-include(FetchContent)
-
 if(ENABLE_PYTHON)
-    find_package(Python COMPONENTS Interpreter Development)
-    FetchContent_Declare(pybind11
-                        GIT_REPOSITORY https://github.com/pybind/pybind11.git
-                        GIT_TAG        v2.13.5
+    if(DEFINED PYTHON_EXECUTABLE AND NOT DEFINED Python_EXECUTABLE)
+        set(Python_EXECUTABLE "${PYTHON_EXECUTABLE}" CACHE FILEPATH
+            "Path to Python executable")
+    endif()
+
+    find_package(Python COMPONENTS Interpreter Development.Module REQUIRED)
+    message(STATUS "Enabling Nanobind Python bindings")
+    message(STATUS "Using Python executable: ${Python_EXECUTABLE}")
+    message(STATUS "Python version: ${Python_VERSION}")
+
+    FetchContent_Declare(nanobind
+                GIT_REPOSITORY https://github.com/wjakob/nanobind.git
+                GIT_TAG        v2.11.0
     )
-    FetchContent_MakeAvailable(pybind11)
+    FetchContent_MakeAvailable(nanobind)
+
 endif()
 
 # Print Python site-packages directory for reference
 message("Python site-packages directory: ${Python_SITELIB}")
 
-if(DEFINED PY_INSTALL)
-    # Note the following setting is only for pyenv and not for conda
-    # TODO: Add support for conda
-    if(APPLE)
-        set(SCIPY_OPENBLAS32_RUNTIME_LIB_PATH "@loader_path/../scipy_openblas32/lib")
+if (ENABLE_SCIPY_OPENBLAS)
+    # Define a preprocessing macro to enable SCIPY_OPENBLAS32
+    add_compile_definitions(SCIPY_OPENBLAS_ENABLED)
+    message(STATUS "ENABLE_SCIPY_OPENBLAS is ON. SciPy OpenBLAS support is enabled.")
+    if(DEFINED PY_INSTALL)
+        # Note the following setting is only for pyenv and not for conda
+        # TODO: Add support for conda
+        if(APPLE)
+            set(SCIPY_OPENBLAS32_RUNTIME_LIB_PATH "@loader_path/../scipy_openblas32/lib")
+        else()
+            set(SCIPY_OPENBLAS32_RUNTIME_LIB_PATH "$ORIGIN/../scipy_openblas32/lib")
+        endif()
     else()
-        set(SCIPY_OPENBLAS32_RUNTIME_LIB_PATH "$ORIGIN/../scipy_openblas32/lib")
+        include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindSCIPY_OPENBLAS32.cmake")
+        if(NOT DEFINED SCIPY_OPENBLAS32_LIB_PATH AND NOT EXISTS ${SCIPY_OPENBLAS32_LIB_PATH})
+            set(SCIPY_OPENBLAS32_LIB_PATH "")
+            find_path_to_openblas(SCIPY_OPENBLAS32_LIB_PATH)
+            add_compile_definitions(SCIPY_OPENBLAS32_LIB="${SCIPY_OPENBLAS32_LIB_PATH}")
+            message(STATUS "SCIPY_OPENBLAS32_LIB_PATH: ${SCIPY_OPENBLAS32_LIB_PATH}")
+        else()
+            add_compile_definitions(SCIPY_OPENBLAS32_LIB="${SCIPY_OPENBLAS32_LIB_PATH}")
+        endif()
+        set(SCIPY_OPENBLAS32_RUNTIME_LIB_PATH "${SCIPY_OPENBLAS32_LIB_PATH}")
     endif()
 else()
-    include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindSCIPY_OPENBLAS32.cmake")
-    if(NOT DEFINED SCIPY_OPENBLAS32_LIB_PATH AND NOT EXISTS ${SCIPY_OPENBLAS32_LIB_PATH})
-        set(SCIPY_OPENBLAS32_LIB_PATH "")
-        find_path_to_openblas(SCIPY_OPENBLAS32_LIB_PATH)
-        add_compile_definitions(SCIPY_OPENBLAS32_LIB="${SCIPY_OPENBLAS32_LIB_PATH}")
-        message(STATUS "SCIPY_OPENBLAS32_LIB_PATH: ${SCIPY_OPENBLAS32_LIB_PATH}")
-    else()
-        add_compile_definitions(SCIPY_OPENBLAS32_LIB="${SCIPY_OPENBLAS32_LIB_PATH}")
-    endif()
-    set(SCIPY_OPENBLAS32_RUNTIME_LIB_PATH "${SCIPY_OPENBLAS32_LIB_PATH}")
+    message(STATUS "ENABLE_SCIPY_OPENBLAS is OFF. SciPy OpenBLAS support is disabled.")
+    set(SCIPY_OPENBLAS32_RUNTIME_LIB_PATH "")
 endif()
 
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
@@ -147,8 +167,19 @@ target_include_directories(pennylane_lightning  INTERFACE "$<INSTALL_INTERFACE:$
 #####################################################
 if(ENABLE_PYTHON)
     message(STATUS "ENABLE_PYTHON is ON.")
-    pybind11_add_module("${PL_BACKEND}_ops" "pennylane_lightning/core/bindings/Bindings.cpp")
+    # Build Nanobind module
+    nanobind_add_module("${PL_BACKEND}_ops"
+                        NB_DOMAIN "pennylane_lightning"
+                        "pennylane_lightning/core/bindings/Bindings.cpp")
 
+    # Remove nanobind's problematic flags that are incompatible with NVCC
+    target_compile_options("${PL_BACKEND}_ops" PRIVATE
+        -fno-function-sections
+        -fno-data-sections
+        -O2  # Override nanobind's -Os with -O2
+    )
+
+    # Set properties for nanobind module
     set(CMAKE_BUILD_RPATH_USE_ORIGIN ON)
     if("${PL_BACKEND}" STREQUAL "lightning_gpu" OR "${PL_BACKEND}" STREQUAL "lightning_tensor")
         # Allow pip installation of cuQuantum & CUDA 12 libs to be accessible without setting LD_LIBRARY_PATH for lightning_gpu
@@ -158,20 +189,17 @@ if(ENABLE_PYTHON)
         set_target_properties("${PL_BACKEND}_ops" PROPERTIES BUILD_RPATH "${SCIPY_OPENBLAS32_RUNTIME_LIB_PATH}")
     endif()
 
-    target_link_libraries("${PL_BACKEND}_ops" PRIVATE   lightning_compile_options
-                                                        lightning_external_libs
-                                                        )
-
-    target_link_libraries("${PL_BACKEND}_ops" PRIVATE   lightning_observables
-                                                        lightning_utils
-                                                        lightning_algorithms
-                                                        )
-
-    target_link_libraries("${PL_BACKEND}_ops" PRIVATE   ${PL_BACKEND} #simulator
-                                                        "${PL_BACKEND}_observables"
-                                                        "${PL_BACKEND}_bindings"
-                                                        "${PL_BACKEND}_measurements"
-                                                        )
+    # Link library
+    target_link_libraries("${PL_BACKEND}_ops" PRIVATE lightning_compile_options
+                                                    lightning_external_libs
+                                                    lightning_observables
+                                                    lightning_utils
+                                                    lightning_algorithms
+                                                    ${PL_BACKEND}
+                                                    "${PL_BACKEND}_observables"
+                                                    "${PL_BACKEND}_bindings"
+                                                    "${PL_BACKEND}_measurements"
+                                                   )
 
     if(NOT DEFINED PL_TENSOR)
         target_link_libraries("${PL_BACKEND}_ops" PRIVATE "${PL_BACKEND}_algorithms")

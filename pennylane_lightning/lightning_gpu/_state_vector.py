@@ -108,7 +108,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
                 self._mpi_handler.num_local_wires,
             )
         else:  # without MPI
-            self._qubit_state = self._state_dtype()(self.num_wires)
+            self._qubit_state = self._state_dtype()(num_wires)
 
     def _state_dtype(self):
         """Binding to Lightning Managed state vector C++ class.
@@ -207,15 +207,15 @@ class LightningGPUStateVector(LightningBaseStateVector):
         # Currently there is not support for sparse matrices in the LightningGPU device.
         return False
 
-    def _apply_state_vector(self, state, device_wires, use_async: bool = False):
-        """Initialize the state vector on GPU with a specified state on host.
-        Note that any use of this method will introduce host-overheads.
+    def _apply_state_vector(self, state, device_wires: Wires, **kwargs):
+        """Initialize the internal state vector in a specified state.
         Args:
-        state (Union[array[complex], scipy.SparseABC]): normalized input state of length ``2**len(wires)`` as a dense array or Scipy sparse array.
-        device_wires (Wires): wires that get initialized in the state
-        use_async(bool): indicates whether to use asynchronous memory copy from host to device or not.
+            state (Union[array[complex], scipy.SparseABC]): normalized input state of length ``2**len(wires)`` as a dense array or Scipy sparse array.
+            device_wires (Wires): wires that get initialized in the state
+            use_async(bool): indicates whether to use asynchronous memory copy from host to device or not.
         Note: This function only supports synchronized memory copy from host to device.
         """
+        use_async = kwargs.get("use_async", False)
 
         if isinstance(state, self._qubit_state.__class__):
             raise DeviceError("LightningGPU does not support allocate external state_vector.")
@@ -336,6 +336,14 @@ class LightningGPUStateVector(LightningBaseStateVector):
                     mid_measurements,
                     postselect_mode=postselect_mode,
                 )
+            elif isinstance(operation, qml.PauliRot):
+                method = getattr(state, "applyPauliRot")
+                paulis = operation._hyperparameters[  # pylint: disable=protected-access
+                    "pauli_word"
+                ]
+                wires = [w for w, p in zip(wires, paulis) if p != "I"]
+                word = "".join(p for p in paulis if p != "I")
+                method(wires, invert_param, operation.parameters, word)
             elif method is not None:  # apply specialized gate
                 param = operation.parameters
                 if isinstance(op_adjoint_base, qml.PCPhase):
