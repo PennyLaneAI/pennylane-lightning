@@ -581,8 +581,11 @@ class Measurements final
           [[maybe_unused]] const std::vector<std::size_t> &device_wires = {})
         -> std::vector<PrecisionT> {
         // GPU_SHARED_NWIRES_MAX is an upper bound for the size of the GPU array
-        // used to reduce the probs (max size = 2 ** 7)
-        constexpr std::size_t GPU_SHARED_NWIRES_MAX = 7;
+        // used to reduce the probs (max size = 2 ** 4)
+        // Kokkos 5.x MDRangePolicy selects larger block sizes for
+        // parallel_reduce, which can exceed CUDA shared memory limits
+        // for array-valued reductions when value_count >= 2^5.
+        constexpr std::size_t GPU_SHARED_NWIRES_MAX = 4;
         // BITSHIFT_FREE_WIRES_MIN is a lower bound for the size of the loop
         // over which the probs computation is parallelized in
         // `probs_bitshift_generic` The free wires are the wires which are

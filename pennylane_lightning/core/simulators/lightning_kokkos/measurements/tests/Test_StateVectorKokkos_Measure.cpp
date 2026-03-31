@@ -513,6 +513,25 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values", "[Measurements]",
         exp_value_ref = 1.061122449;
         CHECK(exp_value == Approx(exp_value_ref).margin(1e-6));
     }
+
+    SECTION("ExpVal multi-qubit matrix:") {
+        const std::size_t num_qubits = 10;
+        auto sv_data = createNonTrivialState<StateVectorT>(num_qubits);
+        StateVectorT sv(sv_data.data(), sv_data.size());
+        Measurements<StateVectorT> Meas(sv);
+
+        for (std::size_t n_wires = 1; n_wires <= 7; n_wires++) {
+            const std::size_t dim = std::size_t{1} << n_wires;
+            std::vector<ComplexT> identity(dim * dim, ComplexT{0.0, 0.0});
+            for (std::size_t i = 0; i < dim; i++) {
+                identity[i * dim + i] = ComplexT{1.0, 0.0};
+            }
+            std::vector<std::size_t> wires(n_wires);
+            std::iota(wires.begin(), wires.end(), 0);
+            PrecisionT ev = Meas.expval(identity, wires);
+            CHECK(ev == Approx(1.0).margin(1e-6));
+        }
+    }
 }
 
 TEMPLATE_PRODUCT_TEST_CASE("Variances", "[Measurements]", (StateVectorKokkos),
@@ -729,6 +748,29 @@ TEMPLATE_TEST_CASE("Probabilities", "[Measures]", float, double) {
                                   std::vector<PrecisionT>(
                                       (1UL << ntarget), 1.0 / (1UL << ntarget)))
                                   .margin(1e-7));
+        }
+    }
+    SECTION("Probs dispatch path coverage sweep") {
+        const std::size_t num_qubits = GENERATE(6, 8, 10, 12, 14);
+        auto statevector_data =
+            std::vector<ComplexT>((1UL << num_qubits), {0.0, 0.0});
+        statevector_data[0] = ComplexT{1.0, 0.0};
+        StateVectorT statevector(statevector_data.data(),
+                                 statevector_data.size());
+        // Uniform superposition: probs for any subset = 1/2^n_wires each.
+        for (std::size_t t = 0; t < num_qubits; t++) {
+            statevector.applyOperation("Hadamard", {t}, false);
+        }
+        Measurements<StateVectorT> Measurer(statevector);
+
+        const std::size_t max_wires = std::min(num_qubits - 1, std::size_t{10});
+        for (std::size_t n_wires = 1; n_wires <= max_wires; n_wires++) {
+            std::vector<std::size_t> targets(n_wires);
+            std::iota(targets.begin(), targets.end(), 0);
+            auto probs = Measurer.probs(targets);
+            std::vector<PrecisionT> expected(
+                (1UL << n_wires), PrecisionT(1.0) / PrecisionT(1UL << n_wires));
+            CHECK_THAT(probs, Catch::Matchers::Approx(expected).margin(1e-6));
         }
     }
 }
