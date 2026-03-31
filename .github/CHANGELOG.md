@@ -38,6 +38,9 @@
 - Upgraded Kokkos from v4.5.0 to v5.1.0.
   [(#1308)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1308)
 
+- Fixed a security issue in the triggering mechanism of one of the GH Actions scripts.
+  [(#1359)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1359)
+
 - Change default branch references from `master` to `main`.
   [(#1356)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1356)
 
