@@ -76,7 +76,7 @@ base = [
     "pytest-xdist>=2.5.0",
     "flaky>=3.7.0", # For pl-device-test
     "pennylane>=0.44",
-    "black==25.9.0",
+    "black==26.3.1",
     "clang-tidy~=20.1",
     "clang-format~=20.1",
     "isort~=7.0.0",
