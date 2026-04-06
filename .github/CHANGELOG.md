@@ -35,7 +35,7 @@
 
 <h3>Internal changes ⚙️</h3>
 
-- Bump `black` version to 26.3.1 to eliminate the vulnerability reported by dependabot.
+- Bumped `black` version to 26.3.1 to eliminate a vulnerability reported by dependabot.
   [(#1360)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1360)
 
 - Fixed a security issue in the triggering mechanism of one of the GH Actions scripts.
