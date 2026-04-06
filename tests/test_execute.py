@@ -14,6 +14,7 @@
 """
 Integration tests for the ``execute`` method of Lightning devices.
 """
+
 import functools
 
 import pennylane as qml

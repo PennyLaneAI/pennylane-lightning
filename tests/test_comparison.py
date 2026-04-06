@@ -15,6 +15,7 @@
 Integration tests that compare the output states of the
 compiled Lightning device with the ``default.qubit``.
 """
+
 import itertools
 import os
 

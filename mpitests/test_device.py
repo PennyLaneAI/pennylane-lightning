@@ -14,6 +14,7 @@
 """
 Unit tests for device creation on :mod:`pennylane_lightning` MPI-enabled devices.
 """
+
 # pylint: disable=protected-access,unused-variable,missing-function-docstring,c-extension-no-member
 
 import pennylane as qml

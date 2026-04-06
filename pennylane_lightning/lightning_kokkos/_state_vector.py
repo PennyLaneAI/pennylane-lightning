@@ -14,6 +14,7 @@
 """
 Class implementation for lightning_kokkos state-vector manipulation.
 """
+
 from warnings import warn
 
 try:

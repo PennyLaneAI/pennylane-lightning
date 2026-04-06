@@ -14,6 +14,7 @@
 """
 Test binary information of Lightning devices.
 """
+
 import platform
 
 import pytest

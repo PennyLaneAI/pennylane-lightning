@@ -14,6 +14,7 @@
 """
 Unit tests for the expval method of Lightning devices.
 """
+
 import itertools
 
 import numpy as np

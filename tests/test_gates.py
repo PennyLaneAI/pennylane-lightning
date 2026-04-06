@@ -14,6 +14,7 @@
 """
 Unit tests for the correct application of gates with a Lightning device.
 """
+
 import copy
 import itertools
 import sys
