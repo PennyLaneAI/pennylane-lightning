@@ -14,6 +14,7 @@
 """
 Tests for the ``vjp`` method.
 """
+
 import itertools
 import math
 

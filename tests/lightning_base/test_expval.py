@@ -14,6 +14,7 @@
 """
 Tests for process and execute (expval calculation).
 """
+
 import itertools
 
 # pylint: disable=too-many-arguments, redefined-outer-name

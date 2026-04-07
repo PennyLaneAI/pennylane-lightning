@@ -14,6 +14,7 @@
 """
 Tests for ``adjoint_jacobian`` method on Lightning devices.
 """
+
 import itertools
 import math
 

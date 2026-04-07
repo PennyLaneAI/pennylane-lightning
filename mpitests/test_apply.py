@@ -14,6 +14,7 @@
 """
 Unit tests for apply on :mod:`pennylane_lightning` MPI-enabled devices.
 """
+
 # pylint: disable=protected-access,cell-var-from-loop,c-extension-no-member,too-many-positional-arguments
 import itertools
 from functools import partial

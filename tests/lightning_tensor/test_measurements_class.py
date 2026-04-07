@@ -14,6 +14,7 @@
 """
 Unit tests for measurements class.
 """
+
 import numpy as np
 import pennylane as qml
 import pytest

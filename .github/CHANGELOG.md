@@ -35,6 +35,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Bumped `black` version to 26.3.1 to eliminate a vulnerability reported by dependabot.
+  [(#1360)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1360)
+
 - Fixed a security issue in the triggering mechanism of one of the GH Actions scripts.
   [(#1359)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1359)
 
@@ -96,6 +99,7 @@ This release contains contributions from (in alphabetical order):
 Runor Agbaire,
 Ali Asadi,
 Astral Cai,
+Yushao Chen,
 Ashish Kanwar Singh,
 Jeffrey Kam,
 Joseph Lee,

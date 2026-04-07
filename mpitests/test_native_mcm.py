@@ -14,6 +14,7 @@
 """
 Unit tests for native mid-circuit measurements on :mod:`pennylane_lightning` MPI-enabled devices.
 """
+
 from functools import partial
 
 import numpy as np
