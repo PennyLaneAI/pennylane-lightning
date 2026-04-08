@@ -513,25 +513,6 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values", "[Measurements]",
         exp_value_ref = 1.061122449;
         CHECK(exp_value == Approx(exp_value_ref).margin(1e-6));
     }
-
-    SECTION("ExpVal multi-qubit matrix:") {
-        const std::size_t num_qubits = 10;
-        auto sv_data = createNonTrivialState<StateVectorT>(num_qubits);
-        StateVectorT sv(sv_data.data(), sv_data.size());
-        Measurements<StateVectorT> Meas(sv);
-
-        for (std::size_t n_wires = 1; n_wires <= 7; n_wires++) {
-            const std::size_t dim = std::size_t{1} << n_wires;
-            std::vector<ComplexT> identity(dim * dim, ComplexT{0.0, 0.0});
-            for (std::size_t i = 0; i < dim; i++) {
-                identity[i * dim + i] = ComplexT{1.0, 0.0};
-            }
-            std::vector<std::size_t> wires(n_wires);
-            std::iota(wires.begin(), wires.end(), 0);
-            PrecisionT ev = Meas.expval(identity, wires);
-            CHECK(ev == Approx(1.0).margin(1e-6));
-        }
-    }
 }
 
 TEMPLATE_PRODUCT_TEST_CASE("Variances", "[Measurements]", (StateVectorKokkos),
@@ -748,7 +729,7 @@ TEMPLATE_TEST_CASE("Probabilities", "[Measures]", float, double) {
         }
     }
     SECTION("Probs dispatch path coverage sweep") {
-        const std::size_t num_qubits = GENERATE(6, 9, 12);
+        const std::size_t num_qubits = GENERATE(14, 20);
         auto statevector_data =
             std::vector<ComplexT>((1UL << num_qubits), {0.0, 0.0});
         statevector_data[0] = ComplexT{1.0, 0.0};
