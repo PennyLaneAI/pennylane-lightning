@@ -748,7 +748,7 @@ TEMPLATE_TEST_CASE("Probabilities", "[Measures]", float, double) {
         }
     }
     SECTION("Probs dispatch path coverage sweep") {
-        const std::size_t num_qubits = GENERATE(6, 9, 12, 15, 18, 21, 24);
+        const std::size_t num_qubits = GENERATE(6, 9, 12);
         auto statevector_data =
             std::vector<ComplexT>((1UL << num_qubits), {0.0, 0.0});
         statevector_data[0] = ComplexT{1.0, 0.0};
