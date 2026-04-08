@@ -582,8 +582,8 @@ class Measurements final
         -> std::vector<PrecisionT> {
         // GPU_SHARED_NWIRES_MAX is an upper bound for the size of the GPU array
         // used to reduce the probs (max size = 2 ** 4)
-        // Kokkos 5.x MDRangePolicy selects larger block sizes for
-        // parallel_reduce, which can exceed CUDA shared memory limits
+        // Since Kokkos 5.1 MDRangePolicy selects larger block sizes for
+        // parallel_reduce, which can exceed CUDA/HIP shared memory limits
         // for array-valued reductions when value_count >= 2^5.
         constexpr std::size_t GPU_SHARED_NWIRES_MAX = 4;
         // BITSHIFT_FREE_WIRES_MIN is a lower bound for the size of the loop

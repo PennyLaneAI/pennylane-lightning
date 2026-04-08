@@ -740,10 +740,7 @@ TEMPLATE_TEST_CASE("Probabilities", "[Measures]", float, double) {
             const std::size_t ntarget = 7;
             std::vector<std::size_t> targets(ntarget);
             std::iota(targets.begin(), targets.end(), 0);
-            auto probs =
-                Pennylane::LightningKokkos::Functors::probs_bitshift_generic<
-                    typename StateVectorT::KokkosExecSpace, PrecisionT>(
-                    statevector.getView(), num_qubits, targets);
+            auto probs = Measurer.probs(targets, device_wires);
             CHECK_THAT(probs, Catch::Matchers::Approx(
                                   std::vector<PrecisionT>(
                                       (1UL << ntarget), 1.0 / (1UL << ntarget)))
@@ -751,7 +748,7 @@ TEMPLATE_TEST_CASE("Probabilities", "[Measures]", float, double) {
         }
     }
     SECTION("Probs dispatch path coverage sweep") {
-        const std::size_t num_qubits = GENERATE(6, 8, 10, 12, 14);
+        const std::size_t num_qubits = GENERATE(6, 9, 12, 15, 18, 21, 24);
         auto statevector_data =
             std::vector<ComplexT>((1UL << num_qubits), {0.0, 0.0});
         statevector_data[0] = ComplexT{1.0, 0.0};

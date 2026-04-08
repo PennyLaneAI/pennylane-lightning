@@ -384,6 +384,11 @@ class getProbsNQubitOpFunctor {
 /**
  * @brief Compute probability distribution from StateVector.
  *
+ * Note: From Kokkos 5.1 onwards, the MDRangePolicy selects larger block sizes
+ * for parallel_reduce, which can exceed CUDA/HIP shared memory limits. For GPU
+ * execution, `probs` will not dispatch to this functor for more than
+ * GPU_SHARED_NWIRES_MAX (4) wires.
+ *
  * @tparam DeviceType Kokkos execution space.
  * @tparam PrecisionT StateVector precision.
  * @param arr StateVector data.
@@ -441,48 +446,20 @@ auto probs_bitshift_generic(
                                                                wires),
             d_probabilities);
         break;
-    case 7UL:
-        // Following conditions are here to prevent error for HIP out of shared
-        // memory error
-#ifdef KOKKOS_ENABLE_HIP
-        if constexpr (std::is_same_v<DeviceType, Kokkos::HIP> &&
-                      sizeof(PrecisionT) == 8) {
-            Kokkos::parallel_reduce(
-                Kokkos::RangePolicy<DeviceType, Kokkos::LaunchBounds<32>>(
-                    0, exp2(num_qubits - n_wires)),
-                getProbsNQubitOpFunctor<PrecisionT, DeviceType, 7>(
-                    arr, num_qubits, wires),
-                d_probabilities);
-        } else
-#endif
-        {
-            Kokkos::parallel_reduce(
-                exp2(num_qubits - n_wires),
-                getProbsNQubitOpFunctor<PrecisionT, DeviceType, 7>(
-                    arr, num_qubits, wires),
-                d_probabilities);
-        }
-        break;
-    case 8UL:
-#ifdef KOKKOS_ENABLE_HIP
-        if constexpr (std::is_same_v<DeviceType, Kokkos::HIP> &&
-                      sizeof(PrecisionT) == 8) {
-            Kokkos::parallel_reduce(
-                Kokkos::RangePolicy<DeviceType, Kokkos::LaunchBounds<16>>(
-                    0, exp2(num_qubits - n_wires)),
-                getProbsNQubitOpFunctor<PrecisionT, DeviceType, 8>(
-                    arr, num_qubits, wires),
-                d_probabilities);
-        } else
-#endif
-        {
-            Kokkos::parallel_reduce(
-                exp2(num_qubits - n_wires),
-                getProbsNQubitOpFunctor<PrecisionT, DeviceType, 8>(
-                    arr, num_qubits, wires),
-                d_probabilities);
-        }
-        break;
+    case 7UL: {
+        Kokkos::parallel_reduce(
+            exp2(num_qubits - n_wires),
+            getProbsNQubitOpFunctor<PrecisionT, DeviceType, 7>(arr, num_qubits,
+                                                               wires),
+            d_probabilities);
+    } break;
+    case 8UL: {
+        Kokkos::parallel_reduce(
+            exp2(num_qubits - n_wires),
+            getProbsNQubitOpFunctor<PrecisionT, DeviceType, 8>(arr, num_qubits,
+                                                               wires),
+            d_probabilities);
+    } break;
     default:
         Kokkos::parallel_reduce(
             exp2(num_qubits - n_wires),
