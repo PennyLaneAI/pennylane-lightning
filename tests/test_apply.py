@@ -14,6 +14,7 @@
 """
 Unit tests for Lightning devices.
 """
+
 import math
 from functools import partial
 

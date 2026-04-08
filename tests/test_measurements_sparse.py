@@ -14,6 +14,7 @@
 """
 Unit tests for Sparse Measurements Lightning devices.
 """
+
 import numpy as np
 import pennylane as qml
 import pytest

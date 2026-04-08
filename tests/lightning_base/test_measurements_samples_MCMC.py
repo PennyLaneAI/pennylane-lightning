@@ -14,6 +14,7 @@
 """
 Unit tests for MCMC sampling in lightning.qubit.
 """
+
 import numpy as np
 import pennylane as qml
 import pytest

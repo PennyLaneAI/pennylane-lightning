@@ -14,6 +14,7 @@
 """
 Unit tests for sparse measurements on :mod:`pennylane_lightning` MPI-enabled devices.
 """
+
 # pylint: disable=protected-access,too-few-public-methods,unused-import,missing-function-docstring,too-many-arguments,too-many-positional-arguments
 
 import numpy as np

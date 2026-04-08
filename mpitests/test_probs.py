@@ -12,6 +12,7 @@
 """
 Unit tests for probs on :mod:`pennylane_lightning` MPI-enabled devices.
 """
+
 import numpy as np
 import pennylane as qml
 import pytest

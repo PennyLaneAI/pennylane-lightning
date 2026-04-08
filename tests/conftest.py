@@ -14,6 +14,7 @@
 """
 Pytest configuration file for PennyLane-Lightning test suite.
 """
+
 import configparser
 import hashlib
 import os

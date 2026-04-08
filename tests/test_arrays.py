@@ -14,6 +14,7 @@
 """
 Array tests for Lightning devices.
 """
+
 import numpy as np
 import pytest
 from conftest import LightningDevice as ld

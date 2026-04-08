@@ -14,6 +14,7 @@
 """
 Test the correctness of templates with Lightning devices.
 """
+
 import functools
 
 import pennylane as qml
