@@ -26,7 +26,7 @@
 #include "cuda_helpers.hpp"
 
 #include <nanobind/nanobind.h>
-#include <nanobind/stl/pair.h>
+#include <nanobind/stl/pair.h> // Necessary for returning std::pair<int, int> in getGPUArch
 
 /// @cond DEV
 namespace {
