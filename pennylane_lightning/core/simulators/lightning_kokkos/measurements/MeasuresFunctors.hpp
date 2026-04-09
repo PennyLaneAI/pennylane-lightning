@@ -446,20 +446,20 @@ auto probs_bitshift_generic(
                                                                wires),
             d_probabilities);
         break;
-    case 7UL: {
+    case 7UL:
         Kokkos::parallel_reduce(
             exp2(num_qubits - n_wires),
             getProbsNQubitOpFunctor<PrecisionT, DeviceType, 7>(arr, num_qubits,
                                                                wires),
             d_probabilities);
-    } break;
-    case 8UL: {
+        break;
+    case 8UL:
         Kokkos::parallel_reduce(
             exp2(num_qubits - n_wires),
             getProbsNQubitOpFunctor<PrecisionT, DeviceType, 8>(arr, num_qubits,
                                                                wires),
             d_probabilities);
-    } break;
+        break;
     default:
         Kokkos::parallel_reduce(
             exp2(num_qubits - n_wires),
