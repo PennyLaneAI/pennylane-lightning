@@ -741,8 +741,7 @@ TEMPLATE_TEST_CASE("Probabilities", "[Measures]", float, double) {
         }
         Measurements<StateVectorT> Measurer(statevector);
 
-        const std::size_t max_wires = std::min(num_qubits - 1, std::size_t{10});
-        for (std::size_t n_wires = 1; n_wires <= max_wires; n_wires++) {
+        for (std::size_t n_wires = 1; n_wires <= 10; n_wires++) {
             std::vector<std::size_t> targets(n_wires);
             std::iota(targets.begin(), targets.end(), 0);
             auto probs = Measurer.probs(targets);
