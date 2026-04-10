@@ -16,7 +16,7 @@
 ARG PENNYLANE_VERSION=main
 ARG LIGHTNING_VERSION=main
 ARG GCC_VERSION=13
-ARG CUDA_INSTALLER=https://developer.download.nvidia.com/compute/cuda/12.5.1/local_installers/cuda_12.5.1_555.42.06_linux.run
+ARG CUDA_INSTALLER=https://developer.download.nvidia.com/compute/cuda/12.9.1/local_installers/cuda_12.9.1_575.57.08_linux.run
 ARG ROCM_INSTALLER=https://repo.radeon.com/amdgpu-install/7.0.3/ubuntu/jammy/amdgpu-install_7.0.3.70003-1_all.deb
 ARG AMD_ARCH=AMD_GFX942
 ARG CUDA_ARCH=AMPERE80
@@ -133,7 +133,7 @@ RUN CMAKE_ARGS="-DKokkos_ENABLE_SERIAL:BOOL=ON \
 
 # Install python3 and setup runtime virtual env in CUDA-12-runtime image (includes CUDA runtime and math libraries)
 # Install lightning-kokkos CUDA backend
-FROM nvidia/cuda:12.5.1-base-ubuntu24.04 AS wheel-lightning-kokkos-cuda
+FROM nvidia/cuda:12.9.1-base-ubuntu24.04 AS wheel-lightning-kokkos-cuda
 ARG PENNYLANE_VERSION
 ARG GCC_VERSION
 ENV DEBIAN_FRONTEND=noninteractive
@@ -168,7 +168,7 @@ RUN CUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}
 
 # Install python3 and setup runtime virtual env in CUDA-12-runtime image (includes CUDA runtime and math libraries)
 # Install lightning-kokkos CUDA backend
-FROM nvidia/cuda:12.5.1-runtime-ubuntu24.04 AS wheel-lightning-gpu
+FROM nvidia/cuda:12.9.1-runtime-ubuntu24.04 AS wheel-lightning-gpu
 ARG PENNYLANE_VERSION
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \

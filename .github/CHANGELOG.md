@@ -35,6 +35,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Upgraded Kokkos from v4.5.0 to v5.1.0.
+  [(#1308)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1308)
+
 - Bumped `black` version to 26.3.1 to eliminate a vulnerability reported by dependabot.
   [(#1360)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1360)
 

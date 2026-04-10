@@ -22,7 +22,7 @@ on:
     inputs:
       branch:
         required: false
-        type: string  
+        type: string
 
 concurrency:
   group: wheel_linux_aarch64-${{ github.ref }}
@@ -35,7 +35,7 @@ jobs:
   set_wheel_build_matrix:
     if: |
       github.event_name != 'pull_request' ||
-      (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'ci:build_wheels')) 
+      (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'ci:build_wheels'))
     name: "Set wheel build matrix"
     uses: ./.github/workflows/set_wheel_build_matrix.yml
     with:
@@ -79,7 +79,9 @@ jobs:
             -v `pwd`:/io \
             -v ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}:/install \
             -i ${{ matrix.container_img }} \
-            bash -c "git config --global --add safe.directory /io && \
+            bash -c "dnf install -y gcc-toolset-${{ env.GCC_VERSION }} && \
+            source /opt/rh/gcc-toolset-${{ env.GCC_VERSION }}/enable && \
+            git config --global --add safe.directory /io && \
             cd /io && \
             python3.12 -m pip install ninja && \
             ln -s /opt/python/cp312-cp312/bin/ninja /usr/bin/ninja && \
@@ -89,6 +91,7 @@ jobs:
                             -DKokkos_ENABLE_${{ matrix.exec_model }}=ON \
                             -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
                             -DCMAKE_CXX_STANDARD=20 \
+                            -DCMAKE_CXX_COMPILER=g++ \
                             -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
                             -G Ninja && \
             cmake --build ./Build --verbose && \
@@ -114,8 +117,8 @@ jobs:
     steps:
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
-        with:        
-          ref: ${{ inputs.branch || github.ref }}        
+        with:
+          ref: ${{ inputs.branch || github.ref }}
 
       - name: Restoring cached dependencies
         id: kokkos-cache
@@ -236,7 +239,7 @@ jobs:
         if: |
           github.event_name == 'release' ||
           github.event_name == 'schedule' ||
-          github.ref == 'refs/heads/main' || 
+          github.ref == 'refs/heads/main' ||
           steps.rc_build.outputs.match != ''
         with:
           name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ fromJson('{ "cp311-*":"py311","cp312-*":"py312", "cp313-*":"py313", "cp314-*":"py314" }')[matrix.cibw_build] }}-${{ matrix.arch }}.zip
@@ -247,7 +250,7 @@ jobs:
         if: |
           github.event_name == 'release' ||
           github.event_name == 'schedule' ||
-          github.ref == 'refs/heads/main' || 
+          github.ref == 'refs/heads/main' ||
           steps.rc_build.outputs.match != ''
         with:
           verbose: true
