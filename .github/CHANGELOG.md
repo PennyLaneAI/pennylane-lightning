@@ -44,7 +44,7 @@
 - Fixed a security issue in the triggering mechanism of one of the GH Actions scripts.
   [(#1359)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1359)
 
-- Change default branch references from `master` to `main`. Removed daily master to main sync.
+- Updated default branch references from `master` to `main` and removed the daily sync between them.
   [(#1356)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1356)
   [(#1361)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1361)
 
