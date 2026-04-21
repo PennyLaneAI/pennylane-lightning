@@ -24,6 +24,8 @@ import pennylane as qml
 import pytest
 from conftest import TOL_STOCHASTIC, device_name, fixture_params
 from mpi4py import MPI
+from pennylane import numpy as pnp
+from scipy.stats import unitary_group
 
 numQubits = 8
 
@@ -836,7 +838,6 @@ class TestTensorVar:
 
 def circuit_ansatz(params, wires):
     """Circuit ansatz containing all the parametrized gates"""
-    # pylint: disable=undefined-variable
     qml.StatePrep(
         unitary_group.rvs(2**numQubits, random_state=0)[0],
         wires=wires,
@@ -857,7 +858,7 @@ def circuit_ansatz(params, wires):
     qml.IsingXX(params[13], wires=[wires[1], wires[0]])
     qml.IsingYY(params[14], wires=[wires[3], wires[2]])
     qml.IsingZZ(params[15], wires=[wires[2], wires[1]])
-    qml.PSAWP(params[16], wires=[wires[3], wires[0]])
+    qml.PSWAP(params[16], wires=[wires[3], wires[0]])
     qml.SingleExcitation(params[24], wires=[wires[2], wires[0]])
     qml.DoubleExcitation(params[25], wires=[wires[2], wires[0], wires[1], wires[3]])
 
@@ -910,17 +911,17 @@ def test_integration(returns, seed):
         return qml.math.hstack([qml.expval(r) for r in returns])
 
     n_params = 30
-    rng = np.random.default_rng(seed)
+    rng = pnp.random.default_rng(seed)
     params = rng.random(n_params)
 
     qnode_mpi = qml.QNode(circuit, dev_mpi, diff_method="parameter-shift")
     qnode_default = qml.QNode(circuit, dev_default, diff_method="parameter-shift")
 
     def convert_to_array_mpi(params):
-        return np.array(qnode_mpi(params))
+        return pnp.array(qnode_mpi(params))
 
     def convert_to_array_default(params):
-        return np.array(qnode_default(params))
+        return pnp.array(qnode_default(params))
 
     j_mpi = qml.jacobian(convert_to_array_mpi)(params)
     j_default = qml.jacobian(convert_to_array_default)(params)
@@ -955,17 +956,17 @@ def test_integration_custom_wires(returns, seed):
         return qml.expval(returns), qml.expval(qml.PauliY(custom_wires[1]))
 
     n_params = 30
-    rng = np.random.default_rng(seed)
+    rng = pnp.random.default_rng(seed)
     params = rng.random(n_params)
 
     qnode_mpi = qml.QNode(circuit, dev_mpi, diff_method="parameter-shift")
     qnode_lightning = qml.QNode(circuit, dev_lightning, diff_method="parameter-shift")
 
     def convert_to_array_mpi(params):
-        return np.array(qnode_mpi(params))
+        return pnp.array(qnode_mpi(params))
 
     def convert_to_array_lightning(params):
-        return np.array(qnode_lightning(params))
+        return pnp.array(qnode_lightning(params))
 
     j_mpi = qml.jacobian(convert_to_array_mpi)(params)
     j_lightning = qml.jacobian(convert_to_array_lightning)(params)

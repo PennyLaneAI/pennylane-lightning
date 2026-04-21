@@ -35,6 +35,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Fixed Python MPI tests involving differentiation to use PennyLane Numpy.
+  [(#XXXX)](https://github.com/PennyLaneAI/pennylane-lightning/pull/XXXX)
+
 - Upgraded Kokkos from v4.5.0 to v5.1.0.
   [(#1308)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1308)
 
