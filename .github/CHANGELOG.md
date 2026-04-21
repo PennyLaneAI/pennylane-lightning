@@ -10,6 +10,9 @@
 
 <h3>Improvements 🛠</h3>
 
+- The `qml` alias as in `import pennylane as qml` has been updated to `qp` in our source code and documentation.
+  [(#1362)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1362)
+
 - Avoid decomposing unsupported gates and templates into `QubitUnitary` when not specified in the device TOML file of Lightning simulators from Catalyst.
   [(#1348)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1348)
 
