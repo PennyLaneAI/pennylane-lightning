@@ -18,7 +18,7 @@ Unit tests for sparse measurements on :mod:`pennylane_lightning` MPI-enabled dev
 # pylint: disable=protected-access,too-few-public-methods,unused-import,missing-function-docstring,too-many-arguments,too-many-positional-arguments
 
 import numpy as np
-import pennylane as qml
+import pennylane as qp
 import pytest
 from conftest import LightningDevice as ld
 from conftest import device_name
@@ -37,38 +37,38 @@ class TestSparseExpval:
 
     @pytest.fixture(params=[np.complex64, np.complex128])
     def dev(self, request):
-        return qml.device(device_name, mpi=True, wires=2, c_dtype=request.param)
+        return qp.device(device_name, mpi=True, wires=2, c_dtype=request.param)
 
     @pytest.mark.parametrize(
         "cases",
         [
             [
-                qml.PauliX(0) @ qml.Identity(1),
+                qp.PauliX(0) @ qp.Identity(1),
                 0.00000000000000000,
                 1.000000000000000000,
             ],
             [
-                qml.Identity(0) @ qml.PauliX(1),
+                qp.Identity(0) @ qp.PauliX(1),
                 -0.19866933079506122,
                 0.960530638694763184,
             ],
             [
-                qml.PauliY(0) @ qml.Identity(1),
+                qp.PauliY(0) @ qp.Identity(1),
                 -0.38941834230865050,
                 0.848353326320648193,
             ],
             [
-                qml.Identity(0) @ qml.PauliY(1),
+                qp.Identity(0) @ qp.PauliY(1),
                 0.00000000000000000,
                 1.000000119209289551,
             ],
             [
-                qml.PauliZ(0) @ qml.Identity(1),
+                qp.PauliZ(0) @ qp.Identity(1),
                 0.92106099400288520,
                 0.151646673679351807,
             ],
             [
-                qml.Identity(0) @ qml.PauliZ(1),
+                qp.Identity(0) @ qp.PauliZ(1),
                 0.98006657784124170,
                 0.039469480514526367,
             ],
@@ -79,21 +79,21 @@ class TestSparseExpval:
 
         # Compute the sparse matrix of the input operator
         # This is done outside of the QNode to avoid queuing the `Hamiltonian`
-        matrix = qml.Hamiltonian([1], [cases[0]]).sparse_matrix()
+        matrix = qp.Hamiltonian([1], [cases[0]]).sparse_matrix()
 
-        @qml.qnode(dev, diff_method="parameter-shift")
+        @qp.qnode(dev, diff_method="parameter-shift")
         def circuit_expval():
-            qml.RX(0.4, wires=[0])
-            qml.RY(-0.2, wires=[1])
-            return qml.expval(qml.SparseHamiltonian(matrix, wires=[0, 1]))
+            qp.RX(0.4, wires=[0])
+            qp.RY(-0.2, wires=[1])
+            return qp.expval(qp.SparseHamiltonian(matrix, wires=[0, 1]))
 
         assert np.allclose(circuit_expval(), cases[1], atol=tol, rtol=0)
 
-        @qml.qnode(dev, diff_method="parameter-shift")
+        @qp.qnode(dev, diff_method="parameter-shift")
         def circuit_var():
-            qml.RX(0.4, wires=[0])
-            qml.RY(-0.2, wires=[1])
-            return qml.var(qml.SparseHamiltonian(matrix, wires=[0, 1]))
+            qp.RX(0.4, wires=[0])
+            qp.RY(-0.2, wires=[1])
+            return qp.var(qp.SparseHamiltonian(matrix, wires=[0, 1]))
 
         assert np.allclose(circuit_var(), cases[2], atol=tol, rtol=0)
 
@@ -135,32 +135,32 @@ class TestSparseExpvalQChem:
 
         H_sparse = H.sparse_matrix(wires)
 
-        dev = qml.device(device_name, mpi=True, wires=wires, c_dtype=dtype)
+        dev = qp.device(device_name, mpi=True, wires=wires, c_dtype=dtype)
 
-        @qml.qnode(dev, diff_method="parameter-shift")
+        @qp.qnode(dev, diff_method="parameter-shift")
         def circuit():
-            qml.BasisState(hf_state, wires=range(qubits))
+            qp.BasisState(hf_state, wires=range(qubits))
 
             for excitation in excitations:
                 if len(excitation) == 4:
-                    qml.DoubleExcitation(1, wires=excitation)
+                    qp.DoubleExcitation(1, wires=excitation)
                 elif len(excitation) == 2:
-                    qml.SingleExcitation(1, wires=excitation)
+                    qp.SingleExcitation(1, wires=excitation)
 
-            return qml.expval(qml.SparseHamiltonian(H_sparse, wires=wires))
+            return qp.expval(qp.SparseHamiltonian(H_sparse, wires=wires))
 
-        dev_default = qml.device("default.qubit", wires=qubits)
+        dev_default = qp.device("default.qubit", wires=qubits)
 
-        @qml.qnode(dev_default, diff_method="parameter-shift")
+        @qp.qnode(dev_default, diff_method="parameter-shift")
         def circuit_default():
-            qml.BasisState(hf_state, wires=range(qubits))
+            qp.BasisState(hf_state, wires=range(qubits))
 
             for excitation in excitations:
                 if len(excitation) == 4:
-                    qml.DoubleExcitation(1, wires=excitation)
+                    qp.DoubleExcitation(1, wires=excitation)
                 elif len(excitation) == 2:
-                    qml.SingleExcitation(1, wires=excitation)
+                    qp.SingleExcitation(1, wires=excitation)
 
-            return qml.expval(qml.SparseHamiltonian(H_sparse, wires=wires))
+            return qp.expval(qp.SparseHamiltonian(H_sparse, wires=wires))
 
         assert np.allclose(circuit(), circuit_default(), atol=tol, rtol=0)

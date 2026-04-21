@@ -14,7 +14,7 @@ Unit tests for probs on :mod:`pennylane_lightning` MPI-enabled devices.
 """
 
 import numpy as np
-import pennylane as qml
+import pennylane as qp
 import pytest
 from conftest import device_name
 
@@ -42,21 +42,21 @@ def apply_probs_nonparam(tol, operation, GateWires, Wires, c_dtype, seed=None):
     rank = comm.Get_rank()
     commSize = comm.Get_size()
 
-    dev_cpu = qml.device("lightning.qubit", wires=num_wires, c_dtype=c_dtype)
-    dev_mpi = qml.device(device_name, wires=num_wires, mpi=True, c_dtype=c_dtype)
+    dev_cpu = qp.device("lightning.qubit", wires=num_wires, c_dtype=c_dtype)
+    dev_mpi = qp.device(device_name, wires=num_wires, mpi=True, c_dtype=c_dtype)
 
     state_vector = create_random_init_state(num_wires, dev_mpi.c_dtype, seed)
     comm.Bcast(state_vector, root=0)
 
     def circuit():
-        qml.StatePrep(state_vector, wires=range(num_wires))
+        qp.StatePrep(state_vector, wires=range(num_wires))
         operation(wires=GateWires)
-        return qml.probs(wires=Wires)
+        return qp.probs(wires=Wires)
 
-    cpu_qnode = qml.QNode(circuit, dev_cpu)
+    cpu_qnode = qp.QNode(circuit, dev_cpu)
     probs_cpu = cpu_qnode()
 
-    mpi_qnode = qml.QNode(circuit, dev_mpi)
+    mpi_qnode = qp.QNode(circuit, dev_mpi)
     local_probs = mpi_qnode()
 
     recv_counts = comm.gather(len(local_probs), root=0)
@@ -84,21 +84,21 @@ def apply_probs_param(tol, operation, par, GateWires, Wires, c_dtype, seed=None)
     rank = comm.Get_rank()
     commSize = comm.Get_size()
 
-    dev_cpu = qml.device("lightning.qubit", wires=num_wires, c_dtype=c_dtype)
-    dev_mpi = qml.device(device_name, wires=num_wires, mpi=True, c_dtype=c_dtype)
+    dev_cpu = qp.device("lightning.qubit", wires=num_wires, c_dtype=c_dtype)
+    dev_mpi = qp.device(device_name, wires=num_wires, mpi=True, c_dtype=c_dtype)
 
     state_vector = create_random_init_state(num_wires, dev_mpi.c_dtype, seed)
     comm.Bcast(state_vector, root=0)
 
     def circuit():
-        qml.StatePrep(state_vector, wires=range(num_wires))
+        qp.StatePrep(state_vector, wires=range(num_wires))
         operation(*par, wires=GateWires)
-        return qml.probs(wires=Wires)
+        return qp.probs(wires=Wires)
 
-    cpu_qnode = qml.QNode(circuit, dev_cpu)
+    cpu_qnode = qp.QNode(circuit, dev_cpu)
     probs_cpu = cpu_qnode()
 
-    mpi_qnode = qml.QNode(circuit, dev_mpi)
+    mpi_qnode = qp.QNode(circuit, dev_mpi)
     local_probs = mpi_qnode()
 
     recv_counts = comm.gather(len(local_probs), root=0)
@@ -138,20 +138,20 @@ class TestProbs:
     """Tests for the probability method."""
 
     @pytest.mark.parametrize(
-        "operation", [qml.PauliX, qml.PauliY, qml.PauliZ, qml.Hadamard, qml.S, qml.T]
+        "operation", [qp.PauliX, qp.PauliY, qp.PauliZ, qp.Hadamard, qp.S, qp.T]
     )
     @pytest.mark.parametrize("GateWires", [[0], [numQubits - 1]])
     def test_prob_single_wire_nonparam(self, tol, operation, GateWires, Wires, c_dtype, seed):
         apply_probs_nonparam(tol, operation, GateWires, Wires, c_dtype, seed)
 
-    @pytest.mark.parametrize("operation", [qml.CNOT, qml.SWAP, qml.CY, qml.CZ])
+    @pytest.mark.parametrize("operation", [qp.CNOT, qp.SWAP, qp.CY, qp.CZ])
     @pytest.mark.parametrize(
         "GateWires", [[0, 1], [numQubits - 2, numQubits - 1], [0, numQubits - 1]]
     )
     def test_prob_two_wire_nonparam(self, tol, operation, GateWires, Wires, c_dtype, seed):
         apply_probs_nonparam(tol, operation, GateWires, Wires, c_dtype, seed)
 
-    @pytest.mark.parametrize("operation", [qml.CSWAP, qml.Toffoli])
+    @pytest.mark.parametrize("operation", [qp.CSWAP, qp.Toffoli])
     @pytest.mark.parametrize(
         "GateWires",
         [
@@ -164,19 +164,19 @@ class TestProbs:
     def test_prob_three_wire_nonparam(self, tol, operation, GateWires, Wires, c_dtype, seed):
         apply_probs_nonparam(tol, operation, GateWires, Wires, c_dtype, seed)
 
-    @pytest.mark.parametrize("operation", [qml.PhaseShift, qml.RX, qml.RY, qml.RZ])
+    @pytest.mark.parametrize("operation", [qp.PhaseShift, qp.RX, qp.RY, qp.RZ])
     @pytest.mark.parametrize("par", [[0.1], [0.2], [0.3]])
     @pytest.mark.parametrize("GateWires", [0, numQubits - 1])
     def test_prob_single_wire_param(self, tol, operation, par, GateWires, Wires, c_dtype, seed):
         apply_probs_param(tol, operation, par, GateWires, Wires, c_dtype, seed)
 
-    @pytest.mark.parametrize("operation", [qml.Rot])
+    @pytest.mark.parametrize("operation", [qp.Rot])
     @pytest.mark.parametrize("par", [[0.1, 0.2, 0.3], [0.2, 0.3, 0.4]])
     @pytest.mark.parametrize("GateWires", [0, numQubits - 1])
     def test_prob_single_wire_3param(self, tol, operation, par, GateWires, Wires, c_dtype, seed):
         apply_probs_param(tol, operation, par, GateWires, Wires, c_dtype, seed)
 
-    @pytest.mark.parametrize("operation", [qml.CRot])
+    @pytest.mark.parametrize("operation", [qp.CRot])
     @pytest.mark.parametrize("par", [[0.1, 0.2, 0.3], [0.2, 0.3, 0.4]])
     @pytest.mark.parametrize(
         "GateWires", [[0, numQubits - 1], [0, 1], [numQubits - 2, numQubits - 1]]
@@ -187,16 +187,16 @@ class TestProbs:
     @pytest.mark.parametrize(
         "operation",
         [
-            qml.CRX,
-            qml.CRY,
-            qml.CRZ,
-            qml.ControlledPhaseShift,
-            qml.SingleExcitation,
-            qml.SingleExcitationMinus,
-            qml.SingleExcitationPlus,
-            qml.IsingXX,
-            qml.IsingYY,
-            qml.IsingZZ,
+            qp.CRX,
+            qp.CRY,
+            qp.CRZ,
+            qp.ControlledPhaseShift,
+            qp.SingleExcitation,
+            qp.SingleExcitationMinus,
+            qp.SingleExcitationPlus,
+            qp.IsingXX,
+            qp.IsingYY,
+            qp.IsingZZ,
         ],
     )
     @pytest.mark.parametrize("par", [[0.1], [0.2], [0.3]])
@@ -208,7 +208,7 @@ class TestProbs:
 
     @pytest.mark.parametrize(
         "operation",
-        [qml.DoubleExcitation, qml.DoubleExcitationMinus, qml.DoubleExcitationPlus],
+        [qp.DoubleExcitation, qp.DoubleExcitationMinus, qp.DoubleExcitationPlus],
     )
     @pytest.mark.parametrize("par", [[0.13], [0.2], [0.3]])
     @pytest.mark.parametrize(

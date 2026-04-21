@@ -18,7 +18,7 @@ Unit tests for native mid-circuit measurements on :mod:`pennylane_lightning` MPI
 from functools import partial
 
 import numpy as np
-import pennylane as qml
+import pennylane as qp
 import pytest
 from conftest import LightningDevice, device_name
 from mpi4py import MPI
@@ -31,16 +31,16 @@ if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-acces
 def test_unspported_mid_measurement():
     """Test unsupported mid_measurement for Lightning-GPU-MPI."""
     comm = MPI.COMM_WORLD
-    dev = qml.device(device_name, wires=2, mpi=True)
+    dev = qp.device(device_name, wires=2, mpi=True)
     params = np.pi / 4 * np.ones(2)
 
-    @partial(qml.set_shots, shots=1000)
-    @qml.qnode(dev)
+    @partial(qp.set_shots, shots=1000)
+    @qp.qnode(dev)
     def func(x, y):
-        qml.RX(x, wires=0)
-        m0 = qml.measure(0)
-        qml.cond(m0, qml.RY)(y, wires=1)
-        return qml.probs(wires=0)
+        qp.RX(x, wires=0)
+        m0 = qp.measure(0)
+        qp.cond(m0, qp.RY)(y, wires=1)
+        return qp.probs(wires=0)
 
     comm.Barrier()
 
