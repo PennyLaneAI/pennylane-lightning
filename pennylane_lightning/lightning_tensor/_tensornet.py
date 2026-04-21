@@ -234,7 +234,7 @@ def expand_mps_first_site(state_MPS: list[np.ndarray], max_bond_dim: int = 128) 
     - Add the identity matrix with shape `(1,2,2)` at the beginning of $B$.
     - Restore the $B$ MPS into the initial canonical form to spread the new site information across the entire MPS $A$.
 
-    The details about how to create a MPS state can be found in the PennyLane tutorial: [Introducing matrix product states for quantum practitioners](https://pennylane.ai/qml/demos/tutorial_mps)
+    The details about how to create a MPS state can be found in the PennyLane tutorial: [Introducing matrix product states for quantum practitioners](https://pennylane.ai/demos/tutorial_mps)
 
     Args:
         state_MPS (list[np.ndarray]): The MPS state to be expanded.

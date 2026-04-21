@@ -8,8 +8,8 @@ A ``lightning.amdgpu`` device can be loaded using:
 
 .. code-block:: python
 
-    import pennylane as qml
-    dev = qml.device("lightning.amdgpu", wires=2)
+    import pennylane as qp
+    dev = qp.device("lightning.amdgpu", wires=2)
 
 The pre-built ``lightning.amdgpu`` device wheels are available for ROCm 7.0+ and MI300 series GPUs. For other versions of ROCm or AMD GPUs series, please refer to the :doc:`/lightning_amdgpu/installation` guide for instructions on building from source.
 

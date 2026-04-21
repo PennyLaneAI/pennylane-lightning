@@ -2,10 +2,10 @@
 
 <h3>New features since last release</h3>
 
-- Added support for `qml.pauli_measure` simulation for Catalyst.
+- Added support for `qp.pauli_measure` simulation for Catalyst.
   [(#1327)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1327)
 
-- Added support for `qml.PauliRot` simulation for Catalyst.
+- Added support for `qp.PauliRot` simulation for Catalyst.
   [(#1322)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1322)
 
 <h3>Improvements 🛠</h3>
@@ -16,7 +16,7 @@
 - Added sitemap configuration and SEO improvements to documentation, including noindex meta tags for C++ API reference pages.
   [(#1331)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1331)
 
-- Added a C++ kernel for the `qml.PauliRot` simulation on `lightning.gpu`.
+- Added a C++ kernel for the `qp.PauliRot` simulation on `lightning.gpu`.
   [(#1329)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1329)
 
 - Linux and MacOS `lightning.qubit` wheels are now built with OpenMP support for all kernel types (LM, AVX2, and AVX512), enabling better performance tuning for CPU simulations.
