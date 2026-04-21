@@ -14,6 +14,7 @@
 """
 Unit tests for adjoint Jacobian on :mod:`pennylane_lightning` MPI-enabled devices.
 """
+
 # pylint: disable=protected-access,cell-var-from-loop,c-extension-no-member
 import itertools
 import math

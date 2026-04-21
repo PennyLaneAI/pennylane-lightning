@@ -13,7 +13,10 @@
 // limitations under the License.
 
 #include "LightningKokkosSimulator.hpp"
-#include "catch2/catch.hpp"
+#include <catch2/catch_approx.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/matchers/catch_matchers_string.hpp>
+using Catch::Approx;
 
 /// @cond DEV
 namespace {
@@ -76,13 +79,13 @@ TEST_CASE("Test Gradient with Var", "[Gradient]") {
     auto pz = sim->Observable(ObsId::PauliZ, {}, {q});
     sim->Var(pz);
 
-    REQUIRE_THROWS_WITH(
-        sim->Gradient(gradients, trainParams),
-        Catch::Contains("Unsupported measurements to compute gradient"));
+    REQUIRE_THROWS_WITH(sim->Gradient(gradients, trainParams),
+                        Catch::Matchers::ContainsSubstring(
+                            "Unsupported measurements to compute gradient"));
 
-    REQUIRE_THROWS_WITH(
-        sim->Gradient(gradients, {}),
-        Catch::Contains("Unsupported measurements to compute gradient"));
+    REQUIRE_THROWS_WITH(sim->Gradient(gradients, {}),
+                        Catch::Matchers::ContainsSubstring(
+                            "Unsupported measurements to compute gradient"));
 
     sim->StopTapeRecording();
 }

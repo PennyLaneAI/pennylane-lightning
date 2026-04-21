@@ -257,8 +257,6 @@ void registerBackendSpecificObservablesMPI(nb::module_ &m) {
         std::is_same_v<PrecisionT, float> ? "64" : "128";
 
     using ArrayComplexT = nb::ndarray<std::complex<PrecisionT>, nb::c_contig>;
-    using SparseIndexT = std::size_t;
-    using ArrSparseIndT = nb::ndarray<SparseIndexT, nb::c_contig>;
 
     std::string class_name = "SparseHamiltonianC" + bitsize;
     auto sparse_hamiltonian_class =
@@ -304,7 +302,7 @@ void registerBackendSpecificObservablesMPI(nb::module_ &m) {
  * @param m Nanobind module
  */
 template <class StateVectorT>
-void registerBackendSpecificAlgorithmsMPI(nb::module_ &m) {
+void registerBackendSpecificAlgorithmsMPI([[maybe_unused]] nb::module_ &m) {
     // This function is intentionally left empty as there are no
     // backend-specific algorithms for Kokkos MPI
 }

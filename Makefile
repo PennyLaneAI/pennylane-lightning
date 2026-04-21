@@ -156,23 +156,23 @@ test-cpp-mpi:
 		  $(OPTIONS)
 ifdef target
 	cmake --build ./BuildTests $(VERBOSE) --target $(target)
-	mpirun -np 2 ./BuildTests/$(target)
+	mpirun -np 2 ./BuildTests/$(target) --order decl
 else
 	cmake --build ./BuildTests $(VERBOSE)
-	
+
 	if [ "$(PL_BACKEND)" = "lightning_gpu" ]; then \
 		for file in ./BuildTests/*_test_runner_mpi; do \
 			echo "Running $$file"; \
-			mpirun -np 2 $$file ; \
+			mpirun -np 2 $$file --order decl ; \
 		done ; \
 	elif [ "$(PL_BACKEND)" = "lightning_kokkos" ]; then \
 		for file in ./BuildTests/lightning_kokkos*test_runner_mpi; do \
 			echo "Running $$file"; \
-			mpirun -np 4 $$file ; \
+			mpirun -np 4 $$file --order decl ; \
 		done ; \
 		for file in ./BuildTests/utils_test_runner_mpi; do \
 			echo "Running $$file"; \
-			mpirun -np 2 $$file ; \
+			mpirun -np 2 $$file --order decl ; \
 		done; \
 	fi
 endif
@@ -222,12 +222,12 @@ endif
 ifdef version
     VERSION := $(version)
 else
-    VERSION := master
+    VERSION := main
 endif
 ifdef pl_version
     PL_VERSION := $(pl_version)
 else
-    PL_VERSION := master
+    PL_VERSION := main
 endif
 
 docker-build:
@@ -267,4 +267,3 @@ test-bindings:
 build-test-bindings:
 	$(MAKE) build-nanobind
 	$(MAKE) test-bindings
-

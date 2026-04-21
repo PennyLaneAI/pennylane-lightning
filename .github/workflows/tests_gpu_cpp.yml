@@ -5,11 +5,11 @@ on:
       lightning-version:
         type: string
         required: true
-        description: The version of Lightning to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
+        description: The version of Lightning to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from main)
       pennylane-version:
         type: string
         required: true
-        description: The version of PennyLane to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
+        description: The version of PennyLane to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from main)
   pull_request:
     types:
       - opened
@@ -18,7 +18,7 @@ on:
       - ready_for_review
   push:
     branches:
-      - master
+      - main
 
 env:
   CI_CUDA_ARCH: 86
@@ -39,7 +39,7 @@ jobs:
       max-parallel: 1
       matrix:
         cuda_version_maj: ["12"]
-        cuda_version_min: ["4"]
+        cuda_version_min: ["9"]
 
     steps:
       - name: Validate GPU version and installed compiler
@@ -160,6 +160,7 @@ jobs:
             -DPL_BACKEND=${{ matrix.pl_backend }} \
             -DSCIPY_OPENBLAS=$(python -c "import scipy_openblas32; print(scipy_openblas32.get_lib_dir())") \
             -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
+            -DCMAKE_CUDA_ARCHITECTURES=${{ env.CI_CUDA_ARCH }} \
             -DCMAKE_CUDA_HOST_COMPILER=$(which gcc-$GCC_VERSION) \
             -DENABLE_COVERAGE=ON \
             -G Ninja \

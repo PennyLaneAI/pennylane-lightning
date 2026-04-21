@@ -14,6 +14,7 @@
 """
 This module tests the ``jaxpr_jvp`` method.
 """
+
 from functools import partial
 
 import pennylane as qml

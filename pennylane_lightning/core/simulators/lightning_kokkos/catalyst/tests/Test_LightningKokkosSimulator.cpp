@@ -21,7 +21,8 @@
 #include <variant>
 #include <vector>
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/matchers/catch_matchers_string.hpp>
 
 #include "LightningKokkosSimulator.hpp"
 #include "QuantumDevice.hpp"
@@ -77,13 +78,13 @@ TEST_CASE("LightningKokkosSimulator::unit_tests", "[unit tests]") {
         std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
         std::vector<intptr_t> Qs = LKsim->AllocateQubits(1);
         REQUIRE_NOTHROW(LKsim->StartTapeRecording());
-        REQUIRE_THROWS_WITH(
-            LKsim->StartTapeRecording(),
-            Catch::Matchers::Contains("Cannot re-activate the cache manager"));
+        REQUIRE_THROWS_WITH(LKsim->StartTapeRecording(),
+                            Catch::Matchers::ContainsSubstring(
+                                "Cannot re-activate the cache manager"));
         REQUIRE_NOTHROW(LKsim->StopTapeRecording());
         REQUIRE_THROWS_WITH(
             LKsim->StopTapeRecording(),
-            Catch::Matchers::Contains(
+            Catch::Matchers::ContainsSubstring(
                 "Cannot stop an already stopped cache manager"));
     }
 }
@@ -732,7 +733,8 @@ TEST_CASE("LightningKokkosSimulator::GateSet", "[GateSet]") {
 
         REQUIRE_THROWS_WITH(
             LKsim->NamedOperation("Hadamard", {}, {Qs[0]}, false, {Qs[1]}, {}),
-            Catch::Contains("Controlled wires/values size mismatch"));
+            Catch::Matchers::ContainsSubstring(
+                "Controlled wires/values size mismatch"));
         std::vector<std::complex<double>> matrix{
             {-0.6709485262524046, -0.6304426335363695},
             {-0.14885403153998722, 0.3608498832392019},
@@ -741,7 +743,8 @@ TEST_CASE("LightningKokkosSimulator::GateSet", "[GateSet]") {
         };
         REQUIRE_THROWS_WITH(
             LKsim->MatrixOperation(matrix, {Qs[0]}, false, {Qs[1]}, {}),
-            Catch::Contains("Controlled wires/values size mismatch"));
+            Catch::Matchers::ContainsSubstring(
+                "Controlled wires/values size mismatch"));
     }
 
     SECTION("Controlled GlobalPhase (multi-qubit)") {
@@ -848,14 +851,15 @@ TEST_CASE("LightningKokkosSimulator::GateSet", "[GateSet]") {
         constexpr std::size_t n_qubits = 2;
         std::vector<intptr_t> Qs = LKsim->AllocateQubits(n_qubits);
 
-        REQUIRE_THROWS_WITH(
-            LKsim->NamedOperation("PauliRot", {0.5}, {Qs[0]}, false, {}, {},
-                                  {"X", "Y"}),
-            Catch::Contains("PauliRot operation requires one string"));
+        REQUIRE_THROWS_WITH(LKsim->NamedOperation("PauliRot", {0.5}, {Qs[0]},
+                                                  false, {}, {}, {"X", "Y"}),
+                            Catch::Matchers::ContainsSubstring(
+                                "PauliRot operation requires one string"));
 
-        REQUIRE_THROWS_WITH(
-            LKsim->NamedOperation("PauliRot", {0.5}, {Qs[0]}, false, {Qs[1]},
-                                  {false}, {"XY"}),
-            Catch::Contains("Controlled PauliRot is not supported"));
+        REQUIRE_THROWS_WITH(LKsim->NamedOperation("PauliRot", {0.5}, {Qs[0]},
+                                                  false, {Qs[1]}, {false},
+                                                  {"XY"}),
+                            Catch::Matchers::ContainsSubstring(
+                                "Controlled PauliRot is not supported"));
     }
 }

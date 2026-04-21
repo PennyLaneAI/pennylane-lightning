@@ -92,11 +92,7 @@ class CMakeBuild(build_ext):
             f"-DCMAKE_BUILD_TYPE={build_type}",  # not used on MSVC, but no harm
             "-DENABLE_WARNINGS=OFF",  # Ignore warnings
         ]
-        configure_args += (
-            [f"-DPYTHON_EXECUTABLE={sys.executable}"]
-            if platform.system() != "Darwin"
-            else [f"-DPython_EXECUTABLE={sys.executable}"]
-        )
+        configure_args += [f"-DPython_EXECUTABLE={sys.executable}"]
 
         if platform.system() == "Windows":
             # As Ninja does not support long path for windows yet:
@@ -163,7 +159,7 @@ class CMakeBuild(build_ext):
             source = os.path.join(f"{extdir}", f"lib{backend}_catalyst.so")
             destination = os.path.join(os.getcwd(), f"build_{backend}")
             shutil.copy(source, destination)
-    
+
         if backend in ("lightning_kokkos", "lightning_qubit", "lightning_amdgpu"):
             if platform.system() in ["Linux", "Darwin"]:
                 shared_lib_ext = {"Linux": ".so", "Darwin": ".dylib"}[platform.system()]

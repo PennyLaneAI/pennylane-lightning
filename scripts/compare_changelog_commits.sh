@@ -51,7 +51,7 @@ extract_contributors_from_changelog() {
 
 extract_contributors_from_git() {
     # Extract the list of contributors from Git
-    contribution_list=$(git log master --since=$LAST_RELEASE_DATE --pretty=format:"%an <%ae>")
+    contribution_list=$(git log main --since=$LAST_RELEASE_DATE --pretty=format:"%an <%ae>")
     # Sort, find unique entries, and format the contribution list
     contribution_list=$(echo "$contribution_list" | sort | uniq | sed 's|<.*|| ; s|Author: ||')
     echo "$contribution_list"
@@ -69,8 +69,8 @@ echo "--------------------------------------------------------------------------
 
 # Create the list of merged PR
 list_merged_PRs(){
-    # Get the list of merged PRs to master
-    list_PRs=$(gh pr list --state merged --base master --search "merged:>=$LAST_RELEASE_DATE" -L 1000 )
+    # Get the list of merged PRs to main
+    list_PRs=$(gh pr list --state merged --base main --search "merged:>=$LAST_RELEASE_DATE" -L 1000 )
     # Extract the PR number and title, format it, and sort it
     list_PRs=$(echo "$list_PRs" | awk -F 'MERGED' '{print $1}' | sort -h)
     echo "$list_PRs" > release_list_merged_PR.txt

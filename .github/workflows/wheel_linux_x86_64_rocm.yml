@@ -16,10 +16,15 @@ on:
       - ready_for_review
   push:
     branches:
-      - master
+      - main
   release:
     types: [published]
   workflow_dispatch:
+  workflow_call:
+    inputs:
+      branch:
+        required: false
+        type: string  
 
 concurrency:
   group: wheel_linux_x86_64_rocm-${{ github.ref }}
@@ -29,11 +34,12 @@ jobs:
   set_wheel_build_matrix:
     if: |
       github.event_name != 'pull_request' ||
-      (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'ci:build_wheels'))
+      (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'ci:build_wheels')) 
     name: "Set wheel build matrix"
     uses: ./.github/workflows/set_wheel_build_matrix.yml
     with:
       event_name: ${{ github.event_name }}
+      workflow_name: wheel_linux_x86_64_rocm
 
   build_dependencies:
     needs: [set_wheel_build_matrix]
@@ -123,6 +129,8 @@ jobs:
 
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
+        with:        
+          ref: ${{ inputs.branch || github.ref }} 
 
       - name: Copy cached libraries
         if: steps.kokkos-cache.outputs.cache-hit == 'true'
@@ -182,8 +190,9 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: |
           github.event_name == 'release' ||
+          github.event_name == 'schedule' ||
           github.event_name == 'workflow_dispatch' ||
-          github.ref == 'refs/heads/master' ||
+          github.ref == 'refs/heads/main' ||
           steps.rc_build.outputs.match != ''
         with:
           name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ fromJson('{ "cp311-*":"py311","cp312-*":"py312","cp313-*":"py313","cp314-*":"py314" }')[matrix.cibw_build] }}-${{ matrix.arch }}-rocm${{ matrix.rocm_version }}.zip
@@ -213,7 +222,8 @@ jobs:
       - uses: actions/download-artifact@v4
         if: |
           github.event_name == 'release' ||
-          github.ref == 'refs/heads/master' || 
+          github.event_name == 'schedule' ||
+          github.ref == 'refs/heads/main' || 
           steps.rc_build.outputs.match != ''
         with:
           name:  ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ fromJson('{ "cp311-*":"py311","cp312-*":"py312","cp313-*":"py313","cp314-*":"py314" }')[matrix.cibw_build] }}-${{ matrix.arch }}-rocm${{ matrix.rocm_version }}.zip
@@ -223,7 +233,8 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         if: |
           github.event_name == 'release' ||
-          github.ref == 'refs/heads/master' || 
+          github.event_name == 'schedule' ||
+          github.ref == 'refs/heads/main' || 
           steps.rc_build.outputs.match != ''
         with:
           verbose: true

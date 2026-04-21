@@ -5,11 +5,11 @@ on:
       lightning-version:
         type: string
         required: true
-        description: The version of Lightning to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
+        description: The version of Lightning to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from main)
       pennylane-version:
         type: string
         required: true
-        description: The version of PennyLane to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
+        description: The version of PennyLane to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from main)
   pull_request:
     types:
       - opened
@@ -20,7 +20,7 @@ on:
       - pennylane_lightning/core/**
   push:
     branches:
-      - master
+      - main
 
 env:
   COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:./coverage.xml -p no:warnings --tb=native"
@@ -91,7 +91,7 @@ jobs:
         if: inputs.pennylane-version == 'latest'
         run: |
           cd pennylane
-          git checkout master
+          git checkout main
           python -m pip uninstall -y pennylane && python -m pip install . -vv --no-deps
 
       - name: Switch to release build of PennyLane

@@ -14,6 +14,7 @@
 """
 Unit tests for the var method of the :mod:`pennylane_lightning.LightningQubit` device.
 """
+
 import numpy as np
 import pennylane as qml
 import pytest

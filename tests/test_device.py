@@ -14,6 +14,7 @@
 """
 Unit tests for Lightning devices creation.
 """
+
 import pickle as pkl
 import sys
 

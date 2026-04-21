@@ -18,7 +18,9 @@
 #include <utility>
 #include <vector>
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_approx.hpp>
+#include <catch2/catch_template_test_macros.hpp>
+using Catch::Approx;
 
 #include "MeasurementsKokkos.hpp"
 #include "ObservablesKokkos.hpp"

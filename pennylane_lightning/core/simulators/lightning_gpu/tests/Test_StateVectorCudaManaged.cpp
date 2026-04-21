@@ -19,7 +19,9 @@
 #include <type_traits>
 #include <vector>
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_template_test_macros.hpp>
+#include <catch2/generators/catch_generators.hpp>
+#include <catch2/matchers/catch_matchers_string.hpp>
 
 #include "StateVectorCudaManaged.hpp"
 #include "TestHelpers.hpp" // createRandomStateVectorData
@@ -104,7 +106,7 @@ TEMPLATE_PRODUCT_TEST_CASE(
                                   st_data.size());
         REQUIRE_THROWS_WITH(
             state_vector.applyMatrix(m, {0, 1}),
-            Catch::Contains(
+            Catch::Matchers::ContainsSubstring(
                 "The size of matrix does not match with the given"));
     }
 
@@ -118,7 +120,7 @@ TEMPLATE_PRODUCT_TEST_CASE(
                                   st_data.size());
         REQUIRE_THROWS_WITH(
             state_vector.applyMatrix(m, {0}),
-            Catch::Contains(
+            Catch::Matchers::ContainsSubstring(
                 "The size of matrix does not match with the given"));
     }
 }
@@ -140,8 +142,9 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorCudaManaged::applyMatrix with a pointer",
 
         StateVectorT state_vector(reinterpret_cast<ComplexT *>(st_data.data()),
                                   st_data.size());
-        REQUIRE_THROWS_WITH(state_vector.applyMatrix(m.data(), {}),
-                            Catch::Contains("must be larger than 0"));
+        REQUIRE_THROWS_WITH(
+            state_vector.applyMatrix(m.data(), {}),
+            Catch::Matchers::ContainsSubstring("must be larger than 0"));
     }
 
     SECTION("Test a matrix represent PauliX") {
@@ -316,7 +319,8 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::collapse error",
 
         REQUIRE_THROWS_WITH(
             sv.collapse(wire, branch),
-            Catch::Contains("Chosen branch has vector norm close to zero and "
-                            "cannot be normalized"));
+            Catch::Matchers::ContainsSubstring(
+                "Chosen branch has vector norm close to zero and "
+                "cannot be normalized"));
     }
 }

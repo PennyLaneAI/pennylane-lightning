@@ -5,14 +5,14 @@ on:
       lightning-version:
         type: string
         required: true
-        description: The version of lightning to use. Valid values are either 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
+        description: The version of lightning to use. Valid values are either 'stable' (most recent git-tag) or 'latest' (most recent commit from main)
       pennylane-version:
         type: string
         required: true
-        description: The version of PennyLane to use. Valid values are either 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
+        description: The version of PennyLane to use. Valid values are either 'stable' (most recent git-tag) or 'latest' (most recent commit from main)
   push:
     branches:
-      - master
+      - main
   pull_request:
     types:
       - opened
@@ -46,10 +46,10 @@ jobs:
       max-parallel: 1
       matrix:
         mpilib: ["openmpi"]
-        kokkos_version: ["4.5.00"]
+        kokkos_version: ["5.1.0"]
         exec_model: ["CUDA"]
         cuda_version_maj: ["12"]
-        cuda_version_min: ["4"]
+        cuda_version_min: ["9"]
     timeout-minutes: 60
 
     steps:
@@ -106,7 +106,7 @@ jobs:
           # Adding venv name as an output for subsequent steps to reference if needed
           echo "venv_name=${{ env.VENV_NAME }}" >> $GITHUB_OUTPUT
           echo "Python_ROOT_DIR=${{ env.VENV_NAME }}" >> $GITHUB_ENV
-          echo "Python3_ROOT_DIR=${{ env.VENV_NAME }}" >> $GITHUB_ENV        
+          echo "Python3_ROOT_DIR=${{ env.VENV_NAME }}" >> $GITHUB_ENV
 
       - name: Display Python-Path
         id: python_path
@@ -121,7 +121,7 @@ jobs:
 
       - name: Install required packages
         run: |
-          python -m pip install --upgrade pip      # Upgrade pip    
+          python -m pip install --upgrade pip      # Upgrade pip
           python -m pip install --group tests
           python -m pip install cmake scipy
 
@@ -193,8 +193,8 @@ jobs:
           mkdir -p ./tests/results
           test_status=0
           for file in *runner ; do ./$file  --reporter junit --out ./tests/results/report_$file.xml && echo "Test $file Success!" || { cat ./tests/results/report_$file.xml; test_status=1; } done;
-          for file in lightning_kokkos*runner_mpi ; do mpirun -np 4 ./$file --reporter junit --out ./tests/results/report_$file.xml && echo "Test $file Success!" || { cat ./tests/results/report_$file.xml; test_status=1; } done;
-          for file in utils_*runner_mpi ; do mpirun -np 2 ./$file --reporter junit --out ./tests/results/report_$file.xml && echo "Test $file Success!" || { cat ./tests/results/report_$file.xml; test_status=1; } done;
+          for file in lightning_kokkos*runner_mpi ; do mpirun -np 4 ./$file --order decl --reporter junit --out ./tests/results/report_$file.xml && echo "Test $file Success!" || { cat ./tests/results/report_$file.xml; test_status=1; } done;
+          for file in utils_*runner_mpi ; do mpirun -np 2 ./$file --order decl --reporter junit --out ./tests/results/report_$file.xml && echo "Test $file Success!" || { cat ./tests/results/report_$file.xml; test_status=1; } done;
           if [ $test_status -ne 0 ]; then
             echo "Tests failed. Exiting with error code."
             exit 1

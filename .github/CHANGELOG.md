@@ -35,14 +35,44 @@
 
 <h3>Internal changes ⚙️</h3>
 
+<<<<<<< mlxd/add_ai_policy
 - A new AI policy document is now applied across the PennyLaneAI organization for all AI contributions.
   [(#1345)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1345)
+=======
+- Upgraded Kokkos from v4.5.0 to v5.1.0.
+  [(#1308)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1308)
+
+- Bumped `black` version to 26.3.1 to eliminate a vulnerability reported by dependabot.
+  [(#1360)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1360)
+
+- Fixed a security issue in the triggering mechanism of one of the GH Actions scripts.
+  [(#1359)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1359)
+
+- Updated default branch references from `master` to `main` and removed the daily sync between them.
+  [(#1356)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1356)
+  [(#1361)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1361)
+
+- Upgrade CIs to use CUDA 12.9.
+  [(#1353)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1353)
+  [(#1354)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1354)
+  [(#1355)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1355)
+
+- Update Catch2 testing framework to v3.11.
+  [(#1350)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1350)
+
+- Update internal dependencies versions for Nanobind (2.11), cmake (3.26), sphinxcontrib-htmlhelp (2.1.0)
+  [(#1347)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1347)
+
+- Added workflow to create and upload nightly builds of the RC branch and trigger Catalyst's nightly RC builds.
+  [(#1344)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1344)
+>>>>>>> main
 
 - Updated Github docker build action to use relevant lightning branch.
   [(#1346)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1346)
 
 - Remove dependency for GCC-11 when building `lightning.amdgpu`.
   [(#1343)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1343)
+  [(#1349)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1349)
 
 - Cleaned up the preprocess transforms of the lightning devices, updating the calls to `decompose` with the correct gate set.
   [(#1341)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1341)
@@ -78,6 +108,7 @@ This release contains contributions from (in alphabetical order):
 Runor Agbaire,
 Ali Asadi,
 Astral Cai,
+Yushao Chen,
 Ashish Kanwar Singh,
 Jeffrey Kam,
 Joseph Lee,
@@ -126,6 +157,9 @@ Jake Zaia.
   [(#1292)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1292)
 
 <h3>Internal changes ⚙️</h3>
+
+- Updated references to Pennylane's `master` to reference `main`.
+  [(#1351)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1351)
 
 - Pinned NumPy to versions preceding 2.4 on CIs as `pyscf` is not compatible with the new version of NumPy yet.
   [(#1315)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1315)

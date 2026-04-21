@@ -250,7 +250,7 @@ html_theme_options = {
 }
 
 edit_on_github_project = "PennyLaneAI/pennylane-lightning"
-edit_on_github_branch = "master/doc"
+edit_on_github_branch = "main/doc"
 
 # -- Sitemap settings -----------------------------------------------------
 sitemap_url_scheme = "{link}"

@@ -19,7 +19,8 @@
 #include <type_traits>
 #include <vector>
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_template_test_macros.hpp>
+#include <catch2/matchers/catch_matchers_string.hpp>
 
 #include "DevTag.hpp"
 #include "MPIManagerGPU.hpp"
@@ -155,7 +156,7 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorCudaMPI::applyMatrix with a std::vector",
         state_vector.CopyHostDataToGpu(local_state, false);
         REQUIRE_THROWS_WITH(
             state_vector.applyMatrix(m, {0, 1}),
-            Catch::Contains(
+            Catch::Matchers::ContainsSubstring(
                 "The size of matrix does not match with the given"));
     }
     SECTION("Test wrong number of wires") {
@@ -166,7 +167,7 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorCudaMPI::applyMatrix with a std::vector",
         state_vector.CopyHostDataToGpu(local_state, false);
         REQUIRE_THROWS_WITH(
             state_vector.applyMatrix(m, {0}),
-            Catch::Contains(
+            Catch::Matchers::ContainsSubstring(
                 "The size of matrix does not match with the given"));
     }
 }
@@ -212,8 +213,9 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorCudaMPI::applyMatrix with a pointer",
         StateVectorT state_vector(mpi_manager, dt_local, mpi_buffersize,
                                   nGlobalIndexBits, nLocalIndexBits);
         state_vector.CopyHostDataToGpu(local_state, false);
-        REQUIRE_THROWS_WITH(state_vector.applyMatrix(m.data(), {}),
-                            Catch::Contains("must be larger than 0"));
+        REQUIRE_THROWS_WITH(
+            state_vector.applyMatrix(m.data(), {}),
+            Catch::Matchers::ContainsSubstring("must be larger than 0"));
     }
 
     SECTION("Test a matrix represent PauliX") {
