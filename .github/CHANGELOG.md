@@ -35,10 +35,8 @@
 
 <h3>Internal changes ⚙️</h3>
 
-<<<<<<< mlxd/add_ai_policy
 - A new AI policy document is now applied across the PennyLaneAI organization for all AI contributions.
   [(#1345)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1345)
-=======
 - Upgraded Kokkos from v4.5.0 to v5.1.0.
   [(#1308)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1308)
 
@@ -65,7 +63,6 @@
 
 - Added workflow to create and upload nightly builds of the RC branch and trigger Catalyst's nightly RC builds.
   [(#1344)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1344)
->>>>>>> main
 
 - Updated Github docker build action to use relevant lightning branch.
   [(#1346)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1346)
