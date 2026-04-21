@@ -19,7 +19,7 @@ import math
 from functools import partial
 
 import numpy as np
-import pennylane as qml
+import pennylane as qp
 import pytest
 from conftest import PHI, THETA
 from conftest import LightningDevice as ld
@@ -42,21 +42,21 @@ class TestExpval:
     @pytest.mark.parametrize(
         "operation,input,expected_output",
         [
-            (qml.PauliX, [1 / math.sqrt(2), 1 / math.sqrt(2)], 1),
-            (qml.PauliX, [1 / math.sqrt(2), -1 / math.sqrt(2)], -1),
-            (qml.PauliX, [1, 0], 0),
-            (qml.PauliY, [1 / math.sqrt(2), 1j / math.sqrt(2)], 1),
-            (qml.PauliY, [1 / math.sqrt(2), -1j / math.sqrt(2)], -1),
-            (qml.PauliY, [1, 0], 0),
-            (qml.PauliZ, [1, 0], 1),
-            (qml.PauliZ, [0, 1], -1),
-            (qml.PauliZ, [1 / math.sqrt(2), 1 / math.sqrt(2)], 0),
-            (qml.Hadamard, [1, 0], 1 / math.sqrt(2)),
-            (qml.Hadamard, [0, 1], -1 / math.sqrt(2)),
-            (qml.Hadamard, [1 / math.sqrt(2), 1 / math.sqrt(2)], 1 / math.sqrt(2)),
-            (qml.Identity, [1, 0], 1),
-            (qml.Identity, [0, 1], 1),
-            (qml.Identity, [1 / math.sqrt(2), -1 / math.sqrt(2)], 1),
+            (qp.PauliX, [1 / math.sqrt(2), 1 / math.sqrt(2)], 1),
+            (qp.PauliX, [1 / math.sqrt(2), -1 / math.sqrt(2)], -1),
+            (qp.PauliX, [1, 0], 0),
+            (qp.PauliY, [1 / math.sqrt(2), 1j / math.sqrt(2)], 1),
+            (qp.PauliY, [1 / math.sqrt(2), -1j / math.sqrt(2)], -1),
+            (qp.PauliY, [1, 0], 0),
+            (qp.PauliZ, [1, 0], 1),
+            (qp.PauliZ, [0, 1], -1),
+            (qp.PauliZ, [1 / math.sqrt(2), 1 / math.sqrt(2)], 0),
+            (qp.Hadamard, [1, 0], 1 / math.sqrt(2)),
+            (qp.Hadamard, [0, 1], -1 / math.sqrt(2)),
+            (qp.Hadamard, [1 / math.sqrt(2), 1 / math.sqrt(2)], 1 / math.sqrt(2)),
+            (qp.Identity, [1, 0], 1),
+            (qp.Identity, [0, 1], 1),
+            (qp.Identity, [1 / math.sqrt(2), -1 / math.sqrt(2)], 1),
         ],
     )
     def test_expval_single_wire_no_parameters(
@@ -65,8 +65,8 @@ class TestExpval:
         """Tests that expectation values are properly calculated for single-wire observables without parameters."""
         dev = qubit_device(wires=1)
         obs = operation(wires=[0])
-        ops = [qml.StatePrep(np.array(input), wires=[0])]
-        tape = qml.tape.QuantumScript(ops, [qml.expval(op=obs)])
+        ops = [qp.StatePrep(np.array(input), wires=[0])]
+        tape = qp.tape.QuantumScript(ops, [qp.expval(op=obs)])
         res = dev.execute(tape)
 
         assert np.isclose(res, expected_output, atol=tol, rtol=0)
@@ -77,12 +77,12 @@ class TestExpval:
     )
     def test_expval_estimate(self):
         """Test that the expectation value is not analytically calculated"""
-        dev = qml.device(device_name, wires=1)
+        dev = qp.device(device_name, wires=1)
 
-        @partial(qml.set_shots, shots=3)
-        @qml.qnode(dev)
+        @partial(qp.set_shots, shots=3)
+        @qp.qnode(dev)
         def circuit():
-            return qml.expval(qml.PauliX(0))
+            return qp.expval(qp.PauliX(0))
 
         expval = circuit()
 
@@ -101,21 +101,21 @@ class TestVar:
     @pytest.mark.parametrize(
         "operation,input,expected_output",
         [
-            (qml.PauliX, [1 / math.sqrt(2), 1 / math.sqrt(2)], 0),
-            (qml.PauliX, [1 / math.sqrt(2), -1 / math.sqrt(2)], 0),
-            (qml.PauliX, [1, 0], 1),
-            (qml.PauliY, [1 / math.sqrt(2), 1j / math.sqrt(2)], 0),
-            (qml.PauliY, [1 / math.sqrt(2), -1j / math.sqrt(2)], 0),
-            (qml.PauliY, [1, 0], 1),
-            (qml.PauliZ, [1, 0], 0),
-            (qml.PauliZ, [0, 1], 0),
-            (qml.PauliZ, [1 / math.sqrt(2), 1 / math.sqrt(2)], 1),
-            (qml.Hadamard, [1, 0], 1 / 2),
-            (qml.Hadamard, [0, 1], 1 / 2),
-            (qml.Hadamard, [1 / math.sqrt(2), 1 / math.sqrt(2)], 1 / 2),
-            (qml.Identity, [1, 0], 0),
-            (qml.Identity, [0, 1], 0),
-            (qml.Identity, [1 / math.sqrt(2), -1 / math.sqrt(2)], 0),
+            (qp.PauliX, [1 / math.sqrt(2), 1 / math.sqrt(2)], 0),
+            (qp.PauliX, [1 / math.sqrt(2), -1 / math.sqrt(2)], 0),
+            (qp.PauliX, [1, 0], 1),
+            (qp.PauliY, [1 / math.sqrt(2), 1j / math.sqrt(2)], 0),
+            (qp.PauliY, [1 / math.sqrt(2), -1j / math.sqrt(2)], 0),
+            (qp.PauliY, [1, 0], 1),
+            (qp.PauliZ, [1, 0], 0),
+            (qp.PauliZ, [0, 1], 0),
+            (qp.PauliZ, [1 / math.sqrt(2), 1 / math.sqrt(2)], 1),
+            (qp.Hadamard, [1, 0], 1 / 2),
+            (qp.Hadamard, [0, 1], 1 / 2),
+            (qp.Hadamard, [1 / math.sqrt(2), 1 / math.sqrt(2)], 1 / 2),
+            (qp.Identity, [1, 0], 0),
+            (qp.Identity, [0, 1], 0),
+            (qp.Identity, [1 / math.sqrt(2), -1 / math.sqrt(2)], 0),
         ],
     )
     def test_var_single_wire_no_parameters(
@@ -124,8 +124,8 @@ class TestVar:
         """Tests that variances are properly calculated for single-wire observables without parameters."""
         dev = qubit_device(wires=1)
         obs = operation(wires=[0])
-        ops = [qml.StatePrep(np.array(input), wires=[0])]
-        tape = qml.tape.QuantumScript(ops, [qml.var(op=obs)])
+        ops = [qp.StatePrep(np.array(input), wires=[0])]
+        tape = qp.tape.QuantumScript(ops, [qp.var(op=obs)])
         res = dev.execute(tape)
 
         assert np.isclose(res, expected_output, atol=tol, rtol=0)
@@ -137,12 +137,12 @@ class TestVar:
     def test_var_estimate(self):
         """Test that the variance is not analytically calculated"""
 
-        dev = qml.device(device_name, wires=1)
+        dev = qp.device(device_name, wires=1)
 
-        @partial(qml.set_shots, shots=3)
-        @qml.qnode(dev)
+        @partial(qp.set_shots, shots=3)
+        @qp.qnode(dev)
         def circuit():
-            return qml.var(qml.PauliX(0))
+            return qp.var(qp.PauliX(0))
 
         var = circuit()
 
@@ -163,24 +163,24 @@ class TestSample:
         # state is set to None in __init__ and only properly
         # initialized during reset
         dev = qubit_device(wires=2)
-        ops = [qml.RX(1.5708, wires=[0]), qml.RX(1.5708, wires=[1])]
+        ops = [qp.RX(1.5708, wires=[0]), qp.RX(1.5708, wires=[1])]
 
         shots = 10
-        obs = qml.PauliZ(wires=[0])
-        tape = qml.tape.QuantumScript(ops, [qml.sample(op=obs)], shots=shots)
+        obs = qp.PauliZ(wires=[0])
+        tape = qp.tape.QuantumScript(ops, [qp.sample(op=obs)], shots=shots)
         s1 = dev.execute(tape)
 
         assert np.array_equal(s1.shape, (shots,))
 
         shots = 12
-        obs = qml.PauliZ(wires=[1])
-        tape = qml.tape.QuantumScript(ops, [qml.sample(op=obs)], shots=shots)
+        obs = qp.PauliZ(wires=[1])
+        tape = qp.tape.QuantumScript(ops, [qp.sample(op=obs)], shots=shots)
         s2 = dev.execute(tape)
         assert np.array_equal(s2.shape, (shots,))
 
         shots = 17
-        obs = qml.PauliX(0) @ qml.PauliZ(1)
-        tape = qml.tape.QuantumScript(ops, [qml.sample(op=obs)], shots=shots)
+        obs = qp.PauliX(0) @ qp.PauliZ(1)
+        tape = qp.tape.QuantumScript(ops, [qp.sample(op=obs)], shots=shots)
         s3 = dev.execute(tape)
 
         assert np.array_equal(s3.shape, (shots,))
@@ -195,11 +195,11 @@ class TestSample:
         # initialized during reset
         dev = qubit_device(wires=2)
 
-        ops = [qml.RX(1.5708, wires=[0])]
+        ops = [qp.RX(1.5708, wires=[0])]
 
-        shots = qml.measurements.Shots(1000)
-        obs = qml.PauliZ(0)
-        tape = qml.tape.QuantumScript(ops, [qml.sample(op=obs)], shots=shots)
+        shots = qp.measurements.Shots(1000)
+        obs = qp.PauliZ(0)
+        tape = qp.tape.QuantumScript(ops, [qp.sample(op=obs)], shots=shots)
         s1 = dev.execute(tape)
 
         # s1 should only contain 1 and -1, which is guaranteed if
@@ -214,7 +214,7 @@ class TestLightningDeviceIntegration:
     def test_load_default_qubit_device(self):
         """Test that the default plugin loads correctly"""
 
-        dev = qml.device(device_name, wires=2)
+        dev = qp.device(device_name, wires=2)
         assert not dev.shots
         assert len(dev.wires) == 2
 
@@ -229,12 +229,12 @@ class TestLightningDeviceIntegration:
         """Test the dynamic allocation of qubits in Lightning devices"""
 
         def circuit():
-            qml.Identity(wires=wires[0])
-            qml.Hadamard(wires=wires[1])
-            return qml.state()
+            qp.Identity(wires=wires[0])
+            qp.Hadamard(wires=wires[1])
+            return qp.state()
 
         dev = qubit_device(None)
-        results = qml.qnode(dev)(circuit)()
+        results = qp.qnode(dev)(circuit)()
         assert np.allclose(results, expected_state, atol=tol, rtol=0)
 
     @pytest.mark.parametrize(
@@ -248,13 +248,13 @@ class TestLightningDeviceIntegration:
         """Test the dynamic allocation of qubits in Lightning devices"""
 
         def circuit():
-            qml.Identity(wires=wires[0])
-            qml.Identity(wires=wires[1])
-            qml.Hadamard(wires=wires[2])
-            return qml.state()
+            qp.Identity(wires=wires[0])
+            qp.Identity(wires=wires[1])
+            qp.Hadamard(wires=wires[2])
+            return qp.state()
 
         dev = qubit_device(None)
-        results = qml.qnode(dev)(circuit)()
+        results = qp.qnode(dev)(circuit)()
         assert np.allclose(results, expected_state, atol=tol, rtol=0)
 
     @pytest.mark.skipif(
@@ -266,10 +266,10 @@ class TestLightningDeviceIntegration:
         p = 0.543
         dev = qubit_device(wires=1)
 
-        @qml.qnode(dev)
+        @qp.qnode(dev)
         def circuit(x):
-            qml.RX(x, wires=0)
-            return qml.expval(qml.PauliY(0))
+            qp.RX(x, wires=0)
+            return qp.expval(qp.PauliY(0))
 
         expected = -np.sin(p)
 
@@ -284,11 +284,11 @@ class TestLightningDeviceIntegration:
         p = 0.543
         dev = qubit_device(wires=1)
 
-        @qml.qnode(dev)
+        @qp.qnode(dev)
         def circuit(x):
             """Test quantum function"""
-            qml.RX(x, wires=0)
-            return qml.expval(qml.Identity(0))
+            qp.RX(x, wires=0)
+            return qp.expval(qp.Identity(0))
 
         assert np.isclose(circuit(p), 1, atol=tol, rtol=0)
 
@@ -300,16 +300,16 @@ class TestLightningDeviceIntegration:
         """Test that the default qubit plugin provides correct result for high shot number"""
 
         shots = 10**4
-        dev = qml.device(device_name, wires=1)
+        dev = qp.device(device_name, wires=1)
 
         p = 0.543
 
-        @partial(qml.set_shots, shots=shots)
-        @qml.qnode(dev)
+        @partial(qp.set_shots, shots=shots)
+        @qp.qnode(dev)
         def circuit(x):
             """Test quantum function"""
-            qml.RX(x, wires=0)
-            return qml.expval(qml.PauliY(0))
+            qp.RX(x, wires=0)
+            return qp.expval(qp.PauliY(0))
 
         runs = []
         for _ in range(100):
@@ -336,15 +336,15 @@ class TestLightningDeviceIntegration:
     ):
         """Tests supported gates that act on a single wire that are not parameterized"""
         dev = qubit_device(wires=1)
-        op = getattr(qml.ops, name)
+        op = getattr(qp.ops, name)
 
         if hasattr(dev, "supports_operation"):
             assert dev.supports_operation(name)
 
-        @qml.qnode(dev)
+        @qp.qnode(dev)
         def circuit():
             op(wires=0)
-            return qml.expval(qml.PauliZ(0))
+            return qp.expval(qp.PauliZ(0))
 
         assert np.isclose(circuit(), expected_output, atol=tol, rtol=0)
 
@@ -359,16 +359,16 @@ class TestLightningDeviceIntegration:
     def test_supported_gate_two_wires_no_parameters(self, qubit_device, tol, name, expected_output):
         """Tests supported gates that act on two wires that are not parameterized"""
         dev = qubit_device(wires=2)
-        op = getattr(qml.ops, name)
+        op = getattr(qp.ops, name)
 
         if hasattr(dev, "supports_operation"):
             assert dev.supports_operation(name)
 
-        @qml.qnode(dev)
+        @qp.qnode(dev)
         def circuit():
-            qml.StatePrep(np.array([1 / 2, 0, 0, math.sqrt(3) / 2]), wires=[0, 1])
+            qp.StatePrep(np.array([1 / 2, 0, 0, math.sqrt(3) / 2]), wires=[0, 1])
             op(wires=[0, 1])
-            return qml.expval(qml.PauliZ(0)), qml.expval(qml.PauliZ(1))
+            return qp.expval(qp.PauliZ(0)), qp.expval(qp.PauliZ(1))
 
         assert np.allclose(circuit(), expected_output, atol=tol, rtol=0)
 
@@ -383,16 +383,16 @@ class TestLightningDeviceIntegration:
     ):
         """Tests supported gates that act on three wires that are not parameterized"""
         dev = qubit_device(wires=3)
-        op = getattr(qml.ops, name)
+        op = getattr(qp.ops, name)
 
         if hasattr(dev, "supports_operation"):
             assert dev.supports_operation(name)
 
-        @qml.qnode(dev)
+        @qp.qnode(dev)
         def circuit():
-            qml.BasisState(np.array([1, 0, 1]), wires=[0, 1, 2])
+            qp.BasisState(np.array([1, 0, 1]), wires=[0, 1, 2])
             op(wires=[0, 1, 2])
-            return qml.expval(qml.PauliZ(0)), qml.expval(qml.PauliZ(1)), qml.expval(qml.PauliZ(2))
+            return qp.expval(qp.PauliZ(0)), qp.expval(qp.PauliZ(1)), qp.expval(qp.PauliZ(2))
 
         assert np.allclose(circuit(), expected_output, atol=tol, rtol=0)
 
@@ -411,15 +411,15 @@ class TestLightningDeviceIntegration:
     def test_supported_state_preparation(self, qubit_device, tol, name, par, expected_output):
         """Tests supported state preparations"""
         dev = qubit_device(wires=2)
-        op = getattr(qml.ops, name)
+        op = getattr(qp.ops, name)
 
         if hasattr(dev, "supports_operation"):
             assert dev.supports_operation(name)
 
-        @qml.qnode(dev)
+        @qp.qnode(dev)
         def circuit():
             op(np.array(par), wires=[0, 1])
-            return qml.expval(qml.PauliZ(0)), qml.expval(qml.PauliZ(1))
+            return qp.expval(qp.PauliZ(0)), qp.expval(qp.PauliZ(1))
 
         assert np.allclose(circuit(), expected_output, atol=tol, rtol=0)
 
@@ -435,7 +435,7 @@ class TestLightningDeviceIntegration:
                 [-1, 1],
                 marks=pytest.mark.skipif(
                     device_name == "lightning.tensor",
-                    reason="lightning.tensor requires a vector of length num_wires for qml.BasisState()",
+                    reason="lightning.tensor requires a vector of length num_wires for qp.BasisState()",
                 ),
             ),
             pytest.param(
@@ -445,7 +445,7 @@ class TestLightningDeviceIntegration:
                 [1, -1],
                 marks=pytest.mark.skipif(
                     device_name == "lightning.tensor",
-                    reason="lightning.tensor requires a vector of length num_wires for qml.BasisState()",
+                    reason="lightning.tensor requires a vector of length num_wires for qp.BasisState()",
                 ),
             ),
         ],
@@ -453,12 +453,12 @@ class TestLightningDeviceIntegration:
     def test_basis_state_2_qubit_subset(self, qubit_device, tol, name, par, wires, expected_output):
         """Tests qubit basis state preparation on subsets of qubits"""
         dev = qubit_device(wires=2)
-        op = getattr(qml.ops, name)
+        op = getattr(qp.ops, name)
 
-        @qml.qnode(dev)
+        @qp.qnode(dev)
         def circuit():
             op(np.array(par), wires=wires)
-            return qml.expval(qml.PauliZ(0)), qml.expval(qml.PauliZ(1))
+            return qp.expval(qp.PauliZ(0)), qp.expval(qp.PauliZ(1))
 
         assert np.allclose(circuit(), expected_output, atol=tol, rtol=0)
 
@@ -478,14 +478,14 @@ class TestLightningDeviceIntegration:
     ):
         """Tests qubit state vector preparation on subsets of 2 qubits"""
         dev = qubit_device(wires=2)
-        op = getattr(qml.ops, name)
+        op = getattr(qp.ops, name)
 
         par = np.array(par)
 
-        @qml.qnode(dev)
+        @qp.qnode(dev)
         def circuit():
             op(par, wires=wires)
-            return qml.expval(qml.PauliZ(0)), qml.expval(qml.PauliZ(1))
+            return qp.expval(qp.PauliZ(0)), qp.expval(qp.PauliZ(1))
 
         assert np.allclose(circuit(), expected_output, atol=tol, rtol=0)
 
@@ -512,14 +512,14 @@ class TestLightningDeviceIntegration:
     ):
         """Tests qubit state vector preparation on subsets of 3 qubits"""
         dev = qubit_device(wires=3)
-        op = getattr(qml.ops, name)
+        op = getattr(qp.ops, name)
 
         par = np.array(par)
 
-        @qml.qnode(dev)
+        @qp.qnode(dev)
         def circuit():
             op(par, wires=wires)
-            return qml.expval(qml.PauliZ(0)), qml.expval(qml.PauliZ(1)), qml.expval(qml.PauliZ(2))
+            return qp.expval(qp.PauliZ(0)), qp.expval(qp.PauliZ(1)), qp.expval(qp.PauliZ(2))
 
         assert np.allclose(circuit(), expected_output, atol=tol, rtol=0)
 
@@ -552,15 +552,15 @@ class TestLightningDeviceIntegration:
     ):
         """Tests supported gates that act on a single wire that are parameterized"""
         dev = qubit_device(wires=1)
-        op = getattr(qml.ops, name)
+        op = getattr(qp.ops, name)
 
         if hasattr(dev, "supports_operation"):
             assert dev.supports_operation(name)
 
-        @qml.qnode(dev)
+        @qp.qnode(dev)
         def circuit():
             op(*par, wires=0)
-            return qml.expval(qml.PauliZ(0))
+            return qp.expval(qp.PauliZ(0))
 
         assert np.isclose(circuit(), expected_output, atol=tol, rtol=0)
 
@@ -594,16 +594,16 @@ class TestLightningDeviceIntegration:
     ):
         """Tests supported gates that act on two wires that are parameterized"""
         dev = qubit_device(wires=2)
-        op = getattr(qml.ops, name)
+        op = getattr(qp.ops, name)
 
         if hasattr(dev, "supports_operation"):
             assert dev.supports_operation(name)
 
-        @qml.qnode(dev)
+        @qp.qnode(dev)
         def circuit():
-            qml.StatePrep(np.array([1 / 2, 0, 0, math.sqrt(3) / 2]), wires=[0, 1])
+            qp.StatePrep(np.array([1 / 2, 0, 0, math.sqrt(3) / 2]), wires=[0, 1])
             op(*par, wires=[0, 1])
-            return qml.expval(qml.PauliZ(0)), qml.expval(qml.PauliZ(1))
+            return qp.expval(qp.PauliZ(0)), qp.expval(qp.PauliZ(1))
 
         assert np.allclose(circuit(), expected_output, atol=tol, rtol=0)
 
@@ -633,15 +633,15 @@ class TestLightningDeviceIntegration:
     ):
         """Tests supported observables on single wires without parameters."""
         dev = qubit_device(wires=1)
-        obs = getattr(qml.ops, name)
+        obs = getattr(qp.ops, name)
 
         if hasattr(dev, "supports_observable"):
             assert dev.supports_observable(name)
 
-        @qml.qnode(dev)
+        @qp.qnode(dev)
         def circuit():
-            qml.StatePrep(np.array(state), wires=[0])
-            return qml.expval(obs(wires=[0]))
+            qp.StatePrep(np.array(state), wires=[0])
+            return qp.expval(obs(wires=[0]))
 
         assert np.isclose(circuit(), expected_output, atol=tol, rtol=0)
 
@@ -662,15 +662,15 @@ class TestLightningDeviceIntegration:
     ):
         """Tests supported observables on single wires with parameters."""
         dev = qubit_device(wires=1)
-        obs = getattr(qml.ops, name)
+        obs = getattr(qp.ops, name)
 
         if hasattr(dev, "supports_observable"):
             assert dev.supports_observable(name)
 
-        @qml.qnode(dev)
+        @qp.qnode(dev)
         def circuit():
-            qml.StatePrep(np.array(state), wires=[0])
-            return qml.expval(obs(*par, wires=[0]))
+            qp.StatePrep(np.array(state), wires=[0])
+            return qp.expval(obs(*par, wires=[0]))
 
         assert np.isclose(circuit(), expected_output, atol=tol, rtol=0)
 
@@ -680,12 +680,12 @@ class TestLightningDeviceIntegration:
         """
         dev = qubit_device(wires=2)
 
-        @partial(qml.set_shots, shots=1000)
-        @qml.qnode(dev)
+        @partial(qp.set_shots, shots=1000)
+        @qp.qnode(dev)
         def circuit():
-            qml.Hadamard(0)
-            qml.CNOT(wires=[0, 1])
-            return qml.sample(wires=[0, 1])
+            qp.Hadamard(0)
+            qp.CNOT(wires=[0, 1])
+            return qp.sample(wires=[0, 1])
 
         outcomes = circuit()
         outcomes = outcomes.T
@@ -700,14 +700,14 @@ class TestLightningDeviceIntegration:
         the correct dimensions
         """
 
-        dev = qml.device(device_name, wires=num_wires)
+        dev = qp.device(device_name, wires=num_wires)
 
-        @partial(qml.set_shots, shots=1000)
-        @qml.qnode(dev)
+        @partial(qp.set_shots, shots=1000)
+        @qp.qnode(dev)
         def circuit():
-            qml.Hadamard(0)
-            qml.CNOT(wires=[0, 1])
-            return qml.sample(wires=[0, 1])
+            qp.Hadamard(0)
+            qp.CNOT(wires=[0, 1])
+            return qp.sample(wires=[0, 1])
 
         outcomes = circuit()
         outcomes = outcomes.T
@@ -716,15 +716,15 @@ class TestLightningDeviceIntegration:
 
     def test_snapshot_is_ignored_without_shot(self):
         """Tests if the Snapshot operator is ignored correctly"""
-        dev = qml.device(device_name, wires=4)
+        dev = qp.device(device_name, wires=4)
 
-        @qml.qnode(dev)
+        @qp.qnode(dev)
         def circuit():
-            qml.Hadamard(0)
-            qml.Snapshot()
-            qml.adjoint(qml.Snapshot())
-            qml.CNOT(wires=[0, 1])
-            return qml.expval(qml.PauliZ(0))
+            qp.Hadamard(0)
+            qp.Snapshot()
+            qp.adjoint(qp.Snapshot())
+            qp.CNOT(wires=[0, 1])
+            return qp.expval(qp.PauliZ(0))
 
         outcomes = circuit()
 
@@ -732,16 +732,16 @@ class TestLightningDeviceIntegration:
 
     def test_snapshot_is_ignored_with_shots(self):
         """Tests if the Snapshot operator is ignored correctly"""
-        dev = qml.device(device_name, wires=4)
+        dev = qp.device(device_name, wires=4)
 
-        @partial(qml.set_shots, shots=1000)
-        @qml.qnode(dev)
+        @partial(qp.set_shots, shots=1000)
+        @qp.qnode(dev)
         def circuit():
-            qml.Hadamard(0)
-            qml.Snapshot()
-            qml.adjoint(qml.Snapshot())
-            qml.CNOT(wires=[0, 1])
-            return qml.sample(wires=[0, 1])
+            qp.Hadamard(0)
+            qp.Snapshot()
+            qp.adjoint(qp.Snapshot())
+            qp.CNOT(wires=[0, 1])
+            return qp.sample(wires=[0, 1])
 
         outcomes = circuit()
         outcomes = outcomes.T
@@ -753,14 +753,14 @@ class TestLightningDeviceIntegration:
         reason="lightning.tensor does not support _tensornet.state access",
     )
     def test_apply_qpe(self, qubit_device, tol):
-        """Test the application of qml.QuantumPhaseEstimation"""
+        """Test the application of qp.QuantumPhaseEstimation"""
         dev = qubit_device(wires=2)
 
-        @qml.qnode(dev)
+        @qp.qnode(dev)
         def circuit():
-            qml.Hadamard(wires=0)
-            qml.QuantumPhaseEstimation(qml.matrix(qml.Hadamard, wire_order=[0])(wires=0), [0], [1])
-            return qml.probs(wires=[0, 1])
+            qp.Hadamard(wires=0)
+            qp.QuantumPhaseEstimation(qp.matrix(qp.Hadamard, wire_order=[0])(wires=0), [0], [1])
+            return qp.probs(wires=[0, 1])
 
         probs = circuit()
 
@@ -786,9 +786,9 @@ class TestLightningDeviceIntegration:
     @pytest.mark.parametrize(
         "op, op_wires",
         [
-            [qml.BlockEncode, [0, 2]],
-            [qml.ctrl(qml.BlockEncode, control=(1)), [0, 2]],
-            [qml.ctrl(qml.BlockEncode, control=(2)), [0, 1]],
+            [qp.BlockEncode, [0, 2]],
+            [qp.ctrl(qp.BlockEncode, control=(1)), [0, 2]],
+            [qp.ctrl(qp.BlockEncode, control=(2)), [0, 1]],
         ],
     )
     @pytest.mark.parametrize(
@@ -805,15 +805,15 @@ class TestLightningDeviceIntegration:
         dev = qubit_device(wires=num_wires)
 
         def circuit1(A):
-            qml.Hadamard(0)
-            qml.Hadamard(1)
+            qp.Hadamard(0)
+            qp.Hadamard(1)
             op(A, wires=op_wires)
-            return qml.state()
+            return qp.state()
 
-        results = qml.qnode(dev)(circuit1)(A)
+        results = qp.qnode(dev)(circuit1)(A)
 
-        dev_default = qml.device("default.qubit", wires=num_wires)
-        expected = qml.qnode(dev_default)(circuit1)(A)
+        dev_default = qp.device("default.qubit", wires=num_wires)
+        expected = qp.qnode(dev_default)(circuit1)(A)
 
         assert np.allclose(results, expected, atol=tol, rtol=0)
 
@@ -828,50 +828,50 @@ class TestApplyLightningMethod:
     @pytest.mark.parametrize(
         "ops0",
         [
-            qml.PauliZ(0),
-            qml.PauliY(0),
-            qml.S(0),
-            qml.RX(0.1234, 0),
-            qml.Rot(0.1, 0.2, 0.3, 0),
-            qml.T(0) @ qml.RY(0.1234, 0),
+            qp.PauliZ(0),
+            qp.PauliY(0),
+            qp.S(0),
+            qp.RX(0.1234, 0),
+            qp.Rot(0.1, 0.2, 0.3, 0),
+            qp.T(0) @ qp.RY(0.1234, 0),
         ],
     )
     @pytest.mark.parametrize(
         "ops1",
         [
-            qml.PauliZ(2),
-            qml.PauliY(2),
-            qml.S(2),
-            qml.RX(0.1234, 2),
-            qml.Rot(0.1, 0.2, 0.3, 2),
-            qml.T(2) @ qml.RY(0.1234, 2),
+            qp.PauliZ(2),
+            qp.PauliY(2),
+            qp.S(2),
+            qp.RX(0.1234, 2),
+            qp.Rot(0.1, 0.2, 0.3, 2),
+            qp.T(2) @ qp.RY(0.1234, 2),
         ],
     )
     def test_multiple_adjoint_operations(self, ops0, ops1, tol):
         """Test that multiple adjoint operations are handled correctly."""
         n_qubits = 4
 
-        dev = qml.device(device_name, wires=n_qubits)
-        dq = qml.device("default.qubit", wires=n_qubits)
+        dev = qp.device(device_name, wires=n_qubits)
+        dq = qp.device("default.qubit", wires=n_qubits)
         init_state = get_random_normalized_state(2**n_qubits)
 
         def circuit():
-            qml.StatePrep(init_state, wires=range(n_qubits))
-            qml.adjoint(ops0)
-            qml.PhaseShift(0.1234, wires=0)
-            qml.adjoint(ops1)
-            return qml.state()
+            qp.StatePrep(init_state, wires=range(n_qubits))
+            qp.adjoint(ops0)
+            qp.PhaseShift(0.1234, wires=0)
+            qp.adjoint(ops1)
+            return qp.state()
 
-        results = qml.QNode(circuit, dev)()
-        expected = qml.QNode(circuit, dq)()
+        results = qp.QNode(circuit, dev)()
+        expected = qp.QNode(circuit, dq)()
         assert np.allclose(results, expected)
 
 
 @pytest.mark.parametrize(
     "op",
     [
-        qml.BasisState([0, 0], wires=[0, 1]),
-        qml.StatePrep([0, 1, 0, 0], wires=[0, 1]),
+        qp.BasisState([0, 0], wires=[0, 1]),
+        qp.StatePrep([0, 1, 0, 0], wires=[0, 1]),
     ],
 )
 @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
@@ -879,22 +879,22 @@ def test_circuit_with_stateprep(op, theta, phi, tol):
     """Test mid-circuit StatePrep"""
     n_qubits = 5
     n_wires = 2
-    dev_def = qml.device("default.qubit", wires=n_qubits)
-    dev = qml.device(device_name, wires=n_qubits)
+    dev_def = qp.device("default.qubit", wires=n_qubits)
+    dev = qp.device(device_name, wires=n_qubits)
     m = 2**n_wires
     U = get_random_matrix(m)
     U, _ = np.linalg.qr(U)
     init_state = get_random_normalized_state(2**n_qubits)
 
     def circuit():
-        qml.StatePrep(init_state, wires=range(n_qubits))
-        qml.RY(theta, wires=[0])
-        qml.RY(phi, wires=[1])
-        qml.CNOT(wires=[0, 1])
+        qp.StatePrep(init_state, wires=range(n_qubits))
+        qp.RY(theta, wires=[0])
+        qp.RY(phi, wires=[1])
+        qp.CNOT(wires=[0, 1])
         op
-        qml.QubitUnitary(U, wires=range(2, 2 + 2 * n_wires, 2))
-        return qml.state()
+        qp.QubitUnitary(U, wires=range(2, 2 + 2 * n_wires, 2))
+        return qp.state()
 
-    circ = qml.QNode(circuit, dev)
-    circ_def = qml.QNode(circuit, dev_def)
+    circ = qp.QNode(circuit, dev)
+    circ_def = qp.QNode(circuit, dev_def)
     assert np.allclose(circ(), circ_def(), tol)

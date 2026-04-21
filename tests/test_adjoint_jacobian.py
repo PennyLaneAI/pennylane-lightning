@@ -450,9 +450,7 @@ class TestAdjointJacobian:
             qp.CNOT(wires=[0, 1])
 
             qp.expval(
-                qp.Hermitian(
-                    [[0, 0, 1, 1], [0, 1, 2, 1], [1, 2, 1, 0], [1, 1, 0, 0]], wires=[0, 1]
-                )
+                qp.Hermitian([[0, 0, 1, 1], [0, 1, 2, 1], [1, 2, 1, 0], [1, 1, 0, 0]], wires=[0, 1])
             )
 
         tape.trainable_params = set(range(1, 1 + op.num_params))
@@ -571,9 +569,7 @@ class TestAdjointJacobianQNode:
     def dev(self, request):
         params = request.param
         if device_name == "lightning.kokkos":
-            return qp.device(
-                device_name, wires=params[2], c_dtype=params[0], kokkos_args=params[1]
-            )
+            return qp.device(device_name, wires=params[2], c_dtype=params[0], kokkos_args=params[1])
         return qp.device(device_name, wires=params[2], c_dtype=params[0])
 
     def test_qnode(self, mocker, dev):
@@ -1142,9 +1138,7 @@ def test_adjoint_SparseHamiltonian(returns, seed):
         qp.Hadamard(3) @ qp.PauliZ(2),
         qp.PauliX(0) @ qp.PauliY(3),
         qp.PauliY(0) @ qp.PauliY(2) @ qp.PauliY(3),
-        qp.Hermitian(
-            np.kron(qp.PauliY.compute_matrix(), qp.PauliZ.compute_matrix()), wires=[3, 2]
-        ),
+        qp.Hermitian(np.kron(qp.PauliY.compute_matrix(), qp.PauliZ.compute_matrix()), wires=[3, 2]),
         qp.Hermitian(np.array([[0, 1], [1, 0]], requires_grad=False), wires=0),
         qp.Hermitian(np.array([[0, 1], [1, 0]], requires_grad=False), wires=0) @ qp.PauliZ(2),
     ],

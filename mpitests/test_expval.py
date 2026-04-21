@@ -189,9 +189,7 @@ class TestExpval:
         """Test that Hadamard expectation value is correct"""
         n_qubits = numQubits - 1
         dev_def = qp.device("default.qubit", wires=n_qubits)
-        dev = qp.device(
-            device_name, mpi=True, wires=n_qubits, c_dtype=c_dtype, batch_obs=batch_obs
-        )
+        dev = qp.device(device_name, mpi=True, wires=n_qubits, c_dtype=c_dtype, batch_obs=batch_obs)
         comm = MPI.COMM_WORLD
 
         rng = np.random.default_rng(seed)
