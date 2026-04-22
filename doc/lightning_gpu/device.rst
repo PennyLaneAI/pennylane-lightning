@@ -261,7 +261,7 @@ The workflow for the default adjoint method with MPI support is as follows:
     n_wires = 20
     n_layers = 2
 
-    dev = qpdevice('lightning.gpu', wires= n_wires, mpi=True)
+    dev = qp.device('lightning.gpu', wires= n_wires, mpi=True)
     @qp.qnode(dev, diff_method="adjoint")
     def circuit_adj(weights):
         qp.StronglyEntanglingLayers(weights, wires=list(range(n_wires)))
