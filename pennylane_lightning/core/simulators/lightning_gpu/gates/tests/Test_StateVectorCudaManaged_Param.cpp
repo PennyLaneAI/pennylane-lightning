@@ -1401,29 +1401,29 @@ TEMPLATE_TEST_CASE("LightningGPU::applyPCPhase", "[LightningGPU_Param]", float,
 
 
         ``` python
-        import pennylane as qml
+        import pennylane as qp
         import numpy as np
 
         tgts = [1, 2]
         def circuit(use_controls=False, use_adj=False):
-            [qml.Hadamard(i) for i in range(n_wires)]
+            [qp.Hadamard(i) for i in range(n_wires)]
 
             if use_controls:
-                qml.ctrl(
-                    qml.PCPhase(0.27, dim = 3, wires=tgts),
+                qp.ctrl(
+                    qp.PCPhase(0.27, dim = 3, wires=tgts),
                     control=[0],
                     control_values=[1]
                )
             elif use_adj:
-                qml.adjoint(qml.PCPhase(0.27, dim = 3, wires=tgts))
+                qp.adjoint(qp.PCPhase(0.27, dim = 3, wires=tgts))
             else:
-                qml.PCPhase(0.27, dim = 3, wires=tgts)
+                qp.PCPhase(0.27, dim = 3, wires=tgts)
 
-            return qml.state()
+            return qp.state()
 
         n_wires = 3
-        dev = qml.device('lightning.gpu', wires=n_wires)
-        qnode_gpu = qml.QNode(circuit, dev)
+        dev = qp.device('lightning.gpu', wires=n_wires)
+        qnode_gpu = qp.QNode(circuit, dev)
         res = qnode_gpu(use_controls=False, use_adj=False)
         print(np.round(res, 12))
 
