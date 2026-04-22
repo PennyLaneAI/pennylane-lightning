@@ -38,6 +38,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- A new AI policy document is now applied across the PennyLaneAI organization for all AI contributions.
+  [(#1364)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1364)
+
 - Upgraded Kokkos from v4.5.0 to v5.1.0.
   [(#1308)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1308)
 
