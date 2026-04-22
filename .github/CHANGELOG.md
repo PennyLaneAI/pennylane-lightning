@@ -35,6 +35,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Removed `lightning_interpreter` from pennylane-lightning.
+  [(#1367)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1367)
+
 - Fixed Python MPI tests involving differentiation to use PennyLane Numpy.
   [(#1365)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1365)
 
