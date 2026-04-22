@@ -144,7 +144,7 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
         config = ExecutionConfig(gradient_method="adjoint", device_options={"batch_obs": batch_obs})
 
         qs = QuantumScript(
-            [qpRX(0.1, wires=[0, 1])],
+            [qp.CRX(0.1, wires=[0, 1])],
             [qp.expval(qp.Projector([0, 1], wires=[0, 1]))],
             trainable_params=[0],
         )
