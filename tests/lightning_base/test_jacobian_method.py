@@ -14,7 +14,7 @@
 
 
 import numpy as np
-import pennylane as qml
+import pennylane as qp
 import pytest
 from conftest import PHI, THETA, LightningDevice, device_name  # tested device
 from pennylane.devices import DefaultQubit, ExecutionConfig
@@ -58,13 +58,13 @@ class TestJacobian:
     @pytest.mark.parametrize(
         "obs",
         [
-            qml.Z(1),
-            2.5 * qml.Z(0),
-            qml.Z(0) @ qml.X(1),
-            qml.Z(1) + qml.X(1),
-            qml.Hamiltonian([-1.0, 1.5], [qml.Z(1), qml.X(1)]),
-            qml.Hermitian(qml.Hadamard.compute_matrix(), 0),
-            qml.Projector([1], 1),
+            qp.Z(1),
+            2.5 * qp.Z(0),
+            qp.Z(0) @ qp.X(1),
+            qp.Z(1) + qp.X(1),
+            qp.Hamiltonian([-1.0, 1.5], [qp.Z(1), qp.X(1)]),
+            qp.Hermitian(qp.Hadamard.compute_matrix(), 0),
+            qp.Projector([1], 1),
         ],
     )
     @pytest.mark.parametrize("execute_and_derivatives", [True, False])
@@ -74,18 +74,18 @@ class TestJacobian:
         """Test that the jacobian is correct when a tape has a single expectation value"""
 
         qs = QuantumScript(
-            [qml.RX(theta, 0), qml.CNOT([0, 1]), qml.RY(phi, 1)],
-            [qml.expval(obs)],
+            [qp.RX(theta, 0), qp.CNOT([0, 1]), qp.RY(phi, 1)],
+            [qp.expval(obs)],
             trainable_params=[0, 1],
         )
 
         statevector = lightning_sv(num_wires=3)
         res, jac = self.process_and_execute(statevector, qs, execute_and_derivatives)
 
-        if isinstance(obs, qml.Hamiltonian):
+        if isinstance(obs, qp.Hamiltonian):
             qs = QuantumScript(
                 qs.operations,
-                [qml.expval(qml.Hermitian(qml.matrix(obs), wires=obs.wires))],
+                [qp.expval(qp.Hermitian(qp.matrix(obs), wires=obs.wires))],
                 trainable_params=qs.trainable_params,
             )
         expected, expected_jac = self.calculate_reference(
@@ -135,13 +135,13 @@ class TestVJP:
     @pytest.mark.parametrize(
         "obs",
         [
-            qml.Z(1),
-            2.5 * qml.Z(0),
-            qml.Z(0) @ qml.X(1),
-            qml.Z(1) + qml.X(1),
-            qml.Hamiltonian([-1.0, 1.5], [qml.Z(1), qml.X(1)]),
-            qml.Hermitian(qml.Hadamard.compute_matrix(), 0),
-            qml.Projector([1], 1),
+            qp.Z(1),
+            2.5 * qp.Z(0),
+            qp.Z(0) @ qp.X(1),
+            qp.Z(1) + qp.X(1),
+            qp.Hamiltonian([-1.0, 1.5], [qp.Z(1), qp.X(1)]),
+            qp.Hermitian(qp.Hadamard.compute_matrix(), 0),
+            qp.Projector([1], 1),
         ],
     )
     @pytest.mark.parametrize("execute_and_derivatives", [True, False])
@@ -149,8 +149,8 @@ class TestVJP:
         """Test that the VJP is correct when a tape has a single expectation value"""
 
         qs = QuantumScript(
-            [qml.RX(theta, 0), qml.CNOT([0, 1]), qml.RY(phi, 1)],
-            [qml.expval(obs)],
+            [qp.RX(theta, 0), qp.CNOT([0, 1]), qp.RY(phi, 1)],
+            [qp.expval(obs)],
             trainable_params=[0, 1],
         )
 
@@ -159,10 +159,10 @@ class TestVJP:
         res, jac = self.process_and_execute(
             statevector, qs, dy, execute_and_derivatives=execute_and_derivatives
         )
-        if isinstance(obs, qml.Hamiltonian):
+        if isinstance(obs, qp.Hamiltonian):
             qs = QuantumScript(
                 qs.operations,
-                [qml.expval(qml.Hermitian(qml.matrix(obs), wires=obs.wires))],
+                [qp.expval(qp.Hermitian(qp.matrix(obs), wires=obs.wires))],
                 trainable_params=qs.trainable_params,
             )
         expected, expected_jac = self.calculate_reference(

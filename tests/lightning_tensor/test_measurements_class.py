@@ -16,7 +16,7 @@ Unit tests for measurements class.
 """
 
 import numpy as np
-import pennylane as qml
+import pennylane as qp
 import pytest
 from conftest import LightningDevice, device_name, get_random_normalized_state  # tested device
 
@@ -76,7 +76,7 @@ class TestMeasurementFunction:
         tensornetwork = lightning_tn(2)
         m = LightningTensorMeasurements(tensornetwork)
 
-        mp = qml.counts(wires=(0, 1))
+        mp = qp.counts(wires=(0, 1))
         with pytest.raises(NotImplementedError):
             m.get_measurement_function(mp)
 
@@ -87,15 +87,15 @@ class TestMeasurementFunction:
 
         m = LightningTensorMeasurements(tensornetwork)
 
-        ops = [qml.PauliX(0), qml.PauliZ(1)]
+        ops = [qp.PauliX(0), qp.PauliZ(1)]
 
-        obs = qml.SparseHamiltonian(
-            qml.Hamiltonian([-1.0, 1.5], [qml.Z(1), qml.X(1)]).sparse_matrix(wire_order=[0, 1, 2]),
+        obs = qp.SparseHamiltonian(
+            qp.Hamiltonian([-1.0, 1.5], [qp.Z(1), qp.X(1)]).sparse_matrix(wire_order=[0, 1, 2]),
             wires=[0, 1, 2],
         )
 
-        for mp in [qml.var(obs), qml.expval(obs)]:
-            tape = qml.tape.QuantumScript(ops, [mp], shots=100)
+        for mp in [qp.var(obs), qp.expval(obs)]:
+            tape = qp.tape.QuantumScript(ops, [mp], shots=100)
 
             with pytest.raises(TypeError):
                 m.measure_tensor_network(tape)
@@ -107,14 +107,14 @@ class TestMeasurementFunction:
 
         m = LightningTensorMeasurements(tensornetwork)
 
-        ops = [qml.PauliX(0), qml.PauliZ(1)]
+        ops = [qp.PauliX(0), qp.PauliZ(1)]
 
-        obs_ham = qml.Hamiltonian([-1.0, 1.5], [qml.Z(1), qml.X(1)])
+        obs_ham = qp.Hamiltonian([-1.0, 1.5], [qp.Z(1), qp.X(1)])
 
-        obs_sum = qml.sum(qml.PauliX(0), qml.PauliX(1))
+        obs_sum = qp.sum(qp.PauliX(0), qp.PauliX(1))
 
-        for mp in [qml.var(obs_ham), qml.var(obs_sum)]:
-            tape = qml.tape.QuantumScript(ops, [mp], shots=100)
+        for mp in [qp.var(obs_ham), qp.var(obs_sum)]:
+            tape = qp.tape.QuantumScript(ops, [mp], shots=100)
 
             with pytest.raises(TypeError):
                 m.measure_tensor_network(tape)
@@ -126,10 +126,10 @@ class TestMeasurementFunction:
 
         m = LightningTensorMeasurements(tensornetwork)
 
-        ops = [qml.PauliX(0), qml.PauliZ(1)]
+        ops = [qp.PauliX(0), qp.PauliZ(1)]
 
-        for mp in [qml.classical_shadow(wires=[0, 1]), qml.shadow_expval(qml.PauliX(0))]:
-            tape = qml.tape.QuantumScript(ops, [mp], shots=100)
+        for mp in [qp.classical_shadow(wires=[0, 1]), qp.shadow_expval(qp.PauliX(0))]:
+            tape = qp.tape.QuantumScript(ops, [mp], shots=100)
 
             with pytest.raises(TypeError):
                 m.measure_tensor_network(tape)
@@ -142,16 +142,16 @@ class TestMeasurementFunction:
         if n_targets >= n_qubits:
             pytest.skip("Number of targets cannot exceed the number of wires.")
 
-        dev = qml.device(device_name, wires=n_qubits, **method)
-        dq = qml.device("default.qubit", wires=n_qubits)
+        dev = qp.device(device_name, wires=n_qubits, **method)
+        dq = qp.device("default.qubit", wires=n_qubits)
 
         init_state = get_random_normalized_state(2**n_qubits)
 
-        ops = [qml.StatePrep(init_state, wires=range(n_qubits))]
+        ops = [qp.StatePrep(init_state, wires=range(n_qubits))]
 
-        mp = qml.probs(wires=range(n_targets))
+        mp = qp.probs(wires=range(n_targets))
 
-        tape = qml.tape.QuantumScript(ops, [mp])
+        tape = qp.tape.QuantumScript(ops, [mp])
         ref = dq.execute(tape)
 
         if method["method"] == "tn":
@@ -169,16 +169,16 @@ class TestMeasurementFunction:
         if n_targets >= n_qubits:
             pytest.skip("Number of targets cannot exceed the number of wires.")
 
-        dev = qml.device(device_name, wires=n_qubits, **method)
-        dq = qml.device("default.qubit", wires=n_qubits)
+        dev = qp.device(device_name, wires=n_qubits, **method)
+        dq = qp.device("default.qubit", wires=n_qubits)
 
         init_state = get_random_normalized_state(2**n_qubits)
 
-        ops = [qml.StatePrep(init_state, wires=range(n_qubits))]
+        ops = [qp.StatePrep(init_state, wires=range(n_qubits))]
 
-        mp = qml.state()
+        mp = qp.state()
 
-        tape = qml.tape.QuantumScript(ops, [mp])
+        tape = qp.tape.QuantumScript(ops, [mp])
         ref = dq.execute(tape)
         if method["method"] == "tn":
             with pytest.raises(DeviceError):
