@@ -28,7 +28,7 @@ from typing import Callable, List, Optional, Sequence, Tuple, Union
 from warnings import warn
 
 import numpy as np
-import pennylane as qml
+import pennylane as qp
 from numpy.random import BitGenerator, Generator, SeedSequence
 from numpy.typing import ArrayLike
 from pennylane.devices import Device, ExecutionConfig, MCMConfig
@@ -228,7 +228,7 @@ class LightningBase(Device):
             if mcm_method == "one-shot" or (mcm_method is None and circuit.shots):
                 # Using the one-shot MCM method.
                 results = []
-                aux_circ = qml.tape.QuantumScript(
+                aux_circ = qp.tape.QuantumScript(
                     circuit.operations,
                     circuit.measurements,
                     shots=[1],
@@ -256,7 +256,7 @@ class LightningBase(Device):
     def supports_derivatives(
         self,
         execution_config: ExecutionConfig | None = None,
-        circuit: Optional[qml.tape.QuantumTape] = None,
+        circuit: Optional[qp.tape.QuantumTape] = None,
     ) -> bool:
         """Check whether or not derivatives are available for a given configuration and circuit.
 
@@ -289,7 +289,7 @@ class LightningBase(Device):
             TensorLike: The Jacobian of the quantum script
         """
         if wire_map is not None:
-            [circuit], _ = qml.map_wires(circuit, wire_map)
+            [circuit], _ = qp.map_wires(circuit, wire_map)
 
         if self._intermediate_states is not None and (
             final_state := self._intermediate_states.get(circuit.hash, None)
@@ -331,7 +331,7 @@ class LightningBase(Device):
         Note that this function can return measurements for non-commuting observables simultaneously.
         """
         if wire_map is not None:
-            [circuit], _ = qml.map_wires(circuit, wire_map)
+            [circuit], _ = qp.map_wires(circuit, wire_map)
         res = self.simulate(circuit, state)
         # pylint: disable=not-callable
         jac = self.LightningAdjointJacobian(state, batch_obs=batch_obs).calculate_jacobian(circuit)
@@ -361,7 +361,7 @@ class LightningBase(Device):
             TensorLike: The VJP of the quantum script
         """
         if wire_map is not None:
-            [circuit], _ = qml.map_wires(circuit, wire_map)
+            [circuit], _ = qp.map_wires(circuit, wire_map)
 
         if self._intermediate_states is not None and (
             final_state := self._intermediate_states.get(circuit.hash, None)
@@ -405,7 +405,7 @@ class LightningBase(Device):
         Note that this function can return measurements for non-commuting observables simultaneously.
         """
         if wire_map is not None:
-            [circuit], _ = qml.map_wires(circuit, wire_map)
+            [circuit], _ = qp.map_wires(circuit, wire_map)
         res = self.simulate(circuit, state)
         # pylint: disable=not-callable
         _vjp = self.LightningAdjointJacobian(state, batch_obs=batch_obs).calculate_vjp(
@@ -591,21 +591,21 @@ class LightningBase(Device):
 
         .. code-block:: python
 
-            import pennylane as qml
+            import pennylane as qp
             import jax
-            qml.capture.enable()
+            qp.capture.enable()
 
             def f(x):
-                @qml.for_loop(3)
+                @qp.for_loop(3)
                 def loop(i, y):
-                    qml.RX(y, i)
+                    qp.RX(y, i)
                     return y + 0.5
                 loop(x)
-                return [qml.expval(qml.Z(i)) for i in range(3)]
+                return [qp.expval(qp.Z(i)) for i in range(3)]
 
             jaxpr = jax.make_jaxpr(f)(0.5)
 
-            dev = qml.device('lightning.qubit', wires=3)
+            dev = qp.device('lightning.qubit', wires=3)
             dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, 0.0)
 
         .. code-block::
@@ -738,9 +738,9 @@ class LightningBase(Device):
             tangents = tangents[0]
 
         jvps = (
-            [qml.gradients.compute_jvp_single(tangents, jacobians)]
+            [qp.gradients.compute_jvp_single(tangents, jacobians)]
             if len(jaxpr.outvars) == 1
-            else qml.gradients.compute_jvp_multi(tangents, jacobians)
+            else qp.gradients.compute_jvp_multi(tangents, jacobians)
         )
 
         return results, jvps
@@ -796,7 +796,7 @@ def resolve_mcm_method(mcm_config: MCMConfig, tape: QuantumScript | None, device
 
     mcm_supported_methods = (
         ("device", "deferred", "tree-traversal", "one-shot", None)
-        if not qml.capture.enabled()
+        if not qp.capture.enabled()
         else ("device", "deferred", "single-branch-statistics", None)
     )
 
@@ -815,7 +815,7 @@ def resolve_mcm_method(mcm_config: MCMConfig, tape: QuantumScript | None, device
 
     mcm_config = replace(mcm_config, mcm_method=final_mcm_method)
 
-    if qml.capture.enabled():
+    if qp.capture.enabled():
         mcm_updated_values = {}
 
         if mcm_method == "single-branch-statistics" and mcm_config.postselect_mode is not None:
@@ -835,7 +835,7 @@ def resolve_mcm_method(mcm_config: MCMConfig, tape: QuantumScript | None, device
 
 def _adjoint_stopping_condition(op: Operator) -> bool:
     return not isinstance(op, (Conditional, MidMeasure, PauliRot)) and (
-        not any(qml.math.requires_grad(d) for d in op.data)
+        not any(qp.math.requires_grad(d) for d in op.data)
         or (op.num_params == 1 and op.has_generator)
     )
 
@@ -846,14 +846,14 @@ def _adjoint_measurement(mp: MeasurementProcess) -> bool:
 
 def adjoint_observables(obs: Operator, capabilities: DeviceCapabilities) -> bool:
     """Returns True for observables supported in the adjoint differentiation method."""
-    if isinstance(obs, qml.ops.SProd):
+    if isinstance(obs, qp.ops.SProd):
         return adjoint_observables(obs.base, capabilities)
-    if isinstance(obs, (qml.ops.Sum, qml.ops.Prod)):
+    if isinstance(obs, (qp.ops.Sum, qp.ops.Prod)):
         return all(adjoint_observables(o, capabilities) for o in obs)
     return capabilities.supports_observable(obs)
 
 
-def adjoint_transforms(device: LightningBase, allow_mcms: bool = False) -> qml.CompilePipeline:
+def adjoint_transforms(device: LightningBase, allow_mcms: bool = False) -> qp.CompilePipeline:
     """Return a compile pipeline that prepares the circuit for adjoint differentiation."""
 
     name = f"adjoint + {device.name}"
@@ -864,7 +864,7 @@ def adjoint_transforms(device: LightningBase, allow_mcms: bool = False) -> qml.C
     _adjoint_observables = partial(adjoint_observables, capabilities=capabilities)
     return (
         no_sampling(name=name)
-        + qml.transforms.broadcast_expand
+        + qp.transforms.broadcast_expand
         + decompose(
             stopping_condition=_adjoint_stopping_condition,
             skip_initial_state_prep=False,

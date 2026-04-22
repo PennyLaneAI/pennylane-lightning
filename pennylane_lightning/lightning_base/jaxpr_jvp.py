@@ -17,7 +17,7 @@ from typing import Sequence, Tuple
 
 import jax
 import numpy as np
-import pennylane as qml
+import pennylane as qp
 from pennylane.capture.primitives import AbstractMeasurement
 from pennylane.typing import TensorLike
 
@@ -104,7 +104,7 @@ def get_output_shapes(jaxpr: "jax.extend.core.Jaxpr", num_wires: int) -> Tuple:
 
 def convert_jaxpr_to_tape(
     jaxpr: "jax.extend.core.Jaxpr", args: Sequence[TensorLike]
-) -> qml.tape.QuantumTape:
+) -> qp.tape.QuantumTape:
     """
     Convert a jaxpr to a PennyLane tape and ensure parameters match.
 
@@ -113,17 +113,17 @@ def convert_jaxpr_to_tape(
         args (Sequence[TensorLike]): the arguments to the JAXPR
 
     Returns:
-        qml.tape.QuantumTape: the tape created from the input JAXPR.
+        qp.tape.QuantumTape: the tape created from the input JAXPR.
     """
 
     const_args = args[: len(jaxpr.constvars)]
     non_const_args = args[len(jaxpr.constvars) :]
 
-    tape = qml.tape.plxpr_to_tape(jaxpr, const_args, *non_const_args)
+    tape = qp.tape.plxpr_to_tape(jaxpr, const_args, *non_const_args)
     tape_params = tape.get_parameters()
 
     len_train_inputs = sum(jax.numpy.size(p) for p in args)
-    if not qml.math.allclose(args, tape_params) or len_train_inputs != len(tape.trainable_params):
+    if not qp.math.allclose(args, tape_params) or len_train_inputs != len(tape.trainable_params):
         raise NotImplementedError(
             "The provided arguments do not match the parameters of the jaxpr converted to quantum tape."
         )

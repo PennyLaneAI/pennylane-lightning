@@ -19,7 +19,7 @@ from abc import ABC, abstractmethod
 from typing import Any, List
 
 import numpy as np
-import pennylane as qml
+import pennylane as qp
 from pennylane import BasisState, StatePrep
 from pennylane.exceptions import QuantumFunctionError
 from pennylane.measurements import ExpectationMP, MeasurementProcess, StateMP
@@ -191,7 +191,7 @@ class LightningBaseAdjointJacobian(ABC):
                 )
 
         if not is_jacobian:
-            if qml.math.allclose(grad_vec, 0.0) or not tape_return_type:
+            if qp.math.allclose(grad_vec, 0.0) or not tape_return_type:
                 # the tape does not have measurements or the gradient is 0.0
                 return True
 
@@ -255,10 +255,10 @@ class LightningBaseAdjointJacobian(ABC):
         empty_array = self._handle_raises(tape, is_jacobian=False, grad_vec=grad_vec)
 
         if empty_array:
-            return qml.math.convert_like(np.zeros(len(tape.trainable_params)), grad_vec)
+            return qp.math.convert_like(np.zeros(len(tape.trainable_params)), grad_vec)
 
         # Proceed, because tape_return_type is Expectation.
-        if qml.math.ndim(grad_vec) == 0:
+        if qp.math.ndim(grad_vec) == 0:
             grad_vec = (grad_vec,)
 
         if len(grad_vec) != len(tape.measurements):
@@ -276,11 +276,11 @@ class LightningBaseAdjointJacobian(ABC):
         if len(tape.trainable_params) == 0:
             return np.array([], dtype=self.qubit_state.dtype)
 
-        ham = qml.simplify(qml.dot(grad_vec, [m.obs for m in tape.measurements]))
+        ham = qp.simplify(qp.dot(grad_vec, [m.obs for m in tape.measurements]))
 
-        new_tape = qml.tape.QuantumScript(
+        new_tape = qp.tape.QuantumScript(
             tape.operations,
-            [qml.expval(ham)],
+            [qp.expval(ham)],
             shots=tape.shots,
             trainable_params=tape.trainable_params,
         )

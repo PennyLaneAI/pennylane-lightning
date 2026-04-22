@@ -16,7 +16,7 @@ This module contains a class for executing plxpr using default qubit tools.
 """
 
 import jax
-import pennylane as qml
+import pennylane as qp
 from pennylane.capture import disable, enable, pause
 from pennylane.capture.base_interpreter import FlattenedHigherOrderPrimitives, PlxprInterpreter
 from pennylane.capture.primitives import adjoint_transform_prim, ctrl_transform_prim, measure_prim
@@ -39,9 +39,9 @@ class LightningInterpreter(PlxprInterpreter):
 
     .. code-block:: python
 
-        import pennylane as qml
+        import pennylane as qp
         import jax
-        qml.capture.enable()
+        qp.capture.enable()
 
         statevector = LightningStateVector(num_wires=3, dtype=np.complex128)
         measurement_class = LightningMeasurements
@@ -49,12 +49,12 @@ class LightningInterpreter(PlxprInterpreter):
         interpreter = LightningInterpreter(statevector, measurement_class, shots=Shots(None))
 
         def f(x):
-            @qml.for_loop(3)
+            @qp.for_loop(3)
             def loop(i, y):
-                qml.RX(y, i)
+                qp.RX(y, i)
                 return y + 0.5
             loop(x)
-            return [qml.expval(qml.Z(i)) for i in range(3)]
+            return [qp.expval(qp.Z(i)) for i in range(3)]
 
         jaxpr = jax.make_jaxpr(f)(1.2)
 
@@ -91,7 +91,7 @@ class LightningInterpreter(PlxprInterpreter):
 
     def interpret_operation(self, op):
         """Apply an operation to the state."""
-        if isinstance(op, qml.Projector):
+        if isinstance(op, qp.Projector):
             raise DeviceError(
                 "Lightning devices do not support postselection with mcm_method='deferred'."
             )
@@ -139,7 +139,7 @@ def _(self, *invals, jaxpr, n_consts, lazy=True):
     recorder.eval(jaxpr, consts, *args)
     ops = recorder.state["ops"]
     with pause():
-        adjoint_ops = [qml.adjoint(op, lazy=lazy) for op in reversed(ops)]
+        adjoint_ops = [qp.adjoint(op, lazy=lazy) for op in reversed(ops)]
         self.state.apply_operations(adjoint_ops)
     return []
 
@@ -155,7 +155,7 @@ def _(self, *invals, n_control, jaxpr, control_values, n_consts, work_wires):
     ops = recorder.state["ops"]
     with pause():
         ctrl_ops = [
-            qml.ctrl(
+            qp.ctrl(
                 op,
                 control_wires,
                 control_values=control_values,
