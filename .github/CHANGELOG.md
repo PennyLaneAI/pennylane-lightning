@@ -35,6 +35,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Fixed Python MPI tests involving differentiation to use PennyLane Numpy.
+  [(#1365)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1365)
+
 - A new AI policy document is now applied across the PennyLaneAI organization for all AI contributions.
   [(#1364)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1364)
 
