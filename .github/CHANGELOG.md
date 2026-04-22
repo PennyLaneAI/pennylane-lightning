@@ -34,7 +34,7 @@
 
 <h3>Bug fixes 🐛</h3>
 
-- Fixed erroneous tranposed result when computing the adjoint jacobian with `lightning.qubit` from Catalyst.
+- Fixed erroneous transposed result when computing the adjoint jacobian with `lightning.qubit` from Catalyst.
   [(#1337)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1337)
 
 <h3>Internal changes ⚙️</h3>
