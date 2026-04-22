@@ -10,9 +10,6 @@
 
 <h3>Improvements 🛠</h3>
 
-- The `qml` alias as in `import pennylane as qml` has been updated to `qp` in our source code and documentation.
-  [(#1362)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1362)
-
 - Avoid decomposing unsupported gates and templates into `QubitUnitary` when not specified in the device TOML file of Lightning simulators from Catalyst.
   [(#1348)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1348)
 
@@ -31,12 +28,19 @@
 
 <h3>Documentation 📝</h3>
 
+- The `qml` alias as in `import pennylane as qml` has been updated to `qp` in our source code and documentation.
+  [(#1362)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1362)
+  [(#1363)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1363)
+
 <h3>Bug fixes 🐛</h3>
 
 - Fixed erroneous tranposed result when computing the adjoint jacobian with `lightning.qubit` from Catalyst.
   [(#1337)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1337)
 
 <h3>Internal changes ⚙️</h3>
+
+- A new AI policy document is now applied across the PennyLaneAI organization for all AI contributions.
+  [(#1364)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1364)
 
 - Upgraded Kokkos from v4.5.0 to v5.1.0.
   [(#1308)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1308)
