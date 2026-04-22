@@ -523,7 +523,7 @@ class TestAdjointJacobianQNode:
                 qml.RX(x, wires=0)
                 return qml.expval(qml.PauliZ(0))
 
-            qml.grad(circ)(0.1)
+            qml.grad(circ)(np.array(0.1))
 
     @staticmethod
     def tol_for_allclose(c_dtype):
