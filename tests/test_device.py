@@ -19,7 +19,7 @@ import pickle as pkl
 import sys
 
 import numpy as np
-import pennylane as qml
+import pennylane as qp
 import pytest
 from conftest import LightningDevice as ld
 from conftest import device_name
@@ -30,13 +30,13 @@ if not ld._CPP_BINARY_AVAILABLE:
 
 @pytest.mark.parametrize("n_wires", [None, 1])
 def test_create_device(n_wires):
-    dev = qml.device(device_name, wires=n_wires)
+    dev = qp.device(device_name, wires=n_wires)
 
 
 @pytest.mark.parametrize("n_wires", [None, 1])
 @pytest.mark.parametrize("C", [np.complex64, np.complex128])
 def test_create_device_with_dtype(n_wires, C):
-    dev = qml.device(device_name, wires=n_wires, c_dtype=C)
+    dev = qp.device(device_name, wires=n_wires, c_dtype=C)
 
 
 @pytest.mark.skipif(
@@ -45,8 +45,8 @@ def test_create_device_with_dtype(n_wires, C):
 @pytest.mark.parametrize("n_wires", [None, 1])
 def test_create_device_with_unsupported_dtype(n_wires):
     with pytest.raises(TypeError, match="Unsupported complex type:"):
-        dev = qml.device(device_name, wires=n_wires, c_dtype=np.complex256)
-        tape = qml.tape.QuantumScript([], [])
+        dev = qp.device(device_name, wires=n_wires, c_dtype=np.complex256)
+        tape = qp.tape.QuantumScript([], [])
         # State-vector is only created when a tape is executed
         dev.execute(tape)
 
@@ -58,8 +58,8 @@ def test_create_device_with_unsupported_dtype(n_wires):
 @pytest.mark.parametrize("n_wires", [None, 1])
 def test_create_device_with_unsupported_kokkos_args(n_wires):
     with pytest.raises(TypeError, match="Argument kokkos_args must be of type .* but it is of .*."):
-        dev = qml.device(device_name, wires=n_wires, kokkos_args=np.complex128)
-        tape = qml.tape.QuantumScript([], [])
+        dev = qp.device(device_name, wires=n_wires, kokkos_args=np.complex128)
+        tape = qp.tape.QuantumScript([], [])
         # State-vector is only created when a tape is executed
         dev.execute(tape)
 
@@ -73,7 +73,7 @@ def test_create_device_with_unsupported_mpi_buf_size():
         from mpi4py import MPI
 
         with pytest.raises(ImportError, match="MPI related APIs are not found"):
-            dev = qml.device(device_name, wires=1)
+            dev = qp.device(device_name, wires=1)
             dev._mpi_init_helper(1)
     except:
         pass
@@ -84,7 +84,7 @@ def test_create_device_with_unsupported_mpi_buf_size():
     reason="Check if the method is pickleable through the cpp layer",
 )
 def test_devpool_is_pickleable():
-    dev = qml.device(device_name, wires=2)
+    dev = qp.device(device_name, wires=2)
     try:
         pickled_devpool = pkl.dumps(dev._dp)
         un_pickled_devpool = pkl.loads(pickled_devpool)
@@ -111,11 +111,11 @@ def test_devpool_is_pickleable():
 def test_device_init_zero_qubit():
     """Test the device initialization with zero-qubit."""
 
-    dev = qml.device(device_name, wires=0)
+    dev = qp.device(device_name, wires=0)
 
-    @qml.qnode(dev)
+    @qp.qnode(dev)
     def circuit():
-        return qml.state()
+        return qp.state()
 
     assert np.allclose(circuit(), np.array([1.0]))
 
@@ -131,12 +131,12 @@ def test_device_init_zero_qubit():
 def test_device_gphase_zero_qubit():
     """Test the device initialization with zero-qubit."""
 
-    dev = qml.device(device_name, wires=0)
+    dev = qp.device(device_name, wires=0)
 
-    @qml.qnode(dev)
+    @qp.qnode(dev)
     def circuit():
-        qml.adjoint(qml.GlobalPhase(np.pi / 4))
-        return qml.state()
+        qp.adjoint(qp.GlobalPhase(np.pi / 4))
+        return qp.state()
 
     assert np.allclose(circuit(), np.array([1.0]) * np.exp(1j * np.pi / 4))
 
@@ -148,7 +148,7 @@ def test_device_gphase_zero_qubit():
 def test_unsupported_windows_platform_kokkos():
     """Test unsupported Windows platform for Kokkos."""
 
-    dev = qml.device(device_name, wires=0)
+    dev = qp.device(device_name, wires=0)
 
     with pytest.raises(
         RuntimeError,
@@ -164,7 +164,7 @@ def test_unsupported_windows_platform_kokkos():
 def test_supported_linux_platform_kokkos():
     """Test supported Linux platform for Kokkos."""
 
-    dev = qml.device(device_name, wires=0)
+    dev = qp.device(device_name, wires=0)
 
     dev_name, shared_lib_name = dev.get_c_interface()
 
@@ -179,7 +179,7 @@ def test_supported_linux_platform_kokkos():
 def test_supported_linux_platform_gpu():
     """Test supported Linux platform for LGPU."""
 
-    dev = qml.device(device_name, wires=1)
+    dev = qp.device(device_name, wires=1)
 
     dev_name, shared_lib_name = dev.get_c_interface()
 
@@ -194,7 +194,7 @@ def test_supported_linux_platform_gpu():
 def test_supported_macos_platform_kokkos():
     """Test supported MacOS platform for Kokkos."""
 
-    dev = qml.device(device_name, wires=0)
+    dev = qp.device(device_name, wires=0)
 
     dev_name, shared_lib_name = dev.get_c_interface()
 
@@ -209,7 +209,7 @@ def test_supported_macos_platform_kokkos():
 def test_unsupported_windows_platform_qubit():
     """Test unsupported Windows platform for LQ."""
 
-    dev = qml.device(device_name, wires=0)
+    dev = qp.device(device_name, wires=0)
 
     with pytest.raises(
         RuntimeError,
@@ -225,7 +225,7 @@ def test_unsupported_windows_platform_qubit():
 def test_supported_linux_platform_qubit():
     """Test supported Linux platform for LQ."""
 
-    dev = qml.device(device_name, wires=0)
+    dev = qp.device(device_name, wires=0)
 
     dev_name, shared_lib_name = dev.get_c_interface()
 
@@ -240,7 +240,7 @@ def test_supported_linux_platform_qubit():
 def test_supported_macos_platform_qubit():
     """Test supported MacOS platform for LQ."""
 
-    dev = qml.device(device_name, wires=0)
+    dev = qp.device(device_name, wires=0)
 
     dev_name, shared_lib_name = dev.get_c_interface()
 
@@ -254,6 +254,6 @@ def test_supported_macos_platform_qubit():
 )
 def test_device_to_matrix_ops():
     """Test that the device's to_matrix_ops capability is correctly set based on the config file."""
-    dev = qml.device(device_name)
+    dev = qp.device(device_name)
     to_mat_ops = dev._to_matrix_ops
     assert to_mat_ops is not None and isinstance(to_mat_ops, dict)

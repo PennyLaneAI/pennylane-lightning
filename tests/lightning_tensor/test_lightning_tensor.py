@@ -16,7 +16,7 @@ Unit tests for the LightningTensor class.
 """
 
 import numpy as np
-import pennylane as qml
+import pennylane as qp
 import pytest
 from conftest import LightningDevice, device_name
 from pennylane.exceptions import DeviceError
@@ -63,8 +63,8 @@ class TestTensorNet:
         assert dev.num_wires == num_wires
 
     def test_device_available_as_plugin(self, method):
-        """Test that the device can be instantiated using ``qml.device``."""
-        dev = qml.device("lightning.tensor", wires=2, **method)
+        """Test that the device can be instantiated using ``qp.device``."""
+        dev = qp.device("lightning.tensor", wires=2, **method)
         assert isinstance(dev, LightningTensor)
         assert dev.backend == "cutensornet"
         assert dev.method in ["mps", "tn"]
@@ -103,7 +103,7 @@ class TestTensorNet:
             pytest.skip("Skipping test for MPS method.")
         dev = LightningTensor(wires=2, **method)
 
-        tape = QuantumScript([qml.StatePrep(np.array([1, 0, 0, 0]), wires=[0, 1])])
+        tape = QuantumScript([qp.StatePrep(np.array([1, 0, 0, 0]), wires=[0, 1])])
         with pytest.raises(DeviceError, match="Exact Tensor Network does not support StatePrep"):
             dev.execute(tape)
 
@@ -192,10 +192,10 @@ class TestTensorNetMPS:
         dev_wires = dev.wires.tolist()
 
         def circuit(MPS):
-            qml.MPSPrep(mps=MPS, wires=dev_wires)
-            return qml.state()
+            qp.MPSPrep(mps=MPS, wires=dev_wires)
+            return qp.state()
 
-        qnode_ltensor = qml.QNode(circuit, dev)
+        qnode_ltensor = qp.QNode(circuit, dev)
 
         _ = qnode_ltensor(MPS)
 
@@ -231,10 +231,10 @@ class TestTensorNetMPS:
         dev_wires = dev.wires.tolist()
 
         def circuit(MPS):
-            qml.MPSPrep(mps=MPS, wires=dev_wires)
-            return qml.state()
+            qp.MPSPrep(mps=MPS, wires=dev_wires)
+            return qp.state()
 
-        qnode_ltensor = qml.QNode(circuit, dev)
+        qnode_ltensor = qp.QNode(circuit, dev)
 
         with pytest.raises(
             RuntimeError,
@@ -256,10 +256,10 @@ class TestTensorNetMPS:
         dev_wires = dev.wires.tolist()
 
         def circuit(MPS):
-            qml.MPSPrep(mps=MPS, wires=dev_wires)
-            return qml.state()
+            qp.MPSPrep(mps=MPS, wires=dev_wires)
+            return qp.state()
 
-        qnode_ltensor = qml.QNode(circuit, dev)
+        qnode_ltensor = qp.QNode(circuit, dev)
 
         with pytest.raises(DeviceError, match="Exact Tensor Network does not support MPSPrep"):
             _ = qnode_ltensor(MPS)
@@ -357,12 +357,12 @@ class TestTensorNetMPS:
         MPS = [np.array(i, dtype=c_dtype) for i in MPS]
 
         def circuit():
-            qml.MPSPrep(MPS, wires=range(1, wires))
-            [qml.Hadamard(i) for i in range(wires)]
-            [qml.RX(0.1 * i, wires=i) for i in range(0, wires, 2)]
-            return qml.expval(qml.PauliZ(1))
+            qp.MPSPrep(MPS, wires=range(1, wires))
+            [qp.Hadamard(i) for i in range(wires)]
+            [qp.RX(0.1 * i, wires=i) for i in range(0, wires, 2)]
+            return qp.expval(qp.PauliZ(1))
 
-        qnode_ltensor = qml.QNode(circuit, dev)
+        qnode_ltensor = qp.QNode(circuit, dev)
 
         assert np.allclose(qnode_ltensor(), -0.076030545078943, atol=tol)
 
@@ -372,10 +372,10 @@ class TestTensorNetMPS:
         #                 -0.013131-0.042167j,  0.015507+0.156004j,
         #                  0.036284+0.136789j, -0.143301-0.186339j]
         # def circuit():
-        #     qml.StatePrep(random_state, wires=range(1, wires))
-        #     [qml.Hadamard(i) for i in range(wires)]
-        #     [qml.RX(0.1 * i, wires=i) for i in range(0, wires, 2)]
-        #     return qml.expval(qml.PauliZ(1))
+        #     qp.StatePrep(random_state, wires=range(1, wires))
+        #     [qp.Hadamard(i) for i in range(wires)]
+        #     [qp.RX(0.1 * i, wires=i) for i in range(0, wires, 2)]
+        #     return qp.expval(qp.PauliZ(1))
 
     def test_MPSPrep_bad_expansion(self, c_dtype):
         """Test the exception of MPSPrep with the method matrix product state (mps) trying to append a single wire at the beginning of the MPS."""
@@ -389,11 +389,11 @@ class TestTensorNetMPS:
         dev = LightningTensor(wires=wires, method="mps", max_bond_dim=8, c_dtype=c_dtype)
 
         def circuit():
-            qml.MPSPrep(MPS, wires=range(1, MPS_wires))
-            [qml.Hadamard(i) for i in range(wires)]
-            return qml.expval(qml.PauliZ(1))
+            qp.MPSPrep(MPS, wires=range(1, MPS_wires))
+            [qp.Hadamard(i) for i in range(wires)]
+            return qp.expval(qp.PauliZ(1))
 
-        qnode_ltensor = qml.QNode(circuit, dev)
+        qnode_ltensor = qp.QNode(circuit, dev)
 
         with pytest.raises(
             DeviceError,
@@ -413,11 +413,11 @@ class TestTensorNetMPS:
         dev = LightningTensor(wires=wires, method="mps", max_bond_dim=8, c_dtype=c_dtype)
 
         def circuit():
-            qml.MPSPrep(MPS, wires=range(wires))
-            [qml.Hadamard(i) for i in range(wires)]
-            return qml.expval(qml.PauliZ(1))
+            qp.MPSPrep(MPS, wires=range(wires))
+            [qp.Hadamard(i) for i in range(wires)]
+            return qp.expval(qp.PauliZ(1))
 
-        qnode_ltensor = qml.QNode(circuit, dev)
+        qnode_ltensor = qp.QNode(circuit, dev)
 
         with pytest.raises(
             RuntimeError,

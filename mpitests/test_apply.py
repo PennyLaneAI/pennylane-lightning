@@ -20,7 +20,7 @@ import itertools
 from functools import partial
 
 import numpy as np
-import pennylane as qml
+import pennylane as qp
 import pytest
 from conftest import TOL_STOCHASTIC, device_name, fixture_params
 from mpi4py import MPI
@@ -67,18 +67,18 @@ def apply_operation_gates_qnode_param(tol, dev_mpi, operation, par, wires, seed=
     comm.Bcast(state_vector, root=0)
 
     comm.Scatter(state_vector, local_state_vector, root=0)
-    dev_cpu = qml.device("lightning.qubit", wires=num_wires, c_dtype=c_dtype)
+    dev_cpu = qp.device("lightning.qubit", wires=num_wires, c_dtype=c_dtype)
 
     def circuit(*params):
-        qml.StatePrep(state_vector, wires=range(num_wires))
+        qp.StatePrep(state_vector, wires=range(num_wires))
         operation(*params, wires=wires)
-        return qml.state()
+        return qp.state()
 
-    cpu_qnode = qml.QNode(circuit, dev_cpu)
+    cpu_qnode = qp.QNode(circuit, dev_cpu)
     expected_output_cpu = cpu_qnode(*par).astype(c_dtype)
     comm.Scatter(expected_output_cpu, local_expected_output_cpu, root=0)
 
-    mpi_qnode = qml.QNode(circuit, dev_mpi)
+    mpi_qnode = qp.QNode(circuit, dev_mpi)
     local_state_vector = mpi_qnode(*par)
 
     assert np.allclose(local_state_vector, local_expected_output_cpu, atol=tol, rtol=0)
@@ -101,18 +101,18 @@ def apply_operation_gates_qnode_nonparam(tol, dev_mpi, operation, wires, seed=No
     comm.Bcast(state_vector, root=0)
 
     comm.Scatter(state_vector, local_state_vector, root=0)
-    dev_cpu = qml.device("lightning.qubit", wires=num_wires, c_dtype=c_dtype)
+    dev_cpu = qp.device("lightning.qubit", wires=num_wires, c_dtype=c_dtype)
 
     def circuit():
-        qml.StatePrep(state_vector, wires=range(num_wires))
+        qp.StatePrep(state_vector, wires=range(num_wires))
         operation(wires=wires)
-        return qml.state()
+        return qp.state()
 
-    cpu_qnode = qml.QNode(circuit, dev_cpu)
+    cpu_qnode = qp.QNode(circuit, dev_cpu)
     expected_output_cpu = cpu_qnode().astype(c_dtype)
     comm.Scatter(expected_output_cpu, local_expected_output_cpu, root=0)
 
-    mpi_qnode = qml.QNode(circuit, dev_mpi)
+    mpi_qnode = qp.QNode(circuit, dev_mpi)
     local_state_vector = mpi_qnode()
 
     assert np.allclose(local_state_vector, local_expected_output_cpu, atol=tol, rtol=0)
@@ -123,7 +123,7 @@ class TestApply:  # pylint: disable=missing-function-docstring,too-many-argument
 
     @pytest.fixture(params=fixture_params)
     def dev_mpi(self, request):
-        return qml.device(
+        return qp.device(
             device_name,
             wires=numQubits,
             mpi=True,
@@ -133,18 +133,18 @@ class TestApply:  # pylint: disable=missing-function-docstring,too-many-argument
 
     # Parameterized test case for single wire nonparam gates
     @pytest.mark.parametrize(
-        "operation", [qml.PauliX, qml.PauliY, qml.PauliZ, qml.Hadamard, qml.S, qml.T]
+        "operation", [qp.PauliX, qp.PauliY, qp.PauliZ, qp.Hadamard, qp.S, qp.T]
     )
     @pytest.mark.parametrize("wires", [0, 1, numQubits - 2, numQubits - 1])
     def test_apply_operation_single_wire_nonparam(self, tol, operation, wires, dev_mpi, seed):
         apply_operation_gates_qnode_nonparam(tol, dev_mpi, operation, wires, seed)
 
-    @pytest.mark.parametrize("operation", [qml.CNOT, qml.SWAP, qml.CY, qml.CZ])
+    @pytest.mark.parametrize("operation", [qp.CNOT, qp.SWAP, qp.CY, qp.CZ])
     @pytest.mark.parametrize("wires", [[0, 1], [numQubits - 2, numQubits - 1], [0, numQubits - 1]])
     def test_apply_operation_two_wire_nonparam(self, tol, operation, wires, dev_mpi, seed):
         apply_operation_gates_qnode_nonparam(tol, dev_mpi, operation, wires, seed)
 
-    @pytest.mark.parametrize("operation", [qml.CSWAP, qml.Toffoli])
+    @pytest.mark.parametrize("operation", [qp.CSWAP, qp.Toffoli])
     @pytest.mark.parametrize(
         "wires",
         [
@@ -157,7 +157,7 @@ class TestApply:  # pylint: disable=missing-function-docstring,too-many-argument
     def test_apply_operation_three_wire_nonparam(self, tol, operation, wires, dev_mpi, seed):
         apply_operation_gates_qnode_nonparam(tol, dev_mpi, operation, wires, seed)
 
-    @pytest.mark.parametrize("operation", [qml.CSWAP, qml.Toffoli])
+    @pytest.mark.parametrize("operation", [qp.CSWAP, qp.Toffoli])
     @pytest.mark.parametrize(
         "wires",
         [
@@ -170,7 +170,7 @@ class TestApply:  # pylint: disable=missing-function-docstring,too-many-argument
     def test_apply_operation_three_wire_qnode_nonparam(self, tol, operation, wires, dev_mpi, seed):
         apply_operation_gates_qnode_nonparam(tol, dev_mpi, operation, wires, seed)
 
-    @pytest.mark.parametrize("operation", [qml.PhaseShift, qml.RX, qml.RY, qml.RZ])
+    @pytest.mark.parametrize("operation", [qp.PhaseShift, qp.RX, qp.RY, qp.RZ])
     @pytest.mark.parametrize("par", [[0.1], [0.2], [0.3]])
     @pytest.mark.parametrize("wires", [0, numQubits - 1])
     def test_apply_operation_1gatequbit_1param_gate_qnode_param(
@@ -178,7 +178,7 @@ class TestApply:  # pylint: disable=missing-function-docstring,too-many-argument
     ):
         apply_operation_gates_qnode_param(tol, dev_mpi, operation, par, wires, seed)
 
-    @pytest.mark.parametrize("operation", [qml.Rot])
+    @pytest.mark.parametrize("operation", [qp.Rot])
     @pytest.mark.parametrize("par", [[0.1, 0.2, 0.3], [0.2, 0.3, 0.4]])
     @pytest.mark.parametrize("wires", [0, numQubits - 1])
     def test_apply_operation_1gatequbit_3param_gate_qnode_param(
@@ -186,7 +186,7 @@ class TestApply:  # pylint: disable=missing-function-docstring,too-many-argument
     ):
         apply_operation_gates_qnode_param(tol, dev_mpi, operation, par, wires, seed)
 
-    @pytest.mark.parametrize("operation", [qml.CRot])
+    @pytest.mark.parametrize("operation", [qp.CRot])
     @pytest.mark.parametrize("par", [[0.1, 0.2, 0.3], [0.2, 0.3, 0.4]])
     @pytest.mark.parametrize("wires", [[0, numQubits - 1], [0, 1], [numQubits - 2, numQubits - 1]])
     def test_apply_operation_1gatequbit_3param_cgate_qnode_param(
@@ -197,17 +197,17 @@ class TestApply:  # pylint: disable=missing-function-docstring,too-many-argument
     @pytest.mark.parametrize(
         "operation",
         [
-            qml.CRX,
-            qml.CRY,
-            qml.CRZ,
-            qml.ControlledPhaseShift,
-            qml.SingleExcitation,
-            qml.SingleExcitationMinus,
-            qml.SingleExcitationPlus,
-            qml.IsingXX,
-            qml.IsingYY,
-            qml.IsingZZ,
-            qml.PSWAP,
+            qp.CRX,
+            qp.CRY,
+            qp.CRZ,
+            qp.ControlledPhaseShift,
+            qp.SingleExcitation,
+            qp.SingleExcitationMinus,
+            qp.SingleExcitationPlus,
+            qp.IsingXX,
+            qp.IsingYY,
+            qp.IsingZZ,
+            qp.PSWAP,
         ],
     )
     @pytest.mark.parametrize("par", [[0.1], [0.2], [0.3]])
@@ -219,7 +219,7 @@ class TestApply:  # pylint: disable=missing-function-docstring,too-many-argument
 
     @pytest.mark.parametrize(
         "operation",
-        [qml.DoubleExcitation, qml.DoubleExcitationMinus, qml.DoubleExcitationPlus],
+        [qp.DoubleExcitation, qp.DoubleExcitationMinus, qp.DoubleExcitationPlus],
     )
     @pytest.mark.parametrize("par", [[0.13], [0.2], [0.3]])
     @pytest.mark.parametrize(
@@ -237,7 +237,7 @@ class TestApply:  # pylint: disable=missing-function-docstring,too-many-argument
 
     @pytest.mark.parametrize(
         "operation",
-        [qml.GlobalPhase],
+        [qp.GlobalPhase],
     )
     @pytest.mark.parametrize("par", [[0.13], [0.2], [0.3]])
     def test_apply_global_phase(self, tol, operation, par, dev_mpi, seed):
@@ -247,7 +247,7 @@ class TestApply:  # pylint: disable=missing-function-docstring,too-many-argument
         apply_operation_gates_qnode_param(tol, dev_mpi, operation, par, wires, seed)
 
     # BasisState test
-    @pytest.mark.parametrize("operation", [qml.BasisState])
+    @pytest.mark.parametrize("operation", [qp.BasisState])
     @pytest.mark.parametrize("index", range(numQubits))
     def test_state_prep(self, tol, operation, index, dev_mpi, seed):
         par = np.zeros(numQubits, dtype=int)
@@ -271,14 +271,14 @@ class TestApply:  # pylint: disable=missing-function-docstring,too-many-argument
         state_vector = create_random_init_state(num_wires, dev_mpi.c_dtype, seed)
 
         comm.Scatter(state_vector, local_state_vector, root=0)
-        dev_cpu = qml.device("lightning.qubit", wires=num_wires, c_dtype=c_dtype)
+        dev_cpu = qp.device("lightning.qubit", wires=num_wires, c_dtype=c_dtype)
 
         def circuit():
             operation(par, wires=range(numQubits))
-            return qml.state()
+            return qp.state()
 
-        cpu_qnode = qml.QNode(circuit, dev_cpu)
-        mpi_qnode = qml.QNode(circuit, dev_mpi)
+        cpu_qnode = qp.QNode(circuit, dev_cpu)
+        mpi_qnode = qp.QNode(circuit, dev_mpi)
 
         expected_output_cpu = cpu_qnode().astype(c_dtype)
         comm.Scatter(expected_output_cpu, local_expected_output_cpu, root=0)
@@ -333,14 +333,14 @@ class TestApply:  # pylint: disable=missing-function-docstring,too-many-argument
         state_vector = create_random_init_state(num_wires, dev_mpi.c_dtype, seed)
 
         comm.Scatter(state_vector, local_state_vector, root=0)
-        dev_cpu = qml.device("lightning.qubit", wires=num_wires, c_dtype=c_dtype)
+        dev_cpu = qp.device("lightning.qubit", wires=num_wires, c_dtype=c_dtype)
 
         def circuit():
-            qml.StatePrep(par, wires=wires)
-            return qml.state()
+            qp.StatePrep(par, wires=wires)
+            return qp.state()
 
-        cpu_qnode = qml.QNode(circuit, dev_cpu)
-        mpi_qnode = qml.QNode(circuit, dev_mpi)
+        cpu_qnode = qp.QNode(circuit, dev_cpu)
+        mpi_qnode = qp.QNode(circuit, dev_mpi)
 
         expected_output_cpu = cpu_qnode().astype(c_dtype)
         comm.Scatter(expected_output_cpu, local_expected_output_cpu, root=0)
@@ -369,21 +369,21 @@ class TestApply:  # pylint: disable=missing-function-docstring,too-many-argument
         state_vector = create_random_init_state(num_wires, dev_mpi.c_dtype, seed)
 
         comm.Scatter(state_vector, local_state_vector, root=0)
-        dev_cpu = qml.device("lightning.qubit", wires=num_wires, c_dtype=c_dtype)
+        dev_cpu = qp.device("lightning.qubit", wires=num_wires, c_dtype=c_dtype)
 
         def circuit():
-            qml.PauliX(wires=[0])
-            qml.PauliX(wires=[0])
-            return qml.state()
+            qp.PauliX(wires=[0])
+            qp.PauliX(wires=[0])
+            return qp.state()
 
-        cpu_qnode = qml.QNode(circuit, dev_cpu)
+        cpu_qnode = qp.QNode(circuit, dev_cpu)
 
         expected_output_cpu = cpu_qnode().astype(c_dtype)
         comm.Scatter(expected_output_cpu, local_expected_output_cpu, root=0)
 
         dev_mpi._statevector.reset_state()
 
-        mpi_qnode = qml.QNode(circuit, dev_mpi)
+        mpi_qnode = qp.QNode(circuit, dev_mpi)
         dev_mpi._statevector.reset_state()
 
         local_state_vector = mpi_qnode()
@@ -403,9 +403,9 @@ class TestSparseHamExpval:  # pylint: disable=too-few-public-methods,missing-fun
         num_global_wires = commSize.bit_length() - 1
         num_local_wires = 3 - num_global_wires
 
-        obs = qml.Identity(0) @ qml.PauliX(1) @ qml.PauliY(2)
-        obs1 = qml.Identity(1)
-        Hmat = qml.Hamiltonian([1.0, 1.0], [obs1, obs]).sparse_matrix()
+        obs = qp.Identity(0) @ qp.PauliX(1) @ qp.PauliY(2)
+        obs1 = qp.Identity(1)
+        Hmat = qp.Hamiltonian([1.0, 1.0], [obs1, obs]).sparse_matrix()
 
         state_vector = np.array(
             [
@@ -426,19 +426,19 @@ class TestSparseHamExpval:  # pylint: disable=too-few-public-methods,missing-fun
         local_state_vector = np.zeros(2**num_local_wires).astype(c_dtype)
         comm.Scatter(state_vector, local_state_vector, root=0)
 
-        H_sparse = qml.SparseHamiltonian(Hmat, wires=range(3))
+        H_sparse = qp.SparseHamiltonian(Hmat, wires=range(3))
 
         def circuit():
-            qml.StatePrep(state_vector, wires=range(3))
-            return qml.expval(H_sparse)
+            qp.StatePrep(state_vector, wires=range(3))
+            return qp.expval(H_sparse)
 
-        dev_mpi = qml.device(device_name, wires=3, mpi=False, c_dtype=c_dtype)
-        mpi_qnode = qml.QNode(circuit, dev_mpi)
+        dev_mpi = qp.device(device_name, wires=3, mpi=False, c_dtype=c_dtype)
+        mpi_qnode = qp.QNode(circuit, dev_mpi)
         expected_output_mpi = mpi_qnode()
         comm.Bcast(np.array(expected_output_mpi), root=0)
 
-        dev_mpi = qml.device(device_name, wires=3, mpi=True, c_dtype=c_dtype)
-        mpi_qnode = qml.QNode(circuit, dev_mpi)
+        dev_mpi = qp.device(device_name, wires=3, mpi=True, c_dtype=c_dtype)
+        mpi_qnode = qp.QNode(circuit, dev_mpi)
         expected_output_mpi = mpi_qnode()
 
         comm.Barrier()
@@ -453,11 +453,11 @@ class TestExpval:
     @pytest.mark.parametrize(
         "operation",
         [
-            qml.PauliX,
-            qml.PauliY,
-            qml.PauliZ,
-            qml.Hadamard,
-            qml.Identity,
+            qp.PauliX,
+            qp.PauliY,
+            qp.PauliZ,
+            qp.Hadamard,
+            qp.Identity,
         ],
     )
     @pytest.mark.parametrize("wires", [0, 1, 2, numQubits - 3, numQubits - 2, numQubits - 1])
@@ -469,24 +469,24 @@ class TestExpval:
         num_global_wires = commSize.bit_length() - 1
         num_local_wires = num_wires - num_global_wires
 
-        dev_mpi = qml.device(device_name, wires=numQubits, mpi=True, c_dtype=c_dtype)
+        dev_mpi = qp.device(device_name, wires=numQubits, mpi=True, c_dtype=c_dtype)
 
         state_vector = create_random_init_state(num_wires, dev_mpi.c_dtype, seed)
         comm.Bcast(state_vector, root=0)
 
         local_state_vector = np.zeros(2**num_local_wires).astype(c_dtype)
         comm.Scatter(state_vector, local_state_vector, root=0)
-        dev_cpu = qml.device("lightning.qubit", wires=num_wires, c_dtype=c_dtype)
+        dev_cpu = qp.device("lightning.qubit", wires=num_wires, c_dtype=c_dtype)
 
         def circuit():
-            qml.StatePrep(state_vector, wires=range(num_wires))
-            return qml.expval(operation(wires))
+            qp.StatePrep(state_vector, wires=range(num_wires))
+            return qp.expval(operation(wires))
 
-        cpu_qnode = qml.QNode(circuit, dev_cpu)
+        cpu_qnode = qp.QNode(circuit, dev_cpu)
         expected_output_cpu = cpu_qnode()
         comm.Bcast(np.array(expected_output_cpu), root=0)
 
-        mpi_qnode = qml.QNode(circuit, dev_mpi)
+        mpi_qnode = qp.QNode(circuit, dev_mpi)
         expected_output_mpi = mpi_qnode()
 
         assert np.allclose(expected_output_mpi, expected_output_cpu, atol=tol, rtol=0)
@@ -495,28 +495,28 @@ class TestExpval:
     @pytest.mark.parametrize(
         "obs",
         [
-            qml.PauliX(0) @ qml.PauliZ(1),
-            qml.PauliX(0) @ qml.PauliZ(numQubits - 1),
-            qml.PauliX(numQubits - 2) @ qml.PauliZ(numQubits - 1),
-            qml.PauliZ(0) @ qml.PauliZ(1),
-            qml.PauliZ(0) @ qml.PauliZ(numQubits - 1),
-            qml.PauliZ(numQubits - 2) @ qml.PauliZ(numQubits - 1),
+            qp.PauliX(0) @ qp.PauliZ(1),
+            qp.PauliX(0) @ qp.PauliZ(numQubits - 1),
+            qp.PauliX(numQubits - 2) @ qp.PauliZ(numQubits - 1),
+            qp.PauliZ(0) @ qp.PauliZ(1),
+            qp.PauliZ(0) @ qp.PauliZ(numQubits - 1),
+            qp.PauliZ(numQubits - 2) @ qp.PauliZ(numQubits - 1),
         ],
     )
     def test_expval_multiple_obs(self, obs, tol, c_dtype):
         """Test expval with Hamiltonian"""
         num_wires = numQubits
 
-        dev_cpu = qml.device("lightning.qubit", wires=num_wires, c_dtype=c_dtype)
-        dev_mpi = qml.device(device_name, wires=num_wires, mpi=True, c_dtype=c_dtype)
+        dev_cpu = qp.device("lightning.qubit", wires=num_wires, c_dtype=c_dtype)
+        dev_mpi = qp.device(device_name, wires=num_wires, mpi=True, c_dtype=c_dtype)
 
         def circuit():
-            qml.RX(0.4, wires=[0])
-            qml.RY(-0.2, wires=[num_wires - 1])
-            return qml.expval(obs)
+            qp.RX(0.4, wires=[0])
+            qp.RY(-0.2, wires=[num_wires - 1])
+            return qp.expval(obs)
 
-        cpu_qnode = qml.QNode(circuit, dev_cpu)
-        mpi_qnode = qml.QNode(circuit, dev_mpi)
+        cpu_qnode = qp.QNode(circuit, dev_cpu)
+        mpi_qnode = qp.QNode(circuit, dev_mpi)
 
         assert np.allclose(cpu_qnode(), mpi_qnode(), atol=tol, rtol=0)
 
@@ -524,25 +524,25 @@ class TestExpval:
     @pytest.mark.parametrize(
         "obs, coeffs",
         [
-            ([qml.PauliX(0) @ qml.PauliZ(1)], [0.314]),
-            ([qml.PauliX(0) @ qml.PauliZ(numQubits - 1)], [0.314]),
-            ([qml.PauliZ(0) @ qml.PauliZ(1)], [0.314]),
-            ([qml.PauliZ(0) @ qml.PauliZ(numQubits - 1)], [0.314]),
+            ([qp.PauliX(0) @ qp.PauliZ(1)], [0.314]),
+            ([qp.PauliX(0) @ qp.PauliZ(numQubits - 1)], [0.314]),
+            ([qp.PauliZ(0) @ qp.PauliZ(1)], [0.314]),
+            ([qp.PauliZ(0) @ qp.PauliZ(numQubits - 1)], [0.314]),
             (
-                [qml.PauliX(0) @ qml.PauliZ(1), qml.PauliZ(0) @ qml.PauliZ(1)],
+                [qp.PauliX(0) @ qp.PauliZ(1), qp.PauliZ(0) @ qp.PauliZ(1)],
                 [0.314, 0.2],
             ),
             (
                 [
-                    qml.PauliX(0) @ qml.PauliZ(numQubits - 1),
-                    qml.PauliZ(0) @ qml.PauliZ(1),
+                    qp.PauliX(0) @ qp.PauliZ(numQubits - 1),
+                    qp.PauliZ(0) @ qp.PauliZ(1),
                 ],
                 [0.314, 0.2],
             ),
             (
                 [
-                    qml.PauliX(numQubits - 2) @ qml.PauliZ(numQubits - 1),
-                    qml.PauliZ(0) @ qml.PauliZ(1),
+                    qp.PauliX(numQubits - 2) @ qp.PauliZ(numQubits - 1),
+                    qp.PauliZ(0) @ qp.PauliZ(1),
                 ],
                 [0.314, 0.2],
             ),
@@ -552,40 +552,40 @@ class TestExpval:
         """Test expval with Hamiltonian"""
         num_wires = numQubits
 
-        ham = qml.Hamiltonian(coeffs, obs)
+        ham = qp.Hamiltonian(coeffs, obs)
 
-        dev_cpu = qml.device("lightning.qubit", wires=num_wires, c_dtype=c_dtype)
-        dev_mpi = qml.device(device_name, wires=num_wires, mpi=True, c_dtype=c_dtype)
+        dev_cpu = qp.device("lightning.qubit", wires=num_wires, c_dtype=c_dtype)
+        dev_mpi = qp.device(device_name, wires=num_wires, mpi=True, c_dtype=c_dtype)
 
         def circuit():
-            qml.RX(0.4, wires=[0])
-            qml.RY(-0.2, wires=[numQubits - 1])
-            return qml.expval(ham)
+            qp.RX(0.4, wires=[0])
+            qp.RY(-0.2, wires=[numQubits - 1])
+            return qp.expval(ham)
 
-        cpu_qnode = qml.QNode(circuit, dev_cpu)
-        mpi_qnode = qml.QNode(circuit, dev_mpi)
+        cpu_qnode = qp.QNode(circuit, dev_cpu)
+        mpi_qnode = qp.QNode(circuit, dev_mpi)
 
         assert np.allclose(cpu_qnode(), mpi_qnode(), atol=tol, rtol=0)
 
     def test_expval_non_pauli_word_hamiltionian(self, tol):
         """Tests expectation values of non-Pauli word Hamiltonians."""
-        dev_mpi = qml.device(device_name, wires=3, mpi=True)
-        dev_cpu = qml.device("lightning.qubit", wires=3)
+        dev_mpi = qp.device(device_name, wires=3, mpi=True)
+        dev_cpu = qp.device("lightning.qubit", wires=3)
 
         theta = 0.432
         phi = 0.123
         varphi = -0.543
 
         def circuit():
-            qml.RX(theta, wires=[0])
-            qml.RX(phi, wires=[1])
-            qml.RX(varphi, wires=[2])
-            qml.CNOT(wires=[0, 1])
-            qml.CNOT(wires=[1, 2])
-            return qml.expval(0.5 * qml.Hadamard(2))
+            qp.RX(theta, wires=[0])
+            qp.RX(phi, wires=[1])
+            qp.RX(varphi, wires=[2])
+            qp.CNOT(wires=[0, 1])
+            qp.CNOT(wires=[1, 2])
+            return qp.expval(0.5 * qp.Hadamard(2))
 
-        cpu_qnode = qml.QNode(circuit, dev_cpu)
-        mpi_qnode = qml.QNode(circuit, dev_mpi)
+        cpu_qnode = qp.QNode(circuit, dev_cpu)
+        mpi_qnode = qp.QNode(circuit, dev_mpi)
 
         assert np.allclose(cpu_qnode(), mpi_qnode(), atol=tol, rtol=0)
 
@@ -600,27 +600,27 @@ class TestGenerateSample:
         """
         num_wires = numQubits
 
-        dev = qml.device(device_name, wires=num_wires, mpi=True, c_dtype=c_dtype)
+        dev = qp.device(device_name, wires=num_wires, mpi=True, c_dtype=c_dtype)
 
-        ops = [qml.RX(1.5708, wires=[0]), qml.RX(1.5708, wires=[1])]
+        ops = [qp.RX(1.5708, wires=[0]), qp.RX(1.5708, wires=[1])]
 
         shots = 10
-        obs = qml.PauliZ(wires=[0])
-        tape = qml.tape.QuantumScript(ops, [qml.sample(op=obs)], shots=shots)
+        obs = qp.PauliZ(wires=[0])
+        tape = qp.tape.QuantumScript(ops, [qp.sample(op=obs)], shots=shots)
         s1 = dev.execute(tape)
 
         assert np.array_equal(s1.shape, (shots,))
 
         shots = 12
-        obs = qml.PauliZ(wires=[1])
-        tape = qml.tape.QuantumScript(ops, [qml.sample(op=obs)], shots=shots)
+        obs = qp.PauliZ(wires=[1])
+        tape = qp.tape.QuantumScript(ops, [qp.sample(op=obs)], shots=shots)
         s2 = dev.execute(tape)
 
         assert np.array_equal(s2.shape, (shots,))
 
         shots = 17
-        obs = qml.PauliX(0) @ qml.PauliZ(1)
-        tape = qml.tape.QuantumScript(ops, [qml.sample(op=obs)], shots=shots)
+        obs = qp.PauliX(0) @ qp.PauliZ(1)
+        tape = qp.tape.QuantumScript(ops, [qp.sample(op=obs)], shots=shots)
         s3 = dev.execute(tape)
 
         assert np.array_equal(s3.shape, (shots,))
@@ -632,12 +632,12 @@ class TestGenerateSample:
         """
         num_wires = numQubits
 
-        dev = qml.device(device_name, wires=num_wires, mpi=True, c_dtype=c_dtype)
+        dev = qp.device(device_name, wires=num_wires, mpi=True, c_dtype=c_dtype)
 
-        shots = qml.measurements.Shots(1000)
-        ops = [qml.RX(1.5708, wires=[0])]
-        obs = qml.PauliZ(0)
-        tape = qml.tape.QuantumScript(ops, [qml.sample(op=obs)], shots=shots)
+        shots = qp.measurements.Shots(1000)
+        ops = [qp.RX(1.5708, wires=[0])]
+        obs = qp.PauliZ(0)
+        tape = qp.tape.QuantumScript(ops, [qp.sample(op=obs)], shots=shots)
         s1 = dev.execute(tape)
 
         # s1 should only contain 1 and -1, which is guaranteed if
@@ -651,14 +651,14 @@ class TestGenerateSample:
         """
         num_wires = numQubits
 
-        dev_mpi = qml.device(device_name, wires=num_wires, mpi=True, c_dtype=c_dtype)
+        dev_mpi = qp.device(device_name, wires=num_wires, mpi=True, c_dtype=c_dtype)
         dev_mpi._statevector.reset_state()
 
-        @partial(qml.set_shots, shots=2000)
-        @qml.qnode(dev_mpi)
+        @partial(qp.set_shots, shots=2000)
+        @qp.qnode(dev_mpi)
         def circuit():
-            qml.RX(1.5708, wires=0)
-            return qml.sample(qml.PauliZ(0))
+            qp.RX(1.5708, wires=0)
+            return qp.sample(qp.PauliZ(0))
 
         # s1 should only contain 1 and -1, which is guaranteed if
         # they square to 1
@@ -671,14 +671,14 @@ class TestGenerateSample:
         """
         num_wires = 3
 
-        dev_mpi = qml.device(device_name, wires=num_wires, mpi=True, c_dtype=c_dtype)
+        dev_mpi = qp.device(device_name, wires=num_wires, mpi=True, c_dtype=c_dtype)
 
-        @partial(qml.set_shots, shots=2000)
-        @qml.qnode(dev_mpi)
+        @partial(qp.set_shots, shots=2000)
+        @qp.qnode(dev_mpi)
         def circuit():
-            qml.Hadamard(0)
-            qml.CNOT(wires=[0, 1])
-            return qml.sample(qml.PauliZ(0)), qml.sample(qml.PauliZ(1))
+            qp.Hadamard(0)
+            qp.CNOT(wires=[0, 1])
+            return qp.sample(qp.PauliZ(0)), qp.sample(qp.PauliZ(1))
 
         outcomes = circuit()
 
@@ -690,21 +690,21 @@ class TestGenerateSample:
         """Test that a tensor product involving PauliX and PauliY works correctly"""
         num_wires = 3
 
-        dev_mpi = qml.device(device_name, wires=num_wires, mpi=True, c_dtype=c_dtype)
+        dev_mpi = qp.device(device_name, wires=num_wires, mpi=True, c_dtype=c_dtype)
 
         theta = 0.432
         phi = 0.123
         varphi = -0.543
 
-        @partial(qml.set_shots, shots=2000)
-        @qml.qnode(dev_mpi)
+        @partial(qp.set_shots, shots=2000)
+        @qp.qnode(dev_mpi)
         def circuit():
-            qml.RX(theta, wires=[0])
-            qml.RX(phi, wires=[1])
-            qml.RX(varphi, wires=[2])
-            qml.CNOT(wires=[0, 1])
-            qml.CNOT(wires=[1, 2])
-            return qml.sample(qml.PauliX(wires=[0]) @ qml.PauliY(wires=[2]))
+            qp.RX(theta, wires=[0])
+            qp.RX(phi, wires=[1])
+            qp.RX(varphi, wires=[2])
+            qp.CNOT(wires=[0, 1])
+            qp.CNOT(wires=[1, 2])
+            return qp.sample(qp.PauliX(wires=[0]) @ qp.PauliY(wires=[2]))
 
         res = circuit()
 
@@ -732,23 +732,21 @@ class TestGenerateSample:
         """Test that a tensor product involving PauliZ and PauliY and hadamard works correctly"""
         num_wires = 3
 
-        dev_mpi = qml.device(device_name, wires=num_wires, mpi=True, c_dtype=c_dtype)
+        dev_mpi = qp.device(device_name, wires=num_wires, mpi=True, c_dtype=c_dtype)
 
         theta = 0.432
         phi = 0.123
         varphi = -0.543
 
-        @partial(qml.set_shots, shots=2000)
-        @qml.qnode(dev_mpi)
+        @partial(qp.set_shots, shots=2000)
+        @qp.qnode(dev_mpi)
         def circuit():
-            qml.RX(theta, wires=[0])
-            qml.RX(phi, wires=[1])
-            qml.RX(varphi, wires=[2])
-            qml.CNOT(wires=[0, 1])
-            qml.CNOT(wires=[1, 2])
-            return qml.sample(
-                qml.PauliZ(wires=[0]) @ qml.Hadamard(wires=[1]) @ qml.PauliY(wires=[2])
-            )
+            qp.RX(theta, wires=[0])
+            qp.RX(phi, wires=[1])
+            qp.RX(varphi, wires=[2])
+            qp.CNOT(wires=[0, 1])
+            qp.CNOT(wires=[1, 2])
+            return qp.sample(qp.PauliZ(wires=[0]) @ qp.Hadamard(wires=[1]) @ qp.PauliY(wires=[2]))
 
         res = circuit()
 
@@ -777,21 +775,21 @@ class TestTensorVar:
         """Test that a tensor product involving PauliX and PauliY works correctly"""
         num_wires = 3
 
-        dev_mpi = qml.device(device_name, wires=num_wires, mpi=True, c_dtype=c_dtype)
+        dev_mpi = qp.device(device_name, wires=num_wires, mpi=True, c_dtype=c_dtype)
 
         theta = 0.432
         phi = 0.123
         varphi = -0.543
 
-        @partial(qml.set_shots, shots=2000)
-        @qml.qnode(dev_mpi)
+        @partial(qp.set_shots, shots=2000)
+        @qp.qnode(dev_mpi)
         def circuit():
-            qml.RX(theta, wires=[0])
-            qml.RX(phi, wires=[1])
-            qml.RX(varphi, wires=[2])
-            qml.CNOT(wires=[0, 1])
-            qml.CNOT(wires=[1, 2])
-            return qml.var(qml.PauliX(wires=[0]) @ qml.PauliY(wires=[2]))
+            qp.RX(theta, wires=[0])
+            qp.RX(phi, wires=[1])
+            qp.RX(varphi, wires=[2])
+            qp.CNOT(wires=[0, 1])
+            qp.CNOT(wires=[1, 2])
+            return qp.var(qp.PauliX(wires=[0]) @ qp.PauliY(wires=[2]))
 
         res = circuit()
 
@@ -809,21 +807,21 @@ class TestTensorVar:
     def test_pauliz_hadamard(self, c_dtype, tol=TOL_STOCHASTIC):
         """Test that a tensor product involving PauliZ and PauliY and hadamard works correctly"""
         num_wires = 3
-        dev_mpi = qml.device(device_name, wires=num_wires, mpi=True, c_dtype=c_dtype)
+        dev_mpi = qp.device(device_name, wires=num_wires, mpi=True, c_dtype=c_dtype)
 
         theta = 0.432
         phi = 0.123
         varphi = -0.543
 
-        @partial(qml.set_shots, shots=2000)
-        @qml.qnode(dev_mpi)
+        @partial(qp.set_shots, shots=2000)
+        @qp.qnode(dev_mpi)
         def circuit():
-            qml.RX(theta, wires=[0])
-            qml.RX(phi, wires=[1])
-            qml.RX(varphi, wires=[2])
-            qml.CNOT(wires=[0, 1])
-            qml.CNOT(wires=[1, 2])
-            return qml.var(qml.PauliZ(wires=[0]) @ qml.Hadamard(wires=[1]) @ qml.PauliY(wires=[2]))
+            qp.RX(theta, wires=[0])
+            qp.RX(phi, wires=[1])
+            qp.RX(varphi, wires=[2])
+            qp.CNOT(wires=[0, 1])
+            qp.CNOT(wires=[1, 2])
+            return qp.var(qp.PauliZ(wires=[0]) @ qp.Hadamard(wires=[1]) @ qp.PauliY(wires=[2]))
 
         res = circuit()
 
@@ -838,84 +836,84 @@ class TestTensorVar:
 
 def circuit_ansatz(params, wires):
     """Circuit ansatz containing all the parametrized gates"""
-    qml.StatePrep(
+    qp.StatePrep(
         unitary_group.rvs(2**numQubits, random_state=0)[0],
         wires=wires,
     )
-    qml.RX(params[0], wires=wires[0])
-    qml.RY(params[1], wires=wires[1])
-    qml.adjoint(qml.RX(params[2], wires=wires[2]))
-    qml.RZ(params[0], wires=wires[3])
-    qml.CRX(params[3], wires=[wires[3], wires[0]])
-    qml.PhaseShift(params[4], wires=wires[2])
-    qml.CRY(params[5], wires=[wires[2], wires[1]])
-    qml.adjoint(qml.CRZ(params[5], wires=[wires[0], wires[3]]))
-    qml.adjoint(qml.PhaseShift(params[6], wires=wires[0]))
-    qml.Rot(params[6], params[7], params[8], wires=wires[0])
-    qml.adjoint(qml.Rot(params[8], params[8], params[9], wires=wires[1]))
-    qml.MultiRZ(params[11], wires=[wires[0], wires[1]])
-    qml.CPhase(params[12], wires=[wires[3], wires[2]])
-    qml.IsingXX(params[13], wires=[wires[1], wires[0]])
-    qml.IsingYY(params[14], wires=[wires[3], wires[2]])
-    qml.IsingZZ(params[15], wires=[wires[2], wires[1]])
-    qml.PSWAP(params[16], wires=[wires[3], wires[0]])
-    qml.SingleExcitation(params[24], wires=[wires[2], wires[0]])
-    qml.DoubleExcitation(params[25], wires=[wires[2], wires[0], wires[1], wires[3]])
+    qp.RX(params[0], wires=wires[0])
+    qp.RY(params[1], wires=wires[1])
+    qp.adjoint(qp.RX(params[2], wires=wires[2]))
+    qp.RZ(params[0], wires=wires[3])
+    qp.CRX(params[3], wires=[wires[3], wires[0]])
+    qp.PhaseShift(params[4], wires=wires[2])
+    qp.CRY(params[5], wires=[wires[2], wires[1]])
+    qp.adjoint(qp.CRZ(params[5], wires=[wires[0], wires[3]]))
+    qp.adjoint(qp.PhaseShift(params[6], wires=wires[0]))
+    qp.Rot(params[6], params[7], params[8], wires=wires[0])
+    qp.adjoint(qp.Rot(params[8], params[8], params[9], wires=wires[1]))
+    qp.MultiRZ(params[11], wires=[wires[0], wires[1]])
+    qp.CPhase(params[12], wires=[wires[3], wires[2]])
+    qp.IsingXX(params[13], wires=[wires[1], wires[0]])
+    qp.IsingYY(params[14], wires=[wires[3], wires[2]])
+    qp.IsingZZ(params[15], wires=[wires[2], wires[1]])
+    qp.PSWAP(params[16], wires=[wires[3], wires[0]])
+    qp.SingleExcitation(params[24], wires=[wires[2], wires[0]])
+    qp.DoubleExcitation(params[25], wires=[wires[2], wires[0], wires[1], wires[3]])
 
 
 @pytest.mark.local_salt(42)
 @pytest.mark.parametrize(
     "returns",
     [
-        (qml.PauliX(0),),
-        (qml.PauliY(0),),
-        (qml.PauliZ(0),),
-        (qml.PauliX(1),),
-        (qml.PauliY(1),),
-        (qml.PauliZ(1),),
-        (qml.PauliX(2),),
-        (qml.PauliY(2),),
-        (qml.PauliZ(2),),
-        (qml.PauliX(3),),
-        (qml.PauliY(3),),
-        (qml.PauliZ(3),),
-        (qml.PauliX(0), qml.PauliY(1)),
+        (qp.PauliX(0),),
+        (qp.PauliY(0),),
+        (qp.PauliZ(0),),
+        (qp.PauliX(1),),
+        (qp.PauliY(1),),
+        (qp.PauliZ(1),),
+        (qp.PauliX(2),),
+        (qp.PauliY(2),),
+        (qp.PauliZ(2),),
+        (qp.PauliX(3),),
+        (qp.PauliY(3),),
+        (qp.PauliZ(3),),
+        (qp.PauliX(0), qp.PauliY(1)),
         (
-            qml.PauliZ(0),
-            qml.PauliX(1),
-            qml.PauliY(2),
+            qp.PauliZ(0),
+            qp.PauliX(1),
+            qp.PauliY(2),
         ),
         (
-            qml.PauliY(0),
-            qml.PauliZ(1),
-            qml.PauliY(3),
+            qp.PauliY(0),
+            qp.PauliZ(1),
+            qp.PauliY(3),
         ),
-        (qml.PauliZ(0) @ qml.PauliY(3),),
-        (qml.Hadamard(2),),
-        (qml.Hadamard(3) @ qml.PauliZ(2),),
-        (qml.PauliX(0) @ qml.PauliY(3),),
-        (qml.PauliY(0) @ qml.PauliY(2) @ qml.PauliY(3),),
-        (qml.PauliZ(0) @ qml.PauliZ(1) @ qml.PauliZ(2),),
-        (0.5 * qml.PauliZ(0) @ qml.PauliZ(2),),
+        (qp.PauliZ(0) @ qp.PauliY(3),),
+        (qp.Hadamard(2),),
+        (qp.Hadamard(3) @ qp.PauliZ(2),),
+        (qp.PauliX(0) @ qp.PauliY(3),),
+        (qp.PauliY(0) @ qp.PauliY(2) @ qp.PauliY(3),),
+        (qp.PauliZ(0) @ qp.PauliZ(1) @ qp.PauliZ(2),),
+        (0.5 * qp.PauliZ(0) @ qp.PauliZ(2),),
     ],
 )
 def test_integration(returns, seed):
     """Integration tests that compare to default.qubit for a large circuit containing parametrized
     operations"""
     num_wires = numQubits
-    dev_default = qml.device("lightning.qubit", wires=range(num_wires))
-    dev_mpi = qml.device(device_name, wires=num_wires, mpi=True, c_dtype=np.complex128)
+    dev_default = qp.device("lightning.qubit", wires=range(num_wires))
+    dev_mpi = qp.device(device_name, wires=num_wires, mpi=True, c_dtype=np.complex128)
 
     def circuit(params):
         circuit_ansatz(params, wires=range(num_wires))
-        return qml.math.hstack([qml.expval(r) for r in returns])
+        return qp.math.hstack([qp.expval(r) for r in returns])
 
     n_params = 30
     rng = pnp.random.default_rng(seed)
     params = rng.random(n_params)
 
-    qnode_mpi = qml.QNode(circuit, dev_mpi, diff_method="parameter-shift")
-    qnode_default = qml.QNode(circuit, dev_default, diff_method="parameter-shift")
+    qnode_mpi = qp.QNode(circuit, dev_mpi, diff_method="parameter-shift")
+    qnode_default = qp.QNode(circuit, dev_default, diff_method="parameter-shift")
 
     def convert_to_array_mpi(params):
         return pnp.array(qnode_mpi(params))
@@ -923,8 +921,8 @@ def test_integration(returns, seed):
     def convert_to_array_default(params):
         return pnp.array(qnode_default(params))
 
-    j_mpi = qml.jacobian(convert_to_array_mpi)(params)
-    j_default = qml.jacobian(convert_to_array_default)(params)
+    j_mpi = qp.jacobian(convert_to_array_mpi)(params)
+    j_default = qp.jacobian(convert_to_array_default)(params)
 
     assert np.allclose(j_mpi, j_default, atol=1e-7)
 
@@ -936,31 +934,31 @@ custom_wires = ["alice", 3.14, -1, 0, "bob", "l", "m", "n"]
 @pytest.mark.parametrize(
     "returns",
     [
-        qml.PauliZ(custom_wires[0]),
-        qml.PauliX(custom_wires[2]),
-        qml.PauliZ(custom_wires[0]) @ qml.PauliY(custom_wires[3]),
-        qml.Hadamard(custom_wires[2]),
-        qml.Hadamard(custom_wires[3]) @ qml.PauliZ(custom_wires[2]),
-        qml.PauliX(custom_wires[0]) @ qml.PauliY(custom_wires[3]),
-        qml.PauliY(custom_wires[0]) @ qml.PauliY(custom_wires[2]) @ qml.PauliY(custom_wires[3]),
+        qp.PauliZ(custom_wires[0]),
+        qp.PauliX(custom_wires[2]),
+        qp.PauliZ(custom_wires[0]) @ qp.PauliY(custom_wires[3]),
+        qp.Hadamard(custom_wires[2]),
+        qp.Hadamard(custom_wires[3]) @ qp.PauliZ(custom_wires[2]),
+        qp.PauliX(custom_wires[0]) @ qp.PauliY(custom_wires[3]),
+        qp.PauliY(custom_wires[0]) @ qp.PauliY(custom_wires[2]) @ qp.PauliY(custom_wires[3]),
     ],
 )
 def test_integration_custom_wires(returns, seed):
     """Integration tests that compare to default.qubit for a large circuit containing parametrized
     operations and when using custom wire labels"""
-    dev_lightning = qml.device("lightning.qubit", wires=custom_wires)
-    dev_mpi = qml.device(device_name, wires=custom_wires, mpi=True, c_dtype=np.complex128)
+    dev_lightning = qp.device("lightning.qubit", wires=custom_wires)
+    dev_mpi = qp.device(device_name, wires=custom_wires, mpi=True, c_dtype=np.complex128)
 
     def circuit(params):
         circuit_ansatz(params, wires=custom_wires)
-        return qml.expval(returns), qml.expval(qml.PauliY(custom_wires[1]))
+        return qp.expval(returns), qp.expval(qp.PauliY(custom_wires[1]))
 
     n_params = 30
     rng = pnp.random.default_rng(seed)
     params = rng.random(n_params)
 
-    qnode_mpi = qml.QNode(circuit, dev_mpi, diff_method="parameter-shift")
-    qnode_lightning = qml.QNode(circuit, dev_lightning, diff_method="parameter-shift")
+    qnode_mpi = qp.QNode(circuit, dev_mpi, diff_method="parameter-shift")
+    qnode_lightning = qp.QNode(circuit, dev_lightning, diff_method="parameter-shift")
 
     def convert_to_array_mpi(params):
         return pnp.array(qnode_mpi(params))
@@ -968,7 +966,7 @@ def test_integration_custom_wires(returns, seed):
     def convert_to_array_lightning(params):
         return pnp.array(qnode_lightning(params))
 
-    j_mpi = qml.jacobian(convert_to_array_mpi)(params)
-    j_lightning = qml.jacobian(convert_to_array_lightning)(params)
+    j_mpi = qp.jacobian(convert_to_array_mpi)(params)
+    j_lightning = qp.jacobian(convert_to_array_lightning)(params)
 
     assert np.allclose(j_mpi, j_lightning, atol=1e-7)

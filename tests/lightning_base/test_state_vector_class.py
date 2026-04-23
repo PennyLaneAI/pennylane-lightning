@@ -18,7 +18,7 @@ Unit tests for lightning base statevector class
 import math
 
 import numpy as np
-import pennylane as qml
+import pennylane as qp
 import pytest
 import scipy as sp
 from conftest import LightningDevice, LightningStateVector, device_name  # tested device
@@ -80,15 +80,15 @@ def test_wrong_dtype(dtype):
 def test_errors_basis_state():
     with pytest.raises(ValueError, match="Basis state must only consist of 0s and 1s;"):
         state_vector = LightningStateVector(2)
-        state_vector.apply_operations([qml.BasisState(np.array([-0.2, 4.2]), wires=[0, 1])])
+        state_vector.apply_operations([qp.BasisState(np.array([-0.2, 4.2]), wires=[0, 1])])
     with pytest.raises(ValueError, match="State must be of length 1;"):
         state_vector = LightningStateVector(1)
-        state_vector.apply_operations([qml.BasisState(np.array([0, 1]), wires=[0])])
+        state_vector.apply_operations([qp.BasisState(np.array([0, 1]), wires=[0])])
 
 
 def test_apply_state_vector_with_lightning_handle(tol):
     state_vector_1 = LightningStateVector(2)
-    state_vector_1.apply_operations([qml.BasisState(np.array([0, 1]), wires=[0, 1])])
+    state_vector_1.apply_operations([qp.BasisState(np.array([0, 1]), wires=[0, 1])])
 
     if device_name == "lightning.gpu":
         with pytest.raises(
@@ -128,7 +128,7 @@ def test_apply_operation_sparse_state_preparation(tol, sparse_rep, state):
     wires = 2
     state_vector = LightningStateVector(wires)
     sparse_state = sparse_rep(state)
-    state_vector.apply_operations([qml.StatePrep(sparse_state, Wires(range(wires)))])
+    state_vector.apply_operations([qp.StatePrep(sparse_state, Wires(range(wires)))])
 
     assert np.allclose(state_vector.state, np.array(state), atol=tol, rtol=0)
 
@@ -136,17 +136,17 @@ def test_apply_operation_sparse_state_preparation(tol, sparse_rep, state):
 @pytest.mark.parametrize(
     "operation,expected_output,par",
     [
-        (qml.BasisState, [0, 0, 1, 0], [1, 0]),
-        (qml.BasisState, [0, 0, 0, 1], [1, 1]),
-        (qml.StatePrep, [0, 0, 1, 0], [0, 0, 1, 0]),
-        (qml.StatePrep, [0, 0, 0, 1], [0, 0, 0, 1]),
+        (qp.BasisState, [0, 0, 1, 0], [1, 0]),
+        (qp.BasisState, [0, 0, 0, 1], [1, 1]),
+        (qp.StatePrep, [0, 0, 1, 0], [0, 0, 1, 0]),
+        (qp.StatePrep, [0, 0, 0, 1], [0, 0, 0, 1]),
         (
-            qml.StatePrep,
+            qp.StatePrep,
             [1 / math.sqrt(3), 0, 1 / math.sqrt(3), 1 / math.sqrt(3)],
             [1 / math.sqrt(3), 0, 1 / math.sqrt(3), 1 / math.sqrt(3)],
         ),
         (
-            qml.StatePrep,
+            qp.StatePrep,
             [1 / math.sqrt(3), 0, -1 / math.sqrt(3), 1 / math.sqrt(3)],
             [1 / math.sqrt(3), 0, -1 / math.sqrt(3), 1 / math.sqrt(3)],
         ),
@@ -166,9 +166,9 @@ def test_apply_operation_state_preparation(tol, operation, expected_output, par)
 @pytest.mark.parametrize(
     "operation,par",
     [
-        (qml.BasisState, [1, 0]),
+        (qp.BasisState, [1, 0]),
         (
-            qml.StatePrep,
+            qp.StatePrep,
             [1 / math.sqrt(3), 0, 1 / math.sqrt(3), 1 / math.sqrt(3)],
         ),
     ],
@@ -188,24 +188,24 @@ def test_reset_state(tol, operation, par):
 
 
 test_data_no_parameters = [
-    (qml.PauliX, [1, 0], [0, 1]),
-    (qml.PauliX, [1 / math.sqrt(2), 1 / math.sqrt(2)], [1 / math.sqrt(2), 1 / math.sqrt(2)]),
-    (qml.PauliY, [1, 0], [0, 1j]),
-    (qml.PauliY, [1 / math.sqrt(2), 1 / math.sqrt(2)], [-1j / math.sqrt(2), 1j / math.sqrt(2)]),
-    (qml.PauliZ, [1, 0], [1, 0]),
-    (qml.PauliZ, [1 / math.sqrt(2), 1 / math.sqrt(2)], [1 / math.sqrt(2), -1 / math.sqrt(2)]),
-    (qml.S, [1, 0], [1, 0]),
-    (qml.S, [1 / math.sqrt(2), 1 / math.sqrt(2)], [1 / math.sqrt(2), 1j / math.sqrt(2)]),
-    (qml.T, [1, 0], [1, 0]),
+    (qp.PauliX, [1, 0], [0, 1]),
+    (qp.PauliX, [1 / math.sqrt(2), 1 / math.sqrt(2)], [1 / math.sqrt(2), 1 / math.sqrt(2)]),
+    (qp.PauliY, [1, 0], [0, 1j]),
+    (qp.PauliY, [1 / math.sqrt(2), 1 / math.sqrt(2)], [-1j / math.sqrt(2), 1j / math.sqrt(2)]),
+    (qp.PauliZ, [1, 0], [1, 0]),
+    (qp.PauliZ, [1 / math.sqrt(2), 1 / math.sqrt(2)], [1 / math.sqrt(2), -1 / math.sqrt(2)]),
+    (qp.S, [1, 0], [1, 0]),
+    (qp.S, [1 / math.sqrt(2), 1 / math.sqrt(2)], [1 / math.sqrt(2), 1j / math.sqrt(2)]),
+    (qp.T, [1, 0], [1, 0]),
     (
-        qml.T,
+        qp.T,
         [1 / math.sqrt(2), 1 / math.sqrt(2)],
         [1 / math.sqrt(2), np.exp(1j * np.pi / 4) / math.sqrt(2)],
     ),
-    (qml.Hadamard, [1, 0], [1 / math.sqrt(2), 1 / math.sqrt(2)]),
-    (qml.Hadamard, [1 / math.sqrt(2), -1 / math.sqrt(2)], [0, 1]),
-    (qml.Identity, [1, 0], [1, 0]),
-    (qml.Identity, [1 / math.sqrt(2), 1 / math.sqrt(2)], [1 / math.sqrt(2), 1 / math.sqrt(2)]),
+    (qp.Hadamard, [1, 0], [1 / math.sqrt(2), 1 / math.sqrt(2)]),
+    (qp.Hadamard, [1 / math.sqrt(2), -1 / math.sqrt(2)], [0, 1]),
+    (qp.Identity, [1, 0], [1, 0]),
+    (qp.Identity, [1 / math.sqrt(2), 1 / math.sqrt(2)], [1 / math.sqrt(2), 1 / math.sqrt(2)]),
 ]
 
 
@@ -216,7 +216,7 @@ def test_apply_operation_single_wire_no_parameters(tol, operation, input, expect
     wires = 1
     state_vector = LightningStateVector(wires)
     state_vector.apply_operations(
-        [qml.StatePrep(np.array(input), Wires(range(wires))), operation(Wires(range(wires)))]
+        [qp.StatePrep(np.array(input), Wires(range(wires))), operation(Wires(range(wires)))]
     )
 
     assert np.allclose(state_vector.state, np.array(expected_output), atol=tol, rtol=0)
@@ -224,24 +224,24 @@ def test_apply_operation_single_wire_no_parameters(tol, operation, input, expect
 
 
 test_data_two_wires_no_parameters = [
-    (qml.CNOT, [1, 0, 0, 0], [1, 0, 0, 0]),
-    (qml.CNOT, [0, 0, 1, 0], [0, 0, 0, 1]),
+    (qp.CNOT, [1, 0, 0, 0], [1, 0, 0, 0]),
+    (qp.CNOT, [0, 0, 1, 0], [0, 0, 0, 1]),
     (
-        qml.CNOT,
+        qp.CNOT,
         [1 / math.sqrt(2), 0, 0, 1 / math.sqrt(2)],
         [1 / math.sqrt(2), 0, 1 / math.sqrt(2), 0],
     ),
-    (qml.SWAP, [1, 0, 0, 0], [1, 0, 0, 0]),
-    (qml.SWAP, [0, 0, 1, 0], [0, 1, 0, 0]),
+    (qp.SWAP, [1, 0, 0, 0], [1, 0, 0, 0]),
+    (qp.SWAP, [0, 0, 1, 0], [0, 1, 0, 0]),
     (
-        qml.SWAP,
+        qp.SWAP,
         [1 / math.sqrt(2), 0, -1 / math.sqrt(2), 0],
         [1 / math.sqrt(2), -1 / math.sqrt(2), 0, 0],
     ),
-    (qml.CZ, [1, 0, 0, 0], [1, 0, 0, 0]),
-    (qml.CZ, [0, 0, 0, 1], [0, 0, 0, -1]),
+    (qp.CZ, [1, 0, 0, 0], [1, 0, 0, 0]),
+    (qp.CZ, [0, 0, 0, 1], [0, 0, 0, -1]),
     (
-        qml.CZ,
+        qp.CZ,
         [1 / math.sqrt(2), 0, 0, -1 / math.sqrt(2)],
         [1 / math.sqrt(2), 0, 0, 1 / math.sqrt(2)],
     ),
@@ -255,7 +255,7 @@ def test_apply_operation_two_wires_no_parameters(tol, operation, input, expected
     wires = 2
     state_vector = LightningStateVector(wires)
     state_vector.apply_operations(
-        [qml.StatePrep(np.array(input), Wires(range(wires))), operation(Wires(range(wires)))]
+        [qp.StatePrep(np.array(input), Wires(range(wires))), operation(Wires(range(wires)))]
     )
 
     assert np.allclose(state_vector.state, np.array(expected_output), atol=tol, rtol=0)
@@ -263,13 +263,13 @@ def test_apply_operation_two_wires_no_parameters(tol, operation, input, expected
 
 
 test_data_three_wires_no_parameters = [
-    (qml.CSWAP, [1, 0, 0, 0, 0, 0, 0, 0], [1, 0, 0, 0, 0, 0, 0, 0]),
-    (qml.CSWAP, [0, 0, 0, 0, 0, 1, 0, 0], [0, 0, 0, 0, 0, 0, 1, 0]),
-    (qml.CSWAP, [0, 0, 0, 0, 0, 0, 1, 0], [0, 0, 0, 0, 0, 1, 0, 0]),
-    (qml.Toffoli, [1, 0, 0, 0, 0, 0, 0, 0], [1, 0, 0, 0, 0, 0, 0, 0]),
-    (qml.Toffoli, [0, 1, 0, 0, 0, 0, 0, 0], [0, 1, 0, 0, 0, 0, 0, 0]),
-    (qml.Toffoli, [0, 0, 0, 0, 0, 0, 1, 0], [0, 0, 0, 0, 0, 0, 0, 1]),
-    (qml.Toffoli, [0, 0, 0, 0, 0, 0, 0, 1], [0, 0, 0, 0, 0, 0, 1, 0]),
+    (qp.CSWAP, [1, 0, 0, 0, 0, 0, 0, 0], [1, 0, 0, 0, 0, 0, 0, 0]),
+    (qp.CSWAP, [0, 0, 0, 0, 0, 1, 0, 0], [0, 0, 0, 0, 0, 0, 1, 0]),
+    (qp.CSWAP, [0, 0, 0, 0, 0, 0, 1, 0], [0, 0, 0, 0, 0, 1, 0, 0]),
+    (qp.Toffoli, [1, 0, 0, 0, 0, 0, 0, 0], [1, 0, 0, 0, 0, 0, 0, 0]),
+    (qp.Toffoli, [0, 1, 0, 0, 0, 0, 0, 0], [0, 1, 0, 0, 0, 0, 0, 0]),
+    (qp.Toffoli, [0, 0, 0, 0, 0, 0, 1, 0], [0, 0, 0, 0, 0, 0, 0, 1]),
+    (qp.Toffoli, [0, 0, 0, 0, 0, 0, 0, 1], [0, 0, 0, 0, 0, 0, 1, 0]),
 ]
 
 
@@ -281,7 +281,7 @@ def test_apply_operation_three_wires_no_parameters(tol, operation, input, expect
     wires = 3
     state_vector = LightningStateVector(wires)
     state_vector.apply_operations(
-        [qml.StatePrep(np.array(input), Wires(range(wires))), operation(Wires(range(wires)))]
+        [qp.StatePrep(np.array(input), Wires(range(wires))), operation(Wires(range(wires)))]
     )
 
     assert np.allclose(state_vector.state, np.array(expected_output), atol=tol, rtol=0)
@@ -290,57 +290,57 @@ def test_apply_operation_three_wires_no_parameters(tol, operation, input, expect
 
 """ operation,input,expected_output,par """
 test_data_single_wire_with_parameters = [
-    (qml.PhaseShift, [1, 0], [1, 0], [math.pi / 2]),
-    (qml.PhaseShift, [0, 1], [0, 1j], [math.pi / 2]),
+    (qp.PhaseShift, [1, 0], [1, 0], [math.pi / 2]),
+    (qp.PhaseShift, [0, 1], [0, 1j], [math.pi / 2]),
     (
-        qml.PhaseShift,
+        qp.PhaseShift,
         [1 / math.sqrt(2), 1 / math.sqrt(2)],
         [1 / math.sqrt(2), 1 / 2 + 1j / 2],
         [math.pi / 4],
     ),
-    (qml.RX, [1, 0], [1 / math.sqrt(2), -1j * 1 / math.sqrt(2)], [math.pi / 2]),
-    (qml.RX, [1, 0], [0, -1j], [math.pi]),
+    (qp.RX, [1, 0], [1 / math.sqrt(2), -1j * 1 / math.sqrt(2)], [math.pi / 2]),
+    (qp.RX, [1, 0], [0, -1j], [math.pi]),
     (
-        qml.RX,
+        qp.RX,
         [1 / math.sqrt(2), 1 / math.sqrt(2)],
         [1 / 2 - 1j / 2, 1 / 2 - 1j / 2],
         [math.pi / 2],
     ),
-    (qml.RY, [1, 0], [1 / math.sqrt(2), 1 / math.sqrt(2)], [math.pi / 2]),
-    (qml.RY, [1, 0], [0, 1], [math.pi]),
-    (qml.RY, [1 / math.sqrt(2), 1 / math.sqrt(2)], [0, 1], [math.pi / 2]),
-    (qml.RZ, [1, 0], [1 / math.sqrt(2) - 1j / math.sqrt(2), 0], [math.pi / 2]),
-    (qml.RZ, [0, 1], [0, 1j], [math.pi]),
+    (qp.RY, [1, 0], [1 / math.sqrt(2), 1 / math.sqrt(2)], [math.pi / 2]),
+    (qp.RY, [1, 0], [0, 1], [math.pi]),
+    (qp.RY, [1 / math.sqrt(2), 1 / math.sqrt(2)], [0, 1], [math.pi / 2]),
+    (qp.RZ, [1, 0], [1 / math.sqrt(2) - 1j / math.sqrt(2), 0], [math.pi / 2]),
+    (qp.RZ, [0, 1], [0, 1j], [math.pi]),
     (
-        qml.RZ,
+        qp.RZ,
         [1 / math.sqrt(2), 1 / math.sqrt(2)],
         [1 / 2 - 1j / 2, 1 / 2 + 1j / 2],
         [math.pi / 2],
     ),
-    (qml.MultiRZ, [1, 0], [1 / math.sqrt(2) - 1j / math.sqrt(2), 0], [math.pi / 2]),
-    (qml.MultiRZ, [0, 1], [0, 1j], [math.pi]),
+    (qp.MultiRZ, [1, 0], [1 / math.sqrt(2) - 1j / math.sqrt(2), 0], [math.pi / 2]),
+    (qp.MultiRZ, [0, 1], [0, 1j], [math.pi]),
     (
-        qml.MultiRZ,
+        qp.MultiRZ,
         [1 / math.sqrt(2), 1 / math.sqrt(2)],
         [1 / 2 - 1j / 2, 1 / 2 + 1j / 2],
         [math.pi / 2],
     ),
-    (qml.Rot, [1, 0], [1 / math.sqrt(2) - 1j / math.sqrt(2), 0], [math.pi / 2, 0, 0]),
-    (qml.Rot, [1, 0], [1 / math.sqrt(2), 1 / math.sqrt(2)], [0, math.pi / 2, 0]),
+    (qp.Rot, [1, 0], [1 / math.sqrt(2) - 1j / math.sqrt(2), 0], [math.pi / 2, 0, 0]),
+    (qp.Rot, [1, 0], [1 / math.sqrt(2), 1 / math.sqrt(2)], [0, math.pi / 2, 0]),
     (
-        qml.Rot,
+        qp.Rot,
         [1 / math.sqrt(2), 1 / math.sqrt(2)],
         [1 / 2 - 1j / 2, 1 / 2 + 1j / 2],
         [0, 0, math.pi / 2],
     ),
     (
-        qml.Rot,
+        qp.Rot,
         [1, 0],
         [-1j / math.sqrt(2), -1 / math.sqrt(2)],
         [math.pi / 2, -math.pi / 2, math.pi / 2],
     ),
     (
-        qml.Rot,
+        qp.Rot,
         [1 / math.sqrt(2), 1 / math.sqrt(2)],
         [1 / 2 + 1j / 2, -1 / 2 + 1j / 2],
         [-math.pi / 2, math.pi, math.pi],
@@ -358,7 +358,7 @@ def test_apply_operation_single_wire_with_parameters(tol, operation, input, expe
     wires = 1
     state_vector = LightningStateVector(wires)
     state_vector.apply_operations(
-        [qml.StatePrep(np.array(input), Wires(range(wires))), operation(*par, Wires(range(wires)))]
+        [qp.StatePrep(np.array(input), Wires(range(wires))), operation(*par, Wires(range(wires)))]
     )
 
     assert np.allclose(state_vector.state, np.array(expected_output), atol=tol, rtol=0)
@@ -367,116 +367,116 @@ def test_apply_operation_single_wire_with_parameters(tol, operation, input, expe
 
 """ operation,input,expected_output,par """
 test_data_two_wires_with_parameters = [
-    (qml.IsingXX, [1, 0, 0, 0], [1 / math.sqrt(2), 0, 0, -1j / math.sqrt(2)], [math.pi / 2]),
+    (qp.IsingXX, [1, 0, 0, 0], [1 / math.sqrt(2), 0, 0, -1j / math.sqrt(2)], [math.pi / 2]),
     (
-        qml.IsingXX,
+        qp.IsingXX,
         [0, 1 / math.sqrt(2), 0, 1 / math.sqrt(2)],
         [-0.5j, 0.5, -0.5j, 0.5],
         [math.pi / 2],
     ),
-    (qml.IsingXY, [1, 0, 0, 0], [1, 0, 0, 0], [math.pi / 2]),
+    (qp.IsingXY, [1, 0, 0, 0], [1, 0, 0, 0], [math.pi / 2]),
     (
-        qml.IsingXY,
+        qp.IsingXY,
         [0, 1 / math.sqrt(2), 0, 1 / math.sqrt(2)],
         [0, 0.5, 0.5j, 1 / math.sqrt(2)],
         [math.pi / 2],
     ),
-    (qml.IsingYY, [1, 0, 0, 0], [1 / math.sqrt(2), 0, 0, 1j / math.sqrt(2)], [math.pi / 2]),
+    (qp.IsingYY, [1, 0, 0, 0], [1 / math.sqrt(2), 0, 0, 1j / math.sqrt(2)], [math.pi / 2]),
     (
-        qml.IsingYY,
+        qp.IsingYY,
         [1 / math.sqrt(2), 0, 0, 1 / math.sqrt(2)],
         [0.5 + 0.5j, 0, 0, 0.5 + 0.5j],
         [math.pi / 2],
     ),
-    (qml.IsingZZ, [1, 0, 0, 0], [1 / math.sqrt(2) - 1j / math.sqrt(2), 0, 0, 0], [math.pi / 2]),
+    (qp.IsingZZ, [1, 0, 0, 0], [1 / math.sqrt(2) - 1j / math.sqrt(2), 0, 0, 0], [math.pi / 2]),
     (
-        qml.IsingZZ,
+        qp.IsingZZ,
         [1 / math.sqrt(2), 0, 0, 1 / math.sqrt(2)],
         [0.5 - 0.5j, 0, 0, 0.5 - 0.5j],
         [math.pi / 2],
     ),
-    (qml.MultiRZ, [1, 0, 0, 0], [1 / math.sqrt(2) - 1j / math.sqrt(2), 0, 0, 0], [math.pi / 2]),
+    (qp.MultiRZ, [1, 0, 0, 0], [1 / math.sqrt(2) - 1j / math.sqrt(2), 0, 0, 0], [math.pi / 2]),
     (
-        qml.MultiRZ,
+        qp.MultiRZ,
         [1 / math.sqrt(2), 0, 0, 1 / math.sqrt(2)],
         [0.5 - 0.5j, 0, 0, 0.5 - 0.5j],
         [math.pi / 2],
     ),
-    (qml.CRX, [0, 1, 0, 0], [0, 1, 0, 0], [math.pi / 2]),
-    (qml.CRX, [0, 0, 0, 1], [0, 0, -1j, 0], [math.pi]),
+    (qp.CRX, [0, 1, 0, 0], [0, 1, 0, 0], [math.pi / 2]),
+    (qp.CRX, [0, 0, 0, 1], [0, 0, -1j, 0], [math.pi]),
     (
-        qml.CRX,
+        qp.CRX,
         [0, 1 / math.sqrt(2), 1 / math.sqrt(2), 0],
         [0, 1 / math.sqrt(2), 1 / 2, -1j / 2],
         [math.pi / 2],
     ),
-    (qml.CRY, [0, 0, 0, 1], [0, 0, -1 / math.sqrt(2), 1 / math.sqrt(2)], [math.pi / 2]),
-    (qml.CRY, [0, 0, 0, 1], [0, 0, -1, 0], [math.pi]),
+    (qp.CRY, [0, 0, 0, 1], [0, 0, -1 / math.sqrt(2), 1 / math.sqrt(2)], [math.pi / 2]),
+    (qp.CRY, [0, 0, 0, 1], [0, 0, -1, 0], [math.pi]),
     (
-        qml.CRY,
+        qp.CRY,
         [1 / math.sqrt(2), 1 / math.sqrt(2), 0, 0],
         [1 / math.sqrt(2), 1 / math.sqrt(2), 0, 0],
         [math.pi / 2],
     ),
-    (qml.CRZ, [0, 0, 0, 1], [0, 0, 0, 1 / math.sqrt(2) + 1j / math.sqrt(2)], [math.pi / 2]),
-    (qml.CRZ, [0, 0, 0, 1], [0, 0, 0, 1j], [math.pi]),
+    (qp.CRZ, [0, 0, 0, 1], [0, 0, 0, 1 / math.sqrt(2) + 1j / math.sqrt(2)], [math.pi / 2]),
+    (qp.CRZ, [0, 0, 0, 1], [0, 0, 0, 1j], [math.pi]),
     (
-        qml.CRZ,
+        qp.CRZ,
         [1 / math.sqrt(2), 1 / math.sqrt(2), 0, 0],
         [1 / math.sqrt(2), 1 / math.sqrt(2), 0, 0],
         [math.pi / 2],
     ),
     (
-        qml.CRot,
+        qp.CRot,
         [0, 0, 0, 1],
         [0, 0, 0, 1 / math.sqrt(2) + 1j / math.sqrt(2)],
         [math.pi / 2, 0, 0],
     ),
-    (qml.CRot, [0, 0, 0, 1], [0, 0, -1 / math.sqrt(2), 1 / math.sqrt(2)], [0, math.pi / 2, 0]),
+    (qp.CRot, [0, 0, 0, 1], [0, 0, -1 / math.sqrt(2), 1 / math.sqrt(2)], [0, math.pi / 2, 0]),
     (
-        qml.CRot,
+        qp.CRot,
         [0, 0, 1 / math.sqrt(2), 1 / math.sqrt(2)],
         [0, 0, 1 / 2 - 1j / 2, 1 / 2 + 1j / 2],
         [0, 0, math.pi / 2],
     ),
     (
-        qml.CRot,
+        qp.CRot,
         [0, 0, 0, 1],
         [0, 0, 1 / math.sqrt(2), 1j / math.sqrt(2)],
         [math.pi / 2, -math.pi / 2, math.pi / 2],
     ),
     (
-        qml.CRot,
+        qp.CRot,
         [0, 1 / math.sqrt(2), 1 / math.sqrt(2), 0],
         [0, 1 / math.sqrt(2), 0, -1 / 2 + 1j / 2],
         [-math.pi / 2, math.pi, math.pi],
     ),
     (
-        qml.ControlledPhaseShift,
+        qp.ControlledPhaseShift,
         [1, 0, 0, 0],
         [1, 0, 0, 0],
         [math.pi / 2],
     ),
     (
-        qml.ControlledPhaseShift,
+        qp.ControlledPhaseShift,
         [0, 1, 0, 0],
         [0, 1, 0, 0],
         [math.pi / 2],
     ),
     (
-        qml.ControlledPhaseShift,
+        qp.ControlledPhaseShift,
         [0, 0, 1, 0],
         [0, 0, 1, 0],
         [math.pi / 2],
     ),
     (
-        qml.ControlledPhaseShift,
+        qp.ControlledPhaseShift,
         [0, 0, 0, 1],
         [0, 0, 0, 1 / math.sqrt(2) + 1j / math.sqrt(2)],
         [math.pi / 4],
     ),
     (
-        qml.ControlledPhaseShift,
+        qp.ControlledPhaseShift,
         [1 / math.sqrt(4), 1 / math.sqrt(4), 1 / math.sqrt(4), 1 / math.sqrt(4)],
         [0.5, 0.5, 0.5, 1 / math.sqrt(8) + 1j / math.sqrt(8)],
         [math.pi / 4],
@@ -491,7 +491,7 @@ def test_apply_operation_two_wires_with_parameters(tol, operation, input, expect
     wires = 2
     state_vector = LightningStateVector(wires)
     state_vector.apply_operations(
-        [qml.StatePrep(np.array(input), Wires(range(wires))), operation(*par, Wires(range(wires)))]
+        [qp.StatePrep(np.array(input), Wires(range(wires))), operation(*par, Wires(range(wires)))]
     )
 
     assert np.allclose(state_vector.state, np.array(expected_output), atol=tol, rtol=0)
@@ -505,7 +505,7 @@ def test_get_final_state(tol, operation, input, expected_output, par):
     wires = 2
     state_vector = LightningStateVector(wires)
     tape = QuantumScript(
-        [qml.StatePrep(np.array(input), Wires(range(wires))), operation(*par, Wires(range(wires)))]
+        [qp.StatePrep(np.array(input), Wires(range(wires))), operation(*par, Wires(range(wires)))]
     )
     final_state = state_vector.get_final_state(tape)
 
@@ -522,7 +522,7 @@ def test_operation_is_sparse_is_false_for_not_supported_devices():
     wires = 2
     state_vector = LightningStateVector(wires)
     assert (
-        state_vector._operation_is_sparse(qml.QubitUnitary(sp.sparse.eye(wires), wires=0)) == False
+        state_vector._operation_is_sparse(qp.QubitUnitary(sp.sparse.eye(wires), wires=0)) == False
     )
 
 

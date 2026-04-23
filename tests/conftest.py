@@ -22,7 +22,7 @@ from functools import reduce
 from typing import Sequence
 
 import numpy as np
-import pennylane as qml
+import pennylane as qp
 import pytest
 from pennylane.exceptions import DeviceError
 from scipy.sparse import csr_matrix, random_array
@@ -117,7 +117,7 @@ def get_device():
     if device not in supported_devices:
         raise ValueError(f"Invalid device {device}. Supported: {', '.join(supported_devices)}")
 
-    if device not in qml.plugin_devices:
+    if device not in qp.plugin_devices:
         raise DeviceError(
             f"Device {device} does not exist. Make sure the required plugin is installed."
         )
@@ -207,9 +207,9 @@ else:
 def qubit_device(request):
     def _device(wires, shots=None, seed=None):
         if device_name == "lightning.tensor":
-            return qml.device(device_name, wires=wires, shots=shots, c_dtype=request.param)
+            return qp.device(device_name, wires=wires, shots=shots, c_dtype=request.param)
         else:
-            return qml.device(
+            return qp.device(
                 device_name, wires=wires, shots=shots, c_dtype=request.param, seed=seed
             )
 
@@ -346,11 +346,11 @@ def validate_others(shots, results1, results2, atol=0.01, rtol=0.2):
 
 def validate_measurements(func, shots, results1, results2, atol=0.01, rtol=0.2):
     """Calls the correct validation function based on measurement type."""
-    if func is qml.counts:
+    if func is qp.counts:
         validate_counts(shots, results1, results2, rtol=rtol)
         return
 
-    if func is qml.sample:
+    if func is qp.sample:
         validate_samples(shots, results1, results2, rtol=rtol)
         return
 
