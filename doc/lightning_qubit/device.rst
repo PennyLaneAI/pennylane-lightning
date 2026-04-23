@@ -112,7 +112,7 @@ Supported operations and observables
 
 **Parallel adjoint differentiation support:**
 
-The ``lightning.qubit`` device directly supports the `adjoint differentiation method <https://pennylane.ai/demos/tutorial_adjoint_diff.html>`__, and enables parallelization over the requested observables (Linux/MacOS support only).
+The ``lightning.qubit`` device directly supports the `adjoint differentiation method <https://pennylane.ai/qml/demos/tutorial_adjoint_diff.html>`__, and enables parallelization over the requested observables (Linux/MacOS support only).
 
 To enable parallel differentiation over observables, ensure the ``OMP_NUM_THREADS`` environment variable is set before starting your Python session, or if already started, before importing packages:
 
