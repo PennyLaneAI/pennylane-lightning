@@ -24,6 +24,8 @@ import pennylane as qp
 import pytest
 from conftest import TOL_STOCHASTIC, device_name, fixture_params
 from mpi4py import MPI
+from pennylane import numpy as pnp
+from scipy.stats import unitary_group
 
 numQubits = 8
 
@@ -834,7 +836,6 @@ class TestTensorVar:
 
 def circuit_ansatz(params, wires):
     """Circuit ansatz containing all the parametrized gates"""
-    # pylint: disable=undefined-variable
     qp.StatePrep(
         unitary_group.rvs(2**numQubits, random_state=0)[0],
         wires=wires,
@@ -908,17 +909,17 @@ def test_integration(returns, seed):
         return qp.math.hstack([qp.expval(r) for r in returns])
 
     n_params = 30
-    rng = np.random.default_rng(seed)
+    rng = pnp.random.default_rng(seed)
     params = rng.random(n_params)
 
     qnode_mpi = qp.QNode(circuit, dev_mpi, diff_method="parameter-shift")
     qnode_default = qp.QNode(circuit, dev_default, diff_method="parameter-shift")
 
     def convert_to_array_mpi(params):
-        return np.array(qnode_mpi(params))
+        return pnp.array(qnode_mpi(params))
 
     def convert_to_array_default(params):
-        return np.array(qnode_default(params))
+        return pnp.array(qnode_default(params))
 
     j_mpi = qp.jacobian(convert_to_array_mpi)(params)
     j_default = qp.jacobian(convert_to_array_default)(params)
@@ -953,17 +954,17 @@ def test_integration_custom_wires(returns, seed):
         return qp.expval(returns), qp.expval(qp.PauliY(custom_wires[1]))
 
     n_params = 30
-    rng = np.random.default_rng(seed)
+    rng = pnp.random.default_rng(seed)
     params = rng.random(n_params)
 
     qnode_mpi = qp.QNode(circuit, dev_mpi, diff_method="parameter-shift")
     qnode_lightning = qp.QNode(circuit, dev_lightning, diff_method="parameter-shift")
 
     def convert_to_array_mpi(params):
-        return np.array(qnode_mpi(params))
+        return pnp.array(qnode_mpi(params))
 
     def convert_to_array_lightning(params):
-        return np.array(qnode_lightning(params))
+        return pnp.array(qnode_lightning(params))
 
     j_mpi = qp.jacobian(convert_to_array_mpi)(params)
     j_lightning = qp.jacobian(convert_to_array_lightning)(params)

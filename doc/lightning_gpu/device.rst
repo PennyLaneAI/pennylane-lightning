@@ -124,7 +124,7 @@ Supported operations and observables
 
 **Parallel adjoint differentiation support:**
 
-The ``lightning.gpu`` device directly supports the `adjoint differentiation method <https://pennylane.ai/demos/tutorial_adjoint_diff.html>`__, and enables parallelization over the requested observables. This supports direct controlling of observable batching, which can be used to run concurrent calculations across multiple available GPUs.
+The ``lightning.gpu`` device directly supports the `adjoint differentiation method <https://pennylane.ai/qml/demos/tutorial_adjoint_diff.html>`__, and enables parallelization over the requested observables. This supports direct controlling of observable batching, which can be used to run concurrent calculations across multiple available GPUs.
 
 If you are computing a large number of expectation values, or if you are using a large number of wires on your device, it may be best to evenly divide the number of expectation value calculations across all available GPUs. This will reduce the overall memory cost of the observables per GPU, at the cost of additional compute time. Assuming `m` observables, and `n` GPUs, the default behaviour is to pre-allocate all storage for `m` observables on a single GPU. To divide the workload amongst many GPUs, initialize a ``lightning.gpu`` device with the ``batch_obs=True`` keyword argument, as:
 
@@ -245,7 +245,7 @@ the GPU memory allocated to the local state vector.
 
 **Multi-GPU/multi-node support for adjoint method:**
 
-The ``lightning.gpu`` device with the multi-GPU/multi-node backend also directly supports the `adjoint differentiation method <https://pennylane.ai/demos/tutorial_adjoint_diff.html>`__. Instead of batching observables across the multiple GPUs available within a node, the state vector is distributed among the available GPUs with the multi-GPU/multi-node backend.
+The ``lightning.gpu`` device with the multi-GPU/multi-node backend also directly supports the `adjoint differentiation method <https://pennylane.ai/qml/demos/tutorial_adjoint_diff.html>`__. Instead of batching observables across the multiple GPUs available within a node, the state vector is distributed among the available GPUs with the multi-GPU/multi-node backend.
 By default, the adjoint method with MPI support follows the performance-oriented implementation of the single GPU backend. This means that a separate ``bra`` is created for each observable and the ``ket`` is updated only once for each operation, regardless of the number of observables.
 
 The workflow for the default adjoint method with MPI support is as follows:
