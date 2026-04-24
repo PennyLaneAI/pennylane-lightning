@@ -1,0 +1,11 @@
+# Add commits here that should be ignored in the output of git blame. Include a comment
+# about why the commit is ignored, with a link to the corresponding PR if applicable.
+
+
+# Migrating QML->QP (3 parts)
+# https://github.com/PennyLaneAI/pennylane-lightning/pull/1362
+c645b17213ca6bd031f83b946d425bd3df537e6a
+# https://github.com/PennyLaneAI/pennylane-lightning/pull/1363
+a17a93fca8e489e3555112dc21c0cba8aba4869f
+# https://github.com/PennyLaneAI/pennylane-lightning/pull/1366
+0eb09c94e466f36935022e1ced098d13c47b2233
