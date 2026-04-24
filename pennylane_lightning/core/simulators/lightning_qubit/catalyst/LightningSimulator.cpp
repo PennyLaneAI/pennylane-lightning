@@ -853,15 +853,15 @@ auto LightningSimulator::PauliMeasure(const std::string &pauli_word,
 }
 
 // Test measure and pauli_measure using the following circuit:
-// @qml.qnode(dev)
+// @qp.qnode(dev)
 // def circuit(x, y):
-//     qml.RY(x, wires=0)
-//     qml.CNOT(wires=[0, 1])
-//     m_0 = qml.measure(1)
+//     qp.RY(x, wires=0)
+//     qp.CNOT(wires=[0, 1])
+//     m_0 = qp.measure(1)
 //     # m_0 = pauli_measurement("Z", [1])
 
-//     qml.cond(m_0, qml.RY)(y, wires=0)
-//     return qml.probs(wires=[0])
+//     qp.cond(m_0, qp.RY)(y, wires=0)
+//     return qp.probs(wires=[0])
 
 // print(circuit(0.5, 0.3))
 

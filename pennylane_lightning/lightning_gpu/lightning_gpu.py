@@ -28,7 +28,7 @@ from typing import List, Optional, Union
 from warnings import warn
 
 import numpy as np
-import pennylane as qml
+import pennylane as qp
 from numpy.random import BitGenerator, Generator, SeedSequence
 from numpy.typing import ArrayLike
 from pennylane.devices import ExecutionConfig
@@ -169,7 +169,7 @@ class LightningGPU(LightningBase):
     _to_matrix_ops = (
         _to_matrix_ops
         if "QubitUnitary"
-        in qml.devices.capabilities.load_toml_file(config_filepath)["operators"]["gates"]
+        in qp.devices.capabilities.load_toml_file(config_filepath)["operators"]["gates"]
         else None
     )
 
@@ -239,7 +239,7 @@ class LightningGPU(LightningBase):
         self.LightningAdjointJacobian = LightningGPUAdjointJacobian
 
     def setup_execution_config(
-        self, config: ExecutionConfig | None = None, circuit: qml.tape.QuantumScript | None = None
+        self, config: ExecutionConfig | None = None, circuit: qp.tape.QuantumScript | None = None
     ) -> ExecutionConfig:
         """
         Update the execution config with choices for how the device should be used and the device options.
@@ -284,7 +284,7 @@ class LightningGPU(LightningBase):
 
     def preprocess_transforms(
         self, execution_config: ExecutionConfig | None = None
-    ) -> qml.CompilePipeline:
+    ) -> qp.CompilePipeline:
         """This function defines the device transform program to be applied and an updated device configuration.
 
         Args:
@@ -292,7 +292,7 @@ class LightningGPU(LightningBase):
                 parameters needed to fully describe the execution.
 
         Returns:
-            qml.CompilePipeline: A transform program that when called returns :class:`~.QuantumTape`'s that the
+            qp.CompilePipeline: A transform program that when called returns :class:`~.QuantumTape`'s that the
             device can natively execute as well as a postprocessing function to be called after execution.
 
         This device:
@@ -306,7 +306,7 @@ class LightningGPU(LightningBase):
             execution_config = ExecutionConfig()
 
         exec_config = execution_config
-        pipeline = qml.CompilePipeline()
+        pipeline = qp.CompilePipeline()
 
         gate_set = self.capabilities.gate_set()
         allow_mcms = False
@@ -316,11 +316,11 @@ class LightningGPU(LightningBase):
             allow_mcms = True
             _stopping_condition = allow_mcms_stopping_condition
 
-        if qml.capture.enabled():
+        if qp.capture.enabled():
             if exec_config.mcm_config.mcm_method == "deferred":
-                pipeline.add_transform(qml.defer_measurements, num_wires=len(self.wires))
+                pipeline.add_transform(qp.defer_measurements, num_wires=len(self.wires))
             pipeline.add_transform(
-                qml.transforms.decompose,
+                qp.transforms.decompose,
                 gate_set=gate_set,
                 stopping_condition=_stopping_condition,
             )
@@ -352,7 +352,7 @@ class LightningGPU(LightningBase):
             pipeline.add_transform(
                 dynamic_one_shot, postselect_mode=exec_config.mcm_config.postselect_mode
             )
-        pipeline.add_transform(qml.transforms.broadcast_expand)
+        pipeline.add_transform(qp.transforms.broadcast_expand)
 
         if exec_config.gradient_method == "adjoint":
             pipeline += adjoint_transforms(self, allow_mcms)
@@ -380,7 +380,7 @@ class LightningGPU(LightningBase):
         results = []
         for circuit in circuits:
             if self._wire_map is not None:
-                [circuit], _ = qml.map_wires(circuit, self._wire_map)
+                [circuit], _ = qp.map_wires(circuit, self._wire_map)
             results.append(
                 self.simulate(
                     self.dynamic_wires_from_circuit(circuit),
@@ -395,7 +395,7 @@ class LightningGPU(LightningBase):
     def supports_derivatives(
         self,
         execution_config: ExecutionConfig | None = None,
-        circuit: Optional[qml.tape.QuantumTape] = None,
+        circuit: Optional[qp.tape.QuantumTape] = None,
     ) -> bool:
         """Check whether or not derivatives are available for a given configuration and circuit.
 

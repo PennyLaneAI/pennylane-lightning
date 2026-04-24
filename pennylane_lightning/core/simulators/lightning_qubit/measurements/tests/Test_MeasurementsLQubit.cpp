@@ -126,16 +126,16 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values", "[Measurements]",
         op_wires = 2
         wires = [0]
         size = 2**op_wires
-        dev = qml.device("default.qubit", wires=n_wires)
+        dev = qp.device("default.qubit", wires=n_wires)
 
-        @qml.qnode(dev)
+        @qp.qnode(dev)
         def circ():
             phase = 0.7
             for i in range(n_wires):
-                qml.RX(phase, wires=i)
-                qml.RY(phase, wires=i)
+                qp.RX(phase, wires=i)
+                qp.RY(phase, wires=i)
                 phase -=0.2
-            return qml.expval(qml.Op(wires))
+            return qp.expval(qp.Op(wires))
 
         print(circ())
     */
@@ -183,21 +183,21 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values", "[Measurements]",
         op_wires = 2
         wires = [0, 1]
         size = 2**op_wires
-        dev = qml.device("default.qubit", wires=n_wires)
+        dev = qp.device("default.qubit", wires=n_wires)
 
 
         mat = np.zeros(size**2, dtype=np.complex128)
         for i in range(size**2):
             mat[i] = i/10 + (i+1)/10*1j
         mat = mat.reshape((size, size))
-        @qml.qnode(dev)
+        @qp.qnode(dev)
         def circ():
             phase = 0.7
             for i in range(n_wires):
-                qml.RX(phase, wires=i)
-                qml.RY(phase, wires=i)
+                qp.RX(phase, wires=i)
+                qp.RY(phase, wires=i)
                 phase -=0.2
-            return qml.expval(qml.Hermitian(mat, wires=wires))
+            return qp.expval(qp.Hermitian(mat, wires=wires))
 
         print(circ())
     */

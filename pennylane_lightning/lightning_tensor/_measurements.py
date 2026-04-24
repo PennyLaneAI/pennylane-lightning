@@ -30,7 +30,7 @@ from functools import reduce
 from typing import Callable, List, Union
 
 import numpy as np
-import pennylane as qml
+import pennylane as qp
 from pennylane.devices.qubit.sampling import _group_measurements
 from pennylane.measurements import (
     ClassicalShadowMP,
@@ -86,7 +86,7 @@ class LightningTensorMeasurements:
             True if the measurement process only uses the sparse data representation.
         """
 
-        return isinstance(obs, qml.SparseHamiltonian)
+        return isinstance(obs, qp.SparseHamiltonian)
 
     def _measurement_dtype(self):
         """Binding to Lightning Measurements C++ class.
@@ -114,7 +114,7 @@ class LightningTensorMeasurements:
         state_array = self._tensornet.state
         wires = Wires(range(self._tensornet.num_wires))
         result = measurementprocess.process_state(state_array, wires)
-        self._tensornet.apply_operations([qml.adjoint(g) for g in reversed(diagonalizing_gates)])
+        self._tensornet.apply_operations([qp.adjoint(g) for g in reversed(diagonalizing_gates)])
         self._tensornet.appendFinalState()
         return result
 
@@ -131,7 +131,7 @@ class LightningTensorMeasurements:
         if self._observable_is_sparse(measurementprocess.obs):
             raise NotImplementedError("Sparse Observables are not supported.")
 
-        if isinstance(measurementprocess.obs, qml.Hermitian):
+        if isinstance(measurementprocess.obs, qp.Hermitian):
             if len(measurementprocess.obs.wires) > 1:
                 raise ValueError("The number of Hermitian observables target wires should be 1.")
 
@@ -164,7 +164,7 @@ class LightningTensorMeasurements:
         results = self._measurement_lightning.probs(measurewires)
         if diagonalizing_gates:
             self._tensornet.apply_operations(
-                [qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)]
+                [qp.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)]
             )
             self._tensornet.appendFinalState()
         return results
@@ -183,7 +183,7 @@ class LightningTensorMeasurements:
         if self._observable_is_sparse(measurementprocess.obs):
             raise NotImplementedError("The var measurement does not support sparse observables.")
 
-        if isinstance(measurementprocess.obs, qml.Hermitian):
+        if isinstance(measurementprocess.obs, qp.Hermitian):
             if len(measurementprocess.obs.wires) > 1:
                 raise ValueError("The number of Hermitian observables target wires should be 1.")
 
@@ -205,12 +205,12 @@ class LightningTensorMeasurements:
         """
         if isinstance(measurementprocess, StateMeasurement):
             if isinstance(measurementprocess, ExpectationMP):
-                if isinstance(measurementprocess.obs, qml.Identity):
+                if isinstance(measurementprocess.obs, qp.Identity):
                     return self.state_diagonalizing_gates
                 return self.expval
 
             if isinstance(measurementprocess, VarianceMP):
-                if isinstance(measurementprocess.obs, qml.Identity):
+                if isinstance(measurementprocess.obs, qp.Identity):
                     return self.state_diagonalizing_gates
                 return self.var
 
@@ -291,8 +291,8 @@ class LightningTensorMeasurements:
             if measurement.wires == Wires([]):
                 # This is required for the case where no wires is specific for the tensornet
                 # (i.e. dynamically determined from circuit), and no wires (and no observable)
-                # is provided for the measurement (e.g. qml.probs() or qml.counts() or
-                # qml.samples()). In the case where number of wires is provided for the statevector,
+                # is provided for the measurement (e.g. qp.probs() or qp.counts() or
+                # qp.samples()). In the case where number of wires is provided for the statevector,
                 # the same operation is performed in validate_device_wires during preprocess.
 
                 # pylint:disable=protected-access
@@ -337,14 +337,12 @@ class LightningTensorMeasurements:
         if len(mps) == 1:
             diagonalizing_gates = mps[0].diagonalizing_gates()
         elif all(mp.obs for mp in mps):
-            diagonalizing_gates = qml.pauli.diagonalize_qwc_pauli_words([mp.obs for mp in mps])[0]
+            diagonalizing_gates = qp.pauli.diagonalize_qwc_pauli_words([mp.obs for mp in mps])[0]
         else:
             diagonalizing_gates = []
 
         if adjoint:
-            diagonalizing_gates = [
-                qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)
-            ]
+            diagonalizing_gates = [qp.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)]
 
         self._tensornet.apply_operations(diagonalizing_gates)
         self._tensornet.appendFinalState()
@@ -381,7 +379,7 @@ class LightningTensorMeasurements:
         except ValueError as e:
             if str(e) != "probabilities contain NaN":
                 raise e
-            samples = qml.math.full((shots.total_shots, len(wires)), 0)
+            samples = qp.math.full((shots.total_shots, len(wires)), 0)
 
         self._apply_diagonalizing_gates(mps, adjoint=True)
 

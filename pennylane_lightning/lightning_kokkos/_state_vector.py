@@ -45,7 +45,7 @@ except ImportError as ex:
 from typing import Union
 
 import numpy as np
-import pennylane as qml
+import pennylane as qp
 import scipy as sp
 from numpy.random import Generator
 from pennylane.measurements import MidMeasureMP
@@ -119,8 +119,8 @@ class LightningKokkosStateVector(LightningBaseStateVector):
 
         **Example**
 
-        >>> dev = qml.device('lightning.kokkos', wires=1)
-        >>> dev.apply([qml.PauliX(wires=[0])])
+        >>> dev = qp.device('lightning.kokkos', wires=1)
+        >>> dev.apply([qp.PauliX(wires=[0])])
         >>> print(dev.state)
         [0.+0.j 1.+0.j]
         """
@@ -154,10 +154,10 @@ class LightningKokkosStateVector(LightningBaseStateVector):
 
         **Example**
 
-        >>> dev = qml.device('lightning.kokkos', wires=3)
-        >>> obs = qml.Identity(0) @ qml.PauliX(1) @ qml.PauliY(2)
-        >>> obs1 = qml.Identity(1)
-        >>> H = qml.Hamiltonian([1.0, 1.0], [obs1, obs])
+        >>> dev = qp.device('lightning.kokkos', wires=3)
+        >>> obs = qp.Identity(0) @ qp.PauliX(1) @ qp.PauliY(2)
+        >>> obs1 = qp.Identity(1)
+        >>> H = qp.Hamiltonian([1.0, 1.0], [obs1, obs])
         >>> state_vector = np.array([0.0 + 0.0j, 0.0 + 0.1j, 0.1 + 0.1j, 0.1 + 0.2j, 0.2 + 0.2j, 0.3 + 0.3j, 0.3 + 0.4j, 0.4 + 0.5j,], dtype=np.complex64)
         >>> dev.sync_h2d(state_vector)
         >>> res = dev.expval(H)
@@ -176,8 +176,8 @@ class LightningKokkosStateVector(LightningBaseStateVector):
 
         **Example**
 
-        >>> dev = qml.device('lightning.kokkos', wires=1)
-        >>> dev.apply([qml.PauliX(wires=[0])])
+        >>> dev = qp.device('lightning.kokkos', wires=1)
+        >>> dev.apply([qp.PauliX(wires=[0])])
         >>> state_vector = np.zeros(2**dev.num_wires).astype(dev.c_dtype)
         >>> dev.sync_d2h(state_vector)
         >>> print(state_vector)
@@ -271,7 +271,7 @@ class LightningKokkosStateVector(LightningBaseStateVector):
         else:  # apply gate as an n-controlled matrix
             method = getattr(state, "applyControlledMatrix")
             method(
-                qml.matrix(base_operation),
+                qp.matrix(base_operation),
                 control_wires,
                 control_values,
                 target_wires,
@@ -298,7 +298,7 @@ class LightningKokkosStateVector(LightningBaseStateVector):
         # Skip over identity operations instead of performing
         # matrix multiplication with it.
         for operation in operations:
-            if isinstance(operation, qml.Identity):
+            if isinstance(operation, qp.Identity):
                 continue
             if isinstance(operation, Adjoint):
                 op_adjoint_base = operation.base
@@ -320,7 +320,7 @@ class LightningKokkosStateVector(LightningBaseStateVector):
                     mid_measurements,
                     postselect_mode=postselect_mode,
                 )
-            elif isinstance(operation, qml.PauliRot):
+            elif isinstance(operation, qp.PauliRot):
                 method = getattr(state, "applyPauliRot")
                 paulis = operation._hyperparameters[  # pylint: disable=protected-access
                     "pauli_word"
@@ -331,14 +331,14 @@ class LightningKokkosStateVector(LightningBaseStateVector):
             elif method is not None:  # apply specialized gate
                 param = operation.parameters
                 method(wires, invert_param, param)
-            elif isinstance(op_adjoint_base, qml.ops.Controlled):  # apply n-controlled gate
+            elif isinstance(op_adjoint_base, qp.ops.Controlled):  # apply n-controlled gate
                 self._apply_lightning_controlled(op_adjoint_base, invert_param)
             else:  # apply gate as a matrix
-                # Inverse can be set to False since qml.matrix(operation) is already in
+                # Inverse can be set to False since qp.matrix(operation) is already in
                 # inverted form
                 method = getattr(state, "applyMatrix")
                 try:
-                    method(qml.matrix(operation), wires, False)
+                    method(qp.matrix(operation), wires, False)
                 except AttributeError:  # pragma: no cover
                     # To support older versions of PL
                     method(operation.matrix, wires, False)

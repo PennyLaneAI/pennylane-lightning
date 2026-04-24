@@ -27,7 +27,7 @@ except ImportError:
     pass
 
 import numpy as np
-import pennylane as qml
+import pennylane as qp
 from pennylane import BasisState, MPSPrep, StatePrep
 from pennylane.exceptions import DeviceError
 from pennylane.ops.op_math import Adjoint
@@ -680,7 +680,7 @@ class LightningTensorNet:
             method(control_wires, control_values, target_wires, inv, param)
         else:  # apply gate as an n-controlled matrix
             method = getattr(tensornet, "applyControlledMatrix")
-            method(qml.matrix(operation.base), control_wires, control_values, target_wires, False)
+            method(qp.matrix(operation.base), control_wires, control_values, target_wires, False)
 
     # pylint: disable=too-many-statements
     def _apply_lightning(self, operations):
@@ -697,7 +697,7 @@ class LightningTensorNet:
         # Skip over identity operations instead of performing
         # matrix multiplication with it.
         for operation in operations:
-            if isinstance(operation, qml.Identity):
+            if isinstance(operation, qp.Identity):
                 continue
             if isinstance(operation, Adjoint):
                 name = operation.base.name
@@ -709,12 +709,12 @@ class LightningTensorNet:
             wires = list(operation.wires)
 
             if (
-                isinstance(operation, qml.ops.Controlled)
+                isinstance(operation, qp.ops.Controlled)
                 and len(list(operation.target_wires)) == 1
                 and len(set(operation.control_values)) == 1
             ):
                 self._apply_lightning_controlled(operation)
-            elif isinstance(operation, qml.GlobalPhase):
+            elif isinstance(operation, qp.GlobalPhase):
                 matrix = np.eye(2) * operation.matrix().flatten()[0]
                 method = getattr(tensornet, "applyMatrix")
                 # GlobalPhase is always applied to the first wire in the tensor network
@@ -724,17 +724,17 @@ class LightningTensorNet:
                     param = operation.parameters
                     method(wires, invert_param, param)
                 else:
-                    # Inverse can be set to False since qml.matrix(operation) is already in
+                    # Inverse can be set to False since qp.matrix(operation) is already in
                     # inverted form
                     method = getattr(tensornet, "applyMatrix")
                     try:
-                        method(qml.matrix(operation), wires, False)
+                        method(qp.matrix(operation), wires, False)
                     except AttributeError:  # pragma: no cover
                         # To support older versions of PL
                         method(operation.matrix(), wires, False)
             else:
                 try:
-                    gate_ops_matrix = qml.matrix(operation)
+                    gate_ops_matrix = qp.matrix(operation)
                 except AttributeError:  # pragma: no cover
                     # To support older versions of PL
                     gate_ops_matrix = operation.matrix()
