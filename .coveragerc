@@ -5,7 +5,7 @@ omit =
     tests/*
     mpitests/*
     pennylane_lightning/lightning_amdgpu/*
-    
+
 
 [coverage:run]
 parallel = true
@@ -28,7 +28,6 @@ exclude_lines =
 
     # Don't complain if non-runnable code isn't run:
     if 0:
-    pass
     if __name__ == .__main__.:
     raise NotImplementedError
 
