@@ -40,6 +40,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Modified the code coverage options to no longer skip lines containing "pass".
+  [(#1369)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1369)
+
 - Removed `lightning_interpreter` from pennylane-lightning.
   [(#1367)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1367)
 
