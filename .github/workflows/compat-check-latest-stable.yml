@@ -1,5 +1,6 @@
 name: Compat Check w/PL - latest/stable
-
+permissions:
+  contents: read
 on:
   schedule:
     - cron: "0 1 * * 1-5"  # Run daily at 3am Mon-Fri

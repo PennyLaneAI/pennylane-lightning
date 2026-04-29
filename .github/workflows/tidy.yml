@@ -22,6 +22,9 @@ concurrency:
   group: tidy-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
 
   tidy-cpp:

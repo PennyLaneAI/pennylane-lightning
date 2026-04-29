@@ -28,6 +28,9 @@ concurrency:
   group: tests_windows_cpp-${{ github.ref }}-${{ github.event_name }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   win-set-matrix-x86:
     if: github.event.pull_request.draft == false

@@ -1,5 +1,6 @@
 name: Compat Check w/PL - release/release
-
+permissions:
+  contents: read
 on:
   workflow_dispatch:
   schedule:

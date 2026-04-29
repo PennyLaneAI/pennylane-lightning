@@ -28,6 +28,9 @@ concurrency:
   group: wheel_noarch-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   build-pure-python-wheel:
     if: |

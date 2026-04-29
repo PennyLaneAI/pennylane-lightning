@@ -6,6 +6,9 @@ on:
       - cron: "30 7 * * 1-5"
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   setup-rc:
     name: Setup the release

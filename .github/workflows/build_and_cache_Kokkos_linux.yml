@@ -1,4 +1,6 @@
 name: Build and Cache Kokkos
+permissions:
+  contents: read
 
 env:
   GCC_VERSION: 13

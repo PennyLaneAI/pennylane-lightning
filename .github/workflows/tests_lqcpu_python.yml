@@ -31,6 +31,9 @@ concurrency:
   group: tests_lqcpu_python-${{ github.ref }}-${{ github.event_name }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   build_lightning_qubit_wheels:
     strategy:
