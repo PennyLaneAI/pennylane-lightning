@@ -14,6 +14,7 @@
 r"""
 Project configuration script.
 """
+
 import argparse
 import os
 from importlib import import_module

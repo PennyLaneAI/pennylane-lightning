@@ -8,8 +8,8 @@ A ``lightning.qubit`` device can be loaded using:
 
 .. code-block:: python
 
-    import pennylane as qml
-    dev = qml.device("lightning.qubit", wires=2)
+    import pennylane as qp
+    dev = qp.device("lightning.qubit", wires=2)
 
 Check out the :doc:`/lightning_qubit/installation` guide for more information.
 
@@ -127,7 +127,7 @@ To enable parallel differentiation over observables, ensure the ``OMP_NUM_THREAD
     # Option 2: Before importing packages
     import os
     os.environ["OMP_NUM_THREADS"] = 4
-    import pennylane as qml
+    import pennylane as qp
 
 Assuming you request multiple expectation values from a QNode, this should automatically parallelize the computation over the requested number of threads. You should ensure that the number of threads does not exceed the available physical cores on your machine.
 
@@ -138,8 +138,8 @@ If you are computing a large number of expectation values, or if you are using a
     # Before importing packages
     import os
     os.environ["OMP_NUM_THREADS"] = 4
-    import pennylane as qml
-    dev = qml.device("lightning.qubit", wires=2, batch_obs=True)
+    import pennylane as qp
+    dev = qp.device("lightning.qubit", wires=2, batch_obs=True)
 
 
 **OpenMP acceleration of the gate kernels:**
@@ -156,8 +156,8 @@ The ``lightning.qubit`` device allows users to use the Markov Chain Monte Carlo 
 
 .. code-block:: python
 
-    import pennylane as qml
-    dev = qml.device("lightning.qubit", wires=2, shots=1000, mcmc=True, kernel_name="Local", num_burnin=100)
+    import pennylane as qp
+    dev = qp.device("lightning.qubit", wires=2, shots=1000, mcmc=True, kernel_name="Local", num_burnin=100)
 
 By default, ``mcmc=False``, the ``kernel_name`` is ``None`` and ``num_burnin`` is ``0``. The ``Local`` kernel conducts a bit-flip local transition between states. The local kernel generates a random qubit site and then generates a random number to determine  the new bit at that qubit site.
 
@@ -165,5 +165,5 @@ The ``lightning.qubit`` device also supports a ``"NonZeroRandom"`` kernel. This 
 
 .. code-block:: python
 
-    import pennylane as qml
-    dev = qml.device("lightning.qubit", wires=2, shots=1000, mcmc=True, kernel_name="NonZeroRandom", num_burnin=200)
+    import pennylane as qp
+    dev = qp.device("lightning.qubit", wires=2, shots=1000, mcmc=True, kernel_name="NonZeroRandom", num_burnin=200)

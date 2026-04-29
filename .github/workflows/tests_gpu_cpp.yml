@@ -160,6 +160,7 @@ jobs:
             -DPL_BACKEND=${{ matrix.pl_backend }} \
             -DSCIPY_OPENBLAS=$(python -c "import scipy_openblas32; print(scipy_openblas32.get_lib_dir())") \
             -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
+            -DCMAKE_CUDA_ARCHITECTURES=${{ env.CI_CUDA_ARCH }} \
             -DCMAKE_CUDA_HOST_COMPILER=$(which gcc-$GCC_VERSION) \
             -DENABLE_COVERAGE=ON \
             -G Ninja \

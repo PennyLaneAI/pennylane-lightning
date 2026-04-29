@@ -14,6 +14,7 @@
 """
 Class implementation for lightning_qubit state-vector manipulation.
 """
+
 from warnings import warn
 
 try:
@@ -28,7 +29,7 @@ except ImportError as ex:
 from typing import Union
 
 import numpy as np
-import pennylane as qml
+import pennylane as qp
 import scipy as sp
 from numpy.random import Generator
 from pennylane.measurements import MidMeasureMP
@@ -74,8 +75,8 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
 
         **Example**
 
-        >>> dev = qml.device('lightning.qubit', wires=1)
-        >>> dev.apply([qml.PauliX(wires=[0])])
+        >>> dev = qp.device('lightning.qubit', wires=1)
+        >>> dev.apply([qp.PauliX(wires=[0])])
         >>> print(dev.state)
         [0.+0.j 1.+0.j]
         """
@@ -168,7 +169,7 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
         if method is not None:  # apply n-controlled specialized gate
             param = base_operation.parameters
 
-            if isinstance(base_operation, qml.PCPhase):
+            if isinstance(base_operation, qp.PCPhase):
                 hyper = float(base_operation.hyperparameters["dimension"][0])
                 param = np.array([base_operation.parameters[0], hyper])
 
@@ -176,7 +177,7 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
         else:  # apply gate as an n-controlled matrix
             method = getattr(state, "applyControlledMatrix")
             method(
-                qml.matrix(base_operation),
+                qp.matrix(base_operation),
                 control_wires,
                 control_values,
                 target_wires,
@@ -235,7 +236,7 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
         # Skip over identity operations instead of performing
         # matrix multiplication with it.
         for operation in operations:
-            if isinstance(operation, qml.Identity):
+            if isinstance(operation, qp.Identity):
                 continue
             if isinstance(operation, Adjoint):
                 op_adjoint_base = operation.base
@@ -258,7 +259,7 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
                     mid_measurements,
                     postselect_mode=postselect_mode,
                 )
-            elif isinstance(operation, qml.PauliRot):
+            elif isinstance(operation, qp.PauliRot):
                 method = getattr(state, "applyPauliRot")
                 paulis = operation._hyperparameters[  # pylint: disable=protected-access
                     "pauli_word"
@@ -268,7 +269,7 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
                 method(wires, invert_param, operation.parameters, word)
             elif self._operation_is_sparse(operation):
                 # Inverse can be set to False since operation.sparse_matrix() is already in inverted form
-                if isinstance(op_adjoint_base, qml.ops.Controlled):
+                if isinstance(op_adjoint_base, qp.ops.Controlled):
                     self._apply_lightning_controlled_sparse(op_adjoint_base)
                 # If the operation is not controlled, apply it as a sparse matrix.
                 else:
@@ -284,15 +285,15 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
             elif method is not None:  # apply specialized gate
                 param = op_adjoint_base.parameters
 
-                if isinstance(op_adjoint_base, qml.PCPhase):
+                if isinstance(op_adjoint_base, qp.PCPhase):
                     hyper = float(op_adjoint_base.hyperparameters["dimension"][0])
                     param = np.array([op_adjoint_base.parameters[0], hyper])
 
                 method(wires, invert_param, param)
-            elif isinstance(op_adjoint_base, qml.ops.Controlled):  # apply n-controlled gate
+            elif isinstance(op_adjoint_base, qp.ops.Controlled):  # apply n-controlled gate
                 self._apply_lightning_controlled(op_adjoint_base, invert_param)
             else:
                 # apply gate as a matrix
-                # Inverse can be set to False since qml.matrix(operation) is already in inverted form
+                # Inverse can be set to False since qp.matrix(operation) is already in inverted form
                 method = getattr(state, "applyMatrix")
-                method(qml.matrix(operation), wires, False)
+                method(qp.matrix(operation), wires, False)

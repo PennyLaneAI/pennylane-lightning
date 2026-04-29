@@ -15,11 +15,12 @@
 Integration tests that compare the output states of the
 compiled Lightning device with the ``default.qubit``.
 """
+
 import itertools
 import os
 
 import numpy as np
-import pennylane as qml
+import pennylane as qp
 import pytest
 from conftest import LightningDevice as ld
 from conftest import device_name
@@ -30,33 +31,33 @@ if not ld._CPP_BINARY_AVAILABLE:
 
 def lightning_backend_dev(wires):
     """Loads the lightning backend"""
-    return qml.device(device_name, wires=wires)
+    return qp.device(device_name, wires=wires)
 
 
 def lightning_backend_batch_obs_dev(wires):
     """Loads the lightning backend"""
-    return qml.device(device_name, wires=wires, batch_obs=True)
+    return qp.device(device_name, wires=wires, batch_obs=True)
 
 
 def default_qubit_dev(wires):
     """Loads ``default.qubit``"""
-    return qml.device("default.qubit", wires=wires)
+    return qp.device("default.qubit", wires=wires)
 
 
 def one_qubit_block(wires=None):
     """A block containing all supported gates"""
-    qml.PauliX(wires=wires)
-    qml.PauliY(wires=wires)
-    qml.S(wires=wires)
-    qml.Hadamard(wires=wires)
-    qml.PauliX(wires=wires)
-    qml.T(wires=wires)
-    qml.PhaseShift(-1, wires=wires)
-    qml.Rot(0.1, 0.2, 0.3, wires=wires)
-    qml.RZ(0.11, wires=wires)
-    qml.RY(0.22, wires=wires)
-    qml.RX(0.33, wires=wires)
-    qml.PauliX(wires=wires)
+    qp.PauliX(wires=wires)
+    qp.PauliY(wires=wires)
+    qp.S(wires=wires)
+    qp.Hadamard(wires=wires)
+    qp.PauliX(wires=wires)
+    qp.T(wires=wires)
+    qp.PhaseShift(-1, wires=wires)
+    qp.Rot(0.1, 0.2, 0.3, wires=wires)
+    qp.RZ(0.11, wires=wires)
+    qp.RY(0.22, wires=wires)
+    qp.RX(0.33, wires=wires)
+    qp.PauliX(wires=wires)
 
 
 class TestComparison:
@@ -83,20 +84,20 @@ class TestComparison:
         def circuit(measurement):
             """A combination of the one_qubit_block and a simple PauliZ measurement applied to a
             basis state"""
-            qml.BasisState(np.array(basis_state), wires=0)
+            qp.BasisState(np.array(basis_state), wires=0)
             one_qubit_block(wires=0)
-            return measurement() if callable(measurement) else qml.apply(measurement)
+            return measurement() if callable(measurement) else qp.apply(measurement)
 
         dev_l = lightning_dev_version(wires)
         dev_d = default_qubit_dev(wires)
 
-        lightning = qml.QNode(circuit, dev_l)
-        default = qml.QNode(circuit, dev_d)
+        lightning = qp.QNode(circuit, dev_l)
+        default = qp.QNode(circuit, dev_d)
 
-        lightning(qml.expval(qml.PauliZ(0)))
+        lightning(qp.expval(qp.PauliZ(0)))
         # pylint: disable=protected-access
 
-        default_state = default(qml.state)
+        default_state = default(qp.state)
 
         assert np.allclose(dev_l._statevector.state, default_state)
         assert os.getenv("OMP_NUM_THREADS") == str(num_threads)
@@ -122,29 +123,29 @@ class TestComparison:
         def circuit(measurement):
             """A combination of two qubit gates with the one_qubit_block and a simple PauliZ
             measurement applied to an input basis state"""
-            qml.BasisState(np.array(basis_state), wires=[0, 1])
-            qml.RX(0.5, wires=0)
-            qml.Hadamard(wires=1)
-            qml.CNOT(wires=[0, 1])
-            qml.CZ(wires=[1, 0])
+            qp.BasisState(np.array(basis_state), wires=[0, 1])
+            qp.RX(0.5, wires=0)
+            qp.Hadamard(wires=1)
+            qp.CNOT(wires=[0, 1])
+            qp.CZ(wires=[1, 0])
             one_qubit_block(wires=0)
-            qml.SWAP(wires=[0, 1])
-            qml.CRX(0.5, wires=[1, 0])
-            qml.CRY(0.9, wires=[0, 1])
+            qp.SWAP(wires=[0, 1])
+            qp.CRX(0.5, wires=[1, 0])
+            qp.CRY(0.9, wires=[0, 1])
             one_qubit_block(wires=1)
-            qml.CRZ(0.02, wires=[0, 1])
-            qml.CRot(0.2, 0.3, 0.7, wires=[0, 1])
-            return measurement() if callable(measurement) else qml.apply(measurement)
+            qp.CRZ(0.02, wires=[0, 1])
+            qp.CRot(0.2, 0.3, 0.7, wires=[0, 1])
+            return measurement() if callable(measurement) else qp.apply(measurement)
 
         dev_l = lightning_dev_version(wires)
         dev_d = default_qubit_dev(wires)
 
-        lightning = qml.QNode(circuit, dev_l)
-        default = qml.QNode(circuit, dev_d)
+        lightning = qp.QNode(circuit, dev_l)
+        default = qp.QNode(circuit, dev_d)
 
-        lightning(qml.expval(qml.PauliZ(0)))
+        lightning(qp.expval(qp.PauliZ(0)))
 
-        default_state = default(qml.state)
+        default_state = default(qp.state)
 
         # pylint: disable=protected-access
         assert np.allclose(dev_l._statevector.state, default_state)
@@ -170,37 +171,37 @@ class TestComparison:
         def circuit(measurement):
             """A combination of two and three qubit gates with the one_qubit_block and a simple
             PauliZ measurement applied to an input basis state"""
-            qml.BasisState(np.array(basis_state), wires=[0, 1, 2])
-            qml.RX(0.5, wires=0)
-            qml.Hadamard(wires=1)
-            qml.RY(0.9, wires=2)
-            qml.CNOT(wires=[0, 1])
-            qml.CNOT(wires=[2, 0])
-            qml.CZ(wires=[1, 0])
+            qp.BasisState(np.array(basis_state), wires=[0, 1, 2])
+            qp.RX(0.5, wires=0)
+            qp.Hadamard(wires=1)
+            qp.RY(0.9, wires=2)
+            qp.CNOT(wires=[0, 1])
+            qp.CNOT(wires=[2, 0])
+            qp.CZ(wires=[1, 0])
             one_qubit_block(wires=0)
-            qml.Toffoli(wires=[1, 0, 2])
+            qp.Toffoli(wires=[1, 0, 2])
             one_qubit_block(wires=2)
-            qml.SWAP(wires=[0, 1])
-            qml.SWAP(wires=[0, 2])
-            qml.CRX(0.5, wires=[1, 0])
-            qml.CSWAP(wires=[2, 1, 0])
-            qml.CRY(0.9, wires=[2, 1])
+            qp.SWAP(wires=[0, 1])
+            qp.SWAP(wires=[0, 2])
+            qp.CRX(0.5, wires=[1, 0])
+            qp.CSWAP(wires=[2, 1, 0])
+            qp.CRY(0.9, wires=[2, 1])
             one_qubit_block(wires=1)
-            qml.CRZ(0.02, wires=[0, 1])
-            qml.CRot(0.2, 0.3, 0.7, wires=[2, 1])
-            qml.RZ(0.4, wires=0)
-            qml.Toffoli(wires=[2, 1, 0])
-            return measurement() if callable(measurement) else qml.apply(measurement)
+            qp.CRZ(0.02, wires=[0, 1])
+            qp.CRot(0.2, 0.3, 0.7, wires=[2, 1])
+            qp.RZ(0.4, wires=0)
+            qp.Toffoli(wires=[2, 1, 0])
+            return measurement() if callable(measurement) else qp.apply(measurement)
 
         dev_l = lightning_dev_version(wires)
         dev_d = default_qubit_dev(wires)
 
-        lightning = qml.QNode(circuit, dev_l)
-        default = qml.QNode(circuit, dev_d)
+        lightning = qp.QNode(circuit, dev_l)
+        default = qp.QNode(circuit, dev_d)
 
-        lightning(qml.expval(qml.PauliZ(0)))
+        lightning(qp.expval(qp.PauliZ(0)))
 
-        default_state = default(qml.state)
+        default_state = default(qp.state)
 
         # pylint: disable=protected-access
         assert np.allclose(dev_l._statevector.state, default_state)
@@ -226,42 +227,42 @@ class TestComparison:
         def circuit(measurement):
             """A combination of two and three qubit gates with the one_qubit_block and a simple
             PauliZ measurement, all acting on a four qubit input basis state"""
-            qml.BasisState(np.array(basis_state), wires=[0, 1, 2, 3])
-            qml.RX(0.5, wires=0)
-            qml.Hadamard(wires=1)
-            qml.RY(0.9, wires=2)
-            qml.Rot(0.1, -0.2, -0.3, wires=3)
-            qml.CNOT(wires=[0, 1])
-            qml.CNOT(wires=[3, 1])
+            qp.BasisState(np.array(basis_state), wires=[0, 1, 2, 3])
+            qp.RX(0.5, wires=0)
+            qp.Hadamard(wires=1)
+            qp.RY(0.9, wires=2)
+            qp.Rot(0.1, -0.2, -0.3, wires=3)
+            qp.CNOT(wires=[0, 1])
+            qp.CNOT(wires=[3, 1])
             one_qubit_block(wires=3)
-            qml.CNOT(wires=[2, 0])
-            qml.CZ(wires=[1, 0])
+            qp.CNOT(wires=[2, 0])
+            qp.CZ(wires=[1, 0])
             one_qubit_block(wires=0)
-            qml.Toffoli(wires=[1, 0, 2])
+            qp.Toffoli(wires=[1, 0, 2])
             one_qubit_block(wires=2)
-            qml.SWAP(wires=[0, 1])
-            qml.SWAP(wires=[0, 2])
-            qml.Toffoli(wires=[1, 3, 2])
-            qml.CRX(0.5, wires=[1, 0])
-            qml.CSWAP(wires=[2, 1, 0])
-            qml.CRY(0.9, wires=[2, 1])
+            qp.SWAP(wires=[0, 1])
+            qp.SWAP(wires=[0, 2])
+            qp.Toffoli(wires=[1, 3, 2])
+            qp.CRX(0.5, wires=[1, 0])
+            qp.CSWAP(wires=[2, 1, 0])
+            qp.CRY(0.9, wires=[2, 1])
             one_qubit_block(wires=1)
-            qml.CRZ(0.02, wires=[0, 1])
-            qml.CRY(0.9, wires=[2, 3])
-            qml.CRot(0.2, 0.3, 0.7, wires=[2, 1])
-            qml.RZ(0.4, wires=0)
-            qml.Toffoli(wires=[2, 1, 0])
-            return measurement() if callable(measurement) else qml.apply(measurement)
+            qp.CRZ(0.02, wires=[0, 1])
+            qp.CRY(0.9, wires=[2, 3])
+            qp.CRot(0.2, 0.3, 0.7, wires=[2, 1])
+            qp.RZ(0.4, wires=0)
+            qp.Toffoli(wires=[2, 1, 0])
+            return measurement() if callable(measurement) else qp.apply(measurement)
 
         dev_l = lightning_dev_version(wires)
         dev_d = default_qubit_dev(wires)
 
-        lightning = qml.QNode(circuit, dev_l)
-        default = qml.QNode(circuit, dev_d)
+        lightning = qp.QNode(circuit, dev_l)
+        default = qp.QNode(circuit, dev_d)
 
-        lightning(qml.expval(qml.PauliZ(0)))
+        lightning(qp.expval(qp.PauliZ(0)))
 
-        default_state = default(qml.state)
+        default_state = default(qp.state)
 
         # pylint: disable=protected-access
         assert np.allclose(dev_l._statevector.state, default_state)
@@ -281,7 +282,7 @@ class TestComparison:
         monkeypatch.setenv("OMP_NUM_THREADS", str(num_threads))
 
         vec = np.array([1] * (2**wires)) / np.sqrt(2**wires)
-        shape = qml.StronglyEntanglingLayers.shape(2, wires)
+        shape = qp.StronglyEntanglingLayers.shape(2, wires)
 
         rng = np.random.default_rng(seed)
         w = rng.uniform(high=2 * np.pi, size=shape)
@@ -289,19 +290,19 @@ class TestComparison:
         def circuit(measurement):
             """Prepares the equal superposition state and then applies StronglyEntanglingLayers
             and concludes with a simple PauliZ measurement"""
-            qml.StatePrep(vec, wires=range(wires))
-            qml.StronglyEntanglingLayers(w, wires=range(wires))
-            return measurement() if callable(measurement) else qml.apply(measurement)
+            qp.StatePrep(vec, wires=range(wires))
+            qp.StronglyEntanglingLayers(w, wires=range(wires))
+            return measurement() if callable(measurement) else qp.apply(measurement)
 
         dev_l = lightning_dev_version(wires)
         dev_d = default_qubit_dev(wires)
 
-        lightning = qml.QNode(circuit, dev_l)
-        default = qml.QNode(circuit, dev_d)
+        lightning = qp.QNode(circuit, dev_l)
+        default = qp.QNode(circuit, dev_d)
 
-        lightning(qml.expval(qml.PauliZ(0)))
+        lightning(qp.expval(qp.PauliZ(0)))
         # pylint: disable=protected-access
 
-        default_state = default(qml.state)
+        default_state = default(qp.state)
 
         assert np.allclose(dev_l._statevector.state, default_state)

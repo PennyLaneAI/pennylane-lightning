@@ -14,6 +14,7 @@
 """
 Unit tests for the serialization helper functions.
 """
+
 import pytest
 from conftest import LightningDevice, device_name
 

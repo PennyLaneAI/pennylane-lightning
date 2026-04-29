@@ -14,6 +14,7 @@
 r"""
 Internal logic to check and set backend variables.
 """
+
 import os
 
 default_backend = "lightning_qubit"

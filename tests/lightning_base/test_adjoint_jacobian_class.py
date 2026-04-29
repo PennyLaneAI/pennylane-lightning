@@ -14,9 +14,10 @@
 """
 Unit tests for the adjoint Jacobian and VJP methods.
 """
+
 import math
 
-import pennylane as qml
+import pennylane as qp
 import pytest
 from conftest import (  # tested device
     LightningAdjointJacobian,
@@ -38,9 +39,9 @@ if not LightningDevice._CPP_BINARY_AVAILABLE:
 
 I, X, Y, Z = (
     np.eye(2),
-    qml.PauliX.compute_matrix(),
-    qml.PauliY.compute_matrix(),
-    qml.PauliZ.compute_matrix(),
+    qp.PauliX.compute_matrix(),
+    qp.PauliY.compute_matrix(),
+    qp.PauliZ.compute_matrix(),
 )
 
 kokkos_args = [None]
@@ -98,7 +99,7 @@ class TestAdjointJacobian:
 
     def test_finite_shots_error(self, lightning_sv):
         """Tests error raised when finite shots specified"""
-        tape = qml.tape.QuantumTape(measurements=[qml.expval(qml.PauliZ(0))], shots=1)
+        tape = qp.tape.QuantumTape(measurements=[qp.expval(qp.PauliZ(0))], shots=1)
 
         with pytest.raises(
             QuantumFunctionError,
@@ -116,9 +117,9 @@ class TestAdjointJacobian:
         """Test if a QuantumFunctionError is raised for a tape with measurements that are not
         supported"""
 
-        with qml.tape.QuantumTape() as tape:
-            qml.RX(0.1, wires=0)
-            qml.state()
+        with qp.tape.QuantumTape() as tape:
+            qp.RX(0.1, wires=0)
+            qp.state()
 
         with pytest.raises(
             QuantumFunctionError,
@@ -129,8 +130,8 @@ class TestAdjointJacobian:
     def test_empty_measurements(self, lightning_sv):
         """Tests if an empty array is returned when the measurements of the tape is empty."""
 
-        with qml.tape.QuantumTape() as tape:
-            qml.RX(0.4, wires=[0])
+        with qp.tape.QuantumTape() as tape:
+            qp.RX(0.4, wires=[0])
 
         jac = self.calculate_jacobian(lightning_sv(num_wires=3), tape)
         assert len(jac) == 0
@@ -138,9 +139,9 @@ class TestAdjointJacobian:
     def test_empty_trainable_params(self, lightning_sv):
         """Tests if an empty array is returned when the number trainable params is zero."""
 
-        with qml.tape.QuantumTape() as tape:
-            qml.X(wires=[0])
-            qml.expval(qml.PauliZ(0))
+        with qp.tape.QuantumTape() as tape:
+            qp.X(wires=[0])
+            qp.expval(qp.PauliZ(0))
 
         jac = self.calculate_jacobian(lightning_sv(num_wires=3), tape)
         assert len(jac) == 0
@@ -148,10 +149,10 @@ class TestAdjointJacobian:
     def test_not_expectation_return_type(self, lightning_sv):
         """Tests if an empty array is returned when the number trainable params is zero."""
 
-        with qml.tape.QuantumTape() as tape:
-            qml.X(wires=[0])
-            qml.RX(0.4, wires=[0])
-            qml.var(qml.PauliZ(1))
+        with qp.tape.QuantumTape() as tape:
+            qp.X(wires=[0])
+            qp.RX(0.4, wires=[0])
+            qp.var(qp.PauliZ(1))
 
         with pytest.raises(
             QuantumFunctionError,
@@ -169,10 +170,10 @@ class TestAdjointJacobian:
         init_state = np.zeros(2**n_qubits)
         init_state[-2::] = np.array([1.0 / np.sqrt(2), 1.0 / np.sqrt(2)], requires_grad=False)
 
-        with qml.tape.QuantumTape() as tape:
-            qml.StatePrep(init_state, wires=range(n_qubits))
-            qml.ctrl(qml.PhaseShift(par, wires=n_qubits - 1), range(0, n_qubits - 1))
-            qml.expval(qml.PauliY(n_qubits - 1))
+        with qp.tape.QuantumTape() as tape:
+            qp.StatePrep(init_state, wires=range(n_qubits))
+            qp.ctrl(qp.PhaseShift(par, wires=n_qubits - 1), range(0, n_qubits - 1))
+            qp.expval(qp.PauliY(n_qubits - 1))
 
         tape.trainable_params = {1}
 
@@ -184,9 +185,9 @@ class TestAdjointJacobian:
     @pytest.mark.parametrize("par", [1, -2, 1.623, -0.051, 0])  # integers, floats, zero
     def test_ry_gradient(self, par, tol, lightning_sv):
         """Test that the gradient of the RY gate matches the exact analytic formula."""
-        with qml.tape.QuantumTape() as tape:
-            qml.RY(par, wires=[0])
-            qml.expval(qml.PauliX(0))
+        with qp.tape.QuantumTape() as tape:
+            qp.RY(par, wires=[0])
+            qp.expval(qp.PauliX(0))
 
         tape.trainable_params = {0}
 
@@ -199,9 +200,9 @@ class TestAdjointJacobian:
         """Test that the gradient of the RX gate matches the known formula."""
         par = 0.7418
 
-        with qml.tape.QuantumTape() as tape:
-            qml.RX(par, wires=0)
-            qml.expval(qml.PauliZ(0))
+        with qp.tape.QuantumTape() as tape:
+            qp.RX(par, wires=0)
+            qp.expval(qp.PauliZ(0))
 
         expected = -np.sin(par)
         result = self.calculate_jacobian(lightning_sv(num_wires=3), tape)
@@ -212,13 +213,13 @@ class TestAdjointJacobian:
         """Tests that the gradient of multiple RX gates in a circuit yields the correct result."""
         params = np.array([np.pi, np.pi / 2, np.pi / 3])
 
-        with qml.tape.QuantumTape() as tape:
-            qml.RX(params[0], wires=0)
-            qml.RX(params[1], wires=1)
-            qml.RX(params[2], wires=2)
+        with qp.tape.QuantumTape() as tape:
+            qp.RX(params[0], wires=0)
+            qp.RX(params[1], wires=1)
+            qp.RX(params[2], wires=2)
 
             for idx in range(3):
-                qml.expval(qml.PauliZ(idx))
+                qp.expval(qp.PauliZ(idx))
 
         expected = -np.diag(np.sin(params))
         result = self.calculate_jacobian(lightning_sv(num_wires=3), tape)
@@ -231,13 +232,13 @@ class TestAdjointJacobian:
         """
         params = np.array([np.pi, np.pi / 2, np.pi / 3])
 
-        with qml.tape.QuantumTape() as tape:
-            qml.RX(params[0], wires=0)
-            qml.RX(params[1], wires=1)
-            qml.RX(params[2], wires=2)
+        with qp.tape.QuantumTape() as tape:
+            qp.RX(params[0], wires=0)
+            qp.RX(params[1], wires=1)
+            qp.RX(params[2], wires=2)
 
             for idx in range(3):
-                qml.expval(qml.Hermitian([[1, 0], [0, -1]], wires=[idx]))
+                qp.expval(qp.Hermitian([[1, 0], [0, -1]], wires=[idx]))
 
         tape.trainable_params = {0, 1, 2}
 
@@ -252,13 +253,13 @@ class TestAdjointJacobian:
         """
         params = np.array([np.pi / 3, np.pi / 4, np.pi / 5])
 
-        with qml.tape.QuantumTape() as tape:
-            qml.RX(params[0], wires=0)
-            qml.RX(params[1], wires=1)
-            qml.RX(params[2], wires=2)
+        with qp.tape.QuantumTape() as tape:
+            qp.RX(params[0], wires=0)
+            qp.RX(params[1], wires=1)
+            qp.RX(params[2], wires=2)
 
-            qml.expval(
-                qml.Hermitian(
+            qp.expval(
+                qp.Hermitian(
                     [[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]], wires=[0, 2]
                 )
             )
@@ -278,24 +279,24 @@ class TestAdjointJacobian:
         """
         params = np.array([np.pi / 3, np.pi / 4, np.pi / 5])
 
-        ham = qml.Hamiltonian(
+        ham = qp.Hamiltonian(
             [1.0, 0.3, 0.3, 0.4],
             [
-                qml.PauliX(0) @ qml.PauliX(1),
-                qml.PauliZ(0),
-                qml.PauliZ(1),
-                qml.Hermitian(
+                qp.PauliX(0) @ qp.PauliX(1),
+                qp.PauliZ(0),
+                qp.PauliZ(1),
+                qp.Hermitian(
                     [[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]], wires=[0, 2]
                 ),
             ],
         )
 
-        with qml.tape.QuantumTape() as tape:
-            qml.RX(params[0], wires=0)
-            qml.RX(params[1], wires=1)
-            qml.RX(params[2], wires=2)
+        with qp.tape.QuantumTape() as tape:
+            qp.RX(params[0], wires=0)
+            qp.RX(params[1], wires=1)
+            qp.RX(params[2], wires=2)
 
-            qml.expval(ham)
+            qp.expval(ham)
 
         tape.trainable_params = {0, 1, 2}
 
@@ -315,19 +316,19 @@ class TestAdjointJacobian:
 def simple_circuit_ansatz(params, wires):
     """Circuit ansatz containing a large circuit"""
     return [
-        qml.StatePrep(unitary_group.rvs(2**4, random_state=0)[0], wires=wires),
-        qml.RX(params[0], wires=wires[0]),
-        qml.RY(params[1], wires=wires[1]),
-        qml.RZ(params[2], wires=wires[3]),
-        qml.CRX(params[3], wires=[wires[3], wires[0]]),
-        qml.CRY(params[4], wires=[wires[2], wires[1]]),
-        qml.CRZ(params[5], wires=[wires[2], wires[1]]),
-        qml.PhaseShift(params[6], wires=wires[2]),
-        qml.MultiRZ(params[7], wires=[wires[0], wires[1]]),
-        qml.IsingXX(params[8], wires=[wires[1], wires[0]]),
-        qml.IsingXY(params[9], wires=[wires[3], wires[2]]),
-        qml.IsingYY(params[10], wires=[wires[3], wires[2]]),
-        qml.IsingZZ(params[11], wires=[wires[2], wires[1]]),
+        qp.StatePrep(unitary_group.rvs(2**4, random_state=0)[0], wires=wires),
+        qp.RX(params[0], wires=wires[0]),
+        qp.RY(params[1], wires=wires[1]),
+        qp.RZ(params[2], wires=wires[3]),
+        qp.CRX(params[3], wires=[wires[3], wires[0]]),
+        qp.CRY(params[4], wires=[wires[2], wires[1]]),
+        qp.CRZ(params[5], wires=[wires[2], wires[1]]),
+        qp.PhaseShift(params[6], wires=wires[2]),
+        qp.MultiRZ(params[7], wires=[wires[0], wires[1]]),
+        qp.IsingXX(params[8], wires=[wires[1], wires[0]]),
+        qp.IsingXY(params[9], wires=[wires[3], wires[2]]),
+        qp.IsingYY(params[10], wires=[wires[3], wires[2]]),
+        qp.IsingZZ(params[11], wires=[wires[2], wires[1]]),
     ]
 
 
@@ -353,7 +354,7 @@ def test_large_circuit(tol, lightning_sv):
     n_params = 12
     params = np.linspace(0, 10, n_params)
     tape = QuantumScript(
-        simple_circuit_ansatz(params, wires=range(4)), [qml.expval(qml.PauliZ(i)) for i in range(2)]
+        simple_circuit_ansatz(params, wires=range(4)), [qp.expval(qp.PauliZ(i)) for i in range(2)]
     )
 
     tape.trainable_params = set(range(1, n_params + 1))
@@ -386,23 +387,23 @@ class TestVectorJacobianProduct:
         """Tests provides correct answer when provided multiple measurements."""
         x, y, z = [0.5, 0.3, -0.7]
 
-        with qml.tape.QuantumTape() as tape1:
-            qml.RX(0.4, wires=[0])
-            qml.Rot(x, y, z, wires=[0])
-            qml.RY(-0.2, wires=[0])
-            qml.expval(qml.PauliX(0))
-            qml.expval(qml.PauliY(1))
-            qml.expval(qml.PauliZ(1))
+        with qp.tape.QuantumTape() as tape1:
+            qp.RX(0.4, wires=[0])
+            qp.Rot(x, y, z, wires=[0])
+            qp.RY(-0.2, wires=[0])
+            qp.expval(qp.PauliX(0))
+            qp.expval(qp.PauliY(1))
+            qp.expval(qp.PauliZ(1))
 
         dy = np.array([1.0, 2.0, 3.0])
         tape1.trainable_params = {1, 2, 3}
 
-        with qml.tape.QuantumTape() as tape2:
-            ham = qml.Hamiltonian(dy, [qml.PauliX(0), qml.PauliY(1), qml.PauliY(1)])
-            qml.RX(0.4, wires=[0])
-            qml.Rot(x, y, z, wires=[0])
-            qml.RY(-0.2, wires=[0])
-            qml.expval(ham)
+        with qp.tape.QuantumTape() as tape2:
+            ham = qp.Hamiltonian(dy, [qp.PauliX(0), qp.PauliY(1), qp.PauliY(1)])
+            qp.RX(0.4, wires=[0])
+            qp.Rot(x, y, z, wires=[0])
+            qp.RY(-0.2, wires=[0])
+            qp.expval(ham)
 
         tape2.trainable_params = {1, 2, 3}
 
@@ -421,13 +422,13 @@ class TestVectorJacobianProduct:
 
         x, y, z = [0.5, 0.3, -0.7]
 
-        with qml.tape.QuantumTape() as tape1:
-            qml.RX(0.4, wires=[0])
-            qml.Rot(x, y, z, wires=[0])
-            qml.RY(-0.2, wires=[0])
-            qml.expval(qml.PauliX(0))
-            qml.expval(qml.PauliY(1))
-            qml.expval(qml.PauliZ(1))
+        with qp.tape.QuantumTape() as tape1:
+            qp.RX(0.4, wires=[0])
+            qp.Rot(x, y, z, wires=[0])
+            qp.RY(-0.2, wires=[0])
+            qp.expval(qp.PauliX(0))
+            qp.expval(qp.PauliY(1))
+            qp.expval(qp.PauliZ(1))
 
         dy1 = np.array([1.0, 2.0])
         tape1.trainable_params = {1, 2, 3}
@@ -448,7 +449,7 @@ class TestVectorJacobianProduct:
 
         statevector = lightning_sv(num_wires=2)
 
-        tape = qml.tape.QuantumScript([], [qml.expval(qml.PauliZ(0))], shots=1)
+        tape = qp.tape.QuantumScript([], [qp.expval(qp.PauliZ(0))], shots=1)
         dy = np.array([1.0])
 
         with pytest.raises(
@@ -464,9 +465,9 @@ class TestVectorJacobianProduct:
         dy = np.array([0.8])
 
         for x in np.linspace(-2 * math.pi, 2 * math.pi, 7):
-            with qml.tape.QuantumTape() as tape:
-                qml.RY(x, wires=(0,))
-                qml.expval(qml.Hermitian(obs, wires=(0,)))
+            with qp.tape.QuantumTape() as tape:
+                qp.RY(x, wires=(0,))
+                qp.expval(qp.Hermitian(obs, wires=(0,)))
             tape.trainable_params = {0}
 
             statevector.reset_state()
@@ -482,9 +483,9 @@ class TestVectorJacobianProduct:
         dy = np.array([0.8])
 
         for x in np.linspace(-2 * math.pi, 2 * math.pi, 7):
-            with qml.tape.QuantumTape() as tape:
-                qml.RY(x, wires=(0,))
-                qml.expval(qml.Hermitian(obs, wires=(0,)) @ qml.PauliZ(wires=1))
+            with qp.tape.QuantumTape() as tape:
+                qp.RY(x, wires=(0,))
+                qp.expval(qp.Hermitian(obs, wires=(0,)) @ qp.PauliZ(wires=1))
             tape.trainable_params = {0}
 
             statevector.reset_state()
@@ -499,11 +500,11 @@ class TestVectorJacobianProduct:
 
         x, y, z = [0.5, 0.3, -0.7]
 
-        with qml.tape.QuantumTape() as tape:
-            qml.RX(0.4, wires=[0])
-            qml.Rot(x, y, z, wires=[0])
-            qml.RY(-0.2, wires=[0])
-            qml.state()
+        with qp.tape.QuantumTape() as tape:
+            qp.RX(0.4, wires=[0])
+            qp.Rot(x, y, z, wires=[0])
+            qp.RY(-0.2, wires=[0])
+            qp.state()
 
         tape.trainable_params = {1, 2, 3}
 
@@ -520,10 +521,10 @@ class TestVectorJacobianProduct:
         statevector = lightning_sv(num_wires=2)
         x = 0.4
 
-        with qml.tape.QuantumTape() as tape:
-            qml.RX(x, wires=0)
-            qml.CNOT(wires=[0, 1])
-            qml.expval(qml.PauliZ(0))
+        with qp.tape.QuantumTape() as tape:
+            qp.RX(x, wires=0)
+            qp.CNOT(wires=[0, 1])
+            qp.expval(qp.PauliZ(0))
 
         tape.trainable_params = {}
         dy = np.array([1.0])
@@ -537,11 +538,11 @@ class TestVectorJacobianProduct:
         x = 0.4
         y = 0.6
 
-        with qml.tape.QuantumTape() as tape:
-            qml.RX(x, wires=0)
-            qml.RX(y, wires=0)
-            qml.CNOT(wires=[0, 1])
-            qml.expval(qml.PauliZ(0))
+        with qp.tape.QuantumTape() as tape:
+            qp.RX(x, wires=0)
+            qp.RX(y, wires=0)
+            qp.CNOT(wires=[0, 1])
+            qp.expval(qp.PauliZ(0))
 
         tape.trainable_params = {0, 1}
         dy = np.array([0.0])
@@ -556,11 +557,11 @@ class TestVectorJacobianProduct:
         x = 0.543
         y = -0.654
 
-        with qml.tape.QuantumTape() as tape:
-            qml.RX(x, wires=[0])
-            qml.RY(y, wires=[1])
-            qml.CNOT(wires=[0, 1])
-            qml.expval(qml.PauliZ(0) @ qml.PauliX(1))
+        with qp.tape.QuantumTape() as tape:
+            qp.RX(x, wires=[0])
+            qp.RY(y, wires=[1])
+            qp.CNOT(wires=[0, 1])
+            qp.expval(qp.PauliZ(0) @ qp.PauliX(1))
 
         tape.trainable_params = {0, 1}
         dy = np.array(1.0)
@@ -577,11 +578,11 @@ class TestVectorJacobianProduct:
         x = 0.543
         y = -0.654
 
-        with qml.tape.QuantumTape() as tape:
-            qml.RX(x, wires=[0])
-            qml.RY(y, wires=[1])
-            qml.CNOT(wires=[0, 1])
-            qml.expval(qml.PauliZ(0) @ qml.PauliX(1))
+        with qp.tape.QuantumTape() as tape:
+            qp.RX(x, wires=[0])
+            qp.RY(y, wires=[1])
+            qp.CNOT(wires=[0, 1])
+            qp.expval(qp.PauliZ(0) @ qp.PauliX(1))
 
         tape.trainable_params = {0, 1}
         dy = np.array([1.0])
@@ -598,12 +599,12 @@ class TestVectorJacobianProduct:
         x = 0.543
         y = -0.654
 
-        with qml.tape.QuantumTape() as tape:
-            qml.RX(x, wires=[0])
-            qml.RY(y, wires=[1])
-            qml.CNOT(wires=[0, 1])
-            qml.expval(qml.PauliZ(0))
-            qml.expval(qml.PauliX(1))
+        with qp.tape.QuantumTape() as tape:
+            qp.RX(x, wires=[0])
+            qp.RY(y, wires=[1])
+            qp.CNOT(wires=[0, 1])
+            qp.expval(qp.PauliZ(0))
+            qp.expval(qp.PauliX(1))
 
         tape.trainable_params = {0, 1}
         dy = np.array([1.0, 2.0])

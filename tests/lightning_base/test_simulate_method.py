@@ -17,7 +17,7 @@ import math
 from typing import Sequence
 
 import numpy as np
-import pennylane as qml
+import pennylane as qp
 import pytest
 from conftest import PHI, THETA, LightningDevice, device_name  # tested device
 from pennylane.devices import DefaultQubit, ExecutionConfig
@@ -47,9 +47,9 @@ class TestSimulate:
 
     def test_simple_circuit(self, lightning_sv, tol):
         """Tests the simulate method for a simple circuit."""
-        tape = qml.tape.QuantumScript(
-            [qml.RX(THETA[0], wires=0), qml.RY(PHI[0], wires=1)],
-            [qml.expval(qml.PauliX(0))],
+        tape = qp.tape.QuantumScript(
+            [qp.RX(THETA[0], wires=0), qp.RY(PHI[0], wires=1)],
+            [qp.expval(qp.PauliX(0))],
             shots=None,
         )
         statevector = lightning_sv(num_wires=2)
@@ -59,16 +59,16 @@ class TestSimulate:
         assert np.allclose(result, reference, tol)
 
     test_data_no_parameters = [
-        (100, qml.PauliZ(wires=[0]), 100),
-        (110, qml.PauliZ(wires=[1]), 110),
-        (120, qml.PauliX(0) @ qml.PauliZ(1), 120),
+        (100, qp.PauliZ(wires=[0]), 100),
+        (110, qp.PauliZ(wires=[1]), 110),
+        (120, qp.PauliX(0) @ qp.PauliZ(1), 120),
     ]
 
     @pytest.mark.parametrize("num_shots,operation,shape", test_data_no_parameters)
     def test_sample_dimensions(self, lightning_sv, num_shots, operation, shape):
         """Tests if the samples returned by simulate have the correct dimensions"""
-        ops = [qml.RX(1.5708, wires=[0]), qml.RX(1.5708, wires=[1])]
-        tape = qml.tape.QuantumScript(ops, [qml.sample(op=operation)], shots=num_shots)
+        ops = [qp.RX(1.5708, wires=[0]), qp.RX(1.5708, wires=[1])]
+        tape = qp.tape.QuantumScript(ops, [qp.sample(op=operation)], shots=num_shots)
 
         statevector = lightning_sv(num_wires=2)
         result = self.calculate_result(2, tape, statevector)
@@ -77,8 +77,8 @@ class TestSimulate:
 
     def test_sample_values(self, lightning_sv, tol):
         """Tests if the samples returned by simulate have the correct values"""
-        ops = [qml.RX(1.5708, wires=[0])]
-        tape = qml.tape.QuantumScript(ops, [qml.sample(op=qml.PauliZ(0))], shots=1000)
+        ops = [qp.RX(1.5708, wires=[0])]
+        tape = qp.tape.QuantumScript(ops, [qp.sample(op=qp.PauliZ(0))], shots=1000)
 
         statevector = lightning_sv(num_wires=1)
 
@@ -94,8 +94,8 @@ class TestSimulate:
     @pytest.mark.parametrize("kernel", ["Local", "NonZeroRandom"])
     def test_sample_values_with_mcmc(self, lightning_sv, tol, mcmc, kernel):
         """Tests if the samples returned by simulate have the correct values using mcmc"""
-        ops = [qml.RX(1.5708, wires=[0])]
-        tape = qml.tape.QuantumScript(ops, [qml.sample(op=qml.PauliZ(0))], shots=1000)
+        ops = [qp.RX(1.5708, wires=[0])]
+        tape = qp.tape.QuantumScript(ops, [qp.sample(op=qp.PauliZ(0))], shots=1000)
 
         statevector = lightning_sv(num_wires=1)
 

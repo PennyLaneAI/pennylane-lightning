@@ -14,6 +14,7 @@
 """
 Unit tests for checking binaries.
 """
+
 import pytest
 from conftest import LightningDevice
 

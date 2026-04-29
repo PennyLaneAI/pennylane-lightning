@@ -14,8 +14,9 @@
 """
 Unit tests for the var method of the :mod:`pennylane_lightning.LightningQubit` device.
 """
+
 import numpy as np
-import pennylane as qml
+import pennylane as qp
 import pytest
 from conftest import PHI, THETA, VARPHI
 from conftest import LightningDevice as ld
@@ -34,13 +35,13 @@ class TestVar:
         dev = qubit_device(wires=3)
 
         # test correct variance for <Z> of a rotated state
-        obs = qml.PauliZ(wires=[0])
+        obs = qp.PauliZ(wires=[0])
         ops = [
-            qml.RX(phi, wires=[0]),
-            qml.RY(theta, wires=[0]),
+            qp.RX(phi, wires=[0]),
+            qp.RY(theta, wires=[0]),
         ]
 
-        tape = qml.tape.QuantumScript(ops, [qml.var(op=obs)])
+        tape = qp.tape.QuantumScript(ops, [qp.var(op=obs)])
         var = dev.execute(tape)
 
         expected = 0.25 * (3 - np.cos(2 * theta) - 2 * np.cos(theta) ** 2 * np.cos(2 * phi))
@@ -53,21 +54,21 @@ class TestVar:
     def test_projector_var(self, theta, phi, qubit_device, tol):
         """Test that Projector variance value is correct"""
         n_qubits = 2
-        dev_def = qml.device("default.qubit", wires=n_qubits)
+        dev_def = qp.device("default.qubit", wires=n_qubits)
         dev = qubit_device(wires=n_qubits)
 
         init_state = get_random_normalized_state(2**n_qubits)
-        obs = qml.Projector(np.array([0, 1, 0, 0]) / np.sqrt(2), wires=[0, 1])
+        obs = qp.Projector(np.array([0, 1, 0, 0]) / np.sqrt(2), wires=[0, 1])
 
         def circuit():
-            qml.StatePrep(init_state, wires=range(n_qubits))
-            qml.RY(theta, wires=[0])
-            qml.RY(phi, wires=[1])
-            qml.CNOT(wires=[0, 1])
-            return qml.expval(obs)
+            qp.StatePrep(init_state, wires=range(n_qubits))
+            qp.RY(theta, wires=[0])
+            qp.RY(phi, wires=[1])
+            qp.CNOT(wires=[0, 1])
+            return qp.expval(obs)
 
-        circ = qml.QNode(circuit, dev)
-        circ_def = qml.QNode(circuit, dev_def)
+        circ = qp.QNode(circuit, dev)
+        circ_def = qp.QNode(circuit, dev_def)
         assert np.allclose(circ(), circ_def(), tol)
 
 
@@ -78,15 +79,15 @@ class TestTensorVar:
     def test_paulix_pauliy(self, theta, phi, varphi, qubit_device, tol):
         """Test that a tensor product involving PauliX and PauliY works correctly"""
         dev = qubit_device(wires=3)
-        obs = qml.PauliX(0) @ qml.PauliY(2)
+        obs = qp.PauliX(0) @ qp.PauliY(2)
         ops = [
-            qml.RX(theta, wires=[0]),
-            qml.RX(phi, wires=[1]),
-            qml.RX(varphi, wires=[2]),
-            qml.CNOT(wires=[0, 1]),
-            qml.CNOT(wires=[1, 2]),
+            qp.RX(theta, wires=[0]),
+            qp.RX(phi, wires=[1]),
+            qp.RX(varphi, wires=[2]),
+            qp.CNOT(wires=[0, 1]),
+            qp.CNOT(wires=[1, 2]),
         ]
-        tape = qml.tape.QuantumScript(ops, [qml.var(op=obs)])
+        tape = qp.tape.QuantumScript(ops, [qp.var(op=obs)])
         res = dev.execute(tape)
 
         expected = (
@@ -103,15 +104,15 @@ class TestTensorVar:
     def test_pauliz_hadamard_pauliy(self, theta, phi, varphi, qubit_device, tol):
         """Test that a tensor product involving PauliZ and PauliY and hadamard works correctly"""
         dev = qubit_device(wires=3)
-        obs = qml.PauliZ(0) @ qml.Hadamard(1) @ qml.PauliY(2)
+        obs = qp.PauliZ(0) @ qp.Hadamard(1) @ qp.PauliY(2)
         ops = [
-            qml.RX(theta, wires=[0]),
-            qml.RX(phi, wires=[1]),
-            qml.RX(varphi, wires=[2]),
-            qml.CNOT(wires=[0, 1]),
-            qml.CNOT(wires=[1, 2]),
+            qp.RX(theta, wires=[0]),
+            qp.RX(phi, wires=[1]),
+            qp.RX(varphi, wires=[2]),
+            qp.CNOT(wires=[0, 1]),
+            qp.CNOT(wires=[1, 2]),
         ]
-        tape = qml.tape.QuantumScript(ops, [qml.var(op=obs)])
+        tape = qp.tape.QuantumScript(ops, [qp.var(op=obs)])
         res = dev.execute(tape)
 
         expected = (

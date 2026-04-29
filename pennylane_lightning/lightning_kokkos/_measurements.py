@@ -35,7 +35,7 @@ except ImportError as error_import:
     warn(str(error_import), UserWarning)
 
 import numpy as np
-import pennylane as qml
+import pennylane as qp
 from pennylane.measurements import MeasurementProcess
 
 # pylint: disable=ungrouped-imports
@@ -92,6 +92,6 @@ class LightningKokkosMeasurements(
             Expectation value.
         """
         pwords, coeffs = zip(*measurementprocess.obs.pauli_rep.items())
-        pauli_words = [qml.pauli.pauli_word_to_string(p) for p in pwords]
+        pauli_words = [qp.pauli.pauli_word_to_string(p) for p in pwords]
         wires = [p.wires.tolist() for p in pwords]
         return self._measurement_lightning.expval(pauli_words, wires, coeffs)

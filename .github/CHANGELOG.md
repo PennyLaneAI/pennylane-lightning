@@ -2,10 +2,10 @@
 
 <h3>New features since last release</h3>
 
-- Added support for `qml.pauli_measure` simulation for Catalyst.
+- Added support for `qp.pauli_measure` simulation for Catalyst.
   [(#1327)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1327)
 
-- Added support for `qml.PauliRot` simulation for Catalyst.
+- Added support for `qp.PauliRot` simulation for Catalyst.
   [(#1322)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1322)
 
 <h3>Improvements 🛠</h3>
@@ -16,7 +16,7 @@
 - Added sitemap configuration and SEO improvements to documentation, including noindex meta tags for C++ API reference pages.
   [(#1331)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1331)
 
-- Added a C++ kernel for the `qml.PauliRot` simulation on `lightning.gpu`.
+- Added a C++ kernel for the `qp.PauliRot` simulation on `lightning.gpu`.
   [(#1329)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1329)
 
 - Linux and MacOS `lightning.qubit` wheels are now built with OpenMP support for all kernel types (LM, AVX2, and AVX512), enabling better performance tuning for CPU simulations.
@@ -28,15 +28,42 @@
 
 <h3>Documentation 📝</h3>
 
+- The `qml` alias as in `import pennylane as qml` has been updated to `qp` in our source code and documentation.
+  [(#1362)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1362)
+  [(#1363)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1363)
+  [(#1366)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1366)
+
 <h3>Bug fixes 🐛</h3>
 
-- Fixed erroneous tranposed result when computing the adjoint jacobian with `lightning.qubit` from Catalyst.
+- Fixed erroneous transposed result when computing the adjoint jacobian with `lightning.qubit` from Catalyst.
   [(#1337)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1337)
 
 <h3>Internal changes ⚙️</h3>
 
-- Change default branch references from `master` to `main`.
+- Modified the code coverage options to no longer skip lines containing "pass".
+  [(#1369)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1369)
+
+- Removed `lightning_interpreter` from pennylane-lightning.
+  [(#1367)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1367)
+
+- Fixed Python MPI tests involving differentiation to use PennyLane Numpy.
+  [(#1365)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1365)
+
+- A new AI policy document is now applied across the PennyLaneAI organization for all AI contributions.
+  [(#1364)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1364)
+
+- Upgraded Kokkos from v4.5.0 to v5.1.0.
+  [(#1308)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1308)
+
+- Bumped `black` version to 26.3.1 to eliminate a vulnerability reported by dependabot.
+  [(#1360)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1360)
+
+- Fixed a security issue in the triggering mechanism of one of the GH Actions scripts.
+  [(#1359)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1359)
+
+- Updated default branch references from `master` to `main` and removed the daily sync between them.
   [(#1356)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1356)
+  [(#1361)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1361)
 
 - Upgrade CIs to use CUDA 12.9.
   [(#1353)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1353)
@@ -93,6 +120,7 @@ This release contains contributions from (in alphabetical order):
 Runor Agbaire,
 Ali Asadi,
 Astral Cai,
+Yushao Chen,
 Ashish Kanwar Singh,
 Jeffrey Kam,
 Joseph Lee,

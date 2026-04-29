@@ -13,9 +13,9 @@
 # limitations under the License.
 import argparse
 
-import pennylane as qml
+import pennylane as qp
 
-pl_version = '"' + qml.version() + '"'
+pl_version = '"' + qp.version() + '"'
 
 
 def remove_quotes(my_str):

@@ -157,7 +157,7 @@ test_pennylane_version(){
             echo "Unknown backend: $backend"
             continue
         fi
-    done <<< $(python -c "import pennylane as qml; qml.about(); exit()"  | grep -- '- lightning')
+    done <<< $(python -c "import pennylane as qp; qp.about(); exit()"  | grep -- '- lightning')
 
     # If list is not empty, print remaining backends
     if [[ ${#backends[@]} -gt 0 ]]; then
@@ -580,7 +580,7 @@ create_merge_PR(){
     git checkout -b $(branch_name ${RELEASE_VERSION} "rc_merge")
 
     pushd $ROOT_DIR
-    sed -i "s|pennylane.git@v${RELEASE_VERSION}-rc0|pennylane.git@main|g" pyproject.toml  
+    sed -i "s|pennylane.git@v${RELEASE_VERSION}-rc0|pennylane.git@main|g" pyproject.toml
     git add pyproject.toml
     popd
     git commit -m "Target PennyLane main in pyproject.toml."

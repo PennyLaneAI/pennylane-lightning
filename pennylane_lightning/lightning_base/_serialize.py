@@ -14,10 +14,11 @@
 r"""
 Helper functions for serializing quantum tapes.
 """
+
 from typing import List, Sequence, Tuple
 
 import numpy as np
-import pennylane as qml
+import pennylane as qp
 from pennylane import (
     BasisState,
     Hadamard,
@@ -253,7 +254,7 @@ class QuantumScriptSerializer:
     def _named_obs(self, observable, wires_map: dict = None):
         """Serializes a Named observable"""
         wires = [wires_map[w] for w in observable.wires] if wires_map else observable.wires.tolist()
-        if isinstance(observable, qml.Identity):
+        if isinstance(observable, qp.Identity):
             wires = wires[:1]
         return self.named_obs(observable.name, wires)
 
@@ -459,7 +460,7 @@ class QuantumScriptSerializer:
 
         def get_wires(operation, single_op):
             # Serialize adjoint(op) and adjoint(ctrl(op))
-            if isinstance(operation, qml.ops.op_math.Adjoint):
+            if isinstance(operation, qp.ops.op_math.Adjoint):
                 inverse = True
                 op_base = operation.base
                 single_op_base = single_op.base
@@ -468,25 +469,25 @@ class QuantumScriptSerializer:
                 op_base = operation
                 single_op_base = single_op
 
-            if isinstance(op_base, qml.ops.op_math.Controlled) and not isinstance(
+            if isinstance(op_base, qp.ops.op_math.Controlled) and not isinstance(
                 op_base,
                 (
-                    qml.CNOT,
-                    qml.CY,
-                    qml.CZ,
-                    qml.ControlledPhaseShift,
-                    qml.CRX,
-                    qml.CRY,
-                    qml.CRZ,
-                    qml.CRot,
-                    qml.CSWAP,
+                    qp.CNOT,
+                    qp.CY,
+                    qp.CZ,
+                    qp.ControlledPhaseShift,
+                    qp.CRX,
+                    qp.CRY,
+                    qp.CRZ,
+                    qp.CRot,
+                    qp.CSWAP,
                 ),
             ):
                 wires_list = list(op_base.target_wires)
                 controlled_wires_list = list(op_base.control_wires)
                 control_values_list = op_base.control_values
                 # Serialize ctrl(adjoint(op))
-                if isinstance(op_base.base, qml.ops.op_math.Adjoint):
+                if isinstance(op_base.base, qp.ops.op_math.Adjoint):
                     ctrl_adjoint = True
                     name = op_base.base.base.name
                 else:
@@ -540,7 +541,7 @@ class QuantumScriptSerializer:
                 names.append(name)
                 # QubitUnitary is a special case, it has a parameter which is not differentiable.
                 # We thus pass a dummy 0.0 parameter which will not be referenced
-                if isinstance(single_op_base, qml.QubitUnitary):
+                if isinstance(single_op_base, qp.QubitUnitary):
                     params.append([0.0])
                     mats.append(matrix(single_op_base))
                 else:

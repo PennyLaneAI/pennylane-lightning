@@ -25,7 +25,7 @@ on:
     inputs:
       branch:
         required: false
-        type: string  
+        type: string
 
 concurrency:
   group: wheel_linux_x86_64-${{ github.ref }}
@@ -35,7 +35,7 @@ jobs:
   set_wheel_build_matrix:
     if: |
       github.event_name != 'pull_request' ||
-      (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'ci:build_wheels')) 
+      (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'ci:build_wheels'))
     name: "Set wheel build matrix"
     uses: ./.github/workflows/set_wheel_build_matrix.yml
     with:
@@ -71,8 +71,9 @@ jobs:
       - name: Install dependencies (AlmaLinux)
         if: ${{ (matrix.container_img == 'quay.io/pypa/manylinux_2_28_x86_64') && (steps.kokkos-cache.outputs.cache-hit != 'true') }}
         run: |
-          dnf update -y && dnf install -y cmake ninja-build
-          echo "COMPILER=g++" >> $GITHUB_ENV
+          dnf update -y && dnf install -y cmake ninja-build gcc-toolset-${GCC_VERSION}
+          source /opt/rh/gcc-toolset-${GCC_VERSION}/enable -y
+          echo "COMPILER=$(which g++)" >> $GITHUB_ENV
 
       - name: Clone Kokkos libs
         if: steps.kokkos-cache.outputs.cache-hit != 'true'
@@ -126,8 +127,8 @@ jobs:
 
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
-        with:        
-          ref: ${{ inputs.branch || github.ref }}         
+        with:
+          ref: ${{ inputs.branch || github.ref }}
 
       - name: Copy cached libraries
         if: steps.kokkos-cache.outputs.cache-hit == 'true'
@@ -237,7 +238,7 @@ jobs:
         if: |
           github.event_name == 'release' ||
           github.event_name == 'schedule' ||
-          github.ref == 'refs/heads/main' || 
+          github.ref == 'refs/heads/main' ||
           steps.rc_build.outputs.match != ''
         with:
           name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ fromJson('{ "cp311-*":"py311","cp312-*":"py312", "cp313-*":"py313", "cp314-*":"py314" }')[matrix.cibw_build] }}-${{ matrix.arch }}.zip
@@ -248,7 +249,7 @@ jobs:
         if: |
           github.event_name == 'release' ||
           github.event_name == 'schedule' ||
-          github.ref == 'refs/heads/main' || 
+          github.ref == 'refs/heads/main' ||
           steps.rc_build.outputs.match != ''
         with:
           verbose: true

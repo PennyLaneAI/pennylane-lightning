@@ -18,7 +18,7 @@ This module implements a tree traversal algorithm for simulating quantum circuit
 """
 
 import numpy as np
-import pennylane as qml
+import pennylane as qp
 from pennylane.devices.qubit.simulate import (
     TreeTraversalStack,
     combine_measurements,
@@ -104,7 +104,7 @@ def mcm_tree_traversal(
     # `mcm_samples` is a register of MCMs. It is necessary to correctly keep track of
     # correlated MCM values which may be requested by terminal measurements.
     mcm_samples = {
-        k + 1: qml.math.empty((circuit.shots.total_shots,), dtype=bool) if finite_shots else None
+        k + 1: qp.math.empty((circuit.shots.total_shots,), dtype=bool) if finite_shots else None
         for k in measured_mcms_indices
     }
 
@@ -117,7 +117,7 @@ def mcm_tree_traversal(
     # For example, if `d = 2` and `mcm_current = [0, 1, 1, 0]` we are on the 11-branch,
     # i.e. the first two MCMs had outcome 1. The last entry isn't meaningful until we are
     # at depth `d=3`.
-    mcm_current = qml.math.zeros(n_mcms + 1, dtype=int)
+    mcm_current = qp.math.zeros(n_mcms + 1, dtype=int)
     # `mid_measurements` maps the elements of `mcm_current` to their respective MCMs
     # This is used by `get_final_state::apply_operation` for `Conditional` operations
     mid_measurements = dict(zip(mcms[1:], mcm_current[1:].tolist()))
@@ -208,7 +208,7 @@ def mcm_tree_traversal(
             if depth != 0:
                 branch_state(lightning_state, initial_state, mcm_current[depth], mcms[depth])
 
-            circtmp = circuits[depth].copy(shots=qml.measurements.shots.Shots(shots))
+            circtmp = circuits[depth].copy(shots=qp.measurements.shots.Shots(shots))
 
             lightning_state = lightning_state.get_final_state(
                 circtmp,
@@ -227,7 +227,7 @@ def mcm_tree_traversal(
             depth += 1
             # Update the active branch samples with `update_mcm_samples`
             if finite_shots:
-                samples = qml.math.atleast_1d(measurements)
+                samples = qp.math.atleast_1d(measurements)
                 stack.counts[depth] = samples_to_counts(samples)
                 stack.probs[depth] = counts_to_probs(stack.counts[depth])
             else:
@@ -292,6 +292,4 @@ def branch_state(
     lightning_state.state_vector.collapse(mcm.wires.tolist()[0], bool(branch))
 
     if mcm.reset and branch == 1:
-        lightning_state._apply_lightning(  # pylint: disable=protected-access
-            [qml.PauliX(mcm.wires)]
-        )
+        lightning_state._apply_lightning([qp.PauliX(mcm.wires)])  # pylint: disable=protected-access

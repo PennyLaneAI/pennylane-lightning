@@ -14,6 +14,7 @@
 r"""
 Internal logic to validate Lightning packages.
 """
+
 import pprint
 import re
 from pathlib import Path
