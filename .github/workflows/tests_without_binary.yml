@@ -29,6 +29,9 @@ concurrency:
   group: tests_without_binary-${{ github.ref }}-${{ github.event_name }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   pythontests:
     timeout-minutes: 30

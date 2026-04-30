@@ -31,6 +31,9 @@ concurrency:
   group: wheel_macos_arm64-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   set_wheel_build_matrix:
     if: |

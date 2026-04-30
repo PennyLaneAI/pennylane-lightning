@@ -31,6 +31,9 @@ concurrency:
 env:
   GCC_VERSION: 13
 
+permissions:
+  contents: read
+
 jobs:
   set_wheel_build_matrix:
     if: |

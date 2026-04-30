@@ -3,6 +3,9 @@ on:
     types: [opened, ready_for_review]
 
 name: Changelog Reminder
+permissions:
+  contents: read
+  pull-requests: write  
 
 jobs:
   remind:

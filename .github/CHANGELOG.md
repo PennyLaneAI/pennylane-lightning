@@ -170,6 +170,9 @@ Jake Zaia.
 
 <h3>Internal changes ⚙️</h3>
 
+- Added permissions to all GitHub Actions workflows.
+  [(#1370)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1370)
+
 - Updated references to Pennylane's `master` to reference `main`.
   [(#1351)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1351)
 

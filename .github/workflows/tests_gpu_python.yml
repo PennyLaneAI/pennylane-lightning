@@ -20,6 +20,9 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
 env:
   CI_CUDA_ARCH: 86
   COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:./coverage.xml -p no:warnings --tb=native"

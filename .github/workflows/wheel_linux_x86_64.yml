@@ -31,6 +31,9 @@ concurrency:
   group: wheel_linux_x86_64-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   set_wheel_build_matrix:
     if: |

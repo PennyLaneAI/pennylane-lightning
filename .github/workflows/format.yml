@@ -9,6 +9,9 @@ concurrency:
   group: format-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   format-python:
     name: Format (Python)
