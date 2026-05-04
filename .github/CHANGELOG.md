@@ -40,6 +40,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Test Docker images for v0.45.0 RC branch.
+  [(#0000)](https://github.com/PennyLaneAI/pennylane-lightning/pull/0000)
+
 - Modified the code coverage options to no longer skip lines containing "pass".
   [(#1369)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1369)
 
@@ -169,6 +172,9 @@ Jake Zaia.
   [(#1292)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1292)
 
 <h3>Internal changes ⚙️</h3>
+
+- Test Docker images for v0.45.0 RC branch.
+  [(#0000)](https://github.com/PennyLaneAI/pennylane-lightning/pull/0000)
 
 - Added permissions to all GitHub Actions workflows.
   [(#1370)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1370)
@@ -348,6 +354,9 @@ Jake Zaia.
 
 <h3>Internal changes ⚙️</h3>
 
+- Test Docker images for v0.45.0 RC branch.
+  [(#0000)](https://github.com/PennyLaneAI/pennylane-lightning/pull/0000)
+
 - Updated test to skip MCM test for `lightning.tensor` and fix seed for deterministic test.
   [(#1281)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1281)
 
@@ -514,6 +523,9 @@ Jake Zaia.
 
 <h3>Internal changes ⚙️</h3>
 
+- Test Docker images for v0.45.0 RC branch.
+  [(#0000)](https://github.com/PennyLaneAI/pennylane-lightning/pull/0000)
+
 - Updated tests with `device(..., shots=...)` to use `qml.set_shots` to ensure compatibility with the latest version of PennyLane.
   [(#1173)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1173)
 
@@ -597,6 +609,9 @@ Jake Zaia
   [(#1131)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1131)
 
 <h3>Internal changes ⚙️</h3>
+
+- Test Docker images for v0.45.0 RC branch.
+  [(#0000)](https://github.com/PennyLaneAI/pennylane-lightning/pull/0000)
 
 - Updates for depending deprecations to `Observable`, `is_trainable`, and `AnyWires` in pennylane.
   [(#1138)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1138)
