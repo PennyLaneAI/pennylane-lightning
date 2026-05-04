@@ -354,9 +354,6 @@ Jake Zaia.
 
 <h3>Internal changes ⚙️</h3>
 
-- Test Docker images for v0.45.0 RC branch.
-  [(#0000)](https://github.com/PennyLaneAI/pennylane-lightning/pull/0000)
-
 - Updated test to skip MCM test for `lightning.tensor` and fix seed for deterministic test.
   [(#1281)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1281)
 
