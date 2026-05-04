@@ -21,7 +21,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-jzaia18
+Jake Zaia
 
 ---
 
