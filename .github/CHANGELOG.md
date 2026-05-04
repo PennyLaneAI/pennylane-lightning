@@ -121,10 +121,12 @@ Runor Agbaire,
 Ali Asadi,
 Astral Cai,
 Yushao Chen,
+Thomas Germain,
 Ashish Kanwar Singh,
 Jeffrey Kam,
 Joseph Lee,
-Jake Zaia.
+Jake Zaia,
+Hong-Sheng Zheng.
 
 ---
 
