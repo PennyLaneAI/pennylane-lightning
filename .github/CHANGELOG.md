@@ -15,7 +15,10 @@
 <h3>Internal changes ⚙️</h3>
 
 - Bumped the version.
-    [(#1374)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1374)
+  [(#1374)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1374)
+
+- Update nightly builds of the RC branch to always trigger Catalyst's nightly RC builds.
+  [(#1376)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1376)
 
 <h3>Contributors ✍️</h3>
 
@@ -108,6 +111,7 @@ Jake Zaia
 
 - Added workflow to create and upload nightly builds of the RC branch and trigger Catalyst's nightly RC builds.
   [(#1344)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1344)
+  [(#1376)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1376)
 
 - Updated Github docker build action to use relevant lightning branch.
   [(#1346)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1346)
