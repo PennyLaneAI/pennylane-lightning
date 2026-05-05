@@ -14,6 +14,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Add `id-token: write` permissions for wheel build workflows.
+  [(#1377)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1377)
+
 - Bumped the version.
   [(#1374)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1374)
 
