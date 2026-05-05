@@ -1,4 +1,31 @@
-# Release 0.45.0-dev (development release)
+# Release 0.46.0-dev (development release)
+
+<h3>New features since last release</h3>
+
+<h3>Improvements 🛠</h3>
+
+<h3>Breaking changes 💔</h3>
+
+<h3>Deprecations 👋</h3>
+
+<h3>Documentation 📝</h3>
+
+<h3>Bug fixes 🐛</h3>
+
+<h3>Internal changes ⚙️</h3>
+
+- Bumped the version.
+    [(#1374)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1374)
+
+<h3>Contributors ✍️</h3>
+
+This release contains contributions from (in alphabetical order):
+
+Jake Zaia
+
+---
+
+# Release 0.45.0
 
 <h3>New features since last release</h3>
 
