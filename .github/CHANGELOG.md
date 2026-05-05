@@ -21,7 +21,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-jzaia18
+Jake Zaia
 
 ---
 
@@ -66,6 +66,9 @@ jzaia18
   [(#1337)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1337)
 
 <h3>Internal changes ⚙️</h3>
+
+- Test Docker images for v0.45.0 RC branch.
+  [(#1373)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1373)
 
 - Modified the code coverage options to no longer skip lines containing "pass".
   [(#1369)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1369)
