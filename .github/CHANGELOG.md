@@ -15,7 +15,7 @@
 <h3>Internal changes ⚙️</h3>
 
 - Bumped the version.
-    [(#1374)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1374)
+  [(#1374)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1374)
 
 - Update nightly builds of the RC branch to always trigger Catalyst's nightly RC builds.
   [(#1376)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1376)
