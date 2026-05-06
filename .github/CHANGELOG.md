@@ -85,7 +85,6 @@
   [(#1343)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1343)
   [(#1349)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1349)
 
-- Remove MPICH checks from CI pipelines for Lightning devices with MPI distributed support.
 - Removed dependency on GCC-11 when building `lightning.amdgpu`.
 [(#1343)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1343)
 [(#1349)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1349)
