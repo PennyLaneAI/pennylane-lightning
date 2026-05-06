@@ -16,10 +16,10 @@
 - Added a C++ kernel for the `qp.PauliRot` simulation on `lightning.gpu`.
   [(#1329)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1329)
 
-- Avoid decomposing unsupported gates and templates into `QubitUnitary` when not specified in the device TOML file of Lightning simulators from Catalyst.
+- Unsupported gates and templates now avoid decomposing into `QubitUnitary` when not specified in the device TOML file of Lightning simulators from Catalyst.
   [(#1348)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1348)
 
-- Cleaned up the preprocess transforms of the lightning devices, updating the calls to `decompose` with the correct gate set.
+- Cleaned up the preprocess transforms of the Lightning devices, updating the calls to `decompose` with the correct gate set.
   [(#1341)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1341)
 
 <h3>Documentation 📝</h3>
@@ -42,7 +42,7 @@
 
 <h3>Internal changes ⚙️</h3>
 
-- Updated default branch references from `master` to `main` and removed the daily sync between them.
+- Updated default branch from `master` to `main`.
   [(#1356)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1356)
   [(#1361)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1361)
 
@@ -73,7 +73,16 @@
   [(#1350)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1350)
 
 - Update internal dependencies versions for Nanobind (2.11), cmake (3.26), sphinxcontrib-htmlhelp (2.1.0)
-  [(#1347)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1347)
+- Upgraded CIs to use CUDA 12.9.
+[(#1353)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1353)
+[(#1354)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1354)
+[(#1355)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1355)
+
+- Updated Catch2 testing framework to v3.11.
+[(#1350)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1350)
+
+- Updated internal dependencies versions for Nanobind (2.11), cmake (3.26), sphinxcontrib-htmlhelp (2.1.0)
+[(#1347)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1347)
 
 - Added workflow to create and upload nightly builds of the RC branch and trigger Catalyst's nightly RC builds.
   [(#1344)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1344)
@@ -86,7 +95,12 @@
   [(#1349)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1349)
 
 - Remove MPICH checks from CI pipelines for Lightning devices with MPI distributed support.
-  [(#1342)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1342)
+- Removed dependency on GCC-11 when building `lightning.amdgpu`.
+[(#1343)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1343)
+[(#1349)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1349)
+
+- Removed MPICH checks from CI pipelines for Lightning devices with MPI distributed support.
+[(#1342)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1342)
 
 - Temporarily updated CI for stable versions to install from `requirements-tests.txt`, and fixed tests to work with pytest 9.0 and updated `queue_category` in PennyLane.
   [(#1340)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1340)
