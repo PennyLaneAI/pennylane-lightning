@@ -5,14 +5,14 @@ on:
 name: Changelog Reminder
 permissions:
   contents: read
-  pull-requests: write  
+  pull-requests: write
 
 jobs:
   remind:
     name: Changelog Reminder
     runs-on: ubuntu-24.04
     steps:
-    - uses: actions/checkout@master
+    - uses: actions/checkout@v6
     - name: Changelog Reminder
       uses: peterjgrainger/action-changelog-reminder@v1.3.0
       with:

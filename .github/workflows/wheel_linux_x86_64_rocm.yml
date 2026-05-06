@@ -18,11 +18,6 @@ on:
   release:
     types: [published]
   workflow_dispatch:
-  workflow_call:
-    inputs:
-      branch:
-        required: false
-        type: string  
 
 concurrency:
   group: wheel_linux_x86_64_rocm-${{ github.ref }}
@@ -36,12 +31,11 @@ jobs:
   set_wheel_build_matrix:
     if: |
       github.event_name != 'pull_request' ||
-      (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'ci:build_wheels')) 
+      (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'ci:build_wheels'))
     name: "Set wheel build matrix"
     uses: ./.github/workflows/set_wheel_build_matrix.yml
     with:
       event_name: ${{ github.event_name }}
-      workflow_name: wheel_linux_x86_64_rocm
 
   build_dependencies:
     needs: [set_wheel_build_matrix]
@@ -49,7 +43,7 @@ jobs:
       matrix:
         exec_model: ["HIP"]
         kokkos_version: ${{ fromJson(needs.set_wheel_build_matrix.outputs.kokkos_version) }}
-        rocm_version: ["7.0.3"] 
+        rocm_version: ["7.0.3"]
         container_img: ["quay.io/pypa/manylinux_2_28_x86_64"]
     timeout-minutes: 30
     name: Kokkos core (${{ matrix.exec_model }})
@@ -71,7 +65,7 @@ jobs:
           dnf clean all
           dnf update -y
           dnf install -y cmake ninja-build git wget gcc-toolset-11 rocm-dev hipcc hip-devel rocthrust-devel rocprim-devel
-          
+
           echo "PATH=/opt/rh/gcc-toolset-11/root/usr/bin:$PATH" >> $GITHUB_ENV
           echo "CXX=hipcc" >> $GITHUB_ENV
 
@@ -86,7 +80,7 @@ jobs:
           source /opt/rh/gcc-toolset-11/enable
           mkdir -p /root/Kokkos_install/${{ matrix.exec_model }}
           cd kokkos
-          
+
           cmake -BBuild . -DCMAKE_INSTALL_PREFIX=/root/Kokkos_install/${{ matrix.exec_model }} \
                           -DKokkos_ENABLE_COMPLEX_ALIGN=OFF \
                           -DKokkos_ENABLE_SERIAL=ON \
@@ -111,7 +105,7 @@ jobs:
         pl_backend: ["lightning_amdgpu"]
         rocm_version: ["7.0.3"]
         cibw_build: ${{ fromJson(needs.set_wheel_build_matrix.outputs.python_version_gpu) }}
-        exec_model: ["HIP"] 
+        exec_model: ["HIP"]
         kokkos_version: ${{ fromJson(needs.set_wheel_build_matrix.outputs.kokkos_version) }}
         container_img: ["quay.io/pypa/manylinux_2_28_x86_64"]
     timeout-minutes: 30
@@ -131,8 +125,6 @@ jobs:
 
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
-        with:        
-          ref: ${{ inputs.branch || github.ref }} 
 
       - name: Copy cached libraries
         if: steps.kokkos-cache.outputs.cache-hit == 'true'
@@ -160,12 +152,12 @@ jobs:
           # Prepare container for build
           CIBW_BEFORE_BUILD: |
             printf "[ROCm]\nname=ROCm\nbaseurl=https://repo.radeon.com/rocm/rhel8/${{ matrix.rocm_version }}/main\nenabled=1\ngpgcheck=0" > /etc/yum.repos.d/rocm.repo
-            
+
             python -m pip install ninja cmake setuptools auditwheel~=5.0
-            
+
             dnf clean all
             dnf install -y git wget gcc-toolset-11 rocm-dev hipcc hip-devel rocthrust-devel rocprim-devel
-          
+
           CIBW_ENVIRONMENT: |
             PATH=/opt/rh/gcc-toolset-11/root/usr/bin:$PATH:/opt/rocm/bin \
             LD_LIBRARY_PATH=/opt/rh/gcc-toolset-11/root/usr/lib64:/opt/rh/gcc-toolset-11/root/usr/lib:$LD_LIBRARY_PATH:/opt/rocm/lib \
@@ -192,7 +184,6 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: |
           github.event_name == 'release' ||
-          github.event_name == 'schedule' ||
           github.event_name == 'workflow_dispatch' ||
           github.ref == 'refs/heads/main' ||
           steps.rc_build.outputs.match != ''
@@ -224,8 +215,7 @@ jobs:
       - uses: actions/download-artifact@v4
         if: |
           github.event_name == 'release' ||
-          github.event_name == 'schedule' ||
-          github.ref == 'refs/heads/main' || 
+          github.ref == 'refs/heads/main' ||
           steps.rc_build.outputs.match != ''
         with:
           name:  ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ fromJson('{ "cp311-*":"py311","cp312-*":"py312","cp313-*":"py313","cp314-*":"py314" }')[matrix.cibw_build] }}-${{ matrix.arch }}-rocm${{ matrix.rocm_version }}.zip
@@ -235,8 +225,7 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         if: |
           github.event_name == 'release' ||
-          github.event_name == 'schedule' ||
-          github.ref == 'refs/heads/main' || 
+          github.ref == 'refs/heads/main' ||
           steps.rc_build.outputs.match != ''
         with:
           verbose: true
