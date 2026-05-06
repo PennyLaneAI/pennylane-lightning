@@ -145,12 +145,12 @@ jobs:
           echo "=== All wheels ==="
           find dist/ -name "*.whl" | sort
 
-      # - name: Upload to TestPyPI
-      #   uses: pypa/gh-action-pypi-publish@release/v1
-      #   with:
-      #     repository-url: https://test.pypi.org/legacy/
-      #     attestations: false
-      #     skip-existing: true
+      - name: Upload to TestPyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+          attestations: false
+          skip-existing: true
       
   # trigger-catalyst-rc:
   #   needs: [build-linux-aarch64-cuda, build-linux-x86_64, build-linux-x86_64-cuda, build-linux-aarch64, build-macos-arm64, build-windows-x86_64, build-linux-x86_64_rocm, build-noarch]
