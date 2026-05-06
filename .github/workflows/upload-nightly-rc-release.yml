@@ -56,23 +56,23 @@ jobs:
         ssh-key: ${{ secrets.NIGHTLY_VERSION_UPDATE_DEPLOY_KEY }}
         ref: ${{ steps.check_rc.outputs.rc_branch }}
 
-    # - name: Bump rc version
-    #   if: ${{ steps.check_rc.outputs.branch_exists == 'true' }}
-    #   run: |
-    #     echo "rc_branch is ${{ steps.check_rc.outputs.rc_branch }}"
-    #     python $GITHUB_WORKSPACE/.github/workflows/set_nightly_version_rc.py
-    #     git config --global user.email '${{ secrets.AUTO_UPDATE_VERSION_RINGO_EMAIL }}'
-    #     git config --global user.name "ringo-but-quantum"
-    #     git add $GITHUB_WORKSPACE/pennylane_lightning/core/_version.py
-    #     git commit -m "[no ci] bump nightly version"
-    #     git push
+    - name: Bump rc version
+      if: ${{ steps.check_rc.outputs.branch_exists == 'true' }}
+      run: |
+        echo "rc_branch is ${{ steps.check_rc.outputs.rc_branch }}"
+        python $GITHUB_WORKSPACE/.github/workflows/set_nightly_version_rc.py
+        git config --global user.email '${{ secrets.AUTO_UPDATE_VERSION_RINGO_EMAIL }}'
+        git config --global user.name "ringo-but-quantum"
+        git add $GITHUB_WORKSPACE/pennylane_lightning/core/_version.py
+        git commit -m "[no ci] bump nightly version"
+        git push
 
-  # build-linux-aarch64-cuda:
-  #   needs: setup-rc
-  #   if: ${{ needs.setup-rc.outputs.branch_exists == 'true' }}
-  #   uses: ./.github/workflows/wheel_linux_aarch64_cuda.yml
-  #   with:
-  #     branch: ${{ needs.setup-rc.outputs.rc_branch }}
+  build-linux-aarch64-cuda:
+    needs: setup-rc
+    if: ${{ needs.setup-rc.outputs.branch_exists == 'true' }}
+    uses: ./.github/workflows/wheel_linux_aarch64_cuda.yml
+    with:
+      branch: ${{ needs.setup-rc.outputs.rc_branch }}
 
   build-linux-x86_64:
     needs: setup-rc
@@ -81,12 +81,12 @@ jobs:
     with:
       branch: ${{ needs.setup-rc.outputs.rc_branch }}
 
-  # build-linux-x86_64-cuda:
-  #   needs: setup-rc
-  #   if: ${{ needs.setup-rc.outputs.branch_exists == 'true' }}
-  #   uses: ./.github/workflows/wheel_linux_x86_64_cuda.yml
-  #   with:
-  #     branch: ${{ needs.setup-rc.outputs.rc_branch }}
+  build-linux-x86_64-cuda:
+    needs: setup-rc
+    if: ${{ needs.setup-rc.outputs.branch_exists == 'true' }}
+    uses: ./.github/workflows/wheel_linux_x86_64_cuda.yml
+    with:
+      branch: ${{ needs.setup-rc.outputs.rc_branch }}
 
   build-linux-aarch64:
     needs: setup-rc
@@ -95,12 +95,12 @@ jobs:
     with:
       branch: ${{ needs.setup-rc.outputs.rc_branch }}
 
-  # build-macos-arm64:
-  #   needs: setup-rc
-  #   if: ${{ needs.setup-rc.outputs.branch_exists == 'true' }}
-  #   uses: ./.github/workflows/wheel_macos_arm64.yml
-  #   with:
-  #     branch: ${{ needs.setup-rc.outputs.rc_branch }}
+  build-macos-arm64:
+    needs: setup-rc
+    if: ${{ needs.setup-rc.outputs.branch_exists == 'true' }}
+    uses: ./.github/workflows/wheel_macos_arm64.yml
+    with:
+      branch: ${{ needs.setup-rc.outputs.rc_branch }}
 
   build-windows-x86_64:
     needs: setup-rc
@@ -124,7 +124,7 @@ jobs:
       branch: ${{ needs.setup-rc.outputs.rc_branch }}
 
   upload-to-testpypi:
-    needs: [build-linux-x86_64, build-linux-aarch64, build-windows-x86_64, build-linux-x86_64_rocm, build-noarch]
+    needs: [build-linux-aarch64-cuda, build-linux-x86_64, build-linux-x86_64-cuda, build-linux-aarch64, build-macos-arm64, build-windows-x86_64, build-linux-x86_64_rocm, build-noarch]
     if: ${{ always() && !cancelled() && contains(needs.*.result, 'success') }}
     name: Upload RC wheels to TestPyPI
     runs-on: ubuntu-24.04
@@ -152,23 +152,23 @@ jobs:
           attestations: false
           skip-existing: true
       
-  # trigger-catalyst-rc:
-  #   needs: [build-linux-aarch64-cuda, build-linux-x86_64, build-linux-x86_64-cuda, build-linux-aarch64, build-macos-arm64, build-windows-x86_64, build-linux-x86_64_rocm, build-noarch]
-  #   if: ${{ always() && !cancelled() }}
-  #   name: Trigger Catalyst RC workflow
-  #   runs-on: ubuntu-24.04
+  trigger-catalyst-rc:
+    needs: [build-linux-aarch64-cuda, build-linux-x86_64, build-linux-x86_64-cuda, build-linux-aarch64, build-macos-arm64, build-windows-x86_64, build-linux-x86_64_rocm, build-noarch]
+    if: ${{ always() && !cancelled() }}
+    name: Trigger Catalyst RC workflow
+    runs-on: ubuntu-24.04
     
-  #   steps:
-  #     - name: Checkout Lightning repo
-  #       uses: actions/checkout@v4
-  #       with:
-  #         ref: main
+    steps:
+      - name: Checkout Lightning repo
+        uses: actions/checkout@v4
+        with:
+          ref: main
 
-  #     - name: Trigger Catalyst RC workflow
-  #       env:
-  #         GITHUB_TOKEN: "${{ secrets.PENNYLANE_TRIGGER_RC_WORKFLOW }}"
-  #       run: |
-  #         git config user.name "GitHub Actions Bot"
-  #         git config user.email "<>"         
-  #         gh workflow run build-nightly-release-candidate.yaml --repo PennyLaneAI/catalyst
+      - name: Trigger Catalyst RC workflow
+        env:
+          GITHUB_TOKEN: "${{ secrets.PENNYLANE_TRIGGER_RC_WORKFLOW }}"
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "<>"         
+          gh workflow run build-nightly-release-candidate.yaml --repo PennyLaneAI/catalyst
           
