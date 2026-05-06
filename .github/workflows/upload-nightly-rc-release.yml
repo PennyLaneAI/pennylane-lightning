@@ -67,12 +67,12 @@ jobs:
     #     git commit -m "[no ci] bump nightly version"
     #     git push
 
-  build-linux-aarch64-cuda:
-    needs: setup-rc
-    if: ${{ needs.setup-rc.outputs.branch_exists == 'true' }}
-    uses: ./.github/workflows/wheel_linux_aarch64_cuda.yml
-    with:
-      branch: ${{ needs.setup-rc.outputs.rc_branch }}
+  # build-linux-aarch64-cuda:
+  #   needs: setup-rc
+  #   if: ${{ needs.setup-rc.outputs.branch_exists == 'true' }}
+  #   uses: ./.github/workflows/wheel_linux_aarch64_cuda.yml
+  #   with:
+  #     branch: ${{ needs.setup-rc.outputs.rc_branch }}
 
   build-linux-x86_64:
     needs: setup-rc
@@ -81,12 +81,12 @@ jobs:
     with:
       branch: ${{ needs.setup-rc.outputs.rc_branch }}
 
-  build-linux-x86_64-cuda:
-    needs: setup-rc
-    if: ${{ needs.setup-rc.outputs.branch_exists == 'true' }}
-    uses: ./.github/workflows/wheel_linux_x86_64_cuda.yml
-    with:
-      branch: ${{ needs.setup-rc.outputs.rc_branch }}
+  # build-linux-x86_64-cuda:
+  #   needs: setup-rc
+  #   if: ${{ needs.setup-rc.outputs.branch_exists == 'true' }}
+  #   uses: ./.github/workflows/wheel_linux_x86_64_cuda.yml
+  #   with:
+  #     branch: ${{ needs.setup-rc.outputs.rc_branch }}
 
   build-linux-aarch64:
     needs: setup-rc
@@ -95,12 +95,12 @@ jobs:
     with:
       branch: ${{ needs.setup-rc.outputs.rc_branch }}
 
-  build-macos-arm64:
-    needs: setup-rc
-    if: ${{ needs.setup-rc.outputs.branch_exists == 'true' }}
-    uses: ./.github/workflows/wheel_macos_arm64.yml
-    with:
-      branch: ${{ needs.setup-rc.outputs.rc_branch }}
+  # build-macos-arm64:
+  #   needs: setup-rc
+  #   if: ${{ needs.setup-rc.outputs.branch_exists == 'true' }}
+  #   uses: ./.github/workflows/wheel_macos_arm64.yml
+  #   with:
+  #     branch: ${{ needs.setup-rc.outputs.rc_branch }}
 
   build-windows-x86_64:
     needs: setup-rc
@@ -124,7 +124,7 @@ jobs:
       branch: ${{ needs.setup-rc.outputs.rc_branch }}
 
   upload-to-testpypi:
-    needs: [build-linux-aarch64-cuda, build-linux-x86_64, build-linux-x86_64-cuda, build-linux-aarch64, build-macos-arm64, build-windows-x86_64, build-linux-x86_64_rocm, build-noarch]
+    needs: [build-linux-x86_64, build-linux-aarch64, build-windows-x86_64, build-linux-x86_64_rocm, build-noarch]
     if: ${{ always() && !cancelled() && contains(needs.*.result, 'success') }}
     name: Upload RC wheels to TestPyPI
     runs-on: ubuntu-24.04
