@@ -14,6 +14,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Revert #1344 to temporarily unblock building RC wheels
+  [(#1378)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1378)
+
 - Add `id-token: write` permissions for wheel build workflows.
   [(#1377)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1377)
 
