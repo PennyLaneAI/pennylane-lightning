@@ -10,21 +10,17 @@
 
 <h3>Improvements 🛠</h3>
 
-- Avoid decomposing unsupported gates and templates into `QubitUnitary` when not specified in the device TOML file of Lightning simulators from Catalyst.
-  [(#1348)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1348)
-
-- Added sitemap configuration and SEO improvements to documentation, including noindex meta tags for C++ API reference pages.
-  [(#1331)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1331)
+- Linux and MacOS `lightning.qubit` wheels are now built with OpenMP support for all kernel types (LM, AVX2, and AVX512), enabling better performance tuning for CPU simulations.
+  [(#1133)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1133)
 
 - Added a C++ kernel for the `qp.PauliRot` simulation on `lightning.gpu`.
   [(#1329)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1329)
 
-- Linux and MacOS `lightning.qubit` wheels are now built with OpenMP support for all kernel types (LM, AVX2, and AVX512), enabling better performance tuning for CPU simulations.
-  [(#1133)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1133)
+- Unsupported gates and templates now avoid decomposing into `QubitUnitary` when not specified in the device TOML file of Lightning simulators from Catalyst.
+  [(#1348)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1348)
 
-<h3>Breaking changes 💔</h3>
-
-<h3>Deprecations 👋</h3>
+- Cleaned up the preprocess transforms of the Lightning devices, updating the calls to `decompose` with the correct gate set.
+  [(#1341)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1341)
 
 <h3>Documentation 📝</h3>
 
@@ -33,12 +29,25 @@
   [(#1363)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1363)
   [(#1366)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1366)
 
+- A new AI policy document is now applied across the PennyLaneAI organization for all AI contributions.
+  [(#1364)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1364)
+
+- Added sitemap configuration and SEO improvements to documentation, including noindex meta tags for C++ API reference pages.
+  [(#1331)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1331)
+
 <h3>Bug fixes 🐛</h3>
 
-- Fixed erroneous transposed result when computing the adjoint jacobian with `lightning.qubit` from Catalyst.
+- Fixed an erroneous transposed result when computing the adjoint jacobian with `lightning.qubit` from Catalyst.
   [(#1337)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1337)
 
 <h3>Internal changes ⚙️</h3>
+
+- Updated default branch from `master` to `main`.
+  [(#1356)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1356)
+  [(#1361)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1361)
+
+- Upgraded Kokkos from v4.5.0 to v5.1.0.
+  [(#1308)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1308)
 
 - Modified the code coverage options to no longer skip lines containing "pass".
   [(#1369)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1369)
@@ -49,31 +58,21 @@
 - Fixed Python MPI tests involving differentiation to use PennyLane Numpy.
   [(#1365)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1365)
 
-- A new AI policy document is now applied across the PennyLaneAI organization for all AI contributions.
-  [(#1364)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1364)
-
-- Upgraded Kokkos from v4.5.0 to v5.1.0.
-  [(#1308)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1308)
-
 - Bumped `black` version to 26.3.1 to eliminate a vulnerability reported by dependabot.
   [(#1360)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1360)
 
 - Fixed a security issue in the triggering mechanism of one of the GH Actions scripts.
   [(#1359)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1359)
 
-- Updated default branch references from `master` to `main` and removed the daily sync between them.
-  [(#1356)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1356)
-  [(#1361)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1361)
-
 - Upgrade CIs to use CUDA 12.9.
   [(#1353)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1353)
   [(#1354)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1354)
   [(#1355)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1355)
 
-- Update Catch2 testing framework to v3.11.
+- Updated Catch2 testing framework to v3.11.
   [(#1350)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1350)
 
-- Update internal dependencies versions for Nanobind (2.11), cmake (3.26), sphinxcontrib-htmlhelp (2.1.0)
+- Updated internal dependencies versions for Nanobind (2.11), cmake (3.26), sphinxcontrib-htmlhelp (2.1.0).
   [(#1347)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1347)
 
 - Added workflow to create and upload nightly builds of the RC branch and trigger Catalyst's nightly RC builds.
@@ -82,14 +81,11 @@
 - Updated Github docker build action to use relevant lightning branch.
   [(#1346)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1346)
 
-- Remove dependency for GCC-11 when building `lightning.amdgpu`.
+- Remove dependency on GCC-11 when building `lightning.amdgpu`.
   [(#1343)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1343)
   [(#1349)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1349)
 
-- Cleaned up the preprocess transforms of the lightning devices, updating the calls to `decompose` with the correct gate set.
-  [(#1341)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1341)
-
-- Remove MPICH checks from CI pipelines for Lightning devices with MPI distributed support.
+- Removed MPICH checks from CI pipelines for Lightning devices with MPI distributed support.
   [(#1342)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1342)
 
 - Temporarily updated CI for stable versions to install from `requirements-tests.txt`, and fixed tests to work with pytest 9.0 and updated `queue_category` in PennyLane.
@@ -125,6 +121,7 @@ Thomas Germain,
 Ashish Kanwar Singh,
 Jeffrey Kam,
 Joseph Lee,
+Anton Naim Ibrahim,
 Luis Alfredo Nuñez Meneses,
 Jake Zaia,
 Hong-Sheng Zheng.
