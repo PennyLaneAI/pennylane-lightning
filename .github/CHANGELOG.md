@@ -14,8 +14,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
-- Add `id-token: write` permissions for wheel build workflows.
+- Update nightly RC builds to upload to testpypi from a single workflow; removed global id-token permission.
   [(#1377)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1377)
+  [(#1379)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1379)
 
 - Bumped the version.
   [(#1374)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1374)
