@@ -30,6 +30,7 @@ concurrency:
 
 permissions:
   contents: read
+  id-token: write
 
 jobs:
   build-pure-python-wheel:

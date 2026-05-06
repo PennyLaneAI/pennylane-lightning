@@ -33,6 +33,7 @@ concurrency:
 
 permissions:
   contents: read
+  id-token: write  
 
 jobs:
   set_wheel_build_matrix:
