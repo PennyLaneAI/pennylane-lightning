@@ -69,15 +69,6 @@
   [(#1354)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1354)
   [(#1355)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1355)
 
-- Update Catch2 testing framework to v3.11.
-  [(#1350)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1350)
-
-- Update internal dependencies versions for Nanobind (2.11), cmake (3.26), sphinxcontrib-htmlhelp (2.1.0)
-- Upgraded CIs to use CUDA 12.9.
-[(#1353)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1353)
-[(#1354)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1354)
-[(#1355)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1355)
-
 - Updated Catch2 testing framework to v3.11.
 [(#1350)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1350)
 
