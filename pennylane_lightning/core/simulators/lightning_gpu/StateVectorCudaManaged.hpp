@@ -357,7 +357,8 @@ class StateVectorCudaManaged
 
             applyPCPhase_CUDA(
                 BaseType::getData(), BaseType::getDataBuffer().getLength(),
-                tgtsInt.data(), tgtsInt.size(), dimension, phase, 256,
+                nullptr, nullptr, 0, tgtsInt.data(), tgtsInt.size(), dimension,
+                phase, 256,
                 BaseType::getDataBuffer().getDevTag().getDeviceID(),
                 BaseType::getDataBuffer().getDevTag().getStreamID());
         } else if (native_gates_.find(opName) != native_gates_.end()) {
@@ -495,7 +496,7 @@ class StateVectorCudaManaged
             const PrecisionT phase = adjoint ? -params[0] : params[0];
             const auto dimension = static_cast<std::size_t>(params[1]);
 
-            applyControlledPCPhase_CUDA(
+            applyPCPhase_CUDA(
                 BaseType::getData(), BaseType::getDataBuffer().getLength(),
                 ctrlsInt.data(), ctrls_valuesInt.data(), ctrlsInt.size(),
                 tgtsInt.data(), tgtsInt.size(), dimension, phase, 256,
