@@ -33,6 +33,9 @@
 - Fixed erroneous tranposed result when computing the adjoint jacobian with `lightning.qubit` from Catalyst.
   [(#1337)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1337)
 
+- Fixed errornous entanglement check during single qubit deallocation
+  [(#1380)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1380)
+
 <h3>Internal changes ⚙️</h3>
 
 - Upgrade CIs to use CUDA 12.9.
