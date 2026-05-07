@@ -269,7 +269,8 @@ bool LightningSimulator::checkSingleQubitDisentangled(size_t wire,
 
     PL_ABORT_IF(wire >= num_qubits, "Invalid wire: wire must be < num_qubits");
 
-    const size_t lower_mask = (1UL << wire) - 1;
+    const size_t bit_pos = num_qubits - 1U - wire;
+    const size_t lower_mask = (1UL << bit_pos) - 1;
     const size_t upper_mask = sv_size - lower_mask - 1;
 
     // The resulting 2x2 reduced density matrix of the complement system to
@@ -282,8 +283,8 @@ bool LightningSimulator::checkSingleQubitDisentangled(size_t wire,
             for (size_t k = 0; k < (sv_size / 2); k++) {
                 size_t idx_wire_0 =
                     ((upper_mask & k) << 1UL) + (lower_mask & k);
-                size_t idx_i = idx_wire_0 + (i << wire);
-                size_t idx_j = idx_wire_0 + (j << wire);
+                size_t idx_i = idx_wire_0 + (i << bit_pos);
+                size_t idx_j = idx_wire_0 + (j << bit_pos);
 
                 sum += state_data[idx_i] * std::conj(state_data[idx_j]);
             }
