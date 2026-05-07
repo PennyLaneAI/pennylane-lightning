@@ -91,16 +91,14 @@ TEST_CASE("LightningSimulator::unit_tests", "[unit tests]") {
 
 TEST_CASE("LightningSimulator::qubit_reuse_checks", "[qubit reuse]") {
     std::unique_ptr<LQSimulator> LQsim = std::make_unique<LQSimulator>();
-    std::vector<intptr_t> Qs = LQsim->AllocateQubits(3);
+    std::vector<intptr_t> Qs = LQsim->AllocateQubits(2);
+    intptr_t Q = LQsim->AllocateQubit();
 
-    LQsim->NamedOperation("Hadamard", {}, {Qs[0]}, false);
-    LQsim->NamedOperation("CNOT", {}, {Qs[0], Qs[1]}, false);
+    LQsim->PauliMeasure("XYZ", {Qs[0], Qs[1], Q});
+    LQsim->PauliMeasure("Z", {Q});
+    LQsim->ReleaseQubit(Q);
 
-    LQsim->ReleaseQubit(Qs[0]);
-
-    REQUIRE_THROWS_WITH(LQsim->AllocateQubit(),
-                        Catch::Matchers::ContainsSubstring(
-                            "Cannot reuse qubit: qubit is entangled"));
+    REQUIRE_NOTHROW(LQsim->AllocateQubit());
 }
 
 TEST_CASE("LightningSimulator::GateSet", "[GateSet]") {

@@ -91,16 +91,14 @@ TEST_CASE("LightningKokkosSimulator::unit_tests", "[unit tests]") {
 
 TEST_CASE("LightningKokkosSimulator::qubit_reuse_checks", "[qubit reuse]") {
     std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
-    std::vector<intptr_t> Qs = LKsim->AllocateQubits(3);
+    std::vector<intptr_t> Qs = LKsim->AllocateQubits(2);
+    intptr_t Q = LKsim->AllocateQubit();
 
-    LKsim->NamedOperation("Hadamard", {}, {Qs[0]}, false);
-    LKsim->NamedOperation("CNOT", {}, {Qs[0], Qs[1]}, false);
+    LKsim->PauliMeasure("XYZ", {Qs[0], Qs[1], Q});
+    LKsim->PauliMeasure("Z", {Q});
+    LKsim->ReleaseQubit(Q);
 
-    LKsim->ReleaseQubit(Qs[0]);
-
-    REQUIRE_THROWS_WITH(LKsim->AllocateQubit(),
-                        Catch::Matchers::ContainsSubstring(
-                            "Cannot reuse qubit: qubit is entangled"));
+    REQUIRE_NOTHROW(LKsim->AllocateQubit());
 }
 
 TEST_CASE("LightningKokkosSimulator::GateSet", "[GateSet]") {
