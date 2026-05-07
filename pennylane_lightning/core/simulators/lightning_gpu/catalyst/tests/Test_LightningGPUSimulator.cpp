@@ -90,6 +90,20 @@ TEST_CASE("LightningGPUSimulator::unit_tests", "[unit tests]") {
     }
 }
 
+TEST_CASE("LightningGPUSimulator::qubit_reuse_checks", "[qubit reuse]") {
+    std::unique_ptr<LGPUSimulator> LGPUsim = std::make_unique<LGPUSimulator>();
+    std::vector<intptr_t> Qs = LGPUsim->AllocateQubits(3);
+
+    LGPUsim->NamedOperation("Hadamard", {}, {Qs[0]}, false);
+    LGPUsim->NamedOperation("CNOT", {}, {Qs[0], Qs[1]}, false);
+
+    LGPUsim->ReleaseQubit(Qs[0]);
+
+    REQUIRE_THROWS_WITH(LGPUsim->AllocateQubit(),
+                        Catch::Matchers::ContainsSubstring(
+                            "Cannot reuse qubit: qubit is entangled"));
+}
+
 TEST_CASE("LightningGPUSimulator::GateSet", "[GateSet]") {
     SECTION("Identity gate") {
         std::unique_ptr<LGPUSimulator> LGPUsim =
