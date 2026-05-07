@@ -33,14 +33,14 @@ with open(version_file_path, "r+", encoding="UTF-8") as f:
     if match:
         # Case 1: Version has RC suffix
         major, minor, bug, rc = match.groups()
-        replacement = f'__version__ = "{major}.{minor}.{bug}-rc{int(rc)+1}"\n'
+        replacement = f'__version__ = "{major}.{minor}.{bug}_rc{int(rc)+1}"\n'
     else:
         # Case 2: Version has no RC suffix
         base_pattern = r"(\d+)\.(\d+)\.(\d+)"
         base_match = re.search(base_pattern, version_line)
         assert base_match, "Version string must be in format X.Y.Z or X.Y.Z-rcN"
         major, minor, bug = base_match.groups()
-        replacement = f'__version__ = "{major}.{minor}.{bug}-rc0"\n'
+        replacement = f'__version__ = "{major}.{minor}.{bug}_rc0"\n'
 
     lines[-1] = replacement
 
