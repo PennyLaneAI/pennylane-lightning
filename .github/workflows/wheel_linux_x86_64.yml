@@ -26,6 +26,10 @@ on:
       branch:
         required: false
         type: string
+      skip_upload:
+        required: false
+        type: boolean
+        default: false
 
 concurrency:
   group: wheel_linux_x86_64-${{ github.ref }}
@@ -33,7 +37,6 @@ concurrency:
 
 permissions:
   contents: read
-  id-token: write  
 
 jobs:
   set_wheel_build_matrix:
@@ -222,6 +225,7 @@ jobs:
 
   upload-pypi:
     needs: [set_wheel_build_matrix, linux-wheels-x86-64]
+    if: ${{ !inputs.skip_upload }}
     strategy:
       matrix:
         arch: [x86_64]
