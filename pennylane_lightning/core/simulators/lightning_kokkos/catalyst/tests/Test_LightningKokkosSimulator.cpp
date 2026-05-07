@@ -89,7 +89,7 @@ TEST_CASE("LightningKokkosSimulator::unit_tests", "[unit tests]") {
     }
 }
 
-TEST_CASE("LightningKokkosSimulator::qubit_reuse_checks", "[qubit reuse]") {
+TEST_CASE("Test Qubit Reuse", "[qubit reuse]") {
     std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
     std::vector<intptr_t> Qs = LKsim->AllocateQubits(2);
     intptr_t Q = LKsim->AllocateQubit();

@@ -89,7 +89,7 @@ TEST_CASE("LightningSimulator::unit_tests", "[unit tests]") {
     }
 }
 
-TEST_CASE("LightningSimulator::qubit_reuse_checks", "[qubit reuse]") {
+TEST_CASE("Test Qubit Reuse", "[qubit reuse]") {
     std::unique_ptr<LQSimulator> LQsim = std::make_unique<LQSimulator>();
     std::vector<intptr_t> Qs = LQsim->AllocateQubits(2);
     intptr_t Q = LQsim->AllocateQubit();
