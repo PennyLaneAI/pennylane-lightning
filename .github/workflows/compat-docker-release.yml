@@ -1,5 +1,6 @@
 name: Compat Check Docker - Lightning@release
-
+permissions:
+  contents: read
 on:
   workflow_dispatch:
   schedule:

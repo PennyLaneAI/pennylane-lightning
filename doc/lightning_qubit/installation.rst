@@ -24,7 +24,7 @@ To build Lightning-Qubit from the `sdist` release you can run
 where ``${PL_BACKEND}`` can be ``lightning_qubit`` (default), ``lightning_gpu``,  ``lightning_kokkos``, or ``lightning_tensor``.
 If installing Lightning-GPU, Lightning-Tensor, or Lightning-Kokkos, additional dependencies may be required. We recommend referring to the respective guides for `Lightning-GPU installation <https://docs.pennylane.ai/projects/lightning/en/stable/lightning_gpu/installation.html>`_, `Lightning-Tensor installation <https://docs.pennylane.ai/projects/lightning/en/stable/lightning_tensor/installation.html>`_, and `Lightning-Kokkos installation <https://docs.pennylane.ai/projects/lightning/en/stable/lightning_kokkos/installation.html>`_.
 
-A C++ compiler such as ``g++``, ``clang++``, or ``MSVC`` is required.
+A C++ compiler such as ``g++``, ``clang++``, or ``MSVC`` supporting C++20 is required.
 On Debian-based systems, this can be installed via ``apt``:
 
 .. code-block:: bash
@@ -47,7 +47,7 @@ For development and testing, you can install by cloning the repository:
 
     git clone https://github.com/PennyLaneAI/pennylane-lightning.git
     cd pennylane-lightning
-    
+
     python -m pip install --group base
     pip install git+https://github.com/PennyLaneAI/pennylane.git@main
 

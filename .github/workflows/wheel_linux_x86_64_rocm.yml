@@ -1,6 +1,4 @@
 name: Wheel::Linux::x86_64::ROCm
-permissions:
-  contents: read
 
 # **What it does**: Builds python wheels for Linux (ubuntu-24.04) architecture x86_64 and store it as artifacts.
 #                   Python versions: 3.11, 3.12, 3.13, 3.14
@@ -16,7 +14,7 @@ on:
       - ready_for_review
   push:
     branches:
-      - master
+      - main
   release:
     types: [published]
   workflow_dispatch:
@@ -29,6 +27,9 @@ on:
 concurrency:
   group: wheel_linux_x86_64_rocm-${{ github.ref }}
   cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   set_wheel_build_matrix:
@@ -192,7 +193,7 @@ jobs:
           github.event_name == 'release' ||
           github.event_name == 'schedule' ||
           github.event_name == 'workflow_dispatch' ||
-          github.ref == 'refs/heads/master' ||
+          github.ref == 'refs/heads/main' ||
           steps.rc_build.outputs.match != ''
         with:
           name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ fromJson('{ "cp311-*":"py311","cp312-*":"py312","cp313-*":"py313","cp314-*":"py314" }')[matrix.cibw_build] }}-${{ matrix.arch }}-rocm${{ matrix.rocm_version }}.zip
@@ -223,7 +224,7 @@ jobs:
         if: |
           github.event_name == 'release' ||
           github.event_name == 'schedule' ||
-          github.ref == 'refs/heads/master' || 
+          github.ref == 'refs/heads/main' || 
           steps.rc_build.outputs.match != ''
         with:
           name:  ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ fromJson('{ "cp311-*":"py311","cp312-*":"py312","cp313-*":"py313","cp314-*":"py314" }')[matrix.cibw_build] }}-${{ matrix.arch }}-rocm${{ matrix.rocm_version }}.zip
@@ -234,7 +235,7 @@ jobs:
         if: |
           github.event_name == 'release' ||
           github.event_name == 'schedule' ||
-          github.ref == 'refs/heads/master' || 
+          github.ref == 'refs/heads/main' || 
           steps.rc_build.outputs.match != ''
         with:
           verbose: true

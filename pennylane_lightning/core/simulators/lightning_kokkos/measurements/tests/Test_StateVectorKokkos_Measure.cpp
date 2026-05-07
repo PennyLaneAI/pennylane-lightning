@@ -721,14 +721,33 @@ TEMPLATE_TEST_CASE("Probabilities", "[Measures]", float, double) {
             const std::size_t ntarget = 7;
             std::vector<std::size_t> targets(ntarget);
             std::iota(targets.begin(), targets.end(), 0);
-            auto probs =
-                Pennylane::LightningKokkos::Functors::probs_bitshift_generic<
-                    typename StateVectorT::KokkosExecSpace, PrecisionT>(
-                    statevector.getView(), num_qubits, targets);
+            auto probs = Measurer.probs(targets, device_wires);
             CHECK_THAT(probs, Catch::Matchers::Approx(
                                   std::vector<PrecisionT>(
                                       (1UL << ntarget), 1.0 / (1UL << ntarget)))
                                   .margin(1e-7));
+        }
+    }
+    SECTION("Probs dispatch path coverage sweep") {
+        const std::size_t num_qubits = GENERATE(14, 20);
+        auto statevector_data =
+            std::vector<ComplexT>((1UL << num_qubits), {0.0, 0.0});
+        statevector_data[0] = ComplexT{1.0, 0.0};
+        StateVectorT statevector(statevector_data.data(),
+                                 statevector_data.size());
+        // Uniform superposition: probs for any subset = 1/2^n_wires each.
+        for (std::size_t t = 0; t < num_qubits; t++) {
+            statevector.applyOperation("Hadamard", {t}, false);
+        }
+        Measurements<StateVectorT> Measurer(statevector);
+
+        for (std::size_t n_wires = 1; n_wires <= 10; n_wires++) {
+            std::vector<std::size_t> targets(n_wires);
+            std::iota(targets.begin(), targets.end(), 0);
+            auto probs = Measurer.probs(targets);
+            std::vector<PrecisionT> expected(
+                (1UL << n_wires), PrecisionT(1.0) / PrecisionT(1UL << n_wires));
+            CHECK_THAT(probs, Catch::Matchers::Approx(expected).margin(1e-6));
         }
     }
 }

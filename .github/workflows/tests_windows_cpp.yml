@@ -5,14 +5,14 @@ on:
       lightning-version:
         type: string
         required: true
-        description: The version of Lightning to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
+        description: The version of Lightning to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from main)
       pennylane-version:
         type: string
         required: true
-        description: The version of PennyLane to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
+        description: The version of PennyLane to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from main)
   push:
     branches:
-      - master
+      - main
   pull_request:
     types:
       - opened
@@ -27,6 +27,9 @@ on:
 concurrency:
   group: tests_windows_cpp-${{ github.ref }}-${{ github.event_name }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
   cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   win-set-matrix-x86:
@@ -60,7 +63,7 @@ jobs:
 
       - name: Kokkos version
         id: kokkos_version
-        run: echo "kokkos_version=[\"4.5.00\"]" >> $GITHUB_OUTPUT
+        run: echo "kokkos_version=[\"5.1.0\"]" >> $GITHUB_OUTPUT
 
     outputs:
       exec_model: ${{ steps.exec_model.outputs.exec_model }}

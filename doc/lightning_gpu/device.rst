@@ -8,8 +8,8 @@ A ``lightning.gpu`` device can be loaded using:
 
 .. code-block:: python
 
-    import pennylane as qml
-    dev = qml.device("lightning.gpu", wires=2)
+    import pennylane as qp
+    dev = qp.device("lightning.gpu", wires=2)
 
 If the NVIDIA cuQuantum libraries are available, the above device will allow all operations to be performed on a CUDA capable GPU of generation SM 7.0 (Volta) and greater. If the libraries are not correctly installed, or available on path, the device will raise an error.
 
@@ -18,7 +18,7 @@ By default, this method is enabled. It can also be explicitly specified using th
 
 .. code-block:: python
 
-    @qml.qnode(dev, diff_method="adjoint")
+    @qp.qnode(dev, diff_method="adjoint")
     def circuit(params):
         ...
 
@@ -130,8 +130,8 @@ If you are computing a large number of expectation values, or if you are using a
 
 .. code-block:: python
 
-    import pennylane as qml
-    dev = qml.device("lightning.gpu", wires=20, batch_obs=True)
+    import pennylane as qp
+    dev = qp.device("lightning.gpu", wires=20, batch_obs=True)
 
 With the above, each GPU will see at most ``ceil(m/n)`` observables to process, reducing the preallocated memory footprint.
 
@@ -139,14 +139,14 @@ Additionally, there can be situations where even with the above distribution, an
 
 .. code-block:: python
 
-    import pennylane as qml
-    dev = qml.device("lightning.gpu", wires=27, batch_obs=1)
+    import pennylane as qp
+    dev = qp.device("lightning.gpu", wires=27, batch_obs=1)
 
 Each problem is unique, so it can often be best to choose the default behaviour up-front, and tune with the above only if necessary.
- 
+
 **Multi-GPU/multi-node support:**
 
-The ``lightning.gpu`` device allows users to leverage the computational power of many GPUs distributed across multiple nodes for running large-scale simulations. 
+The ``lightning.gpu`` device allows users to leverage the computational power of many GPUs distributed across multiple nodes for running large-scale simulations.
 
 To utilize distributed simulation, ``lightning.gpu`` must be compiled with MPI support. Check out the :doc:`/lightning_gpu/installation` guide for more information.
 
@@ -155,63 +155,63 @@ With ``lightning.gpu`` installed with MPI support, this can be enabled in Pennyl
 .. code-block:: python
 
     from mpi4py import MPI
-    import pennylane as qml
-    dev = qml.device('lightning.gpu', wires=8, mpi=True)
-    @qml.qnode(dev)
+    import pennylane as qp
+    dev = qp.device('lightning.gpu', wires=8, mpi=True)
+    @qp.qnode(dev)
     def circuit_mpi():
-        qml.PauliX(wires=[0])
-        return qml.state()
+        qp.PauliX(wires=[0])
+        return qp.state()
     local_state_vector = circuit_mpi()
 
 .. note::
 
-    The total number of MPI processes must be powers of 2, where each MPI process is responsible for managing one GPU. 
+    The total number of MPI processes must be powers of 2, where each MPI process is responsible for managing one GPU.
 
 Currently, a ``lightning.gpu`` device with the MPI multi-GPU backend supports all the ``gate operations`` and ``observables`` that a ``lightning.gpu`` device with a single GPU/node backend supports.
 
-By default, each MPI process will return the overall simulation results, except for the ``qml.state()`` and ``qml.probs()`` methods for which each MPI process only returns the local simulation
-results for the ``qml.state()`` and ``qml.probs()`` methods to avoid buffer overflow. It is the user's responsibility to ensure correct data collection for those two methods. Here are examples of collecting  
-the local simulation results for ``qml.state()`` and ``qml.prob()`` methods:
+By default, each MPI process will return the overall simulation results, except for the ``qp.state()`` and ``qp.probs()`` methods for which each MPI process only returns the local simulation
+results for the ``qp.state()`` and ``qp.probs()`` methods to avoid buffer overflow. It is the user's responsibility to ensure correct data collection for those two methods. Here are examples of collecting
+the local simulation results for ``qp.state()`` and ``qp.prob()`` methods:
 
-The workflow for collecting local state vector (using the ``qml.state()`` method) to ``rank 0`` is as follows:
+The workflow for collecting local state vector (using the ``qp.state()`` method) to ``rank 0`` is as follows:
 
 .. code-block:: python
 
     from mpi4py import MPI
-    import pennylane as qml
+    import pennylane as qp
     comm = MPI.COMM_WORLD
-    rank = comm.Get_rank() 
-    dev = qml.device('lightning.gpu', wires=8, mpi=True)
-    @qml.qnode(dev)
+    rank = comm.Get_rank()
+    dev = qp.device('lightning.gpu', wires=8, mpi=True)
+    @qp.qnode(dev)
     def circuit_mpi():
-        qml.PauliX(wires=[0])
-        return qml.state()
+        qp.PauliX(wires=[0])
+        return qp.state()
     local_state_vector = circuit_mpi()
     #rank 0 will collect the local state vector
     state_vector = comm.gather(local_state_vector, root=0)
     if rank == 0:
         print(state_vector)
-    
-The workflow for collecting local probability (using the ``qml.prob()`` method) to ``rank 0`` is as follows:
+
+The workflow for collecting local probability (using the ``qp.prob()`` method) to ``rank 0`` is as follows:
 
 .. code-block:: python
-    
+
     from mpi4py import MPI
-    import pennylane as qml
+    import pennylane as qp
     import numpy as np
 
     comm = MPI.COMM_WORLD
     rank = comm.Get_rank()
-    dev = qml.device('lightning.gpu', wires=8, mpi=True)
+    dev = qp.device('lightning.gpu', wires=8, mpi=True)
     prob_wires = [0, 1]
 
-    @qml.qnode(dev)
+    @qp.qnode(dev)
     def mpi_circuit():
-        qml.Hadamard(wires=1)
-        return qml.probs(wires=prob_wires)
+        qp.Hadamard(wires=1)
+        return qp.probs(wires=prob_wires)
 
     local_probs = mpi_circuit()
- 
+
     #For data collection across MPI processes.
     recv_counts = comm.gather(len(local_probs),root=0)
     if rank == 0:
@@ -226,7 +226,7 @@ The workflow for collecting local probability (using the ``qml.prob()`` method) 
 Then the python script can be executed with the following command:
 
 .. code-block:: console
-    
+
     $ mpirun -np 4 python yourscript.py
 
 Furthermore, users can optimize the performance of their applications by allocating the appropriate amount of GPU memory for MPI operations with the ``mpi_buf_size`` keyword argument. To allocate ``n`` mebibytes (MiB, `2^20` bytes) of GPU memory for MPI operations, initialize a ``lightning.gpu`` device with the ``mpi_buf_size=n`` keyword argument, as follows:
@@ -234,12 +234,12 @@ Furthermore, users can optimize the performance of their applications by allocat
 .. code-block:: python
 
     from mpi4py import MPI
-    import pennylane as qml
+    import pennylane as qp
     n = 8
-    dev = qml.device("lightning.gpu", wires=20, mpi=True, mpi_buf_size=n)
+    dev = qp.device("lightning.gpu", wires=20, mpi=True, mpi_buf_size=n)
 
-Note the value of ``mpi_buf_size`` should also be a power of ``2``. Remember to carefully manage the ``mpi_buf_size`` parameter, taking into account the available GPU memory and the memory 
-requirements of the local state vector, to prevent memory overflow issues and ensure optimal performance. By default (``mpi_buf_size=0``), the GPU memory allocated for MPI operations 
+Note the value of ``mpi_buf_size`` should also be a power of ``2``. Remember to carefully manage the ``mpi_buf_size`` parameter, taking into account the available GPU memory and the memory
+requirements of the local state vector, to prevent memory overflow issues and ensure optimal performance. By default (``mpi_buf_size=0``), the GPU memory allocated for MPI operations
 will match the size of the local state vector, with a limit of ``64 MiB``. Please be aware that a runtime warning will occur if the local GPU memory buffer for MPI operations exceeds
 the GPU memory allocated to the local state vector.
 
@@ -251,29 +251,29 @@ By default, the adjoint method with MPI support follows the performance-oriented
 The workflow for the default adjoint method with MPI support is as follows:
 
 .. code-block:: python
-    
+
     from mpi4py import MPI
-    import pennylane as qml
+    import pennylane as qp
     from pennylane import numpy as np
-  
+
     comm = MPI.COMM_WORLD
     rank = comm.Get_rank()
     n_wires = 20
     n_layers = 2
-  
-    dev = qml.device('lightning.gpu', wires= n_wires, mpi=True)
-    @qml.qnode(dev, diff_method="adjoint")
+
+    dev = qp.device('lightning.gpu', wires= n_wires, mpi=True)
+    @qp.qnode(dev, diff_method="adjoint")
     def circuit_adj(weights):
-        qml.StronglyEntanglingLayers(weights, wires=list(range(n_wires)))
-        return qml.math.hstack([qml.expval(qml.PauliZ(i)) for i in range(n_wires)])
-  
+        qp.StronglyEntanglingLayers(weights, wires=list(range(n_wires)))
+        return qp.math.hstack([qp.expval(qp.PauliZ(i)) for i in range(n_wires)])
+
     if rank == 0:
-        params = np.random.random(qml.StronglyEntanglingLayers.shape(n_layers=n_layers, n_wires=n_wires))
+        params = np.random.random(qp.StronglyEntanglingLayers.shape(n_layers=n_layers, n_wires=n_wires))
     else:
         params = None
-  
+
     params = comm.bcast(params, root=0)
-    jac = qml.jacobian(circuit_adj)(params)
+    jac = qp.jacobian(circuit_adj)(params)
 
 If users aim to handle larger system sizes with limited hardware resources, the memory-optimized adjoint method with MPI support is more appropriate. The memory-optimized adjoint method with MPI support employs a single ``bra`` object that is reused for all observables.
 This approach results in a notable reduction in the required GPU memory when dealing with a large number of observables. However, it's important to note that the reduction in memory requirement may come at the expense of slower execution due to the multiple ``ket`` updates per gate operation.
@@ -281,8 +281,8 @@ This approach results in a notable reduction in the required GPU memory when dea
 To enable the memory-optimized adjoint method with MPI support, ``batch_obs`` should be set as ``True`` and the workflow follows:
 
 .. code-block:: python
-    
-    dev = qml.device('lightning.gpu', wires= n_wires, mpi=True, batch_obs=True)
+
+    dev = qp.device('lightning.gpu', wires= n_wires, mpi=True, batch_obs=True)
 
 For the adjoint method, each MPI process will provide the overall simulation results.
 

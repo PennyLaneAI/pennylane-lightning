@@ -355,11 +355,11 @@ TEST_CASE("Release Qubits", "[Driver]") {
 TEST_CASE("Sample after dynamic qubit release", "[Driver]") {
     // This test mirrors the Python code:
     // @qjit
-    // @qml.qnode(qml.device("lightning.qubit", wires=3, shots=10))
+    // @qp.qnode(qp.device("lightning.qubit", wires=3, shots=10))
     // def circuit():
-    //     with qml.allocate(2) as qs:
-    //         qml.X(qs[1])
-    //     return qml.sample(wires=[0, 1])
+    //     with qp.allocate(2) as qs:
+    //         qp.X(qs[1])
+    //     return qp.sample(wires=[0, 1])
 
     std::unique_ptr<LSimulator> sim = std::make_unique<LSimulator>();
 

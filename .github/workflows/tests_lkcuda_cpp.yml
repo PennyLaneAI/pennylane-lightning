@@ -5,11 +5,11 @@ on:
       lightning-version:
         type: string
         required: true
-        description: The version of Lightning to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
+        description: The version of Lightning to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from main)
       pennylane-version:
         type: string
         required: true
-        description: The version of PennyLane to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
+        description: The version of PennyLane to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from main)
   pull_request:
     types:
       - opened
@@ -23,7 +23,7 @@ on:
       - '!pennylane_lightning/core/simulators/lightning_tensor/**'
   push:
     branches:
-      - master
+      - main
 
 env:
   CI_CUDA_ARCH: 86
@@ -33,6 +33,9 @@ env:
 concurrency:
   group: tests_lkcuda_cpp-${{ github.ref }}-${{ github.event_name }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
   cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   builddeps:
@@ -44,7 +47,7 @@ jobs:
       max-parallel: 1
       matrix:
         os: [ubuntu-22.04]
-        kokkos_version: ["4.5.00"]
+        kokkos_version: ["5.1.0"]
         exec_model: ["CUDA"]
         cuda_version_maj: ["12"]
         cuda_version_min: ["9"]
@@ -110,7 +113,7 @@ jobs:
       matrix:
         os: [ubuntu-22.04]
         pl_backend: ["lightning_kokkos"]
-        kokkos_version: ["4.5.00"]
+        kokkos_version: ["5.1.0"]
         exec_model: ["CUDA"]
         cuda_version_maj: ["12"]
         cuda_version_min: ["9"]

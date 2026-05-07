@@ -2,12 +2,15 @@ name: Update dev version automatically
 on:
   pull_request_target:
     branches:
-      - master
+      - main
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: write
+  pull-requests: read
 
 jobs:
   update-dev-version:
@@ -15,10 +18,10 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
 
-      - name: Checkout PennyLane-Lightning master
+      - name: Checkout PennyLane-Lightning main
         uses: actions/checkout@v4
         with:
-          ref: master
+          ref: main
           path: main
 
       - name: Checkout PennyLane-Lightning PR
@@ -49,7 +52,7 @@ jobs:
           python3 \
            main/.github/workflows/dev_version_script.py \
            --pr-path "${{ github.workspace }}/pr" \
-           --master-path "${{ github.workspace }}/main"
+           --main-path "${{ github.workspace }}/main"
 
       - name: Capture Changed version
         id: new_version

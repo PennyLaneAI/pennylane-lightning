@@ -5,11 +5,11 @@ on:
       lightning-version:
         type: string
         required: true
-        description: The version of Lightning to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
+        description: The version of Lightning to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from main)
       pennylane-version:
         type: string
         required: true
-        description: The version of PennyLane to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
+        description: The version of PennyLane to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from main)
   pull_request:
     types:
       - opened
@@ -28,7 +28,7 @@ on:
       - pennylane_lightning/lightning_qubit/**
   push:
     branches:
-      - master
+      - main
 
 env:
   TORCH_VERSION: 2.5.1
@@ -41,6 +41,9 @@ concurrency:
   group: tests_lkcpu_python-${{ github.ref }}-${{ github.event_name }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   build_and_cache_Kokkos:
     if: github.event.pull_request.draft == false
@@ -48,7 +51,7 @@ jobs:
     uses: ./.github/workflows/build_and_cache_Kokkos_linux.yml
     with:
       os: ubuntu-24.04
-      kokkos_version: "4.5.00"
+      kokkos_version: ${{ (inputs.lightning-version == 'stable' && '4.5.00') || '5.1.0' }} # FIXME: remove after v0.45 release
 
   build_lightning_kokkos_wheels:
     needs: [build_and_cache_Kokkos]

@@ -3,6 +3,10 @@ name: Manually Triggered Version Bumps
 on:
   workflow_dispatch:
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   pre_release_version_bump:
     runs-on: ubuntu-24.04
@@ -35,4 +39,4 @@ jobs:
           body: updated changelog and _version.py
           branch: pre-release-version-bump
           reviewers: tomlqc, maliasadi
-          base: master
+          base: main

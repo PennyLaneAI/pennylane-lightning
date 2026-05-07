@@ -3,11 +3,14 @@ on:
   pull_request:
   push:
     branches:
-      - master
+      - main
 
 concurrency:
   group: format-${{ github.ref }}
   cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   format-python:

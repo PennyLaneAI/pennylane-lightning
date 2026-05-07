@@ -15,13 +15,14 @@
 This module contains the LightningTensor class that inherits from the new device interface.
 It is a device to perform tensor network simulations of quantum circuits using `cutensornet`.
 """
+
 from dataclasses import replace
 from numbers import Number
 from typing import Callable, Optional, Sequence, Tuple
 from warnings import warn
 
 import numpy as np
-import pennylane as qml
+import pennylane as qp
 from pennylane.devices import Device, ExecutionConfig
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
 from pennylane.devices.preprocess import (
@@ -168,10 +169,10 @@ _observables = frozenset(
 
 def stopping_condition(op: Operator) -> bool:
     """A function that determines whether or not an operation is supported by ``lightning.tensor``."""
-    if isinstance(op, qml.ControlledQubitUnitary):
+    if isinstance(op, qp.ControlledQubitUnitary):
         return True
 
-    if isinstance(op, qml.MPSPrep):
+    if isinstance(op, qp.MPSPrep):
         return True
 
     return op.has_matrix and op.name in _operations
@@ -247,19 +248,19 @@ class LightningTensor(Device):
 
     .. code-block:: python
 
-        import pennylane as qml
+        import pennylane as qp
 
         num_qubits = 100
 
-        dev = qml.device("lightning.tensor", wires=num_qubits, max_bond_dim=32)
+        dev = qp.device("lightning.tensor", wires=num_qubits, max_bond_dim=32)
 
-        @qml.qnode(dev)
+        @qp.qnode(dev)
         def circuit(num_qubits):
             for qubit in range(0, num_qubits - 1):
-                qml.CZ(wires=[qubit, qubit + 1])
-                qml.X(wires=[qubit])
-                qml.Z(wires=[qubit + 1])
-            return qml.expval(qml.Z(0))
+                qp.CZ(wires=[qubit, qubit + 1])
+                qp.X(wires=[qubit])
+                qp.Z(wires=[qubit + 1])
+            return qp.expval(qp.Z(0))
 
     >>> print(circuit(num_qubits))
     -1.0
@@ -268,19 +269,19 @@ class LightningTensor(Device):
 
     .. code-block:: python
 
-        import pennylane as qml
+        import pennylane as qp
 
         num_qubits = 100
 
-        dev = qml.device("lightning.tensor", wires=num_qubits, method="tn")
+        dev = qp.device("lightning.tensor", wires=num_qubits, method="tn")
 
-        @qml.qnode(dev)
+        @qp.qnode(dev)
         def circuit(num_qubits):
             for qubit in range(0, num_qubits - 1):
-                qml.CZ(wires=[qubit, qubit + 1])
-                qml.X(wires=[qubit])
-                qml.Z(wires=[qubit + 1])
-            return qml.expval(qml.Z(0))
+                qp.CZ(wires=[qubit, qubit + 1])
+                qp.X(wires=[qubit])
+                qp.Z(wires=[qubit + 1])
+            return qp.expval(qp.Z(0))
 
     >>> print(circuit(num_qubits))
     -1.0
@@ -433,7 +434,7 @@ class LightningTensor(Device):
     def preprocess_transforms(
         self,
         execution_config: ExecutionConfig | None = None,
-    ) -> qml.CompilePipeline:
+    ) -> qp.CompilePipeline:
         """This function defines the device transform program to be applied and an updated device configuration.
 
         Args:
@@ -441,7 +442,7 @@ class LightningTensor(Device):
                 parameters needed to fully describe the execution.
 
         Returns:
-            qml.CompilePipeline, ExecutionConfig: A compile pipeline that when called returns :class:`~.QuantumTape`'s that the
+            qp.CompilePipeline, ExecutionConfig: A compile pipeline that when called returns :class:`~.QuantumTape`'s that the
             device can natively execute as well as a postprocessing function to be called after execution, and a configuration
             with unset specifications filled in.
 
@@ -453,7 +454,7 @@ class LightningTensor(Device):
         if execution_config is None:
             execution_config = self.setup_execution_config(ExecutionConfig())
 
-        pipeline = qml.CompilePipeline()
+        pipeline = qp.CompilePipeline()
 
         pipeline.add_transform(validate_measurements, name=self.name)
         pipeline.add_transform(validate_observables, accepted_observables, name=self.name)
@@ -489,7 +490,7 @@ class LightningTensor(Device):
 
         for circuit in circuits:
             if self._wire_map is not None:
-                [circuit], _ = qml.map_wires(circuit, self._wire_map)
+                [circuit], _ = qp.map_wires(circuit, self._wire_map)
             results.append(
                 simulate(
                     self.dynamic_wires_from_circuit(circuit),
@@ -505,7 +506,7 @@ class LightningTensor(Device):
     def supports_derivatives(
         self,
         execution_config: ExecutionConfig | None = None,
-        circuit: Optional[qml.tape.QuantumTape] = None,
+        circuit: Optional[qp.tape.QuantumTape] = None,
     ) -> bool:
         """Check whether or not derivatives are available for a given configuration and circuit.
 

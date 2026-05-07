@@ -19,7 +19,7 @@ from abc import ABC, abstractmethod
 from typing import Union
 
 import numpy as np
-import pennylane as qml
+import pennylane as qp
 from numpy.random import Generator
 from pennylane import BasisState, StatePrep
 from pennylane.measurements import MidMeasureMP
@@ -89,8 +89,8 @@ class LightningBaseStateVector(ABC):
 
         **Example**
 
-        >>> dev = qml.device('lightning.[Device]', wires=1)
-        >>> dev.apply([qml.PauliX(wires=[0])])
+        >>> dev = qp.device('lightning.[Device]', wires=1)
+        >>> dev.apply([qp.PauliX(wires=[0])])
         >>> print(dev.state)
         [0.+0.j 1.+0.j]
         """
@@ -181,13 +181,13 @@ class LightningBaseStateVector(ABC):
         """
         wires = self.wires.indices(operation.wires)
         wire = list(wires)[0]
-        circuit = QuantumScript([], [qml.sample(wires=operation.wires)], shots=1)
+        circuit = QuantumScript([], [qp.sample(wires=operation.wires)], shots=1)
         sample = measure_final_state(circuit)
         sample = np.squeeze(sample)
         mid_measurements[operation] = sample
         getattr(self.state_vector, "collapse")(wire, bool(sample))
         if operation.reset and bool(sample):
-            self.apply_operations([qml.PauliX(operation.wires)], mid_measurements=mid_measurements)
+            self.apply_operations([qp.PauliX(operation.wires)], mid_measurements=mid_measurements)
 
     @abstractmethod
     def _apply_lightning(

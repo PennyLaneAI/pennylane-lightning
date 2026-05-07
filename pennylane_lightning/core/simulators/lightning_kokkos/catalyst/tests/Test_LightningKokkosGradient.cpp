@@ -303,15 +303,15 @@ TEST_CASE("Test Gradient with QubitUnitary", "[Gradient]") {
 TEST_CASE("Test Gradient with Adjoing Jacobian Multi Obs", "[Gradient]") {
     // Circuit:
     // n_wires = 2
-    // data = qml.numpy.array([0.1, 0.2])
-    // weights = qml.numpy.array([0.3, 0.4])
+    // data = qp.numpy.array([0.1, 0.2])
+    // weights = qp.numpy.array([0.3, 0.4])
 
-    // @qml.qnode(qml.device("lightning.qubit", wires=n_wires),
+    // @qp.qnode(qp.device("lightning.qubit", wires=n_wires),
     // diff_method="adjoint") def circuit(weights, data):
     //     for i in range(n_wires):
-    //         qml.RY(data[i], wires=i)
-    //         qml.RX(weights[i], wires=i)
-    //     return [qml.expval(qml.PauliZ(i)) for i in range(n_wires)]
+    //         qp.RY(data[i], wires=i)
+    //         qp.RX(weights[i], wires=i)
+    //     return [qp.expval(qp.PauliZ(i)) for i in range(n_wires)]
 
     // def loss_fn(weights, data):
     //     return jnp.array(circuit(weights, data))

@@ -136,22 +136,22 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::RX", "[TNCuda_Param]", TestTNBackends) {
 }
 
 /* python code to get the reference values for a single parameter
-import pennylane as qml
+import pennylane as qp
 
 qubits = 3
-dev = qml.device('default.qubit', wires=qubits)
+dev = qp.device('default.qubit', wires=qubits)
 
-gate = qml.RY
+gate = qp.RY
 
 invert = False
-gate = qml.adjoint(gate) if invert else gate
+gate = qp.adjoint(gate) if invert else gate
 wires=0
 
-@qml.qnode(dev)
+@qp.qnode(dev)
 def circuit():
-    [qml.H(i) for i in range(qubits)]
+    [qp.H(i) for i in range(qubits)]
     gate(0.3, wires=wires)
-    return qml.state()
+    return qp.state()
 
 result = circuit()
 [print(f"{i:3d}  :  ",r) for i,r in enumerate(result)]
@@ -442,23 +442,23 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CRot", "[TNCuda_Param]",
 }
 
 /* python code to get the reference values for a single parameter with 2 target
-wires import pennylane as qml
+wires import pennylane as qp
 
 qubits = 3
-dev = qml.device('default.qubit', wires=qubits)
+dev = qp.device('default.qubit', wires=qubits)
 
-gate = qml.IsingXX
+gate = qp.IsingXX
 
 invert = False
-gate = qml.adjoint(gate) if invert else gate
+gate = qp.adjoint(gate) if invert else gate
 adjacent = True
 wires = [0, 1] if adjacent  else [0,2]
 
-@qml.qnode(dev)
+@qp.qnode(dev)
 def circuit():
-    # [qml.H(i) for i in range(qubits)]
+    # [qp.H(i) for i in range(qubits)]
     gate(0.3, wires=wires)
-    return qml.state()
+    return qp.state()
 
 result = circuit()
 [print(f"{i:3d}  :  ",r) for i,r in enumerate(result)]
@@ -724,24 +724,24 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::IsingZZ", "[TNCuda_Param]",
 }
 
 /* python code to get the reference values for a single parameter with 2 target
-for CRX import pennylane as qml
+for CRX import pennylane as qp
 
 qubits = 3
-dev = qml.device('default.qubit', wires=qubits)
+dev = qp.device('default.qubit', wires=qubits)
 
-gate = qml.CRX
+gate = qp.CRX
 
 invert = False
-gate = qml.adjoint(gate) if invert else gate
+gate = qp.adjoint(gate) if invert else gate
 adjacent = True
 wires = [0,1] if adjacent else [0,2]
 
-@qml.qnode(dev)
+@qp.qnode(dev)
 def circuit():
-    [qml.H(i) for i in range(qubits-1)]
+    [qp.H(i) for i in range(qubits-1)]
     gate(0.3, wires=wires)
 
-    return qml.state()
+    return qp.state()
 
 result = circuit()
 [print(f"{i:3d}  :  ",r) for i,r in enumerate(result)]
@@ -1172,24 +1172,24 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::SingleExcitationPlus", "[TNCuda_Param]",
    wires
 
 
-    import pennylane as qml
+    import pennylane as qp
 
     qubits = 5
-    dev = qml.device('default.qubit', wires=qubits)
+    dev = qp.device('default.qubit', wires=qubits)
 
-    gate = qml.DoubleExcitationPlus
+    gate = qp.DoubleExcitationPlus
 
     invert = True
-    gate = qml.adjoint(gate) if invert else gate
+    gate = qp.adjoint(gate) if invert else gate
     adjacent = True
     wires = [0,1,2,3] if adjacent else [0,1,3,4]
 
-    @qml.qnode(dev)
+    @qp.qnode(dev)
     def circuit():
-        [qml.H(i) for i in range(qubits)]
+        [qp.H(i) for i in range(qubits)]
         gate(0.3, wires=wires)
 
-        return qml.state()
+        return qp.state()
     result = circuit()
     [print(f"{i:3d}  :  ",r) for i,r in enumerate(result)]
 */

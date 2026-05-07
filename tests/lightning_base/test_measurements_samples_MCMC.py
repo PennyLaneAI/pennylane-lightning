@@ -14,8 +14,9 @@
 """
 Unit tests for MCMC sampling in lightning.qubit.
 """
+
 import numpy as np
-import pennylane as qml
+import pennylane as qp
 import pytest
 from conftest import LightningDevice as ld
 from conftest import device_name
@@ -35,12 +36,12 @@ class TestMCMCSample:
 
     @pytest.fixture(params=[np.complex64, np.complex128])
     def dev(self, request):
-        return qml.device(device_name, wires=2, mcmc=True, c_dtype=request.param)
+        return qp.device(device_name, wires=2, mcmc=True, c_dtype=request.param)
 
     test_data_no_parameters = [
-        (100, [0], qml.PauliZ(wires=[0]), 100),
-        (110, [1], qml.PauliZ(wires=[1]), 110),
-        (120, [0, 1], qml.PauliX(0) @ qml.PauliZ(1), 120),
+        (100, [0], qp.PauliZ(wires=[0]), 100),
+        (110, [1], qp.PauliZ(wires=[1]), 110),
+        (120, [0, 1], qp.PauliX(0) @ qp.PauliZ(1), 120),
     ]
 
     @pytest.mark.parametrize("num_shots,measured_wires,operation,shape", test_data_no_parameters)
@@ -48,8 +49,8 @@ class TestMCMCSample:
         """Tests if the samples returned by sample have
         the correct dimensions
         """
-        ops = [qml.RX(1.5708, wires=[0]), qml.RX(1.5708, wires=[1])]
-        tape = qml.tape.QuantumScript(ops, [qml.sample(op=operation)], shots=num_shots)
+        ops = [qp.RX(1.5708, wires=[0]), qp.RX(1.5708, wires=[1])]
+        tape = qp.tape.QuantumScript(ops, [qp.sample(op=operation)], shots=num_shots)
         s1 = dev.execute(tape)
 
         assert np.array_equal(s1.shape, (shape,))
@@ -60,9 +61,9 @@ class TestMCMCSample:
         the correct values
         """
         with pytest.warns(
-            qml.exceptions.PennyLaneDeprecationWarning, match="shots on device is deprecated"
+            qp.exceptions.PennyLaneDeprecationWarning, match="shots on device is deprecated"
         ):
-            dev = qml.device(
+            dev = qp.device(
                 device_name,
                 wires=2,
                 shots=1000,
@@ -70,8 +71,8 @@ class TestMCMCSample:
                 kernel_name=kernel,
                 num_burnin=100,
             )
-        ops = [qml.RX(1.5708, wires=[0])]
-        tape = qml.tape.QuantumScript(ops, [qml.sample(op=qml.PauliZ(0))], shots=1000)
+        ops = [qp.RX(1.5708, wires=[0])]
+        tape = qp.tape.QuantumScript(ops, [qp.sample(op=qp.PauliZ(0))], shots=1000)
         s1 = dev.execute(tape)
 
         # s1 should only contain 1 and -1, which is guaranteed if
@@ -84,10 +85,10 @@ class TestMCMCSample:
         the correct values
         """
         with pytest.warns(
-            qml.exceptions.PennyLaneDeprecationWarning, match="shots on device is deprecated"
+            qp.exceptions.PennyLaneDeprecationWarning, match="shots on device is deprecated"
         ):
             # Create device (should not fail at initialization)
-            dev = qml.device(
+            dev = qp.device(
                 device_name,
                 wires=2,
                 shots=1000,
@@ -106,10 +107,10 @@ class TestMCMCSample:
     @pytest.mark.parametrize(["shots", "num_burnin"], [(10, 11), (1000, 1000)])
     def test_wrong_num_burnin(self, shots, num_burnin):
         with pytest.warns(
-            qml.exceptions.PennyLaneDeprecationWarning, match="shots on device is deprecated"
+            qp.exceptions.PennyLaneDeprecationWarning, match="shots on device is deprecated"
         ):
             # Create device (should not fail at initialization)
-            dev = qml.device(
+            dev = qp.device(
                 device_name,
                 wires=2,
                 shots=shots,
@@ -125,10 +126,10 @@ class TestMCMCSample:
     @pytest.mark.parametrize(["shots", "num_burnin"], [(10, 0), (1000, -1)])
     def test_unacceptable_num_burnin(self, shots, num_burnin):
         with pytest.warns(
-            qml.exceptions.PennyLaneDeprecationWarning, match="shots on device is deprecated"
+            qp.exceptions.PennyLaneDeprecationWarning, match="shots on device is deprecated"
         ):
             # Create device (should not fail at initialization)
-            dev = qml.device(
+            dev = qp.device(
                 device_name,
                 wires=2,
                 shots=shots,
@@ -145,7 +146,7 @@ class TestMCMCSample:
         """Test that an error is raised when the kernel_name is not "Local" or "NonZeroRandom"."""
 
         with pytest.warns(
-            qml.exceptions.PennyLaneDeprecationWarning, match="shots on device is deprecated"
+            qp.exceptions.PennyLaneDeprecationWarning, match="shots on device is deprecated"
         ):
             ld(wires=2, shots=1000, mcmc=True, kernel_name="Local", num_burnin=100).preprocess()
             ld(

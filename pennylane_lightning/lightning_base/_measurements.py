@@ -20,7 +20,7 @@ from functools import reduce
 from typing import Any, Callable, List, Union
 
 import numpy as np
-import pennylane as qml
+import pennylane as qp
 from pennylane.devices.qubit.sampling import _group_measurements
 from pennylane.measurements import (
     ClassicalShadowMP,
@@ -119,7 +119,7 @@ class LightningBaseMeasurements(ABC):
         state_array = self._qubit_state.state
         wires = Wires(range(self._qubit_state.num_wires))
         result = measurementprocess.process_state(state_array, wires)
-        self._qubit_state.apply_operations([qml.adjoint(g) for g in reversed(diagonalizing_gates)])
+        self._qubit_state.apply_operations([qp.adjoint(g) for g in reversed(diagonalizing_gates)])
         return result
 
     def expval(self, measurementprocess: MeasurementProcess):
@@ -143,7 +143,7 @@ class LightningBaseMeasurements(ABC):
 
                 # Identity for CSR_SparseHamiltonian to pass to processes with rank != 0 to reduce
                 # host(cpu) memory requirements
-                CSR_SparseHamiltonian = qml.Identity(0).sparse_matrix()
+                CSR_SparseHamiltonian = qp.Identity(0).sparse_matrix()
                 # CSR_SparseHamiltonian for rank == 0
                 if self._mpi_handler.mpi_manager.getRank() == 0:
                     CSR_SparseHamiltonian = measurementprocess.obs.sparse_matrix().tocsr()
@@ -163,7 +163,7 @@ class LightningBaseMeasurements(ABC):
             return self._expval_pauli_sentence(measurementprocess)
 
         # use specialized functors to compute expval(Hermitian)
-        if isinstance(measurementprocess.obs, qml.Hermitian):
+        if isinstance(measurementprocess.obs, qp.Hermitian):
             observable_wires = measurementprocess.obs.wires
             if self._use_mpi and len(observable_wires) > self._num_local_wires:
                 raise RuntimeError(
@@ -207,7 +207,7 @@ class LightningBaseMeasurements(ABC):
 
         if diagonalizing_gates:
             self._qubit_state.apply_operations(
-                [qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)]
+                [qp.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)]
             )
 
         return results
@@ -239,7 +239,7 @@ class LightningBaseMeasurements(ABC):
             )
 
         if (
-            isinstance(measurementprocess.obs, qml.Hermitian)
+            isinstance(measurementprocess.obs, qp.Hermitian)
             or (measurementprocess.obs.arithmetic_depth > 0)
             or isinstance(measurementprocess.obs.name, List)
         ):
@@ -268,10 +268,10 @@ class LightningBaseMeasurements(ABC):
         if isinstance(measurementprocess, StateMeasurement):
             if isinstance(measurementprocess, ExpectationMP) and measurementprocess.obs is not None:
                 if self._use_mpi:
-                    if isinstance(measurementprocess.obs, (qml.Projector)):
+                    if isinstance(measurementprocess.obs, (qp.Projector)):
                         return self.state_diagonalizing_gates
                 else:
-                    if isinstance(measurementprocess.obs, (qml.Identity, qml.Projector)):
+                    if isinstance(measurementprocess.obs, (qp.Identity, qp.Projector)):
                         return self.state_diagonalizing_gates
                 return self.expval
 
@@ -280,10 +280,10 @@ class LightningBaseMeasurements(ABC):
 
             if isinstance(measurementprocess, VarianceMP) and measurementprocess.obs is not None:
                 if self._use_mpi:
-                    if isinstance(measurementprocess.obs, (qml.Projector)):
+                    if isinstance(measurementprocess.obs, (qp.Projector)):
                         return self.state_diagonalizing_gates
                 else:
-                    if isinstance(measurementprocess.obs, (qml.Identity, qml.Projector)):
+                    if isinstance(measurementprocess.obs, (qp.Identity, qp.Projector)):
                         return self.state_diagonalizing_gates
                 return self.var
 
@@ -366,8 +366,8 @@ class LightningBaseMeasurements(ABC):
             if measurement.wires == Wires([]):
                 # This is required for the case where no wires is specific for the statevector
                 # (i.e. dynamically determined from circuit), and no wires (and no observable)
-                # is provided for the measurement (e.g. qml.probs() or qml.counts() or
-                # qml.samples()). In the case where number of wires is provided for the statevector,
+                # is provided for the measurement (e.g. qp.probs() or qp.counts() or
+                # qp.samples()). In the case where number of wires is provided for the statevector,
                 # the same operation is performed in validate_device_wires during preprocess.
 
                 # pylint:disable=protected-access
@@ -416,14 +416,12 @@ class LightningBaseMeasurements(ABC):
         if len(mps) == 1:
             diagonalizing_gates = mps[0].diagonalizing_gates()
         elif all(mp.obs for mp in mps):
-            diagonalizing_gates = qml.pauli.diagonalize_qwc_pauli_words([mp.obs for mp in mps])[0]
+            diagonalizing_gates = qp.pauli.diagonalize_qwc_pauli_words([mp.obs for mp in mps])[0]
         else:
             diagonalizing_gates = []
 
         if adjoint:
-            diagonalizing_gates = [
-                qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)
-            ]
+            diagonalizing_gates = [qp.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)]
 
         self._qubit_state.apply_operations(diagonalizing_gates)
 
@@ -453,7 +451,7 @@ class LightningBaseMeasurements(ABC):
             wires = reduce(sum, (mp.wires for mp in mps))
         else:
             total_indices = self._qubit_state.num_wires
-            wires = qml.wires.Wires(range(total_indices))
+            wires = qp.wires.Wires(range(total_indices))
 
         def _process_single_shot(samples):
             return tuple(mp.process_samples(samples, wires) for mp in mps)
@@ -475,7 +473,7 @@ class LightningBaseMeasurements(ABC):
         except ValueError as e:
             if str(e) != "probabilities contain NaN":
                 raise e
-            samples = qml.math.full((shots.total_shots, len(wires)), 0)
+            samples = qp.math.full((shots.total_shots, len(wires)), 0)
 
         self._apply_diagonalizing_gates(mps, adjoint=True)
 

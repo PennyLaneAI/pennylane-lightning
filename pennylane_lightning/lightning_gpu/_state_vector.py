@@ -14,6 +14,7 @@
 """
 Class implementation for lightning_gpu state-vector manipulation.
 """
+
 from warnings import warn
 
 try:
@@ -34,7 +35,7 @@ except ImportError as ex:
 from typing import Union
 
 import numpy as np
-import pennylane as qml
+import pennylane as qp
 import scipy as sp
 from numpy.random import Generator
 from pennylane.exceptions import DeviceError
@@ -50,13 +51,13 @@ from ._measurements import LightningGPUMeasurements
 from ._mpi_handler import MPIHandler
 
 gate_cache_needs_hash = (
-    qml.BlockEncode,
-    qml.ControlledQubitUnitary,
-    qml.DiagonalQubitUnitary,
-    qml.MultiControlledX,
-    qml.OrbitalRotation,
-    qml.PSWAP,
-    qml.QubitUnitary,
+    qp.BlockEncode,
+    qp.ControlledQubitUnitary,
+    qp.DiagonalQubitUnitary,
+    qp.MultiControlledX,
+    qp.OrbitalRotation,
+    qp.PSWAP,
+    qp.QubitUnitary,
 )
 
 
@@ -133,8 +134,8 @@ class LightningGPUStateVector(LightningBaseStateVector):
 
         **Example**
 
-        >>> dev = qml.device('lightning.gpu', wires=1)
-        >>> dev.apply([qml.PauliX(wires=[0])])
+        >>> dev = qp.device('lightning.gpu', wires=1)
+        >>> dev.apply([qp.PauliX(wires=[0])])
         >>> state_vector = np.zeros(2**dev.num_wires).astype(dev.c_type)
         >>> dev.syncD2H(state_vector)
         >>> print(state_vector)
@@ -150,8 +151,8 @@ class LightningGPUStateVector(LightningBaseStateVector):
 
         **Example**
 
-        >>> dev = qml.device('lightning.gpu', wires=1)
-        >>> dev.apply([qml.PauliX(wires=[0])])
+        >>> dev = qp.device('lightning.gpu', wires=1)
+        >>> dev.apply([qp.PauliX(wires=[0])])
         >>> print(dev.state)
         [0.+0.j 1.+0.j]
         """
@@ -168,10 +169,10 @@ class LightningGPUStateVector(LightningBaseStateVector):
 
         **Example**
 
-        >>> dev = qml.device('lightning.gpu', wires=3)
-        >>> obs = qml.Identity(0) @ qml.PauliX(1) @ qml.PauliY(2)
-        >>> obs1 = qml.Identity(1)
-        >>> H = qml.Hamiltonian([1.0, 1.0], [obs1, obs])
+        >>> dev = qp.device('lightning.gpu', wires=3)
+        >>> obs = qp.Identity(0) @ qp.PauliX(1) @ qp.PauliY(2)
+        >>> obs1 = qp.Identity(1)
+        >>> H = qp.Hamiltonian([1.0, 1.0], [obs1, obs])
         >>> state_vector = np.array([0.0 + 0.0j, 0.0 + 0.1j, 0.1 + 0.1j, 0.1 + 0.2j,
             0.2 + 0.2j, 0.3 + 0.3j, 0.3 + 0.4j, 0.4 + 0.5j,], dtype=np.complex64,)
         >>> dev.syncH2D(state_vector)
@@ -275,7 +276,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
 
         if method:  # apply n-controlled specialized gate
             param = operation.parameters
-            if isinstance(base_operation, qml.PCPhase):
+            if isinstance(base_operation, qp.PCPhase):
                 # PCPhase has hyperparameters for dimension
                 hyper = float(base_operation.hyperparameters["dimension"][0])
                 param = np.array([base_operation.parameters[0], hyper])
@@ -284,7 +285,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
         else:  # apply gate as an n-controlled matrix
             method = getattr(state, "applyControlledMatrix")
             method(
-                qml.matrix(base_operation),
+                qp.matrix(base_operation),
                 control_wires,
                 control_values,
                 target_wires,
@@ -313,7 +314,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
         # Skip over identity operations instead of performing
         # matrix multiplication with it.
         for operation in operations:
-            if isinstance(operation, qml.Identity):
+            if isinstance(operation, qp.Identity):
                 continue
             if isinstance(operation, Adjoint):
                 op_adjoint_base = operation.base
@@ -336,7 +337,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
                     mid_measurements,
                     postselect_mode=postselect_mode,
                 )
-            elif isinstance(operation, qml.PauliRot):
+            elif isinstance(operation, qp.PauliRot):
                 method = getattr(state, "applyPauliRot")
                 paulis = operation._hyperparameters[  # pylint: disable=protected-access
                     "pauli_word"
@@ -346,20 +347,20 @@ class LightningGPUStateVector(LightningBaseStateVector):
                 method(wires, invert_param, operation.parameters, word)
             elif method is not None:  # apply specialized gate
                 param = operation.parameters
-                if isinstance(op_adjoint_base, qml.PCPhase):
+                if isinstance(op_adjoint_base, qp.PCPhase):
                     # PCPhase has hyperparameters for dimension
                     hyper = float(op_adjoint_base.hyperparameters["dimension"][0])
                     param = np.array([op_adjoint_base.parameters[0], hyper])
 
                 method(wires, invert_param, param)
             elif (
-                isinstance(op_adjoint_base, qml.ops.Controlled) and not self._mpi_handler.use_mpi
+                isinstance(op_adjoint_base, qp.ops.Controlled) and not self._mpi_handler.use_mpi
             ):  # MPI backend does not have native controlled gates support
                 self._apply_lightning_controlled(op_adjoint_base, invert_param)
             elif (
                 self._mpi_handler.use_mpi
-                and isinstance(op_adjoint_base, qml.ops.Controlled)
-                and isinstance(op_adjoint_base.base, qml.GlobalPhase)
+                and isinstance(op_adjoint_base, qp.ops.Controlled)
+                and isinstance(op_adjoint_base.base, qp.GlobalPhase)
             ):
                 # TODO: To move this line to the _apply_lightning_controlled method once the MPI backend supports controlled gates natively
                 raise DeviceError(
@@ -367,7 +368,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
                 )
             else:  # apply gate as a matrix
                 try:
-                    mat = qml.matrix(operation)
+                    mat = qp.matrix(operation)
                 except AttributeError:  # pragma: no cover
                     # To support older versions of PL
                     mat = operation.matrix

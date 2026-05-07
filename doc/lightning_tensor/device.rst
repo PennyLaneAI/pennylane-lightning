@@ -7,8 +7,8 @@ The ``lightning.tensor`` device defaults to the Matrix Product State (MPS) metho
 
 .. code-block:: python
 
-    import pennylane as qml
-    dev = qml.device("lightning.tensor", wires=100)
+    import pennylane as qp
+    dev = qp.device("lightning.tensor", wires=100)
 
 By default, the device approximates the quantum state using an MPS.
 The default setup for the MPS tensor network approximation is:
@@ -20,9 +20,9 @@ Note that ``cutensornet`` will automatically determine the reduced extent of the
 Users also have the flexibility to customize MPS parameters according to their specific needs with:
 
 .. code-block:: python
-    
-    import pennylane as qml
-    
+
+    import pennylane as qp
+
     num_qubits = 100
 
     device_kwargs_mps = {
@@ -31,16 +31,16 @@ Users also have the flexibility to customize MPS parameters according to their s
         "cutoff_mode": "abs",
     }
 
-    dev = qml.device("lightning.tensor", wires=num_qubits, method="mps", **device_kwargs_mps)
+    dev = qp.device("lightning.tensor", wires=num_qubits, method="mps", **device_kwargs_mps)
 
 Users can also run the ``lightning.tensor`` device in the **Exact Tensor Network** mode by setting the ``method`` argument to ``"tn"``:
 
 .. code-block:: python
 
-    import pennylane as qml
-    dev = qml.device("lightning.tensor", wires=100, method="tn")
+    import pennylane as qp
+    dev = qp.device("lightning.tensor", wires=100, method="tn")
 
-The ``lightning.tensor`` device dispatches all operations to be performed on a CUDA-capable GPU of generation SM 7.0 
+The ``lightning.tensor`` device dispatches all operations to be performed on a CUDA-capable GPU of generation SM 7.0
 and greater (Volta and later). This device supports both exact and finite shots measurements. Currently, the supported differentiation methods are parameter-shift and finite-diff. Note that the MPS backend of ``lightning.tensor`` supports multi-wire gates via Matrix Product Operators (MPO).
 
 The ``lightning.tensor`` device is designed for expectation value calculations. Measurements of :func:`~pennylane.probs` or :func:`~pennylane.state` return dense vectors of dimension :math:`2^{\text{n_qubits}}`, so they should only be used for small systems.
@@ -51,7 +51,7 @@ The ``lightning.tensor`` device allows users to get quantum circuit gradients us
 
 .. code-block:: python
 
-    @qml.qnode(dev, diff_method="parameter-shift")
+    @qp.qnode(dev, diff_method="parameter-shift")
     def circuit(params):
         ...
 
@@ -65,7 +65,7 @@ Note that ``lightning.tensor`` cannot be cleaned up like other state-vector devi
 Operations and observables support
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The ``lightning.tensor`` supports all gate operations supported by PennyLane, with the exception of :class:`~pennylane.StatePrep`, which is **not supported** by the **Exact Tensor Network** method. 
+The ``lightning.tensor`` supports all gate operations supported by PennyLane, with the exception of :class:`~pennylane.StatePrep`, which is **not supported** by the **Exact Tensor Network** method.
 
 **Supported operations:**
 

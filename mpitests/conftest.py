@@ -14,12 +14,13 @@
 """
 Pytest configuration file for PennyLane-Lightning MPI test suite.
 """
+
 # pylint: disable=missing-function-docstring,wrong-import-order,unused-import
 
 import itertools
 import os
 
-import pennylane as qml
+import pennylane as qp
 import pytest
 from pennylane import numpy as np
 from pennylane.exceptions import DeviceError
@@ -93,7 +94,7 @@ def get_device():
 
 device_name = get_device()
 
-if device_name not in qml.plugin_devices:
+if device_name not in qp.plugin_devices:
     raise DeviceError(
         f"Device {device_name} does not exist. Make sure the required plugin is installed."
     )
@@ -128,7 +129,7 @@ else:
 )
 def qubit_device(request):
     def _device(wires):
-        return qml.device(
+        return qp.device(
             device_name,
             wires=wires,
             mpi=True,

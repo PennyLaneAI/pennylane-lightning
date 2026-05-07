@@ -6,6 +6,10 @@ on:
       - cron: "30 7 * * 1-5"
   workflow_dispatch:
 
+permissions:
+  contents: write
+  id-token: write 
+
 jobs:
   setup-rc:
     name: Setup the release
@@ -17,7 +21,7 @@ jobs:
     - name: Checkout Lightning repo
       uses: actions/checkout@v4
       with:
-        ref: master
+        ref: main
 
     # Sets up Python environment
     - name: Set up Python
@@ -128,7 +132,7 @@ jobs:
       - name: Checkout Lightning repo
         uses: actions/checkout@v4
         with:
-          ref: master
+          ref: main
 
       - name: Trigger Catalyst RC workflow
         env:

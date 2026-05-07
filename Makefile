@@ -222,12 +222,12 @@ endif
 ifdef version
     VERSION := $(version)
 else
-    VERSION := master
+    VERSION := main
 endif
 ifdef pl_version
     PL_VERSION := $(pl_version)
 else
-    PL_VERSION := master
+    PL_VERSION := main
 endif
 
 docker-build:
@@ -267,4 +267,3 @@ test-bindings:
 build-test-bindings:
 	$(MAKE) build-nanobind
 	$(MAKE) test-bindings
-
