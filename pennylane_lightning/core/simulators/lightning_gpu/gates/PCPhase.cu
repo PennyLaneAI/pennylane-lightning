@@ -134,6 +134,7 @@ void applyPCPhase_CUDA_call(GPUDataT *sv, std::size_t sv_length,
         <<<block_per_grid, thread_per_block, 0, stream_id>>>(
             sv, sv_length, target_list, dimension, upper, lower);
     PL_CUDA_IS_SUCCESS(cudaGetLastError());
+    PL_CUDA_IS_SUCCESS(cudaStreamSynchronize(stream_id));
 }
 
 template <class GPUDataT, class PrecisionT>
@@ -160,6 +161,7 @@ void applyControlledPCPhase_CUDA_call(
         <<<block_per_grid, thread_per_block, 0, stream_id>>>(
             sv, sv_length, control_list, target_list, dimension, upper, lower);
     PL_CUDA_IS_SUCCESS(cudaGetLastError());
+    PL_CUDA_IS_SUCCESS(cudaStreamSynchronize(stream_id));
 }
 } // namespace
 
