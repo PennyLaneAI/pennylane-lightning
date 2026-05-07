@@ -42,7 +42,8 @@ auto makeCudaComplex(PrecisionT real, PrecisionT imag) -> GPUDataT {
     }
 }
 
-inline auto makePCPhaseWireList(const int *wires, std::size_t num_wires)
+inline auto makePCPhaseWireList(const int *wires, std::size_t num_wires,
+                                const int *values = nullptr)
     -> PCPhaseWireList {
     PL_ABORT_IF(num_wires > maxPCPhaseWires,
                 "PCPhase supports at most 64 wires.");
@@ -51,18 +52,11 @@ inline auto makePCPhaseWireList(const int *wires, std::size_t num_wires)
     wire_list.size = num_wires;
     for (std::size_t i = 0; i < num_wires; i++) {
         wire_list.wires[i] = wires[i];
+        if (values != nullptr) {
+            wire_list.values[i] = values[i];
+        }
     }
     return wire_list;
-}
-
-inline auto makePCPhaseControlList(const int *ctrls, const int *ctrl_values,
-                                   std::size_t num_ctrls)
-    -> PCPhaseWireList {
-    auto ctrl_list = makePCPhaseWireList(ctrls, num_ctrls);
-    for (std::size_t i = 0; i < num_ctrls; i++) {
-        ctrl_list.values[i] = ctrl_values[i];
-    }
-    return ctrl_list;
 }
 
 template <class GPUDataT>
@@ -152,8 +146,8 @@ void applyControlledPCPhase_CUDA_call(
     std::size_t thread_per_block, int device_id, cudaStream_t stream_id) {
     PL_CUDA_IS_SUCCESS(cudaSetDevice(device_id));
 
-    const auto control_list = makePCPhaseControlList(ctrls, ctrl_values,
-                                                     num_ctrls);
+    const auto control_list = makePCPhaseWireList(ctrls, num_ctrls,
+                                                  ctrl_values);
     const auto target_list = makePCPhaseWireList(tgts, num_tgts);
     const auto upper = makeCudaComplex<GPUDataT>(std::cos(phase),
                                                 std::sin(phase));
