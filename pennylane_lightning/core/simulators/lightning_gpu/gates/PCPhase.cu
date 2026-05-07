@@ -130,11 +130,9 @@ void applyPCPhase_CUDA_call(GPUDataT *sv, std::size_t sv_length,
         std::max<std::size_t>((sv_length + thread_per_block - 1) /
                                   thread_per_block,
                               1);
-    dim3 blockSize(thread_per_block, 1, 1);
-    dim3 gridSize(block_per_grid, 1);
-
-    applyPCPhaseKernel<GPUDataT><<<gridSize, blockSize, 0, stream_id>>>(
-        sv, sv_length, target_list, dimension, upper, lower);
+    applyPCPhaseKernel<GPUDataT>
+        <<<block_per_grid, thread_per_block, 0, stream_id>>>(
+            sv, sv_length, target_list, dimension, upper, lower);
     PL_CUDA_IS_SUCCESS(cudaGetLastError());
 }
 
@@ -158,11 +156,8 @@ void applyControlledPCPhase_CUDA_call(
         std::max<std::size_t>((sv_length + thread_per_block - 1) /
                                   thread_per_block,
                               1);
-    dim3 blockSize(thread_per_block, 1, 1);
-    dim3 gridSize(block_per_grid, 1);
-
     applyControlledPCPhaseKernel<GPUDataT>
-        <<<gridSize, blockSize, 0, stream_id>>>(
+        <<<block_per_grid, thread_per_block, 0, stream_id>>>(
             sv, sv_length, control_list, target_list, dimension, upper, lower);
     PL_CUDA_IS_SUCCESS(cudaGetLastError());
 }
