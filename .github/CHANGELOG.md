@@ -40,6 +40,9 @@
 - Fixed an erroneous transposed result when computing the adjoint jacobian with `lightning.qubit` from Catalyst.
   [(#1337)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1337)
 
+- Fixed erroneous entanglement check during single qubit deallocation
+  [(#1380)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1380)
+
 <h3>Internal changes ⚙️</h3>
 
 - Updated default branch from `master` to `main`.
@@ -107,7 +110,7 @@
   [(#1320)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1320)
 
 - Updated `pyproject.toml` with project dependencies to replace the requirements files. Updated workflows to use installations from `pyproject.toml`.
-  [(1334)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1334)
+  [(#1334)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1334)
 
 <h3>Contributors ✍️</h3>
 
@@ -118,11 +121,11 @@ Ali Asadi,
 Astral Cai,
 Yushao Chen,
 Thomas Germain,
-Ashish Kanwar Singh,
 Jeffrey Kam,
 Joseph Lee,
 Anton Naim Ibrahim,
 Luis Alfredo Nuñez Meneses,
+Ashish Kanwar Singh,
 Jake Zaia,
 Hong-Sheng Zheng.
 
