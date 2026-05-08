@@ -355,11 +355,11 @@ class StateVectorCudaManaged
             auto tgtsInt = NormalizeCastIndices<std::size_t, int>(
                 wires, BaseType::getNumQubits());
 
+            const int block_size = 256;
             applyPCPhase_CUDA(
                 BaseType::getData(), BaseType::getDataBuffer().getLength(),
                 nullptr, nullptr, 0, tgtsInt.data(), tgtsInt.size(), dimension,
-                phase, 256,
-                BaseType::getDataBuffer().getDevTag().getDeviceID(),
+                phase, block_size, BaseType::getDataBuffer().getDevTag().getDeviceID(),
                 BaseType::getDataBuffer().getDevTag().getStreamID());
         } else if (native_gates_.find(opName) != native_gates_.end()) {
             applyParametricPauliGate_({opName}, ctrls, tgts, params.front(),

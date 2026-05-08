@@ -20,12 +20,12 @@
 
 namespace Pennylane::LightningGPU {
 
-void applyPCPhase_CUDA(cuComplex *sv, std::size_t sv_length,
-                       const int *ctrls, const int *ctrl_values,
-                       std::size_t num_ctrls, const int *tgts,
-                       std::size_t num_tgts, std::size_t dimension,
-                       float phase, std::size_t thread_per_block,
-                       int device_id, cudaStream_t stream_id);
+void applyPCPhase_CUDA(cuComplex *sv, std::size_t sv_length, const int *ctrls,
+                       const int *ctrl_values, std::size_t num_ctrls,
+                       const int *tgts, std::size_t num_tgts,
+                       std::size_t dimension, float phase,
+                       std::size_t thread_per_block, int device_id,
+                       cudaStream_t stream_id);
 void applyPCPhase_CUDA(cuDoubleComplex *sv, std::size_t sv_length,
                        const int *ctrls, const int *ctrl_values,
                        std::size_t num_ctrls, const int *tgts,
