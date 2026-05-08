@@ -73,6 +73,7 @@ __global__ void applyPCPhaseKernel(GPUDataT *sv, std::size_t sv_length,
     for (std::size_t i = 0; i < ctrls.size; i++) {
         const int bit = static_cast<int>(
             (index >> static_cast<std::size_t>(ctrls.wires[i])) & 1U);
+        // If not exit
         if (bit != ctrls.values[i]) {
             return;
         }
@@ -98,8 +99,8 @@ void applyPCPhase_CUDA_call(GPUDataT *sv, std::size_t sv_length,
                             const int *ctrls, const int *ctrl_values,
                             std::size_t num_ctrls, const int *tgts,
                             std::size_t num_tgts, std::size_t dimension,
-                            PrecisionT phase, std::size_t thread_per_block,
-                            int device_id, cudaStream_t stream_id) {
+                            PrecisionT phase, int device_id,
+                            cudaStream_t stream_id) {
     PL_CUDA_IS_SUCCESS(cudaSetDevice(device_id));
 
     const auto control_list =
@@ -110,10 +111,11 @@ void applyPCPhase_CUDA_call(GPUDataT *sv, std::size_t sv_length,
     const auto lower =
         makeCudaComplex<GPUDataT>(std::cos(phase), -std::sin(phase));
 
-    const std::size_t block_per_grid = std::max<std::size_t>(
-        (sv_length + thread_per_block - 1) / thread_per_block, 1);
+    const std::size_t threads_per_block = 256;
+    const std::size_t blocks_per_grid = std::max<std::size_t>(
+        (sv_length + threads_per_block - 1) / threads_per_block, 1);
     applyPCPhaseKernel<GPUDataT>
-        <<<block_per_grid, thread_per_block, 0, stream_id>>>(
+        <<<blocks_per_grid, threads_per_block, 0, stream_id>>>(
             sv, sv_length, control_list, target_list, dimension, upper, lower);
     PL_CUDA_IS_SUCCESS(cudaGetLastError());
     PL_CUDA_IS_SUCCESS(cudaStreamSynchronize(stream_id));
@@ -123,22 +125,18 @@ void applyPCPhase_CUDA_call(GPUDataT *sv, std::size_t sv_length,
 void applyPCPhase_CUDA(cuComplex *sv, std::size_t sv_length, const int *ctrls,
                        const int *ctrl_values, std::size_t num_ctrls,
                        const int *tgts, std::size_t num_tgts,
-                       std::size_t dimension, float phase,
-                       std::size_t thread_per_block, int device_id,
+                       std::size_t dimension, float phase, int device_id,
                        cudaStream_t stream_id) {
     applyPCPhase_CUDA_call(sv, sv_length, ctrls, ctrl_values, num_ctrls, tgts,
-                           num_tgts, dimension, phase, thread_per_block,
-                           device_id, stream_id);
+                           num_tgts, dimension, phase, device_id, stream_id);
 }
 
 void applyPCPhase_CUDA(cuDoubleComplex *sv, std::size_t sv_length,
                        const int *ctrls, const int *ctrl_values,
                        std::size_t num_ctrls, const int *tgts,
                        std::size_t num_tgts, std::size_t dimension,
-                       double phase, std::size_t thread_per_block,
-                       int device_id, cudaStream_t stream_id) {
+                       double phase, int device_id, cudaStream_t stream_id) {
     applyPCPhase_CUDA_call(sv, sv_length, ctrls, ctrl_values, num_ctrls, tgts,
-                           num_tgts, dimension, phase, thread_per_block,
-                           device_id, stream_id);
+                           num_tgts, dimension, phase, device_id, stream_id);
 }
 } // namespace Pennylane::LightningGPU
