@@ -22,6 +22,7 @@
 namespace {
 using namespace Pennylane::Util;
 using Pennylane::LightningKokkos::Util::one;
+using Pennylane::LightningKokkos::Util::StateVectorTeamPolicy;
 using Pennylane::LightningKokkos::Util::vector2view;
 using Pennylane::LightningKokkos::Util::wires2Parity;
 } // namespace
@@ -217,7 +218,7 @@ template <class PrecisionT> struct getExpValMultiQubitOpFunctor {
         Kokkos::View<ComplexT *,
                      Kokkos::DefaultExecutionSpace::scratch_memory_space,
                      Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
-    using MemberType = Kokkos::TeamPolicy<>::member_type;
+    using MemberType = StateVectorTeamPolicy<>::member_type;
 
     KokkosComplexVector arr;
     KokkosComplexVector matrix;

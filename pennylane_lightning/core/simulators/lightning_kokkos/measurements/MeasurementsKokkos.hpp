@@ -35,6 +35,8 @@ using namespace Pennylane::Observables;
 using Pennylane::LightningKokkos::StateVectorKokkos;
 using Pennylane::LightningKokkos::Util::getRealOfComplexInnerProduct;
 using Pennylane::LightningKokkos::Util::SparseMV_Kokkos;
+using Pennylane::LightningKokkos::Util::StateVectorMDRangePolicy;
+using Pennylane::LightningKokkos::Util::StateVectorRangePolicy;
 using Pennylane::LightningKokkos::Util::vector2view;
 using Pennylane::LightningKokkos::Util::view2vector;
 using Pennylane::Util::exp2;
@@ -98,8 +100,10 @@ class Measurements final
         const std::size_t num_qubits = this->_statevector.getNumQubits();
         const Kokkos::View<ComplexT *> arr_data = this->_statevector.getView();
         PrecisionT expval = 0.0;
-        Kokkos::parallel_reduce(exp2(num_qubits - num_wires),
-                                functor_t(arr_data, num_qubits, wires), expval);
+        Kokkos::parallel_reduce(
+            StateVectorRangePolicy<KokkosExecSpace>(
+                0, exp2(num_qubits - num_wires)),
+            functor_t(arr_data, num_qubits, wires), expval);
         return expval;
     }
 
@@ -121,7 +125,8 @@ class Measurements final
         Kokkos::View<ComplexT *> arr_data = this->_statevector.getView();
         PrecisionT expval = 0.0;
         Kokkos::parallel_reduce(
-            exp2(num_qubits - num_wires),
+            StateVectorRangePolicy<KokkosExecSpace>(
+                0, exp2(num_qubits - num_wires)),
             functor_t<PrecisionT>(arr_data, num_qubits, matrix, wires), expval);
         return expval;
     }
@@ -146,28 +151,32 @@ class Measurements final
         PrecisionT expval = 0.0;
         switch (wires.size()) {
         case 1:
-            Kokkos::parallel_reduce(two2N,
-                                    getExpVal1QubitOpFunctor<PrecisionT>(
-                                        arr_data, num_qubits, matrix, wires),
-                                    expval);
+            Kokkos::parallel_reduce(
+                StateVectorRangePolicy<KokkosExecSpace>(0, two2N),
+                getExpVal1QubitOpFunctor<PrecisionT>(arr_data, num_qubits,
+                                                     matrix, wires),
+                expval);
             break;
         case 2:
-            Kokkos::parallel_reduce(two2N,
-                                    getExpVal2QubitOpFunctor<PrecisionT>(
-                                        arr_data, num_qubits, matrix, wires),
-                                    expval);
+            Kokkos::parallel_reduce(
+                StateVectorRangePolicy<KokkosExecSpace>(0, two2N),
+                getExpVal2QubitOpFunctor<PrecisionT>(arr_data, num_qubits,
+                                                     matrix, wires),
+                expval);
             break;
         case 3:
-            Kokkos::parallel_reduce(two2N,
-                                    getExpVal3QubitOpFunctor<PrecisionT>(
-                                        arr_data, num_qubits, matrix, wires),
-                                    expval);
+            Kokkos::parallel_reduce(
+                StateVectorRangePolicy<KokkosExecSpace>(0, two2N),
+                getExpVal3QubitOpFunctor<PrecisionT>(arr_data, num_qubits,
+                                                     matrix, wires),
+                expval);
             break;
         case 4:
-            Kokkos::parallel_reduce(two2N,
-                                    getExpVal4QubitOpFunctor<PrecisionT>(
-                                        arr_data, num_qubits, matrix, wires),
-                                    expval);
+            Kokkos::parallel_reduce(
+                StateVectorRangePolicy<KokkosExecSpace>(0, two2N),
+                getExpVal4QubitOpFunctor<PrecisionT>(arr_data, num_qubits,
+                                                     matrix, wires),
+                expval);
             break;
         default:
             std::size_t scratch_size = ScratchViewComplex::shmem_size(dim);
@@ -305,7 +314,9 @@ class Measurements final
             } else {
                 PrecisionT expval_tmp = 0.0;
                 Kokkos::parallel_reduce(
-                    "getExpValPauliWordFunctor", exp2(num_qubits),
+                    "getExpValPauliWordFunctor",
+                    StateVectorRangePolicy<KokkosExecSpace>(0,
+                                                            exp2(num_qubits)),
                     getExpValPauliWordFunctor<PrecisionT>(
                         arr_data, num_qubits, X_wires, Y_wires, Z_wires),
                     expval_tmp);
@@ -390,7 +401,7 @@ class Measurements final
                                            row_map_ptr, row_map_size));
 
         Kokkos::parallel_reduce(
-            row_map_size - 1,
+            StateVectorRangePolicy<KokkosExecSpace>(0, row_map_size - 1),
             getExpectationValueSparseFunctor<PrecisionT>(
                 arr_data, kok_data, kok_indices, kok_row_map),
             expval);
@@ -549,7 +560,7 @@ class Measurements final
         auto sv = this->_statevector.getView();
         Kokkos::View<PrecisionT *> d_probs("d_probs", N);
         Kokkos::parallel_for(
-            Kokkos::RangePolicy<KokkosExecSpace>(0, N),
+            StateVectorRangePolicy<KokkosExecSpace>(0, N),
             KOKKOS_LAMBDA(const std::size_t k) {
                 const PrecisionT rsv = sv(k).real();
                 const PrecisionT isv = sv(k).imag();
@@ -657,10 +668,12 @@ class Measurements final
 
         if (use_mdrange) {
             using MDPolicyType_2D =
-                Kokkos::MDRangePolicy<Kokkos::Rank<2, Kokkos::Iterate::Left>>;
+                Kokkos::MDRangePolicy<KokkosExecSpace,
+                                      Kokkos::Rank<2, Kokkos::Iterate::Left>,
+                                      Kokkos::IndexType<std::size_t>>;
             auto md_policy = MDPolicyType_2D(
-                {{0, 0}}, {{static_cast<int64_t>(all_indices.size()),
-                            static_cast<int64_t>(all_offsets.size())}});
+                {{0, 0}}, {{static_cast<std::int64_t>(all_indices.size()),
+                            static_cast<std::int64_t>(all_offsets.size())}});
             Kokkos::parallel_reduce(
                 md_policy,
                 getProbsFunctor<PrecisionT, KokkosExecSpace>(
@@ -668,7 +681,8 @@ class Measurements final
                 d_probabilities);
         } else {
             Kokkos::parallel_for(
-                all_indices.size(), KOKKOS_LAMBDA(const std::size_t i) {
+                StateVectorRangePolicy<KokkosExecSpace>(0, all_indices.size()),
+                KOKKOS_LAMBDA(const std::size_t i) {
                     for (std::size_t j = 0; j < d_all_offsets.size(); j++) {
                         const std::size_t index =
                             d_all_indices(i) + d_all_offsets(j);
@@ -748,7 +762,7 @@ class Measurements final
         // Convert probability distribution to cumulative distribution
         auto probability = probs_core();
         Kokkos::parallel_scan(
-            Kokkos::RangePolicy<KokkosExecSpace>(0, N),
+            StateVectorRangePolicy<KokkosExecSpace>(0, N),
             KOKKOS_LAMBDA(const std::size_t k, PrecisionT &update_value,
                           const bool is_final) {
                 const PrecisionT val_k = probability(k);
@@ -767,7 +781,7 @@ class Measurements final
                           .count());
 
         Kokkos::parallel_for(
-            Kokkos::RangePolicy<KokkosExecSpace>(0, num_samples),
+            StateVectorRangePolicy<KokkosExecSpace>(0, num_samples),
             Sampler<PrecisionT, Kokkos::Random_XorShift64_Pool>(
                 samples, probability, rand_pool, num_qubits, N));
 

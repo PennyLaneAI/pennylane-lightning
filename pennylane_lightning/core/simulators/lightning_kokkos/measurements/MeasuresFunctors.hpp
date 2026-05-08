@@ -406,63 +406,72 @@ auto probs_bitshift_generic(
     switch (n_wires) {
     case 1UL:
         Kokkos::parallel_reduce(
-            exp2(num_qubits - n_wires),
+            Pennylane::LightningKokkos::Util::StateVectorRangePolicy<DeviceType>(
+                0, exp2(num_qubits - n_wires)),
             getProbsNQubitOpFunctor<PrecisionT, DeviceType, 1>(arr, num_qubits,
                                                                wires),
             d_probabilities);
         break;
     case 2UL:
         Kokkos::parallel_reduce(
-            exp2(num_qubits - n_wires),
+            Pennylane::LightningKokkos::Util::StateVectorRangePolicy<DeviceType>(
+                0, exp2(num_qubits - n_wires)),
             getProbsNQubitOpFunctor<PrecisionT, DeviceType, 2>(arr, num_qubits,
                                                                wires),
             d_probabilities);
         break;
     case 3UL:
         Kokkos::parallel_reduce(
-            exp2(num_qubits - n_wires),
+            Pennylane::LightningKokkos::Util::StateVectorRangePolicy<DeviceType>(
+                0, exp2(num_qubits - n_wires)),
             getProbsNQubitOpFunctor<PrecisionT, DeviceType, 3>(arr, num_qubits,
                                                                wires),
             d_probabilities);
         break;
     case 4UL:
         Kokkos::parallel_reduce(
-            exp2(num_qubits - n_wires),
+            Pennylane::LightningKokkos::Util::StateVectorRangePolicy<DeviceType>(
+                0, exp2(num_qubits - n_wires)),
             getProbsNQubitOpFunctor<PrecisionT, DeviceType, 4>(arr, num_qubits,
                                                                wires),
             d_probabilities);
         break;
     case 5UL:
         Kokkos::parallel_reduce(
-            exp2(num_qubits - n_wires),
+            Pennylane::LightningKokkos::Util::StateVectorRangePolicy<DeviceType>(
+                0, exp2(num_qubits - n_wires)),
             getProbsNQubitOpFunctor<PrecisionT, DeviceType, 5>(arr, num_qubits,
                                                                wires),
             d_probabilities);
         break;
     case 6UL:
         Kokkos::parallel_reduce(
-            exp2(num_qubits - n_wires),
+            Pennylane::LightningKokkos::Util::StateVectorRangePolicy<DeviceType>(
+                0, exp2(num_qubits - n_wires)),
             getProbsNQubitOpFunctor<PrecisionT, DeviceType, 6>(arr, num_qubits,
                                                                wires),
             d_probabilities);
         break;
     case 7UL:
         Kokkos::parallel_reduce(
-            exp2(num_qubits - n_wires),
+            Pennylane::LightningKokkos::Util::StateVectorRangePolicy<DeviceType>(
+                0, exp2(num_qubits - n_wires)),
             getProbsNQubitOpFunctor<PrecisionT, DeviceType, 7>(arr, num_qubits,
                                                                wires),
             d_probabilities);
         break;
     case 8UL:
         Kokkos::parallel_reduce(
-            exp2(num_qubits - n_wires),
+            Pennylane::LightningKokkos::Util::StateVectorRangePolicy<DeviceType>(
+                0, exp2(num_qubits - n_wires)),
             getProbsNQubitOpFunctor<PrecisionT, DeviceType, 8>(arr, num_qubits,
                                                                wires),
             d_probabilities);
         break;
     default:
         Kokkos::parallel_reduce(
-            exp2(num_qubits - n_wires),
+            Pennylane::LightningKokkos::Util::StateVectorRangePolicy<DeviceType>(
+                0, exp2(num_qubits - n_wires)),
             getProbsNQubitOpFunctor<PrecisionT, DeviceType, 0>(arr, num_qubits,
                                                                wires),
             d_probabilities);
