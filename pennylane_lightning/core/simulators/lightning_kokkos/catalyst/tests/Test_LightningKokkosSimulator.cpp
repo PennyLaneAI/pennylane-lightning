@@ -97,8 +97,22 @@ TEST_CASE("Test Qubit Reuse", "[qubit reuse]") {
     LKsim->PauliMeasure("XYZ", {Qs[0], Qs[1], Q});
     LKsim->PauliMeasure("Z", {Q});
     LKsim->ReleaseQubit(Q);
+    REQUIRE_NOTHROW(Q = LKsim->AllocateQubit());
 
-    REQUIRE_NOTHROW(LKsim->AllocateQubit());
+    LKsim->PauliMeasure("Z", {Qs[0]});
+    LKsim->ReleaseQubit(Qs[0]);
+    LKsim->PauliMeasure("Z", {Qs[1]});
+    LKsim->ReleaseQubit(Qs[1]);
+    REQUIRE_NOTHROW(Qs = LKsim->AllocateQubits(2));
+
+    LKsim->NamedOperation("PauliX", {}, {Q}, false);
+
+    std::vector<double> probs(2);
+    DataView<double, 1> probs_view(probs);
+    LKsim->PartialProbs(probs_view, {Q});
+
+    CHECK(probs[0] == Approx(0.0).margin(1e-6));
+    CHECK(probs[1] == Approx(1.0).margin(1e-6));
 }
 
 TEST_CASE("LightningKokkosSimulator::GateSet", "[GateSet]") {
