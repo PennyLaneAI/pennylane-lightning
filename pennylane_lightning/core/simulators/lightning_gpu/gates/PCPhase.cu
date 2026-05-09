@@ -15,7 +15,6 @@
 
 #include <algorithm>
 #include <cmath>
-#include <type_traits>
 
 #include "Error.hpp"
 #include "cuError.hpp"
@@ -31,17 +30,6 @@ struct PCPhaseWireList {
     int wires[maxPCPhaseWires]{};
     int values[maxPCPhaseWires]{};
 };
-
-template <class GPUDataT, class PrecisionT>
-auto makeCudaComplex(PrecisionT real, PrecisionT imag) -> GPUDataT {
-    if constexpr (std::is_same_v<GPUDataT, cuComplex>) {
-        return make_cuFloatComplex(static_cast<float>(real),
-                                   static_cast<float>(imag));
-    } else {
-        return make_cuDoubleComplex(static_cast<double>(real),
-                                    static_cast<double>(imag));
-    }
-}
 
 inline auto makePCPhaseWireList(const int *wires, std::size_t num_wires,
                                 const int *values = nullptr)
@@ -129,20 +117,22 @@ __global__ void applyDiagKernel(GPUDataT *sv, std::size_t sv_length,
     sv[index] = Util::Cmul(sv[index], diag[target_index]);
 }
 
+} // namespace
+
 template <class GPUDataT, class PrecisionT>
-void applyPCPhase_CUDA_call(GPUDataT *sv, std::size_t sv_length,
-                            const int *ctrls, const int *ctrl_values,
-                            std::size_t num_ctrls, const int *tgts,
-                            std::size_t num_tgts, std::size_t dimension,
-                            PrecisionT phase, int device_id,
-                            cudaStream_t stream_id) {
+void applyPCPhase_CUDA(GPUDataT *sv, std::size_t sv_length,
+                      const int *ctrls, const int *ctrl_values,
+                      std::size_t num_ctrls, const int *tgts,
+                      std::size_t num_tgts, std::size_t dimension,
+                      PrecisionT phase, int device_id,
+                      cudaStream_t stream_id) {
     PL_CUDA_IS_SUCCESS(cudaSetDevice(device_id));
 
     const auto control_list =
         makePCPhaseWireList(ctrls, num_ctrls, ctrl_values);
     const auto target_list = makePCPhaseWireList(tgts, num_tgts);
-    const auto factor =
-        makeCudaComplex<GPUDataT>(std::cos(phase), std::sin(phase));
+    const auto factor = Util::complexToCu(
+        std::complex<PrecisionT>{std::cos(phase), std::sin(phase)});
 
     const std::size_t threads_per_block = 256;
     const std::size_t blocks_per_grid = std::max<std::size_t>(
@@ -155,11 +145,11 @@ void applyPCPhase_CUDA_call(GPUDataT *sv, std::size_t sv_length,
 }
 
 template <class GPUDataT>
-void applyDiag_CUDA_call(GPUDataT *sv, std::size_t sv_length,
-                         const int *ctrls, const int *ctrl_values,
-                         std::size_t num_ctrls, const int *tgts,
-                         std::size_t num_tgts, const GPUDataT *diag,
-                         int device_id, cudaStream_t stream_id) {
+void applyDiag_CUDA(GPUDataT *sv, std::size_t sv_length,
+                   const int *ctrls, const int *ctrl_values,
+                   std::size_t num_ctrls, const int *tgts,
+                   std::size_t num_tgts, const GPUDataT *diag,
+                   int device_id, cudaStream_t stream_id) {
     PL_CUDA_IS_SUCCESS(cudaSetDevice(device_id));
 
     const auto control_list =
@@ -175,41 +165,19 @@ void applyDiag_CUDA_call(GPUDataT *sv, std::size_t sv_length,
     PL_CUDA_IS_SUCCESS(cudaGetLastError());
     PL_CUDA_IS_SUCCESS(cudaStreamSynchronize(stream_id));
 }
-} // namespace
+// Explicit template instantiations
+template void applyPCPhase_CUDA<cuComplex, float>(
+    cuComplex *, std::size_t, const int *, const int *, std::size_t,
+    const int *, std::size_t, std::size_t, float, int, cudaStream_t);
+template void applyPCPhase_CUDA<cuDoubleComplex, double>(
+    cuDoubleComplex *, std::size_t, const int *, const int *, std::size_t,
+    const int *, std::size_t, std::size_t, double, int, cudaStream_t);
 
-void applyPCPhase_CUDA(cuComplex *sv, std::size_t sv_length, const int *ctrls,
-                       const int *ctrl_values, std::size_t num_ctrls,
-                       const int *tgts, std::size_t num_tgts,
-                       std::size_t dimension, float phase, int device_id,
-                       cudaStream_t stream_id) {
-    applyPCPhase_CUDA_call(sv, sv_length, ctrls, ctrl_values, num_ctrls, tgts,
-                           num_tgts, dimension, phase, device_id, stream_id);
-}
+template void applyDiag_CUDA<cuComplex>(
+    cuComplex *, std::size_t, const int *, const int *, std::size_t,
+    const int *, std::size_t, const cuComplex *, int, cudaStream_t);
+template void applyDiag_CUDA<cuDoubleComplex>(
+    cuDoubleComplex *, std::size_t, const int *, const int *, std::size_t,
+    const int *, std::size_t, const cuDoubleComplex *, int, cudaStream_t);
 
-void applyPCPhase_CUDA(cuDoubleComplex *sv, std::size_t sv_length,
-                       const int *ctrls, const int *ctrl_values,
-                       std::size_t num_ctrls, const int *tgts,
-                       std::size_t num_tgts, std::size_t dimension,
-                       double phase, int device_id, cudaStream_t stream_id) {
-    applyPCPhase_CUDA_call(sv, sv_length, ctrls, ctrl_values, num_ctrls, tgts,
-                           num_tgts, dimension, phase, device_id, stream_id);
-}
-
-void applyDiag_CUDA(cuComplex *sv, std::size_t sv_length, const int *ctrls,
-                    const int *ctrl_values, std::size_t num_ctrls,
-                    const int *tgts, std::size_t num_tgts,
-                    const cuComplex *diag, int device_id,
-                    cudaStream_t stream_id) {
-    applyDiag_CUDA_call(sv, sv_length, ctrls, ctrl_values, num_ctrls, tgts,
-                        num_tgts, diag, device_id, stream_id);
-}
-
-void applyDiag_CUDA(cuDoubleComplex *sv, std::size_t sv_length,
-                    const int *ctrls, const int *ctrl_values,
-                    std::size_t num_ctrls, const int *tgts,
-                    std::size_t num_tgts, const cuDoubleComplex *diag,
-                    int device_id, cudaStream_t stream_id) {
-    applyDiag_CUDA_call(sv, sv_length, ctrls, ctrl_values, num_ctrls, tgts,
-                        num_tgts, diag, device_id, stream_id);
-}
 } // namespace Pennylane::LightningGPU

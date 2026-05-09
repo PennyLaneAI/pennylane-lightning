@@ -20,26 +20,32 @@
 
 namespace Pennylane::LightningGPU {
 
-void applyPCPhase_CUDA(cuComplex *sv, std::size_t sv_length, const int *ctrls,
+template <class GPUDataT, class PrecisionT>
+void applyPCPhase_CUDA(GPUDataT *sv, std::size_t sv_length, const int *ctrls,
                        const int *ctrl_values, std::size_t num_ctrls,
                        const int *tgts, std::size_t num_tgts,
-                       std::size_t dimension, float phase, int device_id,
+                       std::size_t dimension, PrecisionT phase, int device_id,
                        cudaStream_t stream_id);
-void applyPCPhase_CUDA(cuDoubleComplex *sv, std::size_t sv_length,
-                       const int *ctrls, const int *ctrl_values,
-                       std::size_t num_ctrls, const int *tgts,
-                       std::size_t num_tgts, std::size_t dimension,
-                       double phase, int device_id, cudaStream_t stream_id);
 
-void applyDiag_CUDA(cuComplex *sv, std::size_t sv_length, const int *ctrls,
+extern template void applyPCPhase_CUDA<cuComplex, float>(
+    cuComplex *, std::size_t, const int *, const int *, std::size_t,
+    const int *, std::size_t, std::size_t, float, int, cudaStream_t);
+extern template void applyPCPhase_CUDA<cuDoubleComplex, double>(
+    cuDoubleComplex *, std::size_t, const int *, const int *, std::size_t,
+    const int *, std::size_t, std::size_t, double, int, cudaStream_t);
+
+template <class GPUDataT>
+void applyDiag_CUDA(GPUDataT *sv, std::size_t sv_length, const int *ctrls,
                     const int *ctrl_values, std::size_t num_ctrls,
                     const int *tgts, std::size_t num_tgts,
-                    const cuComplex *diag, int device_id,
+                    const GPUDataT *diag, int device_id,
                     cudaStream_t stream_id);
-void applyDiag_CUDA(cuDoubleComplex *sv, std::size_t sv_length,
-                    const int *ctrls, const int *ctrl_values,
-                    std::size_t num_ctrls, const int *tgts,
-                    std::size_t num_tgts, const cuDoubleComplex *diag,
-                    int device_id, cudaStream_t stream_id);
+
+extern template void applyDiag_CUDA<cuComplex>(
+    cuComplex *, std::size_t, const int *, const int *, std::size_t,
+    const int *, std::size_t, const cuComplex *, int, cudaStream_t);
+extern template void applyDiag_CUDA<cuDoubleComplex>(
+    cuDoubleComplex *, std::size_t, const int *, const int *, std::size_t,
+    const int *, std::size_t, const cuDoubleComplex *, int, cudaStream_t);
 
 } // namespace Pennylane::LightningGPU
