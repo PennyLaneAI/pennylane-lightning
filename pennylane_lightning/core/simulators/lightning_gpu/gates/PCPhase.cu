@@ -61,8 +61,8 @@ inline auto makePCPhaseWireList(const int *wires, std::size_t num_wires,
 template <class GPUDataT>
 __global__ void applyPCPhaseKernel(GPUDataT *sv, std::size_t sv_length,
                                    PCPhaseWireList ctrls, PCPhaseWireList tgts,
-                                   std::size_t dimension, GPUDataT upper,
-                                   GPUDataT lower) {
+                                   std::size_t dimension, GPUDataT factor
+                                   ) {
     const std::size_t index =
         static_cast<std::size_t>(blockIdx.x) * blockDim.x + threadIdx.x;
     if (index >= sv_length) {
@@ -91,7 +91,7 @@ __global__ void applyPCPhaseKernel(GPUDataT *sv, std::size_t sv_length,
         target_index |= bit;
     }
 
-    sv[index] = Util::Cmul(sv[index], target_index < dimension ? upper : lower);
+    sv[index] = Util::Cmul(sv[index], target_index < dimension ? factor : Util::Conj(factor));
 }
 
 template <class GPUDataT>
@@ -141,17 +141,15 @@ void applyPCPhase_CUDA_call(GPUDataT *sv, std::size_t sv_length,
     const auto control_list =
         makePCPhaseWireList(ctrls, num_ctrls, ctrl_values);
     const auto target_list = makePCPhaseWireList(tgts, num_tgts);
-    const auto upper =
+    const auto factor =
         makeCudaComplex<GPUDataT>(std::cos(phase), std::sin(phase));
-    const auto lower =
-        makeCudaComplex<GPUDataT>(std::cos(phase), -std::sin(phase));
 
     const std::size_t threads_per_block = 256;
     const std::size_t blocks_per_grid = std::max<std::size_t>(
         (sv_length + threads_per_block - 1) / threads_per_block, 1);
     applyPCPhaseKernel<GPUDataT>
         <<<blocks_per_grid, threads_per_block, 0, stream_id>>>(
-            sv, sv_length, control_list, target_list, dimension, upper, lower);
+            sv, sv_length, control_list, target_list, dimension, factor);
     PL_CUDA_IS_SUCCESS(cudaGetLastError());
     PL_CUDA_IS_SUCCESS(cudaStreamSynchronize(stream_id));
 }
