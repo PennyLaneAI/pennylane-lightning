@@ -31,4 +31,15 @@ void applyPCPhase_CUDA(cuDoubleComplex *sv, std::size_t sv_length,
                        std::size_t num_tgts, std::size_t dimension,
                        double phase, int device_id, cudaStream_t stream_id);
 
+void applyDiag_CUDA(cuComplex *sv, std::size_t sv_length, const int *ctrls,
+                    const int *ctrl_values, std::size_t num_ctrls,
+                    const int *tgts, std::size_t num_tgts,
+                    const cuComplex *diag, int device_id,
+                    cudaStream_t stream_id);
+void applyDiag_CUDA(cuDoubleComplex *sv, std::size_t sv_length,
+                    const int *ctrls, const int *ctrl_values,
+                    std::size_t num_ctrls, const int *tgts,
+                    std::size_t num_tgts, const cuDoubleComplex *diag,
+                    int device_id, cudaStream_t stream_id);
+
 } // namespace Pennylane::LightningGPU

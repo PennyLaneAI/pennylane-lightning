@@ -94,6 +94,41 @@ __global__ void applyPCPhaseKernel(GPUDataT *sv, std::size_t sv_length,
     sv[index] = Util::Cmul(sv[index], target_index < dimension ? upper : lower);
 }
 
+template <class GPUDataT>
+__global__ void applyDiagKernel(GPUDataT *sv, std::size_t sv_length,
+                                PCPhaseWireList ctrls, PCPhaseWireList tgts,
+                                const GPUDataT *diag) {
+    const std::size_t index =
+        static_cast<std::size_t>(blockIdx.x) * blockDim.x + threadIdx.x;
+    if (index >= sv_length) {
+        return;
+    }
+
+    // Check if all control bits are set
+    for (std::size_t i = 0; i < ctrls.size; i++) {
+        const int bit = static_cast<int>(
+            (index >> static_cast<std::size_t>(ctrls.wires[i])) & 1U);
+        // If not exit
+        if (bit != ctrls.values[i]) {
+            return;
+        }
+    }
+
+    // Extract target bits from index and use as index into diagonal array
+    std::size_t target_index = 0;
+    for (std::size_t i = 0; i < tgts.size; i++) {
+        // Check if target bit is set
+        const std::size_t bit =
+            (index >> static_cast<std::size_t>(tgts.wires[i])) & 1U;
+        // Shift target index left and add bit
+        target_index <<= 1U;
+        // Add bit to target index
+        target_index |= bit;
+    }
+
+    sv[index] = Util::Cmul(sv[index], diag[target_index]);
+}
+
 template <class GPUDataT, class PrecisionT>
 void applyPCPhase_CUDA_call(GPUDataT *sv, std::size_t sv_length,
                             const int *ctrls, const int *ctrl_values,
@@ -120,6 +155,28 @@ void applyPCPhase_CUDA_call(GPUDataT *sv, std::size_t sv_length,
     PL_CUDA_IS_SUCCESS(cudaGetLastError());
     PL_CUDA_IS_SUCCESS(cudaStreamSynchronize(stream_id));
 }
+
+template <class GPUDataT>
+void applyDiag_CUDA_call(GPUDataT *sv, std::size_t sv_length,
+                         const int *ctrls, const int *ctrl_values,
+                         std::size_t num_ctrls, const int *tgts,
+                         std::size_t num_tgts, const GPUDataT *diag,
+                         int device_id, cudaStream_t stream_id) {
+    PL_CUDA_IS_SUCCESS(cudaSetDevice(device_id));
+
+    const auto control_list =
+        makePCPhaseWireList(ctrls, num_ctrls, ctrl_values);
+    const auto target_list = makePCPhaseWireList(tgts, num_tgts);
+
+    const std::size_t threads_per_block = 256;
+    const std::size_t blocks_per_grid = std::max<std::size_t>(
+        (sv_length + threads_per_block - 1) / threads_per_block, 1);
+    applyDiagKernel<GPUDataT>
+        <<<blocks_per_grid, threads_per_block, 0, stream_id>>>(
+            sv, sv_length, control_list, target_list, diag);
+    PL_CUDA_IS_SUCCESS(cudaGetLastError());
+    PL_CUDA_IS_SUCCESS(cudaStreamSynchronize(stream_id));
+}
 } // namespace
 
 void applyPCPhase_CUDA(cuComplex *sv, std::size_t sv_length, const int *ctrls,
@@ -138,5 +195,23 @@ void applyPCPhase_CUDA(cuDoubleComplex *sv, std::size_t sv_length,
                        double phase, int device_id, cudaStream_t stream_id) {
     applyPCPhase_CUDA_call(sv, sv_length, ctrls, ctrl_values, num_ctrls, tgts,
                            num_tgts, dimension, phase, device_id, stream_id);
+}
+
+void applyDiag_CUDA(cuComplex *sv, std::size_t sv_length, const int *ctrls,
+                    const int *ctrl_values, std::size_t num_ctrls,
+                    const int *tgts, std::size_t num_tgts,
+                    const cuComplex *diag, int device_id,
+                    cudaStream_t stream_id) {
+    applyDiag_CUDA_call(sv, sv_length, ctrls, ctrl_values, num_ctrls, tgts,
+                        num_tgts, diag, device_id, stream_id);
+}
+
+void applyDiag_CUDA(cuDoubleComplex *sv, std::size_t sv_length,
+                    const int *ctrls, const int *ctrl_values,
+                    std::size_t num_ctrls, const int *tgts,
+                    std::size_t num_tgts, const cuDoubleComplex *diag,
+                    int device_id, cudaStream_t stream_id) {
+    applyDiag_CUDA_call(sv, sv_length, ctrls, ctrl_values, num_ctrls, tgts,
+                        num_tgts, diag, device_id, stream_id);
 }
 } // namespace Pennylane::LightningGPU
