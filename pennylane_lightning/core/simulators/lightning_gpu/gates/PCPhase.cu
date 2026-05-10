@@ -25,19 +25,18 @@ namespace {
 
 // NOTE: structs can be directly passed to kernels, avoids having to H2D memcopy
 constexpr std::size_t maxPCPhaseWires = 64;
-struct PCPhaseWireList {
+struct WireValueList {
     std::size_t size = 0;
     int wires[maxPCPhaseWires]{};
     int values[maxPCPhaseWires]{};
 };
 
 inline auto makePCPhaseWireList(const int *wires, std::size_t num_wires,
-                                const int *values = nullptr)
-    -> PCPhaseWireList {
+                                const int *values = nullptr) -> WireValueList {
     PL_ABORT_IF(num_wires > maxPCPhaseWires,
                 "PCPhase supports at most 64 wires.");
 
-    PCPhaseWireList wire_list{};
+    WireValueList wire_list{};
     wire_list.size = num_wires;
     std::copy(wires, wires + num_wires, wire_list.wires);
     if (values != nullptr) {
@@ -48,7 +47,7 @@ inline auto makePCPhaseWireList(const int *wires, std::size_t num_wires,
 
 template <class GPUDataT>
 __global__ void applyPCPhaseKernel(GPUDataT *sv, std::size_t sv_length,
-                                   PCPhaseWireList ctrls, PCPhaseWireList tgts,
+                                   WireValueList ctrls, WireValueList tgts,
                                    std::size_t dimension, GPUDataT factor) {
     const std::size_t index =
         static_cast<std::size_t>(blockIdx.x) * blockDim.x + threadIdx.x;
@@ -85,7 +84,7 @@ __global__ void applyPCPhaseKernel(GPUDataT *sv, std::size_t sv_length,
 
 template <class GPUDataT>
 __global__ void applyDiagKernel(GPUDataT *sv, std::size_t sv_length,
-                                PCPhaseWireList ctrls, PCPhaseWireList tgts,
+                                WireValueList ctrls, WireValueList tgts,
                                 const GPUDataT *diag) {
     const std::size_t index =
         static_cast<std::size_t>(blockIdx.x) * blockDim.x + threadIdx.x;
@@ -164,6 +163,7 @@ void applyDiag_CUDA(GPUDataT *sv, std::size_t sv_length, const int *ctrls,
     PL_CUDA_IS_SUCCESS(cudaGetLastError());
     PL_CUDA_IS_SUCCESS(cudaStreamSynchronize(stream_id));
 }
+
 // Explicit template instantiations
 template void applyPCPhase_CUDA<cuComplex, float>(cuComplex *, std::size_t,
                                                   const int *, const int *,
