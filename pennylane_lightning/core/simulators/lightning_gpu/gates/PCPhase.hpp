@@ -37,13 +37,14 @@ extern template void applyPCPhase_CUDA<cuDoubleComplex, double>(
 template <class GPUDataT>
 void applyDiag_CUDA(GPUDataT *sv, std::size_t sv_length, const int *ctrls,
                     const int *ctrl_values, std::size_t num_ctrls,
-                    const int *tgts, std::size_t num_tgts,
-                    const GPUDataT *diag, int device_id,
-                    cudaStream_t stream_id);
+                    const int *tgts, std::size_t num_tgts, const GPUDataT *diag,
+                    int device_id, cudaStream_t stream_id);
 
-extern template void applyDiag_CUDA<cuComplex>(
-    cuComplex *, std::size_t, const int *, const int *, std::size_t,
-    const int *, std::size_t, const cuComplex *, int, cudaStream_t);
+extern template void applyDiag_CUDA<cuComplex>(cuComplex *, std::size_t,
+                                               const int *, const int *,
+                                               std::size_t, const int *,
+                                               std::size_t, const cuComplex *,
+                                               int, cudaStream_t);
 extern template void applyDiag_CUDA<cuDoubleComplex>(
     cuDoubleComplex *, std::size_t, const int *, const int *, std::size_t,
     const int *, std::size_t, const cuDoubleComplex *, int, cudaStream_t);
