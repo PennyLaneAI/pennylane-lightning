@@ -632,7 +632,8 @@ class MeasurementsMPI final
 
             // Convert probability distribution to cumulative distribution
             Kokkos::parallel_scan(
-                StateVectorRangePolicy<KokkosExecSpace>(0, exp2(num_local_qubits)),
+                StateVectorRangePolicy<KokkosExecSpace>(0,
+                                                        exp2(num_local_qubits)),
                 KOKKOS_LAMBDA(const std::size_t k, PrecisionT &update_value,
                               const bool is_final) {
                     const PrecisionT val_k = local_normalized_probability(k);

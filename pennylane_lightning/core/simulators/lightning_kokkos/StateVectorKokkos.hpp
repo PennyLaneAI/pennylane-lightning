@@ -411,9 +411,8 @@ class StateVectorKokkos final
         KokkosVector matrix_trans("matrix_trans", matrix.size());
 
         if (inverse) {
-            StateVectorMDRangePolicy<2, KokkosExecSpace> policy_2d(
-                {0, 0}, {static_cast<std::int64_t>(dim),
-                         static_cast<std::int64_t>(dim)});
+            StateVectorMDRangePolicy<2, KokkosExecSpace> policy_2d({0, 0},
+                                                                   {dim, dim});
             Kokkos::parallel_for(
                 policy_2d, KOKKOS_LAMBDA(std::size_t i, std::size_t j) {
                     matrix_trans(i + j * dim) =
@@ -532,9 +531,8 @@ class StateVectorKokkos final
         KokkosVector matrix_trans("matrix_trans", matrix.size());
 
         if (inverse) {
-            StateVectorMDRangePolicy<2, KokkosExecSpace> policy_2d(
-                {0, 0}, {static_cast<std::int64_t>(dim),
-                         static_cast<std::int64_t>(dim)});
+            StateVectorMDRangePolicy<2, KokkosExecSpace> policy_2d({0, 0},
+                                                                   {dim, dim});
             Kokkos::parallel_for(
                 policy_2d, KOKKOS_LAMBDA(std::size_t i, std::size_t j) {
                     matrix_trans(i + j * dim) =

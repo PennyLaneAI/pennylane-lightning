@@ -1929,8 +1929,8 @@ void applyPauliRot(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
         get_mask([&word](const int a) { return word[a] == 'Z'; });
     const auto count_mask_y = std::popcount(mask_y);
     Kokkos::parallel_for(
-        StateVectorRangePolicy<ExecutionSpace>(0,
-                                            Pennylane::Util::exp2(num_qubits)),
+        StateVectorRangePolicy<ExecutionSpace>(
+            0, Pennylane::Util::exp2(num_qubits)),
         KOKKOS_LAMBDA(std::size_t i0) {
             std::size_t i1 = i0 ^ mask_xy;
             if (i0 <= i1) {

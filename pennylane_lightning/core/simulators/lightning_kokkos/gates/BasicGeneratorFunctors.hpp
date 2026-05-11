@@ -366,8 +366,8 @@ void applyGenMultiRZ(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
         wires_parity |= Pennylane::Util::exp2(num_qubits - wire - 1);
     }
     Kokkos::parallel_for(
-        StateVectorRangePolicy<ExecutionSpace>(0,
-                                            Pennylane::Util::exp2(num_qubits)),
+        StateVectorRangePolicy<ExecutionSpace>(
+            0, Pennylane::Util::exp2(num_qubits)),
         KOKKOS_LAMBDA(std::size_t k) {
             arr_(k) *= static_cast<PrecisionT>(
                 1 - 2 * int(Kokkos::popcount(k & wires_parity) % 2));
@@ -947,8 +947,8 @@ void applyNCGenMultiRZ(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
         });
 
     Kokkos::parallel_for(
-        StateVectorRangePolicy<ExecutionSpace>(0,
-                                            Pennylane::Util::exp2(num_qubits)),
+        StateVectorRangePolicy<ExecutionSpace>(
+            0, Pennylane::Util::exp2(num_qubits)),
         KOKKOS_LAMBDA(std::size_t k) {
             if (ctrls_mask == (ctrls_parity & k)) {
                 arr_(k) *= static_cast<PrecisionT>(

@@ -100,10 +100,9 @@ class Measurements final
         const std::size_t num_qubits = this->_statevector.getNumQubits();
         const Kokkos::View<ComplexT *> arr_data = this->_statevector.getView();
         PrecisionT expval = 0.0;
-        Kokkos::parallel_reduce(
-            StateVectorRangePolicy<KokkosExecSpace>(
-                0, exp2(num_qubits - num_wires)),
-            functor_t(arr_data, num_qubits, wires), expval);
+        Kokkos::parallel_reduce(StateVectorRangePolicy<KokkosExecSpace>(
+                                    0, exp2(num_qubits - num_wires)),
+                                functor_t(arr_data, num_qubits, wires), expval);
         return expval;
     }
 
@@ -672,8 +671,7 @@ class Measurements final
                                       Kokkos::Rank<2, Kokkos::Iterate::Left>,
                                       Kokkos::IndexType<std::size_t>>;
             auto md_policy = MDPolicyType_2D(
-                {{0, 0}}, {{static_cast<std::int64_t>(all_indices.size()),
-                            static_cast<std::int64_t>(all_offsets.size())}});
+                {{0, 0}}, {{all_indices.size(), all_offsets.size()}});
             Kokkos::parallel_reduce(
                 md_policy,
                 getProbsFunctor<PrecisionT, KokkosExecSpace>(
