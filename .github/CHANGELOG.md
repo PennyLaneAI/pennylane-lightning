@@ -1,3 +1,37 @@
+# Release 0.46.0-dev (development release)
+
+<h3>New features since last release</h3>
+
+<h3>Improvements 🛠</h3>
+
+<h3>Breaking changes 💔</h3>
+
+<h3>Deprecations 👋</h3>
+
+<h3>Documentation 📝</h3>
+
+<h3>Bug fixes 🐛</h3>
+
+<h3>Internal changes ⚙️</h3>
+
+- Update nightly RC builds to upload to testpypi from a single workflow; removed global id-token permission.
+  [(#1377)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1377)
+  [(#1379)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1379)
+
+- Bumped the version.
+  [(#1374)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1374)
+
+- Update nightly builds of the RC branch to always trigger Catalyst's nightly RC builds.
+  [(#1376)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1376)
+
+<h3>Contributors ✍️</h3>
+
+This release contains contributions from (in alphabetical order):
+
+Jake Zaia
+
+---
+
 # Release 0.45.0
 
 <h3>New features since last release</h3>
@@ -55,6 +89,9 @@
 - Upgraded Kokkos from v4.5.0 to v5.1.0.
   [(#1308)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1308)
 
+- Test Docker images for v0.45.0 RC branch.
+  [(#1373)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1373)
+
 - Modified the code coverage options to no longer skip lines containing "pass".
   [(#1369)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1369)
 
@@ -83,6 +120,7 @@
 
 - Added workflow to create and upload nightly builds of the RC branch and trigger Catalyst's nightly RC builds.
   [(#1344)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1344)
+  [(#1376)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1376)
 
 - Updated Github docker build action to use relevant lightning branch.
   [(#1346)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1346)

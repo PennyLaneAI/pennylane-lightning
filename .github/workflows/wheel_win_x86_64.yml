@@ -23,6 +23,10 @@ on:
       branch:
         required: false
         type: string  
+      skip_upload:
+        required: false
+        type: boolean
+        default: false
 
 env:
   DISTUTILS_USE_SDK: 1
@@ -229,6 +233,7 @@ jobs:
 
   upload-pypi:
     needs: [set_wheel_build_matrix, win-wheels]
+    if: ${{ !inputs.skip_upload }}
     strategy:
       matrix:
         arch: [AMD64]

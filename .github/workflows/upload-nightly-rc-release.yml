@@ -38,7 +38,7 @@ jobs:
     - name: Check for rc branch
       id: check_rc
       run: |
-        VERSION=$(python setup.py --version)
+        VERSION=$(sed -n 's/^__version__ = "\(.*\)"/\1/p' pennylane_lightning/core/_version.py)
         IFS=. read MAJ MIN PAT <<< "${VERSION%-dev[0-9]*}"
         RC_BRANCH="v${MAJ}.$((MIN-1)).${PAT}_rc"
         if git ls-remote --exit-code origin "refs/heads/$RC_BRANCH"; then
@@ -73,6 +73,7 @@ jobs:
     uses: ./.github/workflows/wheel_linux_aarch64_cuda.yml
     with:
       branch: ${{ needs.setup-rc.outputs.rc_branch }}
+      skip_upload: true
 
   build-linux-x86_64:
     needs: setup-rc
@@ -80,6 +81,7 @@ jobs:
     uses: ./.github/workflows/wheel_linux_x86_64.yml
     with:
       branch: ${{ needs.setup-rc.outputs.rc_branch }}
+      skip_upload: true
 
   build-linux-x86_64-cuda:
     needs: setup-rc
@@ -87,6 +89,7 @@ jobs:
     uses: ./.github/workflows/wheel_linux_x86_64_cuda.yml
     with:
       branch: ${{ needs.setup-rc.outputs.rc_branch }}
+      skip_upload: true
 
   build-linux-aarch64:
     needs: setup-rc
@@ -94,6 +97,7 @@ jobs:
     uses: ./.github/workflows/wheel_linux_aarch64.yml
     with:
       branch: ${{ needs.setup-rc.outputs.rc_branch }}
+      skip_upload: true
 
   build-macos-arm64:
     needs: setup-rc
@@ -101,6 +105,7 @@ jobs:
     uses: ./.github/workflows/wheel_macos_arm64.yml
     with:
       branch: ${{ needs.setup-rc.outputs.rc_branch }}
+      skip_upload: true
 
   build-windows-x86_64:
     needs: setup-rc
@@ -108,6 +113,7 @@ jobs:
     uses: ./.github/workflows/wheel_win_x86_64.yml
     with:
       branch: ${{ needs.setup-rc.outputs.rc_branch }}
+      skip_upload: true
 
   build-linux-x86_64_rocm:
     needs: setup-rc
@@ -115,6 +121,7 @@ jobs:
     uses: ./.github/workflows/wheel_linux_x86_64_rocm.yml
     with:
       branch: ${{ needs.setup-rc.outputs.rc_branch }}
+      skip_upload: true
   
   build-noarch:
     needs: setup-rc
@@ -122,9 +129,40 @@ jobs:
     uses: ./.github/workflows/wheel_noarch.yml
     with:
       branch: ${{ needs.setup-rc.outputs.rc_branch }}
+      skip_upload: true
 
+  upload-to-testpypi:
+    needs: [build-linux-aarch64-cuda, build-linux-x86_64, build-linux-x86_64-cuda, build-linux-aarch64, build-macos-arm64, build-windows-x86_64, build-linux-x86_64_rocm, build-noarch]
+    if: ${{ always() && !cancelled() && contains(needs.*.result, 'success') }}
+    name: Upload RC wheels to TestPyPI
+    runs-on: ubuntu-24.04
+    environment: testpypi
+    permissions:
+      id-token: write
+
+    steps:
+      - name: Download all wheel artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: "*-wheels-*"
+          path: dist/
+          merge-multiple: true
+
+      - name: List downloaded wheels
+        run: |
+          echo "=== All wheels ==="
+          find dist/ -name "*.whl" | sort
+
+      - name: Upload to TestPyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+          attestations: false
+          skip-existing: true
+      
   trigger-catalyst-rc:
     needs: [build-linux-aarch64-cuda, build-linux-x86_64, build-linux-x86_64-cuda, build-linux-aarch64, build-macos-arm64, build-windows-x86_64, build-linux-x86_64_rocm, build-noarch]
+    if: ${{ always() && !cancelled() }}
     name: Trigger Catalyst RC workflow
     runs-on: ubuntu-24.04
     

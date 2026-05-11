@@ -23,6 +23,10 @@ on:
       branch:
         required: false
         type: string  
+      skip_upload:
+        required: false
+        type: boolean
+        default: false
 
 concurrency:
   group: wheel_noarch-${{ github.ref }}
@@ -99,6 +103,7 @@ jobs:
 
   upload-pypi:
     needs: build-pure-python-wheel
+    if: ${{ !inputs.skip_upload }}
     strategy:
       matrix:
         pl_backend: ["lightning_qubit"]

@@ -23,6 +23,10 @@ on:
       branch:
         required: false
         type: string  
+      skip_upload:
+        required: false
+        type: boolean
+        default: false
 
 env:
   MACOSX_DEPLOYMENT_TARGET: 13.0
@@ -138,6 +142,7 @@ jobs:
 
   upload-pypi:
     needs: [set_wheel_build_matrix, mac-wheels-arm64]
+    if: ${{ !inputs.skip_upload }}
     strategy:
       matrix:
         arch: [arm64]
