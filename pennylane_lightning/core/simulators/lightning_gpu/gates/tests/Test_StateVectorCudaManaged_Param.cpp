@@ -27,7 +27,6 @@
 #include "Gates.hpp"
 #include "TestHelpers.hpp"
 
-#include "DataBuffer.hpp"
 #include "LinearAlg.hpp"
 #include "StateVectorCudaManaged.hpp"
 #include "cuGateCache.hpp"

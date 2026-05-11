@@ -17,7 +17,6 @@
 #include <cmath>
 #include <cstddef>
 
-#include "Error.hpp"
 #include "cuError.hpp"
 #include "cuda_helpers.hpp"
 
@@ -26,12 +25,6 @@ namespace {
 
 // NOTE: structs can be directly passed to kernels, avoids having to H2D memcopy
 constexpr std::size_t maxPCPhaseWires = 64;
-struct WireValueList {
-    std::size_t size = 0;
-    int wires[maxPCPhaseWires]{};
-    int values[maxPCPhaseWires]{};
-};
-
 struct WireInfo {
     std::uint64_t ctrl_mask = 0;
     std::uint64_t ctrl_vals = 0;
