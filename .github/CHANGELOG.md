@@ -45,6 +45,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Merge RC v0.45.0 rc to main
+  [(#1384)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1384)
+
 - Updated default branch from `master` to `main`.
   [(#1356)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1356)
   [(#1361)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1361)
@@ -172,6 +175,9 @@ Hong-Sheng Zheng.
   [(#1292)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1292)
 
 <h3>Internal changes ⚙️</h3>
+
+- Merge RC v0.45.0 rc to main
+  [(#1384)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1384)
 
 - Added permissions to all GitHub Actions workflows.
   [(#1370)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1370)
@@ -351,6 +357,9 @@ Jake Zaia.
 
 <h3>Internal changes ⚙️</h3>
 
+- Merge RC v0.45.0 rc to main
+  [(#1384)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1384)
+
 - Updated test to skip MCM test for `lightning.tensor` and fix seed for deterministic test.
   [(#1281)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1281)
 
@@ -517,6 +526,9 @@ Jake Zaia.
 
 <h3>Internal changes ⚙️</h3>
 
+- Merge RC v0.45.0 rc to main
+  [(#1384)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1384)
+
 - Updated tests with `device(..., shots=...)` to use `qml.set_shots` to ensure compatibility with the latest version of PennyLane.
   [(#1173)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1173)
 
@@ -600,6 +612,9 @@ Jake Zaia
   [(#1131)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1131)
 
 <h3>Internal changes ⚙️</h3>
+
+- Merge RC v0.45.0 rc to main
+  [(#1384)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1384)
 
 - Updates for depending deprecations to `Observable`, `is_trainable`, and `AnyWires` in pennylane.
   [(#1138)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1138)
