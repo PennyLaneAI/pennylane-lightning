@@ -356,9 +356,9 @@ class StateVectorCudaManaged
                 wires, BaseType::getNumQubits());
 
             applyPCPhase_CUDA(
-                BaseType::getData(), BaseType::getDataBuffer().getLength(),
-                nullptr, nullptr, 0, tgtsInt.data(), tgtsInt.size(), dimension,
-                phase, BaseType::getDataBuffer().getDevTag().getDeviceID(),
+                BaseType::getData(), BaseType::getDataBuffer().getLength(), {},
+                {}, tgtsInt, dimension, phase,
+                BaseType::getDataBuffer().getDevTag().getDeviceID(),
                 BaseType::getDataBuffer().getDevTag().getStreamID());
         } else if (native_gates_.find(opName) != native_gates_.end()) {
             applyParametricPauliGate_({opName}, ctrls, tgts, params.front(),
@@ -497,8 +497,7 @@ class StateVectorCudaManaged
 
             applyPCPhase_CUDA(
                 BaseType::getData(), BaseType::getDataBuffer().getLength(),
-                ctrlsInt.data(), ctrls_valuesInt.data(), ctrlsInt.size(),
-                tgtsInt.data(), tgtsInt.size(), dimension, phase,
+                ctrlsInt, ctrls_valuesInt, tgtsInt, dimension, phase,
                 BaseType::getDataBuffer().getDevTag().getDeviceID(),
                 BaseType::getDataBuffer().getDevTag().getStreamID());
         } else if (native_gates_.find(opName) != native_gates_.end()) {
