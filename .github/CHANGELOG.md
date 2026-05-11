@@ -4,6 +4,9 @@
 
 <h3>Improvements 🛠</h3>
 
+- Added support for simulating >32 qubits using Lightning-Kokkos on GPU devices.
+  [(#1382)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1382)
+
 <h3>Breaking changes 💔</h3>
 
 <h3>Deprecations 👋</h3>
