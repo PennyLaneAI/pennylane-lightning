@@ -35,7 +35,6 @@ using namespace Pennylane::Observables;
 using Pennylane::LightningKokkos::StateVectorKokkos;
 using Pennylane::LightningKokkos::Util::getRealOfComplexInnerProduct;
 using Pennylane::LightningKokkos::Util::SparseMV_Kokkos;
-using Pennylane::LightningKokkos::Util::StateVectorMDRangePolicy;
 using Pennylane::LightningKokkos::Util::StateVectorRangePolicy;
 using Pennylane::LightningKokkos::Util::vector2view;
 using Pennylane::LightningKokkos::Util::view2vector;
@@ -670,8 +669,11 @@ class Measurements final
                 Kokkos::MDRangePolicy<KokkosExecSpace,
                                       Kokkos::Rank<2, Kokkos::Iterate::Left>,
                                       Kokkos::IndexType<std::size_t>>;
+            // MDRangePolicy bounds are Kokkos::Array<int64_t, rank> regardless
+            // of IndexType, so cast from size_t to silence -Wnarrowing.
             auto md_policy = MDPolicyType_2D(
-                {{0, 0}}, {{all_indices.size(), all_offsets.size()}});
+                {{0, 0}}, {{static_cast<std::int64_t>(all_indices.size()),
+                            static_cast<std::int64_t>(all_offsets.size())}});
             Kokkos::parallel_reduce(
                 md_policy,
                 getProbsFunctor<PrecisionT, KokkosExecSpace>(
