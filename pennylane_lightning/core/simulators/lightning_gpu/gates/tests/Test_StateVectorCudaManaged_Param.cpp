@@ -1536,9 +1536,8 @@ TEMPLATE_TEST_CASE("LightningGPU::applyDiag_CUDA", "[LightningGPU_Param]",
                                       sv_diag.getDataBuffer().getDevTag());
         diag_device.CopyHostDataToGpu(diag.data(), diag.size());
 
-        applyDiag_CUDA(sv_diag.getData(), sv_diag.getLength(),
-                       ctrlsInt, ctrl_valuesInt, tgtsInt,
-                       diag_device.getData(),
+        applyDiag_CUDA(sv_diag.getData(), sv_diag.getLength(), ctrlsInt,
+                       ctrl_valuesInt, tgtsInt, diag_device.getData(),
                        sv_diag.getDataBuffer().getDevTag().getDeviceID(),
                        sv_diag.getDataBuffer().getDevTag().getStreamID());
 
