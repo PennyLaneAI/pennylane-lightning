@@ -15,7 +15,7 @@
 <h3>Internal changes ⚙️</h3>
 
 - Reduced Lightning-Qubit and Lightning-Kokkos wheel size by fixing CIBW environment variable.
-  [(#XXXX)](https://github.com/PennyLaneAI/pennylane-lightning/pull/XXXX)
+  [(#1386)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1386)
 
 - Update nightly RC builds to upload to testpypi from a single workflow; removed global id-token permission.
   [(#1377)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1377)
