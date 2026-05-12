@@ -79,7 +79,7 @@ Jake Zaia
 
 <h3>Internal changes ⚙️</h3>
 
-- Merge RC v0.45.0 rc to main
+- Merge v0.45.0 release candidate to main.
   [(#1384)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1384)
 
 - Updated default branch from `master` to `main`.
