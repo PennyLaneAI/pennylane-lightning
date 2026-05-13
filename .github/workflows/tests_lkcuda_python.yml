@@ -53,7 +53,7 @@ jobs:
       max-parallel: 1
       matrix:
         os: [ubuntu-22.04]
-        kokkos_version: ${{ fromJson(inputs.lightning-version == 'stable' && '["4.5.00"]' || '["5.1.0"]') }} # FIXME: remove after v0.45 release
+        kokkos_version: ${{ fromJson('["5.1.0"]') }}
         exec_model: ["CUDA"]
         cuda_version_maj: ["12"]
         cuda_version_min: ["9"]
@@ -119,7 +119,7 @@ jobs:
       matrix:
         os: [ubuntu-22.04]
         pl_backend: ["lightning_kokkos", "all"]
-        kokkos_version: ${{ fromJson(inputs.lightning-version == 'stable' && '["4.5.00"]' || '["5.1.0"]') }} # FIXME: remove after v0.45 release
+        kokkos_version: ${{ fromJson('["5.1.0"]') }}
         exec_model: ["CUDA"]
         cuda_version_maj: ["12"]
         cuda_version_min: ["9"]
@@ -217,11 +217,7 @@ jobs:
         run: |
           cd main
           python -m pip install --upgrade pip
-          if [[ "${{ inputs.lightning-version }}" == "stable" ]]; then # FIXME: remove after v0.45 release
-            python -m pip install -r requirements-tests.txt
-          else
-            python -m pip install --group tests
-          fi
+          python -m pip install --group tests
           # pyscf is not compatible with numpy 2.4 yet
           python -m pip install openfermionpyscf "numpy<2.4"
 
@@ -258,7 +254,6 @@ jobs:
         with:
           repository: PennyLaneAI/catalyst
           path: ${{ github.workspace}}/catalyst
-          ref: ${{ (inputs.pennylane-version == 'stable' && 'v0.14.0') || 'main' }} # FIXME: remove after v0.45 release
 
       - name: Switch to release build of Catalyst
         if: inputs.lightning-version == 'release'
