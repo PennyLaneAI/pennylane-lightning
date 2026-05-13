@@ -14,6 +14,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Updated the release script with changes from the v0.45.0 release process
+  [(#1385)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1385)
+
 - Update nightly RC builds to upload to testpypi from a single workflow; removed global id-token permission.
   [(#1377)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1377)
   [(#1379)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1379)
