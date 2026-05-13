@@ -89,6 +89,32 @@ TEST_CASE("LightningSimulator::unit_tests", "[unit tests]") {
     }
 }
 
+TEST_CASE("Test Qubit Reuse", "[qubit reuse]") {
+    std::unique_ptr<LQSimulator> LQsim = std::make_unique<LQSimulator>();
+    std::vector<intptr_t> Qs = LQsim->AllocateQubits(2);
+    intptr_t Q = LQsim->AllocateQubit();
+
+    LQsim->PauliMeasure("XYZ", {Qs[0], Qs[1], Q});
+    LQsim->PauliMeasure("Z", {Q});
+    LQsim->ReleaseQubit(Q);
+    REQUIRE_NOTHROW(Q = LQsim->AllocateQubit());
+
+    LQsim->PauliMeasure("Z", {Qs[0]});
+    LQsim->ReleaseQubit(Qs[0]);
+    LQsim->PauliMeasure("Z", {Qs[1]});
+    LQsim->ReleaseQubit(Qs[1]);
+    REQUIRE_NOTHROW(Qs = LQsim->AllocateQubits(2));
+
+    LQsim->NamedOperation("PauliX", {}, {Q}, false);
+
+    std::vector<double> probs(2);
+    DataView<double, 1> probs_view(probs);
+    LQsim->PartialProbs(probs_view, {Q});
+
+    CHECK(probs[0] == Approx(0.0).margin(1e-6));
+    CHECK(probs[1] == Approx(1.0).margin(1e-6));
+}
+
 TEST_CASE("LightningSimulator::GateSet", "[GateSet]") {
     SECTION("Identity gate") {
         std::unique_ptr<LQSimulator> LQsim = std::make_unique<LQSimulator>();
