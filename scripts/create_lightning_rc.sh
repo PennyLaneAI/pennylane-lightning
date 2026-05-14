@@ -16,28 +16,28 @@ set -e
 # Run them in sequence:
 #
 # 1. Create Release Candidate (creates branches and PRs):
-#    bash scripts/create_lightning_rc.sh -s 0.44.0 -r 0.45.0 -n 0.46.0 --create_rc
+#    bash scripts/create_lightning_rc.sh -s 0.45.0 -r 0.46.0 -n 0.47.0 --create_rc
 #
 # 2. Test Lightning Installation (validates RC build):
-#    bash scripts/create_lightning_rc.sh -s 0.44.0 -r 0.45.0 -n 0.46.0 --lightning_test
+#    bash scripts/create_lightning_rc.sh -s 0.45.0 -r 0.46.0 -n 0.47.0 --lightning_test
 #
 # 3. Create Release (creates GitHub release):
-#    bash scripts/create_lightning_rc.sh -s 0.44.0 -r 0.45.0 -n 0.46.0 --release
+#    bash scripts/create_lightning_rc.sh -s 0.45.0 -r 0.46.0 -n 0.47.0 --release
 #
 # 4. Handle Release Assets (upload wheels and source distributions):
-#    bash scripts/create_lightning_rc.sh -s 0.44.0 -r 0.45.0 -n 0.46.0 --release_assets
+#    bash scripts/create_lightning_rc.sh -s 0.45.0 -r 0.46.0 -n 0.47.0 --release_assets
 #
 # Version flags:
-# -s/--stable_version: Current stable release (e.g., 0.44.0)
-# -r/--release_version: Version being released (e.g., 0.45.0)
-# -n/--next_version: Next development version (e.g., 0.46.0)
+# -s/--stable_version: Current stable release (e.g., 0.45.0)
+# -r/--release_version: Version being released (e.g., 0.46.0)
+# -n/--next_version: Next development version (e.g., 0.47.0)
 #
 # Use the --help option to see all available options.
 
 # Set version numbers
-STABLE_VERSION=0.44.0     # Current stable version | https://github.com/PennyLaneAI/pennylane-lightning/releases
-RELEASE_VERSION=0.45.0    # Upcoming release version | https://test.pypi.org/project/pennylane-lightning/#history
-NEXT_VERSION=0.46.0       # Next version to be developed | RELEASE_VERSION + 1
+STABLE_VERSION=0.45.0     # Current stable version | https://github.com/PennyLaneAI/pennylane-lightning/releases
+RELEASE_VERSION=0.46.0    # Upcoming release version | https://test.pypi.org/project/pennylane-lightning/#history
+NEXT_VERSION=0.47.0       # Next version to be developed | RELEASE_VERSION + 1
 
 IS_TEST=true
 
@@ -84,7 +84,7 @@ help(){
     echo "  -s, --stable_version [version]    Specify the stable version. Default $STABLE_VERSION"
     echo "  -r, --release_version [version]   Specify the release version. Default $RELEASE_VERSION"
     echo "  -n, --next_version [version]      Specify the new version. Default $NEXT_VERSION"
-    echo "  -t, --test                        Run on test version, gh pr create with --dry-run. Default $IS_TEST"
+    echo "  -t, --test [bool]                 Run on test version, gh pr create with --dry-run. Default $IS_TEST"
     echo "  --create_rc                       Create a release candidate"
     echo "  --lightning_test                  Run Lightning tests"
     echo "  --release                         Perform release actions on GitHub"
@@ -194,14 +194,16 @@ create_release_candidate_branch() {
     git pull origin main
 
     # Create branches
-    for branch in base docs rc; do
+    for branch in base rc; do
         git checkout -b $(branch_name ${RELEASE_VERSION} ${branch})
         if [ "$LOCAL_TEST" == "false" ]; then
         git push --set-upstream origin $(branch_name ${RELEASE_VERSION} ${branch})
         fi
     done
     git checkout $(branch_name ${RELEASE_VERSION} rc)
-    git pull
+    if [ "$LOCAL_TEST" == "false" ]; then
+        git pull
+    fi
 
     # Update lightning version
     sed -i "/__version__/d" $PL_VERSION_FILE
@@ -238,37 +240,14 @@ create_release_candidate_PR(){
     # Create a PR for the release candidate branch
 
     git checkout $(branch_name ${RELEASE_VERSION} rc)
-    git pull
     if [ "$LOCAL_TEST" == "false" ]; then
+    git pull
     gh pr create $(use_dry_run) \
         --title "Create v${RELEASE_VERSION} RC branch" \
         --body "v${RELEASE_VERSION} RC branch. This PR was created by an automated script." \
         --head $(branch_name ${RELEASE_VERSION} rc) \
         --base $(branch_name ${RELEASE_VERSION} base) \
         --label 'do not merge','ci:build_wheels','ci:use-multi-gpu-runner','ci:use-gpu-runner','urgent'
-    fi
-}
-
-create_docs_review_PR(){
-    # Create a PR for the docs review
-
-    git checkout $(branch_name ${RELEASE_VERSION} docs)
-    git pull
-
-    git commit -m "Modify docs for v${RELEASE_VERSION}" --allow-empty
-
-    if [ "$LOCAL_TEST" == "false" ]; then
-    git push --set-upstream origin $(branch_name ${RELEASE_VERSION} docs)
-    fi
-
-    if [ "$LOCAL_TEST" == "false" ]; then
-    gh pr create $(use_dry_run) \
-        --title "Create v${RELEASE_VERSION} Doc branch" \
-        --body "v${RELEASE_VERSION} Doc branch. This PR was created by an automated script." \
-        --head $(branch_name ${RELEASE_VERSION} docs) \
-        --base $(branch_name ${RELEASE_VERSION} rc) \
-        --draft \
-        --label 'do not merge','documentation'
     fi
 }
 
@@ -407,7 +386,9 @@ test_install_lightning(){
     # Test Lightning installation
 
     git checkout $(branch_name ${RELEASE_VERSION} rc)
-    git pull
+    if [ "$LOCAL_TEST" == "false" ]; then
+        git pull
+    fi
 
     # Test installation of lightning default backends
     pip install --group dev
@@ -485,9 +466,9 @@ create_release_branch(){
     # Create the release branch
 
     git checkout $(branch_name ${RELEASE_VERSION} rc)
-    git pull
 
     if [ "$LOCAL_TEST" == "false" ]; then
+    git pull
     gh pr comment $(branch_name ${RELEASE_VERSION} rc) \
         --body "Forked as v${RELEASE_VERSION}_release to be released with tag v${RELEASE_VERSION}"
     fi
@@ -513,7 +494,9 @@ create_release_branch(){
 create_GitHub_release(){
     # Create the GitHub release as draft
     git checkout $(branch_name ${RELEASE_VERSION} release)
-    git pull
+    if [ "$LOCAL_TEST" == "false" ]; then
+        git pull
+    fi
 
     create_release_notes
 
@@ -554,7 +537,9 @@ create_sdist(){
     # Create the source distribution
 
     git checkout $(branch_name ${RELEASE_VERSION} "release")
-    git pull
+    if [ "$LOCAL_TEST" == "false" ]; then
+        git pull
+    fi
 
     mkdir -p ${ROOT_DIR}/Release_Assets
 
@@ -576,7 +561,9 @@ create_merge_PR(){
     # Create the merge branch to merge the RC into main and bump the version with NEXT_VERSION-dev
 
     git checkout $(branch_name ${RELEASE_VERSION} "release")
-    git pull
+    if [ "$LOCAL_TEST" == "false" ]; then
+        git pull
+    fi
     git checkout -b $(branch_name ${RELEASE_VERSION} "rc_merge")
 
     pushd $ROOT_DIR
@@ -724,7 +711,6 @@ echo "RELEASE_ASSETS: $RELEASE_ASSETS"
 if [ "$CREATE_RC" == "true" ]; then
     create_release_candidate_branch
     create_release_candidate_PR
-    create_docs_review_PR
     create_docker_PR
     create_version_bump_PR
     git checkout main
