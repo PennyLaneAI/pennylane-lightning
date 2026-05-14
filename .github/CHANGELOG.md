@@ -14,6 +14,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Removed temporary CI patches that are no longer relevant after the v0.45.0 release.
+  [(#1388)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1388)
+
 - Reduced Lightning-Qubit and Lightning-Kokkos wheel size by fixing CIBW environment variable.
   [(#1386)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1386)
 
