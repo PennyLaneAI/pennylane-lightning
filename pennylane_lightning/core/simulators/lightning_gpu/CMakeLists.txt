@@ -20,7 +20,7 @@ if(ENABLE_MPI)
     findMPI_LG(lightning_external_libs)
 endif()
 
-set(LGPU_FILES  StateVectorCudaManaged.cpp initSV.cu
+set(LGPU_FILES  StateVectorCudaManaged.cpp initSV.cu gates/PCPhase.cu
                 CACHE INTERNAL "" FORCE)
 
 if(ENABLE_MPI)

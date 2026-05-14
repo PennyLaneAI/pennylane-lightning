@@ -36,6 +36,7 @@
 #include "cuGateCache.hpp"
 #include "cuGates_host.hpp"
 #include "cuda_helpers.hpp"
+#include "gates/PCPhase.hpp"
 
 #include "CPUMemoryModel.hpp"
 
@@ -349,19 +350,16 @@ class StateVectorCudaManaged
                 BaseType::getDataBuffer().getDevTag().getStreamID(),
                 getCublasCaller());
         } else if (opName == "PCPhase") {
-            const PrecisionT phase = params[0];
+            const PrecisionT phase = adjoint ? -params[0] : params[0];
             const auto dimension = static_cast<std::size_t>(params[1]);
-            const CFP_t upper_complex{std::cos(phase), std::sin(phase)};
-            const CFP_t lower_complex =
-                Pennylane::LightningGPU::Util::Conj(upper_complex);
+            auto tgtsInt = NormalizeCastIndices<std::size_t, int>(
+                wires, BaseType::getNumQubits());
 
-            std::vector<CFP_t> diagonal(Pennylane::Util::exp2(wires.size()),
-                                        lower_complex);
-
-            std::fill(diagonal.begin(), diagonal.begin() + dimension,
-                      upper_complex);
-            applyDevicePermutationGate_({}, diagonal.data(), {}, wires, {},
-                                        adjoint);
+            applyPCPhase_CUDA(
+                BaseType::getData(), BaseType::getDataBuffer().getLength(), {},
+                {}, tgtsInt, dimension, phase,
+                BaseType::getDataBuffer().getDevTag().getDeviceID(),
+                BaseType::getDataBuffer().getDevTag().getStreamID());
         } else if (native_gates_.find(opName) != native_gates_.end()) {
             applyParametricPauliGate_({opName}, ctrls, tgts, params.front(),
                                       adjoint);
@@ -494,19 +492,14 @@ class StateVectorCudaManaged
             applyParametricPauliGeneralGate_(names, ctrlsInt, ctrls_valuesInt,
                                              tgtsInt, 2 * params[0], adjoint);
         } else if (opName == "PCPhase") {
-            const PrecisionT phase = params[0];
+            const PrecisionT phase = adjoint ? -params[0] : params[0];
             const auto dimension = static_cast<std::size_t>(params[1]);
-            const CFP_t upper_complex{std::cos(phase), std::sin(phase)};
-            const CFP_t lower_complex{std::cos(phase), -std::sin(phase)};
 
-            std::vector<CFP_t> diagonal(Pennylane::Util::exp2(tgt_wires.size()),
-                                        lower_complex);
-
-            std::fill(diagonal.begin(), diagonal.begin() + dimension,
-                      upper_complex);
-
-            applyDevicePermutationGate_({}, diagonal.data(), controlled_wires,
-                                        tgt_wires, controlled_values, adjoint);
+            applyPCPhase_CUDA(
+                BaseType::getData(), BaseType::getDataBuffer().getLength(),
+                ctrlsInt, ctrls_valuesInt, tgtsInt, dimension, phase,
+                BaseType::getDataBuffer().getDevTag().getDeviceID(),
+                BaseType::getDataBuffer().getDevTag().getStreamID());
         } else if (native_gates_.find(opName) != native_gates_.end()) {
             applyParametricPauliGeneralGate_({opName}, ctrlsInt,
                                              ctrls_valuesInt, tgtsInt,

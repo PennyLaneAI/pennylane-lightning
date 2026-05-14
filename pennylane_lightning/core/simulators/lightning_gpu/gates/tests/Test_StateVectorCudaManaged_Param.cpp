@@ -32,6 +32,7 @@
 #include "cuGateCache.hpp"
 #include "cuGates_host.hpp"
 #include "cuda_helpers.hpp"
+#include "gates/PCPhase.hpp"
 
 /// @cond DEV
 namespace {
@@ -1489,6 +1490,72 @@ TEMPLATE_TEST_CASE("LightningGPU::applyPCPhase", "[LightningGPU_Param]", float,
 
         CHECK(sv_direct.getDataVector() ==
               Pennylane::Util::approx(expected_results));
+    }
+}
+
+TEMPLATE_TEST_CASE("LightningGPU::applyDiag_CUDA", "[LightningGPU_Param]",
+                   float, double) {
+    using ComplexT = std::complex<TestType>;
+    using CFP_t = StateVectorCudaManaged<TestType>::CFP_t;
+
+    const std::size_t num_qubits = 3;
+    const std::size_t sv_length = Pennylane::Util::exp2(num_qubits);
+
+    auto run_test = [&](const std::vector<std::size_t> &ctrls,
+                        const std::vector<bool> &ctrl_values,
+                        const std::vector<std::size_t> &tgts,
+                        const std::vector<ComplexT> &diag) {
+        std::vector<ComplexT> init(sv_length);
+        for (std::size_t i = 0; i < sv_length; i++) {
+            init[i] = {static_cast<TestType>(i + 1),
+                       static_cast<TestType>(-0.1 * i)};
+        }
+
+        StateVectorCudaManaged<TestType> sv_diag{init.data(), init.size()};
+        StateVectorCudaManaged<TestType> sv_matrix{init.data(), init.size()};
+
+        std::vector<ComplexT> matrix(diag.size() * diag.size(), {0.0, 0.0});
+        for (std::size_t i = 0; i < diag.size(); i++) {
+            matrix[i * (diag.size() + 1)] = diag[i];
+        }
+        sv_matrix.applyControlledMatrix(matrix.data(), ctrls, ctrl_values, tgts,
+                                        false);
+
+        const auto ctrlsInt =
+            Pennylane::LightningGPU::Util::NormalizeCastIndices<std::size_t,
+                                                                int>(
+                ctrls, num_qubits);
+        const auto tgtsInt =
+            Pennylane::LightningGPU::Util::NormalizeCastIndices<std::size_t,
+                                                                int>(
+                tgts, num_qubits);
+        const auto ctrl_valuesInt =
+            Pennylane::Util::cast_vector<bool, int>(ctrl_values);
+
+        DataBuffer<CFP_t> diag_device(diag.size(),
+                                      sv_diag.getDataBuffer().getDevTag());
+        diag_device.CopyHostDataToGpu(diag.data(), diag.size());
+
+        applyDiag_CUDA(sv_diag.getData(), sv_diag.getLength(), ctrlsInt,
+                       ctrl_valuesInt, tgtsInt, diag_device.getData(),
+                       sv_diag.getDataBuffer().getDevTag().getDeviceID(),
+                       sv_diag.getDataBuffer().getDevTag().getStreamID());
+
+        CHECK(sv_diag.getDataVector() ==
+              Pennylane::Util::approx(sv_matrix.getDataVector()));
+    };
+
+    SECTION("uncontrolled two-target diagonal") {
+        run_test({}, {}, {0, 2},
+                 {{1.0, 0.0}, {0.0, 1.0}, {-2.0, 0.0}, {0.5, -0.25}});
+    }
+
+    SECTION("single zero-valued control") {
+        run_test({1}, {false}, {0}, {{0.25, 0.5}, {-1.0, 0.0}});
+    }
+
+    SECTION("mixed control values") {
+        run_test({2, 0}, {true, false}, {1}, {{1.5, 0.0}, {0.0, -1.0}});
     }
 }
 

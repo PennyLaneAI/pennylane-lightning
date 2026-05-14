@@ -1,8 +1,11 @@
 # Release 0.46.0-dev (development release)
-
 <h3>New features since last release</h3>
 
 <h3>Improvements 🛠</h3>
+
+- Add native CUDA implementation for PCPhase gate
+- Add similar implementation for currently unused general diagonal operator.
+[(#1383)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1384)
 
 <h3>Breaking changes 💔</h3>
 
@@ -28,6 +31,7 @@
 
 This release contains contributions from (in alphabetical order):
 
+Kalman Szenes
 Jake Zaia
 
 ---
