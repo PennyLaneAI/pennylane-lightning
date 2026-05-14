@@ -10,7 +10,7 @@ The installation instruction here is specifically for AMD MI300 GPU (GFX942); fo
 
 .. note::
 
-    - Lightning-AMDGPU require Kokkos version 5.1.0
+    - Lightning-AMDGPU requires Kokkos version 5.1.0
     - Lightning-AMDGPU is verified to work with ROCm 6.2, 6.4, 7.0, 7.1.
     - ROCm 7.2 is known to cause compilation failure with Lightning-AMDGPU.
 
