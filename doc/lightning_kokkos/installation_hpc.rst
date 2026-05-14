@@ -28,7 +28,9 @@ Install Kokkos (Recommended)
 
 .. note::
 
-    Lightning-Kokkos requires Kokkos version 5.1.0.
+    - Lightning-Kokkos requires Kokkos version 5.1.0.
+    - Lightning-Kokkos is verified to work with ROCm 6.2, 6.4, 7.0, 7.1.
+    - ROCm 7.2 is known to cause compilation failure with Lightning-Kokkos.
 
 We suggest first installing Kokkos with the desired configuration, following the instructions found in the Kokkos documentation.
 For example, the following instructions demonstrate building Kokkos for AMD MI210/250/250X GPUs:
