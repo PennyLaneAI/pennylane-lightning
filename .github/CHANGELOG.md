@@ -17,6 +17,9 @@
 - Removed temporary CI patches that are no longer relevant after the v0.45.0 release.
   [(#1388)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1388)
 
+- Reduced Lightning-Qubit and Lightning-Kokkos wheel size by fixing CIBW environment variable.
+  [(#1386)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1386)
+
 - Update nightly RC builds to upload to testpypi from a single workflow; removed global id-token permission.
   [(#1377)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1377)
   [(#1379)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1379)
@@ -31,6 +34,7 @@
 
 This release contains contributions from (in alphabetical order):
 
+Joseph Lee,
 Jake Zaia
 
 ---
