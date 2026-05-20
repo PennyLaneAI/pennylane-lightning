@@ -16,7 +16,7 @@
 
 <h3>Bug fixes 🐛</h3>
 
-- Fixed PPR execution bug when handling identity Pauli word.
+- Fixed `qp.PauliRot` execution bug when handling identity Pauli word within the compilation pipeline.
   [(#1390)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1390)
 
 <h3>Internal changes ⚙️</h3>
