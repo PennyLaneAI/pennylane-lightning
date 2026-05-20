@@ -6,7 +6,8 @@
 
 - Updated missing device capabilities after PauliMeasure kernel was added in
   [#1327](https://github.com/PennyLaneAI/pennylane-lightning/pull/1327).
-  [(#1389)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1389)
+- Added `PauliMeasure` to the Lightning devices TOML files.
+[(#1389)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1389)
 
 <h3>Breaking changes 💔</h3>
 
