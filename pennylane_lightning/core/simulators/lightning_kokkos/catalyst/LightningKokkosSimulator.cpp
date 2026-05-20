@@ -468,6 +468,12 @@ void LightningKokkosSimulator::NamedOperation(
                 new_wires.push_back(dev_wires[i]);
             }
         }
+
+        if (new_pauli_word.empty()) {
+                // All-identity = global phase, no state change needed
+                return;
+        } 
+
         this->device_sv->applyPauliRot(new_wires, inverse, params,
                                        new_pauli_word);
         return;
