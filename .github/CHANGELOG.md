@@ -33,6 +33,9 @@
 - Update nightly builds of the RC branch to always trigger Catalyst's nightly RC builds.
   [(#1376)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1376)
 
+- Fixed PPR execution bug when handling identity Pauli word.
+  [(#XXXX)](https://github.com/PennyLaneAI/pennylane-lightning/pull/XXXX)
+
 <h3>Contributors ✍️</h3>
 
 This release contains contributions from (in alphabetical order):
