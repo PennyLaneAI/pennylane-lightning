@@ -884,7 +884,8 @@ TEST_CASE("LightningKokkosSimulator::GateSet", "[GateSet]") {
         DataView<std::complex<double>, 1> view_a(state_a);
         LQsim->State(view_a);
 
-        LQsim->ResetState();
+        LQsim->ReleaseQubits(Qs_a);
+        std::vector<intptr_t> Qs_b = LQsim->AllocateQubits(n_qubits);
 
         LQsim->NamedOperation("PauliRot", {0.5}, {Qs_b[0]}, false, {}, {},
                               /*pauli_string=*/{"Y"});
