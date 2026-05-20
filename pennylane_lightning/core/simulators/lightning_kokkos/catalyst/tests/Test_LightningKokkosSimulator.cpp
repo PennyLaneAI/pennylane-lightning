@@ -873,25 +873,25 @@ TEST_CASE("LightningKokkosSimulator::GateSet", "[GateSet]") {
     }
 
     SECTION("Test PauliRot with identity entries") {
-        std::unique_ptr<LQSimulator> LQsim = std::make_unique<LQSimulator>();
+        std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
         constexpr std::size_t n_qubits = 2;
-        std::vector<intptr_t> Qs_a = LQsim->AllocateQubits(n_qubits);
+        std::vector<intptr_t> Qs_a = LKsim->AllocateQubits(n_qubits);
 
-        LQsim->NamedOperation("PauliRot", {0.5}, {Qs_a[0], Qs_a[1]}, false, {},
+        LKsim->NamedOperation("PauliRot", {0.5}, {Qs_a[0], Qs_a[1]}, false, {},
                               {},
                               /*pauli_string=*/{"YI"});
         std::vector<std::complex<double>> state_a(1U << n_qubits);
         DataView<std::complex<double>, 1> view_a(state_a);
-        LQsim->State(view_a);
+        LKsim->State(view_a);
 
-        LQsim->ReleaseQubits(Qs_a);
-        std::vector<intptr_t> Qs_b = LQsim->AllocateQubits(n_qubits);
+        LKsim->ReleaseQubits(Qs_a);
+        std::vector<intptr_t> Qs_b = LKsim->AllocateQubits(n_qubits);
 
-        LQsim->NamedOperation("PauliRot", {0.5}, {Qs_b[0]}, false, {}, {},
+        LKsim->NamedOperation("PauliRot", {0.5}, {Qs_b[0]}, false, {}, {},
                               /*pauli_string=*/{"Y"});
         std::vector<std::complex<double>> state_b(1U << n_qubits);
         DataView<std::complex<double>, 1> view_b(state_b);
-        LQsim->State(view_b);
+        LKsim->State(view_b);
 
         for (std::size_t i = 0; i < state_a.size(); ++i) {
             CHECK(state_a[i] == PLApproxComplex(state_b[i]).epsilon(1e-5));
