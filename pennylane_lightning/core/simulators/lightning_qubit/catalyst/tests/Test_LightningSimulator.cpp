@@ -854,8 +854,8 @@ TEST_CASE("LightningSimulator::GateSet", "[GateSet]") {
 
         LQsim->NamedOperation("PauliRot", {0.5}, {Qs_b[0]}, false, {}, {},
                               /*pauli_string=*/{"Y"});
-        DataView<std::complex<double>, 1> view_b(state_b);
         std::vector<std::complex<double>> state_b(1U << n_qubits);
+        DataView<std::complex<double>, 1> view_b(state_b);
         LQsim->State(view_b);
 
         for (std::size_t i = 0; i < state_a.size(); ++i) {
