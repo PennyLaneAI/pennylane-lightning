@@ -16,6 +16,9 @@
 
 <h3>Bug fixes 🐛</h3>
 
+- Fixed PPR execution bug when handling identity Pauli word.
+  [(#1390)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1390)
+
 <h3>Internal changes ⚙️</h3>
 
 - Updated the release script with changes from the v0.45.0 release process.
@@ -37,13 +40,11 @@
 - Update nightly builds of the RC branch to always trigger Catalyst's nightly RC builds.
   [(#1376)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1376)
 
-- Fixed PPR execution bug when handling identity Pauli word.
-  [(#1390)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1390)
-
 <h3>Contributors ✍️</h3>
 
 This release contains contributions from (in alphabetical order):
 
+Jeffrey Kam,
 Joseph Lee,
 Jake Zaia
 
