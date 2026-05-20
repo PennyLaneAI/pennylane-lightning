@@ -447,25 +447,8 @@ void LightningGPUSimulator::NamedOperation(
         RT_FAIL_IF(this->tape_recording,
                    "PauliRot operation is not supported when tape "
                    "recording is active"); // TODO: support caching
-
-        // Strips identity Pauli and its corresponding wires.
-        // Mirrors the Python execution logic in _state_vector.py.
-        const std::string &pauli_word = optional_params[0];
-        RT_FAIL_IF(pauli_word.size() != dev_wires.size(),
-                   "PauliRot word and wires must have the same length");
-        std::string new_pauli_word;
-        std::vector<std::size_t> new_wires;
-        new_pauli_word.reserve(pauli_word.size());
-        new_wires.reserve(dev_wires.size());
-        for (std::size_t i = 0; i < pauli_word.size(); ++i) {
-            if (pauli_word[i] != 'I') {
-                new_pauli_word.push_back(pauli_word[i]);
-                new_wires.push_back(dev_wires[i]);
-            }
-        }
-        this->device_sv->applyPauliRot(new_wires, inverse, params,
-                                       new_pauli_word);
-        return;
+        this->device_sv->applyPauliRot(dev_wires, inverse, params,
+                                       optional_params[0]);
         return;
     }
 
