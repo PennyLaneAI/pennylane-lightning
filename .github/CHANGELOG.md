@@ -38,7 +38,7 @@
   [(#1376)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1376)
 
 - Fixed PPR execution bug when handling identity Pauli word.
-  [(#XXXX)](https://github.com/PennyLaneAI/pennylane-lightning/pull/XXXX)
+  [(#1390)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1390)
 
 <h3>Contributors ✍️</h3>
 
