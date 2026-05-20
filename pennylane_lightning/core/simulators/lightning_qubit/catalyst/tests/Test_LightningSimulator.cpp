@@ -863,6 +863,28 @@ TEST_CASE("LightningSimulator::GateSet", "[GateSet]") {
         }
     }
 
+    SECTION("Test PauliRot with all identity entries") {
+        std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
+        constexpr std::size_t n_qubits = 2;
+        std::vector<intptr_t> Qs = LKsim->AllocateQubits(n_qubits);
+
+        LKsim->NamedOperation("PauliRot", {0.5}, {Qs[0], Qs[1]}, false, {}, {},
+                              /*pauli_string=*/{"II"});
+
+        std::vector<std::complex<double>> state(1U << n_qubits);
+        DataView<std::complex<double>, 1> view(state);
+        LKsim->State(view);
+
+        CHECK(state[0] ==
+              PLApproxComplex(std::complex<double>{1.0, 0.0}).epsilon(1e-5));
+        CHECK(state[1] ==
+              PLApproxComplex(std::complex<double>{0.0, 0.0}).epsilon(1e-5));
+        CHECK(state[2] ==
+              PLApproxComplex(std::complex<double>{0.0, 0.0}).epsilon(1e-5));
+        CHECK(state[3] ==
+              PLApproxComplex(std::complex<double>{0.0, 0.0}).epsilon(1e-5));
+    }
+
     SECTION("Test PauliRot runtime failures") {
         std::unique_ptr<LQSimulator> LQsim = std::make_unique<LQSimulator>();
         constexpr std::size_t n_qubits = 2;
