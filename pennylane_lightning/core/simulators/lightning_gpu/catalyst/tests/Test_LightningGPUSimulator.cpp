@@ -896,13 +896,14 @@ TEST_CASE("LightningGPUSimulator::GateSet", "[GateSet]") {
     }
 
     SECTION("Test PauliRot with identity entries") {
-        std::unique_ptr<LGPUSimulator> LGPUsim = std::make_unique<LGPUSimulator>();
+        std::unique_ptr<LGPUSimulator> LGPUsim =
+            std::make_unique<LGPUSimulator>();
         constexpr std::size_t n_qubits = 2;
         std::vector<intptr_t> Qs_a = LGPUsim->AllocateQubits(n_qubits);
 
-        LGPUsim->NamedOperation("PauliRot", {0.5}, {Qs_a[0], Qs_a[1]}, false, {},
-                              {},
-                              /*pauli_string=*/{"YI"});
+        LGPUsim->NamedOperation("PauliRot", {0.5}, {Qs_a[0], Qs_a[1]}, false,
+                                {}, {},
+                                /*pauli_string=*/{"YI"});
         std::vector<std::complex<double>> state_a(1U << n_qubits);
         DataView<std::complex<double>, 1> view_a(state_a);
         LGPUsim->State(view_a);
@@ -911,7 +912,7 @@ TEST_CASE("LightningGPUSimulator::GateSet", "[GateSet]") {
         std::vector<intptr_t> Qs_b = LGPUsim->AllocateQubits(n_qubits);
 
         LGPUsim->NamedOperation("PauliRot", {0.5}, {Qs_b[0]}, false, {}, {},
-                              /*pauli_string=*/{"Y"});
+                                /*pauli_string=*/{"Y"});
         std::vector<std::complex<double>> state_b(1U << n_qubits);
         DataView<std::complex<double>, 1> view_b(state_b);
         LGPUsim->State(view_b);
