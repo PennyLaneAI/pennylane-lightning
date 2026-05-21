@@ -4,9 +4,8 @@
 
 <h3>Improvements 🛠</h3>
 
-- Updated missing device capabilities after PauliMeasure kernel was added in
-  [#1327](https://github.com/PennyLaneAI/pennylane-lightning/pull/1327).
-  [(#1389)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1389)
+- Added `PauliMeasure` to the Lightning devices TOML files.
+[(#1389)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1389)
 
 <h3>Breaking changes 💔</h3>
 
@@ -15,6 +14,9 @@
 <h3>Documentation 📝</h3>
 
 <h3>Bug fixes 🐛</h3>
+
+- Fixed `qp.PauliRot` execution bug when handling identity Pauli word within the compilation pipeline.
+  [(#1390)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1390)
 
 <h3>Internal changes ⚙️</h3>
 
@@ -41,6 +43,7 @@
 
 This release contains contributions from (in alphabetical order):
 
+Jeffrey Kam,
 Joseph Lee,
 Jake Zaia
 
