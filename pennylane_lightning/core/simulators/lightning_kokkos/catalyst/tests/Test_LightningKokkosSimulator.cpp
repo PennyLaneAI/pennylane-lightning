@@ -893,9 +893,11 @@ TEST_CASE("LightningKokkosSimulator::GateSet", "[GateSet]") {
         DataView<std::complex<double>, 1> view_b(state_b);
         LKsim->State(view_b);
 
+        std::complex<double> overlap{0.0, 0.0};
         for (std::size_t i = 0; i < state_a.size(); ++i) {
-            CHECK(state_a[i] == PLApproxComplex(state_b[i]).epsilon(1e-5));
+            overlap += std::conj(state_a[i]) * state_b[i];
         }
+        CHECK(std::abs(overlap) == Approx(1.0).margin(1e-5));
     }
 
     SECTION("Test PauliRot with all identity entries") {
@@ -910,14 +912,13 @@ TEST_CASE("LightningKokkosSimulator::GateSet", "[GateSet]") {
         DataView<std::complex<double>, 1> view(state);
         LKsim->State(view);
 
-        CHECK(state[0] ==
-              PLApproxComplex(std::complex<double>{1.0, 0.0}).epsilon(1e-5));
-        CHECK(state[1] ==
-              PLApproxComplex(std::complex<double>{0.0, 0.0}).epsilon(1e-5));
-        CHECK(state[2] ==
-              PLApproxComplex(std::complex<double>{0.0, 0.0}).epsilon(1e-5));
-        CHECK(state[3] ==
-              PLApproxComplex(std::complex<double>{0.0, 0.0}).epsilon(1e-5));
+        std::vector<std::complex<double>> expected(1U << n_qubits);
+        expected[0] = {1.0, 0.0};
+        std::complex<double> overlap{0.0, 0.0};
+        for (std::size_t i = 0; i < state.size(); ++i) {
+            overlap += std::conj(state[i]) * expected[i];
+        }
+        CHECK(std::abs(overlap) == Approx(1.0).margin(1e-5));
     }
 
     SECTION("Test PauliRot runtime failures") {
