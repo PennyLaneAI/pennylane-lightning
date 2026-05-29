@@ -837,6 +837,55 @@ TEST_CASE("LightningSimulator::GateSet", "[GateSet]") {
                               .epsilon(1e-5));
     }
 
+    SECTION("Test PauliRot with identity entries") {
+        std::unique_ptr<LQSimulator> LQsim = std::make_unique<LQSimulator>();
+        constexpr std::size_t n_qubits = 2;
+        std::vector<intptr_t> Qs_a = LQsim->AllocateQubits(n_qubits);
+
+        LQsim->NamedOperation("PauliRot", {0.5}, {Qs_a[0], Qs_a[1]}, false, {},
+                              {},
+                              /*pauli_string=*/{"YI"});
+        std::vector<std::complex<double>> state_a(1U << n_qubits);
+        DataView<std::complex<double>, 1> view_a(state_a);
+        LQsim->State(view_a);
+
+        LQsim->ReleaseQubits(Qs_a);
+        std::vector<intptr_t> Qs_b = LQsim->AllocateQubits(n_qubits);
+
+        LQsim->NamedOperation("PauliRot", {0.5}, {Qs_b[0]}, false, {}, {},
+                              /*pauli_string=*/{"Y"});
+        std::vector<std::complex<double>> state_b(1U << n_qubits);
+        DataView<std::complex<double>, 1> view_b(state_b);
+        LQsim->State(view_b);
+
+        std::complex<double> overlap{0.0, 0.0};
+        for (std::size_t i = 0; i < state_a.size(); ++i) {
+            overlap += std::conj(state_a[i]) * state_b[i];
+        }
+        CHECK(std::abs(overlap) == Approx(1.0).margin(1e-5));
+    }
+
+    SECTION("Test PauliRot with all identity entries") {
+        std::unique_ptr<LQSimulator> LQsim = std::make_unique<LQSimulator>();
+        constexpr std::size_t n_qubits = 2;
+        std::vector<intptr_t> Qs = LQsim->AllocateQubits(n_qubits);
+
+        LQsim->NamedOperation("PauliRot", {0.5}, {Qs[0], Qs[1]}, false, {}, {},
+                              /*pauli_string=*/{"II"});
+
+        std::vector<std::complex<double>> state(1U << n_qubits);
+        DataView<std::complex<double>, 1> view(state);
+        LQsim->State(view);
+
+        std::vector<std::complex<double>> expected(1U << n_qubits);
+        expected[0] = {1.0, 0.0};
+        std::complex<double> overlap{0.0, 0.0};
+        for (std::size_t i = 0; i < state.size(); ++i) {
+            overlap += std::conj(state[i]) * expected[i];
+        }
+        CHECK(std::abs(overlap) == Approx(1.0).margin(1e-5));
+    }
+
     SECTION("Test PauliRot runtime failures") {
         std::unique_ptr<LQSimulator> LQsim = std::make_unique<LQSimulator>();
         constexpr std::size_t n_qubits = 2;
