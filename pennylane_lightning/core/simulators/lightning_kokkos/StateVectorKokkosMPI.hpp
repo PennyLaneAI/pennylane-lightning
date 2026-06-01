@@ -98,6 +98,16 @@ class StateVectorKokkosMPI final
     std::shared_ptr<KokkosVector> sendbuf_;
     MPIManagerKokkos mpi_manager_;
 
+    /**
+     * @brief Compile-time memory-reduction factor for the MPI comm buffer.
+     *
+     * Buffer size = max(1, min(half_sv / ratio, MPI_COMM_BUFFER_CAP)).
+     */
+    static constexpr std::size_t COMM_BUFFER_RATIO = 4;
+    // Active ratio (defaults to COMM_BUFFER_RATIO); held as a member so a
+    // future runtime knob can set it without changing allocateBuffers().
+    std::size_t comm_buffer_ratio_ = COMM_BUFFER_RATIO;
+
     std::size_t num_qubits_;
     std::size_t numGlobalQubits_;
     std::size_t numLocalQubits_;
@@ -371,13 +381,14 @@ class StateVectorKokkosMPI final
      * @brief Allocate send and recv buffers for MPI communication.
      */
     void allocateBuffers() {
+        const std::size_t buffer_size = computeCommBufferSize(
+            exp2(getNumLocalWires() - 1), comm_buffer_ratio_,
+            MPIManagerKokkos::MPI_COMM_BUFFER_CAP);
         if (!sendbuf_) {
-            sendbuf_ = std::make_shared<KokkosVector>(
-                "sendbuf_", exp2(getNumLocalWires() - 1));
+            sendbuf_ = std::make_shared<KokkosVector>("sendbuf_", buffer_size);
         }
         if (!recvbuf_) {
-            recvbuf_ = std::make_shared<KokkosVector>(
-                "recvbuf_", exp2(getNumLocalWires() - 1));
+            recvbuf_ = std::make_shared<KokkosVector>("recvbuf_", buffer_size);
         }
     }
 

@@ -1115,7 +1115,9 @@ TEMPLATE_TEST_CASE("sendrecvBuffers", "[LKMPI]", double, float) {
 
     std::size_t mpi_rank = mpi_manager.getRank();
     std::size_t dest_rank = mpi_rank ^ 1U;
-    std::size_t message_size = 4;
+    // The comm buffer size is set by allocateBuffers (ratio + cap), so transfer
+    // exactly what the buffer holds rather than a hard-coded count.
+    std::size_t message_size = sendbuf.extent(0);
     Kokkos::parallel_for(
         "InitSendBuffer", message_size, KOKKOS_LAMBDA(const std::size_t i) {
             sendbuf(i) = static_cast<TestType>(mpi_rank + i);
@@ -1161,6 +1163,34 @@ TEMPLATE_TEST_CASE("StateVectorKokkosMPI::computeCommBufferSize", "[LKMPI]",
     CHECK(SV::computeCommBufferSize(7, 2, cap) == 3);
     // Invariant: never exceeds the cap.
     CHECK(SV::computeCommBufferSize(std::size_t{1} << 40, 2, cap) <= cap);
+}
+
+TEMPLATE_TEST_CASE("MPI comm-buffer chunking: swap correctness", "[LKMPI]",
+                   double, float) {
+    const std::size_t num_qubits = 5; // 4 ranks -> 3 local qubits
+    auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
+
+    // The comm buffer is smaller than half the local SV, so swap transfers are
+    // split into multiple chunks -- this is the behavior under test.
+    REQUIRE(sv.getSendBuffer()->extent(0) < exp2(sv.getNumLocalWires() - 1));
+
+    // Scramble then restore canonical wire order via chunked swap transfers.
+    sv.swapGlobalLocalWires({0}, {2});
+    sv.swapGlobalLocalWires({2}, {3});
+    sv.swapGlobalLocalWires({3}, {0});
+    sv.reorderLocalWires();
+
+    std::vector<Kokkos::complex<TestType>> reference(exp2(num_qubits));
+    for (std::size_t i = 0; i < reference.size(); i++) {
+        reference[i] = static_cast<TestType>(i);
+    }
+    auto data = getFullDataVector(sv, 0);
+    if (sv.getMPIManager().getRank() == 0) {
+        for (std::size_t j = 0; j < data.size(); j++) {
+            CHECK(real(data[j]) == Approx(real(reference[j])));
+            CHECK(imag(data[j]) == Approx(imag(reference[j])));
+        }
+    }
 }
 
 TEMPLATE_TEST_CASE("allReduceSum", "[LKMPI]", double, float) {
