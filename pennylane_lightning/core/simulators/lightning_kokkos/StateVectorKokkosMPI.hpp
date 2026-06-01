@@ -934,31 +934,32 @@ class StateVectorKokkosMPI final
         std::size_t dest_mpi_rank = getElementIndexInVector(
             mpi_rank_to_global_index_map_target, dest_global_index);
 
-        std::size_t send_size = exp2(getNumLocalWires() - 1);
+        const std::size_t total_size = exp2(getNumLocalWires());
+        const std::size_t chunk_size = sendbuf_->extent(0);
         auto sendbuf_view = (*sendbuf_);
         auto recvbuf_view = (*recvbuf_);
         auto sv_view = (*sv_).getView();
 
-        // Since the buffer is half the size of the state vector, we need to
-        // do two copies
-        for (std::size_t i = 0; i < 2; i++) {
-            std::size_t offset = i * send_size;
+        // Transfer the full local sub-state-vector in chunks no larger than
+        // the comm buffer; with a half-size buffer this is two chunks.
+        for (std::size_t off = 0; off < total_size; off += chunk_size) {
+            const std::size_t csize = std::min(chunk_size, total_size - off);
             // COPY to buffer
             Kokkos::parallel_for(
-                "copy_sendbuf", RangePolicy<KokkosExecSpace>(0, send_size),
+                "copy_sendbuf", RangePolicy<KokkosExecSpace>(0, csize),
                 KOKKOS_LAMBDA(std::size_t buffer_index) {
-                    sendbuf_view(buffer_index) = sv_view(buffer_index + offset);
+                    sendbuf_view(buffer_index) = sv_view(buffer_index + off);
                 });
             Kokkos::fence();
             // SENDRECV
-            sendrecvBuffers(dest_mpi_rank, dest_mpi_rank, send_size, 0);
+            sendrecvBuffers(dest_mpi_rank, dest_mpi_rank, csize, 0);
             // COPY FROM BUFFER
-
             Kokkos::parallel_for(
-                "copy_recvbuf", RangePolicy<KokkosExecSpace>(0, send_size),
+                "copy_recvbuf", RangePolicy<KokkosExecSpace>(0, csize),
                 KOKKOS_LAMBDA(std::size_t buffer_index) {
-                    sv_view(buffer_index + offset) = recvbuf_view(buffer_index);
+                    sv_view(buffer_index + off) = recvbuf_view(buffer_index);
                 });
+            Kokkos::fence();
         }
 
         // copy global_wires_target and mpi_rank_to_global_index_map_target
