@@ -28,7 +28,7 @@ using Pennylane::LightningKokkos::Util::generateBitPatterns;
 using Pennylane::LightningKokkos::Util::one;
 using Pennylane::LightningKokkos::Util::parity_2_offset;
 using Pennylane::LightningKokkos::Util::reverseWires;
-using Pennylane::LightningKokkos::Util::StateVectorTeamPolicy;
+using Pennylane::LightningKokkos::Util::TeamPolicy;
 using Pennylane::LightningKokkos::Util::vector2view;
 using Pennylane::LightningKokkos::Util::wires2Parity;
 } // namespace
@@ -47,7 +47,7 @@ template <class Precision> struct multiQubitOpFunctor {
         Kokkos::View<std::size_t *,
                      Kokkos::DefaultExecutionSpace::scratch_memory_space,
                      Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
-    using MemberType = StateVectorTeamPolicy<>::member_type;
+    using MemberType = TeamPolicy<>::member_type;
 
     KokkosComplexVector arr;
     KokkosComplexVector matrix;
@@ -122,7 +122,7 @@ template <class Precision> struct NCMultiQubitOpFunctor {
         Kokkos::View<std::size_t *,
                      Kokkos::DefaultExecutionSpace::scratch_memory_space,
                      Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
-    using MemberType = StateVectorTeamPolicy<>::member_type;
+    using MemberType = TeamPolicy<>::member_type;
 
     KokkosComplexVector arr;
     KokkosComplexVector matrix;

@@ -20,7 +20,8 @@
 
 /// @cond DEV
 namespace {
-using Pennylane::LightningKokkos::Util::StateVectorRangePolicy;
+using Pennylane::LightningKokkos::Util::one;
+using Pennylane::LightningKokkos::Util::RangePolicy;
 using Pennylane::LightningKokkos::Util::vector2view;
 using Pennylane::LightningKokkos::Util::view2vector;
 } // namespace
@@ -202,7 +203,7 @@ class getProbsNQubitOpFunctor {
         PrecisionT rsv = real(arr(i1));
         PrecisionT isv = imag(arr(i1));
         dst[offset + 0] += rsv * rsv + isv * isv;
-        i1 = i0 | (1U << rev_wire);
+        i1 = i0 | (one << rev_wire);
         rsv = real(arr(i1));
         isv = imag(arr(i1));
         dst[offset + 1] += rsv * rsv + isv * isv;
@@ -213,7 +214,7 @@ class getProbsNQubitOpFunctor {
                 const std::size_t rev_wire_1, const std::size_t offset,
                 PrecisionT dst[]) const {
         apply0(i0, rev_wire_0, 0 + offset, dst);
-        apply0(i0 | (1U << rev_wire_1), rev_wire_0, 2 + offset, dst);
+        apply0(i0 | (one << rev_wire_1), rev_wire_0, 2 + offset, dst);
     }
 
     KOKKOS_INLINE_FUNCTION
@@ -221,7 +222,7 @@ class getProbsNQubitOpFunctor {
                 const std::size_t rev_wire_1, const std::size_t rev_wire_2,
                 const std::size_t offset, PrecisionT dst[]) const {
         apply1(i0, rev_wire_0, rev_wire_1, 0 + offset, dst);
-        apply1(i0 | (1U << rev_wire_2), rev_wire_0, rev_wire_1, 4 + offset,
+        apply1(i0 | (one << rev_wire_2), rev_wire_0, rev_wire_1, 4 + offset,
                dst);
     }
 
@@ -231,7 +232,7 @@ class getProbsNQubitOpFunctor {
                 const std::size_t rev_wire_3, const std::size_t offset,
                 PrecisionT dst[]) const {
         apply2(i0, rev_wire_0, rev_wire_1, rev_wire_2, 0 + offset, dst);
-        apply2(i0 | (1U << rev_wire_3), rev_wire_0, rev_wire_1, rev_wire_2,
+        apply2(i0 | (one << rev_wire_3), rev_wire_0, rev_wire_1, rev_wire_2,
                8 + offset, dst);
     }
 
@@ -242,7 +243,7 @@ class getProbsNQubitOpFunctor {
                 const std::size_t offset, PrecisionT dst[]) const {
         apply3(i0, rev_wire_0, rev_wire_1, rev_wire_2, rev_wire_3, 0 + offset,
                dst);
-        apply3(i0 | (1U << rev_wire_4), rev_wire_0, rev_wire_1, rev_wire_2,
+        apply3(i0 | (one << rev_wire_4), rev_wire_0, rev_wire_1, rev_wire_2,
                rev_wire_3, 16 + offset, dst);
     }
 
@@ -254,7 +255,7 @@ class getProbsNQubitOpFunctor {
                 PrecisionT dst[]) const {
         apply4(i0, rev_wire_0, rev_wire_1, rev_wire_2, rev_wire_3, rev_wire_4,
                0 + offset, dst);
-        apply4(i0 | (1U << rev_wire_5), rev_wire_0, rev_wire_1, rev_wire_2,
+        apply4(i0 | (one << rev_wire_5), rev_wire_0, rev_wire_1, rev_wire_2,
                rev_wire_3, rev_wire_4, 32 + offset, dst);
     }
 
@@ -266,7 +267,7 @@ class getProbsNQubitOpFunctor {
                 const std::size_t offset, PrecisionT dst[]) const {
         apply5(i0, rev_wire_0, rev_wire_1, rev_wire_2, rev_wire_3, rev_wire_4,
                rev_wire_5, 0 + offset, dst);
-        apply5(i0 | (1U << rev_wire_6), rev_wire_0, rev_wire_1, rev_wire_2,
+        apply5(i0 | (one << rev_wire_6), rev_wire_0, rev_wire_1, rev_wire_2,
                rev_wire_3, rev_wire_4, rev_wire_5, 64 + offset, dst);
     }
 
@@ -279,7 +280,7 @@ class getProbsNQubitOpFunctor {
                 PrecisionT dst[]) const {
         apply6(i0, rev_wire_0, rev_wire_1, rev_wire_2, rev_wire_3, rev_wire_4,
                rev_wire_5, rev_wire_6, 0 + offset, dst);
-        apply6(i0 | (1U << rev_wire_7), rev_wire_0, rev_wire_1, rev_wire_2,
+        apply6(i0 | (one << rev_wire_7), rev_wire_0, rev_wire_1, rev_wire_2,
                rev_wire_3, rev_wire_4, rev_wire_5, rev_wire_6, 128 + offset,
                dst);
     }
@@ -293,7 +294,7 @@ class getProbsNQubitOpFunctor {
                 const std::size_t offset, PrecisionT dst[]) const {
         apply7(i0, rev_wire_0, rev_wire_1, rev_wire_2, rev_wire_3, rev_wire_4,
                rev_wire_5, rev_wire_6, rev_wire_7, 0 + offset, dst);
-        apply7(i0 | (1U << rev_wire_8), rev_wire_0, rev_wire_1, rev_wire_2,
+        apply7(i0 | (one << rev_wire_8), rev_wire_0, rev_wire_1, rev_wire_2,
                rev_wire_3, rev_wire_4, rev_wire_5, rev_wire_6, rev_wire_7,
                256 + offset, dst);
     }
@@ -413,63 +414,63 @@ auto probs_bitshift_generic(
     switch (n_wires) {
     case 1UL:
         Kokkos::parallel_reduce(
-            StateVectorRangePolicy<DeviceType>(0, exp2(num_qubits - n_wires)),
+            RangePolicy<DeviceType>(0, exp2(num_qubits - n_wires)),
             getProbsNQubitOpFunctor<PrecisionT, DeviceType, 1>(arr, num_qubits,
                                                                wires),
             d_probabilities);
         break;
     case 2UL:
         Kokkos::parallel_reduce(
-            StateVectorRangePolicy<DeviceType>(0, exp2(num_qubits - n_wires)),
+            RangePolicy<DeviceType>(0, exp2(num_qubits - n_wires)),
             getProbsNQubitOpFunctor<PrecisionT, DeviceType, 2>(arr, num_qubits,
                                                                wires),
             d_probabilities);
         break;
     case 3UL:
         Kokkos::parallel_reduce(
-            StateVectorRangePolicy<DeviceType>(0, exp2(num_qubits - n_wires)),
+            RangePolicy<DeviceType>(0, exp2(num_qubits - n_wires)),
             getProbsNQubitOpFunctor<PrecisionT, DeviceType, 3>(arr, num_qubits,
                                                                wires),
             d_probabilities);
         break;
     case 4UL:
         Kokkos::parallel_reduce(
-            StateVectorRangePolicy<DeviceType>(0, exp2(num_qubits - n_wires)),
+            RangePolicy<DeviceType>(0, exp2(num_qubits - n_wires)),
             getProbsNQubitOpFunctor<PrecisionT, DeviceType, 4>(arr, num_qubits,
                                                                wires),
             d_probabilities);
         break;
     case 5UL:
         Kokkos::parallel_reduce(
-            StateVectorRangePolicy<DeviceType>(0, exp2(num_qubits - n_wires)),
+            RangePolicy<DeviceType>(0, exp2(num_qubits - n_wires)),
             getProbsNQubitOpFunctor<PrecisionT, DeviceType, 5>(arr, num_qubits,
                                                                wires),
             d_probabilities);
         break;
     case 6UL:
         Kokkos::parallel_reduce(
-            StateVectorRangePolicy<DeviceType>(0, exp2(num_qubits - n_wires)),
+            RangePolicy<DeviceType>(0, exp2(num_qubits - n_wires)),
             getProbsNQubitOpFunctor<PrecisionT, DeviceType, 6>(arr, num_qubits,
                                                                wires),
             d_probabilities);
         break;
     case 7UL:
         Kokkos::parallel_reduce(
-            StateVectorRangePolicy<DeviceType>(0, exp2(num_qubits - n_wires)),
+            RangePolicy<DeviceType>(0, exp2(num_qubits - n_wires)),
             getProbsNQubitOpFunctor<PrecisionT, DeviceType, 7>(arr, num_qubits,
                                                                wires),
             d_probabilities);
         break;
     case 8UL:
         Kokkos::parallel_reduce(
-            StateVectorRangePolicy<DeviceType>(0, exp2(num_qubits - n_wires)),
+            RangePolicy<DeviceType>(0, exp2(num_qubits - n_wires)),
             getProbsNQubitOpFunctor<PrecisionT, DeviceType, 8>(arr, num_qubits,
                                                                wires),
             d_probabilities);
         break;
     default:
         Kokkos::parallel_reduce(
-            StateVectorRangePolicy<DeviceType>(0, exp2(num_qubits - n_wires)),
+            RangePolicy<DeviceType>(0, exp2(num_qubits - n_wires)),
             getProbsNQubitOpFunctor<PrecisionT, DeviceType, 0>(arr, num_qubits,
                                                                wires),
             d_probabilities);

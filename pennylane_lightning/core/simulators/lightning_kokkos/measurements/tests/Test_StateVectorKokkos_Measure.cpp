@@ -31,7 +31,7 @@
 /// @cond DEV
 namespace {
 using namespace Pennylane::LightningKokkos::Measures;
-using Pennylane::LightningKokkos::Util::StateVectorRangePolicy;
+using Pennylane::LightningKokkos::Util::RangePolicy;
 using Pennylane::Util::createNonTrivialState;
 using Pennylane::Util::INVSQRT2;
 }; // namespace
@@ -859,8 +859,7 @@ TEST_CASE("Test tensor transposition", "[Measure]") {
                 getTransposedIndexFunctor(d_wires, d_trans_index, num_wires));
 
             Kokkos::parallel_for(
-                "Transpose",
-                StateVectorRangePolicy<KokkosExecSpace>(0, indices.size()),
+                "Transpose", RangePolicy<KokkosExecSpace>(0, indices.size()),
                 getTransposedFunctor<std::size_t>(d_results, d_indices,
                                                   d_trans_index));
 

@@ -98,7 +98,7 @@ class StateVectorKokkos final
     using ScratchViewSizeT =
         Kokkos::View<std::size_t *, KokkosExecSpace::scratch_memory_space,
                      Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
-    using TeamPolicy = StateVectorTeamPolicy<>;
+    using TeamPolicy = Util::TeamPolicy<>;
     using MemoryStorageT = Pennylane::Util::MemoryStorageLocation::Undefined;
 
     StateVectorKokkos() = delete;
@@ -138,7 +138,7 @@ class StateVectorKokkos final
         KokkosVector sv_view =
             getView(); // circumvent error capturing this with KOKKOS_LAMBDA
         Kokkos::parallel_for(
-            StateVectorRangePolicy<KokkosExecSpace>(0, sv_view.size()),
+            RangePolicy<KokkosExecSpace>(0, sv_view.size()),
             KOKKOS_LAMBDA(std::size_t i) {
                 sv_view(i) =
                     (i == index) ? ComplexT{1.0, 0.0} : ComplexT{0.0, 0.0};
@@ -196,7 +196,7 @@ class StateVectorKokkos final
         KokkosVector sv_view =
             getView(); // circumvent error capturing this with KOKKOS_LAMBDA
         Kokkos::parallel_for(
-            StateVectorRangePolicy<KokkosExecSpace>(0, indices.size()),
+            RangePolicy<KokkosExecSpace>(0, indices.size()),
             KOKKOS_LAMBDA(std::size_t i) {
                 sv_view(d_indices[i]) = d_values[i];
             });
@@ -237,7 +237,7 @@ class StateVectorKokkos final
         auto d_wires = vector2view(wires);
         initZeros();
         Kokkos::parallel_for(
-            StateVectorRangePolicy<KokkosExecSpace>(0, num_state),
+            RangePolicy<KokkosExecSpace>(0, num_state),
             KOKKOS_LAMBDA(std::size_t i) {
                 std::size_t index{0U};
                 for (std::size_t w = 0; w < d_wires.size(); w++) {
@@ -413,7 +413,7 @@ class StateVectorKokkos final
         if (inverse) {
             // MDRangePolicy bounds are Kokkos::Array<int64_t, rank> regardless
             // of IndexType, so cast from size_t to silence -Wnarrowing.
-            StateVectorMDRangePolicy<2, KokkosExecSpace> policy_2d(
+            MDRangePolicy<2, KokkosExecSpace> policy_2d(
                 {0, 0}, {static_cast<std::int64_t>(dim),
                          static_cast<std::int64_t>(dim)});
             Kokkos::parallel_for(
@@ -426,28 +426,24 @@ class StateVectorKokkos final
         }
         switch (wires.size()) {
         case 1:
-            Kokkos::parallel_for(
-                StateVectorRangePolicy<KokkosExecSpace>(0, two2N),
-                apply1QubitOpFunctor<fp_t>(*data_, num_qubits, matrix_trans,
-                                           wires));
+            Kokkos::parallel_for(RangePolicy<KokkosExecSpace>(0, two2N),
+                                 apply1QubitOpFunctor<fp_t>(
+                                     *data_, num_qubits, matrix_trans, wires));
             break;
         case 2:
-            Kokkos::parallel_for(
-                StateVectorRangePolicy<KokkosExecSpace>(0, two2N),
-                apply2QubitOpFunctor<fp_t>(*data_, num_qubits, matrix_trans,
-                                           wires));
+            Kokkos::parallel_for(RangePolicy<KokkosExecSpace>(0, two2N),
+                                 apply2QubitOpFunctor<fp_t>(
+                                     *data_, num_qubits, matrix_trans, wires));
             break;
         case 3:
-            Kokkos::parallel_for(
-                StateVectorRangePolicy<KokkosExecSpace>(0, two2N),
-                apply3QubitOpFunctor<fp_t>(*data_, num_qubits, matrix_trans,
-                                           wires));
+            Kokkos::parallel_for(RangePolicy<KokkosExecSpace>(0, two2N),
+                                 apply3QubitOpFunctor<fp_t>(
+                                     *data_, num_qubits, matrix_trans, wires));
             break;
         case 4:
-            Kokkos::parallel_for(
-                StateVectorRangePolicy<KokkosExecSpace>(0, two2N),
-                apply4QubitOpFunctor<fp_t>(*data_, num_qubits, matrix_trans,
-                                           wires));
+            Kokkos::parallel_for(RangePolicy<KokkosExecSpace>(0, two2N),
+                                 apply4QubitOpFunctor<fp_t>(
+                                     *data_, num_qubits, matrix_trans, wires));
             break;
         default:
             // TODO: explore runtime determine L0 or L1 scratch level (for GPU
@@ -534,7 +530,7 @@ class StateVectorKokkos final
         KokkosVector matrix_trans("matrix_trans", matrix.size());
 
         if (inverse) {
-            StateVectorMDRangePolicy<2, KokkosExecSpace> policy_2d(
+            MDRangePolicy<2, KokkosExecSpace> policy_2d(
                 {0, 0}, {static_cast<std::int64_t>(dim),
                          static_cast<std::int64_t>(dim)});
             Kokkos::parallel_for(
@@ -549,21 +545,21 @@ class StateVectorKokkos final
         switch (wires.size()) {
         case 1:
             Kokkos::parallel_for(
-                StateVectorRangePolicy<KokkosExecSpace>(0, two2N),
+                RangePolicy<KokkosExecSpace>(0, two2N),
                 applyNC1QubitOpFunctor<fp_t>(*data_, num_qubits, matrix_trans,
                                              controlled_wires,
                                              controlled_values, wires));
             break;
         case 2:
             Kokkos::parallel_for(
-                StateVectorRangePolicy<KokkosExecSpace>(0, two2N),
+                RangePolicy<KokkosExecSpace>(0, two2N),
                 applyNC2QubitOpFunctor<fp_t>(*data_, num_qubits, matrix_trans,
                                              controlled_wires,
                                              controlled_values, wires));
             break;
         case 3:
             Kokkos::parallel_for(
-                StateVectorRangePolicy<KokkosExecSpace>(0, two2N),
+                RangePolicy<KokkosExecSpace>(0, two2N),
                 applyNC3QubitOpFunctor<fp_t>(*data_, num_qubits, matrix_trans,
                                              controlled_wires,
                                              controlled_values, wires));
@@ -813,7 +809,7 @@ class StateVectorKokkos final
     void collapse(std::size_t wire, bool branch) {
         KokkosVector matrix("gate_matrix", 4);
         Kokkos::parallel_for(
-            StateVectorRangePolicy<KokkosExecSpace>(0, matrix.size()),
+            RangePolicy<KokkosExecSpace>(0, matrix.size()),
             KOKKOS_LAMBDA(std::size_t k) {
                 matrix(k) = ((k == 0 && branch == 0) || (k == 3 && branch == 1))
                                 ? ComplexT{1.0, 0.0}
@@ -831,7 +827,7 @@ class StateVectorKokkos final
 
         PrecisionT squaredNorm = 0.0;
         Kokkos::parallel_reduce(
-            StateVectorRangePolicy<KokkosExecSpace>(0, sv_view.size()),
+            RangePolicy<KokkosExecSpace>(0, sv_view.size()),
             KOKKOS_LAMBDA(std::size_t i, PrecisionT &sum) {
                 const PrecisionT norm = Kokkos::abs(sv_view(i));
                 sum += norm * norm;
@@ -845,7 +841,7 @@ class StateVectorKokkos final
         const std::complex<PrecisionT> inv_norm =
             1. / Kokkos::sqrt(squaredNorm);
         Kokkos::parallel_for(
-            StateVectorRangePolicy<KokkosExecSpace>(0, sv_view.size()),
+            RangePolicy<KokkosExecSpace>(0, sv_view.size()),
             KOKKOS_LAMBDA(std::size_t i) { sv_view(i) *= inv_norm; });
     }
 

@@ -46,16 +46,15 @@ constexpr std::size_t one{1};
  * lifts that ceiling on every backend.
  */
 template <class ExecSpace = Kokkos::DefaultExecutionSpace>
-using StateVectorRangePolicy =
+using RangePolicy =
     Kokkos::RangePolicy<ExecSpace, Kokkos::IndexType<std::size_t>>;
 
 template <int Rank, class ExecSpace = Kokkos::DefaultExecutionSpace>
-using StateVectorMDRangePolicy =
-    Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<Rank>,
-                          Kokkos::IndexType<std::size_t>>;
+using MDRangePolicy = Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<Rank>,
+                                            Kokkos::IndexType<std::size_t>>;
 
 template <class ExecSpace = Kokkos::DefaultExecutionSpace>
-using StateVectorTeamPolicy =
+using TeamPolicy =
     Kokkos::TeamPolicy<ExecSpace, Kokkos::IndexType<std::size_t>>;
 
 /**

@@ -35,8 +35,8 @@ using namespace Pennylane::Measures;
 using namespace Pennylane::Observables;
 using Pennylane::LightningKokkos::StateVectorKokkos;
 using Pennylane::LightningKokkos::Util::getRealOfComplexInnerProduct;
+using Pennylane::LightningKokkos::Util::RangePolicy;
 using Pennylane::LightningKokkos::Util::SparseMV_Kokkos;
-using Pennylane::LightningKokkos::Util::StateVectorRangePolicy;
 using Pennylane::LightningKokkos::Util::vector2view;
 using Pennylane::LightningKokkos::Util::view2vector;
 using Pennylane::Util::exp2;
@@ -575,7 +575,7 @@ class MeasurementsMPI final
         // Get local squared norm
         PrecisionT local_squared_norm = 0.0;
         Kokkos::parallel_reduce(
-            StateVectorRangePolicy<KokkosExecSpace>(0, local_sv_view.size()),
+            RangePolicy<KokkosExecSpace>(0, local_sv_view.size()),
             KOKKOS_LAMBDA(std::size_t i, PrecisionT &sum) {
                 const PrecisionT norm = Kokkos::abs(local_sv_view(i));
                 sum += norm * norm;
@@ -594,7 +594,7 @@ class MeasurementsMPI final
             auto d_local_squared_norm = vector2view(local_norms);
 
             Kokkos::parallel_scan(
-                StateVectorRangePolicy<KokkosExecSpace>(0, twoN_global_qubits),
+                RangePolicy<KokkosExecSpace>(0, twoN_global_qubits),
                 KOKKOS_LAMBDA(const std::size_t k, PrecisionT &update_value,
                               const bool is_final) {
                     const PrecisionT val_k = d_local_squared_norm(k);
@@ -603,7 +603,7 @@ class MeasurementsMPI final
                     update_value += val_k;
                 });
             Kokkos::parallel_for(
-                StateVectorRangePolicy<KokkosExecSpace>(0, num_samples),
+                RangePolicy<KokkosExecSpace>(0, num_samples),
                 Global_Bin_Sampler<PrecisionT, Kokkos::Random_XorShift64_Pool>(
                     global_samples_bin, d_local_squared_norm, rand_pool,
                     num_global_qubits, twoN_global_qubits));
@@ -624,7 +624,7 @@ class MeasurementsMPI final
                 Measurements(this->_statevector.getLocalSV()).probs_core();
             const double inv_norm = 1. / local_squared_norm;
             Kokkos::parallel_for(
-                StateVectorRangePolicy<KokkosExecSpace>(
+                RangePolicy<KokkosExecSpace>(
                     0, local_normalized_probability.size()),
                 KOKKOS_LAMBDA(const std::size_t k) {
                     local_normalized_probability(k) *= inv_norm;
@@ -632,8 +632,7 @@ class MeasurementsMPI final
 
             // Convert probability distribution to cumulative distribution
             Kokkos::parallel_scan(
-                StateVectorRangePolicy<KokkosExecSpace>(0,
-                                                        exp2(num_local_qubits)),
+                RangePolicy<KokkosExecSpace>(0, exp2(num_local_qubits)),
                 KOKKOS_LAMBDA(const std::size_t k, PrecisionT &update_value,
                               const bool is_final) {
                     const PrecisionT val_k = local_normalized_probability(k);
@@ -644,7 +643,7 @@ class MeasurementsMPI final
 
             // Generate local samples using local distribution
             Kokkos::parallel_for(
-                StateVectorRangePolicy<KokkosExecSpace>(0, local_num_samples),
+                RangePolicy<KokkosExecSpace>(0, local_num_samples),
                 Local_Sampler<PrecisionT, Kokkos::Random_XorShift64_Pool>(
                     local_samples, local_normalized_probability, rand_pool,
                     num_local_qubits, num_global_qubits, global_index,
