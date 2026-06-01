@@ -1130,6 +1130,18 @@ TEMPLATE_TEST_CASE("sendrecvBuffers", "[LKMPI]", double, float) {
     }
 }
 
+TEMPLATE_TEST_CASE("MPIManagerKokkos::Sendrecv buffer cap guard", "[LKMPI]",
+                   double, float) {
+    MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
+    Kokkos::View<Kokkos::complex<TestType> *> sbuf("sbuf", 1);
+    Kokkos::View<Kokkos::complex<TestType> *> rbuf("rbuf", 1);
+    const std::size_t peer = mpi_manager.getRank(); // self; never reached
+    PL_REQUIRE_THROWS_MATCHES(
+        mpi_manager.Sendrecv(sbuf, peer, rbuf, peer,
+                             MPIManagerKokkos::MPI_COMM_BUFFER_CAP + 1, 0),
+        LightningException, "exceeds the 32-bit MPI limit");
+}
+
 TEMPLATE_TEST_CASE("allReduceSum", "[LKMPI]", double, float) {
     const std::size_t num_qubits = 5;
     MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);

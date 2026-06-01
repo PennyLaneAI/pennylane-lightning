@@ -84,6 +84,11 @@ class MPIManagerKokkos final : public MPIManager {
     }
 
   public:
+    /// Hard cap (elements) on a single MPI transfer count. MPI counts are
+    /// `int`, so this stays < INT_MAX (2^30 < 2^31 - 1) with headroom. Enforced
+    /// by the Sendrecv guard below; callers must keep transfer sizes <= this.
+    static constexpr std::size_t MPI_COMM_BUFFER_CAP = std::size_t{1} << 30;
+
     MPIManagerKokkos(MPI_Comm communicator = MPI_COMM_WORLD)
         : MPIManager(communicator) {}
 
@@ -107,6 +112,10 @@ class MPIManagerKokkos final : public MPIManager {
                   Kokkos::View<T *> &recvBuf, std::size_t source,
                   std::size_t size, std::size_t tag = 0) {
         MPI_Datatype datatype = getMPIDatatype<T>();
+        PL_ABORT_IF(size > MPI_COMM_BUFFER_CAP,
+                    "Sendrecv element count exceeds the 32-bit MPI limit; "
+                    "callers must keep transfer sizes within "
+                    "MPI_COMM_BUFFER_CAP.");
         MPI_Status status;
         int sendtag = static_cast<int>(tag);
         int recvtag = static_cast<int>(tag);
