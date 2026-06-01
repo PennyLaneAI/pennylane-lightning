@@ -35,6 +35,7 @@ using namespace Pennylane::Measures;
 using namespace Pennylane::Observables;
 using Pennylane::LightningKokkos::StateVectorKokkos;
 using Pennylane::LightningKokkos::Util::getRealOfComplexInnerProduct;
+using Pennylane::LightningKokkos::Util::one;
 using Pennylane::LightningKokkos::Util::RangePolicy;
 using Pennylane::LightningKokkos::Util::SparseMV_Kokkos;
 using Pennylane::LightningKokkos::Util::vector2view;
@@ -285,8 +286,8 @@ class MeasurementsMPI final
                               this->_statevector.getGlobalWires().end(),
                               global_Z_wires[i]));
                 global_z_mask |=
-                    (1U << (this->_statevector.getNumGlobalWires() - 1 -
-                            distance));
+                    (one << (this->_statevector.getNumGlobalWires() - 1 -
+                             distance));
             }
 
             if (std::popcount(global_index & global_z_mask) % 2 == 1) {
@@ -480,7 +481,7 @@ class MeasurementsMPI final
             mpi_manager_.getRank());
         std::size_t mask = 0;
         for (std::size_t i = 0; i < global_wires.size(); i++) {
-            mask |= (1 << (this->_statevector.getRevGlobalWireIndex(
+            mask |= (one << (this->_statevector.getRevGlobalWireIndex(
                          global_wires[i])));
         }
         std::size_t subCommGroupId = global_index & mask;

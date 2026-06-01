@@ -72,6 +72,12 @@ template <class PrecisionT, class FuncT> class applyNCNFunctor {
         controlBitPatterns(indices_, num_qubits, controlled_wires,
                            controlled_values);
         indices = vector2view(indices_);
+        // Kokkos stores TeamPolicy league_size as a 32-bit int on the CUDA/HIP
+        // backends, so abort rather than silently truncate when the number of
+        // teams would exceed the 2^31 league_size limit.
+        PL_ABORT_IF(two2N >= (std::size_t{1} << 31),
+                    "Number of thread teams exceeds the Kokkos TeamPolicy "
+                    "league_size limit (2^31) on GPU backends for this gate.");
         Kokkos::parallel_for(TeamPolicy<>(two2N, Kokkos::AUTO, dim), *this);
     }
     // TODO: Runtime selection for copying indices to scratch level 0/shmem
@@ -148,7 +154,7 @@ class applyNC1Functor<PrecisionT, FuncT, false> {
                     const std::vector<std::size_t> &wires, FuncT core_function_)
         : arr(arr_), core_function(core_function_),
           rev_wire(num_qubits ? num_qubits - wires[0] - 1 : 0),
-          rev_wire_shift((static_cast<std::size_t>(1U) << rev_wire)),
+          rev_wire_shift((one << rev_wire)),
           wire_parity(fillTrailingOnes(rev_wire)),
           wire_parity_inv(fillLeadingOnes(rev_wire + 1)) {
         Kokkos::parallel_for(
@@ -766,8 +772,7 @@ class applyNC2Functor<PrecisionT, FuncT, false> {
         : arr(arr_), core_function(core_function_),
           rev_wire0(num_qubits - wires[1] - 1),
           rev_wire1(num_qubits - wires[0] - 1),
-          rev_wire0_shift(static_cast<std::size_t>(1U) << rev_wire0),
-          rev_wire1_shift(static_cast<std::size_t>(1U) << rev_wire1),
+          rev_wire0_shift(one << rev_wire0), rev_wire1_shift(one << rev_wire1),
           rev_wire_min(std::min(rev_wire0, rev_wire1)),
           rev_wire_max(std::max(rev_wire0, rev_wire1)),
           parity_low(fillTrailingOnes(rev_wire_min)),
@@ -1368,9 +1373,8 @@ template <class PrecisionT, class FuncT> class applyNC3Functor {
           rev_wire0(num_qubits - wires[2] - 1),
           rev_wire1(num_qubits - wires[1] - 1),
           rev_wire2(num_qubits - wires[0] - 1),
-          rev_wire0_shift(static_cast<std::size_t>(1U) << rev_wire0),
-          rev_wire1_shift(static_cast<std::size_t>(1U) << rev_wire1),
-          rev_wire2_shift(static_cast<std::size_t>(1U) << rev_wire2) {
+          rev_wire0_shift(one << rev_wire0), rev_wire1_shift(one << rev_wire1),
+          rev_wire2_shift(one << rev_wire2) {
         std::size_t rev_wire_min = std::min(rev_wire0, rev_wire1);
         std::size_t rev_wire_max = std::max(rev_wire0, rev_wire1);
         std::size_t rev_wire_mid{0U};
@@ -1547,10 +1551,8 @@ class applyNC4Functor<PrecisionT, FuncT, false> {
           rev_wire1(num_qubits - wires[2] - 1),
           rev_wire2(num_qubits - wires[1] - 1),
           rev_wire3(num_qubits - wires[0] - 1),
-          rev_wire0_shift(static_cast<std::size_t>(1U) << rev_wire0),
-          rev_wire1_shift(static_cast<std::size_t>(1U) << rev_wire1),
-          rev_wire2_shift(static_cast<std::size_t>(1U) << rev_wire2),
-          rev_wire3_shift(static_cast<std::size_t>(1U) << rev_wire3) {
+          rev_wire0_shift(one << rev_wire0), rev_wire1_shift(one << rev_wire1),
+          rev_wire2_shift(one << rev_wire2), rev_wire3_shift(one << rev_wire3) {
         std::size_t rev_wire_min = std::min(rev_wire0, rev_wire1);
         std::size_t rev_wire_min_mid = std::max(rev_wire0, rev_wire1);
         std::size_t rev_wire_max_mid = std::min(rev_wire2, rev_wire3);

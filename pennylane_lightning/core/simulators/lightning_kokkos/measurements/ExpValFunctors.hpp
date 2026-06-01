@@ -102,7 +102,7 @@ template <class PrecisionT> struct getExpectationValuePauliXFunctor {
         std::size_t num_qubits, const std::vector<std::size_t> &wires) {
         arr = arr_;
         rev_wire = num_qubits - wires[0] - 1;
-        rev_wire_shift = (static_cast<std::size_t>(1U) << rev_wire);
+        rev_wire_shift = (one << rev_wire);
         wire_parity = fillTrailingOnes(rev_wire);
         wire_parity_inv = fillLeadingOnes(rev_wire + 1);
     }
@@ -131,7 +131,7 @@ template <class PrecisionT> struct getExpectationValuePauliYFunctor {
         std::size_t num_qubits, const std::vector<std::size_t> &wires) {
         arr = arr_;
         rev_wire = num_qubits - wires[0] - 1;
-        rev_wire_shift = (static_cast<std::size_t>(1U) << rev_wire);
+        rev_wire_shift = (one << rev_wire);
         wire_parity = fillTrailingOnes(rev_wire);
         wire_parity_inv = fillLeadingOnes(rev_wire + 1);
     }
@@ -164,7 +164,7 @@ template <class PrecisionT> struct getExpectationValuePauliZFunctor {
         std::size_t num_qubits, const std::vector<std::size_t> &wires) {
         arr = arr_;
         rev_wire = num_qubits - wires[0] - 1;
-        rev_wire_shift = (static_cast<std::size_t>(1U) << rev_wire);
+        rev_wire_shift = (one << rev_wire);
         wire_parity = fillTrailingOnes(rev_wire);
         wire_parity_inv = fillLeadingOnes(rev_wire + 1);
     }
@@ -192,7 +192,7 @@ template <class PrecisionT> struct getExpectationValueHadamardFunctor {
         std::size_t num_qubits, const std::vector<std::size_t> &wires) {
         arr = arr_;
         rev_wire = num_qubits - wires[0] - 1;
-        rev_wire_shift = (static_cast<std::size_t>(1U) << rev_wire);
+        rev_wire_shift = (one << rev_wire);
         wire_parity = fillTrailingOnes(rev_wire);
         wire_parity_inv = fillLeadingOnes(rev_wire + 1);
     }
@@ -338,7 +338,7 @@ template <class PrecisionT> struct getExpVal1QubitOpFunctor {
         matrix = matrix_;
         num_qubits = num_qubits_;
         rev_wire = num_qubits - wires_[0] - 1;
-        rev_wire_shift = (static_cast<std::size_t>(1U) << rev_wire);
+        rev_wire_shift = (one << rev_wire);
         wire_parity = fillTrailingOnes(rev_wire);
         wire_parity_inv = fillLeadingOnes(rev_wire + 1);
     }
@@ -396,8 +396,8 @@ template <class PrecisionT> struct getExpVal2QubitOpFunctor {
 
         rev_wire0 = num_qubits - wires_[1] - 1;
         rev_wire1 = num_qubits - wires_[0] - 1;
-        rev_wire0_shift = static_cast<std::size_t>(1U) << rev_wire0;
-        rev_wire1_shift = static_cast<std::size_t>(1U) << rev_wire1;
+        rev_wire0_shift = one << rev_wire0;
+        rev_wire1_shift = one << rev_wire1;
         rev_wire_min = std::min(rev_wire0, rev_wire1);
         rev_wire_max = std::max(rev_wire0, rev_wire1);
         parity_low = fillTrailingOnes(rev_wire_min);

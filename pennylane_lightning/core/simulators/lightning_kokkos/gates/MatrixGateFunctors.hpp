@@ -292,8 +292,8 @@ template <class PrecisionT> struct apply2QubitOpFunctor {
 
         rev_wire0 = num_qubits - wires_[1] - 1;
         rev_wire1 = num_qubits - wires_[0] - 1; // Control qubit
-        rev_wire0_shift = static_cast<std::size_t>(1U) << rev_wire0;
-        rev_wire1_shift = static_cast<std::size_t>(1U) << rev_wire1;
+        rev_wire0_shift = one << rev_wire0;
+        rev_wire1_shift = one << rev_wire1;
         rev_wire_min = std::min(rev_wire0, rev_wire1);
         rev_wire_max = std::max(rev_wire0, rev_wire1);
         parity_low = fillTrailingOnes(rev_wire_min);

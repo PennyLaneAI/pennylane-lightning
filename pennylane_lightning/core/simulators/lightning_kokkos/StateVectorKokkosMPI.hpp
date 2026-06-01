@@ -994,7 +994,7 @@ class StateVectorKokkosMPI final
             if (opName == "PauliX") {
                 std::size_t rev_distance = getRevGlobalWireIndex(wires[0]);
                 for (auto &global_index : mpi_rank_to_global_index_map_) {
-                    global_index = global_index ^ (1U << rev_distance);
+                    global_index = global_index ^ (one << rev_distance);
                 }
                 return;
             } else if (opName == "PauliY") {
@@ -1006,7 +1006,7 @@ class StateVectorKokkosMPI final
                                  : (-1.0) * M_PI_2;
                 (*sv_).applyOperation("GlobalPhase", {}, false, {phase});
                 for (auto &global_index : mpi_rank_to_global_index_map_) {
-                    global_index = global_index ^ (1U << rev_distance);
+                    global_index = global_index ^ (one << rev_distance);
                 }
 
                 return;
@@ -1023,7 +1023,7 @@ class StateVectorKokkosMPI final
                 std::size_t rev_distance_1 = getRevGlobalWireIndex(wires[1]);
                 for (auto &global_index : mpi_rank_to_global_index_map_) {
                     global_index = ((global_index >> rev_distance_0) & 1)
-                                       ? global_index ^ (1U << rev_distance_1)
+                                       ? global_index ^ (one << rev_distance_1)
                                        : global_index;
                 }
                 return;
@@ -1135,7 +1135,7 @@ class StateVectorKokkosMPI final
                             const std::vector<std::size_t> &wires,
                             bool inverse = false) {
         PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
-        size_t n = static_cast<std::size_t>(1U) << wires.size();
+        size_t n = one << wires.size();
         const std::vector<ComplexT> matrix_(matrix, matrix + n * n);
         applyOperation("Matrix", wires, inverse, {}, matrix_);
     }
@@ -1176,7 +1176,7 @@ class StateVectorKokkosMPI final
                           const std::vector<std::size_t> &wires,
                           bool inverse = false) {
         PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
-        size_t n = static_cast<std::size_t>(1U) << wires.size();
+        size_t n = one << wires.size();
         const std::vector<ComplexT> matrix_(matrix, matrix + n * n);
         applyOperation("Matrix", controlled_wires, controlled_values, wires,
                        inverse, {}, matrix_);

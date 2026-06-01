@@ -54,7 +54,7 @@ template <class PrecisionT, class DeviceType> class getProbsFunctor {
                     const std::vector<std::size_t> &wires_,
                     const Kokkos::View<std::size_t *> all_indices_,
                     const Kokkos::View<std::size_t *> all_offsets_)
-        : value_count{1U << wires_.size()}, arr{arr_},
+        : value_count{one << wires_.size()}, arr{arr_},
           all_indices{all_indices_}, all_offsets{all_offsets_} {}
 
     KOKKOS_INLINE_FUNCTION
@@ -131,7 +131,7 @@ class getProbsNQubitOpFunctor {
     getProbsNQubitOpFunctor(const Kokkos::View<ComplexT *> &arr_,
                             const std::size_t num_qubits_,
                             const std::vector<std::size_t> &wires_)
-        : value_count{1U << wires_.size()}, arr{arr_}, n_wires{wires_.size()} {
+        : value_count{one << wires_.size()}, arr{arr_}, n_wires{wires_.size()} {
         PL_ABORT_IF(num_wires != 0 && num_wires != n_wires,
                     "num_wires must be equal to n_wires.");
         std::vector<std::size_t> rev_wires_(n_wires);
@@ -199,7 +199,7 @@ class getProbsNQubitOpFunctor {
     void apply0(const std::size_t i0, const std::size_t rev_wire,
                 const std::size_t offset, PrecisionT dst[]) const {
         std::size_t i1;
-        i1 = i0 | (0U << rev_wire);
+        i1 = i0;
         PrecisionT rsv = real(arr(i1));
         PrecisionT isv = imag(arr(i1));
         dst[offset + 0] += rsv * rsv + isv * isv;
@@ -703,7 +703,7 @@ struct getTransposedIndexFunctor {
     KOKKOS_INLINE_FUNCTION
     void operator()(const std::size_t i, const std::size_t j) const {
         const std::size_t axis = sorted_ind_wires(j);
-        const std::size_t index = i / (1L << (max_index_sorted_ind_wires - j));
+        const std::size_t index = i / (one << (max_index_sorted_ind_wires - j));
         const std::size_t sub_index = (index % 2)
                                       << (max_index_sorted_ind_wires - axis);
         Kokkos::atomic_add(&trans_index(i), sub_index);

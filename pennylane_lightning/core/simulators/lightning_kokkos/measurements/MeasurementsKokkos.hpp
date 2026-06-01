@@ -173,6 +173,13 @@ class Measurements final
             break;
         default:
             std::size_t scratch_size = ScratchViewComplex::shmem_size(dim);
+            // Kokkos stores TeamPolicy league_size as a 32-bit int on the
+            // CUDA/HIP backends, so abort rather than silently truncate when
+            // the number of teams would exceed the 2^31 league_size limit.
+            PL_ABORT_IF(two2N >= (std::size_t{1} << 31),
+                        "Number of thread teams exceeds the Kokkos TeamPolicy "
+                        "league_size limit (2^31) on GPU backends for this "
+                        "observable.");
             Kokkos::parallel_reduce(
                 "getExpValMultiQubitOpFunctor",
                 TeamPolicy(two2N, Kokkos::AUTO, dim)
