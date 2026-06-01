@@ -84,9 +84,13 @@ class MPIManagerKokkos final : public MPIManager {
     }
 
   public:
-    /// Hard cap (elements) on a single MPI transfer count. MPI counts are
-    /// `int`, so this stays < INT_MAX (2^30 < 2^31 - 1) with headroom. Enforced
-    /// by the Sendrecv guard below; callers must keep transfer sizes <= this.
+    /**
+     * @brief Hard cap (elements) on a single MPI transfer count.
+     *
+     * MPI counts are `int`, so this stays below INT_MAX (2^30 < 2^31 - 1) with
+     * headroom. Enforced by the Sendrecv guard below; callers must keep
+     * transfer sizes within this bound.
+     */
     static constexpr std::size_t MPI_COMM_BUFFER_CAP = std::size_t{1} << 30;
 
     MPIManagerKokkos(MPI_Comm communicator = MPI_COMM_WORLD)

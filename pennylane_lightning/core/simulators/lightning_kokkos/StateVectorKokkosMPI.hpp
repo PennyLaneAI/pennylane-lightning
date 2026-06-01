@@ -304,6 +304,25 @@ class StateVectorKokkosMPI final
 
     auto getMPIManager() const { return mpi_manager_; }
 
+    /**
+     * @brief Compute the MPI communication buffer size in elements.
+     *
+     * Shrinks half the local state vector by `ratio`, then clamps to `cap`
+     * (which keeps the MPI element count below INT_MAX), never returning less
+     * than 1. Pure so it can be unit-tested with cap-exceeding inputs.
+     *
+     * @param half_sv Half the local sub-state-vector size, in elements.
+     * @param ratio Memory-reduction factor; must be greater than 0 (callers
+     * pass the compile-time COMM_BUFFER_RATIO).
+     * @param cap Hard upper bound, e.g. MPIManagerKokkos::MPI_COMM_BUFFER_CAP.
+     * @return Buffer size in elements: max(1, min(half_sv / ratio, cap)).
+     */
+    static std::size_t computeCommBufferSize(std::size_t half_sv,
+                                             std::size_t ratio,
+                                             std::size_t cap) {
+        return std::max(std::size_t{1}, std::min(half_sv / ratio, cap));
+    }
+
     auto getSendBuffer() const { return sendbuf_; };
     auto getRecvBuffer() const { return recvbuf_; };
 

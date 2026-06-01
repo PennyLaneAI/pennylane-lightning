@@ -1142,6 +1142,27 @@ TEMPLATE_TEST_CASE("MPIManagerKokkos::Sendrecv buffer cap guard", "[LKMPI]",
         LightningException, "exceeds the 32-bit MPI limit");
 }
 
+TEMPLATE_TEST_CASE("StateVectorKokkosMPI::computeCommBufferSize", "[LKMPI]",
+                   double, float) {
+    using SV = StateVectorKokkosMPI<TestType>;
+    const std::size_t cap = MPIManagerKokkos::MPI_COMM_BUFFER_CAP;
+
+    // Ratio reduction (below the cap).
+    CHECK(SV::computeCommBufferSize(std::size_t{1} << 10, 4, cap) ==
+          (std::size_t{1} << 8));
+    // Cap clamp (cannot be reached by a real allocation).
+    CHECK(SV::computeCommBufferSize(std::size_t{1} << 33, 4, cap) == cap);
+    // Floor at 1 (tiny local SV).
+    CHECK(SV::computeCommBufferSize(2, 4, cap) == 1);
+    // Ratio == 1 -> just the (capped) half-SV.
+    CHECK(SV::computeCommBufferSize(std::size_t{1} << 5, 1, cap) ==
+          (std::size_t{1} << 5));
+    // Truncating integer division (not rounded, not floored to 1): 7/2 = 3.
+    CHECK(SV::computeCommBufferSize(7, 2, cap) == 3);
+    // Invariant: never exceeds the cap.
+    CHECK(SV::computeCommBufferSize(std::size_t{1} << 40, 2, cap) <= cap);
+}
+
 TEMPLATE_TEST_CASE("allReduceSum", "[LKMPI]", double, float) {
     const std::size_t num_qubits = 5;
     MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
