@@ -789,48 +789,55 @@ class StateVectorKokkosMPI final
             auto sendbuf_view = (*sendbuf_);
             auto recvbuf_view = (*recvbuf_);
             auto sv_view = (*sv_).getView();
-            std::size_t send_size =
+            const std::size_t send_size =
                 exp2((getNumLocalWires() - local_wires_to_swap.size()));
+            const std::size_t chunk_size = sendbuf_->extent(0);
 
-            // Copy to send buffer
-            Kokkos::parallel_for(
-                "copy_sendbuf", RangePolicy<KokkosExecSpace>(0, send_size),
-                KOKKOS_LAMBDA(std::size_t buffer_index) {
-                    std::size_t SV_index = swap_wire_mask;
-                    for (std::size_t i = 0; i < not_swapping_local_wire_size;
-                         i++) {
-                        SV_index |=
-                            (((buffer_index >> i) & 1)
-                             << rev_local_wires_index_not_swapping_view(i));
-                    }
-                    sendbuf_view(buffer_index) = sv_view(SV_index);
-                });
-            Kokkos::fence();
-
-            // MPI Sendrecv
-            std::size_t other_global_index = batch_index ^ global_index;
-            std::size_t other_mpi_rank =
+            const std::size_t other_global_index = batch_index ^ global_index;
+            const std::size_t other_mpi_rank =
                 getMPIRankFromGlobalIndex(other_global_index);
 
-            sendrecvBuffers(other_mpi_rank, other_mpi_rank, send_size,
-                            batch_index);
+            // Transfer in chunks no larger than the comm buffer; with a
+            // full-size buffer this is a single chunk.
+            for (std::size_t off = 0; off < send_size; off += chunk_size) {
+                const std::size_t csize = std::min(chunk_size, send_size - off);
 
-            // Copy from recv buffer
-            Kokkos::parallel_for(
-                "copy_recvbuf", RangePolicy<KokkosExecSpace>(0, send_size),
-                KOKKOS_LAMBDA(std::size_t buffer_index) {
-                    std::size_t SV_index = swap_wire_mask;
+                // Copy to send buffer
+                Kokkos::parallel_for(
+                    "copy_sendbuf", RangePolicy<KokkosExecSpace>(0, csize),
+                    KOKKOS_LAMBDA(std::size_t buffer_index) {
+                        const std::size_t idx = buffer_index + off;
+                        std::size_t SV_index = swap_wire_mask;
+                        for (std::size_t i = 0;
+                             i < not_swapping_local_wire_size; i++) {
+                            SV_index |=
+                                (((idx >> i) & 1)
+                                 << rev_local_wires_index_not_swapping_view(i));
+                        }
+                        sendbuf_view(buffer_index) = sv_view(SV_index);
+                    });
+                Kokkos::fence();
 
-                    for (std::size_t i = 0; i < not_swapping_local_wire_size;
-                         i++) {
-                        SV_index |=
-                            (((buffer_index >> i) & 1)
-                             << rev_local_wires_index_not_swapping_view(i));
-                    }
+                // MPI Sendrecv
+                sendrecvBuffers(other_mpi_rank, other_mpi_rank, csize,
+                                batch_index);
 
-                    sv_view(SV_index) = recvbuf_view(buffer_index);
-                });
-            Kokkos::fence();
+                // Copy from recv buffer
+                Kokkos::parallel_for(
+                    "copy_recvbuf", RangePolicy<KokkosExecSpace>(0, csize),
+                    KOKKOS_LAMBDA(std::size_t buffer_index) {
+                        const std::size_t idx = buffer_index + off;
+                        std::size_t SV_index = swap_wire_mask;
+                        for (std::size_t i = 0;
+                             i < not_swapping_local_wire_size; i++) {
+                            SV_index |=
+                                (((idx >> i) & 1)
+                                 << rev_local_wires_index_not_swapping_view(i));
+                        }
+                        sv_view(SV_index) = recvbuf_view(buffer_index);
+                    });
+                Kokkos::fence();
+            }
         }
 
         // Swap global and local wires labels
