@@ -318,13 +318,16 @@ class StateVectorKokkosMPI final
      * MPIManagerKokkos::MPI_COMM_BUFFER_CAP (which keeps the MPI element count
      * below INT_MAX), never returning less than 1.
      *
-     * @param local_qubit_count Number of local qubits on each process.
-     * @param ratio Memory-reduction factor; must be greater than 0 .
+     * @param local_qubit_count Number of local qubits on each process; must be
+     * at least 1.
+     * @param ratio Memory-reduction factor; must be greater than 0.
      * @return Buffer size in elements:
-     * max(1, min(2^(local_qubit_count - 1) / ratio, MPI_COMM_BUFFER_CAP).
+     * max(1, min(2^(local_qubit_count - 1) / ratio, MPI_COMM_BUFFER_CAP)).
      */
     static std::size_t computeCommBufferSize(std::size_t local_qubit_count,
                                              std::size_t ratio) {
+        PL_ABORT_IF(local_qubit_count == 0,
+                    "computeCommBufferSize requires at least one local qubit.");
         const std::size_t half_sv = exp2(local_qubit_count - 1);
         return std::max(
             std::size_t{1},
@@ -966,7 +969,8 @@ class StateVectorKokkosMPI final
 
         // Transfer the full local sub-state-vector in chunks no larger than
         // the comm buffer; with a half-size buffer this is two chunks.
-        for (std::size_t offset = 0; offset < total_size; offset += chunk_size) {
+        for (std::size_t offset = 0; offset < total_size;
+             offset += chunk_size) {
             const std::size_t csize = std::min(chunk_size, total_size - offset);
             // COPY to buffer
             Kokkos::parallel_for(

@@ -1163,6 +1163,11 @@ TEMPLATE_TEST_CASE("StateVectorKokkosMPI::computeCommBufferSize", "[LKMPI]",
     CHECK(SV::computeCommBufferSize(6, 3) == 10);
     // Invariant: never exceeds the cap: 2^(41-1) / 2 = 2^39 -> cap.
     CHECK(SV::computeCommBufferSize(41, 2) <= cap);
+    // Smallest valid local size (1 local qubit): 2^(1-1) / 1 = 1.
+    CHECK(SV::computeCommBufferSize(1, 1) == 1);
+    // Zero local qubits is rejected (2^(0-1) would underflow std::size_t).
+    PL_REQUIRE_THROWS_MATCHES(SV::computeCommBufferSize(0, 4),
+                              LightningException, "at least one local qubit");
 }
 
 TEMPLATE_TEST_CASE("MPI comm-buffer chunking: swap correctness", "[LKMPI]",
