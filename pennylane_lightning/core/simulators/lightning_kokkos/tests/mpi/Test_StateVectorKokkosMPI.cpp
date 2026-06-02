@@ -1193,6 +1193,31 @@ TEMPLATE_TEST_CASE("MPI comm-buffer chunking: swap correctness", "[LKMPI]",
     }
 }
 
+TEMPLATE_TEST_CASE("StateVectorKokkosMPI comm_buffer_ratio ctor arg", "[LKMPI]",
+                   double, float) {
+    using SV = StateVectorKokkosMPI<TestType>;
+    const std::size_t num_qubits = 5; // 4 ranks -> 3 local qubits
+    MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
+    REQUIRE(mpi_manager.getSize() == 4);
+
+    // Default ratio when not specified.
+    SV sv_default(mpi_manager, num_qubits);
+    CHECK(sv_default.getCommBufferRatio() == SV::COMM_BUFFER_RATIO);
+
+    // Custom ratio (kokkos_args default, ratio = 2).
+    SV sv2(mpi_manager, num_qubits, Kokkos::InitializationSettings{}, 2);
+    CHECK(sv2.getCommBufferRatio() == 2);
+    const std::size_t half_sv = exp2(sv2.getNumLocalWires() - 1);
+    CHECK(sv2.getSendBuffer()->extent(0) ==
+          SV::computeCommBufferSize(half_sv, 2,
+                                    MPIManagerKokkos::MPI_COMM_BUFFER_CAP));
+
+    // Ratio 0 is rejected.
+    PL_REQUIRE_THROWS_MATCHES(
+        SV(mpi_manager, num_qubits, Kokkos::InitializationSettings{}, 0),
+        LightningException, "comm_buffer_ratio must be >= 1");
+}
+
 TEMPLATE_TEST_CASE("allReduceSum", "[LKMPI]", double, float) {
     const std::size_t num_qubits = 5;
     MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);

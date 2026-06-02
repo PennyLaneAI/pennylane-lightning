@@ -72,6 +72,11 @@ class LightningKokkosStateVector(LightningBaseStateVector):
         kokkos_args (InitializationSettings): binding for Kokkos::InitializationSettings
             (threading parameters).
         mpi (bool): Use MPI for distributed state vector.
+        comm_buffer_ratio (int): For ``mpi=True`` only. Sets each MPI communication buffer
+            to ``max(1, min(2**(local_qubits - 1) // comm_buffer_ratio, 2**30))`` complex
+            elements; two such buffers (send and recv) are allocated per process. Larger
+            values use less memory at the cost of more transfer chunks. ``None`` uses the
+            C++ default (4).
 
     """
 
@@ -82,6 +87,7 @@ class LightningKokkosStateVector(LightningBaseStateVector):
         rng: Generator = None,
         kokkos_args=None,
         mpi: bool = None,
+        comm_buffer_ratio: int = None,
     ):
 
         super().__init__(num_wires, dtype, rng)
@@ -94,9 +100,12 @@ class LightningKokkosStateVector(LightningBaseStateVector):
 
         # Initialize the state vector
         sv_init_args = [self.num_wires]
+        sv_kwargs = {}
         if mpi:
             self._mpi_manager = MPIManagerKokkos()
             sv_init_args.insert(0, self._mpi_manager)
+            if comm_buffer_ratio is not None:
+                sv_kwargs["comm_buffer_ratio"] = comm_buffer_ratio
 
         if kokkos_args is not None:
             if not isinstance(kokkos_args, InitializationSettings):
@@ -105,7 +114,7 @@ class LightningKokkosStateVector(LightningBaseStateVector):
                 )
             sv_init_args.append(kokkos_args)
 
-        self._qubit_state = self._state_dtype()(*sv_init_args)
+        self._qubit_state = self._state_dtype()(*sv_init_args, **sv_kwargs)
 
         if not self._kokkos_config:
             self._kokkos_config = self._kokkos_configuration()

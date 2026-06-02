@@ -121,6 +121,13 @@ class LightningKokkos(LightningBase):
         mpi  (bool): Use MPI to distribute statevector across multiple processes.
         kokkos_args (InitializationSettings): binding for Kokkos::InitializationSettings
             (threading parameters).
+        comm_buffer_ratio (int): For ``mpi=True`` only. Sets the size of *each* MPI
+            communication buffer to
+            ``per_buffer = max(1, min(2**(local_qubits - 1) // comm_buffer_ratio, 2**30))``
+            complex elements, where ``local_qubits = total_qubits - log2(num_processes)``.
+            Two buffers (send and recv) are allocated per process. Larger values use less memory and split each inter-process
+            transfer into more chunks. The per-buffer element count is hard-capped at
+            ``2**30`` to keep MPI transfer counts within the 32-bit limit. Defaults to 4.
     """
 
     # General device options
@@ -156,6 +163,7 @@ class LightningKokkos(LightningBase):
         # Kokkos arguments
         mpi: bool = False,
         kokkos_args=None,
+        comm_buffer_ratio: int = None,
     ):
         if not self._CPP_BINARY_AVAILABLE:
             raise ImportError(
@@ -176,6 +184,8 @@ class LightningKokkos(LightningBase):
         self._set_lightning_classes()
 
         self._mpi = mpi
+        if comm_buffer_ratio is not None and not mpi:
+            raise DeviceError("comm_buffer_ratio requires mpi=True")
         if mpi:
             if wires is None:
                 raise DeviceError("Lightning-Kokkos-MPI does not support dynamic wires allocation.")
@@ -185,6 +195,7 @@ class LightningKokkos(LightningBase):
                 kokkos_args=kokkos_args,
                 mpi=True,
                 rng=self._rng,
+                comm_buffer_ratio=comm_buffer_ratio,
             )
         else:
             self._statevector = None

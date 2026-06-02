@@ -98,14 +98,6 @@ class StateVectorKokkosMPI final
     std::shared_ptr<KokkosVector> sendbuf_;
     MPIManagerKokkos mpi_manager_;
 
-    /**
-     * @brief Compile-time memory-reduction factor for the MPI comm buffer.
-     *
-     * Buffer size = max(1, min(half_sv / ratio, MPI_COMM_BUFFER_CAP)).
-     */
-    static constexpr std::size_t COMM_BUFFER_RATIO = 4;
-    // Active ratio (defaults to COMM_BUFFER_RATIO); held as a member so a
-    // future runtime knob can set it without changing allocateBuffers().
     std::size_t comm_buffer_ratio_ = COMM_BUFFER_RATIO;
 
     std::size_t num_qubits_;
@@ -129,12 +121,14 @@ class StateVectorKokkosMPI final
     StateVectorKokkosMPI(MPIManagerKokkos mpi_manager,
                          std::size_t num_global_qubits,
                          std::size_t num_local_qubits,
-                         const Kokkos::InitializationSettings &kokkos_args = {})
+                         const Kokkos::InitializationSettings &kokkos_args = {},
+                         std::size_t comm_buffer_ratio = COMM_BUFFER_RATIO)
         : BaseType{num_global_qubits + num_local_qubits},
-          mpi_manager_(mpi_manager),
+          mpi_manager_(mpi_manager), comm_buffer_ratio_(comm_buffer_ratio),
           num_qubits_(num_global_qubits + num_local_qubits),
           numGlobalQubits_(num_global_qubits),
           numLocalQubits_(num_local_qubits) {
+        PL_ABORT_IF(comm_buffer_ratio == 0, "comm_buffer_ratio must be >= 1");
         Kokkos::InitializationSettings settings = kokkos_args;
 
         global_wires_.resize(numGlobalQubits_); // set to constructor line
@@ -159,10 +153,11 @@ class StateVectorKokkosMPI final
      */
     StateVectorKokkosMPI(MPIManagerKokkos mpi_manager,
                          std::size_t total_num_qubits,
-                         const Kokkos::InitializationSettings &kokkos_args = {})
+                         const Kokkos::InitializationSettings &kokkos_args = {},
+                         std::size_t comm_buffer_ratio = COMM_BUFFER_RATIO)
         : StateVectorKokkosMPI(mpi_manager, log2(mpi_manager.getSize()),
                                total_num_qubits - log2(mpi_manager.getSize()),
-                               kokkos_args) {}
+                               kokkos_args, comm_buffer_ratio) {}
 
     /**
      * @brief Create a new state vector with MPI Comm.
@@ -303,6 +298,7 @@ class StateVectorKokkosMPI final
         global_wires_ = other.getGlobalWires();
         local_wires_ = other.getLocalWires();
         mpi_rank_to_global_index_map_ = other.getMPIRankToGlobalIndexMap();
+        comm_buffer_ratio_ = other.getCommBufferRatio();
         sendbuf_ = other.sendbuf_;
         recvbuf_ = other.recvbuf_;
         (*sv_).DeviceToDevice(other.getView());
@@ -339,6 +335,22 @@ class StateVectorKokkosMPI final
     std::size_t getNumGlobalWires() const { return numGlobalQubits_; }
 
     std::size_t getNumLocalWires() const { return numLocalQubits_; }
+
+    /**
+     * @brief Default MPI comm-buffer memory-reduction factor.
+     *
+     * Buffer size = max(1, min(half_sv / ratio, MPI_COMM_BUFFER_CAP)).
+     * Two of these buffers (send, recv) are allocated.
+     *
+     */
+    static constexpr std::size_t COMM_BUFFER_RATIO = 4;
+
+    /**
+     * @brief Active comm-buffer memory-reduction factor for this state vector.
+     *
+     * @return The ratio used to size the MPI send/recv buffers.
+     */
+    std::size_t getCommBufferRatio() const { return comm_buffer_ratio_; }
 
     /**
      * @brief Reset the indices of the global_wires_, local_wires_ and

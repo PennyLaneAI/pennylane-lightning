@@ -132,3 +132,29 @@ def test_unsupported_gate():
     ):
         dev.execute(tape)
         comm.Barrier()
+
+
+@pytest.mark.skipif(device_name != "lightning.kokkos", reason="Only for Lightning-Kokkos")
+def test_comm_buffer_ratio_matches_default():
+    """comm_buffer_ratio is accepted with mpi=True and yields the same result
+    as the default ratio (it changes only how transfers are chunked)."""
+    n_wires = 4
+
+    def circuit():
+        qp.Hadamard(0)
+        qp.CNOT([0, 3])
+        qp.RX(0.37, wires=2)
+        return qp.expval(qp.PauliZ(0) @ qp.PauliZ(3))
+
+    dev = qp.device(device_name, wires=n_wires, mpi=True, comm_buffer_ratio=2)
+    dev_default = qp.device(device_name, wires=n_wires, mpi=True)
+    res = qp.QNode(circuit, dev)()
+    res_default = qp.QNode(circuit, dev_default)()
+    assert res == pytest.approx(res_default)
+
+
+@pytest.mark.skipif(device_name != "lightning.kokkos", reason="Only for Lightning-Kokkos")
+def test_comm_buffer_ratio_requires_mpi():
+    """Setting comm_buffer_ratio without mpi=True raises a clear error."""
+    with pytest.raises(DeviceError, match="comm_buffer_ratio requires mpi=True"):
+        qp.device(device_name, wires=4, comm_buffer_ratio=2)
