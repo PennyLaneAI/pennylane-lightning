@@ -311,22 +311,24 @@ class StateVectorKokkosMPI final
     auto getMPIManager() const { return mpi_manager_; }
 
     /**
-     * @brief Compute the MPI communication buffer size in elements.
+     * @brief Compute the per-process MPI communication buffer size in elements.
      *
-     * Shrinks half the local state vector by `ratio`, then clamps to `cap`
-     * (which keeps the MPI element count below INT_MAX), never returning less
-     * than 1. Pure so it can be unit-tested with cap-exceeding inputs.
+     * Shrinks half the local sub-state-vector (2^(local_qubit_count - 1)) by
+     * `ratio`, then clamps to the hard-coded
+     * MPIManagerKokkos::MPI_COMM_BUFFER_CAP (which keeps the MPI element count
+     * below INT_MAX), never returning less than 1.
      *
-     * @param half_sv Half the local sub-state-vector size, in elements.
-     * @param ratio Memory-reduction factor; must be greater than 0 (callers
-     * pass the compile-time COMM_BUFFER_RATIO).
-     * @param cap Hard upper bound, e.g. MPIManagerKokkos::MPI_COMM_BUFFER_CAP.
-     * @return Buffer size in elements: max(1, min(half_sv / ratio, cap)).
+     * @param local_qubit_count Number of local qubits on each process.
+     * @param ratio Memory-reduction factor; must be greater than 0 .
+     * @return Buffer size in elements:
+     * max(1, min(2^(local_qubit_count - 1) / ratio, MPI_COMM_BUFFER_CAP).
      */
-    static std::size_t computeCommBufferSize(std::size_t half_sv,
-                                             std::size_t ratio,
-                                             std::size_t cap) {
-        return std::max(std::size_t{1}, std::min(half_sv / ratio, cap));
+    static std::size_t computeCommBufferSize(std::size_t local_qubit_count,
+                                             std::size_t ratio) {
+        const std::size_t half_sv = exp2(local_qubit_count - 1);
+        return std::max(
+            std::size_t{1},
+            std::min(half_sv / ratio, MPIManagerKokkos::MPI_COMM_BUFFER_CAP));
     }
 
     auto getSendBuffer() const { return sendbuf_; };
@@ -393,9 +395,8 @@ class StateVectorKokkosMPI final
      * @brief Allocate send and recv buffers for MPI communication.
      */
     void allocateBuffers() {
-        const std::size_t buffer_size = computeCommBufferSize(
-            exp2(getNumLocalWires() - 1), comm_buffer_ratio_,
-            MPIManagerKokkos::MPI_COMM_BUFFER_CAP);
+        const std::size_t buffer_size =
+            computeCommBufferSize(getNumLocalWires(), comm_buffer_ratio_);
         if (!sendbuf_) {
             sendbuf_ = std::make_shared<KokkosVector>("sendbuf_", buffer_size);
         }

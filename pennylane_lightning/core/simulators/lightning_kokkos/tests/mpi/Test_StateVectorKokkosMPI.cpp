@@ -1149,20 +1149,20 @@ TEMPLATE_TEST_CASE("StateVectorKokkosMPI::computeCommBufferSize", "[LKMPI]",
     using SV = StateVectorKokkosMPI<TestType>;
     const std::size_t cap = MPIManagerKokkos::MPI_COMM_BUFFER_CAP;
 
-    // Ratio reduction (below the cap).
-    CHECK(SV::computeCommBufferSize(std::size_t{1} << 10, 4, cap) ==
-          (std::size_t{1} << 8));
-    // Cap clamp (cannot be reached by a real allocation).
-    CHECK(SV::computeCommBufferSize(std::size_t{1} << 33, 4, cap) == cap);
-    // Floor at 1 (tiny local SV).
-    CHECK(SV::computeCommBufferSize(2, 4, cap) == 1);
-    // Ratio == 1 -> just the (capped) half-SV.
-    CHECK(SV::computeCommBufferSize(std::size_t{1} << 5, 1, cap) ==
-          (std::size_t{1} << 5));
-    // Truncating integer division (not rounded, not floored to 1): 7/2 = 3.
-    CHECK(SV::computeCommBufferSize(7, 2, cap) == 3);
-    // Invariant: never exceeds the cap.
-    CHECK(SV::computeCommBufferSize(std::size_t{1} << 40, 2, cap) <= cap);
+    // Sizes a buffer as max(1, min(2^(local_qubit_count - 1) / ratio, cap)).
+
+    // Ratio reduction (below the cap): 2^(11-1) / 4 = 2^8.
+    CHECK(SV::computeCommBufferSize(11, 4) == (std::size_t{1} << 8));
+    // Cap clamp (cannot be reached by a real allocation): 2^(34-1) / 4 = 2^31.
+    CHECK(SV::computeCommBufferSize(34, 4) == cap);
+    // Floor at 1 (tiny local SV): 2^(2-1) / 4 = 0 -> 1.
+    CHECK(SV::computeCommBufferSize(2, 4) == 1);
+    // Ratio == 1 -> just the (capped) half-SV: 2^(6-1) = 2^5.
+    CHECK(SV::computeCommBufferSize(6, 1) == (std::size_t{1} << 5));
+    // Truncating integer division (not rounded): 2^(6-1) / 3 = 32 / 3 = 10.
+    CHECK(SV::computeCommBufferSize(6, 3) == 10);
+    // Invariant: never exceeds the cap: 2^(41-1) / 2 = 2^39 -> cap.
+    CHECK(SV::computeCommBufferSize(41, 2) <= cap);
 }
 
 TEMPLATE_TEST_CASE("MPI comm-buffer chunking: swap correctness", "[LKMPI]",
@@ -1207,10 +1207,8 @@ TEMPLATE_TEST_CASE("StateVectorKokkosMPI comm_buffer_ratio ctor arg", "[LKMPI]",
     // Custom ratio (kokkos_args default, ratio = 2).
     SV sv2(mpi_manager, num_qubits, Kokkos::InitializationSettings{}, 2);
     CHECK(sv2.getCommBufferRatio() == 2);
-    const std::size_t half_sv = exp2(sv2.getNumLocalWires() - 1);
     CHECK(sv2.getSendBuffer()->extent(0) ==
-          SV::computeCommBufferSize(half_sv, 2,
-                                    MPIManagerKokkos::MPI_COMM_BUFFER_CAP));
+          SV::computeCommBufferSize(sv2.getNumLocalWires(), 2));
 
     // Ratio 0 is rejected.
     PL_REQUIRE_THROWS_MATCHES(
