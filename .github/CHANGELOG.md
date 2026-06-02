@@ -4,6 +4,9 @@
 
 <h3>Improvements 🛠</h3>
 
+- The MPI send and receive buffer sizes for Lightning-Kokkos are now adjustable.
+  [(#1391)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1391)
+
 - The Lightning-Kokkos simulator now supports simulation of statevectors with 32 or more qubits when using GPU devices.
   [(#1382)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1382)
 
