@@ -135,22 +135,24 @@ def test_unsupported_gate():
 
 
 @pytest.mark.skipif(device_name != "lightning.kokkos", reason="Only for Lightning-Kokkos")
-def test_comm_buffer_ratio_matches_default():
-    """comm_buffer_ratio is accepted with mpi=True and yields the same result
-    as the default ratio."""
-    n_wires = 4
+@pytest.mark.parametrize("comm_buffer_ratio", [1, 2, 3, 4, 5])
+def test_comm_buffer_ratio(comm_buffer_ratio):
+    """For ``mpi=True``, every comm_buffer_ratio yields the correct result."""
+    n_wires = 7
 
     def circuit():
         qp.Hadamard(0)
-        qp.CNOT([0, 3])
+        qp.CNOT([0, 6])
         qp.RX(0.37, wires=2)
-        return qp.expval(qp.PauliZ(0) @ qp.PauliZ(3))
+        qp.CNOT([4, 1])
+        qp.RY(0.21, wires=5)
+        return qp.expval(qp.PauliZ(0) @ qp.PauliZ(6))
 
-    dev = qp.device(device_name, wires=n_wires, mpi=True, comm_buffer_ratio=2)
-    dev_default = qp.device(device_name, wires=n_wires, mpi=True)
+    dev = qp.device(device_name, wires=n_wires, mpi=True, comm_buffer_ratio=comm_buffer_ratio)
+    dev_ref = qp.device("lightning.qubit", wires=n_wires)
     res = qp.QNode(circuit, dev)()
-    res_default = qp.QNode(circuit, dev_default)()
-    assert res == pytest.approx(res_default)
+    res_ref = qp.QNode(circuit, dev_ref)()
+    assert res == pytest.approx(res_ref)
 
 
 @pytest.mark.skipif(device_name != "lightning.kokkos", reason="Only for Lightning-Kokkos")
