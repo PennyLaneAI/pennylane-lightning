@@ -137,7 +137,7 @@ def test_unsupported_gate():
 @pytest.mark.skipif(device_name != "lightning.kokkos", reason="Only for Lightning-Kokkos")
 def test_comm_buffer_ratio_matches_default():
     """comm_buffer_ratio is accepted with mpi=True and yields the same result
-    as the default ratio (it changes only how transfers are chunked)."""
+    as the default ratio."""
     n_wires = 4
 
     def circuit():

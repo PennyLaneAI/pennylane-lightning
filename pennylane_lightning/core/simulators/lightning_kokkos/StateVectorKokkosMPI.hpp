@@ -966,13 +966,13 @@ class StateVectorKokkosMPI final
 
         // Transfer the full local sub-state-vector in chunks no larger than
         // the comm buffer; with a half-size buffer this is two chunks.
-        for (std::size_t off = 0; off < total_size; off += chunk_size) {
-            const std::size_t csize = std::min(chunk_size, total_size - off);
+        for (std::size_t offset = 0; offset < total_size; offset += chunk_size) {
+            const std::size_t csize = std::min(chunk_size, total_size - offset);
             // COPY to buffer
             Kokkos::parallel_for(
                 "copy_sendbuf", RangePolicy<KokkosExecSpace>(0, csize),
                 KOKKOS_LAMBDA(std::size_t buffer_index) {
-                    sendbuf_view(buffer_index) = sv_view(buffer_index + off);
+                    sendbuf_view(buffer_index) = sv_view(buffer_index + offset);
                 });
             Kokkos::fence();
             // SENDRECV
@@ -981,7 +981,7 @@ class StateVectorKokkosMPI final
             Kokkos::parallel_for(
                 "copy_recvbuf", RangePolicy<KokkosExecSpace>(0, csize),
                 KOKKOS_LAMBDA(std::size_t buffer_index) {
-                    sv_view(buffer_index + off) = recvbuf_view(buffer_index);
+                    sv_view(buffer_index + offset) = recvbuf_view(buffer_index);
                 });
             Kokkos::fence();
         }
