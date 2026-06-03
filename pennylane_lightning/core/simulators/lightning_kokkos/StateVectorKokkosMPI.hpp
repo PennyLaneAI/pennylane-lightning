@@ -824,14 +824,16 @@ class StateVectorKokkosMPI final
 
             // Transfer in chunks no larger than the comm buffer; with a
             // full-size buffer this is a single chunk.
-            for (std::size_t off = 0; off < send_size; off += chunk_size) {
-                const std::size_t csize = std::min(chunk_size, send_size - off);
+            for (std::size_t offset = 0; offset < send_size;
+                 offset += chunk_size) {
+                const std::size_t csize =
+                    std::min(chunk_size, send_size - offset);
 
                 // Copy to send buffer
                 Kokkos::parallel_for(
                     "copy_sendbuf", RangePolicy<KokkosExecSpace>(0, csize),
                     KOKKOS_LAMBDA(std::size_t buffer_index) {
-                        const std::size_t idx = buffer_index + off;
+                        const std::size_t idx = buffer_index + offset;
                         std::size_t SV_index = swap_wire_mask;
                         for (std::size_t i = 0;
                              i < not_swapping_local_wire_size; i++) {
@@ -851,7 +853,7 @@ class StateVectorKokkosMPI final
                 Kokkos::parallel_for(
                     "copy_recvbuf", RangePolicy<KokkosExecSpace>(0, csize),
                     KOKKOS_LAMBDA(std::size_t buffer_index) {
-                        const std::size_t idx = buffer_index + off;
+                        const std::size_t idx = buffer_index + offset;
                         std::size_t SV_index = swap_wire_mask;
                         for (std::size_t i = 0;
                              i < not_swapping_local_wire_size; i++) {
