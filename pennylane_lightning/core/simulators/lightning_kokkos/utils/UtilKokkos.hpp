@@ -34,6 +34,30 @@ constexpr std::size_t one{1};
 /// @endcond
 
 /**
+ * @brief Project-wide RangePolicy / MDRangePolicy / TeamPolicy aliases that
+ * pin the `index_type` to `std::size_t`.
+ *
+ * Why: a default `Kokkos::RangePolicy<ExecutionSpace>` inherits its
+ * `index_type` from `ExecutionSpace::size_type`, which on the HIP/CUDA
+ * backend is `unsigned int` (32 bits). For >= 32 qubits, kernels iterate
+ * over `exp2(num_qubits) >= 2^32`, and Kokkos' bound-safety check aborts
+ * with "Kokkos::RangePolicy bound type error: an unsafe implicit conversion is
+ * performed on a bound (4294967296)". Pinning the index type to `std::size_t`
+ * lifts that ceiling on every backend.
+ */
+template <class ExecSpace = Kokkos::DefaultExecutionSpace>
+using RangePolicy =
+    Kokkos::RangePolicy<ExecSpace, Kokkos::IndexType<std::size_t>>;
+
+template <int Rank, class ExecSpace = Kokkos::DefaultExecutionSpace>
+using MDRangePolicy = Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<Rank>,
+                                            Kokkos::IndexType<std::size_t>>;
+
+template <class ExecSpace = Kokkos::DefaultExecutionSpace>
+using TeamPolicy =
+    Kokkos::TeamPolicy<ExecSpace, Kokkos::IndexType<std::size_t>>;
+
+/**
  * @brief Copy the content of a Kokkos view to an `std::vector`.
  *
  * @tparam T View data type.

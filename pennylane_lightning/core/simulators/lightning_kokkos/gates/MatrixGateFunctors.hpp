@@ -28,6 +28,7 @@ using Pennylane::LightningKokkos::Util::generateBitPatterns;
 using Pennylane::LightningKokkos::Util::one;
 using Pennylane::LightningKokkos::Util::parity_2_offset;
 using Pennylane::LightningKokkos::Util::reverseWires;
+using Pennylane::LightningKokkos::Util::TeamPolicy;
 using Pennylane::LightningKokkos::Util::vector2view;
 using Pennylane::LightningKokkos::Util::wires2Parity;
 } // namespace
@@ -46,7 +47,7 @@ template <class Precision> struct multiQubitOpFunctor {
         Kokkos::View<std::size_t *,
                      Kokkos::DefaultExecutionSpace::scratch_memory_space,
                      Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
-    using MemberType = Kokkos::TeamPolicy<>::member_type;
+    using MemberType = TeamPolicy<>::member_type;
 
     KokkosComplexVector arr;
     KokkosComplexVector matrix;
@@ -121,7 +122,7 @@ template <class Precision> struct NCMultiQubitOpFunctor {
         Kokkos::View<std::size_t *,
                      Kokkos::DefaultExecutionSpace::scratch_memory_space,
                      Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
-    using MemberType = Kokkos::TeamPolicy<>::member_type;
+    using MemberType = TeamPolicy<>::member_type;
 
     KokkosComplexVector arr;
     KokkosComplexVector matrix;
@@ -291,8 +292,8 @@ template <class PrecisionT> struct apply2QubitOpFunctor {
 
         rev_wire0 = num_qubits - wires_[1] - 1;
         rev_wire1 = num_qubits - wires_[0] - 1; // Control qubit
-        rev_wire0_shift = static_cast<std::size_t>(1U) << rev_wire0;
-        rev_wire1_shift = static_cast<std::size_t>(1U) << rev_wire1;
+        rev_wire0_shift = one << rev_wire0;
+        rev_wire1_shift = one << rev_wire1;
         rev_wire_min = std::min(rev_wire0, rev_wire1);
         rev_wire_max = std::max(rev_wire0, rev_wire1);
         parity_low = fillTrailingOnes(rev_wire_min);

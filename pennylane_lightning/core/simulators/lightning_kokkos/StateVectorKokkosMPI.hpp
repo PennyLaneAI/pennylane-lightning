@@ -513,7 +513,7 @@ class StateVectorKokkosMPI final
 
         PrecisionT squaredLocalNorm = 0.0;
         Kokkos::parallel_reduce(
-            sv_view.size(),
+            RangePolicy<KokkosExecSpace>(0, sv_view.size()),
             KOKKOS_LAMBDA(std::size_t i, PrecisionT &sum) {
                 const PrecisionT norm = Kokkos::abs(sv_view(i));
                 sum += norm * norm;
@@ -529,7 +529,7 @@ class StateVectorKokkosMPI final
         const std::complex<PrecisionT> inv_norm =
             1. / Kokkos::sqrt(squaredNorm);
         Kokkos::parallel_for(
-            sv_view.size(),
+            RangePolicy<KokkosExecSpace>(0, sv_view.size()),
             KOKKOS_LAMBDA(std::size_t i) { sv_view(i) *= inv_norm; });
     }
 
@@ -775,7 +775,7 @@ class StateVectorKokkosMPI final
 
             // Copy to send buffer
             Kokkos::parallel_for(
-                "copy_sendbuf", send_size,
+                "copy_sendbuf", RangePolicy<KokkosExecSpace>(0, send_size),
                 KOKKOS_LAMBDA(std::size_t buffer_index) {
                     std::size_t SV_index = swap_wire_mask;
                     for (std::size_t i = 0; i < not_swapping_local_wire_size;
@@ -798,7 +798,7 @@ class StateVectorKokkosMPI final
 
             // Copy from recv buffer
             Kokkos::parallel_for(
-                "copy_recvbuf", send_size,
+                "copy_recvbuf", RangePolicy<KokkosExecSpace>(0, send_size),
                 KOKKOS_LAMBDA(std::size_t buffer_index) {
                     std::size_t SV_index = swap_wire_mask;
 
@@ -919,7 +919,7 @@ class StateVectorKokkosMPI final
             std::size_t offset = i * send_size;
             // COPY to buffer
             Kokkos::parallel_for(
-                "copy_sendbuf", send_size,
+                "copy_sendbuf", RangePolicy<KokkosExecSpace>(0, send_size),
                 KOKKOS_LAMBDA(std::size_t buffer_index) {
                     sendbuf_view(buffer_index) = sv_view(buffer_index + offset);
                 });
@@ -929,7 +929,7 @@ class StateVectorKokkosMPI final
             // COPY FROM BUFFER
 
             Kokkos::parallel_for(
-                "copy_recvbuf", send_size,
+                "copy_recvbuf", RangePolicy<KokkosExecSpace>(0, send_size),
                 KOKKOS_LAMBDA(std::size_t buffer_index) {
                     sv_view(buffer_index + offset) = recvbuf_view(buffer_index);
                 });
@@ -994,7 +994,7 @@ class StateVectorKokkosMPI final
             if (opName == "PauliX") {
                 std::size_t rev_distance = getRevGlobalWireIndex(wires[0]);
                 for (auto &global_index : mpi_rank_to_global_index_map_) {
-                    global_index = global_index ^ (1U << rev_distance);
+                    global_index = global_index ^ (one << rev_distance);
                 }
                 return;
             } else if (opName == "PauliY") {
@@ -1006,7 +1006,7 @@ class StateVectorKokkosMPI final
                                  : (-1.0) * M_PI_2;
                 (*sv_).applyOperation("GlobalPhase", {}, false, {phase});
                 for (auto &global_index : mpi_rank_to_global_index_map_) {
-                    global_index = global_index ^ (1U << rev_distance);
+                    global_index = global_index ^ (one << rev_distance);
                 }
 
                 return;
@@ -1023,7 +1023,7 @@ class StateVectorKokkosMPI final
                 std::size_t rev_distance_1 = getRevGlobalWireIndex(wires[1]);
                 for (auto &global_index : mpi_rank_to_global_index_map_) {
                     global_index = ((global_index >> rev_distance_0) & 1)
-                                       ? global_index ^ (1U << rev_distance_1)
+                                       ? global_index ^ (one << rev_distance_1)
                                        : global_index;
                 }
                 return;
@@ -1135,7 +1135,7 @@ class StateVectorKokkosMPI final
                             const std::vector<std::size_t> &wires,
                             bool inverse = false) {
         PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
-        size_t n = static_cast<std::size_t>(1U) << wires.size();
+        size_t n = one << wires.size();
         const std::vector<ComplexT> matrix_(matrix, matrix + n * n);
         applyOperation("Matrix", wires, inverse, {}, matrix_);
     }
@@ -1176,7 +1176,7 @@ class StateVectorKokkosMPI final
                           const std::vector<std::size_t> &wires,
                           bool inverse = false) {
         PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
-        size_t n = static_cast<std::size_t>(1U) << wires.size();
+        size_t n = one << wires.size();
         const std::vector<ComplexT> matrix_(matrix, matrix + n * n);
         applyOperation("Matrix", controlled_wires, controlled_values, wires,
                        inverse, {}, matrix_);
@@ -1311,7 +1311,8 @@ class StateVectorKokkosMPI final
 
         KokkosVector matrix("gate_matrix", 4);
         Kokkos::parallel_for(
-            matrix.size(), KOKKOS_LAMBDA(std::size_t k) {
+            RangePolicy<KokkosExecSpace>(0, matrix.size()),
+            KOKKOS_LAMBDA(std::size_t k) {
                 matrix(k) = ((k == 0 && branch == 0) || (k == 3 && branch == 1))
                                 ? ComplexT{1.0, 0.0}
                                 : ComplexT{0.0, 0.0};

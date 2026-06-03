@@ -4,8 +4,11 @@
 
 <h3>Improvements 🛠</h3>
 
+- The Lightning-Kokkos simulator now supports simulation of statevectors with 32 or more qubits when using GPU devices.
+  [(#1382)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1382)
+
 - Added `PauliMeasure` to the Lightning devices TOML files.
-[(#1389)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1389)
+  [(#1389)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1389)
 
 <h3>Breaking changes 💔</h3>
 

@@ -18,6 +18,15 @@
 
 #include "UtilKokkos.hpp"
 
+/// @cond DEV
+namespace {
+using Pennylane::LightningKokkos::Util::one;
+using Pennylane::LightningKokkos::Util::RangePolicy;
+using Pennylane::LightningKokkos::Util::vector2view;
+using Pennylane::LightningKokkos::Util::view2vector;
+} // namespace
+/// @endcond
+
 namespace Pennylane::LightningKokkos::Functors {
 
 /**
@@ -45,7 +54,7 @@ template <class PrecisionT, class DeviceType> class getProbsFunctor {
                     const std::vector<std::size_t> &wires_,
                     const Kokkos::View<std::size_t *> all_indices_,
                     const Kokkos::View<std::size_t *> all_offsets_)
-        : value_count{1U << wires_.size()}, arr{arr_},
+        : value_count{one << wires_.size()}, arr{arr_},
           all_indices{all_indices_}, all_offsets{all_offsets_} {}
 
     KOKKOS_INLINE_FUNCTION
@@ -122,7 +131,7 @@ class getProbsNQubitOpFunctor {
     getProbsNQubitOpFunctor(const Kokkos::View<ComplexT *> &arr_,
                             const std::size_t num_qubits_,
                             const std::vector<std::size_t> &wires_)
-        : value_count{1U << wires_.size()}, arr{arr_}, n_wires{wires_.size()} {
+        : value_count{one << wires_.size()}, arr{arr_}, n_wires{wires_.size()} {
         PL_ABORT_IF(num_wires != 0 && num_wires != n_wires,
                     "num_wires must be equal to n_wires.");
         std::vector<std::size_t> rev_wires_(n_wires);
@@ -132,9 +141,8 @@ class getProbsNQubitOpFunctor {
         std::vector<std::size_t> parity_ =
             Pennylane::Util::revWireParity(rev_wires_);
         if constexpr (num_wires == 0) {
-            rev_wires =
-                Pennylane::LightningKokkos::Util::vector2view(rev_wires_);
-            parity = Pennylane::LightningKokkos::Util::vector2view(parity_);
+            rev_wires = vector2view(rev_wires_);
+            parity = vector2view(parity_);
         }
         if constexpr (num_wires > 0) {
             rev_wire_0 = rev_wires_[0];
@@ -191,11 +199,11 @@ class getProbsNQubitOpFunctor {
     void apply0(const std::size_t i0, const std::size_t rev_wire,
                 const std::size_t offset, PrecisionT dst[]) const {
         std::size_t i1;
-        i1 = i0 | (0U << rev_wire);
+        i1 = i0;
         PrecisionT rsv = real(arr(i1));
         PrecisionT isv = imag(arr(i1));
         dst[offset + 0] += rsv * rsv + isv * isv;
-        i1 = i0 | (1U << rev_wire);
+        i1 = i0 | (one << rev_wire);
         rsv = real(arr(i1));
         isv = imag(arr(i1));
         dst[offset + 1] += rsv * rsv + isv * isv;
@@ -206,7 +214,7 @@ class getProbsNQubitOpFunctor {
                 const std::size_t rev_wire_1, const std::size_t offset,
                 PrecisionT dst[]) const {
         apply0(i0, rev_wire_0, 0 + offset, dst);
-        apply0(i0 | (1U << rev_wire_1), rev_wire_0, 2 + offset, dst);
+        apply0(i0 | (one << rev_wire_1), rev_wire_0, 2 + offset, dst);
     }
 
     KOKKOS_INLINE_FUNCTION
@@ -214,7 +222,7 @@ class getProbsNQubitOpFunctor {
                 const std::size_t rev_wire_1, const std::size_t rev_wire_2,
                 const std::size_t offset, PrecisionT dst[]) const {
         apply1(i0, rev_wire_0, rev_wire_1, 0 + offset, dst);
-        apply1(i0 | (1U << rev_wire_2), rev_wire_0, rev_wire_1, 4 + offset,
+        apply1(i0 | (one << rev_wire_2), rev_wire_0, rev_wire_1, 4 + offset,
                dst);
     }
 
@@ -224,7 +232,7 @@ class getProbsNQubitOpFunctor {
                 const std::size_t rev_wire_3, const std::size_t offset,
                 PrecisionT dst[]) const {
         apply2(i0, rev_wire_0, rev_wire_1, rev_wire_2, 0 + offset, dst);
-        apply2(i0 | (1U << rev_wire_3), rev_wire_0, rev_wire_1, rev_wire_2,
+        apply2(i0 | (one << rev_wire_3), rev_wire_0, rev_wire_1, rev_wire_2,
                8 + offset, dst);
     }
 
@@ -235,7 +243,7 @@ class getProbsNQubitOpFunctor {
                 const std::size_t offset, PrecisionT dst[]) const {
         apply3(i0, rev_wire_0, rev_wire_1, rev_wire_2, rev_wire_3, 0 + offset,
                dst);
-        apply3(i0 | (1U << rev_wire_4), rev_wire_0, rev_wire_1, rev_wire_2,
+        apply3(i0 | (one << rev_wire_4), rev_wire_0, rev_wire_1, rev_wire_2,
                rev_wire_3, 16 + offset, dst);
     }
 
@@ -247,7 +255,7 @@ class getProbsNQubitOpFunctor {
                 PrecisionT dst[]) const {
         apply4(i0, rev_wire_0, rev_wire_1, rev_wire_2, rev_wire_3, rev_wire_4,
                0 + offset, dst);
-        apply4(i0 | (1U << rev_wire_5), rev_wire_0, rev_wire_1, rev_wire_2,
+        apply4(i0 | (one << rev_wire_5), rev_wire_0, rev_wire_1, rev_wire_2,
                rev_wire_3, rev_wire_4, 32 + offset, dst);
     }
 
@@ -259,7 +267,7 @@ class getProbsNQubitOpFunctor {
                 const std::size_t offset, PrecisionT dst[]) const {
         apply5(i0, rev_wire_0, rev_wire_1, rev_wire_2, rev_wire_3, rev_wire_4,
                rev_wire_5, 0 + offset, dst);
-        apply5(i0 | (1U << rev_wire_6), rev_wire_0, rev_wire_1, rev_wire_2,
+        apply5(i0 | (one << rev_wire_6), rev_wire_0, rev_wire_1, rev_wire_2,
                rev_wire_3, rev_wire_4, rev_wire_5, 64 + offset, dst);
     }
 
@@ -272,7 +280,7 @@ class getProbsNQubitOpFunctor {
                 PrecisionT dst[]) const {
         apply6(i0, rev_wire_0, rev_wire_1, rev_wire_2, rev_wire_3, rev_wire_4,
                rev_wire_5, rev_wire_6, 0 + offset, dst);
-        apply6(i0 | (1U << rev_wire_7), rev_wire_0, rev_wire_1, rev_wire_2,
+        apply6(i0 | (one << rev_wire_7), rev_wire_0, rev_wire_1, rev_wire_2,
                rev_wire_3, rev_wire_4, rev_wire_5, rev_wire_6, 128 + offset,
                dst);
     }
@@ -286,7 +294,7 @@ class getProbsNQubitOpFunctor {
                 const std::size_t offset, PrecisionT dst[]) const {
         apply7(i0, rev_wire_0, rev_wire_1, rev_wire_2, rev_wire_3, rev_wire_4,
                rev_wire_5, rev_wire_6, rev_wire_7, 0 + offset, dst);
-        apply7(i0 | (1U << rev_wire_8), rev_wire_0, rev_wire_1, rev_wire_2,
+        apply7(i0 | (one << rev_wire_8), rev_wire_0, rev_wire_1, rev_wire_2,
                rev_wire_3, rev_wire_4, rev_wire_5, rev_wire_6, rev_wire_7,
                256 + offset, dst);
     }
@@ -406,69 +414,69 @@ auto probs_bitshift_generic(
     switch (n_wires) {
     case 1UL:
         Kokkos::parallel_reduce(
-            exp2(num_qubits - n_wires),
+            RangePolicy<DeviceType>(0, exp2(num_qubits - n_wires)),
             getProbsNQubitOpFunctor<PrecisionT, DeviceType, 1>(arr, num_qubits,
                                                                wires),
             d_probabilities);
         break;
     case 2UL:
         Kokkos::parallel_reduce(
-            exp2(num_qubits - n_wires),
+            RangePolicy<DeviceType>(0, exp2(num_qubits - n_wires)),
             getProbsNQubitOpFunctor<PrecisionT, DeviceType, 2>(arr, num_qubits,
                                                                wires),
             d_probabilities);
         break;
     case 3UL:
         Kokkos::parallel_reduce(
-            exp2(num_qubits - n_wires),
+            RangePolicy<DeviceType>(0, exp2(num_qubits - n_wires)),
             getProbsNQubitOpFunctor<PrecisionT, DeviceType, 3>(arr, num_qubits,
                                                                wires),
             d_probabilities);
         break;
     case 4UL:
         Kokkos::parallel_reduce(
-            exp2(num_qubits - n_wires),
+            RangePolicy<DeviceType>(0, exp2(num_qubits - n_wires)),
             getProbsNQubitOpFunctor<PrecisionT, DeviceType, 4>(arr, num_qubits,
                                                                wires),
             d_probabilities);
         break;
     case 5UL:
         Kokkos::parallel_reduce(
-            exp2(num_qubits - n_wires),
+            RangePolicy<DeviceType>(0, exp2(num_qubits - n_wires)),
             getProbsNQubitOpFunctor<PrecisionT, DeviceType, 5>(arr, num_qubits,
                                                                wires),
             d_probabilities);
         break;
     case 6UL:
         Kokkos::parallel_reduce(
-            exp2(num_qubits - n_wires),
+            RangePolicy<DeviceType>(0, exp2(num_qubits - n_wires)),
             getProbsNQubitOpFunctor<PrecisionT, DeviceType, 6>(arr, num_qubits,
                                                                wires),
             d_probabilities);
         break;
     case 7UL:
         Kokkos::parallel_reduce(
-            exp2(num_qubits - n_wires),
+            RangePolicy<DeviceType>(0, exp2(num_qubits - n_wires)),
             getProbsNQubitOpFunctor<PrecisionT, DeviceType, 7>(arr, num_qubits,
                                                                wires),
             d_probabilities);
         break;
     case 8UL:
         Kokkos::parallel_reduce(
-            exp2(num_qubits - n_wires),
+            RangePolicy<DeviceType>(0, exp2(num_qubits - n_wires)),
             getProbsNQubitOpFunctor<PrecisionT, DeviceType, 8>(arr, num_qubits,
                                                                wires),
             d_probabilities);
         break;
     default:
         Kokkos::parallel_reduce(
-            exp2(num_qubits - n_wires),
+            RangePolicy<DeviceType>(0, exp2(num_qubits - n_wires)),
             getProbsNQubitOpFunctor<PrecisionT, DeviceType, 0>(arr, num_qubits,
                                                                wires),
             d_probabilities);
         break;
     }
-    return Pennylane::LightningKokkos::Util::view2vector(d_probabilities);
+    return view2vector(d_probabilities);
 };
 
 /**
@@ -695,7 +703,7 @@ struct getTransposedIndexFunctor {
     KOKKOS_INLINE_FUNCTION
     void operator()(const std::size_t i, const std::size_t j) const {
         const std::size_t axis = sorted_ind_wires(j);
-        const std::size_t index = i / (1L << (max_index_sorted_ind_wires - j));
+        const std::size_t index = i / (one << (max_index_sorted_ind_wires - j));
         const std::size_t sub_index = (index % 2)
                                       << (max_index_sorted_ind_wires - axis);
         Kokkos::atomic_add(&trans_index(i), sub_index);

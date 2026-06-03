@@ -21,6 +21,7 @@
 #include <Kokkos_Core.hpp>
 
 #include "Error.hpp"
+#include "UtilKokkos.hpp"
 
 namespace Pennylane::LightningKokkos::Util {
 /**
@@ -58,7 +59,8 @@ inline auto axpy_Kokkos(Kokkos::complex<PrecisionT> alpha,
                         Kokkos::View<Kokkos::complex<PrecisionT> *> x,
                         Kokkos::View<Kokkos::complex<PrecisionT> *> y,
                         std::size_t length) {
-    Kokkos::parallel_for(length, axpy_KokkosFunctor<PrecisionT>(alpha, x, y));
+    Kokkos::parallel_for(RangePolicy<>(0, length),
+                         axpy_KokkosFunctor<PrecisionT>(alpha, x, y));
 }
 
 /**
@@ -137,7 +139,7 @@ void SparseMV_Kokkos(Kokkos::View<ComplexT *> x, Kokkos::View<ComplexT *> y,
                       ConstSizeTHostView(column_idx_ptr, numNNZ));
     Kokkos::deep_copy(kok_row_map, ConstSizeTHostView(row_map, row_map_size));
 
-    Kokkos::parallel_for(row_map_size - 1,
+    Kokkos::parallel_for(RangePolicy<>(0, row_map_size - 1),
                          SparseMV_KokkosFunctor<PrecisionT>(
                              x, y, kok_data, kok_column_idx_ptr, kok_row_map));
 }
@@ -180,7 +182,8 @@ getRealOfComplexInnerProduct(Kokkos::View<Kokkos::complex<PrecisionT> *> x,
     PL_ASSERT(x.size() == y.size());
     PrecisionT inner = 0;
     Kokkos::parallel_reduce(
-        x.size(), getRealOfComplexInnerProductFunctor<PrecisionT>(x, y), inner);
+        RangePolicy<>(0, x.size()),
+        getRealOfComplexInnerProductFunctor<PrecisionT>(x, y), inner);
     return inner;
 }
 
@@ -222,7 +225,8 @@ getImagOfComplexInnerProduct(Kokkos::View<Kokkos::complex<PrecisionT> *> x,
     PL_ASSERT(x.size() == y.size());
     PrecisionT inner = 0;
     Kokkos::parallel_reduce(
-        x.size(), getImagOfComplexInnerProductFunctor<PrecisionT>(x, y), inner);
+        RangePolicy<>(0, x.size()),
+        getImagOfComplexInnerProductFunctor<PrecisionT>(x, y), inner);
     return inner;
 }
 
