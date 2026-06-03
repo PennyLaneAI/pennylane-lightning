@@ -326,6 +326,8 @@ class StateVectorKokkosMPI final
                                              std::size_t ratio) {
         PL_ABORT_IF(local_qubit_count == 0,
                     "computeCommBufferSize requires at least one local qubit.");
+        PL_ABORT_IF(ratio == 0,
+                    "computeCommBufferSize requires a ratio of at least 1.");
         return std::max(std::size_t{1}, exp2(local_qubit_count - 1) / ratio);
     }
 
@@ -340,10 +342,10 @@ class StateVectorKokkosMPI final
      * @brief Default MPI comm-buffer memory-reduction factor.
      *
      * Buffer size = max(1, half_sv / ratio). Two of these buffers (send, recv)
-     * are allocated per process.
-     *
+     * are allocated per process. The default of 1 keeps full half-SV buffers.
+     * larger values trade communication latency for less per-process memory.
      */
-    static constexpr std::size_t COMM_BUFFER_RATIO = 4;
+    static constexpr std::size_t COMM_BUFFER_RATIO = 1;
 
     /**
      * @brief Active comm-buffer memory-reduction factor for this state vector.

@@ -160,3 +160,11 @@ def test_comm_buffer_ratio_requires_mpi():
     """Setting comm_buffer_ratio without mpi=True raises a clear error."""
     with pytest.raises(DeviceError, match="comm_buffer_ratio requires mpi=True"):
         qp.device(device_name, wires=4, comm_buffer_ratio=2)
+
+
+@pytest.mark.skipif(device_name != "lightning.kokkos", reason="Only for Lightning-Kokkos")
+@pytest.mark.parametrize("bad_ratio", [0, -1, 2.5, "4"])
+def test_comm_buffer_ratio_invalid_value(bad_ratio):
+    """A non-positive-integer comm_buffer_ratio raises a DeviceError."""
+    with pytest.raises(DeviceError, match="comm_buffer_ratio must be a positive integer"):
+        qp.device(device_name, wires=4, mpi=True, comm_buffer_ratio=bad_ratio)

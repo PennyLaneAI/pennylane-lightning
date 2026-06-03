@@ -128,7 +128,7 @@ class LightningKokkos(LightningBase):
             Two buffers (send and recv) are allocated per process. Larger values use less memory and
             split each inter-process transfer into more chunks. The buffer size is not
             capped; each MPI transfer is internally chunked to stay within the 32-bit MPI
-            count limit. Defaults to 4.
+            count limit. Defaults to 1.
     """
 
     # General device options
@@ -185,8 +185,11 @@ class LightningKokkos(LightningBase):
         self._set_lightning_classes()
 
         self._mpi = mpi
-        if comm_buffer_ratio is not None and not mpi:
-            raise DeviceError("comm_buffer_ratio requires mpi=True")
+        if comm_buffer_ratio is not None:
+            if not mpi:
+                raise DeviceError("comm_buffer_ratio requires mpi=True")
+            if not isinstance(comm_buffer_ratio, int) or comm_buffer_ratio < 1:
+                raise DeviceError("comm_buffer_ratio must be a positive integer (>= 1)")
         if mpi:
             if wires is None:
                 raise DeviceError("Lightning-Kokkos-MPI does not support dynamic wires allocation.")

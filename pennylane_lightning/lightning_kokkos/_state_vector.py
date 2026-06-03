@@ -77,7 +77,7 @@ class LightningKokkosStateVector(LightningBaseStateVector):
             two such buffers (send and recv) are allocated per process. Larger values use
             less memory at the cost of more transfer chunks. The buffer size is not capped;
             each MPI transfer is internally chunked to stay within the 32-bit MPI count
-            limit. ``None`` uses the C++ default (4).
+            limit. ``None`` uses the C++ default (1, i.e. full-size buffers).
 
     """
 

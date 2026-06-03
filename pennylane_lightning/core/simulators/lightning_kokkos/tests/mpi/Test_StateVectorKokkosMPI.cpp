@@ -1170,12 +1170,17 @@ TEMPLATE_TEST_CASE("StateVectorKokkosMPI::computeCommBufferSize", "[LKMPI]",
     // Zero local qubits is rejected (2^(0-1) would underflow std::size_t).
     PL_REQUIRE_THROWS_MATCHES(SV::computeCommBufferSize(0, 4),
                               LightningException, "at least one local qubit");
+    // Zero ratio is rejected (division by zero).
+    PL_REQUIRE_THROWS_MATCHES(SV::computeCommBufferSize(4, 0),
+                              LightningException, "ratio of at least 1");
 }
 
 TEMPLATE_TEST_CASE("MPI comm-buffer chunking: swap correctness", "[LKMPI]",
                    double, float) {
     const std::size_t num_qubits = 5; // 4 ranks -> 3 local qubits
-    auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits);
+    // Use comm_buffer_ratio = 2 so the buffer is smaller than half the local
+    // SV (the default ratio of 1 would not chunk).
+    auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits, 2);
 
     // The comm buffer is smaller than half the local SV, so swap transfers are
     // split into multiple chunks -- this is the behavior under test.
