@@ -73,10 +73,11 @@ class LightningKokkosStateVector(LightningBaseStateVector):
             (threading parameters).
         mpi (bool): Use MPI for distributed state vector.
         comm_buffer_ratio (int): For ``mpi=True`` only. Sets each MPI communication buffer
-            to ``max(1, min(2**(local_qubits - 1) // comm_buffer_ratio, 2**30))`` complex
-            elements; two such buffers (send and recv) are allocated per process. Larger
-            values use less memory at the cost of more transfer chunks. ``None`` uses the
-            C++ default (4).
+            to ``max(1, 2**(local_qubits - 1) // comm_buffer_ratio)`` complex elements;
+            two such buffers (send and recv) are allocated per process. Larger values use
+            less memory at the cost of more transfer chunks. The buffer size is not capped;
+            each MPI transfer is internally chunked to stay within the 32-bit MPI count
+            limit. ``None`` uses the C++ default (4).
 
     """
 

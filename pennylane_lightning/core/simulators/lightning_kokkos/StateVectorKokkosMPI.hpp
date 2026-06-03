@@ -313,25 +313,20 @@ class StateVectorKokkosMPI final
     /**
      * @brief Compute the per-process MPI communication buffer size in elements.
      *
-     * Shrinks half the local sub-state-vector (2^(local_qubit_count - 1)) by
-     * `ratio`, then clamps to the hard-coded
-     * MPIManagerKokkos::MPI_COMM_BUFFER_CAP (which keeps the MPI element count
-     * below INT_MAX), never returning less than 1.
+     * Returns half the local sub-state-vector (2^(local_qubit_count - 1))
+     * reduced by `ratio`, never less than 1.
      *
      * @param local_qubit_count Number of local qubits on each process; must be
      * at least 1.
      * @param ratio Memory-reduction factor; must be greater than 0.
-     * @return Buffer size in elements:
-     * max(1, min(2^(local_qubit_count - 1) / ratio, MPI_COMM_BUFFER_CAP)).
+     * @return Buffer size in elements: max(1, 2^(local_qubit_count - 1) /
+     * ratio).
      */
     static std::size_t computeCommBufferSize(std::size_t local_qubit_count,
                                              std::size_t ratio) {
         PL_ABORT_IF(local_qubit_count == 0,
                     "computeCommBufferSize requires at least one local qubit.");
-        const std::size_t half_sv = exp2(local_qubit_count - 1);
-        return std::max(
-            std::size_t{1},
-            std::min(half_sv / ratio, MPIManagerKokkos::MPI_COMM_BUFFER_CAP));
+        return std::max(std::size_t{1}, exp2(local_qubit_count - 1) / ratio);
     }
 
     auto getSendBuffer() const { return sendbuf_; };
@@ -344,8 +339,8 @@ class StateVectorKokkosMPI final
     /**
      * @brief Default MPI comm-buffer memory-reduction factor.
      *
-     * Buffer size = max(1, min(half_sv / ratio, MPI_COMM_BUFFER_CAP)).
-     * Two of these buffers (send, recv) are allocated.
+     * Buffer size = max(1, half_sv / ratio). Two of these buffers (send, recv)
+     * are allocated per process.
      *
      */
     static constexpr std::size_t COMM_BUFFER_RATIO = 4;
@@ -818,7 +813,10 @@ class StateVectorKokkosMPI final
             auto sv_view = (*sv_).getView();
             const std::size_t send_size =
                 exp2((getNumLocalWires() - local_wires_to_swap.size()));
-            const std::size_t chunk_size = sendbuf_->extent(0);
+            // Each MPI_Sendrecv count must fit in a 32-bit int, so clamp the
+            // chunk to the MPI transfer limit.
+            const std::size_t chunk_size = std::min(
+                sendbuf_->extent(0), MPIManagerKokkos::MPI_MAX_TRANSFER_COUNT);
 
             const std::size_t other_global_index = batch_index ^ global_index;
             const std::size_t other_mpi_rank =
@@ -962,7 +960,10 @@ class StateVectorKokkosMPI final
             mpi_rank_to_global_index_map_target, dest_global_index);
 
         const std::size_t total_size = exp2(getNumLocalWires());
-        const std::size_t chunk_size = sendbuf_->extent(0);
+        // Each MPI_Sendrecv count must fit in a 32-bit int, so clamp the chunk
+        // to the MPI transfer limit.
+        const std::size_t chunk_size = std::min(
+            sendbuf_->extent(0), MPIManagerKokkos::MPI_MAX_TRANSFER_COUNT);
         auto sendbuf_view = (*sendbuf_);
         auto recvbuf_view = (*recvbuf_);
         auto sv_view = (*sv_).getView();

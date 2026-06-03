@@ -1115,8 +1115,8 @@ TEMPLATE_TEST_CASE("sendrecvBuffers", "[LKMPI]", double, float) {
 
     std::size_t mpi_rank = mpi_manager.getRank();
     std::size_t dest_rank = mpi_rank ^ 1U;
-    // The comm buffer size is set by allocateBuffers (ratio + cap), so transfer
-    // exactly what the buffer holds rather than a hard-coded count.
+    // The comm buffer size is set by allocateBuffers (from the ratio), so
+    // transfer exactly what the buffer holds rather than a hard-coded count.
     std::size_t message_size = sendbuf.extent(0);
     Kokkos::parallel_for(
         "InitSendBuffer", message_size, KOKKOS_LAMBDA(const std::size_t i) {
@@ -1132,7 +1132,7 @@ TEMPLATE_TEST_CASE("sendrecvBuffers", "[LKMPI]", double, float) {
     }
 }
 
-TEMPLATE_TEST_CASE("MPIManagerKokkos::Sendrecv buffer cap guard", "[LKMPI]",
+TEMPLATE_TEST_CASE("MPIManagerKokkos::Sendrecv transfer-count guard", "[LKMPI]",
                    double, float) {
     MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
     Kokkos::View<Kokkos::complex<TestType> *> sbuf("sbuf", 1);
@@ -1140,31 +1140,33 @@ TEMPLATE_TEST_CASE("MPIManagerKokkos::Sendrecv buffer cap guard", "[LKMPI]",
     const std::size_t peer = mpi_manager.getRank(); // self; never reached
     PL_REQUIRE_THROWS_MATCHES(
         mpi_manager.Sendrecv(sbuf, peer, rbuf, peer,
-                             MPIManagerKokkos::MPI_COMM_BUFFER_CAP + 1, 0),
+                             MPIManagerKokkos::MPI_MAX_TRANSFER_COUNT + 1, 0),
         LightningException, "exceeds the 32-bit MPI limit");
 }
 
 TEMPLATE_TEST_CASE("StateVectorKokkosMPI::computeCommBufferSize", "[LKMPI]",
                    double, float) {
     using SV = StateVectorKokkosMPI<TestType>;
-    const std::size_t cap = MPIManagerKokkos::MPI_COMM_BUFFER_CAP;
 
-    // Sizes a buffer as max(1, min(2^(local_qubit_count - 1) / ratio, cap)).
+    // Sizes the buffer as max(1, 2^(local_qubit_count - 1) / ratio). There is
+    // no cap here: the 32-bit MPI limit is enforced by chunking transfers, not
+    // by the buffer size, so this may exceed the MPI transfer limit.
 
-    // Ratio reduction (below the cap): 2^(11-1) / 4 = 2^8.
+    // Ratio reduction: 2^(11-1) / 4 = 2^8.
     CHECK(SV::computeCommBufferSize(11, 4) == (std::size_t{1} << 8));
-    // Cap clamp (cannot be reached by a real allocation): 2^(34-1) / 4 = 2^31.
-    CHECK(SV::computeCommBufferSize(34, 4) == cap);
     // Floor at 1 (tiny local SV): 2^(2-1) / 4 = 0 -> 1.
     CHECK(SV::computeCommBufferSize(2, 4) == 1);
-    // Ratio == 1 -> just the (capped) half-SV: 2^(6-1) = 2^5.
+    // Ratio == 1 -> the full half-SV: 2^(6-1) = 2^5.
     CHECK(SV::computeCommBufferSize(6, 1) == (std::size_t{1} << 5));
     // Truncating integer division (not rounded): 2^(6-1) / 3 = 32 / 3 = 10.
     CHECK(SV::computeCommBufferSize(6, 3) == 10);
-    // Invariant: never exceeds the cap: 2^(41-1) / 2 = 2^39 -> cap.
-    CHECK(SV::computeCommBufferSize(41, 2) <= cap);
     // Smallest valid local size (1 local qubit): 2^(1-1) / 1 = 1.
     CHECK(SV::computeCommBufferSize(1, 1) == 1);
+    // Not capped: 2^(34-1) / 4 = 2^31, which exceeds the 2^30 MPI transfer
+    // limit -- the buffer size itself is never clamped to it.
+    CHECK(SV::computeCommBufferSize(34, 4) == (std::size_t{1} << 31));
+    CHECK(SV::computeCommBufferSize(34, 4) >
+          MPIManagerKokkos::MPI_MAX_TRANSFER_COUNT);
     // Zero local qubits is rejected (2^(0-1) would underflow std::size_t).
     PL_REQUIRE_THROWS_MATCHES(SV::computeCommBufferSize(0, 4),
                               LightningException, "at least one local qubit");

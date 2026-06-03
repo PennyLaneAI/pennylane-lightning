@@ -85,13 +85,15 @@ class MPIManagerKokkos final : public MPIManager {
 
   public:
     /**
-     * @brief Hard cap (elements) on a single MPI transfer count.
+     * @brief Maximum element count for a single MPI transfer.
      *
-     * MPI counts are `int`, so this stays below INT_MAX (2^30 < 2^31 - 1) with
-     * headroom. Enforced by the Sendrecv guard below; callers must keep
-     * transfer sizes within this bound.
+     * MPI-3 counts are `int`, so this stays below INT_MAX (2^30 < 2^31 - 1)
+     * with headroom. It bounds the per-transfer count only -- not any buffer
+     * allocation, which is `std::size_t`-sized and may legitimately be larger.
+     * Callers must chunk transfers to this bound; enforced by the Sendrecv
+     * guard below.
      */
-    static constexpr std::size_t MPI_COMM_BUFFER_CAP = std::size_t{1} << 30;
+    static constexpr std::size_t MPI_MAX_TRANSFER_COUNT = std::size_t{1} << 30;
 
     MPIManagerKokkos(MPI_Comm communicator = MPI_COMM_WORLD)
         : MPIManager(communicator) {}
@@ -116,10 +118,10 @@ class MPIManagerKokkos final : public MPIManager {
                   Kokkos::View<T *> &recvBuf, std::size_t source,
                   std::size_t size, std::size_t tag = 0) {
         MPI_Datatype datatype = getMPIDatatype<T>();
-        PL_ABORT_IF(size > MPI_COMM_BUFFER_CAP,
+        PL_ABORT_IF(size > MPI_MAX_TRANSFER_COUNT,
                     "Sendrecv element count exceeds the 32-bit MPI limit; "
                     "callers must keep transfer sizes within "
-                    "MPI_COMM_BUFFER_CAP.");
+                    "MPI_MAX_TRANSFER_COUNT.");
         MPI_Status status;
         int sendtag = static_cast<int>(tag);
         int recvtag = static_cast<int>(tag);

@@ -123,11 +123,12 @@ class LightningKokkos(LightningBase):
             (threading parameters).
         comm_buffer_ratio (int): For ``mpi=True`` only. Sets the size of *each* MPI
             communication buffer to
-            ``per_buffer = max(1, min(2**(local_qubits - 1) // comm_buffer_ratio, 2**30))``
+            ``per_buffer = max(1, 2**(local_qubits - 1) // comm_buffer_ratio)``
             complex elements, where ``local_qubits = total_qubits - log2(num_processes)``.
-            Two buffers (send and recv) are allocated per process. Larger values use less memory and split each inter-process
-            transfer into more chunks. The per-buffer element count is hard-capped at
-            ``2**30`` to keep MPI transfer counts within the 32-bit limit. Defaults to 4.
+            Two buffers (send and recv) are allocated per process. Larger values use less memory and
+            split each inter-process transfer into more chunks. The buffer size is not
+            capped; each MPI transfer is internally chunked to stay within the 32-bit MPI
+            count limit. Defaults to 4.
     """
 
     # General device options
