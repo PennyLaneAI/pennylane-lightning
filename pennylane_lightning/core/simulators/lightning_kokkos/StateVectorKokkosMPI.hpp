@@ -343,7 +343,7 @@ class StateVectorKokkosMPI final
      *
      * Buffer size = max(1, half_sv / ratio). Two of these buffers (send, recv)
      * are allocated per process. The default of 1 keeps full half-SV buffers.
-     * larger values trade communication latency for less per-process memory.
+     * Larger values trade communication latency for less per-process memory.
      */
     static constexpr std::size_t COMM_BUFFER_RATIO = 1;
 
