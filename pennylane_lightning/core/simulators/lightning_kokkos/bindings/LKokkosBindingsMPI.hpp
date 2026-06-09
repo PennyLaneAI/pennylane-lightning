@@ -98,7 +98,7 @@ void registerBackendSpecificStateVectorMethodsMPI(PyClass &pyclass) {
         },
         nb::arg("mpi_manager"), nb::arg("num_qubits"),
         nb::arg("kokkos_args") = InitializationSettings{},
-        nb::arg("comm_buffer_ratio") = StateVectorT::COMM_BUFFER_RATIO);
+        nb::arg("comm_buffer_ratio") = StateVectorT::DEFAULT_COMM_BUFFER_RATIO);
     pyclass.def(nb::init<std::size_t, const InitializationSettings &>());
     pyclass.def("getCommBufferRatio", &StateVectorT::getCommBufferRatio);
 

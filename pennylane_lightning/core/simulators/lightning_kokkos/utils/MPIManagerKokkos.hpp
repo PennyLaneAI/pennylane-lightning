@@ -147,6 +147,10 @@ class MPIManagerKokkos final : public MPIManager {
                     std::vector<int> &recvCounts,
                     std::vector<int> &displacements) {
         MPI_Datatype datatype = getMPIDatatype<T>();
+        PL_ABORT_IF(sendBuf.size() > MPI_MAX_TRANSFER_COUNT,
+                    "AllGatherV send count exceeds the 32-bit MPI limit; "
+                    "callers must keep transfer sizes within "
+                    "MPI_MAX_TRANSFER_COUNT.");
 
         PL_MPI_IS_SUCCESS(
             MPI_Allgatherv(sendBuf.data(), sendBuf.size(), datatype,
@@ -164,6 +168,9 @@ class MPIManagerKokkos final : public MPIManager {
     template <typename T>
     void Bcast(Kokkos::View<T *> &sendBuf, std::size_t root) {
         MPI_Datatype datatype = getMPIDatatype<T>();
+        PL_ABORT_IF(sendBuf.size() > MPI_MAX_TRANSFER_COUNT,
+                    "Bcast element count exceeds the 32-bit MPI limit; callers "
+                    "must keep transfer sizes within MPI_MAX_TRANSFER_COUNT.");
         int rootInt = static_cast<int>(root);
         PL_MPI_IS_SUCCESS(MPI_Bcast(sendBuf.data(), sendBuf.size(), datatype,
                                     rootInt, this->getComm()));

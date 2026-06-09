@@ -1117,7 +1117,7 @@ TEMPLATE_TEST_CASE("sendrecvBuffers", "[LKMPI]", double, float) {
     std::size_t dest_rank = mpi_rank ^ 1U;
     // The comm buffer size is set by allocateBuffers (from the ratio), so
     // transfer exactly what the buffer holds rather than a hard-coded count.
-    std::size_t message_size = sendbuf.extent(0);
+    std::size_t message_size = sendbuf.size();
     Kokkos::parallel_for(
         "InitSendBuffer", message_size, KOKKOS_LAMBDA(const std::size_t i) {
             sendbuf(i) = static_cast<TestType>(mpi_rank + i);
@@ -1184,7 +1184,7 @@ TEMPLATE_TEST_CASE("MPI comm-buffer chunking: swap correctness", "[LKMPI]",
 
     // The comm buffer is smaller than half the local SV, so swap transfers are
     // split into multiple chunks -- this is the behavior under test.
-    REQUIRE(sv.getSendBuffer()->extent(0) < exp2(sv.getNumLocalWires() - 1));
+    REQUIRE(sv.getSendBuffer()->size() < exp2(sv.getNumLocalWires() - 1));
 
     // Scramble then restore canonical wire order via chunked swap transfers.
     sv.swapGlobalLocalWires({0}, {2});
@@ -1214,12 +1214,12 @@ TEMPLATE_TEST_CASE("StateVectorKokkosMPI comm_buffer_ratio ctor arg", "[LKMPI]",
 
     // Default ratio when not specified.
     SV sv_default(mpi_manager, num_qubits);
-    CHECK(sv_default.getCommBufferRatio() == SV::COMM_BUFFER_RATIO);
+    CHECK(sv_default.getCommBufferRatio() == SV::DEFAULT_COMM_BUFFER_RATIO);
 
     // Custom ratio (kokkos_args default, ratio = 2).
     SV sv2(mpi_manager, num_qubits, Kokkos::InitializationSettings{}, 2);
     CHECK(sv2.getCommBufferRatio() == 2);
-    CHECK(sv2.getSendBuffer()->extent(0) ==
+    CHECK(sv2.getSendBuffer()->size() ==
           SV::computeCommBufferSize(sv2.getNumLocalWires(), 2));
 
     // Ratio 0 is rejected.

@@ -98,7 +98,7 @@ class StateVectorKokkosMPI final
     std::shared_ptr<KokkosVector> sendbuf_;
     MPIManagerKokkos mpi_manager_;
 
-    std::size_t comm_buffer_ratio_ = COMM_BUFFER_RATIO;
+    std::size_t comm_buffer_ratio_ = DEFAULT_COMM_BUFFER_RATIO;
 
     std::size_t num_qubits_;
     std::size_t numGlobalQubits_;
@@ -118,11 +118,11 @@ class StateVectorKokkosMPI final
      * @param num_local_qubits Number of local qubits
      * @param kokkos_args Arguments for Kokkos initialization
      */
-    StateVectorKokkosMPI(MPIManagerKokkos mpi_manager,
-                         std::size_t num_global_qubits,
-                         std::size_t num_local_qubits,
-                         const Kokkos::InitializationSettings &kokkos_args = {},
-                         std::size_t comm_buffer_ratio = COMM_BUFFER_RATIO)
+    StateVectorKokkosMPI(
+        MPIManagerKokkos mpi_manager, std::size_t num_global_qubits,
+        std::size_t num_local_qubits,
+        const Kokkos::InitializationSettings &kokkos_args = {},
+        std::size_t comm_buffer_ratio = DEFAULT_COMM_BUFFER_RATIO)
         : BaseType{num_global_qubits + num_local_qubits},
           mpi_manager_(mpi_manager), comm_buffer_ratio_(comm_buffer_ratio),
           num_qubits_(num_global_qubits + num_local_qubits),
@@ -151,10 +151,10 @@ class StateVectorKokkosMPI final
      * @param total_num_qubits Number of qubits
      * @param kokkos_args Arguments for Kokkos initialization
      */
-    StateVectorKokkosMPI(MPIManagerKokkos mpi_manager,
-                         std::size_t total_num_qubits,
-                         const Kokkos::InitializationSettings &kokkos_args = {},
-                         std::size_t comm_buffer_ratio = COMM_BUFFER_RATIO)
+    StateVectorKokkosMPI(
+        MPIManagerKokkos mpi_manager, std::size_t total_num_qubits,
+        const Kokkos::InitializationSettings &kokkos_args = {},
+        std::size_t comm_buffer_ratio = DEFAULT_COMM_BUFFER_RATIO)
         : StateVectorKokkosMPI(mpi_manager, log2(mpi_manager.getSize()),
                                total_num_qubits - log2(mpi_manager.getSize()),
                                kokkos_args, comm_buffer_ratio) {}
@@ -345,7 +345,7 @@ class StateVectorKokkosMPI final
      * are allocated per process. The default of 1 keeps full half-SV buffers.
      * Larger values trade communication latency for less per-process memory.
      */
-    static constexpr std::size_t COMM_BUFFER_RATIO = 1;
+    static constexpr std::size_t DEFAULT_COMM_BUFFER_RATIO = 1;
 
     /**
      * @brief Active comm-buffer memory-reduction factor for this state vector.
@@ -818,7 +818,7 @@ class StateVectorKokkosMPI final
             // Each MPI_Sendrecv count must fit in a 32-bit int, so clamp the
             // chunk to the MPI transfer limit.
             const std::size_t chunk_size = std::min(
-                sendbuf_->extent(0), MPIManagerKokkos::MPI_MAX_TRANSFER_COUNT);
+                sendbuf_->size(), MPIManagerKokkos::MPI_MAX_TRANSFER_COUNT);
 
             const std::size_t other_global_index = batch_index ^ global_index;
             const std::size_t other_mpi_rank =
@@ -967,7 +967,7 @@ class StateVectorKokkosMPI final
         // Each MPI_Sendrecv count must fit in a 32-bit int, so clamp the chunk
         // to the MPI transfer limit.
         const std::size_t chunk_size = std::min(
-            sendbuf_->extent(0), MPIManagerKokkos::MPI_MAX_TRANSFER_COUNT);
+            sendbuf_->size(), MPIManagerKokkos::MPI_MAX_TRANSFER_COUNT);
         auto sendbuf_view = (*sendbuf_);
         auto recvbuf_view = (*recvbuf_);
         auto sv_view = (*sv_).getView();
@@ -992,7 +992,6 @@ class StateVectorKokkosMPI final
                 KOKKOS_LAMBDA(std::size_t buffer_index) {
                     sv_view(buffer_index + offset) = recvbuf_view(buffer_index);
                 });
-            Kokkos::fence();
         }
 
         // copy global_wires_target and mpi_rank_to_global_index_map_target
