@@ -98,6 +98,8 @@ class StateVectorKokkosMPI final
     std::shared_ptr<KokkosVector> sendbuf_;
     MPIManagerKokkos mpi_manager_;
 
+    std::size_t comm_buffer_ratio_ = DEFAULT_COMM_BUFFER_RATIO;
+
     std::size_t num_qubits_;
     std::size_t numGlobalQubits_;
     std::size_t numLocalQubits_;
@@ -116,15 +118,17 @@ class StateVectorKokkosMPI final
      * @param num_local_qubits Number of local qubits
      * @param kokkos_args Arguments for Kokkos initialization
      */
-    StateVectorKokkosMPI(MPIManagerKokkos mpi_manager,
-                         std::size_t num_global_qubits,
-                         std::size_t num_local_qubits,
-                         const Kokkos::InitializationSettings &kokkos_args = {})
+    StateVectorKokkosMPI(
+        MPIManagerKokkos mpi_manager, std::size_t num_global_qubits,
+        std::size_t num_local_qubits,
+        const Kokkos::InitializationSettings &kokkos_args = {},
+        std::size_t comm_buffer_ratio = DEFAULT_COMM_BUFFER_RATIO)
         : BaseType{num_global_qubits + num_local_qubits},
-          mpi_manager_(mpi_manager),
+          mpi_manager_(mpi_manager), comm_buffer_ratio_(comm_buffer_ratio),
           num_qubits_(num_global_qubits + num_local_qubits),
           numGlobalQubits_(num_global_qubits),
           numLocalQubits_(num_local_qubits) {
+        PL_ABORT_IF(comm_buffer_ratio == 0, "comm_buffer_ratio must be >= 1");
         Kokkos::InitializationSettings settings = kokkos_args;
 
         global_wires_.resize(numGlobalQubits_); // set to constructor line
@@ -147,12 +151,13 @@ class StateVectorKokkosMPI final
      * @param total_num_qubits Number of qubits
      * @param kokkos_args Arguments for Kokkos initialization
      */
-    StateVectorKokkosMPI(MPIManagerKokkos mpi_manager,
-                         std::size_t total_num_qubits,
-                         const Kokkos::InitializationSettings &kokkos_args = {})
+    StateVectorKokkosMPI(
+        MPIManagerKokkos mpi_manager, std::size_t total_num_qubits,
+        const Kokkos::InitializationSettings &kokkos_args = {},
+        std::size_t comm_buffer_ratio = DEFAULT_COMM_BUFFER_RATIO)
         : StateVectorKokkosMPI(mpi_manager, log2(mpi_manager.getSize()),
                                total_num_qubits - log2(mpi_manager.getSize()),
-                               kokkos_args) {}
+                               kokkos_args, comm_buffer_ratio) {}
 
     /**
      * @brief Create a new state vector with MPI Comm.
@@ -293,6 +298,7 @@ class StateVectorKokkosMPI final
         global_wires_ = other.getGlobalWires();
         local_wires_ = other.getLocalWires();
         mpi_rank_to_global_index_map_ = other.getMPIRankToGlobalIndexMap();
+        comm_buffer_ratio_ = other.getCommBufferRatio();
         sendbuf_ = other.sendbuf_;
         recvbuf_ = other.recvbuf_;
         (*sv_).DeviceToDevice(other.getView());
@@ -304,12 +310,49 @@ class StateVectorKokkosMPI final
 
     auto getMPIManager() const { return mpi_manager_; }
 
+    /**
+     * @brief Compute the per-process MPI communication buffer size in elements.
+     *
+     * Returns half the local sub-state-vector (2^(local_qubit_count - 1))
+     * reduced by `ratio`, never less than 1.
+     *
+     * @param local_qubit_count Number of local qubits on each process; must be
+     * at least 1.
+     * @param ratio Memory-reduction factor; must be greater than 0.
+     * @return Buffer size in elements: max(1, 2^(local_qubit_count - 1) /
+     * ratio).
+     */
+    static std::size_t computeCommBufferSize(std::size_t local_qubit_count,
+                                             std::size_t ratio) {
+        PL_ABORT_IF(local_qubit_count == 0,
+                    "computeCommBufferSize requires at least one local qubit.");
+        PL_ABORT_IF(ratio == 0,
+                    "computeCommBufferSize requires a ratio of at least 1.");
+        return std::max(std::size_t{1}, exp2(local_qubit_count - 1) / ratio);
+    }
+
     auto getSendBuffer() const { return sendbuf_; };
     auto getRecvBuffer() const { return recvbuf_; };
 
     std::size_t getNumGlobalWires() const { return numGlobalQubits_; }
 
     std::size_t getNumLocalWires() const { return numLocalQubits_; }
+
+    /**
+     * @brief Default MPI comm-buffer memory-reduction factor.
+     *
+     * Buffer size = max(1, half_sv / ratio). Two of these buffers (send, recv)
+     * are allocated per process. The default of 1 keeps full half-SV buffers.
+     * Larger values trade communication latency for less per-process memory.
+     */
+    static constexpr std::size_t DEFAULT_COMM_BUFFER_RATIO = 1;
+
+    /**
+     * @brief Active comm-buffer memory-reduction factor for this state vector.
+     *
+     * @return The ratio used to size the MPI send/recv buffers.
+     */
+    std::size_t getCommBufferRatio() const { return comm_buffer_ratio_; }
 
     /**
      * @brief Reset the indices of the global_wires_, local_wires_ and
@@ -352,13 +395,13 @@ class StateVectorKokkosMPI final
      * @brief Allocate send and recv buffers for MPI communication.
      */
     void allocateBuffers() {
+        const std::size_t buffer_size =
+            computeCommBufferSize(getNumLocalWires(), comm_buffer_ratio_);
         if (!sendbuf_) {
-            sendbuf_ = std::make_shared<KokkosVector>(
-                "sendbuf_", exp2(getNumLocalWires() - 1));
+            sendbuf_ = std::make_shared<KokkosVector>("sendbuf_", buffer_size);
         }
         if (!recvbuf_) {
-            recvbuf_ = std::make_shared<KokkosVector>(
-                "recvbuf_", exp2(getNumLocalWires() - 1));
+            recvbuf_ = std::make_shared<KokkosVector>("recvbuf_", buffer_size);
         }
     }
 
@@ -770,48 +813,60 @@ class StateVectorKokkosMPI final
             auto sendbuf_view = (*sendbuf_);
             auto recvbuf_view = (*recvbuf_);
             auto sv_view = (*sv_).getView();
-            std::size_t send_size =
+            const std::size_t send_size =
                 exp2((getNumLocalWires() - local_wires_to_swap.size()));
+            // Each MPI_Sendrecv count must fit in a 32-bit int, so clamp the
+            // chunk to the MPI transfer limit.
+            const std::size_t chunk_size = std::min(
+                sendbuf_->size(), MPIManagerKokkos::MPI_MAX_TRANSFER_COUNT);
 
-            // Copy to send buffer
-            Kokkos::parallel_for(
-                "copy_sendbuf", RangePolicy<KokkosExecSpace>(0, send_size),
-                KOKKOS_LAMBDA(std::size_t buffer_index) {
-                    std::size_t SV_index = swap_wire_mask;
-                    for (std::size_t i = 0; i < not_swapping_local_wire_size;
-                         i++) {
-                        SV_index |=
-                            (((buffer_index >> i) & 1)
-                             << rev_local_wires_index_not_swapping_view(i));
-                    }
-                    sendbuf_view(buffer_index) = sv_view(SV_index);
-                });
-            Kokkos::fence();
-
-            // MPI Sendrecv
-            std::size_t other_global_index = batch_index ^ global_index;
-            std::size_t other_mpi_rank =
+            const std::size_t other_global_index = batch_index ^ global_index;
+            const std::size_t other_mpi_rank =
                 getMPIRankFromGlobalIndex(other_global_index);
 
-            sendrecvBuffers(other_mpi_rank, other_mpi_rank, send_size,
-                            batch_index);
+            // Transfer in chunks no larger than the comm buffer; with a
+            // full-size buffer this is a single chunk.
+            for (std::size_t offset = 0; offset < send_size;
+                 offset += chunk_size) {
+                const std::size_t csize =
+                    std::min(chunk_size, send_size - offset);
 
-            // Copy from recv buffer
-            Kokkos::parallel_for(
-                "copy_recvbuf", RangePolicy<KokkosExecSpace>(0, send_size),
-                KOKKOS_LAMBDA(std::size_t buffer_index) {
-                    std::size_t SV_index = swap_wire_mask;
+                // Copy to send buffer
+                Kokkos::parallel_for(
+                    "copy_sendbuf", RangePolicy<KokkosExecSpace>(0, csize),
+                    KOKKOS_LAMBDA(std::size_t buffer_index) {
+                        const std::size_t idx = buffer_index + offset;
+                        std::size_t SV_index = swap_wire_mask;
+                        for (std::size_t i = 0;
+                             i < not_swapping_local_wire_size; i++) {
+                            SV_index |=
+                                (((idx >> i) & 1)
+                                 << rev_local_wires_index_not_swapping_view(i));
+                        }
+                        sendbuf_view(buffer_index) = sv_view(SV_index);
+                    });
+                Kokkos::fence();
 
-                    for (std::size_t i = 0; i < not_swapping_local_wire_size;
-                         i++) {
-                        SV_index |=
-                            (((buffer_index >> i) & 1)
-                             << rev_local_wires_index_not_swapping_view(i));
-                    }
+                // MPI Sendrecv
+                sendrecvBuffers(other_mpi_rank, other_mpi_rank, csize,
+                                batch_index);
 
-                    sv_view(SV_index) = recvbuf_view(buffer_index);
-                });
-            Kokkos::fence();
+                // Copy from recv buffer
+                Kokkos::parallel_for(
+                    "copy_recvbuf", RangePolicy<KokkosExecSpace>(0, csize),
+                    KOKKOS_LAMBDA(std::size_t buffer_index) {
+                        const std::size_t idx = buffer_index + offset;
+                        std::size_t SV_index = swap_wire_mask;
+                        for (std::size_t i = 0;
+                             i < not_swapping_local_wire_size; i++) {
+                            SV_index |=
+                                (((idx >> i) & 1)
+                                 << rev_local_wires_index_not_swapping_view(i));
+                        }
+                        sv_view(SV_index) = recvbuf_view(buffer_index);
+                    });
+                Kokkos::fence();
+            }
         }
 
         // Swap global and local wires labels
@@ -908,28 +963,32 @@ class StateVectorKokkosMPI final
         std::size_t dest_mpi_rank = getElementIndexInVector(
             mpi_rank_to_global_index_map_target, dest_global_index);
 
-        std::size_t send_size = exp2(getNumLocalWires() - 1);
+        const std::size_t total_size = exp2(getNumLocalWires());
+        // Each MPI_Sendrecv count must fit in a 32-bit int, so clamp the chunk
+        // to the MPI transfer limit.
+        const std::size_t chunk_size = std::min(
+            sendbuf_->size(), MPIManagerKokkos::MPI_MAX_TRANSFER_COUNT);
         auto sendbuf_view = (*sendbuf_);
         auto recvbuf_view = (*recvbuf_);
         auto sv_view = (*sv_).getView();
 
-        // Since the buffer is half the size of the state vector, we need to
-        // do two copies
-        for (std::size_t i = 0; i < 2; i++) {
-            std::size_t offset = i * send_size;
+        // Transfer the full local sub-state-vector in chunks no larger than
+        // the comm buffer; with a half-size buffer this is two chunks.
+        for (std::size_t offset = 0; offset < total_size;
+             offset += chunk_size) {
+            const std::size_t csize = std::min(chunk_size, total_size - offset);
             // COPY to buffer
             Kokkos::parallel_for(
-                "copy_sendbuf", RangePolicy<KokkosExecSpace>(0, send_size),
+                "copy_sendbuf", RangePolicy<KokkosExecSpace>(0, csize),
                 KOKKOS_LAMBDA(std::size_t buffer_index) {
                     sendbuf_view(buffer_index) = sv_view(buffer_index + offset);
                 });
             Kokkos::fence();
             // SENDRECV
-            sendrecvBuffers(dest_mpi_rank, dest_mpi_rank, send_size, 0);
+            sendrecvBuffers(dest_mpi_rank, dest_mpi_rank, csize, 0);
             // COPY FROM BUFFER
-
             Kokkos::parallel_for(
-                "copy_recvbuf", RangePolicy<KokkosExecSpace>(0, send_size),
+                "copy_recvbuf", RangePolicy<KokkosExecSpace>(0, csize),
                 KOKKOS_LAMBDA(std::size_t buffer_index) {
                     sv_view(buffer_index + offset) = recvbuf_view(buffer_index);
                 });

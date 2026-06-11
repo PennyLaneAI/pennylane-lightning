@@ -88,10 +88,19 @@ void registerBackendSpecificStateVectorMethodsMPI(PyClass &pyclass) {
     registerControlledGates<StateVectorT>(pyclass);
 
     pyclass.def(nb::init<std::size_t>());
-    pyclass.def(nb::init<MPIManagerKokkos &, std::size_t>());
-    pyclass.def(nb::init<MPIManagerKokkos &, std::size_t,
-                         const InitializationSettings &>());
+    pyclass.def(
+        "__init__",
+        [](StateVectorT *self, MPIManagerKokkos &mpi_manager,
+           std::size_t num_qubits, const InitializationSettings &kokkos_args,
+           std::size_t comm_buffer_ratio) {
+            new (self) StateVectorT(mpi_manager, num_qubits, kokkos_args,
+                                    comm_buffer_ratio);
+        },
+        nb::arg("mpi_manager"), nb::arg("num_qubits"),
+        nb::arg("kokkos_args") = InitializationSettings{},
+        nb::arg("comm_buffer_ratio") = StateVectorT::DEFAULT_COMM_BUFFER_RATIO);
     pyclass.def(nb::init<std::size_t, const InitializationSettings &>());
+    pyclass.def("getCommBufferRatio", &StateVectorT::getCommBufferRatio);
 
     pyclass.def("resetStateVector", &StateVectorT::resetStateVector);
     pyclass.def(

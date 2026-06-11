@@ -1115,7 +1115,9 @@ TEMPLATE_TEST_CASE("sendrecvBuffers", "[LKMPI]", double, float) {
 
     std::size_t mpi_rank = mpi_manager.getRank();
     std::size_t dest_rank = mpi_rank ^ 1U;
-    std::size_t message_size = 4;
+    // The comm buffer size is set by allocateBuffers (from the ratio), so
+    // transfer exactly what the buffer holds rather than a hard-coded count.
+    std::size_t message_size = sendbuf.size();
     Kokkos::parallel_for(
         "InitSendBuffer", message_size, KOKKOS_LAMBDA(const std::size_t i) {
             sendbuf(i) = static_cast<TestType>(mpi_rank + i);
@@ -1128,6 +1130,102 @@ TEMPLATE_TEST_CASE("sendrecvBuffers", "[LKMPI]", double, float) {
     for (std::size_t i = 0; i < message_size; i++) {
         CHECK(real(h_recvbuf[i]) == ((mpi_rank ^ 1U) + i));
     }
+}
+
+TEMPLATE_TEST_CASE("MPIManagerKokkos::Sendrecv transfer-count guard", "[LKMPI]",
+                   double, float) {
+    MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
+    Kokkos::View<Kokkos::complex<TestType> *> sbuf("sbuf", 1);
+    Kokkos::View<Kokkos::complex<TestType> *> rbuf("rbuf", 1);
+    const std::size_t peer = mpi_manager.getRank(); // self; never reached
+    PL_REQUIRE_THROWS_MATCHES(
+        mpi_manager.Sendrecv(sbuf, peer, rbuf, peer,
+                             MPIManagerKokkos::MPI_MAX_TRANSFER_COUNT + 1, 0),
+        LightningException, "exceeds the 32-bit MPI limit");
+}
+
+TEMPLATE_TEST_CASE("StateVectorKokkosMPI::computeCommBufferSize", "[LKMPI]",
+                   double, float) {
+    using SV = StateVectorKokkosMPI<TestType>;
+
+    // Sizes the buffer as max(1, 2^(local_qubit_count - 1) / ratio). There is
+    // no cap here: the 32-bit MPI limit is enforced by chunking transfers, not
+    // by the buffer size, so this may exceed the MPI transfer limit.
+
+    // Ratio reduction: 2^(11-1) / 4 = 2^8.
+    CHECK(SV::computeCommBufferSize(11, 4) == (std::size_t{1} << 8));
+    // Floor at 1 (tiny local SV): 2^(2-1) / 4 = 0 -> 1.
+    CHECK(SV::computeCommBufferSize(2, 4) == 1);
+    // Ratio == 1 -> the full half-SV: 2^(6-1) = 2^5.
+    CHECK(SV::computeCommBufferSize(6, 1) == (std::size_t{1} << 5));
+    // Truncating integer division (not rounded): 2^(6-1) / 3 = 32 / 3 = 10.
+    CHECK(SV::computeCommBufferSize(6, 3) == 10);
+    // Smallest valid local size (1 local qubit): 2^(1-1) / 1 = 1.
+    CHECK(SV::computeCommBufferSize(1, 1) == 1);
+    // Not capped: 2^(34-1) / 4 = 2^31, which exceeds the 2^30 MPI transfer
+    // limit -- the buffer size itself is never clamped to it.
+    CHECK(SV::computeCommBufferSize(34, 4) == (std::size_t{1} << 31));
+    CHECK(SV::computeCommBufferSize(34, 4) >
+          MPIManagerKokkos::MPI_MAX_TRANSFER_COUNT);
+    // Zero local qubits is rejected (2^(0-1) would underflow std::size_t).
+    PL_REQUIRE_THROWS_MATCHES(SV::computeCommBufferSize(0, 4),
+                              LightningException, "at least one local qubit");
+    // Zero ratio is rejected (division by zero).
+    PL_REQUIRE_THROWS_MATCHES(SV::computeCommBufferSize(4, 0),
+                              LightningException, "ratio of at least 1");
+}
+
+TEMPLATE_TEST_CASE("MPI comm-buffer chunking: swap correctness", "[LKMPI]",
+                   double, float) {
+    const std::size_t num_qubits = 5; // 4 ranks -> 3 local qubits
+    // Use comm_buffer_ratio = 2 so the buffer is smaller than half the local
+    // SV (the default ratio of 1 would not chunk).
+    auto [sv, sv_ref] = initializeLKTestSV<TestType>(num_qubits, 2);
+
+    // The comm buffer is smaller than half the local SV, so swap transfers are
+    // split into multiple chunks -- this is the behavior under test.
+    REQUIRE(sv.getSendBuffer()->size() < exp2(sv.getNumLocalWires() - 1));
+
+    // Scramble then restore canonical wire order via chunked swap transfers.
+    sv.swapGlobalLocalWires({0}, {2});
+    sv.swapGlobalLocalWires({2}, {3});
+    sv.swapGlobalLocalWires({3}, {0});
+    sv.reorderLocalWires();
+
+    std::vector<Kokkos::complex<TestType>> reference(exp2(num_qubits));
+    for (std::size_t i = 0; i < reference.size(); i++) {
+        reference[i] = static_cast<TestType>(i);
+    }
+    auto data = getFullDataVector(sv, 0);
+    if (sv.getMPIManager().getRank() == 0) {
+        for (std::size_t j = 0; j < data.size(); j++) {
+            CHECK(real(data[j]) == Approx(real(reference[j])));
+            CHECK(imag(data[j]) == Approx(imag(reference[j])));
+        }
+    }
+}
+
+TEMPLATE_TEST_CASE("StateVectorKokkosMPI comm_buffer_ratio ctor arg", "[LKMPI]",
+                   double, float) {
+    using SV = StateVectorKokkosMPI<TestType>;
+    const std::size_t num_qubits = 5; // 4 ranks -> 3 local qubits
+    MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
+    REQUIRE(mpi_manager.getSize() == 4);
+
+    // Default ratio when not specified.
+    SV sv_default(mpi_manager, num_qubits);
+    CHECK(sv_default.getCommBufferRatio() == SV::DEFAULT_COMM_BUFFER_RATIO);
+
+    // Custom ratio (kokkos_args default, ratio = 2).
+    SV sv2(mpi_manager, num_qubits, Kokkos::InitializationSettings{}, 2);
+    CHECK(sv2.getCommBufferRatio() == 2);
+    CHECK(sv2.getSendBuffer()->size() ==
+          SV::computeCommBufferSize(sv2.getNumLocalWires(), 2));
+
+    // Ratio 0 is rejected.
+    PL_REQUIRE_THROWS_MATCHES(
+        SV(mpi_manager, num_qubits, Kokkos::InitializationSettings{}, 0),
+        LightningException, "comm_buffer_ratio must be >= 1");
 }
 
 TEMPLATE_TEST_CASE("allReduceSum", "[LKMPI]", double, float) {

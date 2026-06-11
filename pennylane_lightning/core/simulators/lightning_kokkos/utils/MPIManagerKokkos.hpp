@@ -84,6 +84,17 @@ class MPIManagerKokkos final : public MPIManager {
     }
 
   public:
+    /**
+     * @brief Maximum element count for a single MPI transfer.
+     *
+     * MPI-3 counts are `int`, so this stays below INT_MAX (2^30 < 2^31 - 1)
+     * with headroom. It bounds the per-transfer count only -- not any buffer
+     * allocation, which is `std::size_t`-sized and may legitimately be larger.
+     * Callers must chunk transfers to this bound; enforced by the Sendrecv
+     * guard below.
+     */
+    static constexpr std::size_t MPI_MAX_TRANSFER_COUNT = std::size_t{1} << 30;
+
     MPIManagerKokkos(MPI_Comm communicator = MPI_COMM_WORLD)
         : MPIManager(communicator) {}
 
@@ -107,6 +118,10 @@ class MPIManagerKokkos final : public MPIManager {
                   Kokkos::View<T *> &recvBuf, std::size_t source,
                   std::size_t size, std::size_t tag = 0) {
         MPI_Datatype datatype = getMPIDatatype<T>();
+        PL_ABORT_IF(size > MPI_MAX_TRANSFER_COUNT,
+                    "Sendrecv element count exceeds the 32-bit MPI limit; "
+                    "callers must keep transfer sizes within "
+                    "MPI_MAX_TRANSFER_COUNT.");
         MPI_Status status;
         int sendtag = static_cast<int>(tag);
         int recvtag = static_cast<int>(tag);
@@ -132,6 +147,10 @@ class MPIManagerKokkos final : public MPIManager {
                     std::vector<int> &recvCounts,
                     std::vector<int> &displacements) {
         MPI_Datatype datatype = getMPIDatatype<T>();
+        PL_ABORT_IF(sendBuf.size() > MPI_MAX_TRANSFER_COUNT,
+                    "AllGatherV send count exceeds the 32-bit MPI limit; "
+                    "callers must keep transfer sizes within "
+                    "MPI_MAX_TRANSFER_COUNT.");
 
         PL_MPI_IS_SUCCESS(
             MPI_Allgatherv(sendBuf.data(), sendBuf.size(), datatype,
@@ -149,6 +168,9 @@ class MPIManagerKokkos final : public MPIManager {
     template <typename T>
     void Bcast(Kokkos::View<T *> &sendBuf, std::size_t root) {
         MPI_Datatype datatype = getMPIDatatype<T>();
+        PL_ABORT_IF(sendBuf.size() > MPI_MAX_TRANSFER_COUNT,
+                    "Bcast element count exceeds the 32-bit MPI limit; callers "
+                    "must keep transfer sizes within MPI_MAX_TRANSFER_COUNT.");
         int rootInt = static_cast<int>(root);
         PL_MPI_IS_SUCCESS(MPI_Bcast(sendBuf.data(), sendBuf.size(), datatype,
                                     rootInt, this->getComm()));
