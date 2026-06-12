@@ -95,7 +95,7 @@ jobs:
               "pull_request_number": ${{ env.WEBHOOK_METADATA_PULL_REQUEST_NUMBER }},
               "pull_request_url": "${{ env.WEBHOOK_METADATA_PULL_REQUEST_URL }}",
               "comment_link_api": "${{ env.WEBHOOK_METADATA_COMMENT_LINK_API }}",
-              "comment_link_html": "${{ env.WEBHOOK_METADATA_COMMENT_LINK_HTML }}",
+              "comment_link_html": "${{ env.WEBHOOK_METADATA_COMMENT_LINK_HTML }}"
             }
 
       - name: React to original comment indicating webhook sent
