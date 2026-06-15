@@ -27,6 +27,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- The `/benchmark` GitHub comment trigger can now accept additional arguments and has been renamed to `!benchmark`.
+  [(#1392)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1392)
+
 - Updated the release script with changes from the v0.45.0 release process.
   [(#1385)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1385)
 
