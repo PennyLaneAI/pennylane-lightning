@@ -45,11 +45,14 @@ using TestStateVectorBackends =
 #if _ENABLE_PLKOKKOS_MPI == 1
 template <typename TestType>
 std::pair<StateVectorKokkosMPI<TestType>, StateVectorKokkos<TestType>>
-initializeLKTestSV(const std::size_t num_qubits) {
+initializeLKTestSV(const std::size_t num_qubits,
+                   std::size_t comm_buffer_ratio = 1) {
     MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
     REQUIRE(mpi_manager.getSize() == 4);
 
-    StateVectorKokkosMPI<TestType> sv(mpi_manager, num_qubits);
+    StateVectorKokkosMPI<TestType> sv(mpi_manager, num_qubits,
+                                      Kokkos::InitializationSettings{},
+                                      comm_buffer_ratio);
     StateVectorKokkos<TestType> sv_ref{num_qubits};
 
     // Set the reference data

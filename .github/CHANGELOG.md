@@ -4,6 +4,16 @@
 
 <h3>Improvements 🛠</h3>
 
+- The MPI send and receive buffer sizes for Lightning-Kokkos are now adjustable via the
+  `comm_buffer_ratio` keyword argument.
+  [(#1391)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1391)
+
+- The Lightning-Kokkos simulator now supports simulation of statevectors with 32 or more qubits when using GPU devices.
+  [(#1382)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1382)
+
+- Added `PauliMeasure` to the Lightning devices TOML files.
+  [(#1389)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1389)
+
 <h3>Breaking changes 💔</h3>
 
 <h3>Deprecations 👋</h3>
@@ -12,9 +22,24 @@
 
 <h3>Bug fixes 🐛</h3>
 
+- Fixed `qp.PauliRot` execution bug when handling identity Pauli word within the compilation pipeline.
+  [(#1390)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1390)
+
 <h3>Internal changes ⚙️</h3>
 
-- Update nightly RC builds to upload to testpypi from a single workflow; removed global id-token permission.
+- The `/benchmark` GitHub comment trigger can now accept additional arguments and has been renamed to `!benchmark`.
+  [(#1392)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1392)
+
+- Updated the release script with changes from the v0.45.0 release process.
+  [(#1385)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1385)
+
+- Removed temporary CI patches that are no longer relevant after the v0.45.0 release.
+  [(#1388)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1388)
+
+- Reduced Lightning-Qubit and Lightning-Kokkos wheel size by fixing CIBW environment variable.
+  [(#1386)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1386)
+
+- Updated nightly RC builds to upload to testpypi from a single workflow; removed global id-token permission.
   [(#1377)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1377)
   [(#1379)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1379)
 
@@ -28,6 +53,8 @@
 
 This release contains contributions from (in alphabetical order):
 
+Jeffrey Kam,
+Joseph Lee,
 Jake Zaia
 
 ---

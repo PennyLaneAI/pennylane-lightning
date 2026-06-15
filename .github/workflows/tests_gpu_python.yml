@@ -99,7 +99,6 @@ jobs:
         with:
           repository: PennyLaneAI/catalyst
           path: ${{ github.workspace}}/catalyst
-          ref: ${{ (inputs.pennylane-version == 'stable' && 'v0.14.0') || 'main' }} # FIXME: remove after v0.45 release
 
       - name: Switch to release build of Catalyst
         if: inputs.lightning-version == 'release'
@@ -156,11 +155,7 @@ jobs:
 
       - name: Install required packages
         run: |
-          if [[ "${{ inputs.lightning-version }}" == "stable" ]]; then # FIXME: remove after v0.45 release
-            python -m pip install -r requirements-tests.txt
-          else
-            python -m pip install --group tests
-          fi
+          python -m pip install --group tests
           # pyscf is not compatible with numpy 2.4 yet
           python -m pip install cmake openfermionpyscf "numpy<2.4"
 

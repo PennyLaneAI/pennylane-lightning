@@ -45,6 +45,7 @@ PauliX                 = { properties = [ "invertible", "controllable", "differe
 PauliY                 = { properties = [ "invertible", "controllable", "differentiable" ] }
 PauliZ                 = { properties = [ "invertible", "controllable", "differentiable" ] }
 PauliRot               = { properties = [ "invertible",                                  ] }
+PauliMeasure           = { properties = [                                                ] }
 PhaseShift             = { properties = [ "invertible", "controllable", "differentiable" ] }
 PSWAP                  = { properties = [ "invertible", "controllable", "differentiable" ] }
 QubitUnitary           = { properties = [ "invertible", "controllable"                   ] }

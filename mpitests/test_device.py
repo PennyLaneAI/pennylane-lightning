@@ -132,3 +132,39 @@ def test_unsupported_gate():
     ):
         dev.execute(tape)
         comm.Barrier()
+
+
+@pytest.mark.skipif(device_name != "lightning.kokkos", reason="Only for Lightning-Kokkos")
+@pytest.mark.parametrize("comm_buffer_ratio", [1, 2, 3, 4, 5])
+def test_comm_buffer_ratio(comm_buffer_ratio):
+    """For ``mpi=True``, every comm_buffer_ratio yields the correct result."""
+    n_wires = 7
+
+    def circuit():
+        qp.Hadamard(0)
+        qp.CNOT([0, 6])
+        qp.RX(0.37, wires=2)
+        qp.CNOT([4, 1])
+        qp.RY(0.21, wires=5)
+        return qp.expval(qp.PauliZ(0) @ qp.PauliZ(6))
+
+    dev = qp.device(device_name, wires=n_wires, mpi=True, comm_buffer_ratio=comm_buffer_ratio)
+    dev_ref = qp.device("lightning.qubit", wires=n_wires)
+    res = qp.QNode(circuit, dev)()
+    res_ref = qp.QNode(circuit, dev_ref)()
+    assert res == pytest.approx(res_ref)
+
+
+@pytest.mark.skipif(device_name != "lightning.kokkos", reason="Only for Lightning-Kokkos")
+def test_comm_buffer_ratio_requires_mpi():
+    """Setting comm_buffer_ratio without mpi=True raises a clear error."""
+    with pytest.raises(DeviceError, match="comm_buffer_ratio requires mpi=True"):
+        qp.device(device_name, wires=4, comm_buffer_ratio=2)
+
+
+@pytest.mark.skipif(device_name != "lightning.kokkos", reason="Only for Lightning-Kokkos")
+@pytest.mark.parametrize("bad_ratio", [0, -1, 2.5, "4"])
+def test_comm_buffer_ratio_invalid_value(bad_ratio):
+    """A non-positive-integer comm_buffer_ratio raises a DeviceError."""
+    with pytest.raises(DeviceError, match="comm_buffer_ratio must be a positive integer"):
+        qp.device(device_name, wires=4, mpi=True, comm_buffer_ratio=bad_ratio)

@@ -26,6 +26,7 @@ PauliX                 = { properties = [ "invertible", "controllable", "differe
 PauliY                 = { properties = [ "invertible", "controllable", "differentiable" ] }
 PauliZ                 = { properties = [ "invertible", "controllable", "differentiable" ] }
 PauliRot               = { properties = [ "invertible",                                  ] }
+PauliMeasure           = { properties = [                                                ] }
 Hadamard               = { properties = [ "invertible", "controllable", "differentiable" ] }
 S                      = { properties = [ "invertible", "controllable", "differentiable" ] }
 SX                     = { properties = [ "invertible", "controllable", "differentiable" ] }

@@ -31,6 +31,7 @@
 /// @cond DEV
 namespace {
 using namespace Pennylane::LightningKokkos::Measures;
+using Pennylane::LightningKokkos::Util::RangePolicy;
 using Pennylane::Util::createNonTrivialState;
 using Pennylane::Util::INVSQRT2;
 }; // namespace
@@ -842,11 +843,14 @@ TEST_CASE("Test tensor transposition", "[Measure]") {
                 UnmanagedSizeTHostView(term.first.data(), term.first.size()));
 
             using MDPolicyType_2D =
-                Kokkos::MDRangePolicy<Kokkos::Rank<2, Kokkos::Iterate::Left>>;
+                Kokkos::MDRangePolicy<Kokkos::Rank<2, Kokkos::Iterate::Left>,
+                                      Kokkos::IndexType<std::size_t>>;
 
+            // MDRangePolicy bounds are Kokkos::Array<int64_t, rank> regardless
+            // of IndexType, so cast from size_t to silence -Wnarrowing.
             MDPolicyType_2D mdpolicy_2d1(
-                {{0, 0}}, {{static_cast<int>(indices.size()),
-                            static_cast<int>(term.first.size())}});
+                {{0, 0}}, {{static_cast<std::int64_t>(indices.size()),
+                            static_cast<std::int64_t>(term.first.size())}});
 
             const int num_wires = term.first.size();
 
@@ -855,8 +859,7 @@ TEST_CASE("Test tensor transposition", "[Measure]") {
                 getTransposedIndexFunctor(d_wires, d_trans_index, num_wires));
 
             Kokkos::parallel_for(
-                "Transpose",
-                Kokkos::RangePolicy<KokkosExecSpace>(0, indices.size()),
+                "Transpose", RangePolicy<KokkosExecSpace>(0, indices.size()),
                 getTransposedFunctor<std::size_t>(d_results, d_indices,
                                                   d_trans_index));
 

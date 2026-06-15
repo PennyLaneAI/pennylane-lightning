@@ -5,7 +5,7 @@ on:
       - created
 
 env:
-  BENCHMARK_TRIGGER_COMMAND: /benchmark
+  BENCHMARK_TRIGGER_COMMAND: "!benchmark"
 
 permissions:
   contents: read
@@ -25,7 +25,7 @@ jobs:
           COMMENT_BODY: ${{ github.event.comment.body }}
           BENCHMARK_TRIGGER_COMMAND: ${{ env.BENCHMARK_TRIGGER_COMMAND }}
         run: |
-          if [ "$COMMENT_BODY" = "$BENCHMARK_TRIGGER_COMMAND" ]; then
+          if [[ "$COMMENT_BODY" =~ ^[[:space:]]*"$BENCHMARK_TRIGGER_COMMAND" ]]; then
             echo "triggers_benchmark=true" >> $GITHUB_OUTPUT
           else
             echo "triggers_benchmark=false" >> $GITHUB_OUTPUT
@@ -77,7 +77,8 @@ jobs:
 
           # The username of the person who commented the trigger command on the pull request
           WEBHOOK_METADATA_GITHUB_ACTOR: ${{ github.event.comment.user.login }}
-          WEBHOOK_METADATA_COMMENT_LINK: ${{ github.event.comment.html_url }}
+          WEBHOOK_METADATA_COMMENT_LINK_API: ${{ github.event.comment.url }}
+          WEBHOOK_METADATA_COMMENT_LINK_HTML: ${{ github.event.comment.html_url }}
 
           # Information regarding the pull request
           WEBHOOK_METADATA_PULL_REQUEST_NUMBER: ${{ github.event.issue.number }}
@@ -93,7 +94,8 @@ jobs:
               "github_actor": "${{ env.WEBHOOK_METADATA_GITHUB_ACTOR }}",
               "pull_request_number": ${{ env.WEBHOOK_METADATA_PULL_REQUEST_NUMBER }},
               "pull_request_url": "${{ env.WEBHOOK_METADATA_PULL_REQUEST_URL }}",
-              "comment_link": "${{ env.WEBHOOK_METADATA_COMMENT_LINK }}"
+              "comment_link_api": "${{ env.WEBHOOK_METADATA_COMMENT_LINK_API }}",
+              "comment_link_html": "${{ env.WEBHOOK_METADATA_COMMENT_LINK_HTML }}"
             }
 
       - name: React to original comment indicating webhook sent

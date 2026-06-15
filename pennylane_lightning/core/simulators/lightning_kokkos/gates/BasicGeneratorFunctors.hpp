@@ -25,6 +25,7 @@ namespace {
 using namespace Pennylane::Util;
 using Kokkos::kokkos_swap;
 using Pennylane::Gates::GeneratorOperation;
+using Pennylane::LightningKokkos::Util::RangePolicy;
 } // namespace
 /// @endcond
 
@@ -365,8 +366,7 @@ void applyGenMultiRZ(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
         wires_parity |= Pennylane::Util::exp2(num_qubits - wire - 1);
     }
     Kokkos::parallel_for(
-        Kokkos::RangePolicy<ExecutionSpace>(0,
-                                            Pennylane::Util::exp2(num_qubits)),
+        RangePolicy<ExecutionSpace>(0, Pennylane::Util::exp2(num_qubits)),
         KOKKOS_LAMBDA(std::size_t k) {
             arr_(k) *= static_cast<PrecisionT>(
                 1 - 2 * int(Kokkos::popcount(k & wires_parity) % 2));
@@ -427,7 +427,7 @@ template <class PrecisionT, class FuncT> class applyNCGenerator1Functor {
         i1 = indices_[(mask << one) | one];
         indices = vector2view(indices_);
         Kokkos::parallel_for(
-            Kokkos::RangePolicy<ExecutionSpace>(
+            RangePolicy<ExecutionSpace>(
                 0, Pennylane::Util::exp2(num_qubits - controlled_wires.size() -
                                          wires.size())),
             *this);
@@ -604,7 +604,7 @@ template <class PrecisionT, class FuncT> class applyNCGenerator2Functor {
         i11 = indices_[(mask << two) | two | one];
         indices = vector2view(indices_);
         Kokkos::parallel_for(
-            Kokkos::RangePolicy<ExecutionSpace>(
+            RangePolicy<ExecutionSpace>(
                 0, Pennylane::Util::exp2(num_qubits - controlled_wires.size() -
                                          wires.size())),
             *this);
@@ -838,7 +838,7 @@ template <class PrecisionT, class FuncT> class applyNCGenerator4Functor {
         i1100 = indices_[(mask << 4U) + 12U];
         indices = vector2view(indices_);
         Kokkos::parallel_for(
-            Kokkos::RangePolicy<ExecutionSpace>(
+            RangePolicy<ExecutionSpace>(
                 0, Pennylane::Util::exp2(num_qubits - controlled_wires.size() -
                                          wires.size())),
             *this);
@@ -946,8 +946,7 @@ void applyNCGenMultiRZ(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
         });
 
     Kokkos::parallel_for(
-        Kokkos::RangePolicy<ExecutionSpace>(0,
-                                            Pennylane::Util::exp2(num_qubits)),
+        RangePolicy<ExecutionSpace>(0, Pennylane::Util::exp2(num_qubits)),
         KOKKOS_LAMBDA(std::size_t k) {
             if (ctrls_mask == (ctrls_parity & k)) {
                 arr_(k) *= static_cast<PrecisionT>(

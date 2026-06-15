@@ -41,7 +41,7 @@ auto LightningKokkosSimulator::AllocateQubit() -> QubitIdType {
         const auto &original_data = this->device_sv->getDataVector();
 
         const size_t dsize = original_data.size();
-        RT_ASSERT(dsize == 1UL << num_qubits);
+        RT_ASSERT(dsize == std::size_t{1} << num_qubits);
 
         std::vector<Kokkos::complex<double>> new_data(dsize << 1UL);
 
@@ -162,7 +162,7 @@ void LightningKokkosSimulator::reduceStateVector() {
     // Create a new state vector with reduced size
     auto old_data = this->device_sv->getDataVector();
     size_t num_qubits_after = wire_id_pairs.size();
-    size_t new_size = 1UL << num_qubits_after;
+    size_t new_size = std::size_t{1} << num_qubits_after;
 
     std::vector<Kokkos::complex<double>> new_data(new_size);
 
@@ -217,9 +217,9 @@ void LightningKokkosSimulator::reduceStateVector() {
             size_t new_bit_pos = num_qubits_after - 1 - i;
 
             if ((new_idx >> new_bit_pos) & 1) {
-                old_idx |= (1UL << old_bit_pos);
+                old_idx |= (std::size_t{1} << old_bit_pos);
             } else {
-                old_idx &= ~(1UL << old_bit_pos);
+                old_idx &= ~(std::size_t{1} << old_bit_pos);
             }
         }
 
@@ -271,7 +271,7 @@ bool LightningKokkosSimulator::checkSingleQubitDisentangled(size_t wire,
 
     const size_t bit_pos = num_qubits - 1U - wire;
 
-    const size_t lower_mask = (1UL << bit_pos) - 1;
+    const size_t lower_mask = (std::size_t{1} << bit_pos) - 1;
     const size_t upper_mask = sv_size - lower_mask - 1;
 
     // The resulting 2x2 reduced density matrix of the complement system to
@@ -319,8 +319,8 @@ void LightningKokkosSimulator::checkReleasedQubitsDisentangled() {
     //     and Tr(ρ_released^2) = 1 (pure state)
     const auto &state_data = this->device_sv->getDataVector();
     const size_t num_released = free_device_qubits.size();
-    const size_t released_space_size = 1UL << num_released;
-    const size_t active_space_size = 1UL << num_active;
+    const size_t released_space_size = std::size_t{1} << num_released;
+    const size_t active_space_size = std::size_t{1} << num_active;
 
     // Map (released_idx, active_idx) to full state vector index.
     // The state vector uses interleaved indexing where released and active
@@ -337,13 +337,13 @@ void LightningKokkosSimulator::checkReleasedQubitsDisentangled() {
             if (is_released) {
                 const size_t new_bit_pos = num_released - 1 - released_bit;
                 if ((released_idx >> new_bit_pos) & 1) {
-                    idx |= (1UL << bit_pos);
+                    idx |= (std::size_t{1} << bit_pos);
                 }
                 released_bit++;
             } else {
                 const size_t new_bit_pos = num_active - 1 - active_bit;
                 if ((active_idx >> new_bit_pos) & 1) {
-                    idx |= (1UL << bit_pos);
+                    idx |= (std::size_t{1} << bit_pos);
                 }
                 active_bit++;
             }
@@ -452,8 +452,30 @@ void LightningKokkosSimulator::NamedOperation(
         RT_FAIL_IF(this->tape_recording,
                    "PauliRot operation is not supported when tape "
                    "recording is active"); // TODO: support caching
-        this->device_sv->applyPauliRot(dev_wires, inverse, params,
-                                       optional_params[0]);
+
+        // Strips identity Pauli and its corresponding wires.
+        // Mirrors the Python execution logic in _state_vector.py.
+        const std::string &pauli_word = optional_params[0];
+        RT_FAIL_IF(pauli_word.size() != dev_wires.size(),
+                   "PauliRot word and wires must have the same length");
+        std::string new_pauli_word;
+        std::vector<std::size_t> new_wires;
+        new_pauli_word.reserve(pauli_word.size());
+        new_wires.reserve(dev_wires.size());
+        for (std::size_t i = 0; i < pauli_word.size(); ++i) {
+            if (pauli_word[i] != 'I') {
+                new_pauli_word.push_back(pauli_word[i]);
+                new_wires.push_back(dev_wires[i]);
+            }
+        }
+
+        if (new_pauli_word.empty()) {
+            // All-identity = global phase, no state change needed
+            return;
+        }
+
+        this->device_sv->applyPauliRot(new_wires, inverse, params,
+                                       new_pauli_word);
         return;
     }
 
@@ -700,7 +722,7 @@ void LightningKokkosSimulator::PartialSample(
 void LightningKokkosSimulator::Counts(DataView<double, 1> &eigvals,
                                       DataView<int64_t, 1> &counts) {
     const std::size_t numQubits = this->GetNumQubits();
-    const std::size_t numElements = 1U << numQubits;
+    const std::size_t numElements = std::size_t{1} << numQubits;
 
     RT_FAIL_IF(eigvals.size() != numElements || counts.size() != numElements,
                "Invalid size for the pre-allocated counts");
@@ -733,7 +755,7 @@ void LightningKokkosSimulator::PartialCounts(
     const std::vector<QubitIdType> &wires) {
     const std::size_t numWires = wires.size();
     const std::size_t numQubits = this->GetNumQubits();
-    const std::size_t numElements = 1U << numWires;
+    const std::size_t numElements = std::size_t{1} << numWires;
 
     RT_FAIL_IF(numWires > numQubits, "Invalid number of wires");
     RT_FAIL_IF(!isValidQubits(wires), "Invalid given wires to measure");
@@ -772,7 +794,7 @@ auto LightningKokkosSimulator::Measure(QubitIdType wire,
     // get a measurement
     std::vector<QubitIdType> wires = {reinterpret_cast<QubitIdType>(wire)};
 
-    std::vector<double> probs(1U << wires.size());
+    std::vector<double> probs(std::size_t{1} << wires.size());
     DataView<double, 1> buffer_view(probs);
     auto device_shots = GetDeviceShots();
     SetDeviceShots(0);
