@@ -5,7 +5,7 @@ on:
       - created
 
 env:
-  BENCHMARK_TRIGGER_COMMAND: /benchmark
+  BENCHMARK_TRIGGER_COMMAND: "!benchmark"
 
 permissions:
   contents: read
