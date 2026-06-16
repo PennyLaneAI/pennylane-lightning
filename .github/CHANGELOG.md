@@ -241,6 +241,9 @@ Hong-Sheng Zheng.
 
 <h3>Internal changes ⚙️</h3>
 
+- Updated Sphinx to version 9.0.
+  [(#1393)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1393)
+
 - Added permissions to all GitHub Actions workflows.
   [(#1370)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1370)
   [(#1371)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1371)
