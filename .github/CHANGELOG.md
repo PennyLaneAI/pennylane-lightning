@@ -16,6 +16,9 @@
 
 <h3>Breaking changes 💔</h3>
 
+- Python 3.11 is no longer supported. The minimum required Python version is now 3.12.
+  [(#1395)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1395)
+
 <h3>Deprecations 👋</h3>
 
 <h3>Documentation 📝</h3>
