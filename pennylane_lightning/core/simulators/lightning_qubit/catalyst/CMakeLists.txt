@@ -21,6 +21,7 @@ target_link_libraries(lightning_qubit_catalyst PUBLIC  lightning_compile_options
 
 set(CMAKE_BUILD_RPATH_USE_ORIGIN ON)
 set_target_properties(lightning_qubit_catalyst PROPERTIES BUILD_RPATH "${SCIPY_OPENBLAS32_RUNTIME_LIB_PATH}")
+set_target_properties(lightning_qubit_catalyst PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
 
 if (BUILD_TESTS)
     enable_testing()
