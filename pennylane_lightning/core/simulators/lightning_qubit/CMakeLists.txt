@@ -90,7 +90,7 @@ set(COMPONENT_SUBDIRS   algorithms
                         )
 
 # Do not build the LQ plugin for Windows
-if (NOT WIN32)
+if (1)
     set(COMPONENT_SUBDIRS   ${COMPONENT_SUBDIRS}
                             catalyst
                             )
