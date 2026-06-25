@@ -98,8 +98,6 @@ class MPIManagerKokkos final : public MPIManager {
     MPIManagerKokkos(MPI_Comm communicator = MPI_COMM_WORLD)
         : MPIManager(communicator) {}
 
-    MPIManagerKokkos(int argc, char **argv) : MPIManager(argc, argv) {}
-
     using MPIManager::Bcast;
 
     /**

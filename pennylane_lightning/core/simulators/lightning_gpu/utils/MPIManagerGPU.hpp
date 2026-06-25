@@ -93,8 +93,6 @@ class MPIManagerGPU final : public MPIManager {
     MPIManagerGPU(MPI_Comm communicator = MPI_COMM_WORLD)
         : MPIManager(communicator) {}
 
-    MPIManagerGPU(int argc, char **argv) : MPIManager(argc, argv) {}
-
     auto get_cpp_mpi_type_map() const
         -> const std::unordered_map<std::string, MPI_Datatype> & override {
         return cpp_mpi_type_map_with_cuda;
