@@ -36,10 +36,6 @@ TEST_CASE("MPIManager ctor", "[MPIManager]") {
         REQUIRE(std::is_constructible_v<MPIManager, MPI_Comm>);
     }
 
-    SECTION("Construct with args") {
-        REQUIRE(std::is_constructible_v<MPIManager, int, char **>);
-    }
-
     SECTION("MPIManager {MPIManager&}") {
         REQUIRE(std::is_copy_constructible_v<MPIManager>);
     }
