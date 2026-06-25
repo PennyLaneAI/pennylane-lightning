@@ -76,9 +76,7 @@ class JacobianDataMPI final : public JacobianData<StateVectorT> {
      * @brief Get MPI manager
      */
     auto getMPIManager() -> MPIManagerGPU & { return mpi_manager_; }
-    auto getMPIManager() const -> const MPIManagerGPU & {
-        return mpi_manager_;
-    }
+    auto getMPIManager() const -> const MPIManagerGPU & { return mpi_manager_; }
 
     /**
      * @brief Get DevTag manager
