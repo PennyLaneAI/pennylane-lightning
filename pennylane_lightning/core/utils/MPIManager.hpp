@@ -103,7 +103,8 @@ class MPIRuntime {
     void ensureInitialized() {
         int finflag = 0;
         PL_MPI_IS_SUCCESS(MPI_Finalized(&finflag));
-        PL_ABORT_IF(finflag, "MPI has already been finalized and cannot be reused.");
+        PL_ABORT_IF(finflag,
+                    "MPI has already been finalized and cannot be reused.");
 
         int initflag = 0;
         PL_MPI_IS_SUCCESS(MPI_Initialized(&initflag));
@@ -113,7 +114,6 @@ class MPIRuntime {
             owns_mpi_ = true;
             registerFinalizeHookIfNeeded_();
         }
-
     }
 
     void finalizeIfOwned() {
@@ -133,7 +133,6 @@ class MPIRuntime {
             PL_MPI_IS_SUCCESS(MPI_Finalize());
         }
     }
-
 };
 
 /**
@@ -279,9 +278,10 @@ class MPIManager {
         : rank_(other.rank_), size_per_node_(other.size_per_node_),
           size_(other.size_) {
         MPIRuntime::instance().ensureInitialized();
-        PL_MPI_IS_SUCCESS(MPI_Comm_dup(
-            other.communicator_,
-            &communicator_)); // Avoid freeing other.communicator_ in ~MPIManager
+        PL_MPI_IS_SUCCESS(
+            MPI_Comm_dup(other.communicator_,
+                         &communicator_)); // Avoid freeing other.communicator_
+                                           // in ~MPIManager
         vendor_ = other.vendor_;
         version_ = other.version_;
         subversion_ = other.subversion_;
