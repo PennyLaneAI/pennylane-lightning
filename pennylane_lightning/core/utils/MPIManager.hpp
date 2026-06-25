@@ -26,6 +26,7 @@
 #include <typeindex>
 #include <typeinfo>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include "Error.hpp"
@@ -276,15 +277,100 @@ class MPIManager {
 
     MPIManager(const MPIManager &other)
         : rank_(other.rank_), size_per_node_(other.size_per_node_),
-          size_(other.size_) {
+          size_(other.size_), communicator_(MPI_COMM_NULL),
+          vendor_(other.vendor_), version_(other.version_),
+          subversion_(other.subversion_) {
         MPIRuntime::instance().ensureInitialized();
-        PL_MPI_IS_SUCCESS(
-            MPI_Comm_dup(other.communicator_,
-                         &communicator_)); // Avoid freeing other.communicator_
-                                           // in ~MPIManager
+        if (other.communicator_ != MPI_COMM_NULL) {
+            PL_MPI_IS_SUCCESS(
+                MPI_Comm_dup(other.communicator_,
+                             &communicator_)); // Avoid freeing
+                                               // other.communicator_
+                                               // in ~MPIManager
+        }
+    }
+
+    auto operator=(const MPIManager &other) -> MPIManager & {
+        if (this == &other) {
+            return *this;
+        }
+
+        MPI_Comm new_communicator = MPI_COMM_NULL;
+        if (other.communicator_ != MPI_COMM_NULL) {
+            MPIRuntime::instance().ensureInitialized();
+            PL_MPI_IS_SUCCESS(
+                MPI_Comm_dup(other.communicator_, &new_communicator));
+        }
+
+        int initflag = 0;
+        PL_MPI_IS_SUCCESS(MPI_Initialized(&initflag));
+        int finflag = 0;
+        PL_MPI_IS_SUCCESS(MPI_Finalized(&finflag));
+        if (initflag && !finflag && communicator_ != MPI_COMM_NULL) {
+            int compare;
+            PL_MPI_IS_SUCCESS(
+                MPI_Comm_compare(MPI_COMM_WORLD, communicator_, &compare));
+            if (compare != MPI_IDENT) {
+                PL_MPI_IS_SUCCESS(MPI_Comm_free(&communicator_));
+            }
+        }
+
+        rank_ = other.rank_;
+        size_per_node_ = other.size_per_node_;
+        size_ = other.size_;
+        communicator_ = new_communicator;
         vendor_ = other.vendor_;
         version_ = other.version_;
         subversion_ = other.subversion_;
+        return *this;
+    }
+
+    MPIManager(MPIManager &&other) noexcept
+        : rank_(other.rank_), size_per_node_(other.size_per_node_),
+          size_(other.size_), communicator_(other.communicator_),
+          vendor_(std::move(other.vendor_)), version_(other.version_),
+          subversion_(other.subversion_) {
+        other.rank_ = 0;
+        other.size_per_node_ = 0;
+        other.size_ = 0;
+        other.communicator_ = MPI_COMM_NULL;
+        other.version_ = 0;
+        other.subversion_ = 0;
+    }
+
+    auto operator=(MPIManager &&other) noexcept -> MPIManager & {
+        if (this == &other) {
+            return *this;
+        }
+
+        int initflag = 0;
+        PL_MPI_IS_SUCCESS(MPI_Initialized(&initflag));
+        int finflag = 0;
+        PL_MPI_IS_SUCCESS(MPI_Finalized(&finflag));
+        if (initflag && !finflag && communicator_ != MPI_COMM_NULL) {
+            int compare;
+            PL_MPI_IS_SUCCESS(
+                MPI_Comm_compare(MPI_COMM_WORLD, communicator_, &compare));
+            if (compare != MPI_IDENT) {
+                PL_MPI_IS_SUCCESS(MPI_Comm_free(&communicator_));
+            }
+        }
+
+        rank_ = other.rank_;
+        size_per_node_ = other.size_per_node_;
+        size_ = other.size_;
+        communicator_ = other.communicator_;
+        vendor_ = std::move(other.vendor_);
+        version_ = other.version_;
+        subversion_ = other.subversion_;
+
+        other.rank_ = 0;
+        other.size_per_node_ = 0;
+        other.size_ = 0;
+        other.communicator_ = MPI_COMM_NULL;
+        other.version_ = 0;
+        other.subversion_ = 0;
+        return *this;
     }
 
     // LCOV_EXCL_START
@@ -293,7 +379,7 @@ class MPIManager {
         PL_MPI_IS_SUCCESS(MPI_Initialized(&initflag));
         int finflag = 0;
         PL_MPI_IS_SUCCESS(MPI_Finalized(&finflag));
-        if (!initflag || finflag) {
+        if (!initflag || finflag || communicator_ == MPI_COMM_NULL) {
             return;
         }
 

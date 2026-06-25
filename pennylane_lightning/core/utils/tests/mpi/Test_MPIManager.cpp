@@ -19,6 +19,8 @@
 #include <utility>
 #include <vector>
 
+#include <mpi.h>
+
 #include <catch2/catch_template_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_string.hpp>
 
@@ -38,6 +40,75 @@ TEST_CASE("MPIManager ctor", "[MPIManager]") {
 
     SECTION("MPIManager {MPIManager&}") {
         REQUIRE(std::is_copy_constructible_v<MPIManager>);
+    }
+
+    SECTION("MPIManager = MPIManager&") {
+        REQUIRE(std::is_copy_assignable_v<MPIManager>);
+    }
+
+    SECTION("MPIManager {MPIManager&&}") {
+        REQUIRE(std::is_move_constructible_v<MPIManager>);
+    }
+
+    SECTION("MPIManager = MPIManager&&") {
+        REQUIRE(std::is_move_assignable_v<MPIManager>);
+    }
+}
+
+TEST_CASE("MPIManager special member functions", "[MPIManager]") {
+    MPIManager mpi_manager(MPI_COMM_WORLD);
+    REQUIRE(mpi_manager.getSize() == 2);
+
+    SECTION("Copy assignment duplicates communicator ownership") {
+        auto owned_comm = mpi_manager.split(0, mpi_manager.getRank());
+        MPIManager assigned_manager(MPI_COMM_WORLD);
+
+        assigned_manager = owned_comm;
+
+        CHECK(assigned_manager.getRank() == owned_comm.getRank());
+        CHECK(assigned_manager.getSize() == owned_comm.getSize());
+        CHECK(assigned_manager.getSizeNode() == owned_comm.getSizeNode());
+
+        int compare = MPI_UNEQUAL;
+        MPI_Comm assigned_comm = assigned_manager.getComm();
+        MPI_Comm source_comm = owned_comm.getComm();
+        PL_MPI_IS_SUCCESS(
+            MPI_Comm_compare(assigned_comm, source_comm, &compare));
+        CHECK(compare == MPI_CONGRUENT);
+    }
+
+    SECTION("Move construction transfers communicator ownership") {
+        auto owned_comm = mpi_manager.split(0, mpi_manager.getRank());
+        MPI_Comm source_comm = owned_comm.getComm();
+
+        MPIManager moved_manager(std::move(owned_comm));
+
+        CHECK(owned_comm.getComm() == MPI_COMM_NULL);
+        CHECK(moved_manager.getRank() == mpi_manager.getRank());
+        CHECK(moved_manager.getSize() == mpi_manager.getSize());
+
+        int compare = MPI_UNEQUAL;
+        MPI_Comm moved_comm = moved_manager.getComm();
+        PL_MPI_IS_SUCCESS(MPI_Comm_compare(moved_comm, source_comm, &compare));
+        CHECK(compare == MPI_IDENT);
+    }
+
+    SECTION("Move assignment transfers communicator ownership") {
+        auto owned_comm = mpi_manager.split(0, mpi_manager.getRank());
+        MPI_Comm source_comm = owned_comm.getComm();
+        MPIManager assigned_manager(MPI_COMM_WORLD);
+
+        assigned_manager = std::move(owned_comm);
+
+        CHECK(owned_comm.getComm() == MPI_COMM_NULL);
+        CHECK(assigned_manager.getRank() == mpi_manager.getRank());
+        CHECK(assigned_manager.getSize() == mpi_manager.getSize());
+
+        int compare = MPI_UNEQUAL;
+        MPI_Comm assigned_comm = assigned_manager.getComm();
+        PL_MPI_IS_SUCCESS(
+            MPI_Comm_compare(assigned_comm, source_comm, &compare));
+        CHECK(compare == MPI_IDENT);
     }
 }
 
