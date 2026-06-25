@@ -105,7 +105,8 @@ class StateVectorCudaMPI final
 
     StateVectorCudaMPI() = delete;
 
-    StateVectorCudaMPI(MPIManagerGPU mpi_manager, const DevTag<int> &dev_tag,
+    StateVectorCudaMPI(const MPIManagerGPU &mpi_manager,
+                       const DevTag<int> &dev_tag,
                        std::size_t mpi_buf_size, std::size_t num_global_qubits,
                        std::size_t num_local_qubits)
         : StateVectorCudaBase<Precision, StateVectorCudaMPI<Precision>>(
@@ -227,7 +228,10 @@ class StateVectorCudaMPI final
     /**
      * @brief Get MPI manager
      */
-    auto getMPIManager() const { return mpi_manager_; }
+    auto getMPIManager() -> MPIManagerGPU & { return mpi_manager_; }
+    auto getMPIManager() const -> const MPIManagerGPU & {
+        return mpi_manager_;
+    }
 
     /**
      * @brief Get the total number of wires.
