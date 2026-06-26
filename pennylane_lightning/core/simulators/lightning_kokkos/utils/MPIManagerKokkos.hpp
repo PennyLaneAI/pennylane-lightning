@@ -95,11 +95,7 @@ class MPIManagerKokkos final : public MPIManager {
      */
     static constexpr std::size_t MPI_MAX_TRANSFER_COUNT = std::size_t{1} << 30;
 
-    MPIManagerKokkos(MPI_Comm communicator = MPI_COMM_WORLD)
-        : MPIManager(communicator) {}
-
-    MPIManagerKokkos(int argc, char **argv) : MPIManager(argc, argv) {}
-
+    using MPIManager::MPIManager;
     using MPIManager::Bcast;
 
     /**

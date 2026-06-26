@@ -37,12 +37,20 @@ TEST_CASE("MPIManagerKokkos ctor", "[MPIManagerKokkos]") {
         REQUIRE(std::is_constructible_v<MPIManagerKokkos, MPI_Comm>);
     }
 
-    SECTION("Construct with args") {
-        REQUIRE(std::is_constructible_v<MPIManagerKokkos, int, char **>);
-    }
-
     SECTION("MPIManagerKokkos {MPIManagerKokkos&}") {
         REQUIRE(std::is_copy_constructible_v<MPIManagerKokkos>);
+    }
+
+    SECTION("MPIManagerKokkos = MPIManagerKokkos&") {
+        REQUIRE(std::is_copy_assignable_v<MPIManagerKokkos>);
+    }
+
+    SECTION("MPIManagerKokkos {MPIManagerKokkos&&}") {
+        REQUIRE(std::is_move_constructible_v<MPIManagerKokkos>);
+    }
+
+    SECTION("MPIManagerKokkos = MPIManagerKokkos&&") {
+        REQUIRE(std::is_move_assignable_v<MPIManagerKokkos>);
     }
 }
 
