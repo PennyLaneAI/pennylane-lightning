@@ -89,6 +89,9 @@ class StateVectorKokkosMPI final
     using UnmanagedPrecisionHostView = typename SVK::UnmanagedPrecisionHostView;
     using KokkosExecSpace = typename SVK::KokkosExecSpace;
     using HostExecSpace = typename SVK::HostExecSpace;
+    using ScratchViewComplex = typename SVK::ScratchViewComplex;
+    using TeamPolicy = typename SVK::TeamPolicy;
+    using MemoryStorageT = typename SVK::MemoryStorageT;
 
     using BaseType = StateVectorBase<fp_t, StateVectorKokkosMPI<fp_t>>;
 
