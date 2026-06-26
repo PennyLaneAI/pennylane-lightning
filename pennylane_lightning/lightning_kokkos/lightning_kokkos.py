@@ -190,20 +190,15 @@ class LightningKokkos(LightningBase):
                 raise DeviceError("comm_buffer_ratio requires mpi=True")
             if not isinstance(comm_buffer_ratio, int) or comm_buffer_ratio < 1:
                 raise DeviceError("comm_buffer_ratio must be a positive integer (>= 1)")
-        if mpi:
-            if wires is None:
-                raise DeviceError("Lightning-Kokkos-MPI does not support dynamic wires allocation.")
-            self._statevector = self.LightningStateVector(
-                num_wires=len(self.wires),
-                dtype=self.c_dtype,
-                kokkos_args=kokkos_args,
-                mpi=True,
-                rng=self._rng,
-                comm_buffer_ratio=comm_buffer_ratio,
-            )
-        else:
-            self._statevector = None
-            self._sv_init_kwargs = {"kokkos_args": kokkos_args}
+        if mpi and wires is None:
+            raise DeviceError("Lightning-Kokkos-MPI does not support dynamic wires allocation.")
+
+        self._statevector = None
+        self._sv_init_kwargs = {
+            "kokkos_args": kokkos_args,
+            "mpi": mpi,
+            "comm_buffer_ratio": comm_buffer_ratio,
+        }
 
     @property
     def name(self):

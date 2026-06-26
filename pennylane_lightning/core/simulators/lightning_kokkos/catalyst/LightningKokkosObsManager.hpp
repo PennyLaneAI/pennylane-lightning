@@ -23,6 +23,9 @@
 #include "Utils.hpp"
 
 #include "ObservablesKokkos.hpp"
+#ifdef _ENABLE_PLKOKKOS_MPI
+#include "StateVectorKokkosMPI.hpp"
+#endif
 
 namespace Catalyst::Runtime::Simulator {
 
@@ -33,8 +36,13 @@ namespace Catalyst::Runtime::Simulator {
  */
 template <typename PrecisionT> class LightningKokkosObsManager final {
   private:
+#ifdef _ENABLE_PLKOKKOS_MPI
+    using StateVectorT =
+        Pennylane::LightningKokkos::StateVectorKokkosMPI<PrecisionT>;
+#else
     using StateVectorT =
         Pennylane::LightningKokkos::StateVectorKokkos<PrecisionT>;
+#endif
     using ObservableT = Pennylane::Observables::Observable<StateVectorT>;
     using ObservablePairType = std::pair<std::shared_ptr<ObservableT>, ObsType>;
     std::vector<ObservablePairType> observables_{};
