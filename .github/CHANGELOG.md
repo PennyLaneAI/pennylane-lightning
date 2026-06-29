@@ -27,6 +27,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Updated Sphinx to version 9.0.
+  [(#1393)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1393)
+
 - The `/benchmark` GitHub comment trigger can now accept additional arguments and has been renamed to `!benchmark`.
   [(#1392)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1392)
 
@@ -53,6 +56,7 @@
 
 This release contains contributions from (in alphabetical order):
 
+Runor Agbaire,
 Jeffrey Kam,
 Joseph Lee,
 Jake Zaia
