@@ -36,12 +36,20 @@ TEST_CASE("MPIManagerGPU ctor", "[MPIManagerGPU]") {
         REQUIRE(std::is_constructible_v<MPIManagerGPU, MPI_Comm>);
     }
 
-    SECTION("Construct with args") {
-        REQUIRE(std::is_constructible_v<MPIManagerGPU, int, char **>);
-    }
-
     SECTION("MPIManagerGPU {MPIManagerGPU&}") {
         REQUIRE(std::is_copy_constructible_v<MPIManagerGPU>);
+    }
+
+    SECTION("MPIManagerGPU = MPIManagerGPU&") {
+        REQUIRE(std::is_copy_assignable_v<MPIManagerGPU>);
+    }
+
+    SECTION("MPIManagerGPU {MPIManagerGPU&&}") {
+        REQUIRE(std::is_move_constructible_v<MPIManagerGPU>);
+    }
+
+    SECTION("MPIManagerGPU = MPIManagerGPU&&") {
+        REQUIRE(std::is_move_assignable_v<MPIManagerGPU>);
     }
 }
 
