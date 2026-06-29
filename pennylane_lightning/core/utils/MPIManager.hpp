@@ -135,7 +135,6 @@ class MPIRuntime {
             registerFinalizeHookIfNeeded_();
         }
     }
-
 };
 
 /**
@@ -198,7 +197,7 @@ class MPIManager {
          MPI_C_LONG_DOUBLE_COMPLEX}};
 
     /**
-     * @brief Free communicator except for MPI_COMM_WORLD. 
+     * @brief Free communicator except for MPI_COMM_WORLD.
      */
     static void freeCommunicator(MPI_Comm &communicator) {
         int initflag = 0;
@@ -300,8 +299,9 @@ class MPIManager {
           subversion_(other.subversion_) {
         if (other.communicator_ != MPI_COMM_NULL) {
             MPIRuntime::getInstance().ensureInitialized();
-            // Avoid freeing other.communicator_ in ~MPIManager     
-            PL_MPI_IS_SUCCESS(MPI_Comm_dup(other.communicator_, &communicator_)); 
+            // Avoid freeing other.communicator_ in ~MPIManager
+            PL_MPI_IS_SUCCESS(
+                MPI_Comm_dup(other.communicator_, &communicator_));
         }
     }
 
@@ -313,7 +313,7 @@ class MPIManager {
         MPI_Comm new_communicator = MPI_COMM_NULL;
         if (other.communicator_ != MPI_COMM_NULL) {
             MPIRuntime::getInstance().ensureInitialized();
-            // Avoid freeing other.communicator_ in ~MPIManager     
+            // Avoid freeing other.communicator_ in ~MPIManager
             PL_MPI_IS_SUCCESS(
                 MPI_Comm_dup(other.communicator_, &new_communicator));
         }
