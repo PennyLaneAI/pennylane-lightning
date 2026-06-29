@@ -95,8 +95,8 @@ class MPIManagerKokkos final : public MPIManager {
      */
     static constexpr std::size_t MPI_MAX_TRANSFER_COUNT = std::size_t{1} << 30;
 
-    using MPIManager::MPIManager;
     using MPIManager::Bcast;
+    using MPIManager::MPIManager;
 
     /**
      * @brief MPI_Sendrecv wrapper for Kokkos::Views.
