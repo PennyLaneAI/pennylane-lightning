@@ -198,6 +198,26 @@ class MPIManager {
          MPI_C_LONG_DOUBLE_COMPLEX}};
 
     /**
+     * @brief Free communicator except for MPI_COMM_WORLD. 
+     */
+    static void freeCommunicator(MPI_Comm &communicator) {
+        int initflag = 0;
+        PL_MPI_IS_SUCCESS(MPI_Initialized(&initflag));
+        int finflag = 0;
+        PL_MPI_IS_SUCCESS(MPI_Finalized(&finflag));
+        if (!initflag || finflag || communicator == MPI_COMM_NULL) {
+            return;
+        }
+
+        int compare;
+        PL_MPI_IS_SUCCESS(
+            MPI_Comm_compare(MPI_COMM_WORLD, communicator, &compare));
+        if (compare != MPI_IDENT) {
+            PL_MPI_IS_SUCCESS(MPI_Comm_free(&communicator));
+        }
+    }
+
+    /**
      * @brief Set the MPI vendor.
      */
     void setVendor() {
@@ -238,11 +258,7 @@ class MPIManager {
                                 this->getRank(), MPI_INFO_NULL, &node_comm));
         PL_MPI_IS_SUCCESS(MPI_Comm_size(node_comm, &size_per_node_int));
         size_per_node_ = static_cast<std::size_t>(size_per_node_int);
-        int compare;
-        PL_MPI_IS_SUCCESS(
-            MPI_Comm_compare(MPI_COMM_WORLD, node_comm, &compare));
-        if (compare != MPI_IDENT)
-            PL_MPI_IS_SUCCESS(MPI_Comm_free(&node_comm));
+        freeCommunicator(node_comm);
         this->Barrier();
     }
 
@@ -302,18 +318,7 @@ class MPIManager {
                 MPI_Comm_dup(other.communicator_, &new_communicator));
         }
 
-        int initflag = 0;
-        PL_MPI_IS_SUCCESS(MPI_Initialized(&initflag));
-        int finflag = 0;
-        PL_MPI_IS_SUCCESS(MPI_Finalized(&finflag));
-        if (initflag && !finflag && communicator_ != MPI_COMM_NULL) {
-            int compare;
-            PL_MPI_IS_SUCCESS(
-                MPI_Comm_compare(MPI_COMM_WORLD, communicator_, &compare));
-            if (compare != MPI_IDENT) {
-                PL_MPI_IS_SUCCESS(MPI_Comm_free(&communicator_));
-            }
-        }
+        freeCommunicator(communicator_);
 
         rank_ = other.rank_;
         size_per_node_ = other.size_per_node_;
@@ -343,18 +348,7 @@ class MPIManager {
             return *this;
         }
 
-        int initflag = 0;
-        PL_MPI_IS_SUCCESS(MPI_Initialized(&initflag));
-        int finflag = 0;
-        PL_MPI_IS_SUCCESS(MPI_Finalized(&finflag));
-        if (initflag && !finflag && communicator_ != MPI_COMM_NULL) {
-            int compare;
-            PL_MPI_IS_SUCCESS(
-                MPI_Comm_compare(MPI_COMM_WORLD, communicator_, &compare));
-            if (compare != MPI_IDENT) {
-                PL_MPI_IS_SUCCESS(MPI_Comm_free(&communicator_));
-            }
-        }
+        freeCommunicator(communicator_);
 
         rank_ = other.rank_;
         size_per_node_ = other.size_per_node_;
@@ -374,22 +368,7 @@ class MPIManager {
     }
 
     // LCOV_EXCL_START
-    ~MPIManager() {
-        int initflag = 0;
-        PL_MPI_IS_SUCCESS(MPI_Initialized(&initflag));
-        int finflag = 0;
-        PL_MPI_IS_SUCCESS(MPI_Finalized(&finflag));
-        if (!initflag || finflag || communicator_ == MPI_COMM_NULL) {
-            return;
-        }
-
-        int compare;
-        PL_MPI_IS_SUCCESS(
-            MPI_Comm_compare(MPI_COMM_WORLD, communicator_, &compare));
-        if (compare != MPI_IDENT) {
-            PL_MPI_IS_SUCCESS(MPI_Comm_free(&communicator_));
-        }
-    }
+    ~MPIManager() { freeCommunicator(communicator_); }
     // LCOV_EXCL_STOP
 
     /**
