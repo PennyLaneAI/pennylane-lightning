@@ -66,17 +66,18 @@ template <typename T> auto cppTypeToString() -> const std::string {
  *
  * This class centralizes MPI initialization/finalization ownership inside
  * Lightning while allowing MPIManager to bootstrap the runtime on demand.
+ * It will finalize MPI at exit only if it was initialized within Lightning C++
  */
 class MPIRuntime {
   private:
-    bool owns_mpi_{false};
+    bool mpi_initialized_here_{false};
     bool atexit_registered_{false};
 
     MPIRuntime() = default;
 
     static void finalizeAtExit() noexcept {
         try {
-            MPIRuntime::instance().finalizeIfOwned();
+            MPIRuntime::getInstance().finalizeIfOwned();
         } catch (...) {
             // Avoid throwing during process shutdown.
         }
@@ -89,8 +90,26 @@ class MPIRuntime {
         }
     }
 
+    void finalizeIfOwned() {
+        if (!mpi_initialized_here_) {
+            return;
+        }
+
+        int finflag = 0;
+        PL_MPI_IS_SUCCESS(MPI_Finalized(&finflag));
+        if (finflag) {
+            return;
+        }
+
+        int initflag = 0;
+        PL_MPI_IS_SUCCESS(MPI_Initialized(&initflag));
+        if (initflag) {
+            PL_MPI_IS_SUCCESS(MPI_Finalize());
+        }
+    }
+
   public:
-    static auto instance() -> MPIRuntime & {
+    static auto getInstance() -> MPIRuntime & {
         static MPIRuntime runtime;
         return runtime;
     }
@@ -112,28 +131,11 @@ class MPIRuntime {
 
         if (!initflag) {
             PL_MPI_IS_SUCCESS(MPI_Init(nullptr, nullptr));
-            owns_mpi_ = true;
+            mpi_initialized_here_ = true;
             registerFinalizeHookIfNeeded_();
         }
     }
 
-    void finalizeIfOwned() {
-        if (!owns_mpi_) {
-            return;
-        }
-
-        int finflag = 0;
-        PL_MPI_IS_SUCCESS(MPI_Finalized(&finflag));
-        if (finflag) {
-            return;
-        }
-
-        int initflag = 0;
-        PL_MPI_IS_SUCCESS(MPI_Initialized(&initflag));
-        if (initflag) {
-            PL_MPI_IS_SUCCESS(MPI_Finalize());
-        }
-    }
 };
 
 /**
@@ -260,7 +262,7 @@ class MPIManager {
   public:
     MPIManager(MPI_Comm communicator = MPI_COMM_WORLD)
         : communicator_(communicator) {
-        MPIRuntime::instance().ensureInitialized();
+        MPIRuntime::getInstance().ensureInitialized();
         int rank_int;
         int size_int;
         PL_MPI_IS_SUCCESS(MPI_Comm_rank(communicator_, &rank_int));
@@ -280,13 +282,10 @@ class MPIManager {
           size_(other.size_), communicator_(MPI_COMM_NULL),
           vendor_(other.vendor_), version_(other.version_),
           subversion_(other.subversion_) {
-        MPIRuntime::instance().ensureInitialized();
         if (other.communicator_ != MPI_COMM_NULL) {
-            PL_MPI_IS_SUCCESS(
-                MPI_Comm_dup(other.communicator_,
-                             &communicator_)); // Avoid freeing
-                                               // other.communicator_
-                                               // in ~MPIManager
+            MPIRuntime::getInstance().ensureInitialized();
+            // Avoid freeing other.communicator_ in ~MPIManager     
+            PL_MPI_IS_SUCCESS(MPI_Comm_dup(other.communicator_, &communicator_)); 
         }
     }
 
@@ -297,7 +296,8 @@ class MPIManager {
 
         MPI_Comm new_communicator = MPI_COMM_NULL;
         if (other.communicator_ != MPI_COMM_NULL) {
-            MPIRuntime::instance().ensureInitialized();
+            MPIRuntime::getInstance().ensureInitialized();
+            // Avoid freeing other.communicator_ in ~MPIManager     
             PL_MPI_IS_SUCCESS(
                 MPI_Comm_dup(other.communicator_, &new_communicator));
         }
