@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #pragma once
+#include <algorithm>
 #include <chrono>
 #include <cstdint>
 
@@ -456,9 +457,7 @@ class MeasurementsMPI final
      * @return Floating point std::vector with probabilities.
      * The basis columns are rearranged according to wires.
      *
-     * This will return the probability local to the MPI rank/global index.
-     * To obtain the full probability vector, you need to call
-     * MPI GatherV.
+     * This returns the full probability vector on every MPI rank.
      */
     auto
     probs(const std::vector<std::size_t> &wires,
@@ -470,6 +469,25 @@ class MeasurementsMPI final
             "indices with probability calculations");
         this->_statevector.reorderAllWires();
 
+        return probs_no_reorder(wires, device_wires);
+    }
+
+    /**
+     * @brief Probabilities for a subset of the full system without reordering
+     * the state vector.
+     *
+     * This returns the full probability vector on every MPI rank.
+     *
+     * @param wires Wires will restrict probabilities to a subset of the full
+     * system.
+     * @param device_wires Wires on the device.
+     * @return Floating point std::vector with probabilities. The basis columns
+     * are rearranged according to wires.
+     */
+    auto probs_no_reorder(
+        const std::vector<std::size_t> &wires,
+        [[maybe_unused]] const std::vector<std::size_t> &device_wires = {})
+        -> std::vector<PrecisionT> {
         auto global_wires = this->_statevector.findGlobalWires(wires);
         auto local_wires = this->_statevector.findLocalWires(wires);
 
@@ -486,19 +504,59 @@ class MeasurementsMPI final
         }
         std::size_t subCommGroupId = global_index & mask;
 
-        auto sub_mpi_manager =
-            mpi_manager_.split(subCommGroupId, mpi_manager_.getRank());
+        auto sub_mpi_manager = mpi_manager_.split(subCommGroupId, global_index);
 
-        if (sub_mpi_manager.getSize() == 1) {
-            return local_probabilities;
+        std::vector<PrecisionT> subgroup_probabilities(
+            exp2(local_wires.size()));
+        sub_mpi_manager.Allreduce<PrecisionT>(local_probabilities,
+                                              subgroup_probabilities, "sum");
+
+        if (global_wires.empty()) {
+            return subgroup_probabilities;
         }
-        std::vector<PrecisionT> subgroup_probabilities;
-        if (sub_mpi_manager.getRank() == 0) {
-            subgroup_probabilities.resize(exp2(local_wires.size()));
+
+        auto gathering_mpi_manager =
+            mpi_manager_.split(sub_mpi_manager.getRank(), global_index);
+
+        std::vector<PrecisionT> full_probabilities(exp2(wires.size()));
+        gathering_mpi_manager.Allgather<PrecisionT>(subgroup_probabilities,
+                                                    full_probabilities);
+
+        std::vector<std::size_t> current_probs_wire_order;
+        current_probs_wire_order.reserve(wires.size());
+        for (const auto w : this->_statevector.getGlobalWires()) {
+            if (std::find(global_wires.begin(), global_wires.end(), w) !=
+                global_wires.end()) {
+                current_probs_wire_order.push_back(w);
+            }
         }
-        sub_mpi_manager.Reduce<PrecisionT>(local_probabilities,
-                                           subgroup_probabilities, 0, "sum");
-        return subgroup_probabilities;
+        current_probs_wire_order.insert(current_probs_wire_order.end(),
+                                        local_wires.begin(), local_wires.end());
+
+        std::vector<PrecisionT> reordered_full_probabilities(
+            exp2(wires.size()));
+
+        std::vector<std::size_t> mapping_indices;
+        std::size_t wires_size = wires.size();
+        mapping_indices.reserve(wires_size);
+        for (std::size_t i = 0; i < wires_size; i++) {
+            std::size_t alpha = current_probs_wire_order[wires_size - 1 - i];
+            auto it = std::find(wires.begin(), wires.end(), alpha);
+            auto position = std::distance(wires.begin(), it);
+            std::size_t position_inverse = wires_size - 1 - position;
+            mapping_indices.push_back(position_inverse);
+        }
+
+        for (std::size_t i = 0; i < exp2(wires.size()); i++) {
+            std::size_t reordered_index = 0;
+            for (std::size_t j = 0; j < wires.size(); j++) {
+                reordered_index |= ((i >> j) & 1U) << mapping_indices[j];
+            }
+            reordered_full_probabilities[reordered_index] =
+                full_probabilities[i];
+        }
+
+        return reordered_full_probabilities;
     }
 
     /**

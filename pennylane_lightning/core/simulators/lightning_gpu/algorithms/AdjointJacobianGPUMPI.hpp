@@ -113,7 +113,6 @@ class AdjointJacobianMPI final
         if (!jd.hasTrainableParams()) {
             return;
         }
-        MPIManagerGPU mpi_manager_(jd.getMPIManager());
         DevTag<int> dt_local(jd.getDevTag());
 
         const OpsData<StateVectorT> &ops = jd.getOperations();

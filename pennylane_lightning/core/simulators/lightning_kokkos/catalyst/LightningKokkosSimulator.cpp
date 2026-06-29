@@ -14,6 +14,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <numeric>
 #include <unordered_set>
 
 #include <Kokkos_Complex.hpp>
@@ -30,6 +31,11 @@ auto LightningKokkosSimulator::AllocateQubit() -> QubitIdType {
         this->device_sv = std::make_unique<StateVectorT>(1);
         return this->qubit_manager.Allocate(0);
     }
+
+#ifdef _ENABLE_PLKOKKOS_MPI
+    RT_FAIL("Dynamic qubit allocation is not supported with MPI backend.");
+    return 0;
+#else
 
     // The statevector may contain previously freed qubits,
     // that means we may not need to resize the vector.
@@ -73,6 +79,7 @@ auto LightningKokkosSimulator::AllocateQubit() -> QubitIdType {
     }
 
     return new_program_idx;
+#endif
 }
 
 auto LightningKokkosSimulator::AllocateQubits(std::size_t num_qubits)
@@ -87,6 +94,11 @@ auto LightningKokkosSimulator::AllocateQubits(std::size_t num_qubits)
         return this->qubit_manager.AllocateRange(0, num_qubits);
     }
 
+#ifdef _ENABLE_PLKOKKOS_MPI
+    RT_FAIL("Dynamic qubit allocation is not supported with MPI backend.");
+    return {};
+#endif
+
     std::vector<QubitIdType> result(num_qubits);
     std::generate_n(result.begin(), num_qubits,
                     [this]() { return AllocateQubit(); });
@@ -99,6 +111,14 @@ void LightningKokkosSimulator::ReleaseQubit(QubitIdType q) {
 
     // Mark the qubit as released in the qubit manager
     this->qubit_manager.Release(q);
+
+#ifdef _ENABLE_PLKOKKOS_MPI
+    if (this->qubit_manager.getNumQubits() == 0) {
+        this->device_sv = nullptr;
+        this->needs_reduction = false;
+        return;
+    }
+#endif
 
     // Mark that reduction is needed
     this->needs_reduction = true;
@@ -118,7 +138,11 @@ void LightningKokkosSimulator::ReleaseQubits(
             });
         if (deallocate_all) {
             this->qubit_manager.ReleaseAll();
+#ifdef _ENABLE_PLKOKKOS_MPI
+            this->device_sv = nullptr;
+#else
             this->device_sv = std::make_unique<StateVectorT>(0);
+#endif
             this->needs_reduction = false;
             return;
         }
@@ -133,14 +157,18 @@ auto LightningKokkosSimulator::GetNumQubits() const -> std::size_t {
     return this->qubit_manager.getNumQubits();
 }
 
-auto LightningKokkosSimulator::getMeasurements()
-    -> Pennylane::LightningKokkos::Measures::Measurements<StateVectorT> {
+auto LightningKokkosSimulator::getMeasurements() -> MeasurementsBackendT {
     reduceStateVector();
-    return Pennylane::LightningKokkos::Measures::Measurements<StateVectorT>{
-        *(this->device_sv)};
+    RT_FAIL_IF(this->device_sv == nullptr, "State vector is not allocated");
+    return MeasurementsBackendT{*(this->device_sv)};
 }
 
 void LightningKokkosSimulator::reduceStateVector() {
+#ifdef _ENABLE_PLKOKKOS_MPI
+    RT_FAIL_IF(this->needs_reduction,
+               "Partial qubit release is not supported with MPI backend.");
+    return;
+#else
     if (!this->needs_reduction) {
         return;
     }
@@ -250,6 +278,7 @@ void LightningKokkosSimulator::reduceStateVector() {
     this->qubit_manager.ClearFreeQubits();
 
     this->needs_reduction = false;
+#endif
 }
 
 /**
@@ -501,10 +530,6 @@ void LightningKokkosSimulator::MatrixOperation(
     const std::vector<QubitIdType> &wires, bool inverse,
     const std::vector<QubitIdType> &controlled_wires,
     const std::vector<bool> &controlled_values) {
-    using UnmanagedComplexHostView =
-        Kokkos::View<Kokkos::complex<double> *, Kokkos::HostSpace,
-                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
-
     RT_FAIL_IF(controlled_wires.size() != controlled_values.size(),
                "Controlled wires/values size mismatch");
     RT_FAIL_IF(!isValidQubits(wires), "Given wires do not refer to qubits");
@@ -521,18 +546,15 @@ void LightningKokkosSimulator::MatrixOperation(
         matrix.begin(), matrix.end(), matrix_kok.begin(),
         [](auto c) { return static_cast<Kokkos::complex<double>>(c); });
 
-    Kokkos::View<Kokkos::complex<double> *> gate_matrix("gate_matrix",
-                                                        matrix_kok.size());
-    Kokkos::deep_copy(gate_matrix, UnmanagedComplexHostView(matrix_kok.data(),
-                                                            matrix_kok.size()));
-
-    // Update the state-vector
+    // Update the state-vector. Use applyOperation so the MPI state vector can
+    // move global wires local before applying the matrix.
     if (controlled_wires.empty()) {
-        this->device_sv->applyMultiQubitOp(gate_matrix, dev_wires, inverse);
+        this->device_sv->applyOperation("Matrix", dev_wires, inverse, {},
+                                        matrix_kok);
     } else {
-        this->device_sv->applyNCMultiQubitOp(gate_matrix, dev_controlled_wires,
-                                             controlled_values, dev_wires,
-                                             inverse);
+        this->device_sv->applyOperation("Matrix", dev_controlled_wires,
+                                        controlled_values, dev_wires, inverse,
+                                        {}, matrix_kok);
     }
 
     // Update tape caching if required
@@ -583,7 +605,14 @@ auto LightningKokkosSimulator::Expval(ObsIdType obsKey) -> double {
     auto m = getMeasurements();
     m.setSeed(this->generateSeed());
 
+#ifdef _ENABLE_PLKOKKOS_MPI
+    RT_FAIL_IF(
+        device_shots,
+        "Finite-shot expectation values are not supported with MPI backend.");
+    return m.expval(*obs);
+#else
     return device_shots ? m.expval(*obs, device_shots, {}) : m.expval(*obs);
+#endif
 }
 
 auto LightningKokkosSimulator::Var(ObsIdType obsKey) -> double {
@@ -600,10 +629,20 @@ auto LightningKokkosSimulator::Var(ObsIdType obsKey) -> double {
     auto m = getMeasurements();
     m.setSeed(this->generateSeed());
 
+#ifdef _ENABLE_PLKOKKOS_MPI
+    RT_FAIL_IF(device_shots,
+               "Finite-shot variances are not supported with MPI backend.");
+    return m.var(*obs);
+#else
     return device_shots ? m.var(*obs, device_shots) : m.var(*obs);
+#endif
 }
 
 void LightningKokkosSimulator::State(DataView<std::complex<double>, 1> &state) {
+#ifdef _ENABLE_PLKOKKOS_MPI
+    (void)state;
+    RT_FAIL("State measurement is not supported with MPI backend.");
+#else
     reduceStateVector();
 
     using UnmanagedComplexHostView =
@@ -626,13 +665,22 @@ void LightningKokkosSimulator::State(DataView<std::complex<double>, 1> &state) {
 
     // move data to state leveraging MemRefIter
     std::move(buffer.begin(), buffer.end(), state.begin());
+#endif
 }
 
 void LightningKokkosSimulator::Probs(DataView<double, 1> &probs) {
     auto m = getMeasurements();
     m.setSeed(this->generateSeed());
 
+#ifdef _ENABLE_PLKOKKOS_MPI
+    RT_FAIL_IF(device_shots,
+               "Finite-shot probabilities are not supported with MPI backend.");
+    std::vector<std::size_t> dev_wires(this->GetNumQubits());
+    std::iota(dev_wires.begin(), dev_wires.end(), 0);
+    auto &&dv_probs = m.probs_no_reorder(dev_wires);
+#else
     auto &&dv_probs = device_shots ? m.probs(device_shots) : m.probs();
+#endif
 
     RT_FAIL_IF(probs.size() != dv_probs.size(),
                "Invalid size for the pre-allocated probabilities");
@@ -653,8 +701,14 @@ void LightningKokkosSimulator::PartialProbs(
 
     auto dev_wires = getDeviceWires(wires);
 
+#ifdef _ENABLE_PLKOKKOS_MPI
+    RT_FAIL_IF(device_shots,
+               "Finite-shot probabilities are not supported with MPI backend.");
+    auto &&dv_probs = m.probs_no_reorder(dev_wires);
+#else
     auto &&dv_probs =
         device_shots ? m.probs(dev_wires, device_shots) : m.probs(dev_wires);
+#endif
 
     RT_FAIL_IF(probs.size() != dv_probs.size(),
                "Invalid size for the pre-allocated partial-probabilities");
@@ -883,6 +937,11 @@ auto LightningKokkosSimulator::PauliMeasure(
 void LightningKokkosSimulator::Gradient(
     std::vector<DataView<double, 1>> &gradients,
     const std::vector<std::size_t> &trainParams) {
+#ifdef _ENABLE_PLKOKKOS_MPI
+    (void)gradients;
+    (void)trainParams;
+    RT_FAIL("Gradient computation is not supported with MPI backend.");
+#else
     const bool tp_empty = trainParams.empty();
     const std::size_t num_observables = this->cache_manager.getNumObservables();
     const std::size_t num_params = this->cache_manager.getNumParams();
@@ -964,6 +1023,7 @@ void LightningKokkosSimulator::Gradient(
                   gradients[obs_idx].begin());
         begin_loc_iter += num_train_params;
     }
+#endif
 }
 
 } // namespace Catalyst::Runtime::Simulator
