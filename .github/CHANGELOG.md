@@ -60,6 +60,7 @@
 This release contains contributions from (in alphabetical order):
 
 Runor Agbaire,
+Yushao Chen,
 Jeffrey Kam,
 Joseph Lee,
 Jake Zaia
