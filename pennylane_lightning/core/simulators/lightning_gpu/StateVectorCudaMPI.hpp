@@ -1663,14 +1663,7 @@ class StateVectorCudaMPI final
                             const std::vector<std::vector<std::size_t>> &tgts,
                             std::vector<double> &local_expect) {
         uint32_t nIndexBits = static_cast<uint32_t>(this->getNumLocalQubits());
-        cudaDataType_t data_type;
-
-        if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
-                      std::is_same_v<CFP_t, double2>) {
-            data_type = CUDA_C_64F;
-        } else {
-            data_type = CUDA_C_32F;
-        }
+        cudaDataType_t data_type = cuUtil::getCudaDataType<CFP_t>();
 
         // Note: due to API design, cuStateVec assumes this is always a double.
         // Push NVIDIA to move this to behind API for future releases, and
@@ -1728,14 +1721,7 @@ class StateVectorCudaMPI final
                             Precision param, bool use_adjoint = false) {
         int nIndexBits = BaseType::getNumQubits();
 
-        cudaDataType_t data_type;
-
-        if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
-                      std::is_same_v<CFP_t, double2>) {
-            data_type = CUDA_C_64F;
-        } else {
-            data_type = CUDA_C_32F;
-        }
+        cudaDataType_t data_type = cuUtil::getCudaDataType<CFP_t>();
 
         std::vector<custatevecPauli_t> pauli_enums;
         pauli_enums.reserve(pauli_words.size());
@@ -1858,17 +1844,9 @@ class StateVectorCudaMPI final
         std::size_t extraWorkspaceSizeInBytes = 0;
         int nIndexBits = BaseType::getNumQubits();
 
-        cudaDataType_t data_type;
-        custatevecComputeType_t compute_type;
-
-        if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
-                      std::is_same_v<CFP_t, double2>) {
-            data_type = CUDA_C_64F;
-            compute_type = CUSTATEVEC_COMPUTE_64F;
-        } else {
-            data_type = CUDA_C_32F;
-            compute_type = CUSTATEVEC_COMPUTE_32F;
-        }
+        cudaDataType_t data_type = cuUtil::getCudaDataType<CFP_t>();
+        custatevecComputeType_t compute_type =
+            cuUtil::getCustatevecComputeType<CFP_t>();
 
         std::reverse(tgts.begin(), tgts.end());
         std::reverse(ctrls.begin(), ctrls.end());
@@ -2016,18 +1994,10 @@ class StateVectorCudaMPI final
         std::size_t extraWorkspaceSizeInBytes = 0;
 
         std::size_t nIndexBits = BaseType::getNumQubits();
-        cudaDataType_t data_type;
-        custatevecComputeType_t compute_type;
+        cudaDataType_t data_type = cuUtil::getCudaDataType<CFP_t>();
+        custatevecComputeType_t compute_type =
+            cuUtil::getCustatevecComputeType<CFP_t>();
         cudaDataType_t expectationDataType = CUDA_C_64F;
-
-        if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
-                      std::is_same_v<CFP_t, double2>) {
-            data_type = CUDA_C_64F;
-            compute_type = CUSTATEVEC_COMPUTE_64F;
-        } else {
-            data_type = CUDA_C_32F;
-            compute_type = CUSTATEVEC_COMPUTE_32F;
-        }
 
         // check the size of external workspace
         PL_CUSTATEVEC_IS_SUCCESS(custatevecComputeExpectationGetWorkspaceSize(
@@ -2146,14 +2116,7 @@ class StateVectorCudaMPI final
         int maskBitString[] = {}; // specify the values of mask qubits
         int maskOrdering[] = {};  // specify the mask qubits
 
-        cudaDataType_t svDataType;
-
-        if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
-                      std::is_same_v<CFP_t, double2>) {
-            svDataType = CUDA_C_64F;
-        } else {
-            svDataType = CUDA_C_32F;
-        }
+        cudaDataType_t svDataType = cuUtil::getCudaDataType<CFP_t>();
         //
         // create distributed index bit swap scheduler
         //

@@ -19,9 +19,11 @@
  */
 
 #pragma once
+#include <cuComplex.h>
 #include <custatevec.h>
 #include <memory>
 #include <string>
+#include <type_traits>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -29,6 +31,42 @@
 #include "cuStateVecError.hpp"
 
 namespace Pennylane::LightningGPU::Util {
+
+/**
+ * @brief Map a CUDA complex floating-point type to its cuStateVec
+ * ::cudaDataType_t.
+ *
+ * @tparam CFP_t CUDA complex floating-point type (e.g. cuDoubleComplex,
+ * cuFloatComplex).
+ * @return CUDA_C_64F for double precision, CUDA_C_32F otherwise.
+ */
+template <class CFP_t> constexpr cudaDataType_t getCudaDataType() {
+    if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
+                  std::is_same_v<CFP_t, double2>) {
+        return CUDA_C_64F;
+    } else {
+        return CUDA_C_32F;
+    }
+}
+
+/**
+ * @brief Map a CUDA complex floating-point type to its
+ * ::custatevecComputeType_t.
+ *
+ * @tparam CFP_t CUDA complex floating-point type (e.g. cuDoubleComplex,
+ * cuFloatComplex).
+ * @return CUSTATEVEC_COMPUTE_64F for double precision, CUSTATEVEC_COMPUTE_32F
+ * otherwise.
+ */
+template <class CFP_t>
+constexpr custatevecComputeType_t getCustatevecComputeType() {
+    if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
+                  std::is_same_v<CFP_t, double2>) {
+        return CUSTATEVEC_COMPUTE_64F;
+    } else {
+        return CUSTATEVEC_COMPUTE_32F;
+    }
+}
 
 inline static auto pauliStringToEnum(const std::string &pauli_word)
     -> std::vector<custatevecPauli_t> {
