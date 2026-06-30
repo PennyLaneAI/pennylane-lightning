@@ -83,12 +83,7 @@ class MeasurementsMPI final
     explicit MeasurementsMPI(StateVectorT &statevector)
         : BaseType{statevector}, mpi_manager_(statevector.getMPIManager()),
           gate_cache_(true, statevector.getDataBuffer().getDevTag()) {
-        if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
-                      std::is_same_v<CFP_t, double2>) {
-            data_type_ = CUDA_C_64F;
-        } else {
-            data_type_ = CUDA_C_32F;
-        }
+        data_type_ = cuUtil::getCudaDataType<CFP_t>();
         mpi_manager_.Barrier();
     };
 

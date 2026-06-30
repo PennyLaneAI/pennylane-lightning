@@ -736,14 +736,7 @@ class StateVectorCudaManaged
      */
     void collapse(std::size_t wire, bool branch) {
         PL_ABORT_IF_NOT(wire < BaseType::getNumQubits(), "Invalid wire index.");
-        cudaDataType_t data_type;
-
-        if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
-                      std::is_same_v<CFP_t, double2>) {
-            data_type = CUDA_C_64F;
-        } else {
-            data_type = CUDA_C_32F;
-        }
+        cudaDataType_t data_type = cuUtil::getCudaDataType<CFP_t>();
 
         std::vector<int> basisBits(1, BaseType::getNumQubits() - 1 - wire);
 
@@ -2486,14 +2479,7 @@ class StateVectorCudaManaged
         Precision param, bool use_adjoint = false) {
         int nIndexBits = BaseType::getNumQubits();
 
-        cudaDataType_t data_type;
-
-        if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
-                      std::is_same_v<CFP_t, double2>) {
-            data_type = CUDA_C_64F;
-        } else {
-            data_type = CUDA_C_32F;
-        }
+        cudaDataType_t data_type = cuUtil::getCudaDataType<CFP_t>();
         std::vector<custatevecPauli_t> pauli_enums;
         pauli_enums.reserve(pauli_words.size());
         for (const auto &pauli_str : pauli_words) {
@@ -2563,17 +2549,9 @@ class StateVectorCudaManaged
         std::size_t extraWorkspaceSizeInBytes = 0;
         int nIndexBits = BaseType::getNumQubits();
 
-        cudaDataType_t data_type;
-        custatevecComputeType_t compute_type;
-
-        if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
-                      std::is_same_v<CFP_t, double2>) {
-            data_type = CUDA_C_64F;
-            compute_type = CUSTATEVEC_COMPUTE_64F;
-        } else {
-            data_type = CUDA_C_32F;
-            compute_type = CUSTATEVEC_COMPUTE_32F;
-        }
+        cudaDataType_t data_type = cuUtil::getCudaDataType<CFP_t>();
+        custatevecComputeType_t compute_type =
+            cuUtil::getCustatevecComputeType<CFP_t>();
 
         std::reverse(tgts.begin(), tgts.end());
         std::reverse(ctrls.begin(), ctrls.end());
@@ -2654,17 +2632,9 @@ class StateVectorCudaManaged
         std::size_t extraWorkspaceSizeInBytes = 0;
         int nIndexBits = BaseType::getNumQubits();
 
-        cudaDataType_t data_type;
-        custatevecComputeType_t compute_type;
-
-        if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
-                      std::is_same_v<CFP_t, double2>) {
-            data_type = CUDA_C_64F;
-            compute_type = CUSTATEVEC_COMPUTE_64F;
-        } else {
-            data_type = CUDA_C_32F;
-            compute_type = CUSTATEVEC_COMPUTE_32F;
-        }
+        cudaDataType_t data_type = cuUtil::getCudaDataType<CFP_t>();
+        custatevecComputeType_t compute_type =
+            cuUtil::getCustatevecComputeType<CFP_t>();
 
         auto ctrlsInt = NormalizeCastIndices<std::size_t, int>(
             ctrls, BaseType::getNumQubits());

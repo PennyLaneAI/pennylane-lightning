@@ -79,12 +79,7 @@ class Measurements final
     explicit Measurements(StateVectorT &statevector)
         : BaseType{statevector},
           gate_cache_(true, statevector.getDataBuffer().getDevTag()) {
-        if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
-                      std::is_same_v<CFP_t, double2>) {
-            data_type_ = CUDA_C_64F;
-        } else {
-            data_type_ = CUDA_C_32F;
-        }
+        data_type_ = cuUtil::getCudaDataType<CFP_t>();
     };
 
     /**
@@ -103,14 +98,7 @@ class Measurements final
         int *maskBitString = nullptr; //
         int *maskOrdering = nullptr;
 
-        cudaDataType_t data_type;
-
-        if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
-                      std::is_same_v<CFP_t, double2>) {
-            data_type = CUDA_C_64F;
-        } else {
-            data_type = CUDA_C_32F;
-        }
+        cudaDataType_t data_type = cuUtil::getCudaDataType<CFP_t>();
 
         std::vector<int> wires_int(wires.size());
 
@@ -228,14 +216,7 @@ class Measurements final
         std::iota(std::begin(bitOrdering), std::end(bitOrdering),
                   0); // Fill with 0, 1, ...,
 
-        cudaDataType_t data_type;
-
-        if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
-                      std::is_same_v<CFP_t, double2>) {
-            data_type = CUDA_C_64F;
-        } else {
-            data_type = CUDA_C_32F;
-        }
+        cudaDataType_t data_type = cuUtil::getCudaDataType<CFP_t>();
         this->setSeed(this->_deviceseed);
 
         std::uniform_real_distribution<PrecisionT> dis(0.0, 1.0);
@@ -451,14 +432,7 @@ class Measurements final
                 const std::complex<PrecisionT> *coeffs) -> PrecisionT {
         uint32_t nIndexBits =
             static_cast<uint32_t>(this->_statevector.getNumQubits());
-        cudaDataType_t data_type;
-
-        if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
-                      std::is_same_v<CFP_t, double2>) {
-            data_type = CUDA_C_64F;
-        } else {
-            data_type = CUDA_C_32F;
-        }
+        cudaDataType_t data_type = cuUtil::getCudaDataType<CFP_t>();
 
         // Note: due to API design, cuStateVec assumes this is always a double.
         // Push NVIDIA to move this to behind API for future releases, and
@@ -789,19 +763,11 @@ class Measurements final
                        });
 
         std::size_t nIndexBits = this->_statevector.getNumQubits();
-        cudaDataType_t data_type;
+        cudaDataType_t data_type = cuUtil::getCudaDataType<CFP_t>();
         cudaDataType_t expectationDataType =
             CUDA_C_64F; // Requested by the custatevecComputeExpectation API
-        custatevecComputeType_t compute_type;
-
-        if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
-                      std::is_same_v<CFP_t, double2>) {
-            data_type = CUDA_C_64F;
-            compute_type = CUSTATEVEC_COMPUTE_64F;
-        } else {
-            data_type = CUDA_C_32F;
-            compute_type = CUSTATEVEC_COMPUTE_32F;
-        }
+        custatevecComputeType_t compute_type =
+            cuUtil::getCustatevecComputeType<CFP_t>();
 
         // check the size of external workspace
         PL_CUSTATEVEC_IS_SUCCESS(custatevecComputeExpectationGetWorkspaceSize(
