@@ -77,6 +77,7 @@ class LightningKokkosSimulator final : public Catalyst::Runtime::QuantumDevice {
     std::size_t device_shots{0};
 
     std::mt19937 *gen{nullptr};
+    std::size_t comm_buffer_ratio_{1};
 
 #ifdef _ENABLE_PLKOKKOS_MPI
     std::unique_ptr<StateVectorT> device_sv = nullptr;
@@ -141,6 +142,15 @@ class LightningKokkosSimulator final : public Catalyst::Runtime::QuantumDevice {
     explicit LightningKokkosSimulator(
         const std::string &kwargs = "{}") noexcept {
         auto &&args = Catalyst::Runtime::parse_kwargs(kwargs);
+        if (args.contains("comm_buffer_ratio")) {
+            try {
+                const auto parsed = std::stoull(args["comm_buffer_ratio"]);
+                if (parsed > 0) {
+                    comm_buffer_ratio_ = parsed;
+                }
+            } catch (...) {
+            }
+        }
     }
     ~LightningKokkosSimulator() noexcept = default;
 
