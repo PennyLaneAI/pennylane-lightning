@@ -28,7 +28,13 @@ namespace Catalyst::Runtime::Simulator {
 auto LightningKokkosSimulator::AllocateQubit() -> QubitIdType {
     const size_t num_qubits = GetNumQubits();
     if (num_qubits == 0U) {
+#ifdef _ENABLE_PLKOKKOS_MPI
+        this->device_sv = std::make_unique<StateVectorT>(
+            Pennylane::LightningKokkos::Util::MPIManagerKokkos(MPI_COMM_WORLD),
+            1, Kokkos::InitializationSettings{}, comm_buffer_ratio_);
+#else
         this->device_sv = std::make_unique<StateVectorT>(1);
+#endif
         return this->qubit_manager.Allocate(0);
     }
 
@@ -90,7 +96,13 @@ auto LightningKokkosSimulator::AllocateQubits(std::size_t num_qubits)
 
     // at the first call when num_qubits == 0
     if (!this->GetNumQubits()) {
+#ifdef _ENABLE_PLKOKKOS_MPI
+        this->device_sv = std::make_unique<StateVectorT>(
+            Pennylane::LightningKokkos::Util::MPIManagerKokkos(MPI_COMM_WORLD),
+            num_qubits, Kokkos::InitializationSettings{}, comm_buffer_ratio_);
+#else
         this->device_sv = std::make_unique<StateVectorT>(num_qubits);
+#endif
         return this->qubit_manager.AllocateRange(0, num_qubits);
     }
 
