@@ -30,6 +30,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Upgrade Mac runner to macos-15.
+  [(#1394)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1394)
+
 - Updated Sphinx to version 9.0.
   [(#1393)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1393)
 

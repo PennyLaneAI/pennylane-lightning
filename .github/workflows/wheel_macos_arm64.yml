@@ -29,7 +29,7 @@ on:
         default: false
 
 env:
-  MACOSX_DEPLOYMENT_TARGET: 13.0
+  MACOSX_DEPLOYMENT_TARGET: 15.0
 
 concurrency:
   group: wheel_macos_arm64-${{ github.ref }}
@@ -54,7 +54,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-14]
+        os: [macos-15]
         arch: [arm64]
         pl_backend: ["lightning_kokkos", "lightning_qubit"]
         cibw_build: ${{fromJson(needs.set_wheel_build_matrix.outputs.python_version)}}
