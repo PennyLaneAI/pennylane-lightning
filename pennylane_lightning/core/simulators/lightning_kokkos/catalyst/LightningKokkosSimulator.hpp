@@ -23,6 +23,7 @@
 #include <cstdint>
 #include <iostream>
 #include <limits>
+#include <memory>
 #include <optional>
 #include <random>
 #include <span>
@@ -32,6 +33,10 @@
 #include "AdjointJacobianKokkos.hpp"
 #include "MeasurementsKokkos.hpp"
 #include "StateVectorKokkos.hpp"
+#ifdef _ENABLE_PLKOKKOS_MPI
+#include "MeasurementsKokkosMPI.hpp"
+#include "StateVectorKokkosMPI.hpp"
+#endif
 
 #include "CacheManager.hpp"
 #include "Exception.hpp"
@@ -49,7 +54,16 @@ namespace Catalyst::Runtime::Simulator {
  */
 class LightningKokkosSimulator final : public Catalyst::Runtime::QuantumDevice {
   private:
+#ifdef _ENABLE_PLKOKKOS_MPI
+    using StateVectorT =
+        Pennylane::LightningKokkos::StateVectorKokkosMPI<double>;
+    using MeasurementsBackendT =
+        Pennylane::LightningKokkos::Measures::MeasurementsMPI<StateVectorT>;
+#else
     using StateVectorT = Pennylane::LightningKokkos::StateVectorKokkos<double>;
+    using MeasurementsBackendT =
+        Pennylane::LightningKokkos::Measures::Measurements<StateVectorT>;
+#endif
 
     // static constants for RESULT values
     static constexpr bool GLOBAL_RESULT_TRUE_CONST = true;
@@ -63,8 +77,13 @@ class LightningKokkosSimulator final : public Catalyst::Runtime::QuantumDevice {
     std::size_t device_shots{0};
 
     std::mt19937 *gen{nullptr};
+    std::size_t comm_buffer_ratio_{1};
 
+#ifdef _ENABLE_PLKOKKOS_MPI
+    std::unique_ptr<StateVectorT> device_sv = nullptr;
+#else
     std::unique_ptr<StateVectorT> device_sv = std::make_unique<StateVectorT>(0);
+#endif
     LightningKokkosObsManager<double> obs_manager{};
 
     // Flag to indicate if state vector needs reduction
@@ -111,8 +130,7 @@ class LightningKokkosSimulator final : public Catalyst::Runtime::QuantumDevice {
     void reduceStateVector();
 
     // Helper to get Measurements object with reduced state vector
-    auto getMeasurements()
-        -> Pennylane::LightningKokkos::Measures::Measurements<StateVectorT>;
+    auto getMeasurements() -> MeasurementsBackendT;
 
     // Check if released qubits are disentangled from active qubits
     void checkReleasedQubitsDisentangled();
@@ -124,6 +142,15 @@ class LightningKokkosSimulator final : public Catalyst::Runtime::QuantumDevice {
     explicit LightningKokkosSimulator(
         const std::string &kwargs = "{}") noexcept {
         auto &&args = Catalyst::Runtime::parse_kwargs(kwargs);
+        if (args.contains("comm_buffer_ratio")) {
+            try {
+                const auto parsed = std::stoull(args["comm_buffer_ratio"]);
+                if (parsed > 0) {
+                    comm_buffer_ratio_ = parsed;
+                }
+            } catch (...) {
+            }
+        }
     }
     ~LightningKokkosSimulator() noexcept = default;
 

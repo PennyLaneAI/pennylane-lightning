@@ -17,6 +17,8 @@
 #include <algorithm>
 #include <bit>
 #include <complex>
+#include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <mpi.h>
 #include <stdexcept>
@@ -24,6 +26,7 @@
 #include <typeindex>
 #include <typeinfo>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include "Error.hpp"
@@ -59,11 +62,86 @@ template <typename T> auto cppTypeToString() -> const std::string {
 }
 
 /**
+ * @brief Process-wide MPI lifecycle manager.
+ *
+ * This class centralizes MPI initialization/finalization ownership inside
+ * Lightning while allowing MPIManager to bootstrap the runtime on demand.
+ * It will finalize MPI at exit only if it was initialized within Lightning C++
+ */
+class MPIRuntime {
+  private:
+    bool mpi_initialized_here_{false};
+    bool atexit_registered_{false};
+
+    MPIRuntime() = default;
+
+    static void finalizeAtExit() noexcept {
+        try {
+            MPIRuntime::getInstance().finalizeIfOwned();
+        } catch (...) {
+            // Avoid throwing during process shutdown.
+        }
+    }
+
+    void registerFinalizeHookIfNeeded_() {
+        if (!atexit_registered_) {
+            std::atexit(&MPIRuntime::finalizeAtExit);
+            atexit_registered_ = true;
+        }
+    }
+
+    void finalizeIfOwned() {
+        if (!mpi_initialized_here_) {
+            return;
+        }
+
+        int finflag = 0;
+        PL_MPI_IS_SUCCESS(MPI_Finalized(&finflag));
+        if (finflag) {
+            return;
+        }
+
+        int initflag = 0;
+        PL_MPI_IS_SUCCESS(MPI_Initialized(&initflag));
+        if (initflag) {
+            PL_MPI_IS_SUCCESS(MPI_Finalize());
+        }
+    }
+
+  public:
+    static auto getInstance() -> MPIRuntime & {
+        static MPIRuntime runtime;
+        return runtime;
+    }
+
+    MPIRuntime(const MPIRuntime &) = delete;
+    auto operator=(const MPIRuntime &) -> MPIRuntime & = delete;
+    MPIRuntime(MPIRuntime &&) = delete;
+    auto operator=(MPIRuntime &&) -> MPIRuntime & = delete;
+    ~MPIRuntime() = default;
+
+    void ensureInitialized() {
+        int finflag = 0;
+        PL_MPI_IS_SUCCESS(MPI_Finalized(&finflag));
+        PL_ABORT_IF(finflag,
+                    "MPI has already been finalized and cannot be reused.");
+
+        int initflag = 0;
+        PL_MPI_IS_SUCCESS(MPI_Initialized(&initflag));
+
+        if (!initflag) {
+            PL_MPI_IS_SUCCESS(MPI_Init(nullptr, nullptr));
+            mpi_initialized_here_ = true;
+            registerFinalizeHookIfNeeded_();
+        }
+    }
+};
+
+/**
  * @brief MPI operation class. Maintains MPI related operations.
  */
 class MPIManager {
   private:
-    bool isExternalComm_;
     std::size_t rank_;
     std::size_t size_per_node_;
     std::size_t size_;
@@ -119,6 +197,26 @@ class MPIManager {
          MPI_C_LONG_DOUBLE_COMPLEX}};
 
     /**
+     * @brief Free communicator except for MPI_COMM_WORLD.
+     */
+    static void freeCommunicator(MPI_Comm &communicator) {
+        int initflag = 0;
+        PL_MPI_IS_SUCCESS(MPI_Initialized(&initflag));
+        int finflag = 0;
+        PL_MPI_IS_SUCCESS(MPI_Finalized(&finflag));
+        if (!initflag || finflag || communicator == MPI_COMM_NULL) {
+            return;
+        }
+
+        int compare;
+        PL_MPI_IS_SUCCESS(
+            MPI_Comm_compare(MPI_COMM_WORLD, communicator, &compare));
+        if (compare != MPI_IDENT) {
+            PL_MPI_IS_SUCCESS(MPI_Comm_free(&communicator));
+        }
+    }
+
+    /**
      * @brief Set the MPI vendor.
      */
     void setVendor() {
@@ -159,11 +257,7 @@ class MPIManager {
                                 this->getRank(), MPI_INFO_NULL, &node_comm));
         PL_MPI_IS_SUCCESS(MPI_Comm_size(node_comm, &size_per_node_int));
         size_per_node_ = static_cast<std::size_t>(size_per_node_int);
-        int compare;
-        PL_MPI_IS_SUCCESS(
-            MPI_Comm_compare(MPI_COMM_WORLD, node_comm, &compare));
-        if (compare != MPI_IDENT)
-            PL_MPI_IS_SUCCESS(MPI_Comm_free(&node_comm));
+        freeCommunicator(node_comm);
         this->Barrier();
     }
 
@@ -183,12 +277,7 @@ class MPIManager {
   public:
     MPIManager(MPI_Comm communicator = MPI_COMM_WORLD)
         : communicator_(communicator) {
-        int status = 0;
-        MPI_Initialized(&status);
-        if (!status) {
-            PL_MPI_IS_SUCCESS(MPI_Init(nullptr, nullptr));
-        }
-        isExternalComm_ = true;
+        MPIRuntime::getInstance().ensureInitialized();
         int rank_int;
         int size_int;
         PL_MPI_IS_SUCCESS(MPI_Comm_rank(communicator_, &rank_int));
@@ -203,64 +292,83 @@ class MPIManager {
         check_mpi_config();
     }
 
-    MPIManager(int argc, char **argv) {
-        int status = 0;
-        MPI_Initialized(&status);
-        if (!status) {
-            PL_MPI_IS_SUCCESS(MPI_Init(&argc, &argv));
+    MPIManager(const MPIManager &other)
+        : rank_(other.rank_), size_per_node_(other.size_per_node_),
+          size_(other.size_), communicator_(MPI_COMM_NULL),
+          vendor_(other.vendor_), version_(other.version_),
+          subversion_(other.subversion_) {
+        if (other.communicator_ != MPI_COMM_NULL) {
+            MPIRuntime::getInstance().ensureInitialized();
+            // Avoid freeing other.communicator_ in ~MPIManager
+            PL_MPI_IS_SUCCESS(
+                MPI_Comm_dup(other.communicator_, &communicator_));
         }
-        isExternalComm_ = false;
-        communicator_ = MPI_COMM_WORLD;
-        int rank_int;
-        int size_int;
-        PL_MPI_IS_SUCCESS(MPI_Comm_rank(communicator_, &rank_int));
-        PL_MPI_IS_SUCCESS(MPI_Comm_size(communicator_, &size_int));
-
-        rank_ = static_cast<std::size_t>(rank_int);
-        size_ = static_cast<std::size_t>(size_int);
-
-        setVendor();
-        setVersion();
-        setNumProcsPerNode();
-        check_mpi_config();
     }
 
-    MPIManager(const MPIManager &other) {
-        int status = 0;
-        MPI_Initialized(&status);
-        if (!status) {
-            PL_MPI_IS_SUCCESS(MPI_Init(nullptr, nullptr));
+    auto operator=(const MPIManager &other) -> MPIManager & {
+        if (this == &other) {
+            return *this;
         }
-        isExternalComm_ = true;
+
+        MPI_Comm new_communicator = MPI_COMM_NULL;
+        if (other.communicator_ != MPI_COMM_NULL) {
+            MPIRuntime::getInstance().ensureInitialized();
+            // Avoid freeing other.communicator_ in ~MPIManager
+            PL_MPI_IS_SUCCESS(
+                MPI_Comm_dup(other.communicator_, &new_communicator));
+        }
+
+        freeCommunicator(communicator_);
+
         rank_ = other.rank_;
+        size_per_node_ = other.size_per_node_;
         size_ = other.size_;
-        MPI_Comm_dup(
-            other.communicator_,
-            &communicator_); // Avoid freeing other.communicator_ in ~MPIManager
+        communicator_ = new_communicator;
         vendor_ = other.vendor_;
         version_ = other.version_;
         subversion_ = other.subversion_;
+        return *this;
+    }
+
+    MPIManager(MPIManager &&other) noexcept
+        : rank_(other.rank_), size_per_node_(other.size_per_node_),
+          size_(other.size_), communicator_(other.communicator_),
+          vendor_(std::move(other.vendor_)), version_(other.version_),
+          subversion_(other.subversion_) {
+        other.rank_ = 0;
+        other.size_per_node_ = 0;
+        other.size_ = 0;
+        other.communicator_ = MPI_COMM_NULL;
+        other.version_ = 0;
+        other.subversion_ = 0;
+    }
+
+    auto operator=(MPIManager &&other) noexcept -> MPIManager & {
+        if (this == &other) {
+            return *this;
+        }
+
+        freeCommunicator(communicator_);
+
+        rank_ = other.rank_;
         size_per_node_ = other.size_per_node_;
+        size_ = other.size_;
+        communicator_ = other.communicator_;
+        vendor_ = std::move(other.vendor_);
+        version_ = other.version_;
+        subversion_ = other.subversion_;
+
+        other.rank_ = 0;
+        other.size_per_node_ = 0;
+        other.size_ = 0;
+        other.communicator_ = MPI_COMM_NULL;
+        other.version_ = 0;
+        other.subversion_ = 0;
+        return *this;
     }
 
     // LCOV_EXCL_START
-    ~MPIManager() {
-        if (!isExternalComm_) {
-            int initflag;
-            int finflag;
-            PL_MPI_IS_SUCCESS(MPI_Initialized(&initflag));
-            PL_MPI_IS_SUCCESS(MPI_Finalized(&finflag));
-            if (initflag && !finflag) {
-                PL_MPI_IS_SUCCESS(MPI_Finalize());
-            }
-        } else {
-            int compare;
-            PL_MPI_IS_SUCCESS(
-                MPI_Comm_compare(MPI_COMM_WORLD, communicator_, &compare));
-            if (compare != MPI_IDENT)
-                PL_MPI_IS_SUCCESS(MPI_Comm_free(&communicator_));
-        }
-    }
+    ~MPIManager() { freeCommunicator(communicator_); }
     // LCOV_EXCL_STOP
 
     /**

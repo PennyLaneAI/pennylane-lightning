@@ -108,7 +108,7 @@ auto getFullDataVector(StateVectorKokkosMPI<TestType> &sv,
     -> std::vector<Kokkos::complex<TestType>> {
     sv.reorderGlobalLocalWires();
     sv.reorderLocalWires();
-    auto mpi_manager = sv.getMPIManager();
+    auto &mpi_manager = sv.getMPIManager();
     std::vector<Kokkos::complex<TestType>> data(
         (mpi_manager.getRank() == root) ? sv.getLength() : 0);
 
