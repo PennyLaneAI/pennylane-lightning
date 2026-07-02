@@ -200,6 +200,11 @@ class LightningKokkos(LightningBase):
             "comm_buffer_ratio": comm_buffer_ratio,
         }
 
+        # Forward key word arguments to Catalyst
+        self.device_kwargs = {"mpi": mpi}
+        if comm_buffer_ratio is not None:
+            self.device_kwargs["comm_buffer_ratio"] = comm_buffer_ratio
+
     @property
     def name(self):
         """The name of the device."""
