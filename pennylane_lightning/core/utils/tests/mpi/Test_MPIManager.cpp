@@ -77,6 +77,23 @@ TEST_CASE("MPIManager special member functions", "[MPIManager]") {
         CHECK(compare == MPI_CONGRUENT);
     }
 
+    SECTION("Copy self-assignment preserves communicator ownership") {
+        auto owned_comm = mpi_manager.split(0, mpi_manager.getRank());
+        MPI_Comm source_comm = owned_comm.getComm();
+
+        auto &self_ref = (owned_comm = owned_comm);
+
+        REQUIRE(&self_ref == &owned_comm);
+        CHECK(owned_comm.getRank() == mpi_manager.getRank());
+        CHECK(owned_comm.getSize() == mpi_manager.getSize());
+
+        int compare = MPI_UNEQUAL;
+        MPI_Comm assigned_comm = owned_comm.getComm();
+        PL_MPI_IS_SUCCESS(
+            MPI_Comm_compare(assigned_comm, source_comm, &compare));
+        CHECK(compare == MPI_IDENT);
+    }
+
     SECTION("Move construction transfers communicator ownership") {
         auto owned_comm = mpi_manager.split(0, mpi_manager.getRank());
         MPI_Comm source_comm = owned_comm.getComm();
@@ -106,6 +123,23 @@ TEST_CASE("MPIManager special member functions", "[MPIManager]") {
 
         int compare = MPI_UNEQUAL;
         MPI_Comm assigned_comm = assigned_manager.getComm();
+        PL_MPI_IS_SUCCESS(
+            MPI_Comm_compare(assigned_comm, source_comm, &compare));
+        CHECK(compare == MPI_IDENT);
+    }
+
+    SECTION("Move self-assignment preserves communicator ownership") {
+        auto owned_comm = mpi_manager.split(0, mpi_manager.getRank());
+        MPI_Comm source_comm = owned_comm.getComm();
+
+        auto &self_ref = (owned_comm = std::move(owned_comm));
+
+        REQUIRE(&self_ref == &owned_comm);
+        CHECK(owned_comm.getRank() == mpi_manager.getRank());
+        CHECK(owned_comm.getSize() == mpi_manager.getSize());
+
+        int compare = MPI_UNEQUAL;
+        MPI_Comm assigned_comm = owned_comm.getComm();
         PL_MPI_IS_SUCCESS(
             MPI_Comm_compare(assigned_comm, source_comm, &compare));
         CHECK(compare == MPI_IDENT);
