@@ -75,6 +75,7 @@ class MPIRuntime {
 
     MPIRuntime() = default;
 
+    // LCOV_EXCL_START
     static void finalizeAtExit() noexcept {
         try {
             MPIRuntime::getInstance().finalizeIfOwned();
@@ -107,6 +108,7 @@ class MPIRuntime {
             PL_MPI_IS_SUCCESS(MPI_Finalize());
         }
     }
+    // LCOV_EXCL_STOP
 
   public:
     static auto getInstance() -> MPIRuntime & {
@@ -129,11 +131,13 @@ class MPIRuntime {
         int initflag = 0;
         PL_MPI_IS_SUCCESS(MPI_Initialized(&initflag));
 
+        // LCOV_EXCL_START
         if (!initflag) {
             PL_MPI_IS_SUCCESS(MPI_Init(nullptr, nullptr));
             mpi_initialized_here_ = true;
             registerFinalizeHookIfNeeded_();
         }
+        // LCOV_EXCL_STOP
     }
 };
 
