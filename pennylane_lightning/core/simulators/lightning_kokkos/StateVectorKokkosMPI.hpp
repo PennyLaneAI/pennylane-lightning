@@ -19,6 +19,7 @@
 #pragma once
 #include <complex>
 #include <cstddef>
+#include <cstdio>
 #include <cstdlib>
 #include <string>
 #include <unordered_map>
@@ -110,6 +111,10 @@ class StateVectorKokkosMPI final
     std::vector<std::size_t> global_wires_;
     std::vector<std::size_t> local_wires_;
 
+    std::size_t mpi_rank_ = 0;
+    std::size_t swap_events_ = 0;
+    std::size_t transferred_bytes_ = 0;
+
   public:
     StateVectorKokkosMPI() = delete;
 
@@ -131,6 +136,7 @@ class StateVectorKokkosMPI final
           num_qubits_(num_global_qubits + num_local_qubits),
           numGlobalQubits_(num_global_qubits),
           numLocalQubits_(num_local_qubits) {
+        mpi_rank_ = mpi_manager_.getRank();
         PL_ABORT_IF(comm_buffer_ratio == 0, "comm_buffer_ratio must be >= 1");
         Kokkos::InitializationSettings settings = kokkos_args;
 
@@ -307,7 +313,39 @@ class StateVectorKokkosMPI final
         (*sv_).DeviceToDevice(other.getView());
     }
 
-    ~StateVectorKokkosMPI() = default;
+    ~StateVectorKokkosMPI() {
+        const auto formatCommData = [](std::size_t bytes) -> std::string {
+            constexpr std::size_t kib = 1024ULL;
+            constexpr std::size_t mib = 1024ULL * kib;
+            constexpr std::size_t gib = 1024ULL * mib;
+
+            char buffer[64];
+            if (bytes >= gib) {
+                std::snprintf(buffer, sizeof(buffer), "%.2f GiB (%zu B)",
+                              static_cast<double>(bytes) /
+                                  static_cast<double>(gib),
+                              bytes);
+            } else if (bytes >= mib) {
+                std::snprintf(buffer, sizeof(buffer), "%.2f MiB (%zu B)",
+                              static_cast<double>(bytes) /
+                                  static_cast<double>(mib),
+                              bytes);
+            } else if (bytes >= kib) {
+                std::snprintf(buffer, sizeof(buffer), "%.2f KiB (%zu B)",
+                              static_cast<double>(bytes) /
+                                  static_cast<double>(kib),
+                              bytes);
+            } else {
+                std::snprintf(buffer, sizeof(buffer), "%zu B", bytes);
+            }
+            return std::string(buffer);
+        };
+
+        const std::string transferred = formatCommData(transferred_bytes_);
+        std::fprintf(stderr,
+                     "[lightning.kokkos mpi][rank %zu] swap_events=%zu transferred=%s\n",
+                     mpi_rank_, swap_events_, transferred.c_str());
+    }
 
     SVK &getLocalSV() { return *sv_; }
 
@@ -442,6 +480,7 @@ class StateVectorKokkosMPI final
                          const std::size_t tag) {
         mpi_manager_.Sendrecv(*sendbuf_, send_rank, *recvbuf_, recv_rank, size,
                               tag);
+        transferred_bytes_ += 2 * size * sizeof(ComplexT);
     }
     /********************
     Wires-related methods
@@ -749,6 +788,7 @@ class StateVectorKokkosMPI final
     void
     swapGlobalLocalWires(const std::vector<std::size_t> &global_wires_to_swap,
                          const std::vector<std::size_t> &local_wires_to_swap) {
+        swap_events_ += 1;
         PL_ABORT_IF_NOT(global_wires_to_swap.size() ==
                             local_wires_to_swap.size(),
                         "global_wires_to_swap and local_wires_to_swap must "
