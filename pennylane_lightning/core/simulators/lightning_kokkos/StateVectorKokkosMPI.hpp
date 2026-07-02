@@ -314,37 +314,28 @@ class StateVectorKokkosMPI final
     }
 
     ~StateVectorKokkosMPI() {
-        const auto formatCommData = [](std::size_t bytes) -> std::string {
-            constexpr std::size_t kib = 1024ULL;
-            constexpr std::size_t mib = 1024ULL * kib;
-            constexpr std::size_t gib = 1024ULL * mib;
+        // Gather all instrumentation data on rank 0 for printing
+        const std::size_t root_rank = 0;
+        std::vector<std::size_t> gathered_swap_events(mpi_manager_.getSize());
+        std::vector<std::size_t> gathered_transferred_bytes(
+            mpi_manager_.getSize());
+        mpi_manager_.Gather(swap_events_, gathered_swap_events, root_rank);
+        mpi_manager_.Gather(transferred_bytes_, gathered_transferred_bytes,
+                            root_rank);
 
-            char buffer[64];
-            if (bytes >= gib) {
-                std::snprintf(buffer, sizeof(buffer), "%.2f GiB (%zu B)",
-                              static_cast<double>(bytes) /
-                                  static_cast<double>(gib),
-                              bytes);
-            } else if (bytes >= mib) {
-                std::snprintf(buffer, sizeof(buffer), "%.2f MiB (%zu B)",
-                              static_cast<double>(bytes) /
-                                  static_cast<double>(mib),
-                              bytes);
-            } else if (bytes >= kib) {
-                std::snprintf(buffer, sizeof(buffer), "%.2f KiB (%zu B)",
-                              static_cast<double>(bytes) /
-                                  static_cast<double>(kib),
-                              bytes);
-            } else {
-                std::snprintf(buffer, sizeof(buffer), "%zu B", bytes);
+        if (mpi_rank_ == root_rank) {
+            for (std::size_t rank = 0; rank < mpi_manager_.getSize(); rank++) {
+                const double transferred_gbytes =
+                    static_cast<double>(gathered_transferred_bytes[rank]) /
+                    (1024.0 * 1024.0 * 1024.0);
+                std::fprintf(stderr,
+                             "[lightning.kokkos mpi][rank %zu] swap_events=%zu "
+                             "transferred=%.2f GiB (%zu B)\n",
+                             rank, gathered_swap_events[rank],
+                             transferred_gbytes,
+                             gathered_transferred_bytes[rank]);
             }
-            return std::string(buffer);
-        };
-
-        const std::string transferred = formatCommData(transferred_bytes_);
-        std::fprintf(stderr,
-                     "[lightning.kokkos mpi][rank %zu] swap_events=%zu transferred=%s\n",
-                     mpi_rank_, swap_events_, transferred.c_str());
+        }
     }
 
     SVK &getLocalSV() { return *sv_; }
