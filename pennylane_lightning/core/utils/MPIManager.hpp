@@ -348,9 +348,12 @@ class MPIManager {
     }
 
     auto operator=(MPIManager &&other) noexcept -> MPIManager & {
+        // LCOV_EXCL_START
+        // [-Werror=self-move] prevents self move so this is left untested
         if (this == &other) {
             return *this;
         }
+        // LCOV_EXCL_STOP
 
         freeCommunicator(communicator_);
 
