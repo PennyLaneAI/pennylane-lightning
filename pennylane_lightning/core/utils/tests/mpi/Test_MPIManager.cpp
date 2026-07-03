@@ -127,6 +127,7 @@ TEST_CASE("MPIManager special member functions", "[MPIManager]") {
             MPI_Comm_compare(assigned_comm, source_comm, &compare));
         CHECK(compare == MPI_IDENT);
     }
+
 }
 
 TEMPLATE_TEST_CASE("MPIManager::getMPIDatatype", "[MPIManager]", float,
