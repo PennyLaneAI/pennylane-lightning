@@ -19,6 +19,7 @@
 #pragma once
 #include <complex>
 #include <cstddef>
+#include <cstdio>
 #include <cstdlib>
 #include <string>
 #include <unordered_map>
@@ -110,6 +111,10 @@ class StateVectorKokkosMPI final
     std::vector<std::size_t> global_wires_;
     std::vector<std::size_t> local_wires_;
 
+    std::size_t mpi_rank_ = 0;
+    std::size_t swap_events_ = 0;
+    std::size_t transferred_bytes_ = 0;
+
   public:
     StateVectorKokkosMPI() = delete;
 
@@ -131,6 +136,7 @@ class StateVectorKokkosMPI final
           num_qubits_(num_global_qubits + num_local_qubits),
           numGlobalQubits_(num_global_qubits),
           numLocalQubits_(num_local_qubits) {
+        mpi_rank_ = mpi_manager_.getRank();
         PL_ABORT_IF(comm_buffer_ratio == 0, "comm_buffer_ratio must be >= 1");
         Kokkos::InitializationSettings settings = kokkos_args;
 
@@ -307,7 +313,30 @@ class StateVectorKokkosMPI final
         (*sv_).DeviceToDevice(other.getView());
     }
 
-    ~StateVectorKokkosMPI() = default;
+    ~StateVectorKokkosMPI() {
+        // Gather all instrumentation data on rank 0 for printing
+        const std::size_t root_rank = 0;
+        std::vector<std::size_t> gathered_swap_events(mpi_manager_.getSize());
+        std::vector<std::size_t> gathered_transferred_bytes(
+            mpi_manager_.getSize());
+        mpi_manager_.Gather(swap_events_, gathered_swap_events, root_rank);
+        mpi_manager_.Gather(transferred_bytes_, gathered_transferred_bytes,
+                            root_rank);
+
+        if (mpi_rank_ == root_rank) {
+            for (std::size_t rank = 0; rank < mpi_manager_.getSize(); rank++) {
+                const double transferred_gbytes =
+                    static_cast<double>(gathered_transferred_bytes[rank]) /
+                    (1024.0 * 1024.0 * 1024.0);
+                std::fprintf(stderr,
+                             "[lightning.kokkos mpi][rank %zu] swap_events=%zu "
+                             "transferred=%.2f GiB (%zu B)\n",
+                             rank, gathered_swap_events[rank],
+                             transferred_gbytes,
+                             gathered_transferred_bytes[rank]);
+            }
+        }
+    }
 
     SVK &getLocalSV() { return *sv_; }
 
@@ -442,6 +471,7 @@ class StateVectorKokkosMPI final
                          const std::size_t tag) {
         mpi_manager_.Sendrecv(*sendbuf_, send_rank, *recvbuf_, recv_rank, size,
                               tag);
+        transferred_bytes_ += 2 * size * sizeof(ComplexT);
     }
     /********************
     Wires-related methods
@@ -749,6 +779,7 @@ class StateVectorKokkosMPI final
     void
     swapGlobalLocalWires(const std::vector<std::size_t> &global_wires_to_swap,
                          const std::vector<std::size_t> &local_wires_to_swap) {
+        swap_events_ += 1;
         PL_ABORT_IF_NOT(global_wires_to_swap.size() ==
                             local_wires_to_swap.size(),
                         "global_wires_to_swap and local_wires_to_swap must "
