@@ -686,11 +686,11 @@ class TestGenerateSample:
 
     @pytest.mark.local_salt(42)
     @pytest.mark.parametrize("c_dtype", [np.complex128, np.complex64])
-    def test_paulix_pauliy(self, c_dtype, tol=TOL_STOCHASTIC):
+    def test_paulix_pauliy(self, c_dtype, seed, tol=TOL_STOCHASTIC):
         """Test that a tensor product involving PauliX and PauliY works correctly"""
         num_wires = 3
 
-        dev_mpi = qp.device(device_name, wires=num_wires, mpi=True, c_dtype=c_dtype)
+        dev_mpi = qp.device(device_name, wires=num_wires, mpi=True, c_dtype=c_dtype, seed=seed)
 
         theta = 0.432
         phi = 0.123
@@ -728,11 +728,11 @@ class TestGenerateSample:
 
     @pytest.mark.local_salt(43)
     @pytest.mark.parametrize("c_dtype", [np.complex128, np.complex64])
-    def test_pauliz_hadamard(self, c_dtype, tol=TOL_STOCHASTIC):
+    def test_pauliz_hadamard(self, c_dtype, seed, tol=TOL_STOCHASTIC):
         """Test that a tensor product involving PauliZ and PauliY and hadamard works correctly"""
         num_wires = 3
 
-        dev_mpi = qp.device(device_name, wires=num_wires, mpi=True, c_dtype=c_dtype)
+        dev_mpi = qp.device(device_name, wires=num_wires, mpi=True, c_dtype=c_dtype, seed=seed)
 
         theta = 0.432
         phi = 0.123
@@ -770,12 +770,13 @@ class TestGenerateSample:
 class TestTensorVar:
     """Test tensor variance measurements."""
 
+    @pytest.mark.local_salt(43)
     @pytest.mark.parametrize("c_dtype", [np.complex128, np.complex64])
-    def test_paulix_pauliy(self, c_dtype, tol=TOL_STOCHASTIC):
+    def test_paulix_pauliy(self, c_dtype, seed, tol=TOL_STOCHASTIC):
         """Test that a tensor product involving PauliX and PauliY works correctly"""
         num_wires = 3
 
-        dev_mpi = qp.device(device_name, wires=num_wires, mpi=True, c_dtype=c_dtype)
+        dev_mpi = qp.device(device_name, wires=num_wires, mpi=True, c_dtype=c_dtype, seed=seed)
 
         theta = 0.432
         phi = 0.123
@@ -805,10 +806,10 @@ class TestTensorVar:
 
     @pytest.mark.local_salt(43)
     @pytest.mark.parametrize("c_dtype", [np.complex128, np.complex64])
-    def test_pauliz_hadamard(self, c_dtype, tol=TOL_STOCHASTIC):
+    def test_pauliz_hadamard(self, c_dtype, seed, tol=TOL_STOCHASTIC):
         """Test that a tensor product involving PauliZ and PauliY and hadamard works correctly"""
         num_wires = 3
-        dev_mpi = qp.device(device_name, wires=num_wires, mpi=True, c_dtype=c_dtype)
+        dev_mpi = qp.device(device_name, wires=num_wires, mpi=True, c_dtype=c_dtype, seed=seed)
 
         theta = 0.432
         phi = 0.123
