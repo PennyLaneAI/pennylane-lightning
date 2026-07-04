@@ -25,6 +25,7 @@ macro(FindCatalyst target_name)
         target_include_directories(${target_name} SYSTEM PUBLIC ${LIGHTNING_CATALYST_SRC_PATH}/runtime/include)
 
     else()
+	set(CATALYST_GIT_TAG "mlxd/fwd_it_dataview")
         if(NOT CATALYST_GIT_TAG)
             set(CATALYST_GIT_TAG "main" CACHE STRING "GIT_TAG value to build Catalyst")
         endif()

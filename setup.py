@@ -98,13 +98,17 @@ class CMakeBuild(build_ext):
             # As Ninja does not support long path for windows yet:
             #  (https://github.com/ninja-build/ninja/pull/2056)
             configure_args += [
-                "-T clangcl",
+                #"-T clangcl",
+                "-DCMAKE_C_COMPILER=clang-cl",
+                "-DCMAKE_CXX_COMPILER=clang-cl",
+                "-DCMAKE_BUILD_TYPE=Release",
+                "-DCMAKE_LINKER=lld-link",
             ]
-        elif ninja_path:
-            configure_args += [
-                "-GNinja",
-                f"-DCMAKE_MAKE_PROGRAM={ninja_path}",
-            ]
+        #elif ninja_path:
+        configure_args += [
+            "-GNinja",
+            f"-DCMAKE_MAKE_PROGRAM={ninja_path}",
+        ]
 
         configure_args += [f"-DPL_BACKEND={backend}"]
         configure_args += self.cmake_defines
@@ -167,6 +171,15 @@ class CMakeBuild(build_ext):
                 source = os.path.join(f"{extdir}", f"lib{lib_name}_catalyst{shared_lib_ext}")
                 destination = os.path.join(os.getcwd(), self.build_temp)
                 shutil.copy(source, destination)
+            elif platform.system() is "Windows":
+                shared_lib_ext = ".dll"
+                lib_name = "lightning_kokkos" if backend == "lightning_amdgpu" else backend
+                # Windows follows diff build rules with locations
+                source = os.path.join(os.getcwd(), self.build_temp, f"{lib_name}_catalyst{shared_lib_ext}")
+                destination = extdir
+                shutil.copy(source, destination)
+            else:
+                raise RuntimeException(f"Unsupported platform {platform.system()} for backend {backend}")
 
 with open(os.path.join("pennylane_lightning", "core", "_version.py"), encoding="utf-8") as f:
     version = f.readlines()[-1].split()[-1].strip("\"'")

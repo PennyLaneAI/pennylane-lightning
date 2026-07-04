@@ -124,3 +124,6 @@ exclude_dirs = ["tests"]
 skips = [
     "B101", # We are okay with using asserts in source code as we do not compile optimized bytecode of pennylane
 ]
+[tool.cibuildwheel.windows]
+# Force the linker to find the active pythonXX.lib folder
+environment = { LDFLAGS="/LIBPATH:{python}\\libs", CFLAGS="/I{python}\\include" }

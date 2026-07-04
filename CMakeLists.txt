@@ -94,6 +94,7 @@ if(ENABLE_PYTHON)
     endif()
 
     find_package(Python COMPONENTS Interpreter Development.Module REQUIRED)
+    
     message(STATUS "Enabling Nanobind Python bindings")
     message(STATUS "Using Python executable: ${Python_EXECUTABLE}")
     message(STATUS "Python version: ${Python_VERSION}")
@@ -163,6 +164,8 @@ foreach(BACKEND ${PL_BACKEND})
 endforeach()
 
 target_include_directories(pennylane_lightning  INTERFACE "$<INSTALL_INTERFACE:${PROJECT_SOURCE_DIR}/pennylane_lightning/core;include>")
+target_link_options(pennylane_lightning INTERFACE "-Wl,--export-all-symbols")
+set_target_properties(pennylane_lightning PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
 
 #####################################################
 if(ENABLE_PYTHON)
@@ -171,6 +174,8 @@ if(ENABLE_PYTHON)
     nanobind_add_module("${PL_BACKEND}_ops"
                         NB_DOMAIN "pennylane_lightning"
                         "pennylane_lightning/core/bindings/Bindings.cpp")
+	target_link_options("${PL_BACKEND}_ops" PUBLIC "-Wl,--export-all-symbols")
+	set_target_properties("${PL_BACKEND}_ops" PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
 
     # Remove nanobind's problematic flags that are incompatible with NVCC
     target_compile_options("${PL_BACKEND}_ops" PRIVATE
