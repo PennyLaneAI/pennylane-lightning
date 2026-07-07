@@ -50,7 +50,8 @@ except TypeError:
     project_name = toml.load("pyproject.toml")['project']['name']
 
 backend = project_name.replace("pennylane_", "").lower()
-if (backend == "lightning"): backend = "lightning_qubit"
+if backend == "lightning":
+    backend = "lightning_qubit"
 
 class CMakeExtension(Extension):
     def __init__(self, name, sourcedir=""):
@@ -84,7 +85,7 @@ class CMakeBuild(build_ext):
         extdir = str(Path(self.get_ext_fullpath(ext.name)).parent.absolute())
         debug = int(os.environ.get("DEBUG", 0)) if self.debug is None else self.debug
         build_type = "Debug" if debug else "RelWithDebInfo"
-        ninja_path = str(shutil.which("ninja"))
+        ninja_path = shutil.which("ninja")
 
         build_args = ["--config", "Debug"] if debug else ["--config", "RelWithDebInfo"]
         configure_args = [
@@ -114,11 +115,16 @@ class CMakeBuild(build_ext):
 
         # Add more platform dependent options
         if platform.system() == "Darwin":
-            clang_path = Path(shutil.which("clang++")).parent.parent
+            clang_exe = shutil.which("clang++")
+            if clang_exe is None:
+                raise RuntimeError(
+                    "Could not find 'clang++' on PATH."
+                )
+            clang_path = Path(clang_exe).parent.parent
             configure_args += [
                 f"-DCMAKE_CXX_COMPILER={clang_path}/bin/clang++",
                 f"-DCMAKE_LINKER={clang_path}/bin/lld",
-                f"-DENABLE_GATE_DISPATCHER=OFF",
+                "-DENABLE_GATE_DISPATCHER=OFF",
             ]
             if shutil.which("brew"):
                 libomp_path = subprocess.run(
@@ -155,7 +161,7 @@ class CMakeBuild(build_ext):
         )
 
         # Ensure that catalyst shared object is copied to the build directory for pip editable install
-        if backend in ("lightning_gpu"):
+        if backend == "lightning_gpu":
             source = os.path.join(f"{extdir}", f"lib{backend}_catalyst.so")
             destination = os.path.join(os.getcwd(), f"build_{backend}")
             shutil.copy(source, destination)

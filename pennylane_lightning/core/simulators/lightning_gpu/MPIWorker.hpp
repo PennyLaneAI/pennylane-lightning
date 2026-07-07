@@ -22,6 +22,7 @@
 #include "MPI_helpers.hpp"
 #include "cuError.hpp"
 #include "cuStateVecError.hpp"
+#include "cuStateVec_helpers.hpp"
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <custatevec.h>
@@ -147,13 +148,7 @@ make_shared_mpi_worker(custatevecHandle_t handle, MPIManagerGPU &mpi_manager,
         }
     }
 
-    cudaDataType_t svDataType;
-    if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
-                  std::is_same_v<CFP_t, double2>) {
-        svDataType = CUDA_C_64F;
-    } else {
-        svDataType = CUDA_C_32F;
-    }
+    cudaDataType_t svDataType = cuUtil::getCudaDataType<CFP_t>();
 
     cudaEvent_t localEvent = nullptr;
     custatevecCommunicatorDescriptor_t communicator = nullptr;
