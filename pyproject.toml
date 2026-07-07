@@ -93,7 +93,7 @@ docs = [
     "docutils==0.21.2",
     "exhale>=0.3.3",
     "graphviz",
-    "sphinx==8.1",
+    "sphinx==9.0",
     "sphinx-automodapi",
     "sphinxcontrib-applehelp==2.0.0",
     "sphinxcontrib-devhelp==2.0.0",
