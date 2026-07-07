@@ -4,6 +4,9 @@
 
 <h3>Improvements 🛠</h3>
 
+- A new singleton class manages MPI initialization and finalization.
+  [(#1397)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1397)
+
 - The MPI send and receive buffer sizes for Lightning-Kokkos are now adjustable via the
   `comm_buffer_ratio` keyword argument.
   [(#1391)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1391)
@@ -26,6 +29,9 @@
   [(#1390)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1390)
 
 <h3>Internal changes ⚙️</h3>
+
+- Upgrade Mac runner to macos-15.
+  [(#1394)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1394)
 
 - Updated Sphinx to version 9.0.
   [(#1393)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1393)
