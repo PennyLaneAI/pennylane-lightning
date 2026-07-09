@@ -119,7 +119,7 @@ class StateVectorKokkosMPI final
      * @param kokkos_args Arguments for Kokkos initialization
      */
     StateVectorKokkosMPI(
-        MPIManagerKokkos mpi_manager, std::size_t num_global_qubits,
+        const MPIManagerKokkos &mpi_manager, std::size_t num_global_qubits,
         std::size_t num_local_qubits,
         const Kokkos::InitializationSettings &kokkos_args = {},
         std::size_t comm_buffer_ratio = DEFAULT_COMM_BUFFER_RATIO)
@@ -152,7 +152,7 @@ class StateVectorKokkosMPI final
      * @param kokkos_args Arguments for Kokkos initialization
      */
     StateVectorKokkosMPI(
-        MPIManagerKokkos mpi_manager, std::size_t total_num_qubits,
+        const MPIManagerKokkos &mpi_manager, std::size_t total_num_qubits,
         const Kokkos::InitializationSettings &kokkos_args = {},
         std::size_t comm_buffer_ratio = DEFAULT_COMM_BUFFER_RATIO)
         : StateVectorKokkosMPI(mpi_manager, log2(mpi_manager.getSize()),
@@ -308,7 +308,10 @@ class StateVectorKokkosMPI final
 
     SVK &getLocalSV() { return *sv_; }
 
-    auto getMPIManager() const { return mpi_manager_; }
+    auto getMPIManager() -> MPIManagerKokkos & { return mpi_manager_; }
+    auto getMPIManager() const -> const MPIManagerKokkos & {
+        return mpi_manager_;
+    }
 
     /**
      * @brief Compute the per-process MPI communication buffer size in elements.

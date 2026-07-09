@@ -4,6 +4,9 @@
 
 <h3>Improvements 🛠</h3>
 
+- A new singleton class manages MPI initialization and finalization.
+  [(#1397)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1397)
+
 - The MPI send and receive buffer sizes for Lightning-Kokkos are now adjustable via the
   `comm_buffer_ratio` keyword argument.
   [(#1391)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1391)

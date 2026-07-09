@@ -191,7 +191,7 @@ class HamiltonianMPI final : public HamiltonianBase<StateVectorT> {
 
     // to work with
     void applyInPlace(StateVectorT &sv) const override {
-        auto mpi_manager = sv.getMPIManager();
+        auto &mpi_manager = sv.getMPIManager();
         using CFP_t = typename StateVectorT::CFP_t;
         DataBuffer<CFP_t, int> buffer(sv.getDataBuffer().getLength(),
                                       sv.getDataBuffer().getDevTag());
@@ -278,7 +278,7 @@ class SparseHamiltonianMPI final : public SparseHamiltonianBase<StateVectorT> {
      *
      */
     void applyInPlace(StateVectorT &sv) const override {
-        auto mpi_manager = sv.getMPIManager();
+        auto &mpi_manager = sv.getMPIManager();
         if (mpi_manager.getRank() == 0) {
             PL_ABORT_IF_NOT(
                 this->wires_.size() == sv.getTotalNumQubits(),
