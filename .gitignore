@@ -37,4 +37,3 @@ pyproject.toml
 tests/__pycache__/
 venv/
 wheelhouse/
-.venv/
