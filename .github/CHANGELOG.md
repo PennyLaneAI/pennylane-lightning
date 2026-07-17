@@ -28,6 +28,9 @@
 - Fixed `qp.PauliRot` execution bug when handling identity Pauli word within the compilation pipeline.
   [(#1390)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1390)
 
+- Fixed `CMakelist.txt` Change add_library(lightning_qubit STATIC ${LQUBIT_FILES}) to add_library(lightning_qubit SHARED ${LQUBIT_FILES}).
+  [(#1403)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1403)
+
 <h3>Internal changes ⚙️</h3>
 
 - Upgrade Mac runner to macos-15.
@@ -63,6 +66,7 @@
 This release contains contributions from (in alphabetical order):
 
 Runor Agbaire,
+JiaRung Jian,
 Jeffrey Kam,
 Joseph Lee,
 Jake Zaia
