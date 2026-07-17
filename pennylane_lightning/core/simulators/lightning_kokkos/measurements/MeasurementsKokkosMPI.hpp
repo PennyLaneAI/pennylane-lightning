@@ -68,7 +68,7 @@ class MeasurementsMPI final
 
   public:
     explicit MeasurementsMPI(StateVectorT &statevector)
-        : BaseType{statevector}, mpi_manager_(statevector.getMPIManager()){};
+        : BaseType{statevector}, mpi_manager_(statevector.getMPIManager()) {};
     /**
      * @brief Expectation value of an observable.
      *
@@ -577,7 +577,7 @@ class MeasurementsMPI final
         PrecisionT local_squared_norm = 0.0;
         Kokkos::parallel_reduce(
             RangePolicy<KokkosExecSpace>(0, local_sv_view.size()),
-            KOKKOS_LAMBDA(std::size_t i, PrecisionT & sum) {
+            KOKKOS_LAMBDA(std::size_t i, PrecisionT &sum) {
                 const PrecisionT norm = Kokkos::abs(local_sv_view(i));
                 sum += norm * norm;
             },

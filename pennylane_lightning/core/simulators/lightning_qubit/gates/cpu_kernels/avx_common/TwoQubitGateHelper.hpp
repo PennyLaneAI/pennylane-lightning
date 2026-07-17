@@ -136,7 +136,7 @@ concept TwoQubitGateWithParam =
 
 template <class T>
 concept TwoQubitGateWithoutParam = SymmetricTwoQubitGateWithoutParam<T> ||
-    AsymmetricTwoQubitGateWithoutParam<T>;
+                                   AsymmetricTwoQubitGateWithoutParam<T>;
 
 namespace Internal {
 // InternalInternal for two qubit gates with param begin
@@ -326,7 +326,7 @@ constexpr auto InternalExternalFunctions() -> decltype(auto) {
  * @brief A helper class for two-qubit gate without parameters.
  */
 template <class AVXImpl>
-requires TwoQubitGateWithoutParam<AVXImpl>
+    requires TwoQubitGateWithoutParam<AVXImpl>
 class TwoQubitGateWithoutParamHelper {
   public:
     using Precision = typename AVXImpl::Precision;
@@ -451,7 +451,7 @@ class TwoQubitGateWithoutParamHelper {
  * @brief A helper class for two-qubit gate without parameters.
  */
 template <class AVXImpl, class ParamT>
-requires TwoQubitGateWithParam<AVXImpl>
+    requires TwoQubitGateWithParam<AVXImpl>
 class TwoQubitGateWithParamHelper {
   public:
     using Precision = typename AVXImpl::Precision;

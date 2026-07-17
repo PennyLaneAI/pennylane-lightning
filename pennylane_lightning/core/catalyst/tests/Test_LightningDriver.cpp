@@ -21,7 +21,8 @@
 
 #ifdef _ENABLE_PLQUBIT
 
-[[maybe_unused]] constexpr bool BACKEND_FOUND = true;
+[[maybe_unused]]
+constexpr bool BACKEND_FOUND = true;
 #include "LightningSimulator.hpp"
 using LSimulator = Catalyst::Runtime::Simulator::LightningSimulator;
 

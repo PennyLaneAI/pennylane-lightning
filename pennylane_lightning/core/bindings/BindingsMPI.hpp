@@ -71,7 +71,7 @@ using namespace Pennylane::LightningKokkos::Measures;
 using namespace Pennylane::LightningKokkos::Util;
 
 } // namespace
-  /// @endcond
+/// @endcond
 
 #else
 
