@@ -1339,9 +1339,10 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyOperation non-param "
         }
     }
 
-    DYNAMIC_SECTION("N-controlled S - " << "controls = {" << control << "} "
-                                        << ", wires = {" << wire << "} - "
-                                        << PrecisionToName<PrecisionT>::value) {
+    DYNAMIC_SECTION("N-controlled S - "
+                    << "controls = {" << control << "} "
+                    << ", wires = {" << wire << "} - "
+                    << PrecisionToName<PrecisionT>::value) {
         if (control != wire) {
             const auto matrix = getS<std::complex, PrecisionT>();
 
@@ -1374,9 +1375,10 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyOperation non-param "
         }
     }
 
-    DYNAMIC_SECTION("N-controlled T - " << "controls = {" << control << "} "
-                                        << ", wires = {" << wire << "} - "
-                                        << PrecisionToName<PrecisionT>::value) {
+    DYNAMIC_SECTION("N-controlled T - "
+                    << "controls = {" << control << "} "
+                    << ", wires = {" << wire << "} - "
+                    << PrecisionToName<PrecisionT>::value) {
         if (control != wire) {
             const std::vector<std::complex<PrecisionT>> matrix =
                 getT<std::complex, PrecisionT>();

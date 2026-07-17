@@ -62,7 +62,7 @@ template <class fp_t> class GateCache {
             defaultPopulateCache();
         }
     }
-    virtual ~GateCache() {};
+    virtual ~GateCache(){};
 
     /**
      * @brief Add a default gate-set to the given cache. Assumes

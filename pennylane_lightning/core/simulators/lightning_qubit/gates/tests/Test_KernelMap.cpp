@@ -196,7 +196,7 @@ TEST_CASE("Test KernelMap is consistent in extreme usecase", "[KernelMap]") {
 #ifdef _OPENMP
 #pragma omp parallel default(none)                                             \
     shared(instance, records, rd, num_qubits, threadings, memory_models)       \
-    firstprivate(num_iter)
+        firstprivate(num_iter)
 #endif
     {
         std::mt19937 re;
@@ -204,9 +204,7 @@ TEST_CASE("Test KernelMap is consistent in extreme usecase", "[KernelMap]") {
 #ifdef _OPENMP
 #pragma omp critical
 #endif
-        {
-            re.seed(rd());
-        }
+        { re.seed(rd()); }
 
         std::uniform_int_distribution<std::size_t> num_qubit_dist(
             0, num_qubits.size() - 1);
@@ -231,9 +229,7 @@ TEST_CASE("Test KernelMap is consistent in extreme usecase", "[KernelMap]") {
 #ifdef _OPENMP
 #pragma omp critical
 #endif
-        {
-            records.insert(records.end(), res.begin(), res.end());
-        }
+        { records.insert(records.end(), res.begin(), res.end()); }
     }
     records.push_back(instance.getKernelMap(12, Threading::SingleThread,
                                             CPUMemoryModel::Aligned256));

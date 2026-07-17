@@ -85,7 +85,7 @@ using namespace Pennylane::LightningKokkos::Observables;
 using namespace Pennylane::LightningKokkos::Measures;
 using namespace Pennylane::LightningKokkos::NanoBindings;
 } // namespace
-/// @endcond
+  /// @endcond
 
 #elif _ENABLE_PLGPU == 1
 #include "AdjointJacobianGPU.hpp"
@@ -104,7 +104,7 @@ using namespace Pennylane::LightningGPU::Observables;
 using namespace Pennylane::LightningGPU::Measures;
 using namespace Pennylane::LightningGPU::NanoBindings;
 } // namespace
-/// @endcond
+  /// @endcond
 
 #elif _ENABLE_PLTENSOR == 1
 #include "BindingsCudaUtils.hpp"
@@ -121,7 +121,7 @@ using namespace Pennylane::LightningTensor::TNCuda::Observables;
 using namespace Pennylane::LightningTensor::TNCuda::Measures;
 using namespace Pennylane::LightningTensor::TNCuda::NanoBindings;
 } // namespace
-/// @endcond
+  /// @endcond
 
 #else
 static_assert(false, "Backend not found.");

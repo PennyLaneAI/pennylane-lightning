@@ -197,7 +197,7 @@ class StateVectorKokkosMPI final
                          const Kokkos::InitializationSettings &kokkos_args = {})
         : StateVectorKokkosMPI(MPIManagerKokkos(mpi_communicator),
                                num_global_qubits, num_local_qubits,
-                               kokkos_args) {};
+                               kokkos_args){};
 
     /**
      * @brief Create a new state vector with default MPI_COMM_WORLD
@@ -560,7 +560,7 @@ class StateVectorKokkosMPI final
         PrecisionT squaredLocalNorm = 0.0;
         Kokkos::parallel_reduce(
             RangePolicy<KokkosExecSpace>(0, sv_view.size()),
-            KOKKOS_LAMBDA(std::size_t i, PrecisionT &sum) {
+            KOKKOS_LAMBDA(std::size_t i, PrecisionT & sum) {
                 const PrecisionT norm = Kokkos::abs(sv_view(i));
                 sum += norm * norm;
             },
