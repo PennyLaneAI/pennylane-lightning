@@ -136,7 +136,6 @@ jobs:
     if: ${{ always() && !cancelled() && contains(needs.*.result, 'success') }}
     name: Upload RC wheels to TestPyPI
     runs-on: ubuntu-24.04
-    environment: testpypi
     permissions:
       id-token: write
 
