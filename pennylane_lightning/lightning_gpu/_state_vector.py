@@ -275,7 +275,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
         target_wires = list(operation.target_wires)
 
         if method:  # apply n-controlled specialized gate
-            param = operation.parameters
+            param = base_operation.parameters
             if isinstance(base_operation, qp.PCPhase):
                 # PCPhase has hyperparameters for dimension
                 hyper = float(base_operation.hyperparameters["dimension"][0])

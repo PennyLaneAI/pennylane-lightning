@@ -28,6 +28,11 @@
 
 <h3>Bug fixes 🐛</h3>
 
+- Fixed controlled-gate dispatch in Lightning-Kokkos, Lightning-GPU and Lightning-Tensor to read gate
+  parameters from the base operation instead of the `Controlled` wrapper, restoring compatibility with
+  PennyLane where `Controlled.parameters` now includes the control values.
+  [(#1405)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1405)
+
 - Fixed `qp.PauliRot` execution bug when handling identity Pauli word within the compilation pipeline.
   [(#1390)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1390)
 
