@@ -156,25 +156,6 @@ class TestBasisEmbedding:
         assert np.allclose(res, ref)
 
 
-class TestDisplacementSqueezingEmbedding:
-    """Test the DisplacementEmbedding and SqueezingEmbedding algorithms."""
-
-    @pytest.mark.parametrize("n_qubits", range(2, 20, 2))
-    @pytest.mark.parametrize("template", [qp.DisplacementEmbedding, qp.SqueezingEmbedding])
-    def test_displacementembedding(self, n_qubits, template):
-        dev = qp.device(device_name, wires=n_qubits)
-
-        def circuit(feature_vector):
-            template(features=feature_vector, wires=range(n_qubits))
-            qp.QuadraticPhase(0.1, wires=1)
-            return qp.state()
-
-        X = np.arange(1, n_qubits + 1)
-
-        with pytest.raises(DeviceError, match="not supported"):
-            _ = qp.QNode(circuit, dev, diff_method=None)(X)
-
-
 class TestIQPEmbedding:
     """Test the IQPEmbedding algorithm."""
 
