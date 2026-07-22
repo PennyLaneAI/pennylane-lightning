@@ -38,6 +38,10 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Removed tests for the continuous-variable templates `qp.DisplacementEmbedding`,
+  `qp.SqueezingEmbedding`, and `qp.CVNeuralNetLayers`, following their removal from PennyLane.
+  [(#1406)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1406)
+
 - Upgrade Mac runner to macos-15.
   [(#1394)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1394)
 
