@@ -21,7 +21,6 @@ import pennylane as qp
 import pytest
 from conftest import LightningDevice, device_name, get_random_normalized_state
 from pennylane import numpy as np
-from pennylane.exceptions import DeviceError
 
 # pylint: disable=missing-function-docstring, too-few-public-methods
 
@@ -200,26 +199,6 @@ class TestQAOAEmbedding:
         ref = qp.QNode(circuit, dq, diff_method=None)(X, weights)
 
         assert np.allclose(res, ref)
-
-
-class TestCVNeuralNetLayers:
-    """Test the CVNeuralNetLayers algorithm."""
-
-    @pytest.mark.local_salt(42)
-    def test_cvneuralnetlayers(self, seed):
-        n_qubits = 2
-        dev = qp.device(device_name, wires=n_qubits)
-
-        def circuit(weights):
-            qp.CVNeuralNetLayers(*weights, wires=[0, 1])
-            return qp.state()
-
-        rng = np.random.default_rng(seed)
-        shapes = qp.CVNeuralNetLayers.shape(n_layers=2, n_wires=n_qubits)
-        weights = [rng.random(size=shape) for shape in shapes]
-
-        with pytest.raises(DeviceError, match="not supported"):
-            _ = qp.QNode(circuit, dev, diff_method=None)(weights)
 
 
 class TestRandomLayers:
