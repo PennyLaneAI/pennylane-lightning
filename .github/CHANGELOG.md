@@ -17,6 +17,9 @@
 - Added `PauliMeasure` to the Lightning devices TOML files.
   [(#1389)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1389)
 
+- Declare dynamic allocation capabilities for lightning.qubit device.
+  [(#1407)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1407)
+
 <h3>Breaking changes 💔</h3>
 
 - Python 3.11 is no longer supported. The minimum required Python version is now 3.12.
@@ -76,6 +79,7 @@ This release contains contributions from (in alphabetical order):
 
 Runor Agbaire,
 Yushao Chen,
+David Ittah,
 Jeffrey Kam,
 Joseph Lee,
 Jake Zaia
