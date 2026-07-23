@@ -485,7 +485,7 @@ class QuantumScriptSerializer:
             ):
                 wires_list = list(op_base.target_wires)
                 controlled_wires_list = list(op_base.control_wires)
-                control_values_list = op_base.control_values
+                control_values_list = [bool(v) for v in op_base.control_values]
                 # Serialize ctrl(adjoint(op))
                 if isinstance(op_base.base, qp.ops.op_math.Adjoint):
                     ctrl_adjoint = True
