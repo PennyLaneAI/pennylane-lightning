@@ -31,6 +31,9 @@
 
 <h3>Bug fixes 🐛</h3>
 
+- Fixed controlled-gate execution in Lightning devices when `control_values` is passed
+  as dynamic argument.
+
 - Fixed controlled-gate dispatch in Lightning-Kokkos, Lightning-GPU and Lightning-Tensor to read gate
   parameters from the base operation instead of the `Controlled` wrapper, restoring compatibility with
   PennyLane where `Controlled.parameters` now includes the control values.
