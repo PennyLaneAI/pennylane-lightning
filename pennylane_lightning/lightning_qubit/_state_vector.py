@@ -163,7 +163,7 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
         method = getattr(state, f"{base_operation.name}", None)
 
         control_wires = list(operation.control_wires)
-        control_values = operation.control_values
+        control_values = [bool(v) for v in operation.control_values]
         target_wires = list(operation.target_wires)
 
         if method is not None:  # apply n-controlled specialized gate
@@ -202,7 +202,7 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
         CSR_SparseHamiltonian = base_operation.sparse_matrix()
 
         control_wires = list(operation.control_wires)
-        control_values = operation.control_values
+        control_values = [bool(v) for v in operation.control_values]
         target_wires = list(operation.target_wires)
 
         method = getattr(state, "applyControlledSparseMatrix")
