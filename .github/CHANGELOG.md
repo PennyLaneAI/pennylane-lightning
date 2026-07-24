@@ -31,7 +31,7 @@
 
 - Corrected the kernel tuning documentation to clarify that `LQ_ENABLE_KERNEL_OMP` is a
   compile-time CMake flag rather than a runtime environment variable.
-  [(#XXXX)](https://github.com/PennyLaneAI/pennylane-lightning/pull/XXXX)
+  [(#1409)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1409)
 
 <h3>Bug fixes 🐛</h3>
 
