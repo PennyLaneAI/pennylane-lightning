@@ -496,9 +496,7 @@ def test_shots_single_measure_obs(shots, measure_f, obs, n_wires, mcmc, kernel_n
     """Tests that Lightning handles shots in a circuit where a single measurement of a common observable is performed at the end."""
 
     if (
-        shots is None
-        or device_name
-        in ("lightning.gpu", "lightning.amdgpu", "lightning.kokkos")
+        shots is None or device_name in ("lightning.gpu", "lightning.amdgpu", "lightning.kokkos")
     ) and (mcmc or kernel_name != "Local"):
         pytest.skip(f"Device {device_name} does not have an mcmc option.")
 
