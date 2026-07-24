@@ -8,7 +8,7 @@ Lightning plugins
     :width: 210px
     :target: javascript:void(0);
 
-The Lightning plugin ecosystem provides fast state-vector and tensor-network simulators written in C++.
+The Lightning plugin ecosystem provides fast state-vector simulators written in C++.
 
 `PennyLane <https://docs.pennylane.ai>`_ is a cross-platform Python library for quantum machine
 learning, automatic differentiation, and optimization of hybrid quantum-classical computations.
@@ -29,8 +29,6 @@ PennyLane-Lightning high performance simulators include the following backends:
 *   ``lightning.gpu``: a state-vector simulator based on
     the `NVIDIA cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`_.
     It notably implements a distributed state-vector simulator based on `MPI <https://www.mpi-forum.org/docs/>`_.
-*   ``lightning.tensor``: a tensor-network simulator based on the `NVIDIA cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`_.
-    The supported methods are Matrix Product State (MPS) and Exact Tensor Network (TN).
 
 If you're not sure which simulator to use, check out our `PennyLane performance <https://pennylane.ai/performance>`_ page.
 
@@ -58,11 +56,6 @@ The Lightning ecosystem provides the following devices:
     :name: 'lightning.gpu'
     :description: A heterogeneous backend state-vector simulator with NVIDIA cuQuantum library support.
     :link: lightning_gpu/device.html
-
-.. title-card::
-    :name: 'lightning.tensor'
-    :description: A tensor network simulator with NVIDIA cuQuantum library support.
-    :link: lightning_tensor/device.html
 
 .. raw:: html
 
@@ -112,7 +105,6 @@ If you are using Lightning for research, please cite:
    lightning_kokkos/device
    lightning_amdgpu/device
    lightning_gpu/device
-   lightning_tensor/device
 
 .. toctree::
    :maxdepth: 2

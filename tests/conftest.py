@@ -100,7 +100,6 @@ supported_devices = {
     "lightning.kokkos",
     "lightning.amdgpu",
     "lightning.gpu",
-    "lightning.tensor",
 }
 
 
@@ -108,7 +107,7 @@ def get_device():
     """Return the pennylane lightning device.
 
     The device is ``lightning.qubit`` by default. Allowed values are:
-    "lightning.qubit", "lightning.kokkos", "lightning.amdgpu", "lightning.gpu", and "lightning.tensor".
+    "lightning.qubit", "lightning.kokkos", "lightning.amdgpu", and "lightning.gpu".
     If the environment variable ``PL_DEVICE`` is defined, its value is used.
     """
     device = os.environ.get("PL_DEVICE", default_device)
@@ -138,65 +137,50 @@ lightning_ops = None
 # Define nanobind module name based on current device
 nanobind_module_name = f"pennylane_lightning.{device_module_name}_ops"
 
-# Handle lightning.tensor separately since it has different class structure
-if device_name == "lightning.tensor":
-    from pennylane_lightning.lightning_tensor import LightningTensor as LightningDevice
-    from pennylane_lightning.lightning_tensor._measurements import (
-        LightningTensorMeasurements as LightningMeasurements,
-    )
-    from pennylane_lightning.lightning_tensor._tensornet import (
-        LightningTensorNet as LightningStateVector,
-    )
+# General case for lightning.qubit, lightning.kokkos, and lightning.gpu
+# Capitalize device name for class names
+backend_cap = device_name.split(".")[1].capitalize()
+if device_name == "lightning.gpu":
+    backend_cap = "GPU"  # Special case for GPU (uppercase)
+if device_name == "lightning.qubit":
+    backend_cap = ""  # Special case for LightningQubit (default)
+if device_name == "lightning.amdgpu":
+    backend_cap = "Kokkos"
 
-    LightningAdjointJacobian = None
+# Import main device class
+module_path = f"pennylane_lightning.{device_module_name}"
 
-    if hasattr(pennylane_lightning, "lightning_tensor_ops"):
-        import pennylane_lightning.lightning_tensor_ops as lightning_ops
+if device_name == "lightning.amdgpu":
+    device_class = "LightningAmdgpu"
+    helper_module_path = "pennylane_lightning.lightning_kokkos"
 else:
-    # General case for lightning.qubit, lightning.kokkos, and lightning.gpu
-    # Capitalize device name for class names
-    backend_cap = device_name.split(".")[1].capitalize()
-    if device_name == "lightning.gpu":
-        backend_cap = "GPU"  # Special case for GPU (uppercase)
-    if device_name == "lightning.qubit":
-        backend_cap = ""  # Special case for LightningQubit (default)
-    if device_name == "lightning.amdgpu":
-        backend_cap = "Kokkos"
+    device_class = (
+        f"LightningQubit" if device_name == "lightning.qubit" else f"Lightning{backend_cap}"
+    )  # Special case for LightningQubit (default)
+    helper_module_path = module_path
 
-    # Import main device class
-    module_path = f"pennylane_lightning.{device_module_name}"
+module = importlib.import_module(module_path)
+LightningDevice = getattr(module, device_class)
 
-    if device_name == "lightning.amdgpu":
-        device_class = "LightningAmdgpu"
-        helper_module_path = "pennylane_lightning.lightning_kokkos"
-    else:
-        device_class = (
-            f"LightningQubit" if device_name == "lightning.qubit" else f"Lightning{backend_cap}"
-        )  # Special case for LightningQubit (default)
-        helper_module_path = module_path
+# Import adjoint jacobian class
+adjoint_module = importlib.import_module(f"{helper_module_path}._adjoint_jacobian")
+LightningAdjointJacobian = getattr(adjoint_module, f"Lightning{backend_cap}AdjointJacobian")
 
-    module = importlib.import_module(module_path)
-    LightningDevice = getattr(module, device_class)
+# Import measurements class
+measurements_module = importlib.import_module(f"{helper_module_path}._measurements")
+LightningMeasurements = getattr(measurements_module, f"Lightning{backend_cap}Measurements")
 
-    # Import adjoint jacobian class
-    adjoint_module = importlib.import_module(f"{helper_module_path}._adjoint_jacobian")
-    LightningAdjointJacobian = getattr(adjoint_module, f"Lightning{backend_cap}AdjointJacobian")
+# Import state vector class
+state_vector_module = importlib.import_module(f"{helper_module_path}._state_vector")
+LightningStateVector = getattr(state_vector_module, f"Lightning{backend_cap}StateVector")
 
-    # Import measurements class
-    measurements_module = importlib.import_module(f"{helper_module_path}._measurements")
-    LightningMeasurements = getattr(measurements_module, f"Lightning{backend_cap}Measurements")
-
-    # Import state vector class
-    state_vector_module = importlib.import_module(f"{helper_module_path}._state_vector")
-    LightningStateVector = getattr(state_vector_module, f"Lightning{backend_cap}StateVector")
-
-    # Try to import ops module
-    ops_module_path = f"pennylane_lightning.{device_module_name}_ops"
-    print(ops_module_path)
-    if hasattr(pennylane_lightning, f"{device_module_name}_ops"):
-        lightning_ops = importlib.import_module(ops_module_path)
-    else:
-        print("no ops")
+# Try to import ops module
+ops_module_path = f"pennylane_lightning.{device_module_name}_ops"
+print(ops_module_path)
+if hasattr(pennylane_lightning, f"{device_module_name}_ops"):
+    lightning_ops = importlib.import_module(ops_module_path)
+else:
+    print("no ops")
 
 
 # General qubit_device fixture, for any number of wires.
@@ -206,12 +190,7 @@ else:
 )
 def qubit_device(request):
     def _device(wires, shots=None, seed=None):
-        if device_name == "lightning.tensor":
-            return qp.device(device_name, wires=wires, shots=shots, c_dtype=request.param)
-        else:
-            return qp.device(
-                device_name, wires=wires, shots=shots, c_dtype=request.param, seed=seed
-            )
+        return qp.device(device_name, wires=wires, shots=shots, c_dtype=request.param, seed=seed)
 
     return _device
 
@@ -219,22 +198,10 @@ def qubit_device(request):
 # General LightningStateVector fixture, for any number of wires.
 @pytest.fixture(
     scope="function",
-    params=(
-        [np.complex64, np.complex128]
-        if device_name != "lightning.tensor"
-        else [
-            [c_dtype, method]
-            for c_dtype in [np.complex64, np.complex128]
-            for method in ["mps", "tn"]
-        ]
-    ),
+    params=[np.complex64, np.complex128],
 )
 def lightning_sv(request):
     def _statevector(num_wires, seed=None):
-        if device_name == "lightning.tensor":
-            return LightningStateVector(
-                num_wires=num_wires, c_dtype=request.param[0], method=request.param[1]
-            )
         if seed:
             rng = np.random.default_rng(seed)
             return LightningStateVector(num_wires=num_wires, dtype=request.param, rng=rng)

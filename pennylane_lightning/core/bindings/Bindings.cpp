@@ -60,27 +60,4 @@ NB_MODULE(LIGHTNING_MODULE_NAME, m) {
 #endif
 }
 #endif
-
-#if defined(LIGHTNING_TENSOR_MODULE_NAME)
-/**
- * @brief Add LightningTensor C++ classes, methods and functions to Python
- * module.
- */
-NB_MODULE(LIGHTNING_TENSOR_MODULE_NAME, m) {
-#ifdef NDEBUG
-    // Disable leak warnings in release mode. These are often false positives
-    // caused by 3rd party libraries
-    // https://nanobind.readthedocs.io/en/latest/refleaks.html#additional-sources-of-leaks
-    nb::set_leak_warnings(false);
-#endif
-
-    // Register general info
-    registerInfo(m);
-
-    // Register bindings for backend-specific info:
-    registerBackendSpecificInfo(m);
-
-    registerLightningClassBindings<TensorNetworkBackends>(m);
-}
-#endif
 } // namespace Pennylane::NanoBindings

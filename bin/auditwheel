@@ -27,8 +27,6 @@ libs = [
     "libcustatevec.so",
     "libcustatevec.so.0",
     "libcustatevec.so.1",
-    "libcutensor.so.2",
-    "libcutensornet.so.2",
     "libnvJitLink.so.12",
     
     # ROCm / AMD Libraries

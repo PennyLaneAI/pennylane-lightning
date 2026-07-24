@@ -166,14 +166,6 @@ def test_gate_unitary_correct(op, op_name):
 
     wires = len(op[2]["wires"])
 
-    if wires == 1 and device_name == "lightning.tensor":
-        pytest.skip("Skipping single wire device on lightning.tensor.")
-
-    if op_name == "QubitUnitary" and device_name == "lightning.tensor":
-        pytest.skip(
-            "Skipping QubitUnitary on lightning.tensor. as `lightning.tensor` cannot be cleaned up like other state-vector devices because the data is attached to the graph. It is recommended to use one device per circuit for `lightning.tensor`."
-        )
-
     dev = qp.device(device_name, wires=wires)
 
     @qp.qnode(dev)
@@ -274,9 +266,6 @@ def test_gate_unitary_correct_lt(op, op_name):
 
     wires = len(op[2]["wires"])
 
-    if wires == 1 and device_name == "lightning.tensor":
-        pytest.skip("Skipping single wire device on lightning.tensor.")
-
     unitary = np.zeros((2**wires, 2**wires), dtype=np.complex128)
 
     for i, input in enumerate(itertools.product([0, 1], repeat=wires)):
@@ -307,9 +296,6 @@ def test_inverse_unitary_correct(op, op_name):
         pytest.skip("Skipping operation.")
 
     wires = len(op[2]["wires"])
-
-    if wires == 1 and device_name == "lightning.tensor":
-        pytest.skip("Skipping single wire device on lightning.tensor.")
 
     dev = qp.device(device_name, wires=wires)
 
@@ -619,7 +605,7 @@ def test_controlled_qubit_gates(operation, n_qubits, control_value, adjoint, tol
     """Test that multi-controlled gates are correctly applied to a state"""
     dev_def = qp.device("default.qubit", wires=n_qubits)
     dev = qp.device(device_name, wires=n_qubits)
-    threshold = 5 if device_name == "lightning.tensor" else 250
+    threshold = 250
     num_wires = max(operation.num_wires, 1) if operation.num_wires else 1
     operation = qp.adjoint(operation) if adjoint else operation
 
@@ -685,10 +671,6 @@ def test_controlled_qubit_unitary_from_op(tol):
 
 
 @pytest.mark.local_salt(42)
-@pytest.mark.skipif(
-    device_name in ("lightning.tensor",),
-    reason="PauliRot is not supported on lightning.tensor.",
-)
 @pytest.mark.parametrize("n_wires", [1, 2, 3, 4, 5, 10, 15])
 @pytest.mark.parametrize("n_targets", [1, 2, 3, 4, 5, 10, 15])
 def test_paulirot(n_wires, n_targets, tol, seed):
@@ -789,10 +771,6 @@ def test_controlled_globalphase(n_qubits, control_value, tol):
     (device_name == "lightning.kokkos" and sys.platform == "win32"),
     reason="lightning.kokkos doesn't support zero wires on Windows.",
 )
-@pytest.mark.skipif(
-    device_name in ("lightning.tensor",),
-    reason=device_name + " doesn't support zero wires.",
-)
 @pytest.mark.parametrize("control_value", [False, True])
 @pytest.mark.parametrize("n_qubits", list(range(2, 4)))
 def test_controlled_globalphase_zero_targetwire(n_qubits, control_value, tol):
@@ -820,10 +798,6 @@ def test_controlled_globalphase_zero_targetwire(n_qubits, control_value, tol):
     (device_name == "lightning.kokkos" and sys.platform == "win32"),
     reason="lightning.kokkos doesn't support zero wires on Windows.",
 )
-@pytest.mark.skipif(
-    device_name in ("lightning.tensor",),
-    reason=device_name + " cannot be initialized with less than 2 wires.",
-)
 @pytest.mark.parametrize("n_qubits", list(range(1, 3)))
 def test_controlled_globalphase_1ctrl_true_cornercase(n_qubits, tol):
     """Test that single-controlled (value=True) GlobalPhase with zero-wire is correctly applied to a state"""
@@ -848,10 +822,6 @@ def test_controlled_globalphase_1ctrl_true_cornercase(n_qubits, tol):
 @pytest.mark.skipif(
     (device_name == "lightning.kokkos" and sys.platform == "win32"),
     reason="lightning.kokkos doesn't support zero wires on Windows.",
-)
-@pytest.mark.skipif(
-    device_name in ("lightning.tensor",),
-    reason=device_name + " cannot be initialized with less than 2 wires.",
 )
 @pytest.mark.parametrize("n_qubits", list(range(1, 3)))
 def test_controlled_globalphase_1ctrl_false_cornercase(n_qubits, tol):
@@ -912,7 +882,7 @@ def test_adjoint_controlled_qubit_gates(operation, n_qubits, control_value, tol,
     """Test that adjoint of multi-controlled gates are correctly applied to a state"""
     dev_def = qp.device("default.qubit", wires=n_qubits)
     dev = qp.device(device_name, wires=n_qubits)
-    threshold = 5 if device_name == "lightning.tensor" else 250
+    threshold = 250
     num_wires = max(operation.num_wires, 1) if operation.num_wires else 1
     operation = qp.adjoint(operation) if adjoint else operation
 

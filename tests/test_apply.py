@@ -35,10 +35,6 @@ if not ld._CPP_BINARY_AVAILABLE:
 class TestExpval:
     """Tests that expectation values are properly calculated or that the proper errors are raised."""
 
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor does not support single wire devices",
-    )
     @pytest.mark.parametrize(
         "operation,input,expected_output",
         [
@@ -71,10 +67,6 @@ class TestExpval:
 
         assert np.isclose(res, expected_output, atol=tol, rtol=0)
 
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor does not support single wire devices",
-    )
     def test_expval_estimate(self):
         """Test that the expectation value is not analytically calculated"""
         dev = qp.device(device_name, wires=1)
@@ -94,10 +86,6 @@ class TestExpval:
 class TestVar:
     """Tests that variances are properly calculated."""
 
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor does not support single wire devices",
-    )
     @pytest.mark.parametrize(
         "operation,input,expected_output",
         [
@@ -130,10 +118,6 @@ class TestVar:
 
         assert np.isclose(res, expected_output, atol=tol, rtol=0)
 
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor does not support single-wire devices",
-    )
     def test_var_estimate(self):
         """Test that the variance is not analytically calculated"""
 
@@ -257,9 +241,6 @@ class TestLightningDeviceIntegration:
         results = qp.qnode(dev)(circuit)()
         assert np.allclose(results, expected_state, atol=tol, rtol=0)
 
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor", reason="lightning.tensor requires num_wires > 1"
-    )
     def test_qubit_circuit(self, qubit_device, tol):
         """Test that the default qubit plugin provides correct result for a simple circuit"""
 
@@ -275,9 +256,6 @@ class TestLightningDeviceIntegration:
 
         assert np.isclose(circuit(p), expected, atol=tol, rtol=0)
 
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor", reason="lightning.tensor requires num_wires > 1"
-    )
     def test_qubit_identity(self, qubit_device, tol):
         """Test that the default qubit plugin provides correct result for the Identity expectation"""
 
@@ -292,10 +270,6 @@ class TestLightningDeviceIntegration:
 
         assert np.isclose(circuit(p), 1, atol=tol, rtol=0)
 
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor does not support single wire devices",
-    )
     def test_nonzero_shots(self, tol_stochastic):
         """Test that the default qubit plugin provides correct result for high shot number"""
 
@@ -318,10 +292,6 @@ class TestLightningDeviceIntegration:
         assert np.isclose(np.mean(runs), -np.sin(p), atol=tol_stochastic, rtol=0)
 
     # This test is ran against the state |0> with one Z expval
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor does not support single-wire devices",
-    )
     @pytest.mark.parametrize(
         "name,expected_output",
         [
@@ -433,20 +403,12 @@ class TestLightningDeviceIntegration:
                 [1],
                 [0],
                 [-1, 1],
-                marks=pytest.mark.skipif(
-                    device_name == "lightning.tensor",
-                    reason="lightning.tensor requires a vector of length num_wires for qp.BasisState()",
-                ),
             ),
             pytest.param(
                 "BasisState",
                 [1],
                 [1],
                 [1, -1],
-                marks=pytest.mark.skipif(
-                    device_name == "lightning.tensor",
-                    reason="lightning.tensor requires a vector of length num_wires for qp.BasisState()",
-                ),
             ),
         ],
     )
@@ -524,10 +486,6 @@ class TestLightningDeviceIntegration:
         assert np.allclose(circuit(), expected_output, atol=tol, rtol=0)
 
     # This test is ran on the state |0> with one Z expvals
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor does not support single wire devices",
-    )
     @pytest.mark.parametrize(
         "name,par,expected_output",
         [
@@ -607,10 +565,6 @@ class TestLightningDeviceIntegration:
 
         assert np.allclose(circuit(), expected_output, atol=tol, rtol=0)
 
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor does not support a single wire device",
-    )
     @pytest.mark.parametrize(
         "name,state,expected_output",
         [
@@ -645,10 +599,6 @@ class TestLightningDeviceIntegration:
 
         assert np.isclose(circuit(), expected_output, atol=tol, rtol=0)
 
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor does not support single wire devices",
-    )
     @pytest.mark.parametrize(
         "name,state,expected_output,par",
         [
@@ -748,10 +698,6 @@ class TestLightningDeviceIntegration:
 
         assert np.array_equal(outcomes[0], outcomes[1])
 
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor does not support _tensornet.state access",
-    )
     def test_apply_qpe(self, qubit_device, tol):
         """Test the application of qp.QuantumPhaseEstimation"""
         dev = qubit_device(wires=2)
@@ -821,10 +767,6 @@ class TestLightningDeviceIntegration:
 class TestApplyLightningMethod:
     """Unit tests for the apply_lightning method."""
 
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor does not support direct access to the state",
-    )
     @pytest.mark.parametrize(
         "ops0",
         [
