@@ -23,7 +23,7 @@
 <h3>Breaking changes 💔</h3>
 
 - The `lightning.tensor` device has been deprecated.
-  [(#XXXX)](https://github.com/PennyLaneAI/pennylane-lightning/pull/XXXX)
+  [(#1410)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1410)
 
 - Python 3.11 is no longer supported. The minimum required Python version is now 3.12.
   [(#1395)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1395)
