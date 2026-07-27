@@ -17,6 +17,9 @@
 - Added `PauliMeasure` to the Lightning devices TOML files.
   [(#1389)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1389)
 
+- Declare dynamic allocation capabilities for `lightning.qubit` device.
+  [(#1407)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1407)
+
 <h3>Breaking changes 💔</h3>
 
 - Python 3.11 is no longer supported. The minimum required Python version is now 3.12.
@@ -27,6 +30,10 @@
 <h3>Documentation 📝</h3>
 
 <h3>Bug fixes 🐛</h3>
+
+- Fixed controlled-gate execution in Lightning devices when `control_values` is passed
+  as dynamic argument.
+  [(#1408)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1408)
 
 - Fixed controlled-gate dispatch in Lightning-Kokkos, Lightning-GPU and Lightning-Tensor to read gate
   parameters from the base operation instead of the `Controlled` wrapper, restoring compatibility with
@@ -40,6 +47,10 @@
   [(#1403)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1403)
 
 <h3>Internal changes ⚙️</h3>
+
+- Removed tests for the continuous-variable templates `qp.DisplacementEmbedding`,
+  `qp.SqueezingEmbedding`, and `qp.CVNeuralNetLayers`, following their removal from PennyLane.
+  [(#1406)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1406)
 
 - Upgrade Mac runner to macos-15.
   [(#1394)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1394)
