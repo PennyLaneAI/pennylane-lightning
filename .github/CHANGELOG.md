@@ -4,6 +4,9 @@
 
 <h3>Improvements 🛠</h3>
 
+- Remove unnecessary try/catch block in `MPIRuntime` teardown.
+  [(#1411)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1411)
+
 - A new singleton class manages MPI initialization and finalization.
   [(#1397)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1397)
 
