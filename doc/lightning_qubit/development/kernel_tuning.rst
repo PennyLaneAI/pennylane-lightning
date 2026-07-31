@@ -52,11 +52,11 @@ set this explicitly when comparing performance against an installed wheel.
 Gate kernel dispatching
 -----------------------
 
-Lightning-Qubit ships several kernel families: the generic ``LM`` kernels and specialized
-AVX2 and AVX512 kernels. The ``-DENABLE_GATE_DISPATCHER=ON`` flag (the default) compiles all
-of them into the binary and registers the AVX2/AVX512 kernels with the dynamic dispatcher only
-when the runtime CPU and the memory alignment of the state vector support them. See
-:doc:`avx_kernels/build_system` for details of how this works.
+Lightning-Qubit ships several kernel families: the generic ``LM`` (Less Memory) kernels and
+specialized AVX2 and AVX512 kernels. The ``-DENABLE_GATE_DISPATCHER=ON`` flag (the default)
+compiles all of them into the binary and registers the AVX2/AVX512 kernels with the dynamic
+dispatcher only when the runtime CPU and the memory alignment of the state vector support them.
+See :doc:`avx_kernels/build_system` for details of how this works.
 
 The AVX2/AVX512 kernels are only built on x86-64 UNIX systems. On other platforms, and when
 building with ``-DENABLE_GATE_DISPATCHER=OFF``, only the ``LM`` kernels are compiled and used.
