@@ -32,6 +32,10 @@
 
 <h3>Documentation 📝</h3>
 
+- Corrected the kernel tuning documentation to clarify that `LQ_ENABLE_KERNEL_OMP` is a
+  compile-time CMake flag rather than a runtime environment variable.
+  [(#1409)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1409)
+
 <h3>Bug fixes 🐛</h3>
 
 - Fixed controlled-gate execution in Lightning devices when `control_values` is passed
