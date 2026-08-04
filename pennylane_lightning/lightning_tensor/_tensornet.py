@@ -671,12 +671,12 @@ class LightningTensorNet:
         basename = operation.base.name
         method = getattr(tensornet, f"{basename}", None)
         control_wires = list(operation.control_wires)
-        control_values = operation.control_values
+        control_values = [bool(v) for v in operation.control_values]
         target_wires = list(operation.target_wires)
 
         if method is not None and basename not in ("GlobalPhase", "MultiRZ"):
             inv = False
-            param = operation.parameters
+            param = operation.base.parameters
             method(control_wires, control_values, target_wires, inv, param)
         else:  # apply gate as an n-controlled matrix
             method = getattr(tensornet, "applyControlledMatrix")

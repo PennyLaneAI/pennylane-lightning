@@ -4,7 +4,7 @@ permissions:
   contents: read
 
 env:
-  PYTHON3_MIN_VERSION: "11"
+  PYTHON3_MIN_VERSION: "12"
   PYTHON3_MAX_VERSION: "14"
 
 on:

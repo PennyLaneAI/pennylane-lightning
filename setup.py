@@ -39,7 +39,7 @@ if not has_toml:
         "A TOML parser is required to configure 'pyproject.toml'. "
         f"We support any of the following TOML parsers: {toml_libs} "
         "You can install tomlkit via `pip install tomlkit`, or tomli via `pip install tomli`, "
-        "or use Python 3.11 or above which natively offers the tomllib library."
+        "or use Python 3.12 or above which natively offers the tomllib library."
     )
 
 try:
