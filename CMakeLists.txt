@@ -12,7 +12,7 @@ set(CMAKE_OSX_DEPLOYMENT_TARGET "11" CACHE STRING "Minimum OS X deployment versi
 set(CMAKE_CXX_STANDARD 20) # At least C++20 is required
 
 project(pennylane_lightning
-    DESCRIPTION "C++ suite of state-vector and tensor network simulators bindings for PennyLane. "
+    DESCRIPTION "C++ suite of state-vector simulators bindings for PennyLane. "
     LANGUAGES CXX
 )
 
@@ -77,10 +77,6 @@ endif()
 # Print PL_BACKEND
 foreach(BACKEND ${PL_BACKEND})
     message(STATUS "PL_BACKEND: ${BACKEND}")
-    if("${BACKEND}" STREQUAL "lightning_tensor")
-        set(PL_TENSOR_BACKEND "cutensornet" CACHE STRING "PennyLane LightningTensor backed by cutensornet")
-        set(PL_TENSOR "${PL_BACKEND}_${PL_TENSOR_BACKEND}")
-    endif()
 endforeach()
 
 # Process compile options
@@ -181,7 +177,7 @@ if(ENABLE_PYTHON)
 
     # Set properties for nanobind module
     set(CMAKE_BUILD_RPATH_USE_ORIGIN ON)
-    if("${PL_BACKEND}" STREQUAL "lightning_gpu" OR "${PL_BACKEND}" STREQUAL "lightning_tensor")
+    if("${PL_BACKEND}" STREQUAL "lightning_gpu")
         # Allow pip installation of cuQuantum & CUDA 12 libs to be accessible without setting LD_LIBRARY_PATH for lightning_gpu
         # BUILD_RPATH only works for the last call
         set_target_properties("${PL_BACKEND}_ops" PROPERTIES BUILD_RPATH "$ORIGIN/../cuquantum/lib:$ORIGIN/../nvidia/cuda_runtime/lib:$ORIGIN/../nvidia/nvjitlink/lib:$ORIGIN/../nvidia/cublas/lib:$ORIGIN/../nvidia/cusparse/lib:${SCIPY_OPENBLAS32_RUNTIME_LIB_PATH}:$ORIGIN")
@@ -201,9 +197,7 @@ if(ENABLE_PYTHON)
                                                     "${PL_BACKEND}_measurements"
                                                    )
 
-    if(NOT DEFINED PL_TENSOR)
-        target_link_libraries("${PL_BACKEND}_ops" PRIVATE "${PL_BACKEND}_algorithms")
-    endif()
+    target_link_libraries("${PL_BACKEND}_ops" PRIVATE "${PL_BACKEND}_algorithms")
 
     set_target_properties("${PL_BACKEND}_ops" PROPERTIES CXX_VISIBILITY_PRESET hidden)
     target_compile_definitions("${PL_BACKEND}_ops" PRIVATE VERSION_INFO=${VERSION_STRING})

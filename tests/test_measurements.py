@@ -63,14 +63,7 @@ class TestProbs:
             qp.Hadamard(wires=wire)
             return qp.probs(wires=[0, 1])
 
-        if device_name == "lightning.tensor" and wire == 1 and dev.num_wires is None:
-            with pytest.raises(RuntimeError, match="Invalid wire indices order"):
-                # With dynamic wires, in this case since wires appear in this order 1, 0
-                # The wires will map 1 -> 0 and 0 -> 1. Therefore the wires in the probs
-                # measurement will be [1, 0] which is out of order and invalid for LT.
-                circuit()
-        else:
-            assert np.allclose(circuit(), expected, atol=tol, rtol=0)
+        assert np.allclose(circuit(), expected, atol=tol, rtol=0)
 
     def test_probs_tape_none_wires(self, tol, dev):
         """Test probs with a circuit with wires=None"""
@@ -124,20 +117,8 @@ class TestProbs:
             qp.RY(-0.2, wires=[0])
             return qp.probs(wires=cases[0])
 
-        if (
-            device_name == "lightning.tensor"
-            and (isinstance(cases[0], int) or len(cases[0]) < 2)
-            and dev.num_wires is None
-        ):
-            with pytest.raises(ValueError, match="Number of wires must be greater than 1"):
-                circuit()
-        else:
-            assert np.allclose(circuit(), cases[1], atol=tol, rtol=0)
+        assert np.allclose(circuit(), cases[1], atol=tol, rtol=0)
 
-    @pytest.mark.skipif(
-        device_name in ("lightning.tensor"),
-        reason="lightning.tensor does not support out of order prob.",
-    )
     @pytest.mark.parametrize(
         "cases",
         [
@@ -267,22 +248,18 @@ class TestExpval:
             (
                 [
                     qp.PauliX(0) @ qp.PauliZ(1),
-                    (
-                        qp.Hermitian(
-                            [
-                                [1.0, 0.0, 0.0, 0.0],
-                                [0.0, 3.0, 0.0, 0.0],
-                                [0.0, 0.0, -1.0, 1.0],
-                                [0.0, 0.0, 1.0, -2.0],
-                            ],
-                            wires=[0, 1],
-                        )
-                        if device_name != "lightning.tensor"
-                        else qp.Hermitian([[1.0, 0.0], [0.0, 1.0]], wires=[0])
+                    qp.Hermitian(
+                        [
+                            [1.0, 0.0, 0.0, 0.0],
+                            [0.0, 3.0, 0.0, 0.0],
+                            [0.0, 0.0, -1.0, 1.0],
+                            [0.0, 0.0, 1.0, -2.0],
+                        ],
+                        wires=[0, 1],
                     ),
                 ],
                 [0.3, 1.0],
-                0.9319728930156066 if device_name != "lightning.tensor" else 1.0,
+                0.9319728930156066,
             ),
         ],
     )
@@ -367,15 +344,7 @@ class TestVar:
             qp.RY(-0.2, wires=[0])
             return qp.var(cases[0])
 
-        if (
-            device_name == "lightning.tensor"
-            and cases[0].wires.tolist() == [0]
-            and dev.num_wires is None
-        ):
-            with pytest.raises(ValueError, match="Number of wires must be greater than 1"):
-                circuit()
-        else:
-            assert np.allclose(circuit(), cases[1], atol=tol, rtol=0)
+        assert np.allclose(circuit(), cases[1], atol=tol, rtol=0)
 
     @pytest.mark.parametrize(
         "cases",
@@ -527,9 +496,7 @@ def test_shots_single_measure_obs(shots, measure_f, obs, n_wires, mcmc, kernel_n
     """Tests that Lightning handles shots in a circuit where a single measurement of a common observable is performed at the end."""
 
     if (
-        shots is None
-        or device_name
-        in ("lightning.gpu", "lightning.amdgpu", "lightning.kokkos", "lightning.tensor")
+        shots is None or device_name in ("lightning.gpu", "lightning.amdgpu", "lightning.kokkos")
     ) and (mcmc or kernel_name != "Local"):
         pytest.skip(f"Device {device_name} does not have an mcmc option.")
 
@@ -585,10 +552,6 @@ def test_shots_single_measure_obs(shots, measure_f, obs, n_wires, mcmc, kernel_n
 
 # TODO: Add LT after extending the support for shots_vector
 @pytest.mark.local_salt(42)
-@pytest.mark.skipif(
-    device_name == "lightning.tensor",
-    reason="lightning.tensor does not support single-wire devices.",
-)
 @pytest.mark.parametrize("shots", ((1, 10), (1, 10, 100), (1, 10, 10, 100, 100, 100)))
 def test_shots_bins(shots, qubit_device, seed):
     """Tests that Lightning handles multiple shots."""

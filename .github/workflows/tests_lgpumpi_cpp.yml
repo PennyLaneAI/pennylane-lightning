@@ -24,7 +24,6 @@ on:
       - pennylane_lightning/core/**
       - '!pennylane_lightning/core/simulators/lightning_kokkos/**'
       - '!pennylane_lightning/core/simulators/lightning_qubit/**'
-      - '!pennylane_lightning/core/simulators/lightning_tensor/**'
 
 permissions:
   contents: read

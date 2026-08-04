@@ -28,13 +28,6 @@ if not LightningDevice._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
 
-def lightning_tensor_check(n_qubits):
-    if device_name == "lightning.tensor" and n_qubits > 14:
-        pytest.xfail(
-            "Inexact calculation for lightning.tensor with n_qubits > 14 since the default max mps bond dim is 2^7."
-        )
-
-
 class TestGrover:
     """Test Grover's algorithm (multi-controlled gates, decomposition, etc.)"""
 
@@ -160,7 +153,6 @@ class TestIQPEmbedding:
 
     @pytest.mark.parametrize("n_qubits", range(2, 20, 2))
     def test_iqpembedding(self, n_qubits):
-        lightning_tensor_check(n_qubits)
         dev = qp.device(device_name, wires=n_qubits)
         dq = qp.device("default.qubit")
 
@@ -182,7 +174,6 @@ class TestQAOAEmbedding:
     @pytest.mark.local_salt(42)
     @pytest.mark.parametrize("n_qubits", range(2, 20, 2))
     def test_qaoaembedding(self, n_qubits, seed):
-        lightning_tensor_check(n_qubits)
         dev = qp.device(device_name, wires=n_qubits)
         dq = qp.device("default.qubit")
 
@@ -206,7 +197,6 @@ class TestRandomLayers:
 
     @pytest.mark.parametrize("n_qubits", range(2, 20, 2))
     def test_randomlayers(self, n_qubits):
-        lightning_tensor_check(n_qubits)
         dev = qp.device(device_name, wires=n_qubits)
         dq = qp.device("default.qubit", wires=n_qubits)
 
@@ -228,7 +218,6 @@ class TestStronglyEntanglingLayers:
     @pytest.mark.local_salt(42)
     @pytest.mark.parametrize("n_qubits", range(2, 20, 2))
     def test_stronglyentanglinglayers(self, n_qubits, seed):
-        lightning_tensor_check(n_qubits)
         dev = qp.device(device_name, wires=n_qubits)
         dq = qp.device("default.qubit")
 
@@ -252,7 +241,6 @@ class TestSimplifiedTwoDesign:
     @pytest.mark.local_salt(42)
     @pytest.mark.parametrize("n_qubits", range(2, 20, 2))
     def test_simplifiedtwodesign(self, n_qubits, seed):
-        lightning_tensor_check(n_qubits)
         dev = qp.device(device_name, wires=n_qubits)
         dq = qp.device("default.qubit")
 
@@ -278,7 +266,6 @@ class TestBasicEntanglerLayers:
     @pytest.mark.local_salt(42)
     @pytest.mark.parametrize("n_qubits", range(2, 20, 2))
     def test_basicentanglerlayers(self, n_qubits, seed):
-        lightning_tensor_check(n_qubits)
         dev = qp.device(device_name, wires=n_qubits)
         dq = qp.device("default.qubit")
 
@@ -609,7 +596,6 @@ class TestApproxTimeEvolution:
 
     @pytest.mark.parametrize("n_qubits", range(2, 20, 2))
     def test_approxtimeevolution(self, n_qubits):
-        lightning_tensor_check(n_qubits)
         dev = qp.device(device_name, wires=n_qubits)
         dq = qp.device("default.qubit")
 
@@ -632,7 +618,6 @@ class TestQDrift:
 
     @pytest.mark.parametrize("n_qubits", range(2, 20, 2))
     def test_qdrift(self, n_qubits):
-        lightning_tensor_check(n_qubits)
         dev = qp.device(device_name, wires=n_qubits)
         dq = qp.device("default.qubit", wires=n_qubits)
 
@@ -655,7 +640,6 @@ class TestTrotterProduct:
 
     @pytest.mark.parametrize("n_qubits", range(2, 20, 2))
     def test_trotterproduct(self, n_qubits):
-        lightning_tensor_check(n_qubits)
         dev = qp.device(device_name, wires=n_qubits)
         dq = qp.device("default.qubit")
 
@@ -678,7 +662,6 @@ class TestQuantumPhaseEstimation:
 
     @pytest.mark.parametrize("n_qubits", range(2, 12, 2))
     def test_quantumphaseestimation(self, n_qubits):
-        lightning_tensor_check(n_qubits)
         phase = 5
         target_wires = [0]
         unitary = qp.RX(phase, wires=0).matrix()
@@ -711,7 +694,6 @@ class TestQFT:
 
     @pytest.mark.parametrize("n_qubits", range(2, 15, 2))
     def test_qft(self, n_qubits):
-        lightning_tensor_check(n_qubits)
         dev = qp.device(device_name, wires=n_qubits)
         dq = qp.device("default.qubit")
 
@@ -765,7 +747,6 @@ class TestQSVT:
 
     @pytest.mark.parametrize("n_qubits", range(2, 20, 2))
     def test_qsvt(self, n_qubits):
-        lightning_tensor_check(n_qubits)
         dev = qp.device(device_name, wires=n_qubits)
         dq = qp.device("default.qubit")
         A = np.array([[0.1]])

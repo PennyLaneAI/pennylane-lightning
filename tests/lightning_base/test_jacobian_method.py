@@ -20,9 +20,6 @@ from conftest import PHI, THETA, LightningDevice, device_name  # tested device
 from pennylane.devices import DefaultQubit, ExecutionConfig
 from pennylane.tape import QuantumScript
 
-if device_name == "lightning.tensor":
-    pytest.skip("Skipping tests for the LightningTensor class.", allow_module_level=True)
-
 if not LightningDevice._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
@@ -97,10 +94,6 @@ class TestJacobian:
         assert np.allclose(jac, expected_jac, atol=tol, rtol=0)
 
 
-@pytest.mark.skipif(
-    device_name == "lightning.tensor",
-    reason="lightning.tensor does not support vjp",
-)
 class TestVJP:
     """Unit tests for the vjp method with the new device API."""
 

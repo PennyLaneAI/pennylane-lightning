@@ -105,7 +105,7 @@ def test_devpool_is_pickleable():
     reason="lightning.kokkos doesn't support zero wires on Windows.",
 )
 @pytest.mark.skipif(
-    device_name in ["lightning.gpu", "lightning.tensor"],
+    device_name in ["lightning.gpu"],
     reason=device_name + " doesn't support zero wires.",
 )
 def test_device_init_zero_qubit():
@@ -125,7 +125,7 @@ def test_device_init_zero_qubit():
     reason="lightning.kokkos doesn't support zero wires on Windows.",
 )
 @pytest.mark.skipif(
-    device_name in ["lightning.gpu", "lightning.tensor"],
+    device_name in ["lightning.gpu"],
     reason=device_name + " doesn't support zero wires.",
 )
 def test_device_gphase_zero_qubit():
@@ -248,10 +248,6 @@ def test_supported_macos_platform_qubit():
     assert "liblightning_qubit_catalyst.dylib" in shared_lib_name
 
 
-@pytest.mark.skipif(
-    (device_name == "lightning.tensor"),
-    reason="Lightning-Tensor is not integrated with Catalyst and doesn't support to_matrix_ops.",
-)
 def test_device_to_matrix_ops():
     """Test that the device's to_matrix_ops capability is correctly set based on the config file."""
     dev = qp.device(device_name)

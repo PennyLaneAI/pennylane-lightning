@@ -206,9 +206,6 @@ class TestVar:
         tol = 1e-5 if dev.c_dtype == np.complex64 else 1e-7
         assert np.allclose(calculated_val, reference_val, atol=tol, rtol=0)
 
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor", reason="SparseH not supported on lightning.tensor."
-    )
     def test_sparse_hamiltonian_variance(self, theta, phi, dev):
         """Tests a Hamiltonian."""
 

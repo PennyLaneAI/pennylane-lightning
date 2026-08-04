@@ -82,12 +82,6 @@ elif device_name == "lightning.gpu":
 
     accepted_observables = LightningDevice.capabilities.supports_observable
 
-elif device_name == "lightning.tensor":
-    from pennylane_lightning.lightning_tensor.lightning_tensor import (
-        accepted_observables,
-        stopping_condition,
-    )
-
 else:
     raise TypeError(f"The device name: {device_name} is not a valid name")
 
@@ -152,14 +146,10 @@ class TestHelpers:
         is supported by the device."""
         valid_obs = qp.Projector([0], 0)
         invalid_obs = self.DummyOperator(0)
-        result = True if device_name != "lightning.tensor" else False
+        result = True
         assert accepted_observables(valid_obs) is result
         assert accepted_observables(invalid_obs) is False
 
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor device does not support adjoint_observables",
-    )
     @pytest.mark.parametrize(
         "obs, expected",
         [
@@ -181,10 +171,6 @@ class TestHelpers:
         validator = partial(adjoint_observables, capabilities=LightningDevice.capabilities)
         assert validator(obs) == expected
 
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor device does not support adjoint",
-    )
     @pytest.mark.parametrize("allow_mcms", [True, False])
     def test_add_adjoint_transforms(self, allow_mcms):
         """Test that the correct transforms are added to the program by _add_adjoint_transforms"""
@@ -226,10 +212,6 @@ class TestHelpers:
         for transform, expected_transform in zip(actual_program, expected_program, strict=True):
             assert transform.tape_transform == expected_transform.tape_transform
 
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor device does not support adjoint",
-    )
     @pytest.mark.parametrize(
         "circuit, expected",
         [
@@ -248,10 +230,6 @@ class TestHelpers:
         dev = LightningDevice(wires=5)
         assert supports_adjoint(dev, circuit) == expected
 
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor does not contain a state vector",
-    )
     @pytest.mark.parametrize("device_wires", [None, 2])
     def test_state_vector_init(self, device_wires):
         """Test that the state-vector is not created during initialization"""
@@ -316,9 +294,8 @@ class TestHelpers:
         assert circuit_out.operations == expected_circuit_out.operations
         assert circuit_out.measurements == expected_circuit_out.measurements
 
-        if device_name != "lightning.tensor":
-            assert device._statevector._num_wires == n_wires
-            assert device._statevector._wires == qp.wires.Wires(range(n_wires))
+        assert device._statevector._num_wires == n_wires
+        assert device._statevector._wires == qp.wires.Wires(range(n_wires))
 
     @pytest.mark.parametrize(
         "circuit_in, n_wires, wires_list",
@@ -362,9 +339,8 @@ class TestHelpers:
         assert circuit_out.operations == circuit_in.operations
         assert circuit_out.measurements == circuit_in.measurements
 
-        if device_name != "lightning.tensor":
-            assert device._statevector._num_wires == n_wires
-            assert device._statevector._wires == qp.wires.Wires(range(n_wires))
+        assert device._statevector._num_wires == n_wires
+        assert device._statevector._wires == qp.wires.Wires(range(n_wires))
 
     @pytest.mark.parametrize(
         "circuit_0, n_wires_0",
@@ -395,10 +371,6 @@ class TestHelpers:
     )
     @pytest.mark.parametrize("shots", [None, 10])
     @pytest.mark.parametrize("dtype", [np.complex64, np.complex128])
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor does not have state vector",
-    )
     def test_dynamic_wires_from_circuit_reset_state(
         self, circuit_0, n_wires_0, circuit_1, n_wires_1, shots, dtype
     ):
@@ -487,10 +459,6 @@ class TestInitialization:
         dev = LightningDevice(wires=["a", "b"])
         assert dev._wire_map == {"a": 0, "b": 1}
 
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor is not a state-vector simulator",
-    )
     def test_dummies_definition(self):
         """Test that the dummies are defined correctly"""
         dev = LightningDevice(wires=2)
@@ -498,10 +466,6 @@ class TestInitialization:
         assert dev.LightningMeasurements == LightningMeasurements
         assert dev.LightningAdjointJacobian == LightningAdjointJacobian
 
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor does not support seeding",
-    )
     @pytest.mark.parametrize("n_wires", [None, 3])
     @pytest.mark.parametrize("seed", ["global", None, 42, [42, 43, 44]])
     def test_device_seed(self, n_wires, seed):
@@ -536,10 +500,6 @@ class TestExecution:
         "num_burnin": 0,
     }
 
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor does not support rng key",
-    )
     @pytest.mark.parametrize(
         "config, expected_config",
         [
@@ -682,10 +642,6 @@ class TestExecution:
 
         assert new_config == expected_config
 
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor device supports new device options",
-    )
     def test_preprocess_incorrect_device_config(self):
         """Test that an error is raised if the device options are not valid"""
         config = ExecutionConfig(
@@ -697,10 +653,6 @@ class TestExecution:
         with pytest.raises(DeviceError, match="device option is_wrong_option"):
             _ = device.setup_execution_config(config)
 
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor device doesn't have support for program capture.",
-    )
     @pytest.mark.parametrize("postselect_mode", ["hw-like"])
     def test_sbs_and_postselect_warning(self, enable_disable_plxpr, postselect_mode):
         """Test that a warning is raised if post-selection is used with single branch statistics."""
@@ -717,10 +669,6 @@ class TestExecution:
         ):
             _ = device.setup_execution_config(config)
 
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor device does not support mcms",
-    )
     def test_decompose_conditionals(self):
         """Test that conditional templates are properly decomposed."""
 
@@ -766,10 +714,6 @@ class TestExecution:
         with pytest.raises(DeviceError, match="not supported with"):
             prog((tape,))
 
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor device does not support mcms",
-    )
     @pytest.mark.parametrize("shots, expected", [(None, "deferred"), (10, "one-shot")])
     def test_default_mcm_method_circuit(self, shots, expected):
         """Test that the default mcm method depends on the shots in the circuit."""
@@ -780,10 +724,6 @@ class TestExecution:
         )
         assert processed.mcm_config.mcm_method == expected
 
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor device does not support mcms",
-    )
     def test_default_mcm_method_no_circuit(self):
         """Test that the default mcm method is deferred if no shots are provided."""
         device = LightningDevice(wires=2)
@@ -792,10 +732,6 @@ class TestExecution:
         assert processed.mcm_config.mcm_method == "deferred"
 
     @pytest.mark.usefixtures("enable_and_disable_graph_decomp")
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor device doesn't have support for program capture.",
-    )
     def test_transform_program(self, enable_disable_plxpr):
         """Test that the transform program returned by preprocess has the correct transforms."""
         dev = LightningDevice(wires=1)
@@ -823,10 +759,6 @@ class TestExecution:
         assert program[0].tape_transform == qp.transforms.decompose._tape_transform
 
     @pytest.mark.usefixtures("enable_and_disable_graph_decomp")
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor does not support adjoint",
-    )
     @pytest.mark.parametrize("adjoint", [True, False])
     @pytest.mark.parametrize("mcm_method", ("deferred", "one-shot", "tree-traversal"))
     def test_preprocess(self, adjoint, mcm_method):
@@ -919,9 +851,6 @@ class TestExecution:
     def test_preprocess_state_prep_first_op_decomposition(self, op, is_trainable):
         """Test that state prep ops in the beginning of a tape are decomposed with adjoint
         but not otherwise."""
-        if device_name == "lightning.tensor" and is_trainable:
-            pytest.skip("StatePrep trainable not supported in lightning.tensor")
-
         tape = qp.tape.QuantumScript([op, qp.RX(1.23, wires=0)], [qp.expval(qp.PauliZ(0))])
         device = LightningDevice(wires=3)
 
@@ -998,10 +927,6 @@ class TestExecution:
     )
     def test_execute_single_measurement(self, theta, phi, mp, dev):
         """Test that execute returns the correct results with a single measurement."""
-        if device_name == "lightning.tensor":
-            if isinstance(mp.obs, qp.SparseHamiltonian) or isinstance(mp.obs, qp.Projector):
-                pytest.skip("SparseHamiltonian/Projector obs not supported in lightning.tensor")
-
         if isinstance(mp.obs, qp.SparseHamiltonian) and dev.c_dtype == np.complex64:
             pytest.skip(
                 reason="The conversion from qp.Hamiltonian to SparseHamiltonian is only possible with np.complex128"
@@ -1124,10 +1049,6 @@ class TestExecution:
         assert np.allclose(result[0], np.cos(phi))
         assert np.allclose(result[1], np.cos(phi) * np.cos(theta))
 
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor does not support out of order probs",
-    )
     @pytest.mark.parametrize(
         "wires, wire_order", [(3, (0, 1, 2)), (("a", "b", "c"), ("a", "b", "c"))]
     )
@@ -1187,9 +1108,6 @@ class TestExecution:
     def test_reuse_with_mcms(self, device_wires, mcm_method, seed):
         """Test that a simple dynamic allocation with mcms can be executed."""
 
-        if device_name == "lightning.tensor":
-            pytest.skip("lightning.tensor does not support native mcm.")
-
         dev = LightningDevice(wires=device_wires, seed=seed)
 
         with qp.queuing.AnnotatedQueue() as q:
@@ -1215,10 +1133,6 @@ class TestExecution:
         assert qp.math.allclose(res2, 0, atol=atol)
 
 
-@pytest.mark.skipif(
-    device_name == "lightning.tensor",
-    reason="lightning.tensor does not support derivatives",
-)
 @pytest.mark.parametrize("batch_obs", [True, False])
 class TestDerivatives:
     """Unit tests for calculating derivatives with a device"""
@@ -1626,10 +1540,6 @@ class TestDerivatives:
         assert np.allclose(jac, expected_jac, atol=tol, rtol=0)
 
 
-@pytest.mark.skipif(
-    device_name == "lightning.tensor",
-    reason="lightning.tensor does not support vjp",
-)
 @pytest.mark.parametrize("batch_obs", [True, False])
 class TestVJP:
     """Unit tests for VJP computation with the new device API."""

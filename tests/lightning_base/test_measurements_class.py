@@ -45,31 +45,11 @@ class CustomStateMeasurement(qp.measurements.StateMeasurement):
         return 1
 
 
-# Observables not supported in lightning.tensor
-def obs_not_supported_in_ltensor(obs):
-    if device_name == "lightning.tensor":
-        if isinstance(obs, qp.Projector) or isinstance(obs, qp.SparseHamiltonian):
-            return True
-        if isinstance(obs, qp.Hamiltonian):
-            return any([obs_not_supported_in_ltensor(o) for o in obs])
-        if isinstance(obs, qp.Hermitian) and len(obs.wires) > 1:
-            return True
-        if isinstance(obs, list) and all([isinstance(o, int) for o in obs]):  # out of order probs
-            return obs != sorted(obs)
-        return False
-    else:
-        return False
-
-
 def get_final_state(statevector, tape):
-    if device_name == "lightning.tensor":
-        return statevector.set_tensor_network(tape)
     return statevector.get_final_state(tape)
 
 
 def measure_final_state(m, tape):
-    if device_name == "lightning.tensor":
-        return m.measure_tensor_network(tape)
     return m.measure_final_state(tape)
 
 
@@ -78,11 +58,8 @@ def test_initialization(lightning_sv):
     statevector = lightning_sv(num_wires=5)
     m = LightningMeasurements(statevector)
 
-    if device_name == "lightning.tensor":
-        assert m.dtype == statevector.dtype
-    else:
-        assert m.qubit_state is statevector
-        assert m.dtype == statevector.dtype
+    assert m.qubit_state is statevector
+    assert m.dtype == statevector.dtype
 
 
 class TestGetMeasurementFunction:
@@ -111,9 +88,6 @@ class TestGetMeasurementFunction:
     )
     def test_state_diagonalizing_gates_measurements(self, lightning_sv, mp):
         """Test that any non-expval measurement calls the state_diagonalizing_gates method"""
-        if obs_not_supported_in_ltensor(mp.obs):
-            pytest.skip("Observable not supported in lightning.tensor.")
-
         statevector = lightning_sv(num_wires=5)
         m = LightningMeasurements(statevector)
 
@@ -135,9 +109,6 @@ class TestGetMeasurementFunction:
     )
     def test_expval_selected(self, lightning_sv, obs):
         """Test that expval is chosen for a variety of different expectation values."""
-        if obs_not_supported_in_ltensor(obs):
-            pytest.skip("Observable not supported in lightning.tensor.")
-
         statevector = lightning_sv(num_wires=5)
         m = LightningMeasurements(statevector)
         mp = qp.expval(obs)
@@ -195,10 +166,6 @@ class TestStateDiagonalizingGates:
         result = getattr(m, method_name)(qp.expval(qp.I(4)))
         assert np.allclose(result, 1.0)
 
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor does not support a single-wire circuit.",
-    )
     def test_basis_state_projector_expval(self, lightning_sv, method_name):
         """Test expectation value for a basis state projector."""
         phi = 0.8
@@ -208,10 +175,6 @@ class TestStateDiagonalizingGates:
         result = getattr(m, method_name)(qp.expval(qp.Projector([0], wires=0)))
         assert qp.math.allclose(result, np.cos(phi / 2) ** 2)
 
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor does not support a single-wire circuit.",
-    )
     def test_state_vector_projector_expval(self, lightning_sv, method_name):
         """Test expectation value for a state vector projector."""
         phi = -0.6
@@ -360,9 +323,6 @@ class TestExpvalHamiltonian:
     def test_expval_hamiltonian(self, obs, coeffs, expected, tol, lightning_sv, method_name):
         """Test expval with Hamiltonian"""
 
-        if any(isinstance(o, qp.Hermitian) for o in obs) and device_name == "lightning.tensor":
-            pytest.skip("Hermitian with 1+ wires target not supported in lightning.tensor.")
-
         ham = qp.Hamiltonian(coeffs, obs)
 
         statevector = lightning_sv(self.wires)
@@ -440,10 +400,6 @@ class TestExpvalPauliSentence:
         assert np.allclose(result, expected, atol=tol, rtol=0)
 
 
-@pytest.mark.skipif(
-    device_name == "lightning.tensor",
-    reason="lightning.tensor does not support sparse observables.",
-)
 class TestSparseExpval:
     """Tests for the expval function with sparse observables."""
 
@@ -482,10 +438,6 @@ class TestSparseExpval:
         assert np.allclose(result, expected, tol)
 
 
-@pytest.mark.skipif(
-    device_name == "lightning.tensor",
-    reason="lightning.tensor does not support sparse observables.",
-)
 class TestSparseMeasurements:
     """Tests all sparse measurements"""
 
@@ -638,9 +590,6 @@ class TestMeasurements:
         ),
     )
     def test_single_return_value(self, shots, measurement, observable, lightning_sv, tol, seed):
-        if obs_not_supported_in_ltensor(observable):
-            pytest.skip("Observable not supported in lightning.tensor.")
-
         if measurement is qp.probs and isinstance(
             observable,
             (
@@ -669,8 +618,7 @@ class TestMeasurements:
         rng = np.random.default_rng(seed)
         weights = rng.random((n_layers, n_qubits, 3))
         ops = [qp.Hadamard(i) for i in range(n_qubits)]
-        if device_name != "lightning.tensor":
-            ops += [qp.StronglyEntanglingLayers(weights, wires=range(n_qubits))]
+        ops += [qp.StronglyEntanglingLayers(weights, wires=range(n_qubits))]
         measurements = (
             [measurement(wires=observable)]
             if isinstance(observable, list)
@@ -746,9 +694,6 @@ class TestMeasurements:
         ),
     )
     def test_double_return_value(self, shots, measurement, obs0_, obs1_, lightning_sv, tol, seed):
-        if obs_not_supported_in_ltensor(obs0_) or obs_not_supported_in_ltensor(obs1_):
-            pytest.skip("Observable not supported in lightning.tensor.")
-
         skip_list = (
             qp.ops.Sum,
             qp.ops.SProd,
@@ -774,8 +719,7 @@ class TestMeasurements:
         rng = np.random.default_rng(seed)
         weights = rng.random((n_layers, n_qubits, 3))
         ops = [qp.Hadamard(i) for i in range(n_qubits)]
-        if device_name != "lightning.tensor":
-            ops += [qp.StronglyEntanglingLayers(weights, wires=range(n_qubits))]
+        ops += [qp.StronglyEntanglingLayers(weights, wires=range(n_qubits))]
         measurements = [measurement(op=obs0_), measurement(op=obs1_)]
         tape = qp.tape.QuantumScript(ops, measurements, shots=shots)
 
@@ -812,9 +756,6 @@ class TestMeasurements:
         if measurement is qp.var:
             dtol = max(dtol, 1.0e-4)
 
-        if device_name == "lightning.tensor" and statevector.dtype == np.complex64:
-            dtol = max(dtol, 1.0e-4)
-
         # TODO Might need to update atol/rtol
         for r, e in zip(result, expected):
             if isinstance(shots, tuple) and isinstance(r[0], np.ndarray):
@@ -823,10 +764,6 @@ class TestMeasurements:
             # allclose -> absolute(r - e) <= (atol + rtol * absolute(e))
             assert np.allclose(r, e, atol=dtol, rtol=dtol)
 
-    @pytest.mark.skipif(
-        device_name in ("lightning.tensor"),
-        reason=f"{device_name} does not support out of order probs.",
-    )
     @pytest.mark.parametrize(
         "cases",
         [
@@ -850,10 +787,6 @@ class TestMeasurements:
         results = qp.QNode(circuit, dev)()
         assert np.allclose(expected, results, tol)
 
-    @pytest.mark.skipif(
-        device_name in ("lightning.tensor"),
-        reason=f"{device_name} does not support seeding device.",
-    )
     @pytest.mark.parametrize("dtype", [np.complex64, np.complex128])
     def test_seeded_measurement_rngstate(self, dtype):
         """Test that seeded measurement uses identical rng state"""
@@ -875,10 +808,6 @@ class TestMeasurements:
         assert statevector1._rng.bit_generator.state != statevector3._rng.bit_generator.state
 
     @pytest.mark.local_salt(42)
-    @pytest.mark.skipif(
-        device_name in ("lightning.tensor"),
-        reason=f"{device_name} does not support seeding device.",
-    )
     @pytest.mark.parametrize("dtype", [np.complex64, np.complex128])
     @pytest.mark.parametrize("shots", [10, [10, 10]])
     @pytest.mark.parametrize("measurement", [qp.expval, qp.probs, qp.var, qp.sample, qp.counts])
@@ -1002,7 +931,7 @@ class TestControlledOps:
         self, operation, n_qubits, control_value, tol, lightning_sv, seed
     ):
         """Test that multi-controlled gates are correctly applied to a state"""
-        threshold = 250 if device_name != "lightning.tensor" else 5
+        threshold = 250
         num_wires = max(operation.num_wires, 1) if operation.num_wires else 1
         rng = np.random.default_rng(seed)
 
@@ -1057,17 +986,11 @@ class TestControlledOps:
                 tape = qp.tape.QuantumScript(ops, measurements)
 
                 statevector = lightning_sv(n_qubits)
-                if device_name == "lightning.tensor" and statevector.method == "tn":
-                    pytest.skip("StatePrep not supported in lightning.tensor with the tn method.")
-
                 statevector = get_final_state(statevector, tape)
                 m = LightningMeasurements(statevector)
                 result = measure_final_state(m, tape)
                 expected = self.calculate_reference(tape)
-                if device_name == "lightning.tensor":
-                    assert np.allclose(result, expected, 1e-4)
-                else:
-                    assert np.allclose(result, expected, tol * 10)
+                assert np.allclose(result, expected, tol * 10)
 
     def test_controlled_qubit_unitary_from_op(self, tol, lightning_sv):
         n_qubits = 10
@@ -1112,24 +1035,18 @@ class TestControlledOps:
         )
 
         statevector = lightning_sv(n_qubits)
-        if device_name == "lightning.tensor" and statevector.method == "tn":
-            pytest.skip("StatePrep not supported in lightning.tensor with the tn method.")
-
         statevector = get_final_state(statevector, tape)
         m = LightningMeasurements(statevector)
         result = measure_final_state(m, tape)
         expected = self.calculate_reference(tape_cnot)
 
-        if device_name == "lightning.tensor":
-            assert np.allclose(result, expected, 1e-4)
-        else:
-            assert np.allclose(result, expected, tol)
+        assert np.allclose(result, expected, tol)
 
     @pytest.mark.parametrize("control_value", [False, True])
     @pytest.mark.parametrize("n_qubits", list(range(2, 8)))
     def test_controlled_globalphase(self, n_qubits, control_value, tol, lightning_sv):
         """Test that multi-controlled gates are correctly applied to a state"""
-        threshold = 250 if device_name != "lightning.tensor" else 5
+        threshold = 250
         operation = qp.GlobalPhase
         num_wires = max(operation.num_wires, 1) if operation.num_wires else 1
 
@@ -1157,17 +1074,11 @@ class TestControlledOps:
                     [qp.state()],
                 )
                 statevector = lightning_sv(n_qubits)
-                if device_name == "lightning.tensor" and statevector.method == "tn":
-                    pytest.skip("StatePrep not supported in lightning.tensor with the tn method.")
-
                 statevector = get_final_state(statevector, tape)
                 m = LightningMeasurements(statevector)
                 result = measure_final_state(m, tape)
                 expected = self.calculate_reference(tape)
-                if device_name == "lightning.tensor" and statevector.dtype == np.complex64:
-                    assert np.allclose(result, expected, 1e-4)
-                else:
-                    assert np.allclose(result, expected, tol)
+                assert np.allclose(result, expected, tol)
 
 
 @pytest.mark.parametrize("phi", PHI)
@@ -1238,9 +1149,6 @@ def test_state_vector_2_qubit_subset(tol, op, par, wires, expected, lightning_sv
     )
 
     statevector = lightning_sv(2)
-    if device_name == "lightning.tensor" and statevector.method == "tn":
-        pytest.skip("StatePrep not supported in lightning.tensor with the tn method.")
-
     statevector = get_final_state(statevector, tape)
 
     m = LightningMeasurements(statevector)
