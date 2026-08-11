@@ -172,7 +172,10 @@ class TestAdjointJacobian:
 
         with qp.tape.QuantumTape() as tape:
             qp.StatePrep(init_state, wires=range(n_qubits))
-            qp.ctrl(qp.PhaseShift(par, wires=n_qubits - 1), range(0, n_qubits - 1))
+            if n_qubits == 1:
+                qp.PhaseShift(par, wires=0)
+            else:
+                qp.ctrl(qp.PhaseShift(par, wires=n_qubits - 1), range(0, n_qubits - 1))
             qp.expval(qp.PauliY(n_qubits - 1))
 
         tape.trainable_params = {1}
