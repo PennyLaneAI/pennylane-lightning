@@ -22,7 +22,10 @@ import sys
 import numpy as np
 import pennylane as qp
 import pytest
-from conftest import PHI, THETA
+from conftest import (
+    PHI,
+    THETA,
+)
 from conftest import LightningDevice as ld
 from conftest import (
     device_name,
