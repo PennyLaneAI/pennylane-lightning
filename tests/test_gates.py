@@ -24,7 +24,12 @@ import pennylane as qp
 import pytest
 from conftest import PHI, THETA
 from conftest import LightningDevice as ld
-from conftest import device_name, get_random_matrix, get_random_normalized_state
+from conftest import (
+    device_name,
+    get_operation_num_wires,
+    get_random_matrix,
+    get_random_normalized_state,
+)
 from scipy.sparse import csr_matrix
 
 if not ld._CPP_BINARY_AVAILABLE:
@@ -620,7 +625,7 @@ def test_controlled_qubit_gates(operation, n_qubits, control_value, adjoint, tol
     dev_def = qp.device("default.qubit", wires=n_qubits)
     dev = qp.device(device_name, wires=n_qubits)
     threshold = 5 if device_name == "lightning.tensor" else 250
-    num_wires = max(operation.num_wires, 1) if operation.num_wires else 1
+    num_wires = get_operation_num_wires(operation)
     operation = qp.adjoint(operation) if adjoint else operation
 
     if device_name not in ["lightning.qubit", "lightning.gpu"] and op == qp.PCPhase:
@@ -758,7 +763,7 @@ def test_controlled_globalphase(n_qubits, control_value, tol):
     dev = qp.device(device_name, wires=n_qubits)
     threshold = 250
     operation = qp.GlobalPhase
-    num_wires = max(operation.num_wires, 1) if operation.num_wires else 1
+    num_wires = get_operation_num_wires(operation)
     for n_wires in range(num_wires + 1, num_wires + 4):
         wire_lists = list(itertools.permutations(range(0, n_qubits), n_wires))
         n_perms = len(wire_lists) * n_wires
@@ -913,7 +918,7 @@ def test_adjoint_controlled_qubit_gates(operation, n_qubits, control_value, tol,
     dev_def = qp.device("default.qubit", wires=n_qubits)
     dev = qp.device(device_name, wires=n_qubits)
     threshold = 5 if device_name == "lightning.tensor" else 250
-    num_wires = max(operation.num_wires, 1) if operation.num_wires else 1
+    num_wires = get_operation_num_wires(operation)
     operation = qp.adjoint(operation) if adjoint else operation
 
     for n_wires in range(num_wires + 1, num_wires + 4):
