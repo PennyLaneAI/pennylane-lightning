@@ -372,7 +372,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
                     mat = operation.matrix
                 r_dtype = np.float32 if self.dtype == np.complex64 else np.float64
                 param = (
-                    [[r_dtype(operation.hash)]]
+                    [[r_dtype(hash(operation))]]
                     if isinstance(operation, gate_cache_needs_hash)
                     else []
                 )
