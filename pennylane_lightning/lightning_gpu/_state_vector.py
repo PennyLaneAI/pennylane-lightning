@@ -274,6 +274,10 @@ class LightningGPUStateVector(LightningBaseStateVector):
         control_values = [bool(v) for v in operation.control_values]
         target_wires = list(operation.target_wires)
 
+        if not target_wires:
+            state.applyMatrix(qp.matrix(operation), control_wires, adjoint)
+            return
+
         if method:  # apply n-controlled specialized gate
             param = base_operation.parameters
             if isinstance(base_operation, qp.PCPhase):

@@ -166,6 +166,10 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
         control_values = [bool(v) for v in operation.control_values]
         target_wires = list(operation.target_wires)
 
+        if not target_wires:
+            state.applyMatrix(qp.matrix(operation), control_wires, adjoint)
+            return
+
         if method is not None:  # apply n-controlled specialized gate
             param = base_operation.parameters
 

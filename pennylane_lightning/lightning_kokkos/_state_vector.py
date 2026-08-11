@@ -275,6 +275,9 @@ class LightningKokkosStateVector(LightningBaseStateVector):
         control_wires = list(operation.control_wires)
         control_values = [bool(v) for v in operation.control_values]
         target_wires = list(operation.target_wires)
+        if not target_wires:
+            state.applyMatrix(qp.matrix(operation), control_wires, adjoint)
+            return
         if method is not None:  # apply n-controlled specialized gate
             param = base_operation.parameters
             method(control_wires, control_values, target_wires, adjoint, param)
