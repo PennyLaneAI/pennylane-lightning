@@ -265,10 +265,10 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
                 )
             elif isinstance(operation, qp.PauliRot):
                 method = getattr(state, "applyPauliRot")
-                paulis = operation.hyperparameters["pauli_word"]
+                paulis = operation.pauli_word
                 wires = [i for i, w in zip(wires, paulis) if w != "I"]
                 word = "".join(p for p in paulis if p != "I")
-                method(wires, invert_param, operation.parameters, word)
+                method(wires, invert_param, [operation.theta], word)
             elif self._operation_is_sparse(operation):
                 # Inverse can be set to False since operation.sparse_matrix() is already in inverted form
                 if isinstance(op_adjoint_base, qp.ops.Controlled):

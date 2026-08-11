@@ -335,10 +335,10 @@ class LightningKokkosStateVector(LightningBaseStateVector):
                 )
             elif isinstance(operation, qp.PauliRot):
                 method = getattr(state, "applyPauliRot")
-                paulis = operation.hyperparameters["pauli_word"]
+                paulis = operation.pauli_word
                 wires = [i for i, w in zip(wires, paulis) if w != "I"]
                 word = "".join(p for p in paulis if p != "I")
-                method(wires, invert_param, operation.parameters, word)
+                method(wires, invert_param, [operation.theta], word)
             elif method is not None:  # apply specialized gate
                 param = op_adjoint_base.parameters
                 method(wires, invert_param, param)
