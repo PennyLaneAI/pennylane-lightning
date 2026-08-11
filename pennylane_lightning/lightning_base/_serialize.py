@@ -489,11 +489,10 @@ class QuantumScriptSerializer:
                 # Serialize ctrl(adjoint(op))
                 if isinstance(op_base.base, qp.ops.op_math.Adjoint):
                     ctrl_adjoint = True
-                    controlled_base = op_base.base.base
+                    name = op_base.base.base.name
                 else:
                     ctrl_adjoint = False
-                    controlled_base = op_base.base
-                name = controlled_base.name
+                    name = op_base.base.name
 
                 # Inside the controlled operation, if the base operation (of the adjoint)
                 # is supported natively, we apply the the base operation and invert the
@@ -505,7 +504,6 @@ class QuantumScriptSerializer:
                     )
                     name = single_op_base.name
                 else:
-                    single_op_base = controlled_base
                     inverse ^= ctrl_adjoint
             else:
                 name = single_op_base.name
