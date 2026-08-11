@@ -262,21 +262,21 @@ class LightningGPUStateVector(LightningBaseStateVector):
         """
         state = self.state_vector
 
+        base_operation = (
+            operation.base.base if isinstance(operation.base, Adjoint) else operation.base
+        )
+        if isinstance(base_operation, qp.GlobalPhase) and not operation.target_wires:
+            state.applyMatrix(qp.matrix(operation), list(operation.control_wires), adjoint)
+            return
+
         if isinstance(operation.base, Adjoint):
-            base_operation = operation.base.base
             adjoint = not adjoint
-        else:
-            base_operation = operation.base
 
         method = getattr(state, f"{base_operation.name}", None)
 
         control_wires = list(operation.control_wires)
         control_values = [bool(v) for v in operation.control_values]
         target_wires = list(operation.target_wires)
-
-        if not target_wires:
-            state.applyMatrix(qp.matrix(operation), control_wires, adjoint)
-            return
 
         if method:  # apply n-controlled specialized gate
             param = base_operation.parameters
@@ -348,7 +348,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
                 word = "".join(p for p in paulis if p != "I")
                 method(wires, invert_param, [operation.theta], word)
             elif method is not None:  # apply specialized gate
-                param = op_adjoint_base.parameters
+                param = operation.parameters
                 if isinstance(op_adjoint_base, qp.PCPhase):
                     # PCPhase has hyperparameters for dimension
                     hyper = float(op_adjoint_base.hyperparameters["dimension"][0])
