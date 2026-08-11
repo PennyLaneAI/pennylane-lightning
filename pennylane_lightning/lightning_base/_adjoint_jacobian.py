@@ -125,14 +125,25 @@ class LightningBaseAdjointJacobian(ABC):
         record_tp_rows = []
         all_params = 0
 
+        # MultiControlledX has no native gate parameters, so exclude its control
+        # metadata from the tape's flat parameter indices.
+        mcx_param_indices = []
+        param_idx = 0
+        for operation in tape.operations:
+            if isinstance(operation, qp.MultiControlledX):
+                mcx_param_indices.extend(range(param_idx, param_idx + len(operation.data)))
+            param_idx += len(operation.data)
+
         for op_idx, trainable_param in enumerate(trainable_params):
             # get op_idx-th operator among differentiable operators
             operation, _, _ = tape.get_operation(op_idx)
             if isinstance(operation, Operation) and not isinstance(
-                operation, (BasisState, StatePrep)
+                operation, (BasisState, StatePrep, qp.MultiControlledX)
             ):
-                # We now just ignore non-op or state preps
-                tp_shift.append(trainable_param)
+                # Ignore non-operations, state preparation, and MCX control metadata.
+                tp_shift.append(
+                    trainable_param - sum(i < trainable_param for i in mcx_param_indices)
+                )
                 record_tp_rows.append(all_params)
             all_params += 1
 
