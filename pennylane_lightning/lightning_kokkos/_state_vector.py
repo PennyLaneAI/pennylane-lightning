@@ -265,15 +265,11 @@ class LightningKokkosStateVector(LightningBaseStateVector):
         """
         state = self.state_vector
 
-        base_operation = (
-            operation.base.base if isinstance(operation.base, Adjoint) else operation.base
-        )
-        if isinstance(base_operation, qp.GlobalPhase) and not operation.target_wires:
-            state.applyMatrix(qp.matrix(operation), list(operation.control_wires), adjoint)
-            return
-
         if isinstance(operation.base, Adjoint):
+            base_operation = operation.base.base
             adjoint = not adjoint
+        else:
+            base_operation = operation.base
 
         method = getattr(state, f"{base_operation.name}", None)
         control_wires = list(operation.control_wires)
