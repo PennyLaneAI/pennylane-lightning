@@ -356,6 +356,7 @@ jobs:
           echo "source =" >> .coveragerc
           echo "    pennylane_lightning" >> .coveragerc
           echo "    $wheelpath/pennylane_lightning" >> .coveragerc
+          echo "    */lib/python3.12/site-packages/pennylane_lightning" >> .coveragerc
           echo "    /home/runner/work/pennylane-lightning/pennylane-lightning/pennylane_lightning" >> .coveragerc
           python -m pip install coverage
           python -m coverage combine --debug=pathmap .coverage-*
