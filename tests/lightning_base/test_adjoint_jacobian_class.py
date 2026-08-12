@@ -212,6 +212,35 @@ class TestAdjointJacobian:
 
         assert np.allclose(expected, result, atol=tol, rtol=0)
 
+    @pytest.mark.parametrize("use_adjoint", [False, True])
+    @pytest.mark.parametrize(
+        "trainable_params",
+        [{0, 2}, {0, 1, 2}],
+        ids=["circuit-parameters", "all-tape-parameters"],
+    )
+    def test_multicontrolledx_control_values_not_differentiated(
+        self, use_adjoint, trainable_params, tol, lightning_sv
+    ):
+        """Test that MCX control values do not shift native gate parameter indices."""
+        x, y = 0.4, 0.3
+
+        with qp.tape.QuantumTape() as tape:
+            qp.RX(x, wires=0)
+            mcx = qp.MultiControlledX(wires=[0, 1], control_values=[False])
+            if use_adjoint:
+                qp.adjoint(mcx, lazy=True)
+            qp.RY(y, wires=1)
+            qp.expval(qp.PauliZ(1))
+
+        tape.trainable_params = trainable_params
+
+        expected = [np.sin(x) * np.cos(y), np.cos(x) * np.sin(y)]
+        if 1 in trainable_params:
+            expected.insert(1, 0.0)
+        result = self.calculate_jacobian(lightning_sv(num_wires=2), tape)
+
+        assert np.allclose(expected, result, atol=tol, rtol=0)
+
     def test_multiple_rx_gradient_pauliz(self, tol, lightning_sv):
         """Tests that the gradient of multiple RX gates in a circuit yields the correct result."""
         params = np.array([np.pi, np.pi / 2, np.pi / 3])

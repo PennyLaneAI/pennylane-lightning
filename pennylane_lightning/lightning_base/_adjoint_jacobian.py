@@ -29,6 +29,13 @@ from pennylane.tape import QuantumTape
 from pennylane_lightning.lightning_base._serialize import QuantumScriptSerializer
 
 
+def _is_mcx(operation: Operation) -> bool:
+    """Return whether an operation is a MultiControlledX, possibly wrapped in adjoints."""
+    while isinstance(operation, qp.ops.op_math.Adjoint):
+        operation = operation.base
+    return isinstance(operation, qp.MultiControlledX)
+
+
 class LightningBaseAdjointJacobian(ABC):
     """Lightning [Device] Adjoint Jacobian class
 
@@ -130,15 +137,17 @@ class LightningBaseAdjointJacobian(ABC):
         mcx_param_indices = []
         param_idx = 0
         for operation in tape.operations:
-            if isinstance(operation, qp.MultiControlledX):
+            if _is_mcx(operation):
                 mcx_param_indices.extend(range(param_idx, param_idx + len(operation.data)))
             param_idx += len(operation.data)
 
         for op_idx, trainable_param in enumerate(trainable_params):
             # get op_idx-th operator among differentiable operators
             operation, _, _ = tape.get_operation(op_idx)
-            if isinstance(operation, Operation) and not isinstance(
-                operation, (BasisState, StatePrep, qp.MultiControlledX)
+            if (
+                isinstance(operation, Operation)
+                and not isinstance(operation, (BasisState, StatePrep))
+                and not _is_mcx(operation)
             ):
                 # Ignore non-operations, state preparation, and MCX control metadata.
                 tp_shift.append(
