@@ -27,6 +27,7 @@ from conftest import (  # tested device
     LightningStateVector,
     device_name,
     get_hermitian_matrix,
+    get_operation_num_wires,
     get_random_normalized_state,
     get_sparse_hermitian_matrix,
     validate_counts,
@@ -1003,7 +1004,7 @@ class TestControlledOps:
     ):
         """Test that multi-controlled gates are correctly applied to a state"""
         threshold = 250 if device_name != "lightning.tensor" else 5
-        num_wires = max(operation.num_wires, 1) if operation.num_wires else 1
+        num_wires = get_operation_num_wires(operation)
         rng = np.random.default_rng(seed)
 
         if device_name not in ["lightning.qubit", "lightning.gpu"] and operation == qp.PCPhase:
@@ -1131,7 +1132,7 @@ class TestControlledOps:
         """Test that multi-controlled gates are correctly applied to a state"""
         threshold = 250 if device_name != "lightning.tensor" else 5
         operation = qp.GlobalPhase
-        num_wires = max(operation.num_wires, 1) if operation.num_wires else 1
+        num_wires = get_operation_num_wires(operation)
 
         for n_wires in range(num_wires + 1, num_wires + 4):
             wire_lists = list(itertools.permutations(range(0, n_qubits), n_wires))
