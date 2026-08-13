@@ -38,6 +38,10 @@
 
 <h3>Bug fixes 🐛</h3>
 
+- Restored compatibility with the latest PennyLane operator contract for `qp.PauliRot`,
+  `qp.MultiControlledX`, and `qp.DiagonalQubitUnitary`.
+  [(#1415)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1415)
+
 - Fixed controlled-gate execution in Lightning devices when `control_values` is passed
   as dynamic argument.
   [(#1408)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1408)
