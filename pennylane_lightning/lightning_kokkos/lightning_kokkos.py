@@ -80,7 +80,7 @@ def stopping_condition(op: Operator, allow_mcms: bool = True) -> bool:
     """A function that determines whether or not an operation is supported by ``lightning.kokkos``."""
 
     if isinstance(op, qp.PauliRot):
-        word = op._hyperparameters["pauli_word"]  # pylint: disable=protected-access
+        word = op.pauli_word
         # decomposes to IsingXX, etc. for n <= 2
         return reduce(lambda x, y: x + (y != "I"), word, 0) > 2
 
