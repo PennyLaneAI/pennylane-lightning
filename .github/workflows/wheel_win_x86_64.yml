@@ -266,6 +266,4 @@ jobs:
           github.ref == 'refs/heads/main' || 
           steps.rc_build.outputs.match != ''
         with:
-          user: __token__
-          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
           repository-url: https://test.pypi.org/legacy/

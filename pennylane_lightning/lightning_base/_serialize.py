@@ -539,9 +539,14 @@ class QuantumScriptSerializer:
                 ) = get_wires(operation, single_op)
                 inverses.append(inverse)
                 names.append(name)
+                # MultiControlledX has no kernel parameters; its control values are
+                # serialized separately as control metadata.
+                if isinstance(single_op_base, qp.MultiControlledX):
+                    params.append([])
+                    mats.append(np.array([]))
                 # QubitUnitary is a special case, it has a parameter which is not differentiable.
                 # We thus pass a dummy 0.0 parameter which will not be referenced
-                if isinstance(single_op_base, qp.QubitUnitary):
+                elif isinstance(single_op_base, qp.QubitUnitary):
                     params.append([0.0])
                     mats.append(matrix(single_op_base))
                 else:

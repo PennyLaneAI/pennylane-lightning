@@ -74,6 +74,15 @@ PHI = np.linspace(0.32, 1, 3)
 VARPHI = np.linspace(0.02, 1, 3)
 
 
+def get_operation_num_wires(operation):
+    """Return the minimum wire count needed to instantiate an operation class."""
+    if issubclass(operation, qp.core.Operator2):
+        return operation.wire_sizes[0] or 1
+
+    num_wires = getattr(operation, "num_wires", None)
+    return max(num_wires, 1) if num_wires else 1
+
+
 @pytest.fixture(scope="session")
 def tol():
     """Numerical tolerance for equality tests."""
