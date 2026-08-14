@@ -170,7 +170,7 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
             param = base_operation.parameters
 
             if isinstance(base_operation, qp.PCPhase):
-                hyper = float(base_operation.hyperparameters["dimension"][0])
+                hyper = float(base_operation.compilable_args["dim"])
                 param = np.array([base_operation.parameters[0], hyper])
 
             method(control_wires, control_values, target_wires, adjoint, param)
@@ -284,7 +284,7 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
                 param = op_adjoint_base.parameters
 
                 if isinstance(op_adjoint_base, qp.PCPhase):
-                    hyper = float(op_adjoint_base.hyperparameters["dimension"][0])
+                    hyper = float(op_adjoint_base.compilable_args["dim"])
                     param = np.array([op_adjoint_base.parameters[0], hyper])
 
                 method(wires, invert_param, param)
