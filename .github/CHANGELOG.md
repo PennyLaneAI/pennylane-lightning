@@ -53,6 +53,10 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Changed Lightning-Qubit and Lightning-GPU to read the `qp.PCPhase` dimension from its
+  Operator2 `compilable_args` dictionary.
+  [(#1420)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1420)
+
 - Removed tests for the continuous-variable templates `qp.DisplacementEmbedding`,
   `qp.SqueezingEmbedding`, and `qp.CVNeuralNetLayers`, following their removal from PennyLane.
   [(#1406)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1406)
