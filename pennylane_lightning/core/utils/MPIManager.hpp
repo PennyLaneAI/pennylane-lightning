@@ -77,11 +77,7 @@ class MPIRuntime {
 
     // LCOV_EXCL_START
     static void finalizeAtExit() noexcept {
-        try {
-            MPIRuntime::getInstance().finalizeIfOwned();
-        } catch (...) {
-            // Avoid throwing during process shutdown.
-        }
+        MPIRuntime::getInstance().finalizeIfOwned();
     }
 
     void registerFinalizeHookIfNeeded_() {
