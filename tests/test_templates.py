@@ -144,7 +144,7 @@ class TestBasisEmbedding:
         dq = qp.device("default.qubit")
 
         def circuit(feature_vector):
-            qp.BasisEmbedding(features=feature_vector, wires=range(n_qubits))
+            qp.BasisEmbedding(feature_vector, wires=range(n_qubits))
             return qp.state()
 
         X = np.ones(n_qubits)

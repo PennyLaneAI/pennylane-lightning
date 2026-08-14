@@ -21,7 +21,12 @@ import math
 import pennylane as qp
 import pytest
 from conftest import LightningDevice as ld
-from conftest import device_name, get_random_matrix, get_random_normalized_state
+from conftest import (
+    device_name,
+    get_operation_num_wires,
+    get_random_matrix,
+    get_random_normalized_state,
+)
 from pennylane import QNode
 from pennylane import numpy as np
 from pennylane import qchem, qnode
@@ -223,7 +228,10 @@ class TestAdjointJacobian:
 
         with qp.tape.QuantumTape() as tape:
             qp.StatePrep(init_state, wires=range(n_qubits))
-            qp.ctrl(qp.PhaseShift(par, wires=n_qubits - 1), range(0, n_qubits - 1))
+            if n_qubits == 1:
+                qp.PhaseShift(par, wires=0)
+            else:
+                qp.ctrl(qp.PhaseShift(par, wires=n_qubits - 1), range(0, n_qubits - 1))
             qp.expval(qp.PauliY(n_qubits - 1))
 
         tape.trainable_params = {1}
@@ -641,7 +649,7 @@ class TestAdjointJacobianQNode:
         init_state = get_random_normalized_state(2**n_qubits)
         init_state = np.array(init_state, requires_grad=False)
 
-        num_wires = max(operation.num_wires, 1) if operation.num_wires else 1
+        num_wires = get_operation_num_wires(operation)
         if num_wires > n_qubits:
             return
 
@@ -704,7 +712,7 @@ class TestAdjointJacobianQNode:
         init_state = get_random_normalized_state(2**n_qubits)
         init_state = np.array(init_state, requires_grad=False)
 
-        num_wires = max(operation.num_wires, 1) if operation.num_wires else 1
+        num_wires = get_operation_num_wires(operation)
         if num_wires > n_qubits:
             return
 
@@ -764,7 +772,7 @@ class TestAdjointJacobianQNode:
         dqu = qp.device("default.qubit", wires=n_qubits)
         init_state = get_random_normalized_state(2**n_qubits)
         init_state = np.array(init_state, requires_grad=False)
-        num_wires = max(operation.num_wires, 1) if operation.num_wires else 1
+        num_wires = get_operation_num_wires(operation)
         if num_wires > n_qubits:
             return
 

@@ -278,7 +278,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
             param = base_operation.parameters
             if isinstance(base_operation, qp.PCPhase):
                 # PCPhase has hyperparameters for dimension
-                hyper = float(base_operation.hyperparameters["dimension"][0])
+                hyper = float(base_operation.compilable_args["dim"])
                 param = np.array([base_operation.parameters[0], hyper])
 
             method(control_wires, control_values, target_wires, adjoint, param)
@@ -339,17 +339,15 @@ class LightningGPUStateVector(LightningBaseStateVector):
                 )
             elif isinstance(operation, qp.PauliRot):
                 method = getattr(state, "applyPauliRot")
-                paulis = operation._hyperparameters[  # pylint: disable=protected-access
-                    "pauli_word"
-                ]
+                paulis = operation.pauli_word
                 wires = [w for w, p in zip(wires, paulis) if p != "I"]
                 word = "".join(p for p in paulis if p != "I")
-                method(wires, invert_param, operation.parameters, word)
+                method(wires, invert_param, [operation.theta], word)
             elif method is not None:  # apply specialized gate
                 param = operation.parameters
                 if isinstance(op_adjoint_base, qp.PCPhase):
                     # PCPhase has hyperparameters for dimension
-                    hyper = float(op_adjoint_base.hyperparameters["dimension"][0])
+                    hyper = float(op_adjoint_base.compilable_args["dim"])
                     param = np.array([op_adjoint_base.parameters[0], hyper])
 
                 method(wires, invert_param, param)
@@ -374,7 +372,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
                     mat = operation.matrix
                 r_dtype = np.float32 if self.dtype == np.complex64 else np.float64
                 param = (
-                    [[r_dtype(operation.hash)]]
+                    [[r_dtype(hash(operation))]]
                     if isinstance(operation, gate_cache_needs_hash)
                     else []
                 )
