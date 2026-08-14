@@ -27,6 +27,9 @@
 
 <h3>Deprecations 👋</h3>
 
+- Remove the document page and build references to `gbenchmarks` in Lightning.
+  [(#1412)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1412)
+
 <h3>Documentation 📝</h3>
 
 - Corrected the kernel tuning documentation to clarify that `LQ_ENABLE_KERNEL_OMP` is a
@@ -34,6 +37,10 @@
   [(#1409)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1409)
 
 <h3>Bug fixes 🐛</h3>
+
+- Restored compatibility with the latest PennyLane operator contract for `qp.PauliRot`,
+  `qp.MultiControlledX`, and `qp.DiagonalQubitUnitary`.
+  [(#1415)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1415)
 
 - Fixed controlled-gate execution in Lightning devices when `control_values` is passed
   as dynamic argument.
@@ -48,6 +55,10 @@
   [(#1390)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1390)
 
 <h3>Internal changes ⚙️</h3>
+
+- Changed Lightning-Qubit and Lightning-GPU to read the `qp.PCPhase` dimension from its
+  Operator2 `compilable_args` dictionary.
+  [(#1420)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1420)
 
 - Removed tests for the continuous-variable templates `qp.DisplacementEmbedding`,
   `qp.SqueezingEmbedding`, and `qp.CVNeuralNetLayers`, following their removal from PennyLane.
