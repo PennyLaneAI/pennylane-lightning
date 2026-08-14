@@ -4,6 +4,9 @@
 
 <h3>Improvements 🛠</h3>
 
+- Updated the Lightning performance kernel tuning document.
+  [(#1413)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1413)
+
 - A new singleton class manages MPI initialization and finalization.
   [(#1397)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1397)
 
@@ -97,6 +100,7 @@
 This release contains contributions from (in alphabetical order):
 
 Runor Agbaire,
+Ali Asadi,
 Yushao Chen,
 David Ittah,
 Jeffrey Kam,
