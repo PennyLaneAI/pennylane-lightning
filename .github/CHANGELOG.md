@@ -27,6 +27,9 @@
 
 <h3>Deprecations 👋</h3>
 
+- Remove the document page and build references to `gbenchmarks` in Lightning.
+  [(#1412)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1412)
+
 <h3>Documentation 📝</h3>
 
 - Corrected the kernel tuning documentation to clarify that `LQ_ENABLE_KERNEL_OMP` is a
