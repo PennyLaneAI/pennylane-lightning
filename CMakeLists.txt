@@ -63,7 +63,6 @@ endif()
 
 # Other build options
 option(BUILD_TESTS "Build cpp tests" OFF)
-option(BUILD_BENCHMARKS "Enable cpp benchmarks" OFF)
 
 # Backend
 set(PL_BACKEND "lightning_qubit" CACHE STRING "PennyLane Lightning backend")

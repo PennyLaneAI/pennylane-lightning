@@ -4,6 +4,9 @@
 
 <h3>Improvements 🛠</h3>
 
+- Updated the Lightning performance kernel tuning document.
+  [(#1413)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1413)
+
 - A new singleton class manages MPI initialization and finalization.
   [(#1397)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1397)
 
@@ -26,6 +29,9 @@
   [(#1395)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1395)
 
 <h3>Deprecations 👋</h3>
+
+- Remove the document page and build references to `gbenchmarks` in Lightning.
+  [(#1412)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1412)
 
 <h3>Documentation 📝</h3>
 
@@ -52,6 +58,10 @@
   [(#1390)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1390)
 
 <h3>Internal changes ⚙️</h3>
+
+- Changed Lightning-Qubit and Lightning-GPU to read the `qp.PCPhase` dimension from its
+  Operator2 `compilable_args` dictionary.
+  [(#1420)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1420)
 
 - Removed tests for the continuous-variable templates `qp.DisplacementEmbedding`,
   `qp.SqueezingEmbedding`, and `qp.CVNeuralNetLayers`, following their removal from PennyLane.
@@ -90,6 +100,7 @@
 This release contains contributions from (in alphabetical order):
 
 Runor Agbaire,
+Ali Asadi,
 Yushao Chen,
 David Ittah,
 Jeffrey Kam,
