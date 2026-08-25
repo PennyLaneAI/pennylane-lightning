@@ -41,10 +41,6 @@
 
 <h3>Bug fixes 🐛</h3>
 
-- Added `tomlkit` to the `dev`, `tests` and `base` dependency groups. It was previously
-  pulled in transitively through PennyLane, which no longer depends on it.
-  [(#1422)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1422)
-
 - Restored compatibility with the latest PennyLane operator contract for `qp.PauliRot`,
   `qp.MultiControlledX`, and `qp.DiagonalQubitUnitary`.
   [(#1415)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1415)
@@ -62,6 +58,10 @@
   [(#1390)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1390)
 
 <h3>Internal changes ⚙️</h3>
+
+- Added `tomlkit` to the `dev`, `tests` and `base` dependency groups. It was previously
+  pulled in transitively through PennyLane, which no longer depends on it.
+  [(#1422)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1422)
 
 - Changed Lightning-Qubit and Lightning-GPU to read the `qp.PCPhase` dimension from its
   Operator2 `compilable_args` dictionary.
