@@ -41,6 +41,10 @@
 
 <h3>Bug fixes 🐛</h3>
 
+- Added `tomlkit` to the `dev`, `tests` and `base` dependency groups. It was previously
+  pulled in transitively through PennyLane, which no longer depends on it.
+  [(#XXXX)](https://github.com/PennyLaneAI/pennylane-lightning/pull/XXXX)
+
 - Restored compatibility with the latest PennyLane operator contract for `qp.PauliRot`,
   `qp.MultiControlledX`, and `qp.DiagonalQubitUnitary`.
   [(#1415)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1415)

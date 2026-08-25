@@ -36,6 +36,7 @@ dev = [
     "build",
     "ninja",
     "cmake",
+    "tomlkit",
     "custatevec-cu12; sys_platform == 'linux'",
     "cutensornet-cu12; sys_platform == 'linux'",
     "pennylane @ git+https://github.com/PennyLaneAI/pennylane.git@main",
@@ -56,6 +57,7 @@ dev = [
     "click==8.2.1"
 ]
 tests = [
+    "tomlkit",
     "pytest>=8.4.1",
     "pytest-benchmark",
     "pytest-cov>=3.0.0",
@@ -68,6 +70,7 @@ tests = [
 ]
 base = [
     "ninja",
+    "tomlkit",
     "pytest>=8.4.1",
     "pytest-cov>=3.0.0",
     "pytest-mock>=3.7.0",
