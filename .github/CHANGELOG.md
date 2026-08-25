@@ -41,6 +41,10 @@
 
 <h3>Bug fixes 🐛</h3>
 
+- Added copy and pickle support for Lightning-Qubit state vectors, allowing executed devices
+  and QNodes to be deep-copied while preserving their state.
+  [(Issue #677)](https://github.com/PennyLaneAI/pennylane-lightning/issues/677)
+
 - Restored compatibility with the latest PennyLane operator contract for `qp.PauliRot`,
   `qp.MultiControlledX`, and `qp.DiagonalQubitUnitary`.
   [(#1415)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1415)
@@ -102,6 +106,7 @@ This release contains contributions from (in alphabetical order):
 Runor Agbaire,
 Ali Asadi,
 Yushao Chen,
+Chen Shoval,
 David Ittah,
 Jeffrey Kam,
 Joseph Lee,
