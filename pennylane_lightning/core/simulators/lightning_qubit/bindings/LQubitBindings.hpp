@@ -21,6 +21,7 @@
 #pragma once
 #include <complex>
 #include <memory>
+#include <new>
 #include <string>
 #include <vector>
 
@@ -191,6 +192,20 @@ void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
     registerSparseMatrixOperators<StateVectorT>(pyclass);
 
     pyclass.def(nb::init<std::size_t>(), "Initialize with number of qubits");
+
+    pyclass.def("__copy__",
+                [](const StateVectorT &sv) { return StateVectorT{sv}; });
+    pyclass.def("__deepcopy__", [](const StateVectorT &sv, nb::dict) {
+        return StateVectorT{sv};
+    });
+    pyclass.def("__getstate__", [](const StateVectorT &sv) {
+        return std::vector<ComplexT>{sv.getData(),
+                                     sv.getData() + sv.getLength()};
+    });
+    pyclass.def("__setstate__",
+                [](StateVectorT &sv, const std::vector<ComplexT> &state) {
+                    new (&sv) StateVectorT{state};
+                });
 
     // Add updateData method for LQubit
     pyclass.def(
