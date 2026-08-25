@@ -43,7 +43,7 @@
 
 - Added copy and pickle support for Lightning-Qubit state vectors, allowing executed devices
   and QNodes to be deep-copied while preserving their state.
-  [(Issue #677)](https://github.com/PennyLaneAI/pennylane-lightning/issues/677)
+  [(#1421)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1421)
 
 - Restored compatibility with the latest PennyLane operator contract for `qp.PauliRot`,
   `qp.MultiControlledX`, and `qp.DiagonalQubitUnitary`.
