@@ -13,6 +13,9 @@
 # limitations under the License.
 """Tests for StateVector classes in nanobind-based modules."""
 
+import copy
+import pickle
+
 import numpy as np
 import pytest
 from conftest import device_name, supported_devices
@@ -68,6 +71,42 @@ class TestStateVectorNB:
         expected[0] = 1.0
 
         np.testing.assert_allclose(result, expected)
+
+    @pytest.mark.skipif(
+        device_name != "lightning.qubit",
+        reason="Native state-vector copying is only implemented for lightning.qubit.",
+    )
+    @pytest.mark.parametrize("copy_fn", [copy.copy, copy.deepcopy])
+    def test_statevector_copy(self, get_statevector_class_and_precision, copy_fn):
+        """Test that copied state vectors preserve state and own independent memory."""
+        StateVectorClass, dtype = get_statevector_class_and_precision
+        state = np.array([0.0, 1.0], dtype=dtype)
+        statevector = StateVectorClass(1)
+        statevector.updateData(state)
+
+        copied_statevector = copy_fn(statevector)
+        statevector.resetStateVector()
+
+        result = np.zeros_like(state)
+        copied_statevector.getState(result)
+        np.testing.assert_allclose(result, state)
+
+    @pytest.mark.skipif(
+        device_name != "lightning.qubit",
+        reason="Native state-vector pickling is only implemented for lightning.qubit.",
+    )
+    def test_statevector_pickle(self, get_statevector_class_and_precision):
+        """Test that pickled state vectors preserve their state."""
+        StateVectorClass, dtype = get_statevector_class_and_precision
+        state = np.array([0.0, 1.0], dtype=dtype)
+        statevector = StateVectorClass(1)
+        statevector.updateData(state)
+
+        restored_statevector = pickle.loads(pickle.dumps(statevector))
+
+        result = np.zeros_like(state)
+        restored_statevector.getState(result)
+        np.testing.assert_allclose(result, state)
 
     def test_statevector_gate_operations(self, get_statevector_class_and_precision):
         """Test gate operations on StateVectorC64/128 classes."""
