@@ -57,6 +57,7 @@ dev = [
     "click==8.2.1"
 ]
 tests = [
+    "ninja",
     "tomlkit",
     "pytest>=8.4.1",
     "pytest-benchmark",
