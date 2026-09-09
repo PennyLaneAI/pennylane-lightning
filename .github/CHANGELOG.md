@@ -59,6 +59,10 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Added `tomlkit` to the `dev`, `tests` and `base` dependency groups. It was previously
+  pulled in transitively through PennyLane, which no longer depends on it.
+  [(#1422)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1422)
+
 - Changed Lightning-Qubit and Lightning-GPU to read the `qp.PCPhase` dimension from its
   Operator2 `compilable_args` dictionary.
   [(#1420)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1420)
