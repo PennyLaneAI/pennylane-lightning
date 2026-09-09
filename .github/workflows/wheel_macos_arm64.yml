@@ -138,7 +138,7 @@ jobs:
 
   upload-pypi:
     needs: [set_wheel_build_matrix, mac-wheels-arm64]
-    if: ${{ !inputs.skip_upload }}
+    if: ${{ !inputs.skip_upload && !github.event.release.prerelease }}
     strategy:
       matrix:
         arch: [arm64]
