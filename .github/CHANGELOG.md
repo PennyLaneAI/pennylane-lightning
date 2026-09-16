@@ -4,6 +4,9 @@
 
 <h3>Improvements 🛠</h3>
 
+- Python builds now use the nanobind package installed by PEP 517 instead of cloning it during CMake configuration.
+  [(#1425)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1425)
+
 - Updated the Lightning performance kernel tuning document.
   [(#1413)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1413)
 
