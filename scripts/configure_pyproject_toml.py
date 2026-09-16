@@ -92,14 +92,11 @@ if __name__ == "__main__":
     # ------------------------
     requires = [
         "cmake",
+        "nanobind==2.11.0",
         "ninja; platform_system!='Windows'",
         "setuptools>=75.8.1",
         "tomli",
     ]
-
-    # Add nanobind if enabled
-    if os.environ.get("ENABLE_NANOBIND", "0") == "1":
-        requires.append("nanobind>=2.7.0")
 
     if backend == "lightning_gpu":
         cuda_version = cuda_version()

@@ -97,11 +97,13 @@ if(ENABLE_PYTHON)
     message(STATUS "Using Python executable: ${Python_EXECUTABLE}")
     message(STATUS "Python version: ${Python_VERSION}")
 
-    FetchContent_Declare(nanobind
-                GIT_REPOSITORY https://github.com/wjakob/nanobind.git
-                GIT_TAG        v2.11.0
+    execute_process(
+        COMMAND "${Python_EXECUTABLE}" -m nanobind --cmake_dir
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        OUTPUT_VARIABLE nanobind_ROOT
+        COMMAND_ERROR_IS_FATAL ANY
     )
-    FetchContent_MakeAvailable(nanobind)
+    find_package(nanobind CONFIG REQUIRED)
 
 endif()
 
