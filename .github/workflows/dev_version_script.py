@@ -124,8 +124,9 @@ if __name__ == "__main__":
             ):
                 next_prerelease_version = DEV_PRERELEASE_TAG_START
             else:
-                # Generate the next prerelease version (eg: dev1 -> dev2). Sourcing from main version.
-                next_prerelease_version = main_version.next_version("prerelease").prerelease
+                next_prerelease_version = re.sub(
+                    r"\d+$", lambda m: str(int(m.group()) + 1), main_version.prerelease
+                )
             new_version = main_version.replace(prerelease=next_prerelease_version)
             if pr_version != new_version:
                 print(f"Updating PR package version from -> '{pr_version}', to -> {new_version}")
