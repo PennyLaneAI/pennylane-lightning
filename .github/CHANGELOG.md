@@ -63,6 +63,11 @@
   pulled in transitively through PennyLane, which no longer depends on it.
   [(#1422)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1422)
 
+- Reimplemented the automatic dev version bump as a plain regular expression increment and dropping
+  the `semver` dependency. The bump produced release-candidate versions (e.g. `dev24` -> `rc.1`) after
+  semver 3.1.0 changed the behaviour of `Version.next_version`.
+  [(#1426)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1426)
+
 - Changed Lightning-Qubit and Lightning-GPU to read the `qp.PCPhase` dimension from its
   Operator2 `compilable_args` dictionary.
   [(#1420)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1420)
