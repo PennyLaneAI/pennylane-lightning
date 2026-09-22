@@ -59,8 +59,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
-- Restored the automatic dev version bump, which started producing release-candidate versions
-  (e.g. `dev24` -> `rc.1`) after semver 3.1.0 changed the behaviour of `Version.next_version`.
+- Reimplemented the automatic dev version bump as a plain regular expression increment and dropping
+  the `semver` dependency. The bump produced release-candidate versions (e.g. `dev24` -> `rc.1`) after
+  semver 3.1.0 changed the behaviour of `Version.next_version`.
   [(#1426)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1426)
 
 - Changed Lightning-Qubit and Lightning-GPU to read the `qp.PCPhase` dimension from its
