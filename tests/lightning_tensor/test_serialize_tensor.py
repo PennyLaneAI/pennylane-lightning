@@ -816,7 +816,7 @@ class TestSerializeOps:
 
 
 def check_global_phase_diagonal(par, wires, targets, controls, control_values):
-    op = qp.ctrl(qp.GlobalPhase(par, wires=targets), controls, control_values=control_values)
+    op = qp.ctrl(qp.GlobalPhase(par), controls, control_values=control_values)
     return np.diag(op.matrix(wires))
 
 

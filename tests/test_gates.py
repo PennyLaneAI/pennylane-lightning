@@ -96,7 +96,7 @@ def op(op_name):
         ],
         "CPhase": [qp.CPhase, [], {"phi": 1.777, "wires": [0, 1]}],
         "MultiRZ": [qp.MultiRZ, [], {"theta": 0.112, "wires": [0, 1, 2]}],
-        "GlobalPhase": [qp.GlobalPhase, [], {"phi": 0.112, "wires": [0, 1, 2]}],
+        "GlobalPhase": [qp.GlobalPhase, [], {"phi": 0.112}],
         "CRX": [qp.CRX, [], {"phi": 0.123, "wires": [0, 1]}],
         "CRY": [qp.CRY, [], {"phi": 0.123, "wires": [0, 1]}],
         "CRZ": [qp.CRZ, [], {"phi": 0.123, "wires": [0, 1]}],
@@ -196,7 +196,7 @@ def test_gate_unitary_correct(op, op_name):
         out = output(np.array(input))
         unitary[:, i] = out
 
-    unitary_expected = qp.matrix(op[0](*op[1], **op[2]))
+    unitary_expected = qp.matrix(op[0](*op[1], **op[2]), wire_order=range(wires))
 
     assert np.allclose(unitary, unitary_expected)
 
@@ -224,7 +224,7 @@ def test_gate_unitary_correct(op, op_name):
         out = output(np.array(input))
         unitary[:, i] = out
 
-    unitary_expected = qp.matrix(op[0](*op1, **op2)) @ qp.matrix(op[0](*op[1], **op[2]))
+    unitary_expected = qp.matrix(op[0](*op1, **op2)) @ qp.matrix(op[0](*op[1], **op[2]), wire_order=range(wires))
     assert np.allclose(unitary, unitary_expected)
 
 
@@ -299,7 +299,7 @@ def test_gate_unitary_correct_lt(op, op_name):
         out = output(np.array(input))
         unitary[:, i] = out
 
-    unitary_expected = qp.matrix(op[0](*op[1], **op[2]))
+    unitary_expected = qp.matrix(op[0](*op[1], **op[2]), wire_order = range(wires))
 
     assert np.allclose(unitary, unitary_expected)
 
@@ -333,7 +333,7 @@ def test_inverse_unitary_correct(op, op_name):
         out = output(np.array(input))
         unitary[:, i] = out
 
-    unitary_expected = qp.matrix(qp.adjoint(op[0](*op[1], **op[2])))
+    unitary_expected = qp.matrix(qp.adjoint(op[0](*op[1], **op[2])), wire_order=range(wires))
 
     assert np.allclose(unitary, unitary_expected)
 
