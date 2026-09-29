@@ -78,7 +78,7 @@ def get_operation_num_wires(operation):
     """Return the minimum wire count needed to instantiate an operation class."""
     if issubclass(operation, qp.core.Operator2):
         # NOTE: Operators like GlobalPhase might not act on any wires
-        return operation.wire_sizes[0] if operation.wire_sizes or 1
+        return operation.wire_sizes[0] if operation.wire_sizes else 1
 
     num_wires = getattr(operation, "num_wires", None)
     return max(num_wires, 1) if num_wires else 1
