@@ -2057,6 +2057,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                        const std::vector<bool> &controlled_values,
                        [[maybe_unused]] const std::vector<std::size_t> &wires,
                        bool inverse, ParamT angle) {
+        constexpr std::size_t one{1U};
         const std::complex<PrecisionT> phase =
             std::exp(std::complex<PrecisionT>(0, inverse ? angle : -angle));
 
@@ -2080,6 +2081,21 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             applyNCPhaseShift(arr, num_qubits, {}, {}, controlled_wires,
                               inverse, angle);
             applyNCGlobalPhase(arr, num_qubits, {}, {}, {}, inverse, angle);
+            return;
+        }
+
+        // The generic path below borrows a wire that is not controlled to act
+        // as the single target of `applyNC1`. When every qubit is a control
+        // wire there is no such wire, so handle that case directly: exactly
+        // one basis state satisfies the control pattern.
+        if (controlled_wires.size() == num_qubits) {
+            std::size_t index{0U};
+            for (std::size_t i = 0; i < num_qubits; i++) {
+                if (controlled_values[i]) {
+                    index |= one << (num_qubits - controlled_wires[i] - 1);
+                }
+            }
+            arr[index] *= phase;
             return;
         }
 
@@ -2234,6 +2250,28 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const std::vector<bool> &controlled_values,
         [[maybe_unused]] const std::vector<std::size_t> &wires,
         [[maybe_unused]] const bool adj) -> PrecisionT {
+        constexpr std::size_t one{1U};
+
+        // `applyNCGenerator1` borrows a wire that is not controlled to act as
+        // its single target. When every qubit is a control wire there is no
+        // such wire, so project onto the one basis state that satisfies the
+        // control pattern here instead.
+        if (!controlled_wires.empty() &&
+            controlled_wires.size() == num_qubits) {
+            std::size_t index{0U};
+            for (std::size_t i = 0; i < num_qubits; i++) {
+                if (controlled_values[i]) {
+                    index |= one << (num_qubits - controlled_wires[i] - 1);
+                }
+            }
+            const std::complex<PrecisionT> kept = arr[index];
+            std::fill(arr, arr + exp2(num_qubits),
+                      std::complex<PrecisionT>{0.0});
+            arr[index] = kept;
+            // NOLINTNEXTLINE(readability-magic-numbers)
+            return static_cast<PrecisionT>(-1.0);
+        }
+
         auto core_function = []([[maybe_unused]] std::complex<PrecisionT> *arr,
                                 [[maybe_unused]] const std::size_t i0,
                                 [[maybe_unused]] const std::size_t i1) {};
