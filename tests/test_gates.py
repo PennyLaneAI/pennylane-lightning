@@ -22,10 +22,7 @@ import sys
 import numpy as np
 import pennylane as qp
 import pytest
-from conftest import (
-    PHI,
-    THETA,
-)
+from conftest import PHI, THETA
 from conftest import LightningDevice as ld
 from conftest import (
     device_name,
@@ -225,7 +222,7 @@ def test_gate_unitary_correct(op, op_name):
         out = output(np.array(input))
         unitary[:, i] = out
 
-    unitary_expected = qp.matrix(op[0](*op1, **op2), wire_order=range(wires) @ qp.matrix(
+    unitary_expected = qp.matrix(op[0](*op1, **op2), wire_order=range(wires)) @ qp.matrix(
         op[0](*op[1], **op[2]), wire_order=range(wires)
     )
     assert np.allclose(unitary, unitary_expected)
@@ -284,7 +281,7 @@ def test_gate_unitary_correct_lt(op, op_name):
         pytest.skip("PCPhase only supported on lightning.qubit and lightning.gpu.")
 
     # GlobalPhase acts on no wires, so its entry carries the no wires key
-    wires = len(op[2].get("wires",[])) or 1
+    wires = len(op[2].get("wires", [])) or 1
 
     if wires == 1 and device_name == "lightning.tensor":
         pytest.skip("Skipping single wire device on lightning.tensor.")
@@ -319,7 +316,7 @@ def test_inverse_unitary_correct(op, op_name):
         pytest.skip("Skipping operation.")
 
     # GlobalPhase acts on no wires, so its entry carries the no wires key
-    wires = len(op[2].get("wires",[])) or 1
+    wires = len(op[2].get("wires", [])) or 1
 
     if wires == 1 and device_name == "lightning.tensor":
         pytest.skip("Skipping single wire device on lightning.tensor.")

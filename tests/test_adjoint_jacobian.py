@@ -792,10 +792,11 @@ class TestAdjointJacobianQNode:
                 else:
                     qp.RX(p[0], 0)
                     qp.ctrl(
-                        operation(p[1])
-                        if operation is qp.GlobalPhase
-                        else operation(p[1],
-                        wires=range(n_qubits - num_wires, n_qubits)),
+                        (
+                            operation(p[1])
+                            if operation is qp.GlobalPhase
+                            else operation(p[1], wires=range(n_qubits - num_wires, n_qubits))
+                        ),
                         control_wires,
                         control_values=[
                             control_value or bool(i % 2) for i, _ in enumerate(control_wires)
