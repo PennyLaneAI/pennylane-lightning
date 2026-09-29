@@ -77,8 +77,11 @@ VARPHI = np.linspace(0.02, 1, 3)
 def get_operation_num_wires(operation):
     """Return the minimum wire count needed to instantiate an operation class."""
     if issubclass(operation, qp.core.Operator2):
-        # NOTE: Operators like GlobalPhase might not act on any wires
-        return operation.wire_sizes[0] if operation.wire_sizes else 1
+        if not operation.wire_sizes:
+            # NOTE: Operators like GlobalPhase do not act on any wires
+            return 0
+        # A size of "None" means any number of wires, so one is the minimum
+        return operation.wire_sizes[0] or 1
 
     num_wires = getattr(operation, "num_wires", None)
     return max(num_wires, 1) if num_wires else 1

@@ -659,7 +659,7 @@ class TestAdjointJacobianQNode:
                 qp.StatePrep(init_state, wires=range(n_qubits))
                 qp.RX(p[0], 0)
                 if operation is qp.GlobalPhase:
-                    operation(p[1], wires=range(n_qubits))
+                    operation(p[1])
                 else:
                     operation(p[1], wires=range(w, w + num_wires))
                 qp.RY(p[2], 0)
@@ -722,7 +722,7 @@ class TestAdjointJacobianQNode:
                 qp.StatePrep(init_state, wires=range(n_qubits))
                 qp.RX(p[0], 0)
                 if operation is qp.GlobalPhase:
-                    qp.adjoint(operation(p[1], wires=range(n_qubits)))
+                    qp.adjoint(operation(p[1]))
                 else:
                     qp.adjoint(operation(p[1], wires=range(w, w + num_wires)))
                 qp.RY(p[2], 0)
@@ -792,7 +792,10 @@ class TestAdjointJacobianQNode:
                 else:
                     qp.RX(p[0], 0)
                     qp.ctrl(
-                        operation(p[1], wires=range(n_qubits - num_wires, n_qubits)),
+                        operation(p[1])
+                        if operation is qp.GlobalPhase
+                        else operation(p[1],
+                        wires=range(n_qubits - num_wires, n_qubits)),
                         control_wires,
                         control_values=[
                             control_value or bool(i % 2) for i, _ in enumerate(control_wires)
