@@ -224,7 +224,9 @@ def test_gate_unitary_correct(op, op_name):
         out = output(np.array(input))
         unitary[:, i] = out
 
-    unitary_expected = qp.matrix(op[0](*op1, **op2)) @ qp.matrix(op[0](*op[1], **op[2]), wire_order=range(wires))
+    unitary_expected = qp.matrix(op[0](*op1, **op2)) @ qp.matrix(
+        op[0](*op[1], **op[2]), wire_order=range(wires)
+    )
     assert np.allclose(unitary, unitary_expected)
 
 
@@ -299,7 +301,7 @@ def test_gate_unitary_correct_lt(op, op_name):
         out = output(np.array(input))
         unitary[:, i] = out
 
-    unitary_expected = qp.matrix(op[0](*op[1], **op[2]), wire_order = range(wires))
+    unitary_expected = qp.matrix(op[0](*op[1], **op[2]), wire_order=range(wires))
 
     assert np.allclose(unitary, unitary_expected)
 
