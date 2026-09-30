@@ -668,7 +668,7 @@ void applyNCGlobalPhase(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
         }
         Kokkos::parallel_for(
             Kokkos::RangePolicy<ExecutionSpace>(0, 1),
-            KOKKOS_LAMBDA([[maybe_unused]] std::size_t k) {
+            KOKKOS_LAMBDA(const std::size_t) {
                 arr_(index) *= phase;
             });
         return;
