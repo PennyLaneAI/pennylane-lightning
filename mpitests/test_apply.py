@@ -71,7 +71,7 @@ def apply_operation_gates_qnode_param(tol, dev_mpi, operation, par, wires, seed=
 
     def circuit(*params):
         qp.StatePrep(state_vector, wires=range(num_wires))
-        if wires:
+        if wires is not None:
             operation(*params, wires=wires)
         else:
             # NOTE: GlobalPhase doesn't operate on wires
