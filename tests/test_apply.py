@@ -759,7 +759,7 @@ class TestLightningDeviceIntegration:
         @qp.qnode(dev)
         def circuit():
             qp.Hadamard(wires=0)
-            qp.QuantumPhaseEstimation(qp.matrix(qp.Hadamard, wire_order=[0])(wires=0), [0], [1])
+            qp.QuantumPhaseEstimation(qp.Hadamard(0), [1])
             return qp.probs(wires=[0, 1])
 
         probs = circuit()
