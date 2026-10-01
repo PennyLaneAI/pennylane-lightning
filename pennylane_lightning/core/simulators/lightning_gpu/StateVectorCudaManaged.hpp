@@ -470,6 +470,29 @@ class StateVectorCudaManaged
                     }
                 }
 
+                if (comp_wires.empty()) {
+                    // The controls cover every qubit, so this is a phase on a
+                    // single basis state. custatevecApplyPauliRotation rejects
+                    // an empty target list, so use the last control as the
+                    // target of a (controlled) PhaseShift(-phi) instead.
+                    std::vector<std::size_t> ctrls{controlled_wires.begin(),
+                                                   controlled_wires.end() - 1};
+                    std::vector<bool> ctrl_vals{controlled_values.begin(),
+                                                controlled_values.end() - 1};
+                    const std::vector<std::size_t> tgt{controlled_wires.back()};
+                    const bool flip = !controlled_values.back();
+                    const std::vector<Precision> neg_params = {-params[0]};
+                    if (flip) {
+                        applyPauliX(tgt, false);
+                    }
+                    applyOperation("PhaseShift", ctrls, ctrl_vals, tgt, adjoint,
+                                   neg_params);
+                    if (flip) {
+                        applyPauliX(tgt, false);
+                    }
+                    return;
+                }
+
                 tgtsInt = NormalizeCastIndices<std::size_t, int>(
                     comp_wires, BaseType::getNumQubits());
             }

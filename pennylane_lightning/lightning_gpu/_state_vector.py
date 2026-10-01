@@ -375,9 +375,15 @@ class LightningGPUStateVector(LightningBaseStateVector):
                     # To support older versions of PL
                     mat = operation.matrix
                 r_dtype = np.float32 if self.dtype == np.complex64 else np.float64
+                # The C++ gate cache is keyed on (name, first param). Adjoint wrappers of
+                # matrix-defined ops (e.g. Adjoint(QubitUnitary)) carry no params, so they
+                # must be hashed too, otherwise different matrices share one cache entry.
+                inner_op = operation
+                while isinstance(inner_op, Adjoint):
+                    inner_op = inner_op.base
                 param = (
                     [[r_dtype(hash(operation))]]
-                    if isinstance(operation, gate_cache_needs_hash)
+                    if isinstance(inner_op, gate_cache_needs_hash)
                     else []
                 )
                 if len(mat) == 0:
