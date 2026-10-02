@@ -81,7 +81,7 @@ def test_errors_basis_state():
     with pytest.raises(ValueError, match="Basis state must only consist of 0s and 1s;"):
         state_vector = LightningStateVector(2)
         state_vector.apply_operations([qp.BasisState(np.array([-0.2, 4.2]), wires=[0, 1])])
-    with pytest.raises(ValueError, match="State must be of length 1;"):
+    with pytest.raises(ValueError, match="State and wires must have the same length"):
         state_vector = LightningStateVector(1)
         state_vector.apply_operations([qp.BasisState(np.array([0, 1]), wires=[0])])
 

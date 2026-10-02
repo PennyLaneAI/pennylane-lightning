@@ -1021,13 +1021,16 @@ class TestControlledOps:
                 init_state = rng.random(2**n_qubits) + 1.0j * rng.random(2**n_qubits)
                 init_state /= np.linalg.norm(init_state)
 
+                # Operators that act on no wires, like GlobalPhase, take no wires argument
+                wires_arg = () if num_wires == 0 else (target_wires,)
+
                 if operation.num_params == 0:
                     operation_params = []
                 else:
-                    operation_params = tuple([0.1234] * operation.num_params) + (target_wires,)
+                    operation_params = tuple([0.1234] * operation.num_params) + wires_arg
                     if operation == qp.PCPhase:
                         # Hyperparameter for PCPhase is the dimension of the control space
-                        operation_params = (0.1234, 2) + (target_wires,)
+                        operation_params = (0.1234, 2) + wires_arg
 
                 ops = [
                     qp.StatePrep(init_state, wires=range(n_qubits)),
@@ -1140,7 +1143,6 @@ class TestControlledOps:
             if n_perms > threshold:
                 wire_lists = wire_lists[0 :: (n_perms // threshold)]
             for all_wires in wire_lists:
-                target_wires = all_wires[0:num_wires]
                 control_wires = all_wires[num_wires:]
                 init_state = get_random_normalized_state(2**n_qubits)
 
@@ -1148,7 +1150,7 @@ class TestControlledOps:
                     [
                         qp.StatePrep(init_state, wires=range(n_qubits)),
                         qp.ctrl(
-                            operation(0.1234, target_wires),
+                            operation(0.1234),
                             control_wires,
                             control_values=(
                                 [control_value or bool(i % 2) for i, _ in enumerate(control_wires)]

@@ -3125,3 +3125,49 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::applyControlledGlobalPhase",
         CHECK((imag(result_sv[j])) == Approx(imag(tmp)));
     }
 }
+
+TEMPLATE_TEST_CASE(
+    "StateVectorLQubitManaged::applyControlledGlobalPhase all wires controlled",
+    "[StateVectorLQubitManaged_Param]", float, double) {
+    using ComplexT = StateVectorLQubitManaged<TestType>::ComplexT;
+    std::mt19937_64 re{1337};
+
+    const TestType angle = 0.312;
+    const bool inverse = GENERATE(false, true);
+    // Control wires are deliberately unsorted to check that each control value
+    // is matched with its own wire.
+    const std::vector<std::size_t> controls = GENERATE(
+        std::vector<std::size_t>{1, 0}, std::vector<std::size_t>{2, 0, 1},
+        std::vector<std::size_t>{3, 1, 0, 2});
+    const std::size_t num_qubits = controls.size();
+
+    for (std::size_t mask = 0; mask < (std::size_t{1U} << num_qubits); mask++) {
+        std::vector<bool> values(num_qubits);
+        for (std::size_t i = 0; i < num_qubits; i++) {
+            values[i] = ((mask >> i) & 1U) != 0U;
+        }
+
+        auto sv_data = createRandomStateVectorData<TestType>(re, num_qubits);
+        StateVectorLQubitManaged<TestType> sv(
+            reinterpret_cast<ComplexT *>(sv_data.data()), sv_data.size());
+        sv.applyOperation("GlobalPhase", controls, values, {}, inverse,
+                          {angle});
+        const auto result_sv = sv.getDataVector();
+
+        const ComplexT phase = std::exp(ComplexT{0, inverse ? angle : -angle});
+        for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+            // Basis state j picks up the phase only if every control bit
+            // matches its control value.
+            bool active = true;
+            for (std::size_t i = 0; i < num_qubits; i++) {
+                const bool bit =
+                    ((j >> (num_qubits - 1 - controls[i])) & 1U) != 0U;
+                active = active && (bit == values[i]);
+            }
+            const ComplexT expected =
+                active ? phase * ComplexT(sv_data[j]) : ComplexT(sv_data[j]);
+            CHECK(real(result_sv[j]) == Approx(real(expected)));
+            CHECK(imag(result_sv[j]) == Approx(imag(expected)));
+        }
+    }
+}

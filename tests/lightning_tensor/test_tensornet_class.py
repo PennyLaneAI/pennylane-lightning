@@ -110,7 +110,7 @@ def test_errors_basis_state(tn_backend):
     with pytest.raises(ValueError, match="Basis state must only consist of 0s and 1s;"):
         tensornet = LightningTensorNet(3, max_bond_dim=5, method=tn_backend)
         tensornet.apply_operations([qp.BasisState(np.array([-0.2, 4.2]), wires=[0, 1])])
-    with pytest.raises(ValueError, match="State must be of length 1;"):
+    with pytest.raises(ValueError, match="State and wires must have the same length"):
         tensornet = LightningTensorNet(3, max_bond_dim=5, method=tn_backend)
         tensornet.apply_operations([qp.BasisState(np.array([0, 1]), wires=[0])])
 
