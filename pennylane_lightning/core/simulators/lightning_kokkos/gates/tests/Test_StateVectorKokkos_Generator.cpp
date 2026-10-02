@@ -696,6 +696,62 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyControlledGenerator empty control",
     }
 }
 
+TEMPLATE_TEST_CASE(
+    "StateVectorKokkos::applyControlledGenerator GlobalPhase all wires "
+    "controlled",
+    "[StateVectorKokkos_Generator]", float, double) {
+    using StateVectorT = StateVectorKokkos<TestType>;
+    const TestType ep_deriv = 1e-3;
+    const TestType ep_margin = 1e-4;
+
+    const bool inverse = GENERATE(true, false);
+    // Control wires are deliberately unsorted to check that each control value
+    // is matched with its own wire.
+    const std::vector<std::size_t> controls = GENERATE(
+        std::vector<std::size_t>{1, 0}, std::vector<std::size_t>{2, 0, 1},
+        std::vector<std::size_t>{3, 1, 0, 2});
+    const std::size_t num_qubits = controls.size();
+    const std::vector<std::size_t> wires{};
+
+    auto ini_st = createNonTrivialState<StateVectorT>(num_qubits);
+
+    for (std::size_t mask = 0; mask < (std::size_t{1U} << num_qubits); mask++) {
+        std::vector<bool> values(num_qubits);
+        for (std::size_t i = 0; i < num_qubits; i++) {
+            values[i] = ((mask >> i) & 1U) != 0U;
+        }
+
+        StateVectorT kokkos_gntr_sv{ini_st.data(), ini_st.size()};
+        StateVectorT kokkos_gate_svp{ini_st.data(), ini_st.size()};
+        StateVectorT kokkos_gate_svm{ini_st.data(), ini_st.size()};
+
+        auto scale = kokkos_gntr_sv.applyGenerator("GlobalPhase", controls,
+                                                   values, wires, inverse);
+        auto h = static_cast<TestType>(((inverse) ? -1.0 : 1.0) * ep_deriv);
+        kokkos_gate_svp.applyOperation("GlobalPhase", controls, values, wires,
+                                       inverse, {h});
+        kokkos_gate_svm.applyOperation("GlobalPhase", controls, values, wires,
+                                       inverse, {-h});
+
+        auto result_gntr_sv = kokkos_gntr_sv.getDataVector();
+        auto result_gate_svp = kokkos_gate_svp.getDataVector();
+        auto result_gate_svm = kokkos_gate_svm.getDataVector();
+
+        for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+            CHECK(-scale * imag(result_gntr_sv[j]) ==
+                  Approx(0.5 *
+                         (real(result_gate_svp[j]) - real(result_gate_svm[j])) /
+                         ep_deriv)
+                      .margin(ep_margin));
+            CHECK(scale * real(result_gntr_sv[j]) ==
+                  Approx(0.5 *
+                         (imag(result_gate_svp[j]) - imag(result_gate_svm[j])) /
+                         ep_deriv)
+                      .margin(ep_margin));
+        }
+    }
+}
+
 TEMPLATE_TEST_CASE("StateVectorKokkos::applyControlledGenerator CRX/Y/Z",
                    "[StateVectorKokkos_Generator]", float, double) {
     using StateVectorT = StateVectorKokkos<TestType>;

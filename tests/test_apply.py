@@ -898,3 +898,50 @@ def test_circuit_with_stateprep(op, theta, phi, tol):
     circ = qp.QNode(circuit, dev)
     circ_def = qp.QNode(circuit, dev_def)
     assert np.allclose(circ(), circ_def(), tol)
+
+
+@pytest.mark.skipif(
+    device_name == "lightning.tensor",
+    reason="lightning.tensor does not support PauliRot",
+)
+@pytest.mark.parametrize("word", ["I", "II", "III"])
+@pytest.mark.parametrize("theta", THETA)
+def test_all_identity_pauli_rot(word, theta, tol):
+    """Test that a PauliRot whose word contains only identities applies the
+    global phase exp(-i theta / 2)."""
+    n_qubits = 3
+    init_state = get_random_normalized_state(2**n_qubits)
+
+    def circuit():
+        qp.StatePrep(init_state, wires=range(n_qubits))
+        qp.PauliRot(theta, word, wires=range(len(word)))
+        return qp.state()
+
+    results = qp.QNode(circuit, qp.device(device_name, wires=n_qubits))()
+    expected = qp.QNode(circuit, qp.device("default.qubit", wires=n_qubits))()
+    assert np.allclose(results, expected, atol=tol, rtol=0)
+
+
+@pytest.mark.skipif(
+    device_name == "lightning.tensor",
+    reason="lightning.tensor does not support direct access to the state",
+)
+def test_adjoint_qubit_unitaries_with_different_matrices(tol):
+    """Test that adjoints of matrix-defined operations with different matrices
+    on the same wires are not mixed up by the gate cache."""
+    n_qubits = 3
+    n_wires = 2
+    init_state = get_random_normalized_state(2**n_qubits)
+    U1, _ = np.linalg.qr(get_random_matrix(2**n_wires))
+    U2, _ = np.linalg.qr(get_random_matrix(2**n_wires))
+
+    def circuit():
+        qp.StatePrep(init_state, wires=range(n_qubits))
+        qp.adjoint(qp.QubitUnitary(U1, wires=[0, 1]))
+        qp.adjoint(qp.QubitUnitary(U2, wires=[0, 1]))
+        qp.adjoint(qp.adjoint(qp.QubitUnitary(U1, wires=[1, 2]), lazy=True), lazy=True)
+        return qp.state()
+
+    results = qp.QNode(circuit, qp.device(device_name, wires=n_qubits))()
+    expected = qp.QNode(circuit, qp.device("default.qubit", wires=n_qubits))()
+    assert np.allclose(results, expected, atol=tol, rtol=0)
