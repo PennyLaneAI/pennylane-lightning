@@ -102,6 +102,10 @@ class TestStateVectorNB:
         statevector = StateVectorClass(1)
         statevector.updateData(state)
 
+        serialized_state = statevector.__getstate__()
+        assert isinstance(serialized_state, bytes)
+        assert len(serialized_state) == state.nbytes
+
         restored_statevector = pickle.loads(pickle.dumps(statevector))
 
         result = np.zeros_like(state)
