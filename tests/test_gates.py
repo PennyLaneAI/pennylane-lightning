@@ -889,6 +889,37 @@ def test_controlled_globalphase_1ctrl_false_cornercase(n_qubits, tol):
     assert np.allclose(circ(), circ_def(), tol)
 
 
+@pytest.mark.skipif(
+    (device_name == "lightning.kokkos" and sys.platform == "win32"),
+    reason="lightning.kokkos doesn't support zero wires on Windows.",
+)
+@pytest.mark.skipif(
+    device_name in ("lightning.tensor",),
+    reason=device_name + " doesn't support zero wires.",
+)
+@pytest.mark.parametrize("adjoint", [False, True])
+@pytest.mark.parametrize("control_wires", [[0], [0, 1], [1, 0], [0, 1, 2], [2, 0, 1]])
+def test_controlled_globalphase_all_wires_controlled(control_wires, adjoint, tol):
+    """Test a controlled GlobalPhase whose control wires cover every wire of the device,
+    for every combination of control values, including unsorted control wires."""
+    n_qubits = len(control_wires)
+    dev_def = qp.device("default.qubit", wires=n_qubits)
+    dev = qp.device(device_name, wires=n_qubits)
+    init_state = get_random_normalized_state(2**n_qubits)
+
+    for control_values in itertools.product([False, True], repeat=n_qubits):
+
+        def circuit():
+            qp.StatePrep(init_state, wires=range(n_qubits))
+            op = qp.ctrl(qp.GlobalPhase, control_wires, control_values=list(control_values))
+            (qp.adjoint(op) if adjoint else op)(0.1234)
+            return qp.state()
+
+        circ = qp.QNode(circuit, dev)
+        circ_def = qp.QNode(circuit, dev_def)
+        assert np.allclose(circ(), circ_def(), tol)
+
+
 @pytest.mark.parametrize(
     "operation",
     [
