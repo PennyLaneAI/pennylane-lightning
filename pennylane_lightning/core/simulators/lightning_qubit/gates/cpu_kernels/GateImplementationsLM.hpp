@@ -2088,7 +2088,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         // as the single target of `applyNC1`. When every qubit is a control
         // wire there is no such wire, so handle that case directly: exactly
         // one basis state satisfies the control pattern.
-        if (controlled_wires.size() == num_qubits) {
+        if (!controlled_wires.empty() && controlled_wires.size() == num_qubits) {
             std::size_t index{0U};
             for (std::size_t i = 0; i < num_qubits; i++) {
                 if (controlled_values[i]) {
