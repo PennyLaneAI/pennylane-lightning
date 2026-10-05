@@ -734,6 +734,10 @@ def test_paulirot(n_wires, n_targets, tol, seed):
             [stateprep] + op.decomposition(),
             [qp.state()],
         )
+        # ``PauliRot.decomposition()`` returns a single ``ChangeOpBasis2`` op, which the
+        # device does not support natively. Run the device preprocessing so it is
+        # lowered to supported gates instead of being applied as a dense matrix.
+        (tape1,), _ = dev.preprocess_transforms()((tape1,))
         assert np.allclose(dev.execute(tape1), dev.execute(tape0), tol)
 
 

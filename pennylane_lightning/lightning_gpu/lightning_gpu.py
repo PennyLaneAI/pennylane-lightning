@@ -355,7 +355,13 @@ class LightningGPU(LightningBase):
         pipeline.add_transform(qp.transforms.broadcast_expand)
 
         if exec_config.gradient_method == "adjoint":
-            pipeline += adjoint_transforms(self, allow_mcms)
+            # The LGPU gate cache keys matrix-fallback ops by (name, first param), so
+            # parameterless ops that are not natively supported (e.g. the ``Prod`` basis
+            # changes from the ``PauliRot`` decomposition) would share one cached matrix.
+            # Decompose them down to the supported gate set instead.
+            pipeline += adjoint_transforms(
+                self, allow_mcms, device_stopping_condition=_stopping_condition
+            )
 
         return pipeline
 
