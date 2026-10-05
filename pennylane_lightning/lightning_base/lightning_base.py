@@ -654,7 +654,14 @@ def resolve_mcm_method(mcm_config: MCMConfig, tape: QuantumScript | None, device
 
 
 def _adjoint_stopping_condition(op: Operator) -> bool:
-    return not isinstance(op, (Conditional, MidMeasure, PauliRot)) and (
+    # ``Adjoint(PauliRot)`` (or ``Adjoint(Adjoint(...))``, ``Pow(Adjoint(...))``) has a generator, but
+    # there is no ``PauliRot`` kernel: the serializer would send it as a constant matrix and the
+    # trainable parameter would be silently dropped (zero gradient). Unwrap such wrappers so they are
+    # decomposed like a bare ``PauliRot``.
+    base = op
+    while isinstance(base, (qp.ops.op_math.Adjoint, qp.ops.op_math.Pow)):
+        base = base.base
+    return not isinstance(base, (Conditional, MidMeasure, PauliRot)) and (
         not any(qp.math.requires_grad(d) for d in op.data)
         or (op.num_params == 1 and op.has_generator)
     )

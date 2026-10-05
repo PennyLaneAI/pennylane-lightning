@@ -1542,3 +1542,95 @@ def test_diff_qubit_unitary(n_targets, seed):
         assert np.allclose(jac, jac_fd)
         assert np.allclose(jac, jac_ps)
         assert np.allclose(jac, jac_def)
+
+
+WRAPPED_PAULI_ROTS = {
+    # name: (wrapped operation, angle scale k such that it equals PauliRot(k * x))
+    "adjoint": (lambda x, w: qp.adjoint(qp.PauliRot(x, "XYZ", wires=w)), -1),
+    "adjoint_adjoint": (lambda x, w: qp.adjoint(qp.adjoint(qp.PauliRot(x, "XYZ", wires=w))), 1),
+    "pow_adjoint": (lambda x, w: qp.pow(qp.adjoint(qp.PauliRot(x, "XYZ", wires=w)), 2), -2),
+    "adjoint_pow": (lambda x, w: qp.adjoint(qp.pow(qp.PauliRot(x, "XYZ", wires=w), 2)), -2),
+}
+
+
+@pytest.mark.parametrize("wrapper", list(WRAPPED_PAULI_ROTS))
+def test_adjoint_of_pauli_rot(wrapper):
+    """Regression test: ``PauliRot`` wrapped in ``Adjoint``/``Pow`` must not be sent to the
+    adjoint method as a constant matrix, which silently returned a zero gradient."""
+    n_wires = 3
+    wires = list(range(n_wires))
+    build, scale = WRAPPED_PAULI_ROTS[wrapper]
+
+    def make_circuit(rotation):
+        def circuit(x):
+            qp.RY(0.4, wires=0)
+            qp.RX(0.2, wires=1)
+            qp.RY(0.7, wires=2)
+            rotation(x)
+            return qp.expval(qp.Z(0) + qp.X(1) @ qp.Y(2) + 0.3 * qp.Y(0) @ qp.Z(2))
+
+        return circuit
+
+    circuit = make_circuit(lambda x: build(x, wires))
+    circuit_ref = make_circuit(lambda x: qp.PauliRot(scale * x, "XYZ", wires=wires))
+
+    x = np.array(0.3, requires_grad=True)
+    dev = qp.device(device_name, wires=n_wires)
+    dev_def = qp.device("default.qubit", wires=n_wires)
+    grad = qp.grad(qp.QNode(circuit, dev, diff_method="adjoint"))(x)
+    expected = qp.grad(qp.QNode(circuit_ref, dev_def, diff_method="backprop"))(x)
+
+    assert not np.allclose(expected, 0.0)
+    assert np.allclose(grad, expected, atol=1e-6, rtol=0)
+
+
+@pytest.mark.parametrize("n_wires", [3, 5])
+def test_adjoint_preprocessing_pauli_rot_uses_device_gates(n_wires):
+    """Regression test: the adjoint preprocessing must decompose ``PauliRot`` down to the
+    device gate set, rather than leaving its n-wire ``Prod`` basis changes, which are applied
+    as dense 2^n x 2^n matrices."""
+    from importlib import import_module
+
+    dev = qp.device(device_name, wires=n_wires)
+    stopping_condition = import_module(type(dev).__module__).stopping_condition
+    program = dev.preprocess_transforms(qp.devices.ExecutionConfig(gradient_method="adjoint"))
+
+    word = "XYZY"[:n_wires] + "X" * max(0, n_wires - 4)
+    tape = qp.tape.QuantumScript(
+        [qp.PauliRot(np.array(0.3), word, wires=range(n_wires))],
+        [qp.expval(qp.Z(0))],
+        trainable_params=[0],
+    )
+    (new_tape,), _ = program((tape,))
+
+    assert not any(isinstance(op, qp.ops.op_math.Prod) for op in new_tape.operations)
+    assert all(stopping_condition(op) for op in new_tape.operations)
+
+
+def test_adjoint_jacobian_different_qubit_unitaries():
+    """Regression test: several ``QubitUnitary`` gates with different matrices on the same
+    wires must each use their own matrix in the adjoint Jacobian."""
+    n_wires = 3
+    U1, _ = np.linalg.qr(get_random_matrix(4, seed=1))
+    U2, _ = np.linalg.qr(get_random_matrix(4, seed=2))
+    U1 = np.array(U1, requires_grad=False)
+    U2 = np.array(U2, requires_grad=False)
+
+    def circuit(x):
+        qp.RY(x[0], wires=0)
+        qp.QubitUnitary(U1, wires=[0, 1])
+        qp.RX(x[1], wires=1)
+        qp.QubitUnitary(U2, wires=[0, 1])
+        qp.RY(x[2], wires=2)
+        qp.QubitUnitary(U1, wires=[1, 2])
+        return qp.expval(qp.Z(0) @ qp.X(1) + qp.Y(2))
+
+    x = np.array([0.1, 0.7, -0.4], requires_grad=True)
+    jac = qp.jacobian(
+        qp.QNode(circuit, qp.device(device_name, wires=n_wires), diff_method="adjoint")
+    )(x)
+    expected = qp.jacobian(
+        qp.QNode(circuit, qp.device("default.qubit", wires=n_wires), diff_method="backprop")
+    )(x)
+
+    assert np.allclose(jac, expected, atol=1e-6, rtol=0)

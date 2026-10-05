@@ -945,3 +945,28 @@ def test_adjoint_qubit_unitaries_with_different_matrices(tol):
     results = qp.QNode(circuit, qp.device(device_name, wires=n_qubits))()
     expected = qp.QNode(circuit, qp.device("default.qubit", wires=n_qubits))()
     assert np.allclose(results, expected, atol=tol, rtol=0)
+
+
+@pytest.mark.skipif(
+    device_name == "lightning.tensor",
+    reason="lightning.tensor does not support direct access to the state",
+)
+def test_adjoint_pauli_rots_with_different_angles(tol):
+    """Test that adjoints of ``PauliRot`` with different angles are not mixed up by the gate
+    cache, within one circuit and when the same circuit is re-executed with a new angle."""
+    n_qubits = 3
+    init_state = get_random_normalized_state(2**n_qubits)
+    dev = qp.device(device_name, wires=n_qubits)
+    dev_def = qp.device("default.qubit", wires=n_qubits)
+
+    def circuit(theta):
+        qp.StatePrep(init_state, wires=range(n_qubits))
+        qp.adjoint(qp.PauliRot(theta, "XY", wires=[0, 1]))
+        qp.adjoint(qp.PauliRot(2 * theta, "XY", wires=[0, 1]))
+        qp.adjoint(qp.adjoint(qp.PauliRot(theta, "ZYX", wires=[0, 1, 2])))
+        return qp.state()
+
+    qnode = qp.QNode(circuit, dev)
+    qnode_def = qp.QNode(circuit, dev_def)
+    for theta in [0.3, 1.1, 0.3]:
+        assert np.allclose(qnode(theta), qnode_def(theta), atol=tol, rtol=0)
