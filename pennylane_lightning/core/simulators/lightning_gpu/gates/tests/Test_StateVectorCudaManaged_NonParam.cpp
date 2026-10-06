@@ -1508,3 +1508,55 @@ TEMPLATE_TEST_CASE(
                 approx(sv1.getDataVector()).margin(margin));
     }
 }
+
+TEMPLATE_TEST_CASE(
+    "StateVectorCudaManaged::applyOperation - provided matrix is not "
+    "shadowed by the gate cache",
+    "[StateVectorCudaManaged]", float, double) {
+    // Regression test: the gate cache is keyed on (opName, params[0]). Ops
+    // sent with a matrix and no parameters (e.g. QubitUnitary from the
+    // adjoint-Jacobian serializer) all map to (opName, 0.0); the second
+    // matrix must not be replaced by the cached first one.
+    using PrecisionT = TestType;
+    using ComplexT = std::complex<PrecisionT>;
+    std::mt19937 re{1337};
+    const std::size_t num_qubits = 4;
+    const auto margin = PrecisionT{1e-5};
+
+    const auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
+    const std::vector<ComplexT> mat0 = randomUnitary<PrecisionT>(re, 2);
+    const std::vector<ComplexT> mat1 = randomUnitary<PrecisionT>(re, 2);
+    REQUIRE(mat0 != mat1);
+
+    StateVectorCudaManaged<PrecisionT> sv_ref(num_qubits);
+    StateVectorCudaManaged<PrecisionT> sv(num_qubits);
+    sv_ref.CopyHostDataToGpu(st0.data(), st0.size());
+    sv.CopyHostDataToGpu(st0.data(), st0.size());
+
+    SECTION("Non-controlled") {
+        const bool adjoint = GENERATE(false, true);
+        sv_ref.applyMatrix(mat0, {0, 1}, adjoint);
+        sv_ref.applyMatrix(mat1, {1, 2}, adjoint);
+        sv_ref.applyMatrix(mat1, {2, 3}, adjoint);
+
+        sv.applyOperation("QubitUnitary", {0, 1}, adjoint, {}, mat0);
+        sv.applyOperation("QubitUnitary", {1, 2}, adjoint, {}, mat1);
+        sv.applyOperation("QubitUnitary", {2, 3}, adjoint, {}, mat1);
+
+        REQUIRE(sv.getDataVector() ==
+                approx(sv_ref.getDataVector()).margin(margin));
+    }
+
+    SECTION("Controlled") {
+        const bool adjoint = GENERATE(false, true);
+        sv_ref.applyControlledMatrix(mat0.data(), {3}, {true}, {0, 1}, adjoint);
+        sv_ref.applyControlledMatrix(mat1.data(), {0}, {false}, {1, 2},
+                                     adjoint);
+
+        sv.applyOperation("matrix", {3}, {true}, {0, 1}, adjoint, {}, mat0);
+        sv.applyOperation("matrix", {0}, {false}, {1, 2}, adjoint, {}, mat1);
+
+        REQUIRE(sv.getDataVector() ==
+                approx(sv_ref.getDataVector()).margin(margin));
+    }
+}

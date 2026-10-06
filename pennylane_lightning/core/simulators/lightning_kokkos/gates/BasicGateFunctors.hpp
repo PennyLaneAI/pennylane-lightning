@@ -654,6 +654,24 @@ void applyNCGlobalPhase(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
         return;
     }
 
+    // The generic path below borrows a wire that is not controlled to act as
+    // the single target of `applyNC1Functor`. When every qubit is a control
+    // wire there is no such wire, so handle that case directly: exactly one
+    // basis state satisfies the control pattern.
+    if (!controlled_wires.empty() && controlled_wires.size() == num_qubits) {
+        std::size_t index{0U};
+        for (std::size_t i = 0; i < num_qubits; i++) {
+            if (controlled_values[i]) {
+                index |= std::size_t{1U}
+                         << (num_qubits - controlled_wires[i] - 1);
+            }
+        }
+        Kokkos::parallel_for(
+            Kokkos::RangePolicy<ExecutionSpace>(0, 1),
+            KOKKOS_LAMBDA(const std::size_t) { arr_(index) *= phase; });
+        return;
+    }
+
     if (num_qubits) [[likely]] {
         auto core_function =
             KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,

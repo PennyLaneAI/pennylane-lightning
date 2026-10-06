@@ -316,12 +316,12 @@ class LightningGPUStateVector(LightningBaseStateVector):
         for operation in operations:
             if isinstance(operation, qp.Identity):
                 continue
-            if isinstance(operation, Adjoint):
-                op_adjoint_base = operation.base
-                invert_param = True
-            else:
-                op_adjoint_base = operation
-                invert_param = False
+            # Unwrap nested adjoints, e.g. Adjoint(Adjoint(op)) == op.
+            op_adjoint_base = operation
+            invert_param = False
+            while isinstance(op_adjoint_base, Adjoint):
+                op_adjoint_base = op_adjoint_base.base
+                invert_param = not invert_param
 
             name = op_adjoint_base.name
             method = getattr(state, name, None)
@@ -337,12 +337,18 @@ class LightningGPUStateVector(LightningBaseStateVector):
                     mid_measurements,
                     postselect_mode=postselect_mode,
                 )
-            elif isinstance(operation, qp.PauliRot):
-                method = getattr(state, "applyPauliRot")
-                paulis = operation.pauli_word
+            elif isinstance(op_adjoint_base, qp.PauliRot):
+                # Check the base, not ``operation``: an ``Adjoint(PauliRot)`` would otherwise reach
+                # the matrix fallback, where the C++ gate cache keys it as ("PauliRot", 0.0).
+                paulis = op_adjoint_base.pauli_word
                 wires = [w for w, p in zip(wires, paulis) if p != "I"]
                 word = "".join(p for p in paulis if p != "I")
-                method(wires, invert_param, [operation.theta], word)
+                if not word:
+                    # An all-identity PauliRot is exp(-i theta/2) * I == GlobalPhase(theta / 2).
+                    # custatevecApplyPauliRotation rejects an empty Pauli word ("invalid value").
+                    state.GlobalPhase([], invert_param, [op_adjoint_base.theta / 2])
+                else:
+                    state.applyPauliRot(wires, invert_param, [op_adjoint_base.theta], word)
             elif method is not None:  # apply specialized gate
                 param = operation.parameters
                 if isinstance(op_adjoint_base, qp.PCPhase):
@@ -371,9 +377,15 @@ class LightningGPUStateVector(LightningBaseStateVector):
                     # To support older versions of PL
                     mat = operation.matrix
                 r_dtype = np.float32 if self.dtype == np.complex64 else np.float64
+                # The C++ gate cache is keyed on (name, first param). Adjoint wrappers of
+                # matrix-defined ops (e.g. Adjoint(QubitUnitary)) carry no params, so they
+                # must be hashed too, otherwise different matrices share one cache entry.
+                inner_op = operation
+                while isinstance(inner_op, Adjoint):
+                    inner_op = inner_op.base
                 param = (
                     [[r_dtype(hash(operation))]]
-                    if isinstance(operation, gate_cache_needs_hash)
+                    if isinstance(inner_op, gate_cache_needs_hash)
                     else []
                 )
                 if len(mat) == 0:

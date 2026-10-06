@@ -374,15 +374,24 @@ class StateVectorCudaManaged
         } else if (par_gates_.find(opName) != par_gates_.end()) {
             par_gates_.at(opName)(wires, adjoint, params);
         } else { // No offloadable function call; defer to matrix passing
+            // A caller-supplied matrix is authoritative: apply it directly.
+            // The gate cache is keyed on (opName, params[0]), which is not
+            // unique for ops sent without parameters (e.g. QubitUnitary from
+            // the adjoint-Jacobian serializer, Adjoint(...) wrappers, or
+            // Catalyst's controlled "matrix" ops all map to (opName, 0.0)),
+            // so reading or filling the cache here could apply another op's
+            // matrix.
+            if (!gate_matrix.empty()) {
+                applyDeviceMatrixGate_(gate_matrix.data(), ctrls, tgts,
+                                       adjoint);
+                return;
+            }
             auto &&par =
                 (params.empty()) ? std::vector<Precision>{0.0} : params;
-            if (!gate_cache_.gateExists(opName, par[0]) &&
-                gate_matrix.empty()) {
+            if (!gate_cache_.gateExists(opName, par[0])) {
                 std::string message = "Currently unsupported gate: " + opName +
                                       " and no matrix is provided.";
                 throw LightningException(message);
-            } else if (!gate_cache_.gateExists(opName, par[0])) {
-                gate_cache_.add_gate(opName, par[0], gate_matrix);
             }
             applyDeviceMatrixGate_(
                 gate_cache_.get_gate_device_ptr(opName, par[0]), ctrls, tgts,
@@ -470,6 +479,29 @@ class StateVectorCudaManaged
                     }
                 }
 
+                if (comp_wires.empty()) {
+                    // The controls cover every qubit, so this is a phase on a
+                    // single basis state. custatevecApplyPauliRotation rejects
+                    // an empty target list, so use the last control as the
+                    // target of a (controlled) PhaseShift(-phi) instead.
+                    std::vector<std::size_t> ctrls{controlled_wires.begin(),
+                                                   controlled_wires.end() - 1};
+                    std::vector<bool> ctrl_vals{controlled_values.begin(),
+                                                controlled_values.end() - 1};
+                    const std::vector<std::size_t> tgt{controlled_wires.back()};
+                    const bool flip = !controlled_values.back();
+                    const std::vector<Precision> neg_params = {-params[0]};
+                    if (flip) {
+                        applyPauliX(tgt, false);
+                    }
+                    applyOperation("PhaseShift", ctrls, ctrl_vals, tgt, adjoint,
+                                   neg_params);
+                    if (flip) {
+                        applyPauliX(tgt, false);
+                    }
+                    return;
+                }
+
                 tgtsInt = NormalizeCastIndices<std::size_t, int>(
                     comp_wires, BaseType::getNumQubits());
             }
@@ -528,15 +560,24 @@ class StateVectorCudaManaged
                 gate_cache_.get_gate_device_ptr(opName, params[0]), ctrlsInt,
                 tgtsInt, ctrls_valuesInt, adjoint);
         } else { // No offloadable function call; defer to matrix passing
+            // A caller-supplied matrix is authoritative: apply it directly.
+            // The gate cache is keyed on (opName, params[0]), which is not
+            // unique for ops sent without parameters (e.g. QubitUnitary from
+            // the adjoint-Jacobian serializer, Adjoint(...) wrappers, or
+            // Catalyst's controlled "matrix" ops all map to (opName, 0.0)),
+            // so reading or filling the cache here could apply another op's
+            // matrix.
+            if (!gate_matrix.empty()) {
+                applyDeviceGeneralGate_(gate_matrix.data(), ctrlsInt, tgtsInt,
+                                        ctrls_valuesInt, adjoint);
+                return;
+            }
             auto &&par =
                 (params.empty()) ? std::vector<Precision>{0.0} : params;
-            if (!gate_cache_.gateExists(opName, par[0]) &&
-                gate_matrix.empty()) {
+            if (!gate_cache_.gateExists(opName, par[0])) {
                 std::string message = "Currently unsupported gate: " + opName +
                                       " and no matrix provided.";
                 throw LightningException(message);
-            } else if (!gate_cache_.gateExists(opName, par[0])) {
-                gate_cache_.add_gate(opName, par[0], gate_matrix);
             }
             applyDeviceGeneralGate_(
                 gate_cache_.get_gate_device_ptr(opName, par[0]), ctrlsInt,

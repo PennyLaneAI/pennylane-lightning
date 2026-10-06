@@ -306,3 +306,67 @@ TEMPLATE_TEST_CASE("Test all generators of all controlled kernels",
         testAllControlledGeneratorsForKernel<PrecisionT>(re, kernel);
     }
 }
+
+TEMPLATE_TEST_CASE("Test controlled GlobalPhase generator with all wires "
+                   "controlled",
+                   "[GateImplementations_Generator]", float, double) {
+    using PrecisionT = TestType;
+    using ComplexT = std::complex<PrecisionT>;
+    constexpr static auto I = Pennylane::Util::IMAG<PrecisionT>();
+    constexpr static auto eps = PrecisionT{1e-3}; // For finite difference
+
+    std::mt19937 re{1337};
+    const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
+    const auto kernel = Pennylane::Gates::KernelType::LM;
+    const auto gntr_op = ControlledGeneratorOperation::GlobalPhase;
+    const auto gate_op = ControlledGateOperation::GlobalPhase;
+
+    // Control wires are deliberately unsorted to check that each control value
+    // is matched with its own wire.
+    const std::vector<std::vector<std::size_t>> all_controls{
+        {1, 0}, {2, 0, 1}, {3, 1, 0, 2}};
+
+    for (const bool inverse : {false, true}) {
+        for (const auto &controls : all_controls) {
+            const std::size_t num_qubits = controls.size();
+            for (std::size_t mask = 0; mask < (std::size_t{1U} << num_qubits);
+                 mask++) {
+                std::vector<bool> values(num_qubits);
+                for (std::size_t i = 0; i < num_qubits; i++) {
+                    values[i] = ((mask >> i) & 1U) != 0U;
+                }
+                const auto ini_st =
+                    createRandomStateVectorData<PrecisionT>(re, num_qubits);
+
+                auto gntr_st = ini_st;
+                PrecisionT scale = dispatcher.applyControlledGenerator(
+                    kernel, gntr_st.data(), num_qubits, gntr_op, controls,
+                    values, {}, false);
+                CHECK(scale == Approx(-1.0));
+                if (inverse) {
+                    scale *= -1;
+                }
+                scaleVector(gntr_st, I * scale);
+
+                auto diff_st_1 = ini_st;
+                auto diff_st_2 = ini_st;
+                dispatcher.applyControlledGate(kernel, diff_st_1.data(),
+                                               num_qubits, gate_op, controls,
+                                               values, {}, inverse, {eps});
+                dispatcher.applyControlledGate(kernel, diff_st_2.data(),
+                                               num_qubits, gate_op, controls,
+                                               values, {}, inverse, {-eps});
+
+                std::vector<ComplexT> gate_der_st(std::size_t{1U}
+                                                  << num_qubits);
+                std::transform(diff_st_1.cbegin(), diff_st_1.cend(),
+                               diff_st_2.cbegin(), gate_der_st.begin(),
+                               [](ComplexT a, ComplexT b) { return a - b; });
+                scaleVector(gate_der_st, static_cast<PrecisionT>(0.5) / eps);
+
+                REQUIRE(gntr_st ==
+                        approx(gate_der_st).margin(PrecisionT{1e-3}));
+            }
+        }
+    }
+}

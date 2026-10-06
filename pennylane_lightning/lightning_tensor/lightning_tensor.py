@@ -172,6 +172,11 @@ def stopping_condition(op: Operator) -> bool:
     if isinstance(op, qp.ControlledQubitUnitary):
         return True
 
+    # Accept Adjoint(ControlledQubitUnitary) directly: it is applied as a dense matrix, and
+    # decomposing it can loop forever (CQU <-> C(QubitUnitary) for >2 target wires).
+    if isinstance(op, qp.ops.op_math.Adjoint) and isinstance(op.base, qp.ControlledQubitUnitary):
+        return True
+
     if isinstance(op, qp.MPSPrep):
         return True
 

@@ -531,6 +531,28 @@ void applyNCGenGlobalPhase(
         [[maybe_unused]] const auto i0_ = i0;
         [[maybe_unused]] const auto i1_ = i1;
     };
+    // `applyNCGenerator1Functor` borrows a wire that is not controlled to act
+    // as its single target. When every qubit is a control wire there is no
+    // such wire, so project onto the one basis state that satisfies the
+    // control pattern here instead.
+    if (!controlled_wires.empty() && controlled_wires.size() == num_qubits) {
+        std::size_t index{0U};
+        for (std::size_t i = 0; i < num_qubits; i++) {
+            if (controlled_values[i]) {
+                index |= std::size_t{1U}
+                         << (num_qubits - controlled_wires[i] - 1);
+            }
+        }
+        Kokkos::parallel_for(
+            Kokkos::RangePolicy<ExecutionSpace>(0, exp2(num_qubits)),
+            KOKKOS_LAMBDA(std::size_t k) {
+                if (k != index) {
+                    arr_(k) = Kokkos::complex<PrecisionT>{0.0};
+                }
+            });
+        return;
+    }
+
     std::size_t target{0U};
     if (!controlled_wires.empty()) {
         for (std::size_t i = 0; i < num_qubits; i++) {

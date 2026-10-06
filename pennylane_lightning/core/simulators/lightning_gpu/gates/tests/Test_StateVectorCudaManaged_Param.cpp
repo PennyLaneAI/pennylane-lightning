@@ -16,6 +16,7 @@
 #include <complex>
 #include <iostream>
 #include <limits>
+#include <numeric>
 #include <random>
 #include <type_traits>
 #include <utility>
@@ -2161,6 +2162,55 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyControlledGlobalPhase",
         tmp *= ComplexT(sv_data[j]);
         CHECK((real(result_sv[j])) == Approx(real(tmp)));
         CHECK((imag(result_sv[j])) == Approx(imag(tmp)));
+    }
+}
+
+TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyControlledGlobalPhase - "
+                   "controls on all wires",
+                   "[StateVectorCudaManaged_Param]", double) {
+    // When the controls cover every qubit there are no complement wires, so
+    // the phase is applied as a controlled PhaseShift(-phi) on the last
+    // control (wrapped in PauliX when that control value is false).
+    using ComplexT = StateVectorCudaManaged<TestType>::ComplexT;
+    std::mt19937_64 re{1337};
+    const std::size_t num_qubits = GENERATE(1, 2, 3);
+    const bool inverse = GENERATE(false, true);
+    // Reversed order makes the last control (the PhaseShift target) wire 0
+    // instead of the highest wire.
+    const bool reverse_ctrls = GENERATE(false, true);
+    const TestType param = 0.4321;
+
+    const std::vector<std::size_t> tgts{};
+    std::vector<std::size_t> ctrls(num_qubits);
+    std::iota(ctrls.begin(), ctrls.end(), 0);
+    if (reverse_ctrls) {
+        std::reverse(ctrls.begin(), ctrls.end());
+    }
+
+    // Every combination of control values, so both the flip and no-flip
+    // paths are covered for each control position.
+    for (std::size_t mask = 0; mask < exp2(num_qubits); mask++) {
+        std::vector<bool> ctrl_vals(num_qubits);
+        std::size_t idx = 0;
+        for (std::size_t i = 0; i < num_qubits; i++) {
+            ctrl_vals[i] = ((mask >> i) & 1U) != 0;
+            if (ctrl_vals[i]) {
+                idx |= std::size_t{1} << (num_qubits - 1 - ctrls[i]);
+            }
+        }
+
+        auto sv_data = createRandomStateVectorData<TestType>(re, num_qubits);
+        StateVectorCudaManaged<TestType> sv(
+            reinterpret_cast<ComplexT *>(sv_data.data()), sv_data.size());
+        sv.applyOperation("GlobalPhase", ctrls, ctrl_vals, tgts, inverse,
+                          {param});
+
+        // Only the basis state that matches every control value picks up
+        // the phase exp(-i * param) (exp(+i * param) for the adjoint).
+        std::vector<ComplexT> expected(sv_data.begin(), sv_data.end());
+        expected[idx] *= std::exp(ComplexT{0, inverse ? param : -param});
+
+        CHECK(sv.getDataVector() == Pennylane::Util::approx(expected));
     }
 }
 
