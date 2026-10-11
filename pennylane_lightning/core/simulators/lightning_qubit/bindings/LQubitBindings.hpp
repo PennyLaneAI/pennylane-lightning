@@ -19,8 +19,11 @@
  */
 
 #pragma once
+#include <bit>
 #include <complex>
+#include <cstring>
 #include <memory>
+#include <new>
 #include <string>
 #include <vector>
 
@@ -191,6 +194,26 @@ void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
     registerSparseMatrixOperators<StateVectorT>(pyclass);
 
     pyclass.def(nb::init<std::size_t>(), "Initialize with number of qubits");
+
+    pyclass.def("__copy__",
+                [](const StateVectorT &sv) { return StateVectorT{sv}; });
+    pyclass.def("__deepcopy__", [](const StateVectorT &sv, nb::dict) {
+        return StateVectorT{sv};
+    });
+    pyclass.def("__getstate__", [](const StateVectorT &sv) {
+        return nb::bytes{sv.getData(), sv.getLength() * sizeof(ComplexT)};
+    });
+    pyclass.def("__setstate__", [](StateVectorT &sv, const nb::bytes &state) {
+        if (state.size() % sizeof(ComplexT) != 0) {
+            throw std::invalid_argument("Invalid serialized state vector");
+        }
+        const std::size_t state_length = state.size() / sizeof(ComplexT);
+        if (!std::has_single_bit(state_length)) {
+            throw std::invalid_argument("Invalid serialized state vector");
+        }
+        new (&sv) StateVectorT{std::countr_zero(state_length)};
+        std::memcpy(sv.getData(), state.data(), state.size());
+    });
 
     // Add updateData method for LQubit
     pyclass.def(
