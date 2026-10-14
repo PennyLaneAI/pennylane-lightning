@@ -83,6 +83,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- `ctr(GlobalPhase)` now dispatches to `PhaseShift` when possible. Related test is updated.
+  [(#1427)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1427)
+
 - Added `tomlkit` to the `dev`, `tests` and `base` dependency groups. It was previously
   pulled in transitively through PennyLane, which no longer depends on it.
   [(#1422)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1422)
@@ -135,6 +138,7 @@ This release contains contributions from (in alphabetical order):
 Runor Agbaire,
 Ali Asadi,
 Yushao Chen,
+Marcus Edwards,
 David Ittah,
 Jeffrey Kam,
 Joseph Lee,
