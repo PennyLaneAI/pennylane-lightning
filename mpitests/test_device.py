@@ -125,7 +125,7 @@ def test_unsupported_mpi_buf_size():
 def test_unsupported_gate():
     comm = MPI.COMM_WORLD
     dev = qp.device(device_name, mpi=True, wires=4)
-    op = qp.ctrl(qp.GlobalPhase(0.1), [0], control_values=[True])
+    op = qp.ops.Controlled(qp.GlobalPhase(0.1), control_wires=[0])
     tape = QuantumScript([op])
     with pytest.raises(
         DeviceError, match="Lightning-GPU-MPI does not support Controlled GlobalPhase gates"
