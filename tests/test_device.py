@@ -15,6 +15,7 @@
 Unit tests for Lightning devices creation.
 """
 
+import copy
 import pickle as pkl
 import sys
 
@@ -98,6 +99,28 @@ def test_devpool_is_pickleable():
 
     except TypeError:
         pytest.fail("DevPool should be Pickleable")
+
+
+@pytest.mark.skipif(
+    device_name != "lightning.qubit",
+    reason="Native state-vector copying is only implemented for lightning.qubit.",
+)
+@pytest.mark.parametrize("c_dtype", [np.complex64, np.complex128])
+def test_qnode_is_deepcopyable_after_execution(c_dtype):
+    """Test that an executed QNode and its native state can be deep-copied."""
+    dev = qp.device(device_name, wires=2, c_dtype=c_dtype)
+
+    @qp.qnode(dev)
+    def circuit(theta):
+        qp.RX(theta, 0)
+        qp.CNOT(wires=[0, 1])
+        return qp.expval(qp.Z(1))
+
+    expected = circuit(0.37)
+    copied_circuit = copy.deepcopy(circuit)
+
+    assert copied_circuit.device is not circuit.device
+    assert np.allclose(copied_circuit(0.37), expected)
 
 
 @pytest.mark.skipif(
