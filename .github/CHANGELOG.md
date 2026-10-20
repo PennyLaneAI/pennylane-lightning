@@ -150,6 +150,8 @@ Andrija Paurevic,
 Chen Shoval,
 Jake Zaia
 
+---
+
 # Release 0.45.0
 
 <h3>New features since last release</h3>
