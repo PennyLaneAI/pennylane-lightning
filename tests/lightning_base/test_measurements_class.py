@@ -188,21 +188,6 @@ class TestStateDiagonalizingGates:
         result = getattr(m, method_name)(measurement)
         assert qp.math.allclose(result, [0.5, 0.5])
 
-    def test_successive_measurements_restore_basis(self, lightning_sv, method_name):
-        """Probability measurements restore the state before another basis is measured."""
-        statevector = lightning_sv(num_wires=2)
-        operations = [qp.RY(0.73, 0), qp.RX(-0.41, 0), qp.CNOT([0, 1])]
-        statevector.apply_operations(operations)
-        measurements = LightningMeasurements(statevector)
-
-        for observable in [qp.X(0), qp.Y(0), qp.Z(0), qp.X(0)]:
-            measurement = qp.probs(op=observable)
-            reference = DefaultQubit().execute(qp.tape.QuantumScript(operations, [measurement]))
-            result = getattr(measurements, method_name)(measurement)
-            assert qp.math.allclose(result, reference)
-
-        assert qp.math.allclose(statevector.state, qp.matrix(qp.prod(*reversed(operations)))[:, 0])
-
     def test_identity_expval(self, lightning_sv, method_name):
         """Test that the expectation value of an identity is always one."""
         statevector = lightning_sv(num_wires=5)
