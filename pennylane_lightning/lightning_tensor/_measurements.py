@@ -163,9 +163,7 @@ class LightningTensorMeasurements:
 
         results = self._measurement_lightning.probs(measurewires)
         if diagonalizing_gates:
-            self._tensornet.apply_operations(
-                [qp.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)]
-            )
+            self._tensornet.apply_operations([qp.adjoint(g) for g in reversed(diagonalizing_gates)])
             self._tensornet.appendFinalState()
         return results
 
@@ -342,7 +340,7 @@ class LightningTensorMeasurements:
             diagonalizing_gates = []
 
         if adjoint:
-            diagonalizing_gates = [qp.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)]
+            diagonalizing_gates = [qp.adjoint(g) for g in reversed(diagonalizing_gates)]
 
         self._tensornet.apply_operations(diagonalizing_gates)
         self._tensornet.appendFinalState()

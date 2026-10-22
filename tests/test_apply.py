@@ -939,7 +939,7 @@ def test_adjoint_qubit_unitaries_with_different_matrices(tol):
         qp.StatePrep(init_state, wires=range(n_qubits))
         qp.adjoint(qp.QubitUnitary(U1, wires=[0, 1]))
         qp.adjoint(qp.QubitUnitary(U2, wires=[0, 1]))
-        qp.adjoint(qp.adjoint(qp.QubitUnitary(U1, wires=[1, 2]), lazy=True), lazy=True)
+        qp.adjoint(qp.adjoint(qp.QubitUnitary(U1, wires=[1, 2])))
         return qp.state()
 
     results = qp.QNode(circuit, qp.device(device_name, wires=n_qubits))()

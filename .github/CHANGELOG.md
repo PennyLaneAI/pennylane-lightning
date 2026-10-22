@@ -41,6 +41,10 @@
 
 <h3>Bug fixes 🐛</h3>
 
+- Measurement basis restoration now uses symbolic adjoints, supporting PennyLane's
+  removal of the `qp.adjoint` `lazy` argument while preserving inverse gate order.
+  [(#1428)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1428)
+
 - Restored compatibility with the latest PennyLane, where `qp.GlobalPhase` no longer acts on wires and
   `qp.QuantumPhaseEstimation` has a new signature. Lightning-Qubit, Lightning-Kokkos and Lightning-GPU now
   support a controlled `GlobalPhase` whose controls cover every qubit.

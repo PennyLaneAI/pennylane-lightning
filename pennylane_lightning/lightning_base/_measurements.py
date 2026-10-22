@@ -207,7 +207,7 @@ class LightningBaseMeasurements(ABC):
 
         if diagonalizing_gates:
             self._qubit_state.apply_operations(
-                [qp.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)]
+                [qp.adjoint(g) for g in reversed(diagonalizing_gates)]
             )
 
         return results
@@ -421,7 +421,7 @@ class LightningBaseMeasurements(ABC):
             diagonalizing_gates = []
 
         if adjoint:
-            diagonalizing_gates = [qp.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)]
+            diagonalizing_gates = [qp.adjoint(g) for g in reversed(diagonalizing_gates)]
 
         self._qubit_state.apply_operations(diagonalizing_gates)
 

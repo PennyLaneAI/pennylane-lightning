@@ -413,7 +413,7 @@ class TestAdjointJacobian:
 
             qp.Rot(1.3, -2.3, 0.5, wires=[0])
             qp.RZ(-0.5, wires=0)
-            qp.adjoint(qp.RY(0.5, wires=1), lazy=False)
+            qp.adjoint(qp.RY(0.5, wires=1))
             qp.CNOT(wires=[0, 1])
 
             qp.expval(obs(wires=0))
@@ -454,7 +454,7 @@ class TestAdjointJacobian:
 
             qp.Rot(1.3, -2.3, 0.5, wires=[0])
             qp.RZ(-0.5, wires=0)
-            qp.adjoint(qp.RY(0.5, wires=1), lazy=False)
+            qp.adjoint(qp.RY(0.5, wires=1))
             qp.CNOT(wires=[0, 1])
 
             qp.expval(
