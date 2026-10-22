@@ -756,8 +756,8 @@ class TestSerializeOps:
             qp.CNOT(wires=["a", 3.2])
             qp.SingleExcitation(0.5, wires=["a", 3.2])
             qp.SingleExcitationPlus(0.4, wires=["a", 3.2])
-            qp.adjoint(qp.SingleExcitationMinus(0.5, wires=["a", 3.2]), lazy=False)
-            qp.adjoint(qp.SingleExcitationMinus(0.5, wires=["a", 3.2]), lazy=True)
+            qp.SingleExcitationMinus(-0.5, wires=["a", 3.2])
+            qp.adjoint(qp.SingleExcitationMinus(0.5, wires=["a", 3.2]))
 
         mat = np.array([])
         s = QuantumScriptSerializer(device_name).serialize_ops(tape, wires_dict)
@@ -789,8 +789,8 @@ class TestSerializeOps:
         ops = qp.OrbitalRotation(0.1234, wires=range(4))
         with qp.tape.QuantumTape() as tape:
             qp.ctrl(qp.RX(0.4, wires=0), [2, 3])
-            qp.ctrl(qp.adjoint(qp.RX(0.4, wires=0), lazy=False), [2, 3])
-            qp.ctrl(qp.adjoint(qp.RX(0.4, wires=0), lazy=True), [2, 3])
+            qp.ctrl(qp.RX(-0.4, wires=0), [2, 3])
+            qp.ctrl(qp.adjoint(qp.RX(0.4, wires=0)), [2, 3])
             qp.adjoint(qp.ctrl(qp.RX(0.4, wires=0), [2, 3]))
             qp.adjoint(qp.ctrl(qp.adjoint(qp.RX(0.4, wires=0)), [2, 3]))
             qp.ctrl(qp.adjoint(ops), [4, 5])
@@ -839,8 +839,8 @@ class TestSerializeOps:
         with qp.tape.QuantumTape() as tape:
             qp.ctrl(op, [4, 5])
             qp.adjoint(qp.ctrl(op, [4, 5]))
-            qp.ctrl(qp.adjoint(op, lazy=True), [4, 5])
-            qp.adjoint(qp.ctrl(qp.adjoint(op, lazy=True), [4, 5]), lazy=True)
+            qp.ctrl(qp.adjoint(op), [4, 5])
+            qp.adjoint(qp.ctrl(qp.adjoint(op), [4, 5]))
 
         s = QuantumScriptSerializer(device_name).serialize_ops(tape, wires_map)
         s_expected = (
@@ -867,9 +867,9 @@ class TestSerializeOps:
         """Test expected serialization for adjoint gates and qubitunitary"""
         mat = qp.matrix(qp.OrbitalRotation(0.1234, wires=range(4)))
         with qp.tape.QuantumTape() as tape:
-            qp.adjoint(qp.SingleExcitationMinus(0.5, wires=[0, 1]), lazy=False)
-            qp.adjoint(qp.SingleExcitationMinus(0.5, wires=[0, 1]), lazy=True)
-            qp.adjoint(qp.QubitUnitary(mat, wires=range(4)), lazy=True)
+            qp.SingleExcitationMinus(-0.5, wires=[0, 1])
+            qp.adjoint(qp.SingleExcitationMinus(0.5, wires=[0, 1]))
+            qp.adjoint(qp.QubitUnitary(mat, wires=range(4)))
 
         s = QuantumScriptSerializer(device_name).serialize_ops(tape, wires_map)
         s_expected = (

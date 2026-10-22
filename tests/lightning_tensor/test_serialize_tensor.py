@@ -728,7 +728,7 @@ class TestSerializeOps:
             qp.CNOT(wires=["a", 3.2])
             qp.SingleExcitation(0.5, wires=["a", 3.2])
             qp.SingleExcitationPlus(0.4, wires=["a", 3.2])
-            qp.adjoint(qp.SingleExcitationMinus(0.5, wires=["a", 3.2]), lazy=False)
+            qp.SingleExcitationMinus(-0.5, wires=["a", 3.2])
 
         s = QuantumScriptSerializer(
             device_name, use_csingle, tensor_backend=self.tn_method
