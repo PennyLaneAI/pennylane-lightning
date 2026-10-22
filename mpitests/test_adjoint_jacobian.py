@@ -403,7 +403,7 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
                 op,
                 qp.Rot(1.3, -2.3, 0.5, wires=[0]),
                 qp.RZ(-0.5, wires=0),
-                qp.RY(-0.5, wires=1),
+                qp.adjoint(qp.RY(0.5, wires=1)),
                 qp.CNOT(wires=[0, 1]),
             ],
             meas,
