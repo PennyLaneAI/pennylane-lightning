@@ -24,6 +24,7 @@ supported_backends = {
     "lightning_amdgpu",
     "lightning_gpu",
     "lightning_tensor",
+    "lightning_tensornet",
 }
 supported_backends.update({sb.replace("_", ".") for sb in supported_backends})
 
@@ -32,7 +33,8 @@ def get_backend():
     """Return backend.
 
     The backend is ``lightning_qubit`` by default.
-    Allowed values are: "lightning_kokkos", "lightning_qubit", "lightning_gpu" and "lightning_tensor".
+    Allowed values are: "lightning_kokkos", "lightning_qubit", "lightning_gpu", "lightning_tensor"
+    and "lightning_tensornet".
     A dot can also be used instead of an underscore.
     If the environment variable ``PL_BACKEND`` is defined, its value is used.
     Otherwise, if the environment variable ``CMAKE_ARGS`` is defined and it

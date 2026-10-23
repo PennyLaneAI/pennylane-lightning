@@ -2,6 +2,16 @@
 
 <h3>New features since last release</h3>
 
+- Added `lightning.tensornet`, a Kokkos-based noisy matrix-product-state (MPS) simulator integrated
+  with the Catalyst runtime (`qp.qjit`). Noiseless circuits are simulated as a pure MPS, and the first
+  non-unitary channel switches the simulation exactly to a matrix-product density operator (MPDO).
+  The device runs on any Kokkos backend (OpenMP, Serial, CUDA, HIP, SYCL) and accepts a
+  `qp.NoiseModel` (or a serialized native `LNM1` model) through the `noise_model` keyword argument.
+  The noise model is applied either as a device transform (`noise_mode="transform"`) or natively
+  by the C++ backend (`noise_mode="native"`); under `qp.qjit` it is handed to the Catalyst
+  runtime device through `device_kwargs`. The Docker file has new targets to build and test the plugin.
+  [(#1429)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1429)
+
 <h3>Improvements 🛠</h3>
 
 - Updated the Lightning performance kernel tuning document.
@@ -146,6 +156,7 @@ Marcus Edwards,
 David Ittah,
 Jeffrey Kam,
 Joseph Lee,
+Lee J. O'Riordan,
 Andrija Paurevic,
 Jake Zaia
 

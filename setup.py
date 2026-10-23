@@ -160,7 +160,12 @@ class CMakeBuild(build_ext):
             destination = os.path.join(os.getcwd(), f"build_{backend}")
             shutil.copy(source, destination)
 
-        if backend in ("lightning_kokkos", "lightning_qubit", "lightning_amdgpu"):
+        if backend in (
+            "lightning_kokkos",
+            "lightning_qubit",
+            "lightning_amdgpu",
+            "lightning_tensornet",
+        ):
             if platform.system() in ["Linux", "Darwin"]:
                 shared_lib_ext = {"Linux": ".so", "Darwin": ".dylib"}[platform.system()]
                 lib_name = "lightning_kokkos" if backend == "lightning_amdgpu" else backend

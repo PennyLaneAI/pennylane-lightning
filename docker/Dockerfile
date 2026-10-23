@@ -107,6 +107,32 @@ COPY --from=build-wheel-lightning-qubit /opt/pennylane-lightning/dist/ /
 RUN pip install --force-reinstall --no-cache-dir pennylane_lightning*.whl && rm pennylane_lightning*.whl
 RUN pip install --no-cache-dir git+https://github.com/PennyLaneAI/pennylane.git@${PENNYLANE_VERSION}
 
+# Download Lightning release and build lightning-tensornet backend with Kokkos-OpenMP
+FROM base-build-python AS build-wheel-lightning-tensornet-openmp
+WORKDIR /opt/pennylane-lightning
+ENV PL_BACKEND=lightning_tensornet
+RUN pip uninstall -y pennylane-lightning
+RUN python scripts/configure_pyproject_toml.py || true
+RUN CMAKE_ARGS="-DKokkos_ENABLE_SERIAL:BOOL=ON -DKokkos_ENABLE_OPENMP:BOOL=ON" python -m build --wheel
+
+# Install lightning-tensornet OpenMP backend
+FROM base-runtime AS wheel-lightning-tensornet-openmp
+ARG PENNYLANE_VERSION
+COPY --from=build-wheel-lightning-tensornet-openmp /opt/pennylane-lightning/dist/ /
+COPY --from=build-wheel-lightning-qubit /opt/pennylane-lightning/dist/ /
+RUN pip install --force-reinstall --no-cache-dir pennylane_lightning*.whl && rm pennylane_lightning*.whl
+RUN pip install --no-cache-dir git+https://github.com/PennyLaneAI/pennylane.git@${PENNYLANE_VERSION}
+
+# Test lightning-tensornet OpenMP backend: Python test suite and PennyLane device tests
+FROM wheel-lightning-tensornet-openmp AS test-lightning-tensornet-openmp
+WORKDIR /opt/pennylane-lightning
+COPY --from=build-wheel-lightning-tensornet-openmp /opt/pennylane-lightning/tests/ tests/
+RUN pip install --no-cache-dir pytest pytest-mock pytest-rng flaky
+ENV PL_DEVICE=lightning.tensornet
+RUN python -m pytest tests/ --tb=short
+RUN pl-device-test --device lightning.tensornet --skip-ops --shots=10000 --tb=short
+RUN pl-device-test --device lightning.tensornet --skip-ops --tb=short
+
 # Install CUDA-12 in build venv image
 FROM base-build-python AS base-build-cuda
 WORKDIR /opt/cuda-build

@@ -93,6 +93,12 @@ set(COMPONENT_SUBDIRS   algorithms
                         utils
                         )
 
+# Backends built on top of lightning_kokkos (e.g. lightning_tensornet) only need
+# the core library.
+if(PLKOKKOS_SKIP_CATALYST)
+    list(REMOVE_ITEM COMPONENT_SUBDIRS catalyst)
+endif()
+
 foreach(COMP ${COMPONENT_SUBDIRS})
     add_subdirectory(${COMP})
 endforeach()

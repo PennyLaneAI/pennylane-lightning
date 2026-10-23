@@ -80,6 +80,11 @@ foreach(BACKEND ${PL_BACKEND})
         set(PL_TENSOR_BACKEND "cutensornet" CACHE STRING "PennyLane LightningTensor backed by cutensornet")
         set(PL_TENSOR "${PL_BACKEND}_${PL_TENSOR_BACKEND}")
     endif()
+    # Kokkos tensor-network (MPS/MPDO) backend: it provides its own Python
+    # bindings and does not run the generic state-vector C++ tests.
+    if("${BACKEND}" STREQUAL "lightning_tensornet")
+        set(PL_NOISY_BACKEND ON)
+    endif()
 endforeach()
 
 # Process compile options
@@ -167,9 +172,14 @@ target_include_directories(pennylane_lightning  INTERFACE "$<INSTALL_INTERFACE:$
 if(ENABLE_PYTHON)
     message(STATUS "ENABLE_PYTHON is ON.")
     # Build Nanobind module
+    if(PL_NOISY_BACKEND)
+        set(PL_BINDINGS_SOURCE "pennylane_lightning/core/simulators/${PL_BACKEND}/bindings/Bindings.cpp")
+    else()
+        set(PL_BINDINGS_SOURCE "pennylane_lightning/core/bindings/Bindings.cpp")
+    endif()
     nanobind_add_module("${PL_BACKEND}_ops"
                         NB_DOMAIN "pennylane_lightning"
-                        "pennylane_lightning/core/bindings/Bindings.cpp")
+                        "${PL_BINDINGS_SOURCE}")
 
     # Remove nanobind's problematic flags that are incompatible with NVCC
     target_compile_options("${PL_BACKEND}_ops" PRIVATE

@@ -114,6 +114,7 @@ supported_devices = {
     "lightning.amdgpu",
     "lightning.gpu",
     "lightning.tensor",
+    "lightning.tensornet",
 }
 
 
@@ -121,7 +122,8 @@ def get_device():
     """Return the pennylane lightning device.
 
     The device is ``lightning.qubit`` by default. Allowed values are:
-    "lightning.qubit", "lightning.kokkos", "lightning.amdgpu", "lightning.gpu", and "lightning.tensor".
+    "lightning.qubit", "lightning.kokkos", "lightning.amdgpu", "lightning.gpu", "lightning.tensor"
+    and "lightning.tensornet".
     If the environment variable ``PL_DEVICE`` is defined, its value is used.
     """
     device = os.environ.get("PL_DEVICE", default_device)
@@ -151,8 +153,17 @@ lightning_ops = None
 # Define nanobind module name based on current device
 nanobind_module_name = f"pennylane_lightning.{device_module_name}_ops"
 
-# Handle lightning.tensor separately since it has different class structure
-if device_name == "lightning.tensor":
+# Handle lightning.tensornet and lightning.tensor separately since they have a
+# different class structure
+if device_name == "lightning.tensornet":
+    from pennylane_lightning.lightning_tensornet import LightningTensornet as LightningDevice
+
+    LightningAdjointJacobian = None
+    LightningMeasurements = None
+    LightningStateVector = None
+    if hasattr(pennylane_lightning, f"{device_module_name}_ops"):
+        lightning_ops = importlib.import_module(nanobind_module_name)
+elif device_name == "lightning.tensor":
     from pennylane_lightning.lightning_tensor import LightningTensor as LightningDevice
     from pennylane_lightning.lightning_tensor._measurements import (
         LightningTensorMeasurements as LightningMeasurements,
@@ -368,6 +379,17 @@ def validate_measurements(func, shots, results1, results2, atol=0.01, rtol=0.2):
         return
 
     validate_others(shots, results1, results2, atol=atol, rtol=rtol)
+
+
+def pytest_ignore_collect(collection_path, config):  # pylint: disable=unused-argument
+    """The state-vector test modules do not apply to lightning.tensornet, whose tests
+    live in tests/lightning_tensornet."""
+    if device_name != "lightning.tensornet" or collection_path.suffix != ".py":
+        return None
+    tn_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "lightning_tensornet")
+    if os.path.commonpath([tn_dir, os.path.abspath(str(collection_path))]) != tn_dir:
+        return True
+    return None
 
 
 # This hook is called to add info to test report header

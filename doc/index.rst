@@ -31,6 +31,9 @@ PennyLane-Lightning high performance simulators include the following backends:
     It notably implements a distributed state-vector simulator based on `MPI <https://www.mpi-forum.org/docs/>`_.
 *   ``lightning.tensor``: a tensor-network simulator based on the `NVIDIA cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`_.
     The supported methods are Matrix Product State (MPS) and Exact Tensor Network (TN).
+*   ``lightning.tensornet``: a noisy Matrix Product State (MPS) simulator written with `Kokkos <https://kokkos.github.io/kokkos-core-wiki/index.html>`_.
+    Noise channels switch the simulation exactly to a Matrix Product Density Operator (MPDO).
+    It supports PennyLane noise models and ``qjit`` compilation with `Catalyst <https://docs.pennylane.ai/projects/catalyst>`_.
 
 If you're not sure which simulator to use, check out our `PennyLane performance <https://pennylane.ai/performance>`_ page.
 
@@ -63,6 +66,11 @@ The Lightning ecosystem provides the following devices:
     :name: 'lightning.tensor'
     :description: A tensor network simulator with NVIDIA cuQuantum library support.
     :link: lightning_tensor/device.html
+
+.. title-card::
+    :name: 'lightning.tensornet'
+    :description: A noisy matrix-product-state simulator with Kokkos library support.
+    :link: lightning_tensornet/device.html
 
 .. raw:: html
 
@@ -113,6 +121,7 @@ If you are using Lightning for research, please cite:
    lightning_amdgpu/device
    lightning_gpu/device
    lightning_tensor/device
+   lightning_tensornet/device
 
 .. toctree::
    :maxdepth: 2
