@@ -10,6 +10,7 @@
   The noise model is applied either as a device transform (`noise_mode="transform"`) or natively
   by the C++ backend (`noise_mode="native"`); under `qp.qjit` it is handed to the Catalyst
   runtime device through `device_kwargs`. The Docker file has new targets to build and test the plugin.
+  [(#1429)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1429)
 
 <h3>Improvements 🛠</h3>
 
