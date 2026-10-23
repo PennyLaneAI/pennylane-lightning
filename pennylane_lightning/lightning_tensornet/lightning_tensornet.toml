@@ -1,0 +1,136 @@
+schema = 3
+
+# Capabilities of lightning.tensornet (Kokkos matrix-product-state simulator;
+# switches to a matrix-product density operator when noise is applied).
+#
+# Sections without a prefix apply both to Python execution and to the
+# Catalyst runtime device (qjit). Sections prefixed with "pennylane." are only
+# supported by the Python device (Catalyst decomposes those operations before
+# they reach the runtime); sections prefixed with "qjit." are only supported by
+# the runtime device.
+#
+#   GATE = { properties = [ PROPS ], conditions = [ CONDS ] }
+#
+# PROPS: "controllable", "invertible" (no device gradients: lightning.tensornet uses
+#        parameter-shift / finite-difference).
+# CONDS: "analytic", "finiteshots", "terms-commute".
+[operators.gates]
+
+CNOT                   = { properties = [ "invertible"                 ] }
+ControlledPhaseShift   = { properties = [ "invertible"                 ] }
+CRot                   = { properties = [ "invertible"                 ] }
+CRX                    = { properties = [ "invertible"                 ] }
+CRY                    = { properties = [ "invertible"                 ] }
+CRZ                    = { properties = [ "invertible"                 ] }
+CSWAP                  = { properties = [ "invertible"                 ] }
+CY                     = { properties = [ "invertible"                 ] }
+CZ                     = { properties = [ "invertible"                 ] }
+DoubleExcitationMinus  = { properties = [ "invertible", "controllable" ] }
+DoubleExcitationPlus   = { properties = [ "invertible", "controllable" ] }
+DoubleExcitation       = { properties = [ "invertible", "controllable" ] }
+GlobalPhase            = { properties = [ "invertible", "controllable" ] }
+Hadamard               = { properties = [ "invertible", "controllable" ] }
+Identity               = { properties = [ "invertible"                 ] }
+IsingXX                = { properties = [ "invertible", "controllable" ] }
+IsingXY                = { properties = [ "invertible", "controllable" ] }
+IsingYY                = { properties = [ "invertible", "controllable" ] }
+IsingZZ                = { properties = [ "invertible", "controllable" ] }
+MultiRZ                = { properties = [ "invertible", "controllable" ] }
+PauliX                 = { properties = [ "invertible", "controllable" ] }
+PauliY                 = { properties = [ "invertible", "controllable" ] }
+PauliZ                 = { properties = [ "invertible", "controllable" ] }
+PauliRot               = { properties = [ "invertible"                 ] }
+PhaseShift             = { properties = [ "invertible", "controllable" ] }
+PSWAP                  = { properties = [ "invertible", "controllable" ] }
+QubitUnitary           = { properties = [ "invertible", "controllable" ] }
+Rot                    = { properties = [ "invertible", "controllable" ] }
+RX                     = { properties = [ "invertible", "controllable" ] }
+RY                     = { properties = [ "invertible", "controllable" ] }
+RZ                     = { properties = [ "invertible", "controllable" ] }
+SingleExcitationMinus  = { properties = [ "invertible", "controllable" ] }
+SingleExcitationPlus   = { properties = [ "invertible", "controllable" ] }
+SingleExcitation       = { properties = [ "invertible", "controllable" ] }
+S                      = { properties = [ "invertible", "controllable" ] }
+SWAP                   = { properties = [ "invertible", "controllable" ] }
+Toffoli                = { properties = [ "invertible"                 ] }
+T                      = { properties = [ "invertible", "controllable" ] }
+SX                     = { properties = [ "invertible", "controllable" ] }
+
+# Supported by the Python device only.
+[pennylane.operators.gates]
+
+MultiControlledX             = {}
+ControlledQubitUnitary       = {}
+BlockEncode                  = { properties = [ "controllable" ] }
+DiagonalQubitUnitary         = {}
+ECR                          = {}
+ISWAP                        = {}
+OrbitalRotation              = {}
+QubitCarry                   = {}
+QubitSum                     = {}
+SISWAP                       = {}
+SQISW                        = {}
+# Noise channels (applied through their Kraus operators). Under qjit, noise is
+# supplied through the `noise_model` device argument instead.
+AmplitudeDamping             = {}
+GeneralizedAmplitudeDamping  = {}
+PhaseDamping                 = {}
+DepolarizingChannel          = {}
+BitFlip                      = {}
+PhaseFlip                    = {}
+PauliError                   = {}
+ResetError                   = {}
+ThermalRelaxationError       = {}
+QubitChannel                 = {}
+
+# Supported by the Catalyst runtime device only.
+[qjit.operators.gates]
+
+PauliMeasure                 = {}
+
+[operators.observables]
+
+Identity               = {}
+PauliX                 = {}
+PauliY                 = {}
+PauliZ                 = {}
+Hadamard               = {}
+Hermitian              = {}
+Sum                    = {}
+SProd                  = {}
+Prod                   = {}
+Exp                    = {}
+LinearCombination      = {}
+
+[pennylane.operators.observables]
+
+Projector              = {}
+
+[measurement_processes]
+
+ExpectationMP          = {}
+VarianceMP             = {}
+ProbabilityMP          = {}
+SampleMP               = { conditions = [ "finiteshots" ] }
+CountsMP               = { conditions = [ "finiteshots" ] }
+# Pure states only: the state of a noisy (mixed) simulation is a density
+# operator and qml.state() raises; use qml.density_matrix() in Python.
+StateMP                = { conditions = [ "analytic" ] }
+
+# The runtime interface only returns state vectors; the density matrix and the
+# quantities derived from it are available in Python.
+[pennylane.measurement_processes]
+
+DensityMatrixMP        = { conditions = [ "analytic" ] }
+PurityMP               = { conditions = [ "analytic" ] }
+VnEntropyMP            = { conditions = [ "analytic" ] }
+MutualInfoMP           = { conditions = [ "analytic" ] }
+
+[compilation]
+
+qjit_compatible = true
+runtime_code_generation = false
+supported_mcm_methods = [ "device", "one-shot" ]
+dynamic_qubit_management = true
+non_commuting_observables = true
+initial_state_prep = true
