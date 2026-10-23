@@ -44,6 +44,11 @@ Select the device below for detailed source-installation instructions:
    :description: Detailed guidelines to installing and testing the Lightning Tensor device
    :link: ../lightning_tensor/installation.html
 
+.. title-card::
+   :name: Lightning Tensornet
+   :description: Detailed guidelines to installing and testing the Lightning Tensornet device
+   :link: ../lightning_tensornet/installation.html
+
 .. raw:: html
 
         <div style='clear:both'></div>
@@ -57,3 +62,4 @@ Select the device below for detailed source-installation instructions:
    ../lightning_kokkos/installation
    ../lightning_kokkos/installation_hpc
    ../lightning_tensor/installation
+   ../lightning_tensornet/installation

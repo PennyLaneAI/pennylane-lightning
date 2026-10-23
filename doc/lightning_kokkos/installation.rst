@@ -14,6 +14,8 @@ Install Lightning-Kokkos from source
 
 As Kokkos enables support for many different HPC-targeted hardware platforms, ``lightning.kokkos`` can be built to support any of these platforms when building from source.
 
+.. _install-kokkos-optional:
+
 Install Kokkos (Optional)
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 

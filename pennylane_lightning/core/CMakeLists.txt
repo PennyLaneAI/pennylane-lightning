@@ -10,6 +10,7 @@ set(COMPONENT_SUBDIRS   algorithms
                         catalyst
                         gates
                         measurements
+                        noise
                         observables
                         simulators
                         utils

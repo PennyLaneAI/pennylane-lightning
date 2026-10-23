@@ -60,6 +60,8 @@ help:
 	@echo "  check-tidy [target=?]    to build a specific PennyLane-Lightning target with ENABLE_CLANG_TIDY=ON (requires clang-tidy & CMake)"
 	@echo "  docker-build [target=?]  to build a Docker image for a specific PennyLane-Lightning target"
 	@echo "  docker-push  [target=?]  to push a Docker image to the PennyLaneAI Docker Hub repo"
+	@echo "  docker-test  [target=?]  to build a Docker image for a PennyLane-Lightning target and run its tests"
+	@echo "                           (available for target=lightning-tensornet-openmp)"
 	@echo "  docker-all  		      to build and push Docker images for all PennyLane-Lightning targets"
 
 .PHONY: clean
@@ -213,7 +215,7 @@ docs:
 clean-docs:
 	$(MAKE) -C doc clean
 
-.PHONY : docker-build docker-push docker-all
+.PHONY : docker-build docker-push docker-test docker-all
 ifdef target
     TARGET := $(target)
 else
@@ -237,6 +239,11 @@ docker-build:
 		  --build-arg='LIGHTNING_VERSION=$(VERSION)' --build-arg='PENNYLANE_VERSION=$(PL_VERSION)' .
 docker-push:
 	docker push pennylaneai/pennylane:$(VERSION)-$(TARGET)
+docker-test:
+	docker build -f docker/Dockerfile \
+		  --tag=pennylaneai/pennylane:$(VERSION)-$(TARGET)-test \
+		  --target test-$(TARGET) \
+		  --build-arg='LIGHTNING_VERSION=$(VERSION)' --build-arg='PENNYLANE_VERSION=$(PL_VERSION)' .
 docker-build-all:
 	$(MAKE) docker-build target=lightning-qubit 		pl_version=$(PL_VERSION) version=$(VERSION)
 	$(MAKE) docker-build target=lightning-gpu 			pl_version=$(PL_VERSION) version=$(VERSION)

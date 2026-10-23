@@ -30,6 +30,16 @@ MACRO(FIND_AND_ADD_SIMULATOR)
         if ("${BACKEND}" STREQUAL "lightning_amdgpu")
             # Reuse the lightning_kokkos source code for this backend
             add_subdirectory(lightning_kokkos)
+        elseif ("${BACKEND}" STREQUAL "lightning_tensornet")
+            # The Kokkos MPS backend uses the lightning_kokkos core targets
+            # (Kokkos installation): skip the lightning_kokkos Catalyst
+            # plugin and tests.
+            set(PLKOKKOS_SKIP_CATALYST ON)
+            set(_PL_SAVED_BUILD_TESTS ${BUILD_TESTS})
+            set(BUILD_TESTS OFF)
+            add_subdirectory(lightning_kokkos)
+            set(BUILD_TESTS ${_PL_SAVED_BUILD_TESTS})
+            add_subdirectory(lightning_tensornet)
         elseif (${BACKEND} IN_LIST SIMULATORS_LIST)
             add_subdirectory(${BACKEND})
         else()

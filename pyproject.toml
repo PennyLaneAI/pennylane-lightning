@@ -114,6 +114,7 @@ kokkos = [ "pennylane-lightning-kokkos",]
 amdgpu = [ "pennylane-lightning-amdgpu",]
 gpu = [ "pennylane-lightning-gpu",]
 tensor = [ "pennylane-lightning-tensor",]
+tensornet = [ "pennylane-lightning-tensornet",]
 
 [project.urls]
 Homepage = "https://github.com/PennyLaneAI/pennylane-lightning"

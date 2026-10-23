@@ -21,6 +21,7 @@ Choose a version (e.g. `v0.34.0`) and append a device (plugin) name among the fo
 - `lightning-kokkos-cuda`: [pennylane-lightning-kokkos](https://github.com/PennyLaneAI/pennylane-lightning#lightning-kokkos-installation) parallelizes state-vector simulations using Kokkos' [CUDA](https://developer.nvidia.com/cuda-toolkit) backend.
 - `lightning-kokkos-openmp`: [pennylane-lightning-kokkos](https://github.com/PennyLaneAI/pennylane-lightning#lightning-kokkos-installation) parallelizes state-vector simulations using Kokkos' [OpenMP](https://www.openmp.org/) backend.
 - `lightning-kokkos-rocm`: [pennylane-lightning-kokkos](https://github.com/PennyLaneAI/pennylane-lightning#lightning-kokkos-installation) parallelizes state-vector simulations using Kokkos' [HIP](https://docs.amd.com/projects/HIP/en/docs-5.3.0/index.html) backend.
+- `lightning-tensornet-openmp`: [pennylane-lightning-tensornet](https://docs.pennylane.ai/projects/lightning/en/latest/lightning_tensornet/device.html) is a noisy matrix-product-state simulator built with Kokkos' [OpenMP](https://www.openmp.org/) backend.
 
 If you have Docker installed, download and spawn a container with `pennylane-lightning` as follows
 
@@ -60,6 +61,7 @@ Decide on a target among:
 - `wheel-lightning-kokkos-cuda`
 - `wheel-lightning-kokkos-openmp`
 - `wheel-lightning-kokkos-rocm`
+- `wheel-lightning-tensornet-openmp`
 
 For instance `TARGET=wheel-lightning-qubit`.
 Then the following command will build the target
@@ -73,6 +75,19 @@ You may also feed a git tag or version as follows
 ```shell
 docker build -f docker/Dockerfile --tag=${TARGET} --target ${TARGET} --build-arg="LIGHTNING_VERSION=${VERSION}" .
 ```
+
+Some targets also have a test stage that builds the image and runs the plugin test suites
+(the Python tests of the plugin and `pl-device-test` with and without shots).
+The build fails if a test fails:
+
+- `test-lightning-tensornet-openmp`
+
+```shell
+docker build -f docker/Dockerfile --target test-lightning-tensornet-openmp .
+```
+
+or equivalently `make docker-test target=lightning-tensornet-openmp`.
+The test stage uses the sources of `LIGHTNING_VERSION`, so pass a branch or tag that contains the plugin.
 
 To start a container with a `bash` shell use
 

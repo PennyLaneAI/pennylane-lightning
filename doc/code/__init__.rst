@@ -33,6 +33,11 @@ This section contains the API documentation for the Lightning packages.
    :description: API documentation for the lightning_tensor package
    :link: ../lightning_tensor/package.html
 
+.. title-card::
+   :name: lightning_tensornet
+   :description: API documentation for the lightning_tensornet package
+   :link: ../lightning_tensornet/package.html
+
 .. raw:: html
 
         <div style='clear:both'></div>
@@ -45,3 +50,4 @@ This section contains the API documentation for the Lightning packages.
    ../lightning_gpu/package
    ../lightning_kokkos/package
    ../lightning_tensor/package
+   ../lightning_tensornet/package
