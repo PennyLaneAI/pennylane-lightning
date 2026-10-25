@@ -211,7 +211,8 @@ void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
         if (!std::has_single_bit(state_length)) {
             throw std::invalid_argument("Invalid serialized state vector");
         }
-        new (&sv) StateVectorT{std::countr_zero(state_length)};
+        new (&sv) StateVectorT{
+            static_cast<std::size_t>(std::countr_zero(state_length))};
         std::memcpy(sv.getData(), state.data(), state.size());
     });
 
