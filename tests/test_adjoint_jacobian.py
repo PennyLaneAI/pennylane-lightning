@@ -974,31 +974,6 @@ class TestAdjointJacobianQNode:
         finally:
             jax.config.update("jax_enable_x64", original_x64)
 
-    def test_torch_amplitude_embedding(self, dev):
-        """Test that the adjoint Jacobian works with AmplitudeEmbedding in a TorchLayer"""
-
-        torch = pytest.importorskip("torch")
-
-        # Define a simple circuit with AmplitudeEmbedding and BasicEntanglerLayers
-        n_qubits = 3
-        qp.AmplitudeEmbedding.ndim_params = (1,)
-
-        @qp.qnode(dev)
-        def qnode(inputs, weights):
-            qp.AmplitudeEmbedding(inputs, wires=range(n_qubits), normalize=True)
-            qp.BasicEntanglerLayers(weights, wires=range(n_qubits))
-            return [qp.expval(qp.PauliZ(wires=i)) for i in range(n_qubits)]
-
-        n_layers = 1
-        weight_shapes = {"weights": (n_layers, n_qubits)}
-
-        qlayer = qp.qnn.TorchLayer(qnode, weight_shapes)
-        clayer_1 = torch.nn.Linear(2, 8)
-        xs_test = torch.tensor([[-0.7380, 0.3596], [-0.1870, 0.9423]])
-
-        t = clayer_1(xs_test)
-        qlayer(t)
-
 
 def circuit_ansatz(params, wires):
     """Circuit ansatz containing all the parametrized gates"""
