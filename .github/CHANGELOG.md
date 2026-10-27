@@ -45,6 +45,10 @@
   removal of the `qp.adjoint` `lazy` argument while preserving inverse gate order.
   [(#1428)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1428)
 
+- Added copy and pickle support for Lightning-Qubit state vectors, allowing executed devices
+  and QNodes to be deep-copied while preserving their state.
+  [(#1421)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1421)
+
 - Restored compatibility with the latest PennyLane, where `qp.GlobalPhase` no longer acts on wires and
   `qp.QuantumPhaseEstimation` has a new signature. Lightning-Qubit, Lightning-Kokkos and Lightning-GPU now
   support a controlled `GlobalPhase` whose controls cover every qubit.
@@ -147,6 +151,7 @@ David Ittah,
 Jeffrey Kam,
 Joseph Lee,
 Andrija Paurevic,
+Chen Shoval,
 Jake Zaia
 
 ---
