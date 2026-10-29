@@ -844,11 +844,8 @@ auto LightningKokkosSimulator::PauliMeasure(
     }
 
     // Measure in the computational basis
-    bool mres = true;
-    for (const auto &wire : wires) {
-        Result res = this->Measure(wire);
-        mres = mres && (*res);
-    }
+    Result res = this->Measure(wires[0]);
+    bool mres = *res;
 
     for (std::size_t i = 1; i < pauli_word.size(); i++) {
         this->NamedOperation("CNOT", {}, {wires[i], wires[0]});

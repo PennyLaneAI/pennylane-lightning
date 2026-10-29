@@ -197,6 +197,24 @@ TEST_CASE("Mid-circuit measurement test with invalid postselect value",
                                                 "Invalid postselect value"));
 }
 
+TEST_CASE("Multi-qubit PauliMeasure on a Bell state", "[Measures]") {
+    // The Bell state (|00> + |11>) / sqrt(2) has eigenvalue -1 for YY, so the
+    // measurement returns true and leaves the state unchanged.
+    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::vector<intptr_t> Qs = sim->AllocateQubits(2);
+    sim->NamedOperation("Hadamard", {}, {Qs[0]}, false);
+    sim->NamedOperation("CNOT", {}, {Qs[0], Qs[1]}, false);
+
+    auto m = sim->PauliMeasure("YY", Qs);
+    CHECK(*m);
+
+    std::vector<std::complex<double>> state(1U << sim->GetNumQubits());
+    DataView<std::complex<double>, 1> view(state);
+    sim->State(view);
+    CHECK(std::abs(state[0]) == Approx(M_SQRT1_2).margin(1e-6));
+    CHECK(std::abs(state[3]) == Approx(M_SQRT1_2).margin(1e-6));
+}
+
 TEST_CASE("Expval(ObsT) test with invalid key for cached observables",
           "[Measures]") {
     std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();

@@ -41,6 +41,11 @@
 
 <h3>Bug fixes 🐛</h3>
 
+- Fixed multi-qubit `PauliMeasure` in the Lightning-Kokkos Catalyst simulator, which measured every
+  wire of the Pauli word and returned the logical AND of the outcomes. It now measures only the parity
+  of the Pauli word, as Lightning-Qubit and Lightning-GPU do.
+  [(#XXXX)](https://github.com/PennyLaneAI/pennylane-lightning/pull/XXXX)
+
 - Measurement basis restoration now uses symbolic adjoints, supporting PennyLane's
   removal of the `qp.adjoint` `lazy` argument while preserving inverse gate order.
   [(#1428)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1428)
@@ -152,6 +157,7 @@ Jeffrey Kam,
 Joseph Lee,
 Andrija Paurevic,
 Chen Shoval,
+David Wierichs,
 Jake Zaia
 
 ---
