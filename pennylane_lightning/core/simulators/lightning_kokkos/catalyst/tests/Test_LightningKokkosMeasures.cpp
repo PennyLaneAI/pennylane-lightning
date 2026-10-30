@@ -215,6 +215,24 @@ TEST_CASE("Multi-qubit PauliMeasure on a Bell state", "[Measures]") {
     CHECK(std::abs(state[3]) == Approx(M_SQRT1_2).margin(1e-6));
 }
 
+TEST_CASE("PauliMeasure ignores identity entries", "[Measures]") {
+    // |10> is an eigenstate of every Pauli word below, so each measurement is
+    // deterministic and leaves the state unchanged.
+    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::vector<intptr_t> Qs = sim->AllocateQubits(2);
+    sim->NamedOperation("PauliX", {}, {Qs[0]}, false);
+
+    CHECK(*sim->PauliMeasure("ZI", Qs));
+    CHECK_FALSE(*sim->PauliMeasure("IZ", Qs));
+    CHECK_FALSE(*sim->PauliMeasure("ZI", {Qs[1], Qs[0]}));
+    CHECK_FALSE(*sim->PauliMeasure("II", Qs));
+
+    std::vector<std::complex<double>> state(1U << sim->GetNumQubits());
+    DataView<std::complex<double>, 1> view(state);
+    sim->State(view);
+    CHECK(std::abs(state[2]) == Approx(1.0).margin(1e-6));
+}
+
 TEST_CASE("Expval(ObsT) test with invalid key for cached observables",
           "[Measures]") {
     std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();

@@ -46,6 +46,10 @@
   parity of the Pauli word, as Lightning-Qubit and Lightning-GPU do.
   [(#1432)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1432)
 
+- `PauliMeasure` in the Lightning-Qubit, Lightning-Kokkos and Lightning-GPU simulators no longer
+  includes the identity entries of the Pauli word in the measured parity.
+  [(#1432)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1432)
+
 - Measurement basis restoration now uses symbolic adjoints, supporting PennyLane's
   removal of the `qp.adjoint` `lazy` argument while preserving inverse gate order.
   [(#1428)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1428)
