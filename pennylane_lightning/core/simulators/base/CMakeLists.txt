@@ -11,7 +11,7 @@ target_link_libraries(lightning_base INTERFACE  lightning_compile_options
 
 set_property(TARGET lightning_base PROPERTY POSITION_INDEPENDENT_CODE ON)
 
-if (BUILD_TESTS AND NOT DEFINED PL_TENSOR)
+if (BUILD_TESTS AND NOT DEFINED PL_TENSOR AND NOT DEFINED PL_CLIFFISH)
     enable_testing()
     add_subdirectory("tests")
 endif()

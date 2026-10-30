@@ -56,7 +56,7 @@ jobs:
       matrix:
         os: [macos-15]
         arch: [arm64]
-        pl_backend: ["lightning_kokkos", "lightning_qubit"]
+        pl_backend: ["lightning_kokkos", "lightning_qubit", "lightning_cliffish"]
         cibw_build: ${{fromJson(needs.set_wheel_build_matrix.outputs.python_version)}}
     timeout-minutes: 30
     name: macos-latest::arm64 - ${{ matrix.pl_backend }} (Python ${{ fromJson('{ "cp312-*":"3.12", "cp313-*":"3.13", "cp314-*":"3.14" }')[matrix.cibw_build] }})
@@ -96,14 +96,20 @@ jobs:
 
           CIBW_BEFORE_TEST: |
             python -m pip install --group tests
-            if ${{ matrix.pl_backend == 'lightning_kokkos'}}
+            if ${{ matrix.pl_backend != 'lightning_qubit'}}
             then
               PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
               SKIP_COMPILATION=True python -m pip install . -vv
             fi
           CIBW_TEST_COMMAND: |
             DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
-            pl-device-test --device=${DEVICENAME} --skip-ops -x --tb=short
+            if ${{ matrix.pl_backend == 'lightning_cliffish'}}
+            then
+              # lightning.cliffish runs only under Catalyst: check that the wheel ships its device library
+              python -c "import os, pennylane as qp; dev = qp.device('lightning.cliffish', wires=2); assert os.path.isfile(dev.get_c_interface()[1])"
+            else
+              pl-device-test --device=${DEVICENAME} --skip-ops -x --tb=short
+            fi
 
           CIBW_BUILD_VERBOSITY: 3
 
@@ -142,7 +148,7 @@ jobs:
     strategy:
       matrix:
         arch: [arm64]
-        pl_backend: ["lightning_qubit", "lightning_kokkos"]
+        pl_backend: ["lightning_qubit", "lightning_kokkos", "lightning_cliffish"]
         cibw_build: ${{ fromJson(needs.set_wheel_build_matrix.outputs.python_version) }}
     runs-on: ubuntu-24.04
     permissions:

@@ -80,6 +80,9 @@ foreach(BACKEND ${PL_BACKEND})
         set(PL_TENSOR_BACKEND "cutensornet" CACHE STRING "PennyLane LightningTensor backed by cutensornet")
         set(PL_TENSOR "${PL_BACKEND}_${PL_TENSOR_BACKEND}")
     endif()
+    if("${BACKEND}" STREQUAL "lightning_cliffish")
+        set(PL_CLIFFISH "${BACKEND}")
+    endif()
 endforeach()
 
 # Process compile options
@@ -164,7 +167,8 @@ endforeach()
 target_include_directories(pennylane_lightning  INTERFACE "$<INSTALL_INTERFACE:${PROJECT_SOURCE_DIR}/pennylane_lightning/core;include>")
 
 #####################################################
-if(ENABLE_PYTHON)
+# lightning_cliffish has no Python module: Catalyst loads its device library directly.
+if(ENABLE_PYTHON AND NOT DEFINED PL_CLIFFISH)
     message(STATUS "ENABLE_PYTHON is ON.")
     # Build Nanobind module
     nanobind_add_module("${PL_BACKEND}_ops"

@@ -2,6 +2,12 @@
 
 <h3>New features since last release</h3>
 
+- A new backend, `lightning_cliffish`, adds the build, wheel packaging, CI and Catalyst device
+  library for `lightning.cliffish`, a near-Clifford simulator that runs only under
+  `qp.qjit(capture=True)` and has no Python simulation path. The device loads through Catalyst but
+  does not simulate yet: every operation fails with an error.
+  [(#XXXX)](https://github.com/PennyLaneAI/pennylane-lightning/pull/XXXX)
+
 <h3>Improvements 🛠</h3>
 
 - Updated the Lightning performance kernel tuning document.
