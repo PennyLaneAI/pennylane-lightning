@@ -24,7 +24,9 @@ if device_name not in ("lightning.qubit", "lightning.kokkos", "lightning.amdgpu"
 if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-access
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
-pytest.importorskip("catalyst")
+# Not importorskip: a Catalyst source checkout on sys.path imports as an empty namespace package
+if not qp.compiler.available("catalyst"):
+    pytest.skip("Catalyst is not installed. Skipping.", allow_module_level=True)
 
 
 @pytest.fixture(params=[False, True], ids=["legacy", "capture"])
