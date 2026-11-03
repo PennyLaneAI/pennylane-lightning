@@ -228,7 +228,7 @@ class TestAdjointJacobian:
             qp.RX(x, wires=0)
             mcx = qp.MultiControlledX(wires=[0, 1], control_values=[False])
             if use_adjoint:
-                qp.adjoint(mcx, lazy=True)
+                qp.adjoint(mcx)
             qp.RY(y, wires=1)
             qp.expval(qp.PauliZ(1))
 

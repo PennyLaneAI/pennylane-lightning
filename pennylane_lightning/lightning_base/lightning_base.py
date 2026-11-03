@@ -654,7 +654,14 @@ def resolve_mcm_method(mcm_config: MCMConfig, tape: QuantumScript | None, device
 
 
 def _adjoint_stopping_condition(op: Operator) -> bool:
-    return not isinstance(op, (Conditional, MidMeasure, PauliRot)) and (
+    # ``Adjoint(PauliRot)`` (or ``Adjoint(Adjoint(...))``, ``Pow(Adjoint(...))``) has a generator, but
+    # there is no ``PauliRot`` kernel: the serializer would send it as a constant matrix and the
+    # trainable parameter would be silently dropped (zero gradient). Unwrap such wrappers so they are
+    # decomposed like a bare ``PauliRot``.
+    base = op
+    while isinstance(base, (qp.ops.op_math.Adjoint, qp.ops.op_math.Pow)):
+        base = base.base
+    return not isinstance(base, (Conditional, MidMeasure, PauliRot)) and (
         not any(qp.math.requires_grad(d) for d in op.data)
         or (op.num_params == 1 and op.has_generator)
     )
@@ -673,8 +680,21 @@ def adjoint_observables(obs: Operator, capabilities: DeviceCapabilities) -> bool
     return capabilities.supports_observable(obs)
 
 
-def adjoint_transforms(device: LightningBase, allow_mcms: bool = False) -> qp.CompilePipeline:
-    """Return a compile pipeline that prepares the circuit for adjoint differentiation."""
+def adjoint_transforms(
+    device: LightningBase,
+    allow_mcms: bool = False,
+    device_stopping_condition: Optional[Callable[[Operator], bool]] = None,
+) -> qp.CompilePipeline:
+    """Return a compile pipeline that prepares the circuit for adjoint differentiation.
+
+    Args:
+        device (LightningBase): the device to prepare the circuit for.
+        allow_mcms (bool): whether mid-circuit measurements are allowed.
+        device_stopping_condition (Callable or None): if given, operations produced by the
+            adjoint decomposition must also satisfy this condition (state preparations are
+            exempt). This keeps the adjoint decomposition from emitting operations the device
+            only executes through its generic matrix fallback.
+    """
 
     name = f"adjoint + {device.name}"
     capabilities = device.capabilities
@@ -682,11 +702,20 @@ def adjoint_transforms(device: LightningBase, allow_mcms: bool = False) -> qp.Co
     if allow_mcms:
         gate_set |= {"MidMeasureMP"}
     _adjoint_observables = partial(adjoint_observables, capabilities=capabilities)
+
+    stopping_condition = _adjoint_stopping_condition
+    if device_stopping_condition is not None:
+
+        def stopping_condition(op: Operator) -> bool:
+            return _adjoint_stopping_condition(op) and (
+                isinstance(op, qp.operation.StatePrepBase) or device_stopping_condition(op)
+            )
+
     return (
         no_sampling(name=name)
         + qp.transforms.broadcast_expand
         + decompose(
-            stopping_condition=_adjoint_stopping_condition,
+            stopping_condition=stopping_condition,
             skip_initial_state_prep=False,
             device_wires=device.wires,
             target_gates=gate_set,

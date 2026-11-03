@@ -41,6 +41,38 @@
 
 <h3>Bug fixes 🐛</h3>
 
+- Measurement basis restoration now uses symbolic adjoints, supporting PennyLane's
+  removal of the `qp.adjoint` `lazy` argument while preserving inverse gate order.
+  [(#1428)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1428)
+
+- Added copy and pickle support for Lightning-Qubit state vectors, allowing executed devices
+  and QNodes to be deep-copied while preserving their state.
+  [(#1421)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1421)
+
+- Restored compatibility with the latest PennyLane, where `qp.GlobalPhase` no longer acts on wires and
+  `qp.QuantumPhaseEstimation` has a new signature. Lightning-Qubit, Lightning-Kokkos and Lightning-GPU now
+  support a controlled `GlobalPhase` whose controls cover every qubit.
+  [(#1416)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1416)
+
+- Fixed adjoint differentiation of `qp.adjoint(qp.PauliRot(...))`, including nested `Adjoint`/`Pow`
+  wrappers, which silently returned a zero gradient on Lightning-Qubit and Lightning-Kokkos.
+  [(#1416)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1416)
+
+- Adjoint differentiation on Lightning-Qubit and Lightning-Kokkos now decomposes operations to the device
+  gate set, so the basis changes of `qp.PauliRot` are no longer applied as dense `2^n x 2^n` matrices.
+  For a 12-qubit `PauliRot` gradient this reduces runtime from about 4.6 s to 0.01 s and peak memory
+  from about 1.8 GB to 0.2 GB.
+  [(#1416)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1416)
+
+- Fixed Lightning-GPU applying a stale cached matrix to `qp.adjoint(qp.PauliRot(...))`. It now uses the
+  native `PauliRot` kernel.
+  [(#1416)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1416)
+
+- Fixed Lightning-GPU (including the MPI backend) applying the first matrix to every `qp.QubitUnitary` in
+  adjoint-Jacobian computations. A matrix passed with an operation is now applied directly instead of being
+  looked up in the gate cache by name.
+  [(#1416)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1416)
+
 - Restored compatibility with the latest PennyLane operator contract for `qp.PauliRot`,
   `qp.MultiControlledX`, and `qp.DiagonalQubitUnitary`.
   [(#1415)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1415)
@@ -58,6 +90,18 @@
   [(#1390)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1390)
 
 <h3>Internal changes ⚙️</h3>
+
+- `ctr(GlobalPhase)` now dispatches to `PhaseShift` when possible. Related test is updated.
+  [(#1427)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1427)
+
+- Added `tomlkit` to the `dev`, `tests` and `base` dependency groups. It was previously
+  pulled in transitively through PennyLane, which no longer depends on it.
+  [(#1422)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1422)
+
+- Reimplemented the automatic dev version bump as a plain regular expression increment and dropping
+  the `semver` dependency. The bump produced release-candidate versions (e.g. `dev24` -> `rc.1`) after
+  semver 3.1.0 changed the behaviour of `Version.next_version`.
+  [(#1426)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1426)
 
 - Changed Lightning-Qubit and Lightning-GPU to read the `qp.PCPhase` dimension from its
   Operator2 `compilable_args` dictionary.
@@ -102,9 +146,12 @@ This release contains contributions from (in alphabetical order):
 Runor Agbaire,
 Ali Asadi,
 Yushao Chen,
+Marcus Edwards,
 David Ittah,
 Jeffrey Kam,
 Joseph Lee,
+Andrija Paurevic,
+Chen Shoval,
 Jake Zaia
 
 ---

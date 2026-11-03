@@ -96,7 +96,7 @@ def op(op_name):
         ],
         "CPhase": [qp.CPhase, [], {"phi": 1.777, "wires": [0, 1]}],
         "MultiRZ": [qp.MultiRZ, [], {"theta": 0.112, "wires": [0, 1, 2]}],
-        "GlobalPhase": [qp.GlobalPhase, [], {"phi": 0.112, "wires": [0, 1, 2]}],
+        "GlobalPhase": [qp.GlobalPhase, [], {"phi": 0.112}],
         "CRX": [qp.CRX, [], {"phi": 0.123, "wires": [0, 1]}],
         "CRY": [qp.CRY, [], {"phi": 0.123, "wires": [0, 1]}],
         "CRZ": [qp.CRZ, [], {"phi": 0.123, "wires": [0, 1]}],
@@ -172,7 +172,8 @@ def test_gate_unitary_correct(op, op_name):
     if device_name not in ["lightning.qubit", "lightning.gpu"] and op == qp.PCPhase:
         pytest.skip("PCPhase only supported on lightning.qubit and lightning.gpu.")
 
-    wires = len(op[2]["wires"])
+    # GlobalPhase acts on no wires, so its entry carries no "wires" key.
+    wires = len(op[2].get("wires", [])) or 1
 
     if wires == 1 and device_name == "lightning.tensor":
         pytest.skip("Skipping single wire device on lightning.tensor.")
@@ -196,7 +197,7 @@ def test_gate_unitary_correct(op, op_name):
         out = output(np.array(input))
         unitary[:, i] = out
 
-    unitary_expected = qp.matrix(op[0](*op[1], **op[2]))
+    unitary_expected = qp.matrix(op[0](*op[1], **op[2]), wire_order=range(wires))
 
     assert np.allclose(unitary, unitary_expected)
 
@@ -224,7 +225,9 @@ def test_gate_unitary_correct(op, op_name):
         out = output(np.array(input))
         unitary[:, i] = out
 
-    unitary_expected = qp.matrix(op[0](*op1, **op2)) @ qp.matrix(op[0](*op[1], **op[2]))
+    unitary_expected = qp.matrix(op[0](*op1, **op2), wire_order=range(wires)) @ qp.matrix(
+        op[0](*op[1], **op[2]), wire_order=range(wires)
+    )
     assert np.allclose(unitary, unitary_expected)
 
 
@@ -241,9 +244,9 @@ def test_compare_sparse_and_dense_operations(op, op_name):
 
     # op is a tuple with the operation, its parameters, and its keyword arguments
     qp_op = op[0](*op[1], **op[2])
-    wires = op[2]["wires"]
+    wires = op[2].get("wires", [0])
     num_wires = len(wires)
-    matrix = qp.matrix(qp_op)
+    matrix = qp.matrix(qp_op, wire_order=wires)
 
     dev = qp.device(device_name, wires=num_wires)
 
@@ -280,7 +283,8 @@ def test_gate_unitary_correct_lt(op, op_name):
     if device_name not in ["lightning.qubit", "lightning.gpu"] and op == qp.PCPhase:
         pytest.skip("PCPhase only supported on lightning.qubit and lightning.gpu.")
 
-    wires = len(op[2]["wires"])
+    # GlobalPhase acts on no wires, so its entry carries the no wires key
+    wires = len(op[2].get("wires", [])) or 1
 
     if wires == 1 and device_name == "lightning.tensor":
         pytest.skip("Skipping single wire device on lightning.tensor.")
@@ -299,7 +303,7 @@ def test_gate_unitary_correct_lt(op, op_name):
         out = output(np.array(input))
         unitary[:, i] = out
 
-    unitary_expected = qp.matrix(op[0](*op[1], **op[2]))
+    unitary_expected = qp.matrix(op[0](*op[1], **op[2]), wire_order=range(wires))
 
     assert np.allclose(unitary, unitary_expected)
 
@@ -314,7 +318,8 @@ def test_inverse_unitary_correct(op, op_name):
     if op == None:
         pytest.skip("Skipping operation.")
 
-    wires = len(op[2]["wires"])
+    # GlobalPhase acts on no wires, so its entry carries the no wires key
+    wires = len(op[2].get("wires", [])) or 1
 
     if wires == 1 and device_name == "lightning.tensor":
         pytest.skip("Skipping single wire device on lightning.tensor.")
@@ -333,7 +338,7 @@ def test_inverse_unitary_correct(op, op_name):
         out = output(np.array(input))
         unitary[:, i] = out
 
-    unitary_expected = qp.matrix(qp.adjoint(op[0](*op[1], **op[2])))
+    unitary_expected = qp.matrix(qp.adjoint(op[0](*op[1], **op[2])), wire_order=range(wires))
 
     assert np.allclose(unitary, unitary_expected)
 
@@ -644,13 +649,16 @@ def test_controlled_qubit_gates(operation, n_qubits, control_value, adjoint, tol
             control_wires = all_wires[num_wires:]
             init_state = get_random_normalized_state(2**n_qubits)
 
+            # Operators like GlobalPhase act on no wires and take no wires argument
+            wires_arg = () if num_wires == 0 else (target_wires,)
+
             if operation.num_params == 0:
                 operation_params = []
             else:
-                operation_params = tuple([0.1234] * operation.num_params) + (target_wires,)
+                operation_params = tuple([0.1234] * operation.num_params) + wires_arg
                 if operation == qp.PCPhase or (adjoint and operation.__name__ == "PCPhase"):
                     # Hyperparameter for PCPhase is the dimension of the control space
-                    operation_params = (0.1234, 2) + (target_wires,)
+                    operation_params = (0.1234, 2) + wires_arg
 
             def circuit():
                 qp.StatePrep(init_state, wires=range(n_qubits))
@@ -726,6 +734,10 @@ def test_paulirot(n_wires, n_targets, tol, seed):
             [stateprep] + op.decomposition(),
             [qp.state()],
         )
+        # ``PauliRot.decomposition()`` returns a single ``ChangeOpBasis2`` op, which the
+        # device does not support natively. Run the device preprocessing so it is
+        # lowered to supported gates instead of being applied as a dense matrix.
+        (tape1,), _ = dev.preprocess_transforms()((tape1,))
         assert np.allclose(dev.execute(tape1), dev.execute(tape0), tol)
 
 
@@ -773,14 +785,13 @@ def test_controlled_globalphase(n_qubits, control_value, tol):
         if n_perms > threshold:
             wire_lists = wire_lists[0 :: (n_perms // threshold)]
         for all_wires in wire_lists:
-            target_wires = all_wires[0:num_wires]
             control_wires = all_wires[num_wires:]
             init_state = get_random_normalized_state(2**n_qubits)
 
             def circuit():
                 qp.StatePrep(init_state, wires=range(n_qubits))
                 qp.ctrl(
-                    operation(0.1234, target_wires),
+                    operation(0.1234),
                     control_wires,
                     control_values=(
                         [control_value or bool(i % 2) for i, _ in enumerate(control_wires)]
@@ -882,6 +893,37 @@ def test_controlled_globalphase_1ctrl_false_cornercase(n_qubits, tol):
     assert np.allclose(circ(), circ_def(), tol)
 
 
+@pytest.mark.skipif(
+    (device_name == "lightning.kokkos" and sys.platform == "win32"),
+    reason="lightning.kokkos doesn't support zero wires on Windows.",
+)
+@pytest.mark.skipif(
+    device_name in ("lightning.tensor",),
+    reason=device_name + " doesn't support zero wires.",
+)
+@pytest.mark.parametrize("adjoint", [False, True])
+@pytest.mark.parametrize("control_wires", [[0], [0, 1], [1, 0], [0, 1, 2], [2, 0, 1]])
+def test_controlled_globalphase_all_wires_controlled(control_wires, adjoint, tol):
+    """Test a controlled GlobalPhase whose control wires cover every wire of the device,
+    for every combination of control values, including unsorted control wires."""
+    n_qubits = len(control_wires)
+    dev_def = qp.device("default.qubit", wires=n_qubits)
+    dev = qp.device(device_name, wires=n_qubits)
+    init_state = get_random_normalized_state(2**n_qubits)
+
+    for control_values in itertools.product([False, True], repeat=n_qubits):
+
+        def circuit():
+            qp.StatePrep(init_state, wires=range(n_qubits))
+            op = qp.ctrl(qp.GlobalPhase, control_wires, control_values=list(control_values))
+            (qp.adjoint(op) if adjoint else op)(0.1234)
+            return qp.state()
+
+        circ = qp.QNode(circuit, dev)
+        circ_def = qp.QNode(circuit, dev_def)
+        assert np.allclose(circ(), circ_def(), tol)
+
+
 @pytest.mark.parametrize(
     "operation",
     [
@@ -934,6 +976,9 @@ def test_adjoint_controlled_qubit_gates(operation, n_qubits, control_value, tol,
             control_wires = all_wires[num_wires:]
             init_state = get_random_normalized_state(2**n_qubits)
 
+            # Operators like GlobalPhase do not act on any wires and so take no wires argument
+            wires_arg = () if num_wires == 0 else (target_wires,)
+
             def circuit():
                 qp.StatePrep(init_state, wires=range(n_qubits))
                 qp.adjoint(
@@ -941,7 +986,7 @@ def test_adjoint_controlled_qubit_gates(operation, n_qubits, control_value, tol,
                         (
                             operation(target_wires)
                             if operation.num_params == 0
-                            else operation(*tuple([0.1234] * operation.num_params), target_wires)
+                            else operation(*tuple([0.1234] * operation.num_params), *wires_arg)
                         ),
                         control_wires,
                         control_values=(

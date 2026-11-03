@@ -42,9 +42,6 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Install Python Dependencies
-        run: pip install semver
-
       - name: Capture Current Version in Pull Request
         id: old_version
         run: echo "version=$(grep -o '__version__ = "[^"]\+[0-9]\+"' pr/pennylane_lightning/core/_version.py | cut -d '"' -f 2)" >> $GITHUB_OUTPUT

@@ -680,8 +680,7 @@ class TestQuantumPhaseEstimation:
     def test_quantumphaseestimation(self, n_qubits):
         lightning_tensor_check(n_qubits)
         phase = 5
-        target_wires = [0]
-        unitary = qp.RX(phase, wires=0).matrix()
+        unitary = qp.RX(phase, wires=0)
         n_estimation_wires = n_qubits - 1
         estimation_wires = range(1, n_estimation_wires + 1)
 
@@ -690,11 +689,10 @@ class TestQuantumPhaseEstimation:
 
         def circuit():
             # Start in the |+> eigenstate of the unitary
-            qp.Hadamard(wires=target_wires)
+            qp.Hadamard(wires=0)
 
             qp.QuantumPhaseEstimation(
                 unitary,
-                target_wires=target_wires,
                 estimation_wires=estimation_wires,
             )
 
