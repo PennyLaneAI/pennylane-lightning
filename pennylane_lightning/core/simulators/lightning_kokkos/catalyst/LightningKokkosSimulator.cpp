@@ -839,19 +839,30 @@ auto LightningKokkosSimulator::PauliMeasure(
         }
     }
 
-    for (std::size_t i = 1; i < pauli_word.size(); i++) {
-        this->NamedOperation("CNOT", {}, {wires[i], wires[0]});
+    // Identity entries do not contribute to the parity
+    std::vector<QubitIdType> parity_wires;
+    parity_wires.reserve(wires.size());
+    for (std::size_t i = 0; i < pauli_word.size(); i++) {
+        if (pauli_word[i] != 'I') {
+            parity_wires.push_back(wires[i]);
+        }
+    }
+
+    if (parity_wires.empty()) {
+        // All-identity Pauli words always have eigenvalue +1
+        return const_cast<Result>(&GLOBAL_RESULT_FALSE_CONST);
+    }
+
+    for (std::size_t i = 1; i < parity_wires.size(); i++) {
+        this->NamedOperation("CNOT", {}, {parity_wires[i], parity_wires[0]});
     }
 
     // Measure in the computational basis
-    bool mres = true;
-    for (const auto &wire : wires) {
-        Result res = this->Measure(wire);
-        mres = mres && (*res);
-    }
+    Result res = this->Measure(parity_wires[0]);
+    bool mres = *res;
 
-    for (std::size_t i = 1; i < pauli_word.size(); i++) {
-        this->NamedOperation("CNOT", {}, {wires[i], wires[0]});
+    for (std::size_t i = 1; i < parity_wires.size(); i++) {
+        this->NamedOperation("CNOT", {}, {parity_wires[i], parity_wires[0]});
     }
 
     for (size_t i = 0; i < pauli_word.size(); i++) {
