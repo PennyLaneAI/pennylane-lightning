@@ -26,7 +26,7 @@
 - Added a `StateVectorKokkos` constructor taking a Kokkos execution-space instance (e.g. bound to a
   `hipStream_t`), and threaded it through the gate, measurement, observable, adjoint-Jacobian and
   linear-algebra code paths, so multiple threads can each drive a distinct GPU concurrently.
-  [(#XXXX)](https://github.com/PennyLaneAI/pennylane-lightning/pull/XXXX)
+  [(#1434)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1434)
 
 <h3>Breaking changes 💔</h3>
 
@@ -48,7 +48,7 @@
 
 - Fixed an alignment-unsafe `reinterpret_cast` between `std::complex` and `Kokkos::complex` in the
   nanobind bindings by copying the data instead.
-  [(#XXXX)](https://github.com/PennyLaneAI/pennylane-lightning/pull/XXXX)
+  [(#1434)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1434)
 
 - Fixed multi-qubit `PauliMeasure` in the Lightning-Kokkos simulator, which measured every
   wire of the Pauli word and returned the logical AND of the outcomes. It now measures only the
