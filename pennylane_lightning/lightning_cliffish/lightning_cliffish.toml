@@ -2,14 +2,65 @@ schema = 3
 
 # lightning.cliffish runs only under qp.qjit(capture=True). Catalyst does not
 # check operations against this file under capture, so it must list exactly
-# what the runtime supports. Each operation and measurement process is added
-# here when the runtime gains it.
+# what the runtime supports.
 
+# The set of all gate types supported at the runtime execution interface of the
+# device. The gate definition has the following format:
+#
+#   GATE = { properties = [ PROPS ], conditions = [ CONDS ] }
+#
+# PROPS: zero or more comma-separated quoted strings:
+#        - "controllable": if a controlled version of this gate is supported.
+#        - "invertible": if the adjoint of this operation is supported.
+#        - "differentiable": if device gradient is supported for this gate.
+#
+# Parametric gates run only at Clifford angles; any other angle fails at run
+# time, since non-Clifford operations need the dense register.
 [operators.gates]
 
+Identity               = { properties = [ "invertible" ] }
+PauliX                 = { properties = [ "invertible" ] }
+PauliY                 = { properties = [ "invertible" ] }
+PauliZ                 = { properties = [ "invertible" ] }
+Hadamard               = { properties = [ "invertible" ] }
+S                      = { properties = [ "invertible" ] }
+SX                     = { properties = [ "invertible" ] }
+CNOT                   = { properties = [ "invertible" ] }
+CY                     = { properties = [ "invertible" ] }
+CZ                     = { properties = [ "invertible" ] }
+SWAP                   = { properties = [ "invertible" ] }
+ISWAP                  = { properties = [ "invertible" ] }
+RX                     = { properties = [ "invertible" ] }
+RY                     = { properties = [ "invertible" ] }
+RZ                     = { properties = [ "invertible" ] }
+PhaseShift             = { properties = [ "invertible" ] }
+IsingXX                = { properties = [ "invertible" ] }
+IsingYY                = { properties = [ "invertible" ] }
+IsingZZ                = { properties = [ "invertible" ] }
+MultiRZ                = { properties = [ "invertible" ] }
+PauliRot               = { properties = [ "invertible" ] }
+PauliMeasure           = { properties = [ ] }
+
+# Observables supported by the device.
 [operators.observables]
 
+Identity               = { properties = [ ] }
+PauliX                 = { properties = [ ] }
+PauliY                 = { properties = [ ] }
+PauliZ                 = { properties = [ ] }
+Hadamard               = { properties = [ ] }
+Prod                   = { properties = [ ] }
+SProd                  = { properties = [ ] }
+Sum                    = { properties = [ ] }
+LinearCombination      = { properties = [ ] }
+
 [measurement_processes]
+
+ExpectationMP          = { }
+VarianceMP             = { }
+ProbabilityMP          = { }
+SampleMP               = { conditions = [ "finiteshots" ] }
+CountsMP               = { conditions = [ "finiteshots" ] }
 
 [compilation]
 
@@ -22,13 +73,13 @@ runtime_code_generation = false
 # The methods of handling mid-circuit measurements that the device supports, e.g.,
 # "one-shot", "device", "tree-traversal", etc. An empty list indicates that the device
 # does not support mid-circuit measurements.
-supported_mcm_methods = [ ]
+supported_mcm_methods = [ "one-shot" ]
 
 # Whether the device supports dynamic qubit allocation/deallocation.
 dynamic_qubit_management = false
 
 # Whether simultaneous measurements of non-commuting observables is supported.
-non_commuting_observables = false
+non_commuting_observables = true
 
 # Whether the device supports initial state preparation.
 initial_state_prep = false
