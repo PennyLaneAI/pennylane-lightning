@@ -4,8 +4,9 @@
 
 - A new backend, `lightning_cliffish`, adds the build, wheel packaging, CI and Catalyst device
   library for `lightning.cliffish`, a near-Clifford simulator that runs only under
-  `qp.qjit(capture=True)` and has no Python simulation path. The device loads through Catalyst but
-  does not simulate yet: every operation fails with an error.
+  `qp.qjit(capture=True)` and has no Python simulation path. It also adds the bit-packed Pauli-word
+  layer, on Kokkos, that the simulator core builds on. The device loads through Catalyst but does
+  not simulate yet: every operation fails with an error.
   [(#1433)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1433)
 
 <h3>Improvements 🛠</h3>
