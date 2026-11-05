@@ -58,7 +58,8 @@ template <class Precision> struct multiQubitOpFunctor {
     std::size_t num_qubits;
 
     template <class ExecutionSpace>
-    multiQubitOpFunctor(ExecutionSpace exec, KokkosComplexVector arr_, std::size_t num_qubits_,
+    multiQubitOpFunctor(ExecutionSpace exec, KokkosComplexVector arr_,
+                        std::size_t num_qubits_,
                         const KokkosComplexVector &matrix_,
                         const std::vector<std::size_t> &wires_) {
         wires = vector2view(exec, wires_);
@@ -135,7 +136,8 @@ template <class Precision> struct NCMultiQubitOpFunctor {
     std::size_t num_qubits;
 
     template <class ExecutionSpace>
-    NCMultiQubitOpFunctor(ExecutionSpace exec, KokkosComplexVector arr_, std::size_t num_qubits_,
+    NCMultiQubitOpFunctor(ExecutionSpace exec, KokkosComplexVector arr_,
+                          std::size_t num_qubits_,
                           const KokkosComplexVector &matrix_,
                           const std::vector<std::size_t> &controlled_wires_,
                           const std::vector<bool> &controlled_values_,
@@ -198,7 +200,8 @@ template <class PrecisionT> struct apply1QubitOpFunctor {
     std::size_t wire_parity_inv;
 
     template <class ExecutionSpace>
-    apply1QubitOpFunctor(ExecutionSpace exec, KokkosComplexVector arr_, std::size_t num_qubits_,
+    apply1QubitOpFunctor(ExecutionSpace /*exec*/, KokkosComplexVector arr_,
+                         std::size_t num_qubits_,
                          const KokkosComplexVector &matrix_,
                          const std::vector<std::size_t> &wires_) {
         arr = arr_;
@@ -238,7 +241,8 @@ template <class PrecisionT> struct applyNC1QubitOpFunctor {
     std::size_t num_qubits;
 
     template <class ExecutionSpace>
-    applyNC1QubitOpFunctor(ExecutionSpace exec, KokkosComplexVector arr_, std::size_t num_qubits_,
+    applyNC1QubitOpFunctor(ExecutionSpace exec, KokkosComplexVector arr_,
+                           std::size_t num_qubits_,
                            const KokkosComplexVector &matrix_,
                            const std::vector<std::size_t> &controlled_wires_,
                            const std::vector<bool> &controlled_values_,
@@ -288,7 +292,8 @@ template <class PrecisionT> struct apply2QubitOpFunctor {
     std::size_t parity_middle;
 
     template <class ExecutionSpace>
-    apply2QubitOpFunctor(ExecutionSpace exec, KokkosComplexVector arr_, std::size_t num_qubits_,
+    apply2QubitOpFunctor(ExecutionSpace /*exec*/, KokkosComplexVector arr_,
+                         std::size_t num_qubits_,
                          const KokkosComplexVector &matrix_,
                          const std::vector<std::size_t> &wires_) {
         arr = arr_;
@@ -345,7 +350,8 @@ template <class PrecisionT> struct applyNC2QubitOpFunctor {
     std::size_t num_qubits;
 
     template <class ExecutionSpace>
-    applyNC2QubitOpFunctor(ExecutionSpace exec, KokkosComplexVector arr_, std::size_t num_qubits_,
+    applyNC2QubitOpFunctor(ExecutionSpace exec, KokkosComplexVector arr_,
+                           std::size_t num_qubits_,
                            const KokkosComplexVector &matrix_,
                            const std::vector<std::size_t> &controlled_wires_,
                            const std::vector<bool> &controlled_values_,
@@ -408,7 +414,8 @@ template <class PrecisionT> struct apply3QubitOpFunctor {
     std::size_t num_qubits;
 
     template <class ExecutionSpace>
-    apply3QubitOpFunctor(ExecutionSpace exec, KokkosComplexVector arr_, std::size_t num_qubits_,
+    apply3QubitOpFunctor(ExecutionSpace exec, KokkosComplexVector arr_,
+                         std::size_t num_qubits_,
                          const KokkosComplexVector &matrix_,
                          const std::vector<std::size_t> &wires_) {
         arr = arr_;
@@ -468,7 +475,8 @@ template <class PrecisionT> struct applyNC3QubitOpFunctor {
     std::size_t num_qubits;
 
     template <class ExecutionSpace>
-    applyNC3QubitOpFunctor(ExecutionSpace exec, KokkosComplexVector arr_, std::size_t num_qubits_,
+    applyNC3QubitOpFunctor(ExecutionSpace exec, KokkosComplexVector arr_,
+                           std::size_t num_qubits_,
                            const KokkosComplexVector &matrix_,
                            const std::vector<std::size_t> &controlled_wires_,
                            const std::vector<bool> &controlled_values_,
@@ -543,7 +551,8 @@ template <class PrecisionT> struct apply4QubitOpFunctor {
     std::size_t num_qubits;
 
     template <class ExecutionSpace>
-    apply4QubitOpFunctor(ExecutionSpace exec, KokkosComplexVector arr_, std::size_t num_qubits_,
+    apply4QubitOpFunctor(ExecutionSpace exec, KokkosComplexVector arr_,
+                         std::size_t num_qubits_,
                          const KokkosComplexVector &matrix_,
                          const std::vector<std::size_t> &wires_) {
         arr = arr_;
@@ -651,7 +660,8 @@ template <class PrecisionT> struct apply5QubitOpFunctor {
     std::size_t num_qubits;
 
     template <class ExecutionSpace>
-    apply5QubitOpFunctor(ExecutionSpace exec, KokkosComplexVector arr_, std::size_t num_qubits_,
+    apply5QubitOpFunctor(ExecutionSpace exec, KokkosComplexVector arr_,
+                         std::size_t num_qubits_,
                          const KokkosComplexVector &matrix_,
                          const std::vector<std::size_t> &wires_) {
         arr = arr_;

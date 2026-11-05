@@ -117,8 +117,8 @@ template <class PrecisionT> struct SparseMV_KokkosFunctor {
  */
 template <class PrecisionT, class ComplexT, class ExecutionSpace>
 void SparseMV_Kokkos(ExecutionSpace exec, Kokkos::View<ComplexT *> x,
-                     Kokkos::View<ComplexT *> y,
-                     const std::size_t *row_map, const std::size_t row_map_size,
+                     Kokkos::View<ComplexT *> y, const std::size_t *row_map,
+                     const std::size_t row_map_size,
                      const std::size_t *column_idx_ptr,
                      const ComplexT *values_ptr, const std::size_t numNNZ) {
     using ConstComplexHostView =
@@ -130,15 +130,19 @@ void SparseMV_Kokkos(ExecutionSpace exec, Kokkos::View<ComplexT *> x,
     using KokkosSizeTVector = Kokkos::View<std::size_t *>;
     using KokkosVector = Kokkos::View<ComplexT *>;
 
-    KokkosVector kok_data(Kokkos::view_alloc(exec, "kokkos_sparese_matrix_vals"), numNNZ);
-    KokkosSizeTVector kok_column_idx_ptr(Kokkos::view_alloc(exec, "kokkos_column_idx_ptr"), numNNZ);
-    KokkosSizeTVector kok_row_map(Kokkos::view_alloc(exec, "kokkos_offsets"), row_map_size);
+    KokkosVector kok_data(
+        Kokkos::view_alloc(exec, "kokkos_sparese_matrix_vals"), numNNZ);
+    KokkosSizeTVector kok_column_idx_ptr(
+        Kokkos::view_alloc(exec, "kokkos_column_idx_ptr"), numNNZ);
+    KokkosSizeTVector kok_row_map(Kokkos::view_alloc(exec, "kokkos_offsets"),
+                                  row_map_size);
 
     Kokkos::deep_copy(exec, kok_data, ConstComplexHostView(values_ptr, numNNZ));
 
     Kokkos::deep_copy(exec, kok_column_idx_ptr,
                       ConstSizeTHostView(column_idx_ptr, numNNZ));
-    Kokkos::deep_copy(exec, kok_row_map, ConstSizeTHostView(row_map, row_map_size));
+    Kokkos::deep_copy(exec, kok_row_map,
+                      ConstSizeTHostView(row_map, row_map_size));
 
     Kokkos::parallel_for(RangePolicy<ExecutionSpace>(exec, 0, row_map_size - 1),
                          SparseMV_KokkosFunctor<PrecisionT>(

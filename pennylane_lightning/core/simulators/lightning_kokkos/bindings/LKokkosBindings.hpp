@@ -132,22 +132,21 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
                const arr_sparse_ind &entries, const ArrayComplexT &values) {
                 // Value copy, not reinterpret_cast -- see the expval(matrix)
                 // overload above for why.
-                std::vector<ComplexT> values_v(
-                    values.data(), values.data() + values.size());
-                return M.expval(
-                    static_cast<SparseIndexT *>(row_map.data()),
-                    static_cast<SparseIndexT>(row_map.size()),
-                    static_cast<SparseIndexT *>(entries.data()),
-                    values_v.data(),
-                    static_cast<SparseIndexT>(values.size()));
+                std::vector<ComplexT> values_v(values.data(),
+                                               values.data() + values.size());
+                return M.expval(static_cast<SparseIndexT *>(row_map.data()),
+                                static_cast<SparseIndexT>(row_map.size()),
+                                static_cast<SparseIndexT *>(entries.data()),
+                                values_v.data(),
+                                static_cast<SparseIndexT>(values.size()));
             },
             "Expected value of a sparse Hamiltonian.")
         .def(
             "var",
             [](Measurements<StateVectorT> &M, const arr_sparse_ind &row_map,
                const arr_sparse_ind &entries, const ArrayComplexT &values) {
-                std::vector<ComplexT> values_v(
-                    values.data(), values.data() + values.size());
+                std::vector<ComplexT> values_v(values.data(),
+                                               values.data() + values.size());
                 return M.var(static_cast<SparseIndexT *>(row_map.data()),
                              static_cast<SparseIndexT>(row_map.size()),
                              static_cast<SparseIndexT *>(entries.data()),
@@ -404,8 +403,8 @@ void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
                 // Value copy, not reinterpret_cast -- see
                 // registerBackendSpecificMeasurements' expval(matrix)
                 // overload above for why.
-                std::vector<ComplexT> state_v(
-                    state.data(), state.data() + state.size());
+                std::vector<ComplexT> state_v(state.data(),
+                                              state.data() + state.size());
                 sv.setStateVector(state_v.data(), wires);
             },
             "Set the state vector to the data contained in `state`.")

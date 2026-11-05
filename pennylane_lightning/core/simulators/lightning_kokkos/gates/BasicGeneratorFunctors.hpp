@@ -32,7 +32,8 @@ using Pennylane::LightningKokkos::Util::RangePolicy;
 namespace Pennylane::LightningKokkos::Functors {
 
 template <class ExecutionSpace, class PrecisionT>
-void applyGenPhaseShift(ExecutionSpace exec, Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
+void applyGenPhaseShift(ExecutionSpace exec,
+                        Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                         std::size_t num_qubits,
                         const std::vector<std::size_t> &wires,
                         [[maybe_unused]] bool inverse = false) {
@@ -47,9 +48,9 @@ void applyGenPhaseShift(ExecutionSpace exec, Kokkos::View<Kokkos::complex<Precis
 }
 
 template <class ExecutionSpace, class PrecisionT>
-void applyGenControlledPhaseShift(ExecutionSpace exec, 
-    Kokkos::View<Kokkos::complex<PrecisionT> *> arr_, std::size_t num_qubits,
-    const std::vector<std::size_t> &wires,
+void applyGenControlledPhaseShift(
+    ExecutionSpace exec, Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
+    std::size_t num_qubits, const std::vector<std::size_t> &wires,
     [[maybe_unused]] bool inverse = false) {
     auto core_function = KOKKOS_LAMBDA(
         Kokkos::View<Kokkos::complex<PrecisionT> *> arr, std::size_t i00,
@@ -65,7 +66,8 @@ void applyGenControlledPhaseShift(ExecutionSpace exec,
 }
 
 template <class ExecutionSpace, class PrecisionT>
-void applyGenCRX(ExecutionSpace exec, Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
+void applyGenCRX(ExecutionSpace exec,
+                 Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                  std::size_t num_qubits, const std::vector<std::size_t> &wires,
                  [[maybe_unused]] bool inverse = false) {
     auto core_function = KOKKOS_LAMBDA(
@@ -80,7 +82,8 @@ void applyGenCRX(ExecutionSpace exec, Kokkos::View<Kokkos::complex<PrecisionT> *
 }
 
 template <class ExecutionSpace, class PrecisionT>
-void applyGenCRY(ExecutionSpace exec, Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
+void applyGenCRY(ExecutionSpace exec,
+                 Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                  std::size_t num_qubits, const std::vector<std::size_t> &wires,
                  [[maybe_unused]] bool inverse = false) {
     auto core_function = KOKKOS_LAMBDA(
@@ -97,7 +100,8 @@ void applyGenCRY(ExecutionSpace exec, Kokkos::View<Kokkos::complex<PrecisionT> *
 }
 
 template <class ExecutionSpace, class PrecisionT>
-void applyGenCRZ(ExecutionSpace exec, Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
+void applyGenCRZ(ExecutionSpace exec,
+                 Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                  std::size_t num_qubits, const std::vector<std::size_t> &wires,
                  [[maybe_unused]] bool inverse = false) {
     auto core_function = KOKKOS_LAMBDA(
@@ -113,7 +117,8 @@ void applyGenCRZ(ExecutionSpace exec, Kokkos::View<Kokkos::complex<PrecisionT> *
 }
 
 template <class ExecutionSpace, class PrecisionT>
-void applyGenIsingXX(ExecutionSpace exec, Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
+void applyGenIsingXX(ExecutionSpace exec,
+                     Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                      std::size_t num_qubits,
                      const std::vector<std::size_t> &wires,
                      [[maybe_unused]] bool inverse = false) {
@@ -128,7 +133,8 @@ void applyGenIsingXX(ExecutionSpace exec, Kokkos::View<Kokkos::complex<Precision
 }
 
 template <class ExecutionSpace, class PrecisionT>
-void applyGenIsingXY(ExecutionSpace exec, Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
+void applyGenIsingXY(ExecutionSpace exec,
+                     Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                      std::size_t num_qubits,
                      const std::vector<std::size_t> &wires,
                      [[maybe_unused]] bool inverse = false) {
@@ -144,7 +150,8 @@ void applyGenIsingXY(ExecutionSpace exec, Kokkos::View<Kokkos::complex<Precision
 }
 
 template <class ExecutionSpace, class PrecisionT>
-void applyGenIsingYY(ExecutionSpace exec, Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
+void applyGenIsingYY(ExecutionSpace exec,
+                     Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                      std::size_t num_qubits,
                      const std::vector<std::size_t> &wires,
                      [[maybe_unused]] bool inverse = false) {
@@ -161,7 +168,8 @@ void applyGenIsingYY(ExecutionSpace exec, Kokkos::View<Kokkos::complex<Precision
 }
 
 template <class ExecutionSpace, class PrecisionT>
-void applyGenIsingZZ(ExecutionSpace exec, Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
+void applyGenIsingZZ(ExecutionSpace exec,
+                     Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                      std::size_t num_qubits,
                      const std::vector<std::size_t> &wires,
                      [[maybe_unused]] bool inverse = false) {
@@ -179,7 +187,8 @@ void applyGenIsingZZ(ExecutionSpace exec, Kokkos::View<Kokkos::complex<Precision
 }
 
 template <class ExecutionSpace, class PrecisionT>
-void applyGenSingleExcitation(ExecutionSpace exec, Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
+void applyGenSingleExcitation(ExecutionSpace exec,
+                              Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                               std::size_t num_qubits,
                               const std::vector<std::size_t> &wires,
                               [[maybe_unused]] bool inverse = false) {
@@ -198,9 +207,9 @@ void applyGenSingleExcitation(ExecutionSpace exec, Kokkos::View<Kokkos::complex<
 }
 
 template <class ExecutionSpace, class PrecisionT>
-void applyGenSingleExcitationMinus(ExecutionSpace exec, 
-    Kokkos::View<Kokkos::complex<PrecisionT> *> arr_, std::size_t num_qubits,
-    const std::vector<std::size_t> &wires,
+void applyGenSingleExcitationMinus(
+    ExecutionSpace exec, Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
+    std::size_t num_qubits, const std::vector<std::size_t> &wires,
     [[maybe_unused]] bool inverse = false) {
     auto core_function = KOKKOS_LAMBDA(
         Kokkos::View<Kokkos::complex<PrecisionT> *> arr, std::size_t i00,
@@ -217,9 +226,9 @@ void applyGenSingleExcitationMinus(ExecutionSpace exec,
 }
 
 template <class ExecutionSpace, class PrecisionT>
-void applyGenSingleExcitationPlus(ExecutionSpace exec, 
-    Kokkos::View<Kokkos::complex<PrecisionT> *> arr_, std::size_t num_qubits,
-    const std::vector<std::size_t> &wires,
+void applyGenSingleExcitationPlus(
+    ExecutionSpace exec, Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
+    std::size_t num_qubits, const std::vector<std::size_t> &wires,
     [[maybe_unused]] bool inverse = false) {
     auto core_function = KOKKOS_LAMBDA(
         Kokkos::View<Kokkos::complex<PrecisionT> *> arr, std::size_t i00,
@@ -236,7 +245,8 @@ void applyGenSingleExcitationPlus(ExecutionSpace exec,
 }
 
 template <class ExecutionSpace, class PrecisionT>
-void applyGenPSWAP(ExecutionSpace exec, Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
+void applyGenPSWAP(ExecutionSpace exec,
+                   Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                    std::size_t num_qubits,
                    const std::vector<std::size_t> &wires,
                    [[maybe_unused]] bool inverse = false) {
@@ -252,7 +262,8 @@ void applyGenPSWAP(ExecutionSpace exec, Kokkos::View<Kokkos::complex<PrecisionT>
 }
 
 template <class ExecutionSpace, class PrecisionT>
-void applyGenDoubleExcitation(ExecutionSpace exec, Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
+void applyGenDoubleExcitation(ExecutionSpace exec,
+                              Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                               std::size_t num_qubits,
                               const std::vector<std::size_t> &wires,
                               [[maybe_unused]] bool inverse = false) {
@@ -287,9 +298,9 @@ void applyGenDoubleExcitation(ExecutionSpace exec, Kokkos::View<Kokkos::complex<
 }
 
 template <class ExecutionSpace, class PrecisionT>
-void applyGenDoubleExcitationMinus(ExecutionSpace exec, 
-    Kokkos::View<Kokkos::complex<PrecisionT> *> arr_, std::size_t num_qubits,
-    const std::vector<std::size_t> &wires,
+void applyGenDoubleExcitationMinus(
+    ExecutionSpace exec, Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
+    std::size_t num_qubits, const std::vector<std::size_t> &wires,
     [[maybe_unused]] bool inverse = false) {
     auto core_function = KOKKOS_LAMBDA(
         Kokkos::View<Kokkos::complex<PrecisionT> *> arr, std::size_t i0000,
@@ -322,9 +333,9 @@ void applyGenDoubleExcitationMinus(ExecutionSpace exec,
 }
 
 template <class ExecutionSpace, class PrecisionT>
-void applyGenDoubleExcitationPlus(ExecutionSpace exec, 
-    Kokkos::View<Kokkos::complex<PrecisionT> *> arr_, std::size_t num_qubits,
-    const std::vector<std::size_t> &wires,
+void applyGenDoubleExcitationPlus(
+    ExecutionSpace exec, Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
+    std::size_t num_qubits, const std::vector<std::size_t> &wires,
     [[maybe_unused]] bool inverse = false) {
     auto core_function = KOKKOS_LAMBDA(
         Kokkos::View<Kokkos::complex<PrecisionT> *> arr, std::size_t i0000,
@@ -357,7 +368,8 @@ void applyGenDoubleExcitationPlus(ExecutionSpace exec,
 }
 
 template <class ExecutionSpace, class PrecisionT>
-void applyGenMultiRZ(ExecutionSpace exec, Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
+void applyGenMultiRZ(ExecutionSpace exec,
+                     Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                      std::size_t num_qubits,
                      const std::vector<std::size_t> &wires,
                      [[maybe_unused]] bool inverse = false) {
@@ -428,8 +440,9 @@ template <class PrecisionT, class FuncT> class applyNCGenerator1Functor {
         indices = vector2view(exec, indices_);
         Kokkos::parallel_for(
             RangePolicy<ExecutionSpace>(
-                exec, 0, Pennylane::Util::exp2(num_qubits - controlled_wires.size() -
-                                         wires.size())),
+                exec, 0,
+                Pennylane::Util::exp2(num_qubits - controlled_wires.size() -
+                                      wires.size())),
             *this);
     }
     KOKKOS_FUNCTION void operator()(std::size_t k) const {
@@ -445,7 +458,8 @@ template <class PrecisionT, class FuncT> class applyNCGenerator1Functor {
 };
 
 template <class ExecutionSpace, class PrecisionT>
-void applyNCGenRX(ExecutionSpace exec, Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
+void applyNCGenRX(ExecutionSpace exec,
+                  Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                   std::size_t num_qubits,
                   const std::vector<std::size_t> &controlled_wires,
                   const std::vector<bool> &controlled_values,
@@ -457,12 +471,13 @@ void applyNCGenRX(ExecutionSpace exec, Kokkos::View<Kokkos::complex<PrecisionT> 
         kokkos_swap(arr(i0), arr(i1));
     };
     applyNCGenerator1Functor<PrecisionT, decltype(core_function)>(
-        exec, arr_, num_qubits, controlled_wires, controlled_values,
-        wires, core_function);
+        exec, arr_, num_qubits, controlled_wires, controlled_values, wires,
+        core_function);
 }
 
 template <class ExecutionSpace, class PrecisionT>
-void applyNCGenRY(ExecutionSpace exec, Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
+void applyNCGenRY(ExecutionSpace exec,
+                  Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                   std::size_t num_qubits,
                   const std::vector<std::size_t> &controlled_wires,
                   const std::vector<bool> &controlled_values,
@@ -477,12 +492,13 @@ void applyNCGenRY(ExecutionSpace exec, Kokkos::View<Kokkos::complex<PrecisionT> 
         arr(i1) = Kokkos::complex<PrecisionT>{-imag(v0), real(v0)};
     };
     applyNCGenerator1Functor<PrecisionT, decltype(core_function)>(
-        exec, arr_, num_qubits, controlled_wires, controlled_values,
-        wires, core_function);
+        exec, arr_, num_qubits, controlled_wires, controlled_values, wires,
+        core_function);
 }
 
 template <class ExecutionSpace, class PrecisionT>
-void applyNCGenRZ(ExecutionSpace exec, Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
+void applyNCGenRZ(ExecutionSpace exec,
+                  Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                   std::size_t num_qubits,
                   const std::vector<std::size_t> &controlled_wires,
                   const std::vector<bool> &controlled_values,
@@ -495,12 +511,13 @@ void applyNCGenRZ(ExecutionSpace exec, Kokkos::View<Kokkos::complex<PrecisionT> 
         arr(i1) *= -1;
     };
     applyNCGenerator1Functor<PrecisionT, decltype(core_function)>(
-        exec, arr_, num_qubits, controlled_wires, controlled_values,
-        wires, core_function);
+        exec, arr_, num_qubits, controlled_wires, controlled_values, wires,
+        core_function);
 }
 
 template <class ExecutionSpace, class PrecisionT>
-void applyNCGenPhaseShift(ExecutionSpace exec, Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
+void applyNCGenPhaseShift(ExecutionSpace exec,
+                          Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                           std::size_t num_qubits,
                           const std::vector<std::size_t> &controlled_wires,
                           const std::vector<bool> &controlled_values,
@@ -513,14 +530,14 @@ void applyNCGenPhaseShift(ExecutionSpace exec, Kokkos::View<Kokkos::complex<Prec
         arr[i0] = 0.0;
     };
     applyNCGenerator1Functor<PrecisionT, decltype(core_function)>(
-        exec, arr_, num_qubits, controlled_wires, controlled_values,
-        wires, core_function);
+        exec, arr_, num_qubits, controlled_wires, controlled_values, wires,
+        core_function);
 }
 
 template <class ExecutionSpace, class PrecisionT>
-void applyNCGenGlobalPhase(ExecutionSpace exec, 
-    Kokkos::View<Kokkos::complex<PrecisionT> *> arr_, std::size_t num_qubits,
-    const std::vector<std::size_t> &controlled_wires,
+void applyNCGenGlobalPhase(
+    ExecutionSpace exec, Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
+    std::size_t num_qubits, const std::vector<std::size_t> &controlled_wires,
     const std::vector<bool> &controlled_values,
     [[maybe_unused]] const std::vector<std::size_t> &wires,
     [[maybe_unused]] bool inverse = false) {
@@ -564,8 +581,8 @@ void applyNCGenGlobalPhase(ExecutionSpace exec,
         }
     }
     applyNCGenerator1Functor<PrecisionT, decltype(core_function)>(
-        exec, arr_, num_qubits, controlled_wires, controlled_values,
-        {target}, core_function);
+        exec, arr_, num_qubits, controlled_wires, controlled_values, {target},
+        core_function);
 }
 
 template <class PrecisionT, class FuncT> class applyNCGenerator2Functor {
@@ -627,8 +644,9 @@ template <class PrecisionT, class FuncT> class applyNCGenerator2Functor {
         indices = vector2view(exec, indices_);
         Kokkos::parallel_for(
             RangePolicy<ExecutionSpace>(
-                exec, 0, Pennylane::Util::exp2(num_qubits - controlled_wires.size() -
-                                         wires.size())),
+                exec, 0,
+                Pennylane::Util::exp2(num_qubits - controlled_wires.size() -
+                                      wires.size())),
             *this);
     }
     KOKKOS_FUNCTION void operator()(std::size_t k) const {
@@ -645,7 +663,8 @@ template <class PrecisionT, class FuncT> class applyNCGenerator2Functor {
 };
 
 template <class ExecutionSpace, class PrecisionT>
-void applyNCGenIsingXX(ExecutionSpace exec, Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
+void applyNCGenIsingXX(ExecutionSpace exec,
+                       Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                        std::size_t num_qubits,
                        const std::vector<std::size_t> &controlled_wires,
                        const std::vector<bool> &controlled_values,
@@ -658,12 +677,13 @@ void applyNCGenIsingXX(ExecutionSpace exec, Kokkos::View<Kokkos::complex<Precisi
         kokkos_swap(arr(i10), arr(i01));
     };
     applyNCGenerator2Functor<PrecisionT, decltype(core_function)>(
-        exec, arr_, num_qubits, controlled_wires, controlled_values,
-        wires, core_function);
+        exec, arr_, num_qubits, controlled_wires, controlled_values, wires,
+        core_function);
 }
 
 template <class ExecutionSpace, class PrecisionT>
-void applyNCGenIsingXY(ExecutionSpace exec, Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
+void applyNCGenIsingXY(ExecutionSpace exec,
+                       Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                        std::size_t num_qubits,
                        const std::vector<std::size_t> &controlled_wires,
                        const std::vector<bool> &controlled_values,
@@ -677,12 +697,13 @@ void applyNCGenIsingXY(ExecutionSpace exec, Kokkos::View<Kokkos::complex<Precisi
         kokkos_swap(arr(i10), arr(i01));
     };
     applyNCGenerator2Functor<PrecisionT, decltype(core_function)>(
-        exec, arr_, num_qubits, controlled_wires, controlled_values,
-        wires, core_function);
+        exec, arr_, num_qubits, controlled_wires, controlled_values, wires,
+        core_function);
 }
 
 template <class ExecutionSpace, class PrecisionT>
-void applyNCGenIsingYY(ExecutionSpace exec, Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
+void applyNCGenIsingYY(ExecutionSpace exec,
+                       Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                        std::size_t num_qubits,
                        const std::vector<std::size_t> &controlled_wires,
                        const std::vector<bool> &controlled_values,
@@ -697,12 +718,13 @@ void applyNCGenIsingYY(ExecutionSpace exec, Kokkos::View<Kokkos::complex<Precisi
         kokkos_swap(arr(i10), arr(i01));
     };
     applyNCGenerator2Functor<PrecisionT, decltype(core_function)>(
-        exec, arr_, num_qubits, controlled_wires, controlled_values,
-        wires, core_function);
+        exec, arr_, num_qubits, controlled_wires, controlled_values, wires,
+        core_function);
 }
 
 template <class ExecutionSpace, class PrecisionT>
-void applyNCGenIsingZZ(ExecutionSpace exec, Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
+void applyNCGenIsingZZ(ExecutionSpace exec,
+                       Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                        std::size_t num_qubits,
                        const std::vector<std::size_t> &controlled_wires,
                        const std::vector<bool> &controlled_values,
@@ -717,14 +739,14 @@ void applyNCGenIsingZZ(ExecutionSpace exec, Kokkos::View<Kokkos::complex<Precisi
         arr(i01) *= -1;
     };
     applyNCGenerator2Functor<PrecisionT, decltype(core_function)>(
-        exec, arr_, num_qubits, controlled_wires, controlled_values,
-        wires, core_function);
+        exec, arr_, num_qubits, controlled_wires, controlled_values, wires,
+        core_function);
 }
 
 template <class ExecutionSpace, class PrecisionT>
-void applyNCGenSingleExcitation(ExecutionSpace exec, 
-    Kokkos::View<Kokkos::complex<PrecisionT> *> arr_, std::size_t num_qubits,
-    const std::vector<std::size_t> &controlled_wires,
+void applyNCGenSingleExcitation(
+    ExecutionSpace exec, Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
+    std::size_t num_qubits, const std::vector<std::size_t> &controlled_wires,
     const std::vector<bool> &controlled_values,
     const std::vector<std::size_t> &wires,
     [[maybe_unused]] bool inverse = false) {
@@ -739,14 +761,14 @@ void applyNCGenSingleExcitation(ExecutionSpace exec,
         arr(i01) = Kokkos::complex<PrecisionT>{imag(v10), -real(v10)};
     };
     applyNCGenerator2Functor<PrecisionT, decltype(core_function)>(
-        exec, arr_, num_qubits, controlled_wires, controlled_values,
-        wires, core_function);
+        exec, arr_, num_qubits, controlled_wires, controlled_values, wires,
+        core_function);
 }
 
 template <class ExecutionSpace, class PrecisionT>
-void applyNCGenSingleExcitationMinus(ExecutionSpace exec, 
-    Kokkos::View<Kokkos::complex<PrecisionT> *> arr_, std::size_t num_qubits,
-    const std::vector<std::size_t> &controlled_wires,
+void applyNCGenSingleExcitationMinus(
+    ExecutionSpace exec, Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
+    std::size_t num_qubits, const std::vector<std::size_t> &controlled_wires,
     const std::vector<bool> &controlled_values,
     const std::vector<std::size_t> &wires,
     [[maybe_unused]] bool inverse = false) {
@@ -761,14 +783,14 @@ void applyNCGenSingleExcitationMinus(ExecutionSpace exec,
         arr(i01) = Kokkos::complex<PrecisionT>{imag(v10), -real(v10)};
     };
     applyNCGenerator2Functor<PrecisionT, decltype(core_function)>(
-        exec, arr_, num_qubits, controlled_wires, controlled_values,
-        wires, core_function);
+        exec, arr_, num_qubits, controlled_wires, controlled_values, wires,
+        core_function);
 }
 
 template <class ExecutionSpace, class PrecisionT>
-void applyNCGenSingleExcitationPlus(ExecutionSpace exec, 
-    Kokkos::View<Kokkos::complex<PrecisionT> *> arr_, std::size_t num_qubits,
-    const std::vector<std::size_t> &controlled_wires,
+void applyNCGenSingleExcitationPlus(
+    ExecutionSpace exec, Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
+    std::size_t num_qubits, const std::vector<std::size_t> &controlled_wires,
     const std::vector<bool> &controlled_values,
     const std::vector<std::size_t> &wires,
     [[maybe_unused]] bool inverse = false) {
@@ -783,12 +805,13 @@ void applyNCGenSingleExcitationPlus(ExecutionSpace exec,
         arr(i01) = Kokkos::complex<PrecisionT>{imag(v10), -real(v10)};
     };
     applyNCGenerator2Functor<PrecisionT, decltype(core_function)>(
-        exec, arr_, num_qubits, controlled_wires, controlled_values,
-        wires, core_function);
+        exec, arr_, num_qubits, controlled_wires, controlled_values, wires,
+        core_function);
 }
 
 template <class ExecutionSpace, class PrecisionT>
-void applyNCGenPSWAP(ExecutionSpace exec, Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
+void applyNCGenPSWAP(ExecutionSpace exec,
+                     Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                      std::size_t num_qubits,
                      const std::vector<std::size_t> &controlled_wires,
                      const std::vector<bool> &controlled_values,
@@ -802,8 +825,8 @@ void applyNCGenPSWAP(ExecutionSpace exec, Kokkos::View<Kokkos::complex<Precision
         kokkos_swap(arr(i01), arr(i10));
     };
     applyNCGenerator2Functor<PrecisionT, decltype(core_function)>(
-        exec, arr_, num_qubits, controlled_wires, controlled_values,
-        wires, core_function);
+        exec, arr_, num_qubits, controlled_wires, controlled_values, wires,
+        core_function);
 }
 
 template <class PrecisionT, class FuncT> class applyNCGenerator4Functor {
@@ -861,8 +884,9 @@ template <class PrecisionT, class FuncT> class applyNCGenerator4Functor {
         indices = vector2view(exec, indices_);
         Kokkos::parallel_for(
             RangePolicy<ExecutionSpace>(
-                exec, 0, Pennylane::Util::exp2(num_qubits - controlled_wires.size() -
-                                         wires.size())),
+                exec, 0,
+                Pennylane::Util::exp2(num_qubits - controlled_wires.size() -
+                                      wires.size())),
             *this);
     }
     KOKKOS_FUNCTION void operator()(std::size_t k) const {
@@ -878,9 +902,9 @@ template <class PrecisionT, class FuncT> class applyNCGenerator4Functor {
 };
 
 template <class ExecutionSpace, class PrecisionT>
-void applyNCGenDoubleExcitation(ExecutionSpace exec, 
-    Kokkos::View<Kokkos::complex<PrecisionT> *> arr_, std::size_t num_qubits,
-    const std::vector<std::size_t> &controlled_wires,
+void applyNCGenDoubleExcitation(
+    ExecutionSpace exec, Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
+    std::size_t num_qubits, const std::vector<std::size_t> &controlled_wires,
     const std::vector<bool> &controlled_values,
     const std::vector<std::size_t> &wires,
     [[maybe_unused]] bool inverse = false) {
@@ -896,14 +920,14 @@ void applyNCGenDoubleExcitation(ExecutionSpace exec,
         arr(i1100) = Kokkos::complex<PrecisionT>{-imag(v0011), real(v0011)};
     };
     applyNCGenerator4Functor<PrecisionT, decltype(core_function)>(
-        exec, arr_, num_qubits, controlled_wires, controlled_values,
-        wires, core_function);
+        exec, arr_, num_qubits, controlled_wires, controlled_values, wires,
+        core_function);
 }
 
 template <class ExecutionSpace, class PrecisionT>
-void applyNCGenDoubleExcitationMinus(ExecutionSpace exec, 
-    Kokkos::View<Kokkos::complex<PrecisionT> *> arr_, std::size_t num_qubits,
-    const std::vector<std::size_t> &controlled_wires,
+void applyNCGenDoubleExcitationMinus(
+    ExecutionSpace exec, Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
+    std::size_t num_qubits, const std::vector<std::size_t> &controlled_wires,
     const std::vector<bool> &controlled_values,
     const std::vector<std::size_t> &wires,
     [[maybe_unused]] bool inverse = false) {
@@ -918,14 +942,14 @@ void applyNCGenDoubleExcitationMinus(ExecutionSpace exec,
         arr(i1100) = Kokkos::complex<PrecisionT>{-imag(v0011), real(v0011)};
     };
     applyNCGenerator4Functor<PrecisionT, decltype(core_function)>(
-        exec, arr_, num_qubits, controlled_wires, controlled_values,
-        wires, core_function);
+        exec, arr_, num_qubits, controlled_wires, controlled_values, wires,
+        core_function);
 }
 
 template <class ExecutionSpace, class PrecisionT>
-void applyNCGenDoubleExcitationPlus(ExecutionSpace exec, 
-    Kokkos::View<Kokkos::complex<PrecisionT> *> arr_, std::size_t num_qubits,
-    const std::vector<std::size_t> &controlled_wires,
+void applyNCGenDoubleExcitationPlus(
+    ExecutionSpace exec, Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
+    std::size_t num_qubits, const std::vector<std::size_t> &controlled_wires,
     const std::vector<bool> &controlled_values,
     const std::vector<std::size_t> &wires,
     [[maybe_unused]] bool inverse = false) {
@@ -940,12 +964,13 @@ void applyNCGenDoubleExcitationPlus(ExecutionSpace exec,
         arr(i1100) = Kokkos::complex<PrecisionT>{imag(v0011), -real(v0011)};
     };
     applyNCGenerator4Functor<PrecisionT, decltype(core_function)>(
-        exec, arr_, num_qubits, controlled_wires, controlled_values,
-        wires, core_function);
+        exec, arr_, num_qubits, controlled_wires, controlled_values, wires,
+        core_function);
 }
 
 template <class ExecutionSpace, class PrecisionT>
-void applyNCGenMultiRZ(ExecutionSpace exec, Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
+void applyNCGenMultiRZ(ExecutionSpace exec,
+                       Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                        std::size_t num_qubits,
                        const std::vector<std::size_t> &controlled_wires,
                        const std::vector<bool> &controlled_values,
@@ -980,7 +1005,8 @@ void applyNCGenMultiRZ(ExecutionSpace exec, Kokkos::View<Kokkos::complex<Precisi
 }
 
 template <class ExecutionSpace, class PrecisionT>
-PrecisionT applyNamedGenerator(ExecutionSpace exec, const GeneratorOperation generator_op,
+PrecisionT applyNamedGenerator(ExecutionSpace exec,
+                               const GeneratorOperation generator_op,
                                Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                                std::size_t num_qubits,
                                const std::vector<std::size_t> &wires,
@@ -999,11 +1025,12 @@ PrecisionT applyNamedGenerator(ExecutionSpace exec, const GeneratorOperation gen
                                             num_qubits, wires, inverse);
         return -static_cast<PrecisionT>(0.5);
     case GeneratorOperation::PhaseShift:
-        applyGenPhaseShift<ExecutionSpace>(exec, arr_, num_qubits, wires, inverse);
+        applyGenPhaseShift<ExecutionSpace>(exec, arr_, num_qubits, wires,
+                                           inverse);
         return static_cast<PrecisionT>(1.0);
     case GeneratorOperation::ControlledPhaseShift:
-        applyGenControlledPhaseShift<ExecutionSpace>(exec, arr_, num_qubits, wires,
-                                                     inverse);
+        applyGenControlledPhaseShift<ExecutionSpace>(exec, arr_, num_qubits,
+                                                     wires, inverse);
         return static_cast<PrecisionT>(1);
     case GeneratorOperation::CRX:
         applyGenCRX<ExecutionSpace>(exec, arr_, num_qubits, wires, inverse);
@@ -1031,24 +1058,24 @@ PrecisionT applyNamedGenerator(ExecutionSpace exec, const GeneratorOperation gen
                                                  inverse);
         return -static_cast<PrecisionT>(0.5);
     case GeneratorOperation::SingleExcitationMinus:
-        applyGenSingleExcitationMinus<ExecutionSpace>(exec, arr_, num_qubits, wires,
-                                                      inverse);
+        applyGenSingleExcitationMinus<ExecutionSpace>(exec, arr_, num_qubits,
+                                                      wires, inverse);
         return -static_cast<PrecisionT>(0.5);
     case GeneratorOperation::SingleExcitationPlus:
-        applyGenSingleExcitationPlus<ExecutionSpace>(exec, arr_, num_qubits, wires,
-                                                     inverse);
+        applyGenSingleExcitationPlus<ExecutionSpace>(exec, arr_, num_qubits,
+                                                     wires, inverse);
         return -static_cast<PrecisionT>(0.5);
     case GeneratorOperation::DoubleExcitation:
         applyGenDoubleExcitation<ExecutionSpace>(exec, arr_, num_qubits, wires,
                                                  inverse);
         return -static_cast<PrecisionT>(0.5);
     case GeneratorOperation::DoubleExcitationMinus:
-        applyGenDoubleExcitationMinus<ExecutionSpace>(exec, arr_, num_qubits, wires,
-                                                      inverse);
+        applyGenDoubleExcitationMinus<ExecutionSpace>(exec, arr_, num_qubits,
+                                                      wires, inverse);
         return -static_cast<PrecisionT>(0.5);
     case GeneratorOperation::DoubleExcitationPlus:
-        applyGenDoubleExcitationPlus<ExecutionSpace>(exec, arr_, num_qubits, wires,
-                                                     inverse);
+        applyGenDoubleExcitationPlus<ExecutionSpace>(exec, arr_, num_qubits,
+                                                     wires, inverse);
         return static_cast<PrecisionT>(0.5);
     case GeneratorOperation::MultiRZ:
         applyGenMultiRZ<ExecutionSpace>(exec, arr_, num_qubits, wires, inverse);
@@ -1064,8 +1091,8 @@ PrecisionT applyNamedGenerator(ExecutionSpace exec, const GeneratorOperation gen
 }
 
 template <class ExecutionSpace, class PrecisionT>
-PrecisionT applyNCNamedGenerator(ExecutionSpace exec, 
-    const ControlledGeneratorOperation generator_op,
+PrecisionT applyNCNamedGenerator(
+    ExecutionSpace exec, const ControlledGeneratorOperation generator_op,
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr_, std::size_t num_qubits,
     const std::vector<std::size_t> &controlled_wires,
     const std::vector<bool> &controlled_values,
@@ -1084,67 +1111,74 @@ PrecisionT applyNCNamedGenerator(ExecutionSpace exec,
                                      controlled_values, wires, inverse);
         return -static_cast<PrecisionT>(0.5);
     case ControlledGeneratorOperation::PhaseShift:
-        applyNCGenPhaseShift<ExecutionSpace>(exec, arr_, num_qubits, controlled_wires,
+        applyNCGenPhaseShift<ExecutionSpace>(exec, arr_, num_qubits,
+                                             controlled_wires,
                                              controlled_values, wires, inverse);
         return static_cast<PrecisionT>(1.0);
     case ControlledGeneratorOperation::IsingXX:
-        applyNCGenIsingXX<ExecutionSpace>(exec, arr_, num_qubits, controlled_wires,
-                                          controlled_values, wires, inverse);
+        applyNCGenIsingXX<ExecutionSpace>(exec, arr_, num_qubits,
+                                          controlled_wires, controlled_values,
+                                          wires, inverse);
         return -static_cast<PrecisionT>(0.5);
     case ControlledGeneratorOperation::IsingXY:
-        applyNCGenIsingXY<ExecutionSpace>(exec, arr_, num_qubits, controlled_wires,
-                                          controlled_values, wires, inverse);
+        applyNCGenIsingXY<ExecutionSpace>(exec, arr_, num_qubits,
+                                          controlled_wires, controlled_values,
+                                          wires, inverse);
         return static_cast<PrecisionT>(0.5);
     case ControlledGeneratorOperation::IsingYY:
-        applyNCGenIsingYY<ExecutionSpace>(exec, arr_, num_qubits, controlled_wires,
-                                          controlled_values, wires, inverse);
+        applyNCGenIsingYY<ExecutionSpace>(exec, arr_, num_qubits,
+                                          controlled_wires, controlled_values,
+                                          wires, inverse);
         return -static_cast<PrecisionT>(0.5);
     case ControlledGeneratorOperation::IsingZZ:
-        applyNCGenIsingZZ<ExecutionSpace>(exec, arr_, num_qubits, controlled_wires,
-                                          controlled_values, wires, inverse);
+        applyNCGenIsingZZ<ExecutionSpace>(exec, arr_, num_qubits,
+                                          controlled_wires, controlled_values,
+                                          wires, inverse);
         return -static_cast<PrecisionT>(0.5);
     case ControlledGeneratorOperation::SingleExcitation:
-        applyNCGenSingleExcitation<ExecutionSpace>(exec, 
-            arr_, num_qubits, controlled_wires, controlled_values, wires,
+        applyNCGenSingleExcitation<ExecutionSpace>(
+            exec, arr_, num_qubits, controlled_wires, controlled_values, wires,
             inverse);
         return -static_cast<PrecisionT>(0.5);
     case ControlledGeneratorOperation::SingleExcitationMinus:
-        applyNCGenSingleExcitationMinus<ExecutionSpace>(exec, 
-            arr_, num_qubits, controlled_wires, controlled_values, wires,
+        applyNCGenSingleExcitationMinus<ExecutionSpace>(
+            exec, arr_, num_qubits, controlled_wires, controlled_values, wires,
             inverse);
         return -static_cast<PrecisionT>(0.5);
     case ControlledGeneratorOperation::SingleExcitationPlus:
-        applyNCGenSingleExcitationPlus<ExecutionSpace>(exec, 
-            arr_, num_qubits, controlled_wires, controlled_values, wires,
+        applyNCGenSingleExcitationPlus<ExecutionSpace>(
+            exec, arr_, num_qubits, controlled_wires, controlled_values, wires,
             inverse);
         return -static_cast<PrecisionT>(0.5);
     case ControlledGeneratorOperation::DoubleExcitation:
-        applyNCGenDoubleExcitation<ExecutionSpace>(exec, 
-            arr_, num_qubits, controlled_wires, controlled_values, wires,
+        applyNCGenDoubleExcitation<ExecutionSpace>(
+            exec, arr_, num_qubits, controlled_wires, controlled_values, wires,
             inverse);
         return -static_cast<PrecisionT>(0.5);
     case ControlledGeneratorOperation::DoubleExcitationMinus:
-        applyNCGenDoubleExcitationMinus<ExecutionSpace>(exec, 
-            arr_, num_qubits, controlled_wires, controlled_values, wires,
+        applyNCGenDoubleExcitationMinus<ExecutionSpace>(
+            exec, arr_, num_qubits, controlled_wires, controlled_values, wires,
             inverse);
         return -static_cast<PrecisionT>(0.5);
     case ControlledGeneratorOperation::DoubleExcitationPlus:
-        applyNCGenDoubleExcitationPlus<ExecutionSpace>(exec, 
-            arr_, num_qubits, controlled_wires, controlled_values, wires,
+        applyNCGenDoubleExcitationPlus<ExecutionSpace>(
+            exec, arr_, num_qubits, controlled_wires, controlled_values, wires,
             inverse);
         return static_cast<PrecisionT>(0.5);
     case ControlledGeneratorOperation::MultiRZ:
-        applyNCGenMultiRZ<ExecutionSpace>(exec, arr_, num_qubits, controlled_wires,
-                                          controlled_values, wires, inverse);
+        applyNCGenMultiRZ<ExecutionSpace>(exec, arr_, num_qubits,
+                                          controlled_wires, controlled_values,
+                                          wires, inverse);
         return -static_cast<PrecisionT>(0.5);
     case ControlledGeneratorOperation::GlobalPhase:
-        applyNCGenGlobalPhase<ExecutionSpace>(exec, 
-            arr_, num_qubits, controlled_wires, controlled_values, wires,
+        applyNCGenGlobalPhase<ExecutionSpace>(
+            exec, arr_, num_qubits, controlled_wires, controlled_values, wires,
             inverse);
         return static_cast<PrecisionT>(-1.0);
     case ControlledGeneratorOperation::PSWAP:
-        applyNCGenPSWAP<ExecutionSpace>(exec, arr_, num_qubits, controlled_wires,
-                                        controlled_values, wires, inverse);
+        applyNCGenPSWAP<ExecutionSpace>(exec, arr_, num_qubits,
+                                        controlled_wires, controlled_values,
+                                        wires, inverse);
         return static_cast<PrecisionT>(1.0);
     default:
         PL_ABORT("Controlled generator operation does not exist.");

@@ -68,10 +68,10 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyGenerator - errors",
         using ExecutionSpace = StateVectorT::KokkosExecSpace;
         StateVectorT sv{1};
         KokkosVector arr_("arr_", 2);
-        PL_REQUIRE_THROWS_MATCHES(applyNamedGenerator<ExecutionSpace>(
+        PL_REQUIRE_THROWS_MATCHES(
+            applyNamedGenerator<ExecutionSpace>(
                 sv.exec(), GeneratorOperation::END, arr_, 1, {0}),
-                                  LightningException,
-                                  "Generator operation does not exist.");
+            LightningException, "Generator operation does not exist.");
     }
 
     SECTION("NCnamedGeneratorFactor") {
@@ -81,8 +81,9 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyGenerator - errors",
         StateVectorT sv{2};
         KokkosVector arr_("arr_", 4);
         PL_REQUIRE_THROWS_MATCHES(
-            applyNCNamedGenerator<ExecutionSpace>(sv.exec(),
-                ControlledGeneratorOperation::END, arr_, 2, {1}, {true}, {0}),
+            applyNCNamedGenerator<ExecutionSpace>(
+                sv.exec(), ControlledGeneratorOperation::END, arr_, 2, {1},
+                {true}, {0}),
             LightningException,
             "Controlled generator operation does not exist.");
     }
