@@ -22,7 +22,7 @@
   probabilities, samples and counts. With shots, expectation values and variances are estimated
   from samples. Mid-circuit measurements run with `mcm_method="one-shot"`, and with single-branch
   statistics by default.
-  [(#XXXX)](https://github.com/PennyLaneAI/pennylane-lightning/pull/XXXX)
+  [(#1437)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1437)
 
 <h3>Improvements 🛠</h3>
 
