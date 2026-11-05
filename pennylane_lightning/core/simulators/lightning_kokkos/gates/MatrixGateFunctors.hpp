@@ -57,16 +57,18 @@ template <class Precision> struct multiQubitOpFunctor {
     std::size_t dim;
     std::size_t num_qubits;
 
-    multiQubitOpFunctor(KokkosComplexVector arr_, std::size_t num_qubits_,
+    template <class ExecutionSpace>
+    multiQubitOpFunctor(ExecutionSpace exec, KokkosComplexVector arr_,
+                        std::size_t num_qubits_,
                         const KokkosComplexVector &matrix_,
                         const std::vector<std::size_t> &wires_) {
-        wires = vector2view(wires_);
+        wires = vector2view(exec, wires_);
         dim = Pennylane::Util::exp2(wires_.size());
         num_qubits = num_qubits_;
         arr = arr_;
         matrix = matrix_;
         const auto &[parity_, rev_wire_shifts_] =
-            wires2Parity(num_qubits_, wires_);
+            wires2Parity(exec, num_qubits_, wires_);
         parity = parity_;
         rev_wire_shifts = rev_wire_shifts_;
     }
@@ -133,7 +135,9 @@ template <class Precision> struct NCMultiQubitOpFunctor {
     std::size_t dim;
     std::size_t num_qubits;
 
-    NCMultiQubitOpFunctor(KokkosComplexVector arr_, std::size_t num_qubits_,
+    template <class ExecutionSpace>
+    NCMultiQubitOpFunctor(ExecutionSpace exec, KokkosComplexVector arr_,
+                          std::size_t num_qubits_,
                           const KokkosComplexVector &matrix_,
                           const std::vector<std::size_t> &controlled_wires_,
                           const std::vector<bool> &controlled_values_,
@@ -143,13 +147,13 @@ template <class Precision> struct NCMultiQubitOpFunctor {
         matrix = matrix_;
         num_qubits = num_qubits_;
         const auto &[parity_, rev_wires_] =
-            reverseWires(num_qubits_, wires_, controlled_wires_);
+            reverseWires(exec, num_qubits_, wires_, controlled_wires_);
         parity = parity_;
         std::vector<std::size_t> indices_ =
             generateBitPatterns(wires_, num_qubits_);
         controlBitPatterns(indices_, num_qubits_, controlled_wires_,
                            controlled_values_);
-        indices = vector2view(indices_);
+        indices = vector2view(exec, indices_);
     }
 
     KOKKOS_INLINE_FUNCTION
@@ -195,7 +199,9 @@ template <class PrecisionT> struct apply1QubitOpFunctor {
     std::size_t wire_parity;
     std::size_t wire_parity_inv;
 
-    apply1QubitOpFunctor(KokkosComplexVector arr_, std::size_t num_qubits_,
+    template <class ExecutionSpace>
+    apply1QubitOpFunctor(ExecutionSpace /*exec*/, KokkosComplexVector arr_,
+                         std::size_t num_qubits_,
                          const KokkosComplexVector &matrix_,
                          const std::vector<std::size_t> &wires_) {
         arr = arr_;
@@ -234,7 +240,9 @@ template <class PrecisionT> struct applyNC1QubitOpFunctor {
     KokkosIntVector rev_wire_shifts;
     std::size_t num_qubits;
 
-    applyNC1QubitOpFunctor(KokkosComplexVector arr_, std::size_t num_qubits_,
+    template <class ExecutionSpace>
+    applyNC1QubitOpFunctor(ExecutionSpace exec, KokkosComplexVector arr_,
+                           std::size_t num_qubits_,
                            const KokkosComplexVector &matrix_,
                            const std::vector<std::size_t> &controlled_wires_,
                            const std::vector<bool> &controlled_values_,
@@ -243,13 +251,13 @@ template <class PrecisionT> struct applyNC1QubitOpFunctor {
         matrix = matrix_;
         num_qubits = num_qubits_;
         const auto &[parity_, rev_wires_] =
-            reverseWires(num_qubits_, wires_, controlled_wires_);
+            reverseWires(exec, num_qubits_, wires_, controlled_wires_);
         parity = parity_;
         std::vector<std::size_t> indices_ =
             generateBitPatterns(wires_, num_qubits_);
         controlBitPatterns(indices_, num_qubits_, controlled_wires_,
                            controlled_values_);
-        indices = vector2view(indices_);
+        indices = vector2view(exec, indices_);
     }
 
     KOKKOS_INLINE_FUNCTION
@@ -283,7 +291,9 @@ template <class PrecisionT> struct apply2QubitOpFunctor {
     std::size_t parity_high;
     std::size_t parity_middle;
 
-    apply2QubitOpFunctor(KokkosComplexVector arr_, std::size_t num_qubits_,
+    template <class ExecutionSpace>
+    apply2QubitOpFunctor(ExecutionSpace /*exec*/, KokkosComplexVector arr_,
+                         std::size_t num_qubits_,
                          const KokkosComplexVector &matrix_,
                          const std::vector<std::size_t> &wires_) {
         arr = arr_;
@@ -339,7 +349,9 @@ template <class PrecisionT> struct applyNC2QubitOpFunctor {
     KokkosIntVector rev_wire_shifts;
     std::size_t num_qubits;
 
-    applyNC2QubitOpFunctor(KokkosComplexVector arr_, std::size_t num_qubits_,
+    template <class ExecutionSpace>
+    applyNC2QubitOpFunctor(ExecutionSpace exec, KokkosComplexVector arr_,
+                           std::size_t num_qubits_,
                            const KokkosComplexVector &matrix_,
                            const std::vector<std::size_t> &controlled_wires_,
                            const std::vector<bool> &controlled_values_,
@@ -348,13 +360,13 @@ template <class PrecisionT> struct applyNC2QubitOpFunctor {
         matrix = matrix_;
         num_qubits = num_qubits_;
         const auto &[parity_, rev_wires_] =
-            reverseWires(num_qubits_, wires_, controlled_wires_);
+            reverseWires(exec, num_qubits_, wires_, controlled_wires_);
         parity = parity_;
         std::vector<std::size_t> indices_ =
             generateBitPatterns(wires_, num_qubits_);
         controlBitPatterns(indices_, num_qubits_, controlled_wires_,
                            controlled_values_);
-        indices = vector2view(indices_);
+        indices = vector2view(exec, indices_);
     }
 
     KOKKOS_INLINE_FUNCTION
@@ -401,14 +413,16 @@ template <class PrecisionT> struct apply3QubitOpFunctor {
     KokkosIntVector rev_wire_shifts;
     std::size_t num_qubits;
 
-    apply3QubitOpFunctor(KokkosComplexVector arr_, std::size_t num_qubits_,
+    template <class ExecutionSpace>
+    apply3QubitOpFunctor(ExecutionSpace exec, KokkosComplexVector arr_,
+                         std::size_t num_qubits_,
                          const KokkosComplexVector &matrix_,
                          const std::vector<std::size_t> &wires_) {
         arr = arr_;
         matrix = matrix_;
         num_qubits = num_qubits_;
         const auto &[parity_, rev_wire_shifts_] =
-            wires2Parity(num_qubits_, wires_);
+            wires2Parity(exec, num_qubits_, wires_);
         parity = parity_;
         rev_wire_shifts = rev_wire_shifts_;
     }
@@ -460,7 +474,9 @@ template <class PrecisionT> struct applyNC3QubitOpFunctor {
     KokkosIntVector rev_wire_shifts;
     std::size_t num_qubits;
 
-    applyNC3QubitOpFunctor(KokkosComplexVector arr_, std::size_t num_qubits_,
+    template <class ExecutionSpace>
+    applyNC3QubitOpFunctor(ExecutionSpace exec, KokkosComplexVector arr_,
+                           std::size_t num_qubits_,
                            const KokkosComplexVector &matrix_,
                            const std::vector<std::size_t> &controlled_wires_,
                            const std::vector<bool> &controlled_values_,
@@ -469,13 +485,13 @@ template <class PrecisionT> struct applyNC3QubitOpFunctor {
         matrix = matrix_;
         num_qubits = num_qubits_;
         const auto &[parity_, rev_wires_] =
-            reverseWires(num_qubits_, wires_, controlled_wires_);
+            reverseWires(exec, num_qubits_, wires_, controlled_wires_);
         parity = parity_;
         std::vector<std::size_t> indices_ =
             generateBitPatterns(wires_, num_qubits_);
         controlBitPatterns(indices_, num_qubits_, controlled_wires_,
                            controlled_values_);
-        indices = vector2view(indices_);
+        indices = vector2view(exec, indices_);
     }
 
     KOKKOS_INLINE_FUNCTION
@@ -534,14 +550,16 @@ template <class PrecisionT> struct apply4QubitOpFunctor {
     KokkosIntVector rev_wire_shifts;
     std::size_t num_qubits;
 
-    apply4QubitOpFunctor(KokkosComplexVector arr_, std::size_t num_qubits_,
+    template <class ExecutionSpace>
+    apply4QubitOpFunctor(ExecutionSpace exec, KokkosComplexVector arr_,
+                         std::size_t num_qubits_,
                          const KokkosComplexVector &matrix_,
                          const std::vector<std::size_t> &wires_) {
         arr = arr_;
         matrix = matrix_;
         num_qubits = num_qubits_;
         const auto &[parity_, rev_wire_shifts_] =
-            wires2Parity(num_qubits_, wires_);
+            wires2Parity(exec, num_qubits_, wires_);
         parity = parity_;
         rev_wire_shifts = rev_wire_shifts_;
     }
@@ -641,14 +659,16 @@ template <class PrecisionT> struct apply5QubitOpFunctor {
     KokkosIntVector rev_wire_shifts;
     std::size_t num_qubits;
 
-    apply5QubitOpFunctor(KokkosComplexVector arr_, std::size_t num_qubits_,
+    template <class ExecutionSpace>
+    apply5QubitOpFunctor(ExecutionSpace exec, KokkosComplexVector arr_,
+                         std::size_t num_qubits_,
                          const KokkosComplexVector &matrix_,
                          const std::vector<std::size_t> &wires_) {
         arr = arr_;
         matrix = matrix_;
         num_qubits = num_qubits_;
         const auto &[parity_, rev_wire_shifts_] =
-            wires2Parity(num_qubits_, wires_);
+            wires2Parity(exec, num_qubits_, wires_);
         parity = parity_;
         rev_wire_shifts = rev_wire_shifts_;
     }

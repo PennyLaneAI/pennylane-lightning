@@ -54,12 +54,12 @@ template <class PrecisionT> struct axpy_KokkosFunctor {
  * @param y Vector to be added
  * @param length number of elements in x
  * */
-template <class PrecisionT>
-inline auto axpy_Kokkos(Kokkos::complex<PrecisionT> alpha,
+template <class PrecisionT, class ExecutionSpace>
+inline auto axpy_Kokkos(ExecutionSpace exec, Kokkos::complex<PrecisionT> alpha,
                         Kokkos::View<Kokkos::complex<PrecisionT> *> x,
                         Kokkos::View<Kokkos::complex<PrecisionT> *> y,
                         std::size_t length) {
-    Kokkos::parallel_for(RangePolicy<>(0, length),
+    Kokkos::parallel_for(RangePolicy<ExecutionSpace>(exec, 0, length),
                          axpy_KokkosFunctor<PrecisionT>(alpha, x, y));
 }
 
@@ -115,9 +115,10 @@ template <class PrecisionT> struct SparseMV_KokkosFunctor {
  * @param values_ptr    pointer to an array with the non-zero elements.
  * @param numNNZ        number of non-zero elements.
  */
-template <class PrecisionT, class ComplexT>
-void SparseMV_Kokkos(Kokkos::View<ComplexT *> x, Kokkos::View<ComplexT *> y,
-                     const std::size_t *row_map, const std::size_t row_map_size,
+template <class PrecisionT, class ComplexT, class ExecutionSpace>
+void SparseMV_Kokkos(ExecutionSpace exec, Kokkos::View<ComplexT *> x,
+                     Kokkos::View<ComplexT *> y, const std::size_t *row_map,
+                     const std::size_t row_map_size,
                      const std::size_t *column_idx_ptr,
                      const ComplexT *values_ptr, const std::size_t numNNZ) {
     using ConstComplexHostView =
@@ -129,17 +130,21 @@ void SparseMV_Kokkos(Kokkos::View<ComplexT *> x, Kokkos::View<ComplexT *> y,
     using KokkosSizeTVector = Kokkos::View<std::size_t *>;
     using KokkosVector = Kokkos::View<ComplexT *>;
 
-    KokkosVector kok_data("kokkos_sparese_matrix_vals", numNNZ);
-    KokkosSizeTVector kok_column_idx_ptr("kokkos_column_idx_ptr", numNNZ);
-    KokkosSizeTVector kok_row_map("kokkos_offsets", row_map_size);
+    KokkosVector kok_data(
+        Kokkos::view_alloc(exec, "kokkos_sparese_matrix_vals"), numNNZ);
+    KokkosSizeTVector kok_column_idx_ptr(
+        Kokkos::view_alloc(exec, "kokkos_column_idx_ptr"), numNNZ);
+    KokkosSizeTVector kok_row_map(Kokkos::view_alloc(exec, "kokkos_offsets"),
+                                  row_map_size);
 
-    Kokkos::deep_copy(kok_data, ConstComplexHostView(values_ptr, numNNZ));
+    Kokkos::deep_copy(exec, kok_data, ConstComplexHostView(values_ptr, numNNZ));
 
-    Kokkos::deep_copy(kok_column_idx_ptr,
+    Kokkos::deep_copy(exec, kok_column_idx_ptr,
                       ConstSizeTHostView(column_idx_ptr, numNNZ));
-    Kokkos::deep_copy(kok_row_map, ConstSizeTHostView(row_map, row_map_size));
+    Kokkos::deep_copy(exec, kok_row_map,
+                      ConstSizeTHostView(row_map, row_map_size));
 
-    Kokkos::parallel_for(RangePolicy<>(0, row_map_size - 1),
+    Kokkos::parallel_for(RangePolicy<ExecutionSpace>(exec, 0, row_map_size - 1),
                          SparseMV_KokkosFunctor<PrecisionT>(
                              x, y, kok_data, kok_column_idx_ptr, kok_row_map));
 }
@@ -174,15 +179,16 @@ template <class PrecisionT> struct getRealOfComplexInnerProductFunctor {
  * @param y Input vector
  * @return :math:`real(conj(x)*y)`
  */
-template <class PrecisionT>
+template <class PrecisionT, class ExecutionSpace>
 inline auto
-getRealOfComplexInnerProduct(Kokkos::View<Kokkos::complex<PrecisionT> *> x,
+getRealOfComplexInnerProduct(ExecutionSpace exec,
+                             Kokkos::View<Kokkos::complex<PrecisionT> *> x,
                              Kokkos::View<Kokkos::complex<PrecisionT> *> y)
     -> PrecisionT {
     PL_ASSERT(x.size() == y.size());
     PrecisionT inner = 0;
     Kokkos::parallel_reduce(
-        RangePolicy<>(0, x.size()),
+        RangePolicy<ExecutionSpace>(exec, 0, x.size()),
         getRealOfComplexInnerProductFunctor<PrecisionT>(x, y), inner);
     return inner;
 }
@@ -217,15 +223,16 @@ template <class PrecisionT> struct getImagOfComplexInnerProductFunctor {
  * @param y Input vector
  * @return :math:`imag(conj(x)*y)`
  */
-template <class PrecisionT>
+template <class PrecisionT, class ExecutionSpace>
 inline auto
-getImagOfComplexInnerProduct(Kokkos::View<Kokkos::complex<PrecisionT> *> x,
+getImagOfComplexInnerProduct(ExecutionSpace exec,
+                             Kokkos::View<Kokkos::complex<PrecisionT> *> x,
                              Kokkos::View<Kokkos::complex<PrecisionT> *> y)
     -> PrecisionT {
     PL_ASSERT(x.size() == y.size());
     PrecisionT inner = 0;
     Kokkos::parallel_reduce(
-        RangePolicy<>(0, x.size()),
+        RangePolicy<ExecutionSpace>(exec, 0, x.size()),
         getImagOfComplexInnerProductFunctor<PrecisionT>(x, y), inner);
     return inner;
 }

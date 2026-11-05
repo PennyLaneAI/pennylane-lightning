@@ -73,6 +73,67 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorKokkos::Constructibility",
     SECTION("StateVectorBackend<TestType> {StateVectorBackend<TestType>&&}") {
         REQUIRE(std::is_move_constructible_v<StateVectorT>);
     }
+    SECTION("StateVectorBackend<TestType> {std::size_t, const "
+            "KokkosExecSpace&}") {
+        using KokkosExecSpace = typename StateVectorT::KokkosExecSpace;
+        REQUIRE(std::is_constructible_v<StateVectorT, std::size_t,
+                                        const KokkosExecSpace &>);
+    }
+}
+
+TEMPLATE_PRODUCT_TEST_CASE(
+    "StateVectorKokkos::execution-space-instance constructor",
+    "[General Constructibility]", (StateVectorKokkos), (float, double)) {
+    using StateVectorT = TestType;
+    using PrecisionT = typename StateVectorT::PrecisionT;
+    using KokkosExecSpace = typename StateVectorT::KokkosExecSpace;
+
+    const std::size_t num_qubits = 3;
+
+    // Kokkos::initialize() is a process-wide singleton: default-constructing
+    // a raw KokkosExecSpace (e.g. Kokkos::HIP{}) below requires it to have
+    // already run. Constructing a default StateVectorKokkos first guarantees
+    // that (it calls Kokkos::initialize() itself if needed), independent of
+    // which order Catch2 runs these sections/test cases in.
+    StateVectorT sv_bootstrap(num_qubits);
+
+    SECTION("Initializes to the |0...0> basis state, matching the default "
+            "constructor") {
+        KokkosExecSpace exec_space{};
+        StateVectorT sv_exec(num_qubits, exec_space);
+        StateVectorT sv_default(num_qubits);
+
+        REQUIRE(sv_exec.getDataVector() == sv_default.getDataVector());
+    }
+
+    SECTION("Gate application on a state vector bound to an explicit "
+            "execution-space instance matches the default instance") {
+        PrecisionT eps = std::numeric_limits<PrecisionT>::epsilon() * 10E3;
+        KokkosExecSpace exec_space{};
+        StateVectorT sv_exec(num_qubits, exec_space);
+        StateVectorT sv_default(num_qubits);
+
+        for (auto *sv : {&sv_exec, &sv_default}) {
+            sv->applyOperation("Hadamard", {0}, false);
+            sv->applyOperation("CNOT", {0, 1}, false);
+            sv->applyOperation("RX", {2}, false, {0.4});
+        }
+
+        REQUIRE(isApproxEqual(sv_exec.getDataVector(),
+                              sv_default.getDataVector(), eps));
+    }
+
+    SECTION("Copying a state vector bound to an explicit execution-space "
+            "instance preserves its data") {
+        KokkosExecSpace exec_space{};
+        StateVectorT sv_exec(num_qubits, exec_space);
+        sv_exec.applyOperation("Hadamard", {0}, false);
+        sv_exec.applyOperation("CNOT", {0, 1}, false);
+
+        StateVectorT sv_copy(sv_exec);
+
+        REQUIRE(sv_copy.getDataVector() == sv_exec.getDataVector());
+    }
 }
 
 TEMPLATE_PRODUCT_TEST_CASE("StateVectorKokkos::applyMatrix with a std::vector",

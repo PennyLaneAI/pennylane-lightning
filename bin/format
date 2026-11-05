@@ -23,7 +23,7 @@ DEFAULT_CLANG_FORMAT_VERSION=20
 BASE_ARGS = f"-style={json.dumps(CLANG_FMT_STYLE_CFG)}"
 
 def parse_version(version_string):
-    version_rgx = "version (\d+)"
+    version_rgx = r"version (\d+)"
 
     m = re.search(version_rgx, version_string)
     return int(m.group(1))

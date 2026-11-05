@@ -54,8 +54,8 @@ class AdjointJacobian final
                                std::span<PrecisionT> &jac,
                                PrecisionT scaling_coeff, std::size_t idx) {
         auto element = -2 * scaling_coeff *
-                       getImagOfComplexInnerProduct<PrecisionT>(sv1.getView(),
-                                                                sv2.getView());
+                       getImagOfComplexInnerProduct<PrecisionT>(
+                           sv1.exec(), sv1.getView(), sv2.getView());
         jac[idx] = element;
     }
 
@@ -126,11 +126,12 @@ class AdjointJacobian final
         }
 
         // Create observable-applied state-vectors
-        std::vector<StateVectorT> H_lambda(num_observables,
-                                           StateVectorT(lambda.getNumQubits()));
+        std::vector<StateVectorT> H_lambda(
+            num_observables,
+            StateVectorT(lambda.getNumQubits(), lambda.exec()));
         BaseType::applyObservables(H_lambda, lambda, obs);
 
-        StateVectorT mu{lambda.getNumQubits()};
+        StateVectorT mu(lambda.getNumQubits(), lambda.exec());
 
         for (int op_idx = static_cast<int>(ops_name.size() - 1); op_idx >= 0;
              op_idx--) {

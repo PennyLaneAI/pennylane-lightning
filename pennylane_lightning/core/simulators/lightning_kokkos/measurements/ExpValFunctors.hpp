@@ -228,16 +228,19 @@ template <class PrecisionT> struct getExpValMultiQubitOpFunctor {
     std::size_t dim;
     std::size_t num_qubits;
 
-    getExpValMultiQubitOpFunctor(const KokkosComplexVector &arr_,
+    template <class ExecutionSpace>
+    getExpValMultiQubitOpFunctor(ExecutionSpace exec,
+                                 const KokkosComplexVector &arr_,
                                  std::size_t num_qubits_,
                                  const KokkosComplexVector &matrix_,
                                  const std::vector<std::size_t> &wires_) {
-        wires = vector2view(wires_);
+        wires = vector2view(exec, wires_);
         dim = one << wires_.size();
         num_qubits = num_qubits_;
         arr = arr_;
         matrix = matrix_;
-        std::tie(parity, rev_wire_shifts) = wires2Parity(num_qubits_, wires_);
+        std::tie(parity, rev_wire_shifts) =
+            wires2Parity(exec, num_qubits_, wires_);
     }
 
     KOKKOS_INLINE_FUNCTION
@@ -448,15 +451,18 @@ template <class PrecisionT> struct getExpVal3QubitOpFunctor {
     const std::size_t dim = one << n_wires;
     std::size_t num_qubits;
 
-    getExpVal3QubitOpFunctor(const KokkosComplexVector &arr_,
+    template <class ExecutionSpace>
+    getExpVal3QubitOpFunctor(ExecutionSpace exec,
+                             const KokkosComplexVector &arr_,
                              const std::size_t num_qubits_,
                              const KokkosComplexVector &matrix_,
                              const std::vector<std::size_t> &wires_) {
-        wires = vector2view(wires_);
+        wires = vector2view(exec, wires_);
         arr = arr_;
         matrix = matrix_;
         num_qubits = num_qubits_;
-        std::tie(parity, rev_wire_shifts) = wires2Parity(num_qubits_, wires_);
+        std::tie(parity, rev_wire_shifts) =
+            wires2Parity(exec, num_qubits_, wires_);
     }
 
     KOKKOS_INLINE_FUNCTION
@@ -516,15 +522,18 @@ template <class PrecisionT> struct getExpVal4QubitOpFunctor {
     const std::size_t dim = one << n_wires;
     std::size_t num_qubits;
 
-    getExpVal4QubitOpFunctor(const KokkosComplexVector &arr_,
+    template <class ExecutionSpace>
+    getExpVal4QubitOpFunctor(ExecutionSpace exec,
+                             const KokkosComplexVector &arr_,
                              const std::size_t num_qubits_,
                              const KokkosComplexVector &matrix_,
                              const std::vector<std::size_t> &wires_) {
-        wires = vector2view(wires_);
+        wires = vector2view(exec, wires_);
         arr = arr_;
         matrix = matrix_;
         num_qubits = num_qubits_;
-        std::tie(parity, rev_wire_shifts) = wires2Parity(num_qubits_, wires_);
+        std::tie(parity, rev_wire_shifts) =
+            wires2Parity(exec, num_qubits_, wires_);
     }
 
     KOKKOS_INLINE_FUNCTION
@@ -613,15 +622,18 @@ template <class PrecisionT> struct getExpVal5QubitOpFunctor {
     const std::size_t dim = one << n_wires;
     std::size_t num_qubits;
 
-    getExpVal5QubitOpFunctor(const KokkosComplexVector &arr_,
+    template <class ExecutionSpace>
+    getExpVal5QubitOpFunctor(ExecutionSpace exec,
+                             const KokkosComplexVector &arr_,
                              const std::size_t num_qubits_,
                              const KokkosComplexVector &matrix_,
                              const std::vector<std::size_t> &wires_) {
-        wires = vector2view(wires_);
+        wires = vector2view(exec, wires_);
         arr = arr_;
         matrix = matrix_;
         num_qubits = num_qubits_;
-        std::tie(parity, rev_wire_shifts) = wires2Parity(num_qubits_, wires_);
+        std::tie(parity, rev_wire_shifts) =
+            wires2Parity(exec, num_qubits_, wires_);
     }
 
     KOKKOS_INLINE_FUNCTION

@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <complex>
 #include <limits>
+#include <thread>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -868,5 +869,78 @@ TEST_CASE("Test tensor transposition", "[Measure]") {
                 d_results);
             REQUIRE(term.second == results);
         }
+    }
+}
+
+TEMPLATE_PRODUCT_TEST_CASE(
+    "StateVectorKokkos::concurrent use of per-thread execution-space "
+    "instances",
+    "[Measurements]", (StateVectorKokkos), (float, double)) {
+    using StateVectorT = TestType;
+    using PrecisionT = typename StateVectorT::PrecisionT;
+    using ComplexT = typename StateVectorT::ComplexT;
+    using KokkosExecSpace = typename StateVectorT::KokkosExecSpace;
+
+    constexpr std::size_t num_threads = 8;
+    constexpr std::size_t num_qubits = 4;
+    const PrecisionT eps = std::numeric_limits<PrecisionT>::epsilon() * 10E3;
+
+    // Same circuit for every thread, parametrized by the thread index so that
+    // a cross-thread mix-up (shared buffers, wrong stream) would show up as a
+    // wrong result rather than going unnoticed.
+    auto run_circuit = [&](StateVectorT &sv, std::size_t idx) {
+        const auto angle = static_cast<PrecisionT>(0.1 * (idx + 1));
+        sv.applyOperation("Hadamard", {0}, false);
+        sv.applyOperation("CNOT", {0, 1}, false);
+        sv.applyOperation("RX", {2}, false, {angle});
+        sv.applyOperation("CRY", {2, 3}, false, {angle});
+        sv.applyOperation("RZ", {1}, false, {angle});
+    };
+
+    // Serial reference results, on the default execution space instance.
+    std::vector<std::vector<ComplexT>> ref_state(num_threads);
+    std::vector<PrecisionT> ref_expval(num_threads);
+    for (std::size_t idx = 0; idx < num_threads; idx++) {
+        StateVectorT sv(num_qubits);
+        run_circuit(sv, idx);
+        ref_state[idx] = sv.getDataVector();
+        ref_expval[idx] = Measurements<StateVectorT>(sv).expval(
+            "PauliZ", std::vector<std::size_t>{2});
+    }
+
+    // Kokkos::initialize() must have run before raw execution-space
+    // instances are created; the serial reference above guarantees it.
+    // partition_space() yields independent instances (separate streams on
+    // GPU backends) of the same device, so this test is valid, and still
+    // exercises concurrency, on a machine with a single GPU.
+    const std::vector<int> weights(num_threads, 1);
+    const auto exec_spaces =
+        Kokkos::Experimental::partition_space(KokkosExecSpace{}, weights);
+    REQUIRE(exec_spaces.size() == num_threads);
+
+    // Catch2 assertions are not thread safe: workers only record results,
+    // and all checks happen on the main thread after joining.
+    std::vector<std::vector<ComplexT>> state(num_threads);
+    std::vector<PrecisionT> expval(num_threads);
+    std::vector<std::thread> workers;
+    workers.reserve(num_threads);
+    for (std::size_t idx = 0; idx < num_threads; idx++) {
+        workers.emplace_back([&, idx]() {
+            StateVectorT sv(num_qubits, exec_spaces[idx]);
+            run_circuit(sv, idx);
+            state[idx] = sv.getDataVector();
+            expval[idx] = Measurements<StateVectorT>(sv).expval(
+                "PauliZ", std::vector<std::size_t>{2});
+            sv.exec().fence();
+        });
+    }
+    for (auto &w : workers) {
+        w.join();
+    }
+
+    for (std::size_t idx = 0; idx < num_threads; idx++) {
+        CAPTURE(idx);
+        REQUIRE(isApproxEqual(state[idx], ref_state[idx], eps));
+        REQUIRE(std::abs(expval[idx] - ref_expval[idx]) < eps);
     }
 }

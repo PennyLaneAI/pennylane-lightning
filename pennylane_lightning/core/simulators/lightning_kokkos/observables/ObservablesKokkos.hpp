@@ -187,7 +187,7 @@ class Hamiltonian final : public HamiltonianBase<StateVectorT> {
      * @param sv The statevector to update
      */
     void applyInPlace(StateVectorT &sv) const override {
-        StateVectorT buffer{sv.getNumQubits()};
+        StateVectorT buffer(sv.getNumQubits(), sv.exec());
         buffer.initZeros();
         StateVectorT tmp{sv};
         for (std::size_t term_idx = 0; term_idx < this->coeffs_.size();
@@ -195,8 +195,8 @@ class Hamiltonian final : public HamiltonianBase<StateVectorT> {
             tmp.updateData(sv.getView());
             this->obs_[term_idx]->applyInPlace(tmp);
             LightningKokkos::Util::axpy_Kokkos<PrecisionT>(
-                ComplexT{this->coeffs_[term_idx], 0.0}, tmp.getView(),
-                buffer.getView(), tmp.getLength());
+                sv.exec(), ComplexT{this->coeffs_[term_idx], 0.0},
+                tmp.getView(), buffer.getView(), tmp.getLength());
         }
         sv.updateData(buffer);
     }
@@ -261,12 +261,12 @@ class SparseHamiltonian final : public SparseHamiltonianBase<StateVectorT> {
     void applyInPlace(StateVectorT &sv) const override {
         PL_ABORT_IF_NOT(this->wires_.size() == sv.getNumQubits(),
                         "SparseH wire count does not match state-vector size");
-        StateVectorT d_sv_prime(sv.getNumQubits());
+        StateVectorT d_sv_prime(sv.getNumQubits(), sv.exec());
 
         SparseMV_Kokkos<PrecisionT, ComplexT>(
-            sv.getView(), d_sv_prime.getView(), this->offsets_.data(),
-            this->offsets_.size(), this->indices_.data(), this->data_.data(),
-            this->data_.size());
+            sv.exec(), sv.getView(), d_sv_prime.getView(),
+            this->offsets_.data(), this->offsets_.size(), this->indices_.data(),
+            this->data_.data(), this->data_.size());
 
         sv.updateData(d_sv_prime);
     }
@@ -284,13 +284,14 @@ template <class StateVectorT, bool use_openmp> struct HamiltonianApplyInPlace {
     run(const std::vector<PrecisionT> &coeffs,
         const std::vector<std::shared_ptr<Observable<StateVectorT>>> &terms,
         StateVectorT &sv) {
-        KokkosVector res("results", sv.getLength());
-        Kokkos::deep_copy(res, ComplexT{0.0, 0.0});
+        KokkosVector res(Kokkos::view_alloc(sv.exec(), "results"),
+                         sv.getLength());
+        Kokkos::deep_copy(sv.exec(), res, ComplexT{0.0, 0.0});
         for (std::size_t term_idx = 0; term_idx < coeffs.size(); term_idx++) {
             StateVectorT tmp{sv};
             terms[term_idx]->applyInPlace(tmp);
             LightningKokkos::Util::axpy_Kokkos<PrecisionT>(
-                ComplexT{coeffs[term_idx], 0.0}, tmp.getView(), res,
+                sv.exec(), ComplexT{coeffs[term_idx], 0.0}, tmp.getView(), res,
                 tmp.getLength());
         }
         sv.updateData(res);

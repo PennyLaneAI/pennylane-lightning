@@ -92,6 +92,34 @@ inline auto pointer2view(const T *vec, const std::size_t num)
 }
 
 /**
+ * @brief Copy the content of a pointer to a Kokkos view, allocated and
+ * copied on a specific execution-space instance.
+ *
+ * Same as pointer2view(vec, num), except the returned view -- and the copy
+ * that fills it -- are bound to `exec` instead of whatever execution space's
+ * process-wide default instance happens to be.  Needed anywhere this is
+ * called from code that's already bound to a specific device/stream (see
+ * StateVectorKokkos's exec_space constructor overload): allocating this
+ * small staging view without `exec` would silently place it on a
+ * *different* device than the state vector it's about to be used against.
+ *
+ * @tparam T Pointer data type.
+ * @tparam ExecSpace Execution-space type.
+ * @param exec Execution-space instance to allocate/copy on.
+ * @param vec Pointer.
+ * @return Kokkos view pointing to a copy of the pointer.
+ */
+template <typename T, class ExecSpace>
+inline auto pointer2view(ExecSpace exec, const T *vec, const std::size_t num)
+    -> Kokkos::View<T *> {
+    using UnmanagedView = Kokkos::View<const T *, Kokkos::HostSpace,
+                                       Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
+    Kokkos::View<T *> view(Kokkos::view_alloc(exec, "vec"), num);
+    Kokkos::deep_copy(exec, view, UnmanagedView(vec, num));
+    return view;
+}
+
+/**
  * @brief Copy the content of an `std::vector` to a Kokkos view.
  *
  * @tparam T Vector data type.
@@ -101,6 +129,22 @@ inline auto pointer2view(const T *vec, const std::size_t num)
 template <typename T>
 inline auto vector2view(const std::vector<T> &vec) -> Kokkos::View<T *> {
     return pointer2view(vec.data(), vec.size());
+}
+
+/**
+ * @brief Copy the content of an `std::vector` to a Kokkos view, allocated and
+ * copied on a specific execution-space instance. See pointer2view(exec, ...).
+ *
+ * @tparam T Vector data type.
+ * @tparam ExecSpace Execution-space type.
+ * @param exec Execution-space instance to allocate/copy on.
+ * @param vec Vector.
+ * @return Kokkos view pointing to a copy of the vector.
+ */
+template <typename T, class ExecSpace>
+inline auto vector2view(ExecSpace exec, const std::vector<T> &vec)
+    -> Kokkos::View<T *> {
+    return pointer2view(exec, vec.data(), vec.size());
 }
 
 /**
@@ -136,6 +180,51 @@ inline auto wires2Parity(const std::size_t num_qubits,
         parity_host(parity_.data(), parity_.size());
     Kokkos::resize(parity, parity_host.size());
     Kokkos::deep_copy(parity, parity_host);
+
+    return {parity, rev_wire_shifts};
+}
+
+/**
+ * @brief Compute the parities and shifts for multi-qubit operations,
+ * allocated and copied on a specific execution-space instance.  See
+ * wires2Parity(num_qubits, wires) -- same logic, but the returned
+ * KokkosIntVectors (and the copies that fill them) are bound to `exec`
+ * instead of whatever execution space's process-wide default instance
+ * happens to be.
+ *
+ * @tparam ExecSpace Execution-space type.
+ * @param exec Execution-space instance to allocate/copy on.
+ * @param num_qubits Number of qubits in the state vector.
+ * @param wires List of target wires.
+ * @return std::pair<KokkosIntVector, KokkosIntVector> Parities and shifts for
+ * multi-qubit operations.
+ */
+template <class ExecSpace>
+inline auto wires2Parity(ExecSpace exec, const std::size_t num_qubits,
+                         const std::vector<std::size_t> &wires)
+    -> std::pair<KokkosIntVector, KokkosIntVector> {
+    KokkosIntVector parity;
+    KokkosIntVector rev_wire_shifts;
+
+    std::vector<std::size_t> rev_wires_(wires.size());
+    std::vector<std::size_t> rev_wire_shifts_(wires.size());
+    for (std::size_t k = 0; k < wires.size(); k++) {
+        rev_wires_[k] = (num_qubits - 1) - wires[(wires.size() - 1) - k];
+        rev_wire_shifts_[k] = (one << rev_wires_[k]);
+    }
+    const std::vector<std::size_t> parity_ = revWireParity(rev_wires_);
+
+    Kokkos::View<const std::size_t *, Kokkos::HostSpace,
+                 Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+        rev_wire_shifts_host(rev_wire_shifts_.data(), rev_wire_shifts_.size());
+    Kokkos::resize(exec, rev_wire_shifts, rev_wire_shifts_host.size());
+    Kokkos::deep_copy(exec, rev_wire_shifts, rev_wire_shifts_host);
+
+    Kokkos::View<const std::size_t *, Kokkos::HostSpace,
+                 Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+        parity_host(parity_.data(), parity_.size());
+    Kokkos::resize(exec, parity, parity_host.size());
+    Kokkos::deep_copy(exec, parity, parity_host);
 
     return {parity, rev_wire_shifts};
 }
@@ -181,6 +270,59 @@ inline auto reverseWires(const std::size_t num_qubits,
         parity_host(parity_.data(), parity_.size());
     Kokkos::resize(parity, parity_host.size());
     Kokkos::deep_copy(parity, parity_host);
+
+    return {parity, rev_wires};
+}
+
+/**
+ * @brief Compute parity and reverse wires for multi-qubit control
+ * operations, allocated and copied on a specific execution-space instance.
+ * See reverseWires(num_qubits, wires, controlled_wires) -- same logic, but
+ * the returned KokkosIntVectors (and the copies that fill them) are bound to
+ * `exec` instead of whatever execution space's process-wide default
+ * instance happens to be.
+ *
+ * @tparam ExecSpace Execution-space type.
+ * @param exec Execution-space instance to allocate/copy on.
+ * @param num_qubits Number of qubits in the state vector.
+ * @param wires List of target wires.
+ * @param controlled_wires List of control wires.
+ * @return std::pair<KokkosIntVector, KokkosIntVector> Parities and reverse
+ * wires for control multi-qubit operations
+ */
+template <class ExecSpace>
+inline auto reverseWires(ExecSpace exec, const std::size_t num_qubits,
+                         const std::vector<std::size_t> &wires,
+                         const std::vector<std::size_t> &controlled_wires)
+    -> std::pair<KokkosIntVector, KokkosIntVector> {
+    KokkosIntVector parity;
+    KokkosIntVector rev_wires;
+
+    const std::size_t n_contr = controlled_wires.size();
+    const std::size_t n_wires = wires.size();
+    const std::size_t nw_tot = n_contr + n_wires;
+    std::vector<std::size_t> all_wires;
+    all_wires.reserve(nw_tot);
+    all_wires.insert(all_wires.begin(), wires.begin(), wires.end());
+    all_wires.insert(all_wires.begin() + n_wires, controlled_wires.begin(),
+                     controlled_wires.end());
+
+    std::vector<std::size_t> rev_wires_(nw_tot, (num_qubits - 1));
+    std::transform(rev_wires_.begin(), rev_wires_.end(), all_wires.rbegin(),
+                   rev_wires_.begin(), std::minus<>{});
+    const std::vector<std::size_t> parity_ = revWireParity(rev_wires_);
+
+    Kokkos::View<const std::size_t *, Kokkos::HostSpace,
+                 Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+        rev_wires_host(rev_wires_.data(), rev_wires_.size());
+    Kokkos::resize(exec, rev_wires, rev_wires_host.size());
+    Kokkos::deep_copy(exec, rev_wires, rev_wires_host);
+
+    Kokkos::View<const std::size_t *, Kokkos::HostSpace,
+                 Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+        parity_host(parity_.data(), parity_.size());
+    Kokkos::resize(exec, parity, parity_host.size());
+    Kokkos::deep_copy(exec, parity, parity_host);
 
     return {parity, rev_wires};
 }

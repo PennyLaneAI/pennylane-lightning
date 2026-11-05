@@ -106,8 +106,12 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
             [](Measurements<StateVectorT> &M, const ArrayComplexT &matrix,
                const std::vector<std::size_t> &wires) {
                 const std::size_t matrix_size = exp2(2 * wires.size());
-                auto matrix_data =
-                    PL_reinterpret_cast<const ComplexT>(matrix.data());
+                // Value copy (Kokkos::complex has a converting constructor
+                // from std::complex) rather than reinterpret_cast: ComplexT
+                // (e.g. Kokkos::complex<T>) can have a stricter alignment
+                // than the std::complex<T> buffer nanobind/numpy hands us,
+                // so a raw pointer reinterpret would be unsafe/UB.
+                const auto *matrix_data = matrix.data();
                 std::vector<ComplexT> matrix_v{matrix_data,
                                                matrix_data + matrix_size};
                 return M.expval(matrix_v, wires);
@@ -126,22 +130,27 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
             "expval",
             [](Measurements<StateVectorT> &M, const arr_sparse_ind &row_map,
                const arr_sparse_ind &entries, const ArrayComplexT &values) {
-                return M.expval(
-                    static_cast<SparseIndexT *>(row_map.data()),
-                    static_cast<SparseIndexT>(row_map.size()),
-                    static_cast<SparseIndexT *>(entries.data()),
-                    PL_reinterpret_cast<const ComplexT>(values.data()),
-                    static_cast<SparseIndexT>(values.size()));
+                // Value copy, not reinterpret_cast -- see the expval(matrix)
+                // overload above for why.
+                std::vector<ComplexT> values_v(values.data(),
+                                               values.data() + values.size());
+                return M.expval(static_cast<SparseIndexT *>(row_map.data()),
+                                static_cast<SparseIndexT>(row_map.size()),
+                                static_cast<SparseIndexT *>(entries.data()),
+                                values_v.data(),
+                                static_cast<SparseIndexT>(values.size()));
             },
             "Expected value of a sparse Hamiltonian.")
         .def(
             "var",
             [](Measurements<StateVectorT> &M, const arr_sparse_ind &row_map,
                const arr_sparse_ind &entries, const ArrayComplexT &values) {
+                std::vector<ComplexT> values_v(values.data(),
+                                               values.data() + values.size());
                 return M.var(static_cast<SparseIndexT *>(row_map.data()),
                              static_cast<SparseIndexT>(row_map.size()),
                              static_cast<SparseIndexT *>(entries.data()),
-                             PL_reinterpret_cast<const ComplexT>(values.data()),
+                             values_v.data(),
                              static_cast<SparseIndexT>(values.size()));
             },
             "Variance of a sparse Hamiltonian.");
@@ -181,8 +190,9 @@ void registerBackendSpecificObservables(nb::module_ &m) {
            const std::vector<SparseIndexT> &indices,
            const std::vector<SparseIndexT> &indptr,
            const std::vector<std::size_t> &wires) {
-            const ComplexT *data_ptr =
-                PL_reinterpret_cast<const ComplexT>(data.data());
+            // Value copy, not reinterpret_cast -- see registerBackendSpecific
+            // Measurements' expval(matrix) overload above for why.
+            const auto *data_ptr = data.data();
             std::vector<ComplexT> data_vec(data_ptr, data_ptr + data.size());
             new (self) SparseHamiltonian<StateVectorT>(data_vec, indices,
                                                        indptr, wires);
@@ -390,26 +400,43 @@ void registerBackendSpecificStateVectorMethods(PyClass &pyclass) {
             "setStateVector",
             [](StateVectorT &sv, const ArrayComplexT &state,
                const std::vector<std::size_t> &wires) {
-                sv.setStateVector(
-                    PL_reinterpret_cast<const ComplexT>(state.data()), wires);
+                // Value copy, not reinterpret_cast -- see
+                // registerBackendSpecificMeasurements' expval(matrix)
+                // overload above for why.
+                std::vector<ComplexT> state_v(state.data(),
+                                              state.data() + state.size());
+                sv.setStateVector(state_v.data(), wires);
             },
             "Set the state vector to the data contained in `state`.")
         .def(
             "DeviceToHost",
             [](StateVectorT &device_sv, ArrayComplexT &host_sv) {
-                auto *data_ptr = PL_reinterpret_cast<ComplexT>(host_sv.data());
                 if (host_sv.size()) {
-                    device_sv.DeviceToHost(data_ptr, host_sv.size());
+                    // Stage through a properly-aligned ComplexT buffer (not
+                    // a reinterpret_cast of host_sv's std::complex memory,
+                    // which nanobind/numpy only aligns to alignof(PrecisionT)
+                    // -- narrower than Kokkos::complex<T>'s alignment
+                    // requirement), then convert element-wise into the
+                    // caller-owned host_sv buffer.
+                    std::vector<ComplexT> staging(host_sv.size());
+                    device_sv.DeviceToHost(staging.data(), host_sv.size());
+                    auto *host_ptr = host_sv.data();
+                    for (std::size_t i = 0; i < host_sv.size(); i++) {
+                        host_ptr[i] = std::complex<PrecisionT>(
+                            staging[i].real(), staging[i].imag());
+                    }
                 }
             },
             "Synchronize data from the Kokkos device to host.")
         .def(
             "HostToDevice",
             [](StateVectorT &device_sv, const ArrayComplexT &host_sv) {
-                auto *data_ptr = const_cast<ComplexT *>(
-                    PL_reinterpret_cast<ComplexT>(host_sv.data()));
                 if (host_sv.size()) {
-                    device_sv.HostToDevice(data_ptr, host_sv.size());
+                    // See DeviceToHost above for why this stages through a
+                    // ComplexT buffer instead of reinterpret_cast.
+                    std::vector<ComplexT> staging(
+                        host_sv.data(), host_sv.data() + host_sv.size());
+                    device_sv.HostToDevice(staging.data(), host_sv.size());
                 }
             },
             "Synchronize data from the host device to Kokkos.");

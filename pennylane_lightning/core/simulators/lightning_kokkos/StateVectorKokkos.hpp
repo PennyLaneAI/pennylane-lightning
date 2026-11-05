@@ -102,17 +102,31 @@ class StateVectorKokkos final
     using MemoryStorageT = Pennylane::Util::MemoryStorageLocation::Undefined;
 
     StateVectorKokkos() = delete;
+
+    /**
+     * @brief Create a new state vector of the given number of qubits,
+     * initialized to the |0...0> basis state, using Kokkos's own default
+     * execution-space instance (lazily initializing Kokkos via
+     * kokkos_args if this is the first Kokkos-related construction in the
+     * process).
+     *
+     * @param num_qubits Number of qubits.
+     * @param kokkos_args Arguments for Kokkos initialization. Ignored if
+     * Kokkos is already initialized.
+     */
     StateVectorKokkos(std::size_t num_qubits,
                       const Kokkos::InitializationSettings &kokkos_args = {})
-        : BaseType{num_qubits} {
+        : BaseType{num_qubits}, kokkos_init_guard_(kokkos_args), exec_() {
+        // kokkos_init_guard_ (declared/constructed before exec_ below) has
+        // already ensured Kokkos::initialize() has run by this point, so
+        // exec_ default-constructing to KokkosExecSpace's own default
+        // instance here is safe -- behavior-identical to the previous
+        // implicit-default policy/view construction throughout this class (a
+        // default-constructed instance IS what e.g. RangePolicy<Space>(0, N)
+        // uses internally when no instance is given explicitly).  Real
+        // per-device/per-stream binding only happens via the exec_space
+        // constructor overload below.
         num_qubits_ = num_qubits;
-
-        {
-            const std::lock_guard<std::mutex> lock(init_mutex_);
-            if (!Kokkos::is_initialized()) {
-                Kokkos::initialize(kokkos_args);
-            }
-        }
 
 #ifdef _WIN32
         PL_ABORT_IF_NOT(num_qubits,
@@ -120,14 +134,60 @@ class StateVectorKokkos final
                         "not supported on Windows.");
 #endif
 
-        data_ = std::make_unique<KokkosVector>("data_", exp2(num_qubits));
+        data_ = std::make_unique<KokkosVector>(
+            Kokkos::view_alloc(exec_, "data_"), exp2(num_qubits));
+        setBasisState(0U);
+    };
+
+    /**
+     * @brief Create a new state vector bound to a specific, caller-owned
+     * Kokkos execution-space instance (e.g. Kokkos::HIP(stream) built from a
+     * stream on a specific physical GPU).
+     *
+     * Unlike the constructors above, this does NOT let Kokkos::initialize()
+     * pick (or bias) which device this state vector's memory/kernels live
+     * on: Kokkos::initialize() binds the WHOLE PROCESS to one device for its
+     * entire lifetime, so it cannot be used to place different
+     * StateVectorKokkos instances on different physical GPUs within one
+     * process.  This constructor sidesteps that: `exec_space` is used
+     * explicitly for every View allocation and every kernel dispatch this
+     * instance performs (see e.g. applyOperation/applyMultiQubitOp/etc.),
+     * so it works regardless of which device Kokkos::initialize() itself
+     * happens to be bound to -- the caller is responsible for constructing
+     * `exec_space` against the device/stream it wants (e.g.
+     * hipSetDevice(N); hipStreamCreate(&stream); Kokkos::HIP exec(stream);)
+     * and for that stream's lifetime outliving this state vector.
+     *
+     * @param num_qubits Number of qubits.
+     * @param exec_space Execution-space instance to bind this state vector
+     * to.
+     */
+    StateVectorKokkos(std::size_t num_qubits, const KokkosExecSpace &exec_space)
+        : BaseType{num_qubits}, kokkos_init_guard_(), exec_(exec_space) {
+        // kokkos_init_guard_ uses no device_id preference here on purpose:
+        // with per-instance binding, Kokkos::initialize()'s own default
+        // device is irrelevant to where THIS state vector's data/kernels
+        // run -- exec_space (constructed by the caller against whichever
+        // device/stream it wants) is what actually matters.
+        num_qubits_ = num_qubits;
+
+#ifdef _WIN32
+        PL_ABORT_IF_NOT(num_qubits,
+                        "LightningKokkos zero-qubit device initialization is "
+                        "not supported on Windows.");
+#endif
+
+        data_ = std::make_unique<KokkosVector>(
+            Kokkos::view_alloc(exec_, "data_"), exp2(num_qubits));
         setBasisState(0U);
     };
 
     /**
      * @brief Init zeros for the state-vector on device.
      */
-    void initZeros() { Kokkos::deep_copy(getView(), ComplexT{0.0, 0.0}); }
+    void initZeros() {
+        Kokkos::deep_copy(exec_, getView(), ComplexT{0.0, 0.0});
+    }
 
     /**
      * @brief Set value for a single element of the state-vector on device.
@@ -138,7 +198,7 @@ class StateVectorKokkos final
         KokkosVector sv_view =
             getView(); // circumvent error capturing this with KOKKOS_LAMBDA
         Kokkos::parallel_for(
-            RangePolicy<KokkosExecSpace>(0, sv_view.size()),
+            RangePolicy<KokkosExecSpace>(exec_, 0, sv_view.size()),
             KOKKOS_LAMBDA(std::size_t i) {
                 sv_view(i) =
                     (i == index) ? ComplexT{1.0, 0.0} : ComplexT{0.0, 0.0};
@@ -196,7 +256,7 @@ class StateVectorKokkos final
         KokkosVector sv_view =
             getView(); // circumvent error capturing this with KOKKOS_LAMBDA
         Kokkos::parallel_for(
-            RangePolicy<KokkosExecSpace>(0, indices.size()),
+            RangePolicy<KokkosExecSpace>(exec_, 0, indices.size()),
             KOKKOS_LAMBDA(std::size_t i) {
                 sv_view(d_indices[i]) = d_values[i];
             });
@@ -237,7 +297,7 @@ class StateVectorKokkos final
         auto d_wires = vector2view(wires);
         initZeros();
         Kokkos::parallel_for(
-            RangePolicy<KokkosExecSpace>(0, num_state),
+            RangePolicy<KokkosExecSpace>(exec_, 0, num_state),
             KOKKOS_LAMBDA(std::size_t i) {
                 std::size_t index{0U};
                 for (std::size_t w = 0; w < d_wires.size(); w++) {
@@ -321,11 +381,16 @@ class StateVectorKokkos final
      * @brief Copy constructor
      *
      * @param other Another state vector
-     * @param kokkos_args Arguments for Kokkos initialization
+     * @param kokkos_args Arguments for Kokkos initialization (ignored: the
+     * copy is placed on `other`'s own execution-space instance instead, so
+     * it stays on the same device/stream as the state vector it's copying --
+     * `kokkos_args` only matters the very first time Kokkos::initialize()
+     * runs, which has already happened by the time `other` exists).
      */
-    StateVectorKokkos(const StateVectorKokkos &other,
-                      const Kokkos::InitializationSettings &kokkos_args = {})
-        : StateVectorKokkos(other.getNumQubits(), kokkos_args) {
+    StateVectorKokkos(
+        const StateVectorKokkos &other,
+        [[maybe_unused]] const Kokkos::InitializationSettings &kokkos_args = {})
+        : StateVectorKokkos(other.getNumQubits(), other.exec_) {
         this->DeviceToDevice(other.getView());
     }
 
@@ -335,7 +400,7 @@ class StateVectorKokkos final
     ~StateVectorKokkos() {
         data_.reset();
         {
-            const std::lock_guard<std::mutex> lock(init_mutex_);
+            const std::lock_guard<std::mutex> lock(KokkosInitGuard::mutex());
             if (!is_exit_reg_) {
                 is_exit_reg_ = true;
                 std::atexit([]() {
@@ -367,8 +432,8 @@ class StateVectorKokkos final
             const std::size_t num_qubits = this->getNumQubits();
             const GateOperation gateop =
                 reverse_lookup(gate_names, std::string_view{opName});
-            applyNamedOperation<KokkosExecSpace>(gateop, *data_, num_qubits,
-                                                 wires, inverse, params);
+            applyNamedOperation<KokkosExecSpace>(
+                exec_, gateop, *data_, num_qubits, wires, inverse, params);
         } else {
             PL_ABORT_IF(gate_matrix.empty(),
                         std::string("Operation does not exist for ") + opName +
@@ -392,7 +457,8 @@ class StateVectorKokkos final
                         "wires and word have incompatible dimensions.");
         Pennylane::LightningKokkos::Functors::applyPauliRot<KokkosExecSpace,
                                                             PrecisionT>(
-            getView(), this->getNumQubits(), wires, inverse, params[0], word);
+            exec_, getView(), this->getNumQubits(), wires, inverse, params[0],
+            word);
     }
 
     /**
@@ -408,14 +474,16 @@ class StateVectorKokkos final
         const std::size_t num_qubits = this->getNumQubits();
         const std::size_t two2N = exp2(num_qubits - wires.size());
         const std::size_t dim = exp2(wires.size());
-        KokkosVector matrix_trans("matrix_trans", matrix.size());
+        KokkosVector matrix_trans(Kokkos::view_alloc(exec_, "matrix_trans"),
+                                  matrix.size());
 
         if (inverse) {
             // MDRangePolicy bounds are Kokkos::Array<int64_t, rank> regardless
             // of IndexType, so cast from size_t to silence -Wnarrowing.
             MDRangePolicy<2, KokkosExecSpace> policy_2d(
-                {0, 0}, {static_cast<std::int64_t>(dim),
-                         static_cast<std::int64_t>(dim)});
+                exec_, {0, 0},
+                {static_cast<std::int64_t>(dim),
+                 static_cast<std::int64_t>(dim)});
             Kokkos::parallel_for(
                 policy_2d, KOKKOS_LAMBDA(std::size_t i, std::size_t j) {
                     matrix_trans(i + j * dim) =
@@ -426,24 +494,28 @@ class StateVectorKokkos final
         }
         switch (wires.size()) {
         case 1:
-            Kokkos::parallel_for(RangePolicy<KokkosExecSpace>(0, two2N),
-                                 apply1QubitOpFunctor<fp_t>(
-                                     *data_, num_qubits, matrix_trans, wires));
+            Kokkos::parallel_for(
+                RangePolicy<KokkosExecSpace>(exec_, 0, two2N),
+                apply1QubitOpFunctor<fp_t>(exec_, *data_, num_qubits,
+                                           matrix_trans, wires));
             break;
         case 2:
-            Kokkos::parallel_for(RangePolicy<KokkosExecSpace>(0, two2N),
-                                 apply2QubitOpFunctor<fp_t>(
-                                     *data_, num_qubits, matrix_trans, wires));
+            Kokkos::parallel_for(
+                RangePolicy<KokkosExecSpace>(exec_, 0, two2N),
+                apply2QubitOpFunctor<fp_t>(exec_, *data_, num_qubits,
+                                           matrix_trans, wires));
             break;
         case 3:
-            Kokkos::parallel_for(RangePolicy<KokkosExecSpace>(0, two2N),
-                                 apply3QubitOpFunctor<fp_t>(
-                                     *data_, num_qubits, matrix_trans, wires));
+            Kokkos::parallel_for(
+                RangePolicy<KokkosExecSpace>(exec_, 0, two2N),
+                apply3QubitOpFunctor<fp_t>(exec_, *data_, num_qubits,
+                                           matrix_trans, wires));
             break;
         case 4:
-            Kokkos::parallel_for(RangePolicy<KokkosExecSpace>(0, two2N),
-                                 apply4QubitOpFunctor<fp_t>(
-                                     *data_, num_qubits, matrix_trans, wires));
+            Kokkos::parallel_for(
+                RangePolicy<KokkosExecSpace>(exec_, 0, two2N),
+                apply4QubitOpFunctor<fp_t>(exec_, *data_, num_qubits,
+                                           matrix_trans, wires));
             break;
         default:
             // TODO: explore runtime determine L0 or L1 scratch level (for GPU
@@ -459,9 +531,9 @@ class StateVectorKokkos final
                 "league_size limit (2^31) on GPU backends for this gate.");
             Kokkos::parallel_for(
                 "multiQubitOpFunctor",
-                TeamPolicy(two2N, Kokkos::AUTO, dim)
+                TeamPolicy(exec_, two2N, Kokkos::AUTO, dim)
                     .set_scratch_size(1, Kokkos::PerTeam(scratch_size)),
-                multiQubitOpFunctor<PrecisionT>(*data_, num_qubits,
+                multiQubitOpFunctor<PrecisionT>(exec_, *data_, num_qubits,
                                                 matrix_trans, wires));
             break;
         }
@@ -501,8 +573,8 @@ class StateVectorKokkos final
             const ControlledGateOperation gateop =
                 reverse_lookup(controlled_gate_names, std::string_view{opName});
             applyNCNamedOperation<KokkosExecSpace>(
-                gateop, *data_, num_qubits, controlled_wires, controlled_values,
-                wires, inverse, params);
+                exec_, gateop, *data_, num_qubits, controlled_wires,
+                controlled_values, wires, inverse, params);
         } else {
             PL_ABORT_IF(gate_matrix.empty(),
                         std::string("Operation does not exist for ") + opName +
@@ -534,12 +606,14 @@ class StateVectorKokkos final
         const std::size_t two2N =
             exp2(num_qubits - wires.size() - controlled_wires.size());
         const std::size_t dim = exp2(wires.size());
-        KokkosVector matrix_trans("matrix_trans", matrix.size());
+        KokkosVector matrix_trans(Kokkos::view_alloc(exec_, "matrix_trans"),
+                                  matrix.size());
 
         if (inverse) {
             MDRangePolicy<2, KokkosExecSpace> policy_2d(
-                {0, 0}, {static_cast<std::int64_t>(dim),
-                         static_cast<std::int64_t>(dim)});
+                exec_, {0, 0},
+                {static_cast<std::int64_t>(dim),
+                 static_cast<std::int64_t>(dim)});
             Kokkos::parallel_for(
                 policy_2d, KOKKOS_LAMBDA(std::size_t i, std::size_t j) {
                     matrix_trans(i + j * dim) =
@@ -552,23 +626,23 @@ class StateVectorKokkos final
         switch (wires.size()) {
         case 1:
             Kokkos::parallel_for(
-                RangePolicy<KokkosExecSpace>(0, two2N),
-                applyNC1QubitOpFunctor<fp_t>(*data_, num_qubits, matrix_trans,
-                                             controlled_wires,
+                RangePolicy<KokkosExecSpace>(exec_, 0, two2N),
+                applyNC1QubitOpFunctor<fp_t>(exec_, *data_, num_qubits,
+                                             matrix_trans, controlled_wires,
                                              controlled_values, wires));
             break;
         case 2:
             Kokkos::parallel_for(
-                RangePolicy<KokkosExecSpace>(0, two2N),
-                applyNC2QubitOpFunctor<fp_t>(*data_, num_qubits, matrix_trans,
-                                             controlled_wires,
+                RangePolicy<KokkosExecSpace>(exec_, 0, two2N),
+                applyNC2QubitOpFunctor<fp_t>(exec_, *data_, num_qubits,
+                                             matrix_trans, controlled_wires,
                                              controlled_values, wires));
             break;
         case 3:
             Kokkos::parallel_for(
-                RangePolicy<KokkosExecSpace>(0, two2N),
-                applyNC3QubitOpFunctor<fp_t>(*data_, num_qubits, matrix_trans,
-                                             controlled_wires,
+                RangePolicy<KokkosExecSpace>(exec_, 0, two2N),
+                applyNC3QubitOpFunctor<fp_t>(exec_, *data_, num_qubits,
+                                             matrix_trans, controlled_wires,
                                              controlled_values, wires));
             break;
         default:
@@ -586,10 +660,10 @@ class StateVectorKokkos final
                 "league_size limit (2^31) on GPU backends for this gate.");
             Kokkos::parallel_for(
                 "multiNCQubitOpFunctor",
-                TeamPolicy(two2N, Kokkos::AUTO, dim)
+                TeamPolicy(exec_, two2N, Kokkos::AUTO, dim)
                     .set_scratch_size(1, Kokkos::PerTeam(scratch_size)),
                 NCMultiQubitOpFunctor<PrecisionT>(
-                    *data_, num_qubits, matrix_trans, controlled_wires,
+                    exec_, *data_, num_qubits, matrix_trans, controlled_wires,
                     controlled_values, wires));
             break;
         }
@@ -610,14 +684,14 @@ class StateVectorKokkos final
                             bool inverse = false) {
         PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
         const std::size_t n2 = exp2(wires.size() * 2);
-        KokkosVector matrix_("matrix_", n2);
+        KokkosVector matrix_(Kokkos::view_alloc(exec_, "matrix_"), n2);
 
         // Note that when copying data between different memory spaces (host !=
         // device), Kokkos::View<Kokkos::complex*> cannot perform a deep copy of
         // unmanaged complex numbers during initialization via its constructor.
         // Thus, we need to explicitly deep-copy the matrix data using
         // Kokkos::deep_copy().
-        Kokkos::deep_copy(matrix_, UnmanagedComplexHostView(matrix, n2));
+        Kokkos::deep_copy(exec_, matrix_, UnmanagedComplexHostView(matrix, n2));
 
         applyMultiQubitOp(matrix_, wires, inverse);
     }
@@ -637,8 +711,9 @@ class StateVectorKokkos final
                             bool inverse = false) {
         PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
         const std::size_t n2 = exp2(wires.size() * 2);
-        KokkosVector matrix_("matrix_", n2);
-        Kokkos::deep_copy(matrix_, UnmanagedConstComplexHostView(matrix, n2));
+        KokkosVector matrix_(Kokkos::view_alloc(exec_, "matrix_"), n2);
+        Kokkos::deep_copy(exec_, matrix_,
+                          UnmanagedConstComplexHostView(matrix, n2));
         applyMultiQubitOp(matrix_, wires, inverse);
     }
 
@@ -678,8 +753,8 @@ class StateVectorKokkos final
         const std::vector<std::size_t> &wires, bool inverse = false) {
         PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
         const std::size_t n2 = exp2(wires.size() * 2);
-        KokkosVector matrix_("matrix_", n2);
-        Kokkos::deep_copy(matrix_, UnmanagedComplexHostView(matrix, n2));
+        KokkosVector matrix_(Kokkos::view_alloc(exec_, "matrix_"), n2);
+        Kokkos::deep_copy(exec_, matrix_, UnmanagedComplexHostView(matrix, n2));
         applyNCMultiQubitOp(matrix_, controlled_wires, controlled_values, wires,
                             inverse);
     }
@@ -703,8 +778,9 @@ class StateVectorKokkos final
                           bool inverse = false) {
         PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
         const std::size_t n2 = exp2(wires.size() * 2);
-        KokkosVector matrix_("matrix_", n2);
-        Kokkos::deep_copy(matrix_, UnmanagedConstComplexHostView(matrix, n2));
+        KokkosVector matrix_(Kokkos::view_alloc(exec_, "matrix_"), n2);
+        Kokkos::deep_copy(exec_, matrix_,
+                          UnmanagedConstComplexHostView(matrix, n2));
         applyNCMultiQubitOp(matrix_, controlled_wires, controlled_values, wires,
                             inverse);
     }
@@ -751,7 +827,7 @@ class StateVectorKokkos final
         const std::size_t num_qubits = this->getNumQubits();
         const GeneratorOperation generator_op =
             reverse_lookup(generator_names, std::string_view{opName});
-        return applyNamedGenerator<KokkosExecSpace>(generator_op, *data_,
+        return applyNamedGenerator<KokkosExecSpace>(exec_, generator_op, *data_,
                                                     num_qubits, wires, inverse);
     }
 
@@ -777,7 +853,7 @@ class StateVectorKokkos final
         const ControlledGeneratorOperation generator_op = reverse_lookup(
             controlled_generator_names, std::string_view{opName});
         return applyNCNamedGenerator<KokkosExecSpace>(
-            generator_op, *data_, num_qubits, controlled_wires,
+            exec_, generator_op, *data_, num_qubits, controlled_wires,
             controlled_values, wires, inverse);
     }
 
@@ -821,9 +897,9 @@ class StateVectorKokkos final
      * @param branch Branch 0 or 1.
      */
     void collapse(std::size_t wire, bool branch) {
-        KokkosVector matrix("gate_matrix", 4);
+        KokkosVector matrix(Kokkos::view_alloc(exec_, "gate_matrix"), 4);
         Kokkos::parallel_for(
-            RangePolicy<KokkosExecSpace>(0, matrix.size()),
+            RangePolicy<KokkosExecSpace>(exec_, 0, matrix.size()),
             KOKKOS_LAMBDA(std::size_t k) {
                 matrix(k) = ((k == 0 && branch == 0) || (k == 3 && branch == 1))
                                 ? ComplexT{1.0, 0.0}
@@ -841,7 +917,7 @@ class StateVectorKokkos final
 
         PrecisionT squaredNorm = 0.0;
         Kokkos::parallel_reduce(
-            RangePolicy<KokkosExecSpace>(0, sv_view.size()),
+            RangePolicy<KokkosExecSpace>(exec_, 0, sv_view.size()),
             KOKKOS_LAMBDA(std::size_t i, PrecisionT &sum) {
                 const PrecisionT norm = Kokkos::abs(sv_view(i));
                 sum += norm * norm;
@@ -855,7 +931,7 @@ class StateVectorKokkos final
         const std::complex<PrecisionT> inv_norm =
             1. / Kokkos::sqrt(squaredNorm);
         Kokkos::parallel_for(
-            RangePolicy<KokkosExecSpace>(0, sv_view.size()),
+            RangePolicy<KokkosExecSpace>(exec_, 0, sv_view.size()),
             KOKKOS_LAMBDA(std::size_t i) { sv_view(i) *= inv_norm; });
     }
 
@@ -865,7 +941,7 @@ class StateVectorKokkos final
      * @param other Kokkos View
      */
     void updateData(const KokkosVector other) {
-        Kokkos::deep_copy(*data_, other);
+        Kokkos::deep_copy(exec_, *data_, other);
     }
 
     /**
@@ -922,6 +998,14 @@ class StateVectorKokkos final
     [[nodiscard]] auto getView() -> KokkosVector & { return *data_; }
 
     /**
+     * @brief Get the execution-space instance this state vector's data and
+     * kernels are bound to (see the exec_space constructor overload above).
+     *
+     * @return The execution-space instance.
+     */
+    [[nodiscard]] auto exec() const -> const KokkosExecSpace & { return exec_; }
+
+    /**
      * @brief Get the vector-converted Kokkos view
      *
      * @return std::vector<ComplexT>
@@ -939,7 +1023,7 @@ class StateVectorKokkos final
      *
      */
     inline void HostToDevice(ComplexT *sv, std::size_t length) {
-        Kokkos::deep_copy(*data_, UnmanagedComplexHostView(sv, length));
+        Kokkos::deep_copy(exec_, *data_, UnmanagedComplexHostView(sv, length));
     }
 
     /**
@@ -947,7 +1031,7 @@ class StateVectorKokkos final
      *
      */
     inline void DeviceToHost(ComplexT *sv, std::size_t length) const {
-        Kokkos::deep_copy(UnmanagedComplexHostView(sv, length), *data_);
+        Kokkos::deep_copy(exec_, UnmanagedComplexHostView(sv, length), *data_);
     }
 
     /**
@@ -955,12 +1039,66 @@ class StateVectorKokkos final
      *
      */
     inline void DeviceToDevice(KokkosVector vector_to_copy) {
-        Kokkos::deep_copy(*data_, vector_to_copy);
+        Kokkos::deep_copy(exec_, *data_, vector_to_copy);
     }
 
   private:
     std::size_t num_qubits_;
-    std::mutex init_mutex_;
+
+    /**
+     * @brief Ensures Kokkos::initialize() has run, exactly once per
+     * process, before any KokkosExecSpace instance is constructed.
+     *
+     * Kokkos::initialize() is a process-wide singleton operation, so the
+     * mutex guarding it (see mutex() below) is deliberately *static*
+     * (shared by every instance) rather than a per-instance member: a
+     * per-instance mutex cannot serialize concurrent construction of
+     * multiple StateVectorKokkos instances from different threads, which is
+     * exactly the scenario the exec_space constructor overload above exists
+     * to support.
+     */
+    struct KokkosInitGuard {
+        /**
+         * @brief Run Kokkos::initialize(kokkos_args) if Kokkos has not
+         * already been initialized in this process.
+         *
+         * @param kokkos_args Arguments for Kokkos initialization. Ignored
+         * if Kokkos is already initialized (Kokkos::initialize() only ever
+         * takes effect the first time it is called in a process).
+         */
+        explicit KokkosInitGuard(
+            const Kokkos::InitializationSettings &kokkos_args = {}) {
+            const std::lock_guard<std::mutex> lock(mutex());
+            if (!Kokkos::is_initialized()) {
+                Kokkos::initialize(kokkos_args);
+            }
+        }
+
+        /**
+         * @brief Process-wide mutex serializing the
+         * Kokkos::is_initialized()/Kokkos::initialize() check-then-act
+         * above, and the analogous is_exit_reg_ check in the destructor,
+         * since both guard process-wide singleton state.
+         *
+         * @return Reference to the shared mutex instance.
+         */
+        static std::mutex &mutex() {
+            static std::mutex m;
+            return m;
+        }
+    };
+    // kokkos_init_guard_ MUST be declared (and therefore constructed)
+    // before exec_ below: member initialization always runs in declaration
+    // order regardless of the order written in a constructor's initializer
+    // list, and default-constructing exec_ (e.g. Kokkos::HIP{}) requires
+    // Kokkos::initialize() to have already run.
+    KokkosInitGuard kokkos_init_guard_;
+    // exec_ MUST be declared (and therefore destroyed) after data_ is
+    // destroyed: C++ destroys members in REVERSE declaration order, and
+    // data_'s View must be freed while exec_ (and the stream/device it may
+    // wrap) is still alive.  Declaring exec_ before data_ here means exec_ is
+    // constructed first / destroyed last, which is the order we need.
+    KokkosExecSpace exec_;
     std::unique_ptr<KokkosVector> data_;
     inline static bool is_exit_reg_ = false;
 };

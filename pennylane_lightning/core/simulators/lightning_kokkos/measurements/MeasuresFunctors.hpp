@@ -128,7 +128,9 @@ class getProbsNQubitOpFunctor {
     std::size_t parity_8;
     std::size_t parity_9;
 
-    getProbsNQubitOpFunctor(const Kokkos::View<ComplexT *> &arr_,
+    template <class ExecutionSpace>
+    getProbsNQubitOpFunctor(ExecutionSpace exec,
+                            const Kokkos::View<ComplexT *> &arr_,
                             const std::size_t num_qubits_,
                             const std::vector<std::size_t> &wires_)
         : value_count{one << wires_.size()}, arr{arr_}, n_wires{wires_.size()} {
@@ -141,8 +143,8 @@ class getProbsNQubitOpFunctor {
         std::vector<std::size_t> parity_ =
             Pennylane::Util::revWireParity(rev_wires_);
         if constexpr (num_wires == 0) {
-            rev_wires = vector2view(rev_wires_);
-            parity = vector2view(parity_);
+            rev_wires = vector2view(exec, rev_wires_);
+            parity = vector2view(exec, parity_);
         }
         if constexpr (num_wires > 0) {
             rev_wire_0 = rev_wires_[0];
@@ -405,74 +407,75 @@ class getProbsNQubitOpFunctor {
  */
 template <class DeviceType, class PrecisionT>
 auto probs_bitshift_generic(
-    const Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
+    DeviceType exec, const Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
     const std::size_t num_qubits, const std::vector<std::size_t> &wires)
     -> std::vector<PrecisionT> {
     const std::size_t n_wires = wires.size();
     const std::size_t n_probs = Pennylane::Util::exp2(n_wires);
-    Kokkos::View<PrecisionT *> d_probabilities("d_probabilities", n_probs);
+    Kokkos::View<PrecisionT *> d_probabilities(
+        Kokkos::view_alloc(exec, "d_probabilities"), n_probs);
     switch (n_wires) {
     case 1UL:
         Kokkos::parallel_reduce(
-            RangePolicy<DeviceType>(0, exp2(num_qubits - n_wires)),
-            getProbsNQubitOpFunctor<PrecisionT, DeviceType, 1>(arr, num_qubits,
-                                                               wires),
+            RangePolicy<DeviceType>(exec, 0, exp2(num_qubits - n_wires)),
+            getProbsNQubitOpFunctor<PrecisionT, DeviceType, 1>(
+                exec, arr, num_qubits, wires),
             d_probabilities);
         break;
     case 2UL:
         Kokkos::parallel_reduce(
-            RangePolicy<DeviceType>(0, exp2(num_qubits - n_wires)),
-            getProbsNQubitOpFunctor<PrecisionT, DeviceType, 2>(arr, num_qubits,
-                                                               wires),
+            RangePolicy<DeviceType>(exec, 0, exp2(num_qubits - n_wires)),
+            getProbsNQubitOpFunctor<PrecisionT, DeviceType, 2>(
+                exec, arr, num_qubits, wires),
             d_probabilities);
         break;
     case 3UL:
         Kokkos::parallel_reduce(
-            RangePolicy<DeviceType>(0, exp2(num_qubits - n_wires)),
-            getProbsNQubitOpFunctor<PrecisionT, DeviceType, 3>(arr, num_qubits,
-                                                               wires),
+            RangePolicy<DeviceType>(exec, 0, exp2(num_qubits - n_wires)),
+            getProbsNQubitOpFunctor<PrecisionT, DeviceType, 3>(
+                exec, arr, num_qubits, wires),
             d_probabilities);
         break;
     case 4UL:
         Kokkos::parallel_reduce(
-            RangePolicy<DeviceType>(0, exp2(num_qubits - n_wires)),
-            getProbsNQubitOpFunctor<PrecisionT, DeviceType, 4>(arr, num_qubits,
-                                                               wires),
+            RangePolicy<DeviceType>(exec, 0, exp2(num_qubits - n_wires)),
+            getProbsNQubitOpFunctor<PrecisionT, DeviceType, 4>(
+                exec, arr, num_qubits, wires),
             d_probabilities);
         break;
     case 5UL:
         Kokkos::parallel_reduce(
-            RangePolicy<DeviceType>(0, exp2(num_qubits - n_wires)),
-            getProbsNQubitOpFunctor<PrecisionT, DeviceType, 5>(arr, num_qubits,
-                                                               wires),
+            RangePolicy<DeviceType>(exec, 0, exp2(num_qubits - n_wires)),
+            getProbsNQubitOpFunctor<PrecisionT, DeviceType, 5>(
+                exec, arr, num_qubits, wires),
             d_probabilities);
         break;
     case 6UL:
         Kokkos::parallel_reduce(
-            RangePolicy<DeviceType>(0, exp2(num_qubits - n_wires)),
-            getProbsNQubitOpFunctor<PrecisionT, DeviceType, 6>(arr, num_qubits,
-                                                               wires),
+            RangePolicy<DeviceType>(exec, 0, exp2(num_qubits - n_wires)),
+            getProbsNQubitOpFunctor<PrecisionT, DeviceType, 6>(
+                exec, arr, num_qubits, wires),
             d_probabilities);
         break;
     case 7UL:
         Kokkos::parallel_reduce(
-            RangePolicy<DeviceType>(0, exp2(num_qubits - n_wires)),
-            getProbsNQubitOpFunctor<PrecisionT, DeviceType, 7>(arr, num_qubits,
-                                                               wires),
+            RangePolicy<DeviceType>(exec, 0, exp2(num_qubits - n_wires)),
+            getProbsNQubitOpFunctor<PrecisionT, DeviceType, 7>(
+                exec, arr, num_qubits, wires),
             d_probabilities);
         break;
     case 8UL:
         Kokkos::parallel_reduce(
-            RangePolicy<DeviceType>(0, exp2(num_qubits - n_wires)),
-            getProbsNQubitOpFunctor<PrecisionT, DeviceType, 8>(arr, num_qubits,
-                                                               wires),
+            RangePolicy<DeviceType>(exec, 0, exp2(num_qubits - n_wires)),
+            getProbsNQubitOpFunctor<PrecisionT, DeviceType, 8>(
+                exec, arr, num_qubits, wires),
             d_probabilities);
         break;
     default:
         Kokkos::parallel_reduce(
-            RangePolicy<DeviceType>(0, exp2(num_qubits - n_wires)),
-            getProbsNQubitOpFunctor<PrecisionT, DeviceType, 0>(arr, num_qubits,
-                                                               wires),
+            RangePolicy<DeviceType>(exec, 0, exp2(num_qubits - n_wires)),
+            getProbsNQubitOpFunctor<PrecisionT, DeviceType, 0>(
+                exec, arr, num_qubits, wires),
             d_probabilities);
         break;
     }

@@ -159,9 +159,15 @@ void applyMatrix(
 
     PL_ASSERT(matrix.size() == Util::exp2(2 * wires.size()));
 
-    // Cast to raw pointer
-    auto *data_ptr = PL_reinterpret_cast<const ComplexT>(matrix.data());
-    st.applyMatrix(data_ptr, wires, inverse);
+    // Copy element-wise rather than reinterpret_cast: ComplexT (e.g.
+    // Kokkos::complex<T>) can have a stricter alignment than the
+    // std::complex<T> buffer nanobind/numpy hands us, so a raw pointer
+    // reinterpret would be unsafe/UB. A genuine value copy sidesteps that
+    // (Kokkos::complex has a converting constructor from std::complex) --
+    // same pattern already used for the _ENABLE_PLTENSOR path below.
+    std::vector<ComplexT> conv_matrix(matrix.data(),
+                                      matrix.data() + matrix.size());
+    st.applyMatrix(conv_matrix.data(), wires, inverse);
 }
 
 /**
@@ -193,9 +199,12 @@ void applyControlledMatrix(
                                 controlled_values, wires, inverse, {},
                                 conv_matrix);
 #else
-    st.applyControlledMatrix(PL_reinterpret_cast<const ComplexT>(matrix.data()),
-                             controlled_wires, controlled_values, wires,
-                             inverse);
+    // See applyMatrix above: value copy instead of reinterpret_cast avoids
+    // an alignment-unsafe raw pointer cast between std::complex and ComplexT.
+    std::vector<ComplexT> conv_matrix(matrix.data(),
+                                      matrix.data() + matrix.size());
+    st.applyControlledMatrix(conv_matrix.data(), controlled_wires,
+                             controlled_values, wires, inverse);
 #endif
 }
 
@@ -905,8 +914,10 @@ void registerBackendAgnosticStateVectorMethods(PyClass &pyclass) {
            const nb::ndarray<const std::complex<PrecisionT>, nb::c_contig>
                &state,
            const std::vector<std::size_t> &wires, const bool async) {
-            const auto *data_ptr =
-                PL_reinterpret_cast<const ComplexT>(state.data());
+            // Value copy instead of reinterpret_cast: see applyMatrix above.
+            std::vector<ComplexT> conv_state(state.data(),
+                                             state.data() + state.shape(0));
+            const auto *data_ptr = conv_state.data();
             std::size_t size = state.shape(0);
 
             if constexpr (requires {
