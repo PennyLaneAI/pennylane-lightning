@@ -16,6 +16,14 @@
   Non-Clifford operations fail with an error. The Catalyst device does not use the core yet.
   [(#1436)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1436)
 
+  `lightning.cliffish` now runs Clifford circuits compiled with `qp.qjit(capture=True)`: the
+  Catalyst device runs on the core, with Clifford gates, Pauli rotations at Clifford angles, Pauli
+  measurements, observables built from Pauli words, and expectation values, variances,
+  probabilities, samples and counts. With shots, expectation values and variances are estimated
+  from samples. Mid-circuit measurements run with `mcm_method="one-shot"`, and with single-branch
+  statistics by default.
+  [(#1437)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1437)
+
 <h3>Improvements 🛠</h3>
 
 - Updated the Lightning performance kernel tuning document.
