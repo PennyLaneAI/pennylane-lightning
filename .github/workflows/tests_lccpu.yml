@@ -1,0 +1,146 @@
+name: Testing::x86_64::LCliffish
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+    paths:
+      - .github/workflows/tests_lccpu.yml
+      - pennylane_lightning/core/simulators/lightning_cliffish/**
+      - pennylane_lightning/core/catalyst/**
+      - pennylane_lightning/core/utils/**
+      - pennylane_lightning/lightning_cliffish/**
+      - tests/lightning_cliffish/**
+      - CMakeLists.txt
+      - cmake/**
+      - setup.py
+      - MANIFEST.in
+      - scripts/configure_pyproject_toml.py
+      - scripts/backend_support.py
+
+  push:
+    branches:
+      - main
+
+env:
+  GCC_VERSION: 13
+
+concurrency:
+  group: tests_lccpu-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  cpptests:
+    timeout-minutes: 30
+    name: C++ Tests (lightning_cliffish)
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+
+    steps:
+      - uses: actions/setup-python@v5
+        name: Install Python
+        with:
+          python-version: '3.12'
+
+      - name: Checkout PennyLane-Lightning
+        uses: actions/checkout@v4
+
+      - name: Checkout Catalyst
+        uses: actions/checkout@v4
+        with:
+          repository: PennyLaneAI/catalyst
+          path: ${{ github.workspace }}/catalyst
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION g++-$GCC_VERSION ninja-build
+
+      - name: Build and run unit tests
+        run: |
+          cmake . -BBuild -G Ninja \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DBUILD_TESTS=ON \
+            -DENABLE_PYTHON=OFF \
+            -DENABLE_SCIPY_OPENBLAS=OFF \
+            -DPL_BACKEND=lightning_cliffish \
+            -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
+            -DLIGHTNING_CATALYST_SRC_PATH=${{ github.workspace }}/catalyst
+
+          cmake --build ./Build
+
+          cd ./Build
+          mkdir -p ./tests/results
+          test_status=0
+          for file in *runner ; do
+            ./$file --reporter junit --out ./tests/results/report_$file.xml && echo "Test $file Success!" || { cat ./tests/results/report_$file.xml; test_status=1; };
+          done;
+          if [ $test_status -ne 0 ]; then
+            echo "Tests failed. Exiting with error code."
+            exit 1
+          fi
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ubuntu-tests-reports-${{ github.job }}-lightning_cliffish
+          retention-days: 1
+          include-hidden-files: true
+          path: |
+            ./Build/tests/results/
+          if-no-files-found: error
+
+  pythontests:
+    timeout-minutes: 30
+    name: Python Tests (lightning_cliffish)
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+
+    steps:
+      - uses: actions/setup-python@v5
+        name: Install Python
+        with:
+          python-version: '3.12'
+
+      - name: Checkout PennyLane-Lightning
+        uses: actions/checkout@v4
+
+      - name: Checkout Catalyst
+        uses: actions/checkout@v4
+        with:
+          repository: PennyLaneAI/catalyst
+          path: ${{ github.workspace }}/catalyst
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION g++-$GCC_VERSION ninja-build
+
+      - name: Get required Python packages
+        run: |
+          python -m pip install --group tests
+          python -m pip install build wheel
+          # lightning.cliffish runs only under qp.qjit, so its tests need Catalyst (nightly on TestPyPI)
+          python -m pip install --pre --extra-index-url https://test.pypi.org/simple/ pennylane-catalyst
+
+      - name: Create device wheel
+        run: |
+          PL_BACKEND=lightning_cliffish python scripts/configure_pyproject_toml.py
+          CMAKE_ARGS="-DENABLE_SCIPY_OPENBLAS=OFF \
+                -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
+                -DLIGHTNING_CATALYST_SRC_PATH=${{ github.workspace }}/catalyst" python -m build --wheel
+
+      - name: Install Lightning and the device wheel
+        run: |
+          # The device depends on pennylane_lightning, which it uses only for Python helpers
+          PL_BACKEND=lightning_qubit python scripts/configure_pyproject_toml.py
+          SKIP_COMPILATION=True python -m pip install . --no-deps --force-reinstall
+          python -m pip install dist/pennylane_lightning_cliffish-*.whl --no-deps --force-reinstall
+
+      - name: Run Python tests
+        run: |
+          # Move the source tree aside so the tests import the installed wheels
+          mv pennylane_lightning pennylane_lightning_src
+          PL_DEVICE=lightning.cliffish python -m pytest tests/lightning_cliffish -p no:warnings --tb=native

@@ -114,6 +114,7 @@ supported_devices = {
     "lightning.amdgpu",
     "lightning.gpu",
     "lightning.tensor",
+    "lightning.cliffish",
 }
 
 
@@ -121,7 +122,8 @@ def get_device():
     """Return the pennylane lightning device.
 
     The device is ``lightning.qubit`` by default. Allowed values are:
-    "lightning.qubit", "lightning.kokkos", "lightning.amdgpu", "lightning.gpu", and "lightning.tensor".
+    "lightning.qubit", "lightning.kokkos", "lightning.amdgpu", "lightning.gpu", "lightning.tensor",
+    and "lightning.cliffish".
     If the environment variable ``PL_DEVICE`` is defined, its value is used.
     """
     device = os.environ.get("PL_DEVICE", default_device)
@@ -165,6 +167,13 @@ if device_name == "lightning.tensor":
 
     if hasattr(pennylane_lightning, "lightning_tensor_ops"):
         import pennylane_lightning.lightning_tensor_ops as lightning_ops
+elif device_name == "lightning.cliffish":
+    # lightning.cliffish has no state vector and runs only through Catalyst
+    from pennylane_lightning.lightning_cliffish import LightningCliffish as LightningDevice
+
+    LightningAdjointJacobian = None
+    LightningMeasurements = None
+    LightningStateVector = None
 else:
     # General case for lightning.qubit, lightning.kokkos, and lightning.gpu
     # Capitalize device name for class names

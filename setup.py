@@ -79,6 +79,14 @@ class CMakeBuild(build_ext):
 
         super().finalize_options()
 
+    def get_ext_filename(self, fullname):
+        # lightning_cliffish has no Python module: the file setuptools packages and copies
+        # for editable installs is the Catalyst device library itself.
+        if backend == "lightning_cliffish":
+            shared_lib_ext = {"Linux": ".so", "Darwin": ".dylib"}[platform.system()]
+            return f"lib{backend}_catalyst{shared_lib_ext}"
+        return super().get_ext_filename(fullname)
+
     def build_extension(self, ext: CMakeExtension):
         self.build_temp = f"build_{backend}"
         extdir = str(Path(self.get_ext_fullpath(ext.name)).parent.absolute())
@@ -160,7 +168,7 @@ class CMakeBuild(build_ext):
             destination = os.path.join(os.getcwd(), f"build_{backend}")
             shutil.copy(source, destination)
 
-        if backend in ("lightning_kokkos", "lightning_qubit", "lightning_amdgpu"):
+        if backend in ("lightning_kokkos", "lightning_qubit", "lightning_amdgpu", "lightning_cliffish"):
             if platform.system() in ["Linux", "Darwin"]:
                 shared_lib_ext = {"Linux": ".so", "Darwin": ".dylib"}[platform.system()]
                 lib_name = "lightning_kokkos" if backend == "lightning_amdgpu" else backend
