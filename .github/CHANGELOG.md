@@ -114,6 +114,10 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- A deferred-measurement test now builds its expected controlled ops with `qp.ctrl`, so it passes
+  whether or not `qp.ctrl` dispatches to `CNOT` and `CY`, which PennyLane no longer does.
+  [(#1435)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1435)
+
 - `ctr(GlobalPhase)` now dispatches to `PhaseShift` when possible. Related test is updated.
   [(#1427)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1427)
 
