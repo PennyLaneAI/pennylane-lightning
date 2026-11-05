@@ -23,13 +23,16 @@
 #include <cstddef>
 #include <cstdint>
 #include <limits>
+#include <memory>
 #include <optional>
 #include <random>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include <Kokkos_Core.hpp>
 
+#include "AffineSubspace.hpp"
 #include "Error.hpp"
 #include "PauliKernels.hpp"
 #include "PauliRows.hpp"
@@ -433,6 +436,78 @@ class NativeTableau final : public TableauEngine {
         pulled.setLogI(
             Pauli::logIMod4(pauli.logI() - product_log_i + 3 * xz_pairs));
         return pulled;
+    }
+
+    [[nodiscard]] auto
+    computationalSupport(const std::vector<std::size_t> &qubits) const
+        -> GF2::AffineSubspace override {
+        for (auto qubit : qubits) {
+            PL_ABORT_IF_NOT(qubit < num_qubits_, "Qubit index out of range");
+        }
+        const std::size_t num_qubits = num_qubits_;
+        const auto host_x =
+            Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, rows_.x());
+        const auto host_z =
+            Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, rows_.z());
+        const auto host_log_i = Kokkos::create_mirror_view_and_copy(
+            Kokkos::HostSpace{}, rows_.logI());
+
+        std::vector<PauliWord> stabilizers;
+        stabilizers.reserve(num_qubits);
+        for (std::size_t i = 0; i < num_qubits; i++) {
+            PauliWord stabilizer(num_qubits);
+            for (std::size_t w = 0; w < rows_.numWords(); w++) {
+                stabilizer.x()[w] = host_x(num_qubits + i, w);
+                stabilizer.z()[w] = host_z(num_qubits + i, w);
+            }
+            stabilizer.setLogI(host_log_i(num_qubits + i));
+            stabilizers.push_back(std::move(stabilizer));
+        }
+
+        // Row-reduce the X parts. The rows left with no X part generate the
+        // Z-type stabilizers.
+        std::size_t rank = 0;
+        for (std::size_t q = 0; q < num_qubits && rank < num_qubits; q++) {
+            std::size_t pivot = rank;
+            while (pivot < num_qubits &&
+                   !Pauli::getBit(stabilizers[pivot].x(), q)) {
+                pivot++;
+            }
+            if (pivot == num_qubits) {
+                continue;
+            }
+            std::swap(stabilizers[rank], stabilizers[pivot]);
+            for (std::size_t i = 0; i < num_qubits; i++) {
+                if (i != rank && Pauli::getBit(stabilizers[i].x(), q)) {
+                    stabilizers[i] *= stabilizers[rank];
+                }
+            }
+            rank++;
+        }
+
+        // A stabilizer (-1)^s Z^a allows only the outcomes x with a.x = s.
+        const std::size_t bit_words = GF2::numBitWords(num_qubits);
+        std::vector<GF2::Bits> constraints;
+        std::vector<bool> parities;
+        for (std::size_t i = rank; i < num_qubits; i++) {
+            const Word *z = stabilizers[i].z();
+            constraints.emplace_back(z, z + bit_words);
+            parities.push_back(stabilizers[i].logI() == 2);
+        }
+        const auto support = GF2::AffineSubspace::solve(
+            num_qubits, std::move(constraints), std::move(parities));
+        PL_ABORT_IF_NOT(support.has_value(),
+                        "The tableau's Z-type stabilizers are inconsistent");
+        return support->project(qubits);
+    }
+
+    [[nodiscard]] auto clone() const
+        -> std::unique_ptr<TableauEngine> override {
+        auto copy = std::make_unique<NativeTableau>(num_qubits_);
+        Kokkos::deep_copy(copy->rows_.x(), rows_.x());
+        Kokkos::deep_copy(copy->rows_.z(), rows_.z());
+        Kokkos::deep_copy(copy->rows_.logI(), rows_.logI());
+        return copy;
     }
 };
 

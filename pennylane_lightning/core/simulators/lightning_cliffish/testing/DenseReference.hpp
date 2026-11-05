@@ -115,6 +115,38 @@ inline auto project(const State &state, const PauliWord &pauli, bool outcome)
     return result;
 }
 
+/**
+ * @brief Probability of each outcome index of measuring `wires`, with
+ * wires[0] the most significant bit.
+ */
+inline auto probabilities(const State &state,
+                          const std::vector<std::size_t> &wires)
+    -> std::vector<double> {
+    std::vector<double> result(std::size_t{1} << wires.size(), 0.0);
+    for (std::size_t index = 0; index < state.size(); index++) {
+        std::size_t outcome = 0;
+        for (auto wire : wires) {
+            outcome = (outcome << 1U) | ((index >> wire) & 1U);
+        }
+        result[outcome] += std::norm(state[index]);
+    }
+    return result;
+}
+
+/// sum_k coefficients[k] paulis[k] |state>.
+inline auto applySum(const State &state,
+                     const std::vector<double> &coefficients,
+                     const std::vector<PauliWord> &paulis) -> State {
+    State result(state.size(), 0.0);
+    for (std::size_t k = 0; k < paulis.size(); k++) {
+        const State term = applyPauli(state, paulis[k]);
+        for (std::size_t i = 0; i < state.size(); i++) {
+            result[i] += coefficients[k] * term[i];
+        }
+    }
+    return result;
+}
+
 /// A uniformly random Hermitian Pauli word, not the identity.
 inline auto randomPauli(std::size_t num_qubits, std::mt19937 &gen)
     -> PauliWord {

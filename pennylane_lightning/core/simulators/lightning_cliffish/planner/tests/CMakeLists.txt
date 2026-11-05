@@ -29,6 +29,7 @@ target_sources(lightning_cliffish_planner_tests INTERFACE runner_lightning_cliff
 ################################################################################
 set(TEST_SOURCES    Test_GateExpansions.cpp
                     Test_Core.cpp
+                    Test_Outputs.cpp
 )
 
 add_executable(lightning_cliffish_planner_tests_runner ${TEST_SOURCES})

@@ -21,6 +21,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <cstddef>
 #include <memory>
 #include <optional>
@@ -30,9 +31,11 @@
 #include <variant>
 #include <vector>
 
+#include "AffineSubspace.hpp"
 #include "Error.hpp"
 #include "GateExpansions.hpp"
 #include "NativeTableau.hpp"
+#include "Observables.hpp"
 #include "PauliWord.hpp"
 #include "Program.hpp"
 #include "TableauEngine.hpp"
@@ -227,6 +230,65 @@ class HybridMethod {
         PL_ABORT_IF_NOT(planned_width_ == engine_->numQubits(),
                         "Every lowered plan must run before an output");
         return engine_->expectation(engineWord(pauli, wires));
+    }
+
+    /// Exact expectation value of `observable`.
+    [[nodiscard]] auto expval(const Observable &observable) const -> double {
+        double value = 0.0;
+        for (const auto &term : observable) {
+            value += term.coefficient * expectation(term.pauli, term.wires);
+        }
+        return value;
+    }
+
+    /**
+     * @brief Exact variance of `observable`: <O^2> - <O>^2.
+     *
+     * With O = sum_i c_i P_i, <O^2> = sum_i c_i^2 + 2 sum_{i<j} c_i c_j
+     * <P_i P_j>, where only commuting pairs contribute.
+     */
+    [[nodiscard]] auto variance(const Observable &observable) const -> double {
+        PL_ABORT_IF_NOT(planned_width_ == engine_->numQubits(),
+                        "Every lowered plan must run before an output");
+        std::vector<PauliWord> words;
+        words.reserve(observable.size());
+        for (const auto &term : observable) {
+            PL_ABORT_IF_NOT(term.pauli.size() == term.wires.size(),
+                            "The Pauli word must have one character per wire");
+            words.push_back(engineWord(term.pauli, term.wires));
+        }
+
+        double mean = 0.0;
+        double second_moment = 0.0;
+        for (std::size_t i = 0; i < words.size(); i++) {
+            const double c_i = observable[i].coefficient;
+            mean += c_i * engine_->expectation(words[i]);
+            second_moment += c_i * c_i;
+            for (std::size_t j = i + 1; j < words.size(); j++) {
+                if (words[i].commutes(words[j])) {
+                    second_moment += 2 * c_i * observable[j].coefficient *
+                                     engine_->expectation(words[i] * words[j]);
+                }
+            }
+        }
+        return std::max(0.0, second_moment - mean * mean);
+    }
+
+    /**
+     * @brief Support of the computational-basis outcomes of `wires`; bit k is
+     * the outcome of wires[k].
+     */
+    [[nodiscard]] auto
+    computationalSupport(const std::vector<QubitId> &wires) const
+        -> GF2::AffineSubspace {
+        PL_ABORT_IF_NOT(planned_width_ == engine_->numQubits(),
+                        "Every lowered plan must run before an output");
+        std::vector<std::size_t> slots;
+        slots.reserve(wires.size());
+        for (auto wire : wires) {
+            slots.push_back(slotOf(wire));
+        }
+        return engine_->computationalSupport(slots);
     }
 };
 

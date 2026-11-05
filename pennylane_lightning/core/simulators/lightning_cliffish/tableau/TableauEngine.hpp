@@ -25,11 +25,13 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 #include <optional>
 #include <random>
 #include <string>
 #include <vector>
 
+#include "AffineSubspace.hpp"
 #include "PauliWord.hpp"
 
 namespace Pennylane::LightningCliffish::Tableau {
@@ -111,6 +113,20 @@ class TableauEngine {
     /// Pull a Hermitian Pauli word back through the state's Clifford: C^† P C.
     [[nodiscard]] virtual auto pullBack(const PauliWord &pauli) const
         -> PauliWord = 0;
+
+    /**
+     * @brief The outcomes of measuring `qubits` in the computational basis.
+     *
+     * The outcomes are uniformly distributed on the returned subspace; bit k
+     * is the outcome of qubits[k]. The state is unchanged.
+     */
+    [[nodiscard]] virtual auto
+    computationalSupport(const std::vector<std::size_t> &qubits) const
+        -> GF2::AffineSubspace = 0;
+
+    /// An independent copy of this engine and its state.
+    [[nodiscard]] virtual auto clone() const
+        -> std::unique_ptr<TableauEngine> = 0;
 };
 
 } // namespace Pennylane::LightningCliffish::Tableau

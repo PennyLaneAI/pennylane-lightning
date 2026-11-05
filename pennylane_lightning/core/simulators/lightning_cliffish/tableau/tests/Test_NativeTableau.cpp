@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <random>
@@ -248,4 +249,90 @@ TEST_CASE("NativeTableau rejects invalid ops", "[NativeTableau]") {
         tableau.applyBlock({EngineOp::rotation(PauliWord::fromString("XX"), 0)},
                            gen),
         ContainsSubstring("1, 2 or 3 quarter turns"));
+}
+
+TEST_CASE("NativeTableau::computationalSupport matches dense probabilities",
+          "[NativeTableau]") {
+    std::mt19937 gen{21};
+    for (std::size_t num_qubits = 1; num_qubits <= 5; num_qubits++) {
+        for (int trial = 0; trial < 10; trial++) {
+            NativeTableau<> tableau(num_qubits);
+            State state = zeroState(num_qubits);
+            applyRandomRotations(tableau, state, 25, gen);
+
+            // All qubits in order, then a random ordered subset.
+            std::vector<std::size_t> wires(num_qubits);
+            for (std::size_t q = 0; q < num_qubits; q++) {
+                wires[q] = q;
+            }
+            std::vector<std::vector<std::size_t>> wire_sets{wires};
+            std::shuffle(wires.begin(), wires.end(), gen);
+            wires.resize(
+                std::uniform_int_distribution<std::size_t>(1, num_qubits)(gen));
+            wire_sets.push_back(wires);
+
+            for (const auto &subset : wire_sets) {
+                const auto expected = probabilities(state, subset);
+                const auto actual =
+                    Pennylane::LightningCliffish::GF2::probabilities(
+                        tableau.computationalSupport(subset));
+                REQUIRE(actual.size() == expected.size());
+                for (std::size_t i = 0; i < expected.size(); i++) {
+                    CHECK(std::abs(actual[i] - expected[i]) < 1e-9);
+                }
+            }
+            // Reading the support leaves the state unchanged.
+            requireSameState(tableau, state, gen, 20);
+        }
+    }
+}
+
+TEST_CASE("NativeTableau samples are possible outcomes on many qubits",
+          "[NativeTableau]") {
+    namespace GF2 = Pennylane::LightningCliffish::GF2;
+    const std::size_t num_qubits = 200;
+    std::mt19937 gen{22};
+    NativeTableau<> tableau(num_qubits);
+    std::uniform_int_distribution<unsigned> turns(1, 3);
+    for (int i = 0; i < 600; i++) {
+        tableau.applyBlock(
+            {EngineOp::rotation(randomPauli(num_qubits, gen),
+                                static_cast<std::uint8_t>(turns(gen)))},
+            gen);
+    }
+
+    std::vector<std::size_t> qubits(num_qubits);
+    for (std::size_t q = 0; q < num_qubits; q++) {
+        qubits[q] = q;
+    }
+    const auto support = tableau.computationalSupport(qubits);
+    const auto samples = GF2::sampleUniform(support, 10, 5);
+
+    // Projecting a copy onto every bit of a sample never hits a
+    // zero-probability outcome.
+    for (std::size_t shot = 0; shot < samples.num_shots; shot++) {
+        const auto copy = tableau.clone();
+        Tableau::EngineBlock block;
+        for (std::size_t q = 0; q < num_qubits; q++) {
+            block.push_back(EngineOp::measurement(
+                singleQubitPauli(num_qubits, q, 'Z'), samples.bit(shot, q)));
+        }
+        REQUIRE_NOTHROW(copy->applyBlock(block, gen));
+    }
+}
+
+TEST_CASE("NativeTableau::clone is independent of the original",
+          "[NativeTableau]") {
+    std::mt19937 gen{23};
+    NativeTableau<> tableau(3);
+    State state = zeroState(3);
+    applyRandomRotations(tableau, state, 20, gen);
+
+    const auto copy = tableau.clone();
+    CHECK(copy->name() == "native");
+    CHECK(copy->numQubits() == 3);
+    copy->applyBlock({EngineOp::rotation(randomPauli(3, gen), 1),
+                      EngineOp::measurement(randomPauli(3, gen))},
+                     gen);
+    requireSameState(tableau, state, gen);
 }
