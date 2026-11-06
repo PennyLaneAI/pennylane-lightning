@@ -24,6 +24,14 @@
   statistics by default.
   [(#1437)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1437)
 
+  `lightning.cliffish` now runs Clifford+T circuits and rotations at any angle. A non-Clifford
+  rotation promotes a qubit into a small dense register next to the tableau, and the register
+  shrinks again at measurements, when rotations about one axis sum to a Clifford angle, and when a
+  dense check finds a stabilizer. The device options `max_dense_qubits`, `recompression` and
+  `dense_checks` bound the register and pick how it shrinks; a program whose register would pass
+  `max_dense_qubits` fails with an error that says how to run it instead.
+  [(#1439)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1439)
+
 <h3>Improvements 🛠</h3>
 
 - Updated the Lightning performance kernel tuning document.
