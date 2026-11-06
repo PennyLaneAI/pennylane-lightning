@@ -93,7 +93,7 @@ def stopping_condition(op: Operator, allow_mcms: bool = True) -> bool:
     """A function that determines whether or not an operation is supported by ``lightning.gpu``."""
 
     if isinstance(op, MidMeasure):
-        # Conditional and MidMeasureMP should not be decomposed
+        # Conditional and MidMeasure should not be decomposed
         return allow_mcms
 
     return _supports_operation(op.name)
@@ -312,7 +312,7 @@ class LightningGPU(LightningBase):
         allow_mcms = False
         _stopping_condition = no_mcms_stopping_condition
         if exec_config.mcm_config.mcm_method != "deferred":
-            gate_set |= {"MidMeasureMP"}
+            gate_set |= {"MidMeasure"}
             allow_mcms = True
             _stopping_condition = allow_mcms_stopping_condition
 

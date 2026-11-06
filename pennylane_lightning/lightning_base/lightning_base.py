@@ -700,7 +700,7 @@ def adjoint_transforms(
     capabilities = device.capabilities
     gate_set = capabilities.gate_set(differentiable=True)
     if allow_mcms:
-        gate_set |= {"MidMeasureMP"}
+        gate_set |= {"MidMeasure"}
     _adjoint_observables = partial(adjoint_observables, capabilities=capabilities)
 
     stopping_condition = _adjoint_stopping_condition

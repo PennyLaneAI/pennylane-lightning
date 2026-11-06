@@ -31,7 +31,8 @@ from pennylane.devices.qubit.simulate import (
     update_mcm_samples,
     variance_transform,
 )
-from pennylane.measurements import MidMeasureMP, find_post_processed_mcms
+from pennylane.measurements import find_post_processed_mcms
+from pennylane.ops import MidMeasure
 from pennylane.tape import QuantumScript
 from pennylane.typing import Result
 
@@ -95,7 +96,7 @@ def mcm_tree_traversal(
     # mcms is the list of all mid-circuit measurement operations
     # mcms[d] is the parent MCM (node) of a circuit segment (edge) at depth `d`
     # The first element is None because there is no parent MCM at depth 0
-    mcms = tuple([None] + [op for op in circuit.operations if isinstance(op, MidMeasureMP)])
+    mcms = tuple([None] + [op for op in circuit.operations if isinstance(op, MidMeasure)])
     n_mcms = len(mcms) - 1
     # We obtain `measured_mcms_indices`, the list of MCMs which require post-processing:
     # either as requested by terminal measurements or post-selection
@@ -273,7 +274,7 @@ def mcm_tree_traversal(
 
 
 def branch_state(
-    lightning_state: LightningBaseStateVector, state: np.ndarray, branch: int, mcm: MidMeasureMP
+    lightning_state: LightningBaseStateVector, state: np.ndarray, branch: int, mcm: MidMeasure
 ):
     """Collapse the state on a given branch.
 
@@ -281,7 +282,7 @@ def branch_state(
         lightning_state (LightningBaseStateVector): The state vector class used to handle the state
         state (np.ndarray): The state vector to collapse
         branch (int): The branch on which the state is collapsed
-        mcm (MidMeasureMP): Mid-circuit measurement object used to obtain the wires and ``reset``
+        mcm (MidMeasure): Mid-circuit measurement object used to obtain the wires and ``reset``
     """
     # Set the state to the initial state
     lightning_state._apply_state_vector(  # pylint: disable=protected-access
