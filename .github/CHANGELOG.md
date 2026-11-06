@@ -101,7 +101,7 @@
 <h3>Internal changes ⚙️</h3>
 
 - Use the canonical `MidMeasure` name in gate sets, imports, and mid-circuit measurement handling.
-  [(#XXXX)](https://github.com/PennyLaneAI/pennylane-lightning/pull/XXXX)
+  [(#1441)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1441)
 
 - A deferred-measurement test now builds its expected controlled ops with `qp.ctrl`, so it passes
   whether or not `qp.ctrl` dispatches to `CNOT` and `CY`, which PennyLane no longer does.
