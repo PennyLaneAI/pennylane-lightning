@@ -188,13 +188,18 @@ TEST_CASE("Core runs a 1000-qubit GHZ circuit", "[Core]") {
 TEST_CASE("Core fails loudly on what it cannot run", "[Core]") {
     std::mt19937 gen{6};
 
-    SECTION("Non-Clifford gates") {
-        Core core;
+    SECTION("A dense register over its limit") {
+        Core core(Planner::HybridOptions{.max_dense_qubits = 2});
         core.setPRNG(&gen);
-        core.allocate(1);
-        core.append(gate("T", {0}));
+        core.allocate(3);
+        for (QubitId q = 0; q < 3; q++) {
+            core.append(gate("Hadamard", {q}));
+            core.append(gate("T", {q}));
+        }
         REQUIRE_THROWS_WITH(core.flush(),
-                            ContainsSubstring("cannot apply 'T'"));
+                            ContainsSubstring("dense register of 3 qubits") &&
+                                ContainsSubstring("max_dense_qubits = 2") &&
+                                ContainsSubstring("lightning.qubit"));
     }
 
     SECTION("Conditional ops") {

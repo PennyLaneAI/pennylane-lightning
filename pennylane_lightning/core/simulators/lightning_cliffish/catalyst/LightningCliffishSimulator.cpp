@@ -20,8 +20,10 @@
 #include <unordered_set>
 
 #include "Exception.hpp"
+#include "Utils.hpp"
 
 namespace {
+using Pennylane::LightningCliffish::Planner::HybridOptions;
 using Pennylane::LightningCliffish::Planner::Observable;
 using Pennylane::LightningCliffish::Planner::PauliTerm;
 using Pennylane::LightningCliffish::Program::Op;
@@ -34,9 +36,31 @@ auto toCore(const std::vector<QubitIdType> &wires) -> std::vector<QubitId> {
                    [](QubitIdType wire) { return static_cast<QubitId>(wire); });
     return result;
 }
+
+auto parseOptions(const std::string &kwargs) -> HybridOptions {
+    auto args = Catalyst::Runtime::parse_kwargs(kwargs);
+    HybridOptions options;
+    if (args.contains("max_dense_qubits")) {
+        options.max_dense_qubits =
+            static_cast<std::size_t>(std::stoull(args["max_dense_qubits"]));
+    }
+    if (args.contains("recompression")) {
+        options.recompression =
+            Pennylane::LightningCliffish::Planner::parseRecompression(
+                args["recompression"]);
+    }
+    if (args.contains("dense_checks")) {
+        options.dense_checks = args["dense_checks"] == "True";
+    }
+    return options;
+}
 } // namespace
 
 namespace Catalyst::Runtime::Simulator {
+
+LightningCliffishSimulator::LightningCliffishSimulator(
+    const std::string &kwargs)
+    : core{parseOptions(kwargs)} {}
 
 auto LightningCliffishSimulator::observable(ObsIdType key) const
     -> const CoreObservable & {

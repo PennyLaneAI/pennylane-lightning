@@ -33,6 +33,7 @@
 #include "Error.hpp"
 #include "HybridMethod.hpp"
 #include "Observables.hpp"
+#include "OutcomeDistribution.hpp"
 #include "Program.hpp"
 
 namespace Pennylane::LightningCliffish {
@@ -42,7 +43,8 @@ namespace Pennylane::LightningCliffish {
  *
  * Ops are buffered as received. A flush lowers the buffered window to a plan
  * and runs it. A flush is forced when the program demands a value: a
- * measurement value, or an output.
+ * measurement value, or an output. Before an output, the hybrid method runs
+ * its end check.
  */
 class Core {
   private:
@@ -65,30 +67,54 @@ class Core {
     }
 
     /// Mean of `shots` outcomes of a Pauli word with exact expectation
-    /// `exact`: -1, 0 or +1.
-    static auto sampledMean(int exact, std::size_t shots, std::uint64_t seed)
+    /// `exact`.
+    static auto sampledMean(double exact, std::size_t shots, std::uint64_t seed)
         -> double {
-        if (exact != 0) {
+        if (exact == 1.0 || exact == -1.0) {
             return exact;
         }
-        // Each outcome is +1 or -1 with probability 1/2.
-        std::size_t ones = 0;
-        std::uint64_t state = seed;
-        for (std::size_t done = 0; done < shots; done += 64) {
-            std::uint64_t bits = GF2::splitMix64(state);
-            if (shots - done < 64) {
-                bits &= (std::uint64_t{1} << (shots - done)) - 1;
-            }
-            ones += static_cast<std::size_t>(std::popcount(bits));
-        }
         const auto num_shots = static_cast<double>(shots);
-        return (num_shots - 2.0 * static_cast<double>(ones)) / num_shots;
+        std::uint64_t state = seed;
+        if (exact == 0.0) {
+            // Each outcome is +1 or -1 with probability 1/2.
+            std::size_t ones = 0;
+            for (std::size_t done = 0; done < shots; done += 64) {
+                std::uint64_t bits = GF2::splitMix64(state);
+                if (shots - done < 64) {
+                    bits &= (std::uint64_t{1} << (shots - done)) - 1;
+                }
+                ones += static_cast<std::size_t>(std::popcount(bits));
+            }
+            return (num_shots - 2.0 * static_cast<double>(ones)) / num_shots;
+        }
+        // Each outcome is +1 with probability (1 + exact) / 2.
+        const double plus_probability = (1.0 + exact) / 2;
+        std::size_t plus = 0;
+        for (std::size_t shot = 0; shot < shots; shot++) {
+            const double u =
+                static_cast<double>(GF2::splitMix64(state) >> 11U) * 0x1.0p-53;
+            plus += (u < plus_probability) ? 1 : 0;
+        }
+        return (2.0 * static_cast<double>(plus) - num_shots) / num_shots;
+    }
+
+    /// Flush, and run the check that precedes an output.
+    void flushForOutput() {
+        flush();
+        method_.prepareOutput();
     }
 
   public:
     Core() = default;
 
+    explicit Core(Planner::HybridOptions options) : method_{options} {}
+
     explicit Core(Planner::HybridMethod method) : method_{std::move(method)} {}
+
+    /// What the hybrid method did so far.
+    [[nodiscard]] auto report() const -> Planner::HybridReport {
+        return method_.report();
+    }
 
     /**
      * @brief Draw measurement outcomes from `gen`, or from the core's own
@@ -138,8 +164,8 @@ class Core {
      * `wires[k]`. An output is a forced flush.
      */
     auto expectation(const std::string &pauli,
-                     const std::vector<Program::QubitId> &wires) -> int {
-        flush();
+                     const std::vector<Program::QubitId> &wires) -> double {
+        flushForOutput();
         return method_.expectation(pauli, wires);
     }
 
@@ -149,13 +175,13 @@ class Core {
 
     /// Exact expectation value of `observable`.
     auto expval(const Planner::Observable &observable) -> double {
-        flush();
+        flushForOutput();
         return method_.expval(observable);
     }
 
     /// Exact variance of `observable`.
     auto var(const Planner::Observable &observable) -> double {
-        flush();
+        flushForOutput();
         return method_.variance(observable);
     }
 
@@ -167,10 +193,10 @@ class Core {
         -> double {
         PL_ABORT_IF(shots == 0,
                     "A sampled expectation needs at least one shot");
-        flush();
+        flushForOutput();
         double value = 0.0;
         for (const auto &term : observable) {
-            const int exact = method_.expectation(term.pauli, term.wires);
+            const double exact = method_.expectation(term.pauli, term.wires);
             value += term.coefficient * sampledMean(exact, shots, drawSeed());
         }
         return value;
@@ -186,7 +212,7 @@ class Core {
         PL_ABORT_IF_NOT(observable.size() == 1,
                         "A sampled variance needs an observable with one "
                         "Pauli term");
-        flush();
+        flushForOutput();
         const auto &term = observable.front();
         const double mean = sampledMean(
             method_.expectation(term.pauli, term.wires), shots, drawSeed());
@@ -200,9 +226,9 @@ class Core {
      */
     auto sample(const std::vector<Program::QubitId> &wires, std::size_t shots)
         -> GF2::Samples {
-        flush();
-        return GF2::sampleUniform(method_.computationalSupport(wires), shots,
-                                  drawSeed());
+        flushForOutput();
+        return Planner::sample(method_.outcomeDistribution(wires), shots,
+                               drawSeed());
     }
 
     /**
@@ -221,8 +247,8 @@ class Core {
      */
     auto probabilities(const std::vector<Program::QubitId> &wires)
         -> std::vector<double> {
-        flush();
-        return GF2::probabilities(method_.computationalSupport(wires));
+        flushForOutput();
+        return Planner::probabilities(method_.outcomeDistribution(wires));
     }
 };
 

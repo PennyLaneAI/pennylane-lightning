@@ -106,6 +106,17 @@ class TableauEngine {
     virtual auto applyBlock(const EngineBlock &block, std::mt19937 &gen)
         -> std::vector<bool> = 0;
 
+    /**
+     * @brief Change the frame of the state C|0...0> by rotations on its
+     * virtual qubits: C -> C V^†.
+     *
+     * V applies the block's rotations in order; the block holds rotations
+     * only. The hybrid method applies V to its dense register at the same
+     * time, so the state the frame and the register describe is unchanged.
+     * Only engines with the `dense_register` capability support this.
+     */
+    virtual void applyVirtualBlock(const EngineBlock &block) = 0;
+
     /// Expectation value of a Hermitian Pauli word: -1, 0 or +1.
     [[nodiscard]] virtual auto expectation(const PauliWord &pauli) const
         -> int = 0;

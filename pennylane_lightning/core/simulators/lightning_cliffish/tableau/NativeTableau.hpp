@@ -300,7 +300,7 @@ class NativeTableau final : public TableauEngine {
     [[nodiscard]] auto name() const -> std::string override { return "native"; }
 
     [[nodiscard]] auto capabilities() const -> Capabilities override {
-        return {};
+        return {.dense_register = true};
     }
 
     [[nodiscard]] auto numQubits() const -> std::size_t override {
@@ -352,6 +352,44 @@ class NativeTableau final : public TableauEngine {
             }
         }
         return outcomes;
+    }
+
+    void applyVirtualBlock(const EngineBlock &block) override {
+        for (const auto &op : block) {
+            PL_ABORT_IF_NOT(op.kind == EngineOp::Kind::Rotation,
+                            "A virtual block holds rotations only");
+            // C R^† = (C R^† C^†) C, and C R^† C^† is the inverse rotation
+            // about the pushed-forward word C Q C^†.
+            loadOp(pushForward(op.pauli));
+            applyRotation(static_cast<std::uint8_t>(4 - op.quarter_turns));
+        }
+    }
+
+    /**
+     * @brief Push a Hermitian word on the virtual qubits forward through the
+     * state's Clifford: C Q C^†.
+     */
+    [[nodiscard]] auto pushForward(const PauliWord &pauli) const -> PauliWord {
+        PL_ABORT_IF_NOT(pauli.numQubits() == num_qubits_,
+                        "Pauli word acts on a different number of qubits "
+                        "than the tableau");
+        // Q = i^log Q prod_j X_j^x_j Z_j^z_j, with one factor of i per Y,
+        // and C X_j C^† and C Z_j C^† are rows j and n + j.
+        PauliWord image(num_qubits_);
+        int y_count = 0;
+        for (std::size_t j = 0; j < num_qubits_; j++) {
+            const bool x_bit = Pauli::getBit(pauli.x(), j);
+            const bool z_bit = Pauli::getBit(pauli.z(), j);
+            if (x_bit) {
+                image *= rows_.getRow(j);
+            }
+            if (z_bit) {
+                image *= rows_.getRow(num_qubits_ + j);
+            }
+            y_count += (x_bit && z_bit) ? 1 : 0;
+        }
+        image.setLogI(Pauli::logIMod4(image.logI() + pauli.logI() + y_count));
+        return image;
     }
 
     [[nodiscard]] auto expectation(const PauliWord &pauli) const

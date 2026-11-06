@@ -14,10 +14,12 @@
 
 /**
  * @file GateExpansions.hpp
- * The static per-name table of exact Clifford expansions.
+ * The static per-name table of exact gate expansions.
  *
  * Every supported gate is, up to a global phase, a product of rotations
- * exp(-i k pi/4 P) for Pauli words P and k in {1, 2, 3}.
+ * exp(-i theta/2 P) for Pauli words P. A Clifford rotation is held as
+ * exp(-i k pi/4 P) with k in {1, 2, 3}; any other angle is a non-Clifford
+ * rotation for the dense register.
  */
 
 #pragma once
@@ -30,7 +32,6 @@
 #include <string>
 #include <string_view>
 #include <unordered_map>
-#include <unordered_set>
 #include <vector>
 
 #include "Error.hpp"
@@ -39,12 +40,19 @@
 namespace Pennylane::LightningCliffish::Planner {
 
 /**
- * @brief exp(-i quarter_turns pi/4 P), with character k of `pauli` acting on
- * wire k of the op.
+ * @brief exp(-i quarter_turns pi/4 P), or exp(-i angle/2 P) for a
+ * non-Clifford angle, with character k of `pauli` acting on wire k of the op.
  */
 struct LocalRotation {
     std::string pauli;
     std::uint8_t quarter_turns;
+    /// Non-Clifford rotations only; quarter_turns is then 0.
+    std::optional<double> angle{};
+
+    /// The rotation is exp(-i halfAngle() P).
+    [[nodiscard]] auto halfAngle() const -> double {
+        return angle.has_value() ? *angle / 2 : quarter_turns * M_PI / 4;
+    }
 
     friend auto operator==(const LocalRotation &, const LocalRotation &)
         -> bool = default;
@@ -124,19 +132,8 @@ inline auto rotationWord(std::string_view name, std::size_t num_wires)
     return std::nullopt;
 }
 
-/// Gates that are never Clifford.
-inline auto isNonCliffordGate(std::string_view name) -> bool {
-    static const std::unordered_set<std::string_view> names{
-        "T", "Toffoli", "CCZ", "CSWAP", "CH"};
-    return names.contains(name);
-}
-
-[[noreturn]] inline void abortNonClifford(const std::string &name) {
-    PL_ABORT("lightning.cliffish cannot apply '" + name +
-             "': it is not a Clifford operation, and non-Clifford operations "
-             "need the dense register, which is not implemented yet. Run this "
-             "circuit on lightning.qubit instead.");
-}
+/// T = exp(i pi/8) exp(-i pi/8 Z), so it is RZ(pi/4) up to a phase.
+inline constexpr double t_gate_angle = M_PI / 4;
 
 /**
  * @brief Expand a gate or PauliRot op into rotations, in application order.
@@ -156,21 +153,26 @@ inline auto expandGate(const Program::Op &op) -> std::vector<LocalRotation> {
     std::optional<std::string> word =
         op.kind == OpKind::PauliRot ? std::optional<std::string>{op.pauli_word}
                                     : rotationWord(op.name, op.wires.size());
+    std::optional<double> angle{};
     if (word.has_value()) {
         PL_ABORT_IF_NOT(op.params.size() == 1,
                         "'" + name + "' takes exactly one parameter");
-        const auto quarter_turns = cliffordQuarterTurns(op.params[0]);
+        angle = op.params[0];
+    } else if (op.name == "T") {
+        word = "Z";
+        angle = t_gate_angle;
+    }
+
+    if (word.has_value()) {
+        const auto quarter_turns = cliffordQuarterTurns(*angle);
         if (!quarter_turns.has_value()) {
-            abortNonClifford(name);
-        }
-        if (*quarter_turns != 0) {
+            rotations.push_back({*word, 0, *angle});
+        } else if (*quarter_turns != 0) {
             rotations.push_back({*word, *quarter_turns});
         }
     } else if (const auto it = fixedGateExpansions().find(op.name);
                it != fixedGateExpansions().end()) {
         rotations = it->second;
-    } else if (isNonCliffordGate(op.name)) {
-        abortNonClifford(name);
     } else {
         PL_ABORT("lightning.cliffish does not support the operation '" + name +
                  "'");
@@ -188,6 +190,9 @@ inline auto expandGate(const Program::Op &op) -> std::vector<LocalRotation> {
         for (auto &rotation : rotations) {
             rotation.quarter_turns =
                 static_cast<std::uint8_t>((4 - rotation.quarter_turns) % 4);
+            if (rotation.angle.has_value()) {
+                rotation.angle = -*rotation.angle;
+            }
         }
     }
     return rotations;

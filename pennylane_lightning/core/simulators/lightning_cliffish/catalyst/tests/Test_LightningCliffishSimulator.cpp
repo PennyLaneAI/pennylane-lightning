@@ -353,10 +353,23 @@ TEST_CASE("LightningCliffishSimulator fails loudly on what it cannot run",
     device.AllocateQubits(2);
     const auto z0 = device.Observable(ObsId::PauliZ, {}, {0});
 
-    SECTION("Non-Clifford gates fail when the program is simulated") {
-        device.NamedOperation("T", {}, {0});
-        REQUIRE_THROWS_WITH(device.Expval(z0),
-                            ContainsSubstring("cannot apply 'T'"));
+    SECTION("A dense register over max_dense_qubits fails when the program "
+            "is simulated") {
+        LCSimulator small("{'max_dense_qubits': 1}");
+        small.SetDevicePRNG(&gen);
+        small.AllocateQubits(2);
+        for (QubitIdType q = 0; q < 2; q++) {
+            small.NamedOperation("Hadamard", {}, {q});
+            small.NamedOperation("T", {}, {q});
+        }
+        const auto z = small.Observable(ObsId::PauliZ, {}, {0});
+        REQUIRE_THROWS_WITH(small.Expval(z),
+                            ContainsSubstring("dense register of 2 qubits"));
+    }
+
+    SECTION("An unknown recompression policy fails at construction") {
+        REQUIRE_THROWS_WITH(LCSimulator("{'recompression': 'eager'}"),
+                            ContainsSubstring("Unknown recompression"));
     }
 
     SECTION("Controlled gates fail when the program is simulated") {

@@ -22,6 +22,7 @@ target_compile_options(lightning_compile_options INTERFACE "-D_ENABLE_PLCLIFFISH
 
 add_subdirectory(pauli)
 add_subdirectory(tableau)
+add_subdirectory(dense)
 add_subdirectory(program)
 add_subdirectory(planner)
 
@@ -34,6 +35,7 @@ target_link_libraries(lightning_cliffish INTERFACE lightning_compile_options
                                                    lightning_utils
                                                    lightning_cliffish_pauli
                                                    lightning_cliffish_tableau
+                                                   lightning_cliffish_dense
                                                    lightning_cliffish_program
                                                    lightning_cliffish_planner
                                                    )
