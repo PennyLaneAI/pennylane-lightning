@@ -45,7 +45,7 @@
   the extension module was loaded with `RTLD_LOCAL` (the default for Python): `MPIRuntime` now
   promotes the loaded MPI library's symbols to the global scope, which cuStateVec's communicator
   needs to resolve them.
-  [(#1438)](https://github.com/PennyLaneAI/pennylane-lightning/issues/1438)
+  [(#1440)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1440)
 
 - Fixed multi-qubit `PauliMeasure` in the Lightning-Kokkos simulator, which measured every
   wire of the Pauli word and returned the logical AND of the outcomes. It now measures only the
