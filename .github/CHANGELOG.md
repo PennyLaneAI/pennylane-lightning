@@ -41,6 +41,12 @@
 
 <h3>Bug fixes 🐛</h3>
 
+- Lightning-GPU with `mpi=True` no longer fails with "MPI communicator creation failed" when
+  the extension module was loaded with `RTLD_LOCAL` (the default for Python): `MPIRuntime` now
+  promotes the loaded MPI library's symbols to the global scope, which cuStateVec's communicator
+  needs to resolve them.
+  [(#1438)](https://github.com/PennyLaneAI/pennylane-lightning/issues/1438)
+
 - Fixed multi-qubit `PauliMeasure` in the Lightning-Kokkos simulator, which measured every
   wire of the Pauli word and returned the logical AND of the outcomes. It now measures only the
   parity of the Pauli word, as Lightning-Qubit and Lightning-GPU do.
@@ -162,6 +168,7 @@ Yushao Chen,
 Marcus Edwards,
 David Ittah,
 Jeffrey Kam,
+Mehmet Niyazi Kayi,
 Joseph Lee,
 Andrija Paurevic,
 Chen Shoval,
