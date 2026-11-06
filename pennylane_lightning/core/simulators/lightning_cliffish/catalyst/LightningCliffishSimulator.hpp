@@ -70,8 +70,11 @@ class LightningCliffishSimulator final
                    const std::vector<QubitIdType> &wires);
 
   public:
-    explicit LightningCliffishSimulator(
-        [[maybe_unused]] const std::string &kwargs = "{}") noexcept {}
+    /**
+     * @param kwargs The device's keyword arguments: max_dense_qubits,
+     * recompression ("auto", "none", "t1" or "t2") and dense_checks.
+     */
+    explicit LightningCliffishSimulator(const std::string &kwargs = "{}");
     ~LightningCliffishSimulator() noexcept = default;
 
     LightningCliffishSimulator(const LightningCliffishSimulator &) = delete;

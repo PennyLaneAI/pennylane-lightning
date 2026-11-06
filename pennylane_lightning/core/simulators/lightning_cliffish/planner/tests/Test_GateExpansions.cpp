@@ -98,7 +98,7 @@ auto rotationsMatrix(const std::vector<LocalRotation> &rotations,
                      std::size_t num_wires) -> Matrix {
     Matrix u = identity(std::size_t{1} << num_wires);
     for (const auto &rotation : rotations) {
-        const double half_angle = rotation.quarter_turns * M_PI / 4;
+        const double half_angle = rotation.halfAngle();
         const Matrix p = pauliMatrix(rotation.pauli);
         Matrix r = identity(p.size());
         for (std::size_t i = 0; i < p.size(); i++) {
@@ -257,15 +257,38 @@ TEST_CASE("Parametric gates expand at Clifford angles", "[GateExpansions]") {
     CHECK(expandGate(gate("RX", 1, {0.0})).empty());
 }
 
+TEST_CASE("Non-Clifford gates expand to rotations at their angle",
+          "[GateExpansions]") {
+    const Matrix t{{1, 0}, {0, std::exp(imag * M_PI / 4.0)}};
+    CHECK(equalUpToPhase(t, rotationsMatrix(expandGate(gate("T", 1)), 1)));
+    CHECK(expandGate(gate("T", 1)) ==
+          std::vector<LocalRotation>{{"Z", 0, M_PI / 4}});
+    CHECK(expandGate(gate("T", 1, {}, true)) ==
+          std::vector<LocalRotation>{{"Z", 0, -M_PI / 4}});
+
+    for (double angle : {0.3, -1.1, M_PI / 4, 2.5}) {
+        INFO("Angle " << angle);
+        const double c = std::cos(angle / 2);
+        const double s = std::sin(angle / 2);
+        const Matrix ry{{c, -s}, {s, c}};
+        CHECK(equalUpToPhase(
+            ry, rotationsMatrix(expandGate(gate("RY", 1, {angle})), 1)));
+        CHECK(expandGate(gate("IsingXX", 2, {angle})) ==
+              std::vector<LocalRotation>{{"XX", 0, angle}});
+    }
+
+    // A rotation near the identity is a real angle and is never snapped
+    // (ADR 0007), but one within the snap of a Clifford angle snaps to it.
+    CHECK(expandGate(gate("RZ", 1, {1e-15})) ==
+          std::vector<LocalRotation>{{"Z", 0, 1e-15}});
+    CHECK(expandGate(gate("RZ", 1, {M_PI / 2 + 1e-13})) ==
+          std::vector<LocalRotation>{{"Z", 1}});
+}
+
 TEST_CASE("Gate expansion fails loudly on unsupported ops",
           "[GateExpansions]") {
-    REQUIRE_THROWS_WITH(expandGate(gate("T", 1)),
-                        ContainsSubstring("cannot apply 'T'") &&
-                            ContainsSubstring("lightning.qubit"));
-    REQUIRE_THROWS_WITH(expandGate(gate("RZ", 1, {M_PI / 4})),
-                        ContainsSubstring("not a Clifford operation"));
-    REQUIRE_THROWS_WITH(expandGate(gate("RZ", 1, {1e-15})),
-                        ContainsSubstring("not a Clifford operation"));
+    REQUIRE_THROWS_WITH(expandGate(gate("Toffoli", 3)),
+                        ContainsSubstring("does not support the operation"));
     REQUIRE_THROWS_WITH(expandGate(gate("QubitUnitary", 1)),
                         ContainsSubstring("does not support the operation"));
     REQUIRE_THROWS_WITH(expandGate(gate("CNOT", 1)),
@@ -275,7 +298,7 @@ TEST_CASE("Gate expansion fails loudly on unsupported ops",
 
     auto controlled = gate("PauliX", 1);
     controlled.controlled_wires = {1};
-    controlled.controlled_values = {true};
+    controlled.controlled_values.push_back(true);
     REQUIRE_THROWS_WITH(expandGate(controlled),
                         ContainsSubstring("controlled operations"));
 }

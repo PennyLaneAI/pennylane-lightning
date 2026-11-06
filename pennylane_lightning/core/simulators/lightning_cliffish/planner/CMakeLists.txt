@@ -11,6 +11,7 @@ target_link_libraries(lightning_cliffish_planner INTERFACE lightning_compile_opt
                                                          lightning_utils
                                                          lightning_cliffish_program
                                                          lightning_cliffish_tableau
+                                                         lightning_cliffish_dense
                                                          )
 
 if (BUILD_TESTS)

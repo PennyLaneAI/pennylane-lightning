@@ -68,7 +68,7 @@ inline void applyDense(State &state, const Op &op, std::size_t num_qubits) {
         for (std::size_t k = 0; k < op.wires.size(); k++) {
             pauli.set(op.wires[k], rotation.pauli[k]);
         }
-        state = rotate(state, pauli, rotation.quarter_turns);
+        state = rotateBy(state, pauli, rotation.halfAngle());
     }
 }
 

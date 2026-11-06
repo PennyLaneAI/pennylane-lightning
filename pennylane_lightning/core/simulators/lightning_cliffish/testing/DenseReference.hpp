@@ -75,9 +75,9 @@ inline auto applyPauli(const State &state, const PauliWord &pauli) -> State {
 }
 
 /// exp(-i quarter_turns pi/4 P) |state>.
-inline auto rotate(const State &state, const PauliWord &pauli,
-                   unsigned quarter_turns) -> State {
-    const double half_angle = quarter_turns * M_PI / 4;
+/// exp(-i half_angle P) applied to `state`.
+inline auto rotateBy(const State &state, const PauliWord &pauli,
+                     double half_angle) -> State {
     const State pauli_state = applyPauli(state, pauli);
     State result(state.size());
     for (std::size_t i = 0; i < state.size(); i++) {
@@ -86,6 +86,11 @@ inline auto rotate(const State &state, const PauliWord &pauli,
             std::complex<double>{0, 1} * std::sin(half_angle) * pauli_state[i];
     }
     return result;
+}
+
+inline auto rotate(const State &state, const PauliWord &pauli,
+                   unsigned quarter_turns) -> State {
+    return rotateBy(state, pauli, quarter_turns * M_PI / 4);
 }
 
 /// <state| P |state> for a Hermitian Pauli word P.

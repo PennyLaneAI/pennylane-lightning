@@ -14,8 +14,8 @@ schema = 3
 #        - "invertible": if the adjoint of this operation is supported.
 #        - "differentiable": if device gradient is supported for this gate.
 #
-# Parametric gates run only at Clifford angles; any other angle fails at run
-# time, since non-Clifford operations need the dense register.
+# Parametric gates run at any angle. A Clifford angle stays in the tableau;
+# any other angle, and T, runs in the dense register.
 [operators.gates]
 
 Identity               = { properties = [ "invertible" ] }
@@ -30,6 +30,7 @@ CY                     = { properties = [ "invertible" ] }
 CZ                     = { properties = [ "invertible" ] }
 SWAP                   = { properties = [ "invertible" ] }
 ISWAP                  = { properties = [ "invertible" ] }
+T                      = { properties = [ "invertible" ] }
 RX                     = { properties = [ "invertible" ] }
 RY                     = { properties = [ "invertible" ] }
 RZ                     = { properties = [ "invertible" ] }

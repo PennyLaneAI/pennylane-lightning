@@ -71,6 +71,92 @@ def apply_circuit(circuit: list[tuple[int, list[int]]]) -> None:
         gate(wires=wires if len(wires) > 1 else wires[0])
 
 
+# Non-Clifford gates for random circuits, with their number of wires and parameters.
+NON_CLIFFORD_GATES: list[tuple[Callable, int, int]] = [
+    (lambda wires: qp.T(wires), 1, 0),
+    (lambda wires: qp.adjoint(qp.T(wires)), 1, 0),
+    (lambda angle, wires: qp.RX(angle, wires), 1, 1),
+    (lambda angle, wires: qp.RY(angle, wires), 1, 1),
+    (lambda angle, wires: qp.RZ(angle, wires), 1, 1),
+    (lambda angle, wires: qp.IsingZZ(angle, wires), 2, 1),
+    (lambda angle, wires: qp.PauliRot(angle, "XY", wires), 2, 1),
+]
+
+
+def random_clifford_t_circuit(
+    num_wires: int, depth: int, seed: int, non_clifford_fraction: float = 0.3
+) -> list[tuple[Callable, list[int], list[float]]]:
+    """A random circuit of Clifford gates, T gates and rotations at random angles, as
+    (gate, wires, parameters) triples."""
+    rng = np.random.default_rng(seed)
+    circuit = []
+    while len(circuit) < depth:
+        if rng.random() < non_clifford_fraction:
+            gate, num_gate_wires, num_params = NON_CLIFFORD_GATES[
+                int(rng.integers(len(NON_CLIFFORD_GATES)))
+            ]
+        else:
+            gate, num_gate_wires = CLIFFORD_GATES[int(rng.integers(len(CLIFFORD_GATES)))]
+            num_params = 0
+        if num_gate_wires > num_wires:
+            continue
+        wires = [int(w) for w in rng.choice(num_wires, size=num_gate_wires, replace=False)]
+        params = [float(a) for a in rng.uniform(-np.pi, np.pi, size=num_params)]
+        circuit.append((gate, wires, params))
+    return circuit
+
+
+def apply_clifford_t_circuit(circuit: list[tuple[Callable, list[int], list[float]]]) -> None:
+    """Queue the gates of a random Clifford+T circuit."""
+    for gate, wires, params in circuit:
+        gate(*params, wires=wires if len(wires) > 1 else wires[0])
+
+
+# The gates that gate-level input uses. Under capture, Catalyst passes templates
+# such as qp.QFT and qp.Toffoli to this device undecomposed, so tests decompose
+# them first.
+GATE_LEVEL_SET = {
+    "Hadamard",
+    "S",
+    "Adjoint(S)",
+    "T",
+    "Adjoint(T)",
+    "CNOT",
+    "CZ",
+    "SWAP",
+    "PauliX",
+    "PauliY",
+    "PauliZ",
+    "RX",
+    "RY",
+    "RZ",
+    "PhaseShift",
+    "GlobalPhase",
+}
+
+
+def gate_level(ops_fn: Callable) -> list[qp.operation.Operator]:
+    """The ops `ops_fn` queues, decomposed to GATE_LEVEL_SET, without global phases."""
+    pending = list(qp.tape.make_qscript(ops_fn)().operations)
+    ops = []
+    while pending:
+        op = pending.pop(0)
+        if op.name not in GATE_LEVEL_SET:
+            pending[:0] = op.decomposition()
+        elif op.name != "GlobalPhase":
+            ops.append(op)
+    return ops
+
+
+def apply_ops(ops: list[qp.operation.Operator]) -> None:
+    """Queue copies of `ops`."""
+    for op in ops:
+        if isinstance(op, qp.ops.op_math.Adjoint):
+            qp.adjoint(type(op.base)(*op.base.parameters, wires=op.base.wires))
+        else:
+            type(op)(*op.parameters, wires=op.wires)
+
+
 def random_pauli_word(num_wires: int, seed: int) -> list[tuple[str, int]]:
     """A random Pauli word on all wires, as (Pauli, wire) pairs; never the identity."""
     rng = np.random.default_rng(seed)
@@ -106,15 +192,15 @@ def test_c_interface():
 
 
 def test_capabilities():
-    """Test that the TOML file declares Clifford gates, Pauli observables and
-    sampling, and nothing differentiable."""
+    """Test that the TOML file declares Clifford gates, T, rotations, Pauli
+    observables and sampling, and nothing differentiable."""
     capabilities = DeviceCapabilities.from_toml_file(LightningDevice.config_filepath)
     assert capabilities.qjit_compatible
-    for gate in ("Hadamard", "S", "CNOT", "CZ", "SWAP", "PauliRot", "PauliMeasure"):
+    for gate in ("Hadamard", "S", "CNOT", "CZ", "SWAP", "T", "RZ", "PauliRot", "PauliMeasure"):
         assert gate in capabilities.operations
         assert not capabilities.operations[gate].differentiable
         assert not capabilities.operations[gate].controllable
-    assert "T" not in capabilities.operations
+    assert "Toffoli" not in capabilities.operations
     assert "Hermitian" not in capabilities.observables
     assert "StateMP" not in capabilities.measurement_processes
     assert capabilities.supported_mcm_methods == ["one-shot"]
@@ -321,25 +407,211 @@ def test_seeded_runs_are_reproducible():
     assert not np.array_equal(first(), other())
 
 
+def test_device_kwargs():
+    """Test that the device passes its options to the runtime and checks them."""
+    device = LightningDevice(wires=2, max_dense_qubits=10, recompression="t1", dense_checks=False)
+    assert device.device_kwargs == {
+        "max_dense_qubits": 10,
+        "recompression": "t1",
+        "dense_checks": False,
+    }
+    with pytest.raises(ValueError, match="recompression must be one of"):
+        LightningDevice(wires=2, recompression="eager")
+    with pytest.raises(ValueError, match="max_dense_qubits must be in"):
+        LightningDevice(wires=2, max_dense_qubits=41)
+
+
 @requires_catalyst
-@pytest.mark.parametrize(
-    "gate, message",
-    [
-        (lambda: qp.T(0), "cannot apply 'T'"),
-        (lambda: qp.RX(0.3, 0), "cannot apply 'RX'"),
-        (lambda: qp.RZ(1e-15, 0), "cannot apply 'RZ'"),
-    ],
-)
-def test_non_clifford_operations_fail_loudly(gate: Callable, message: str):
-    """Test that non-Clifford operations fail with an error that names them."""
+@pytest.mark.parametrize("num_wires", [2, 3, 5])
+@pytest.mark.parametrize("seed", [0, 1, 2])
+def test_clifford_t_circuits_match_default_qubit(num_wires: int, seed: int):
+    """Test exact expectation values, variances and probabilities on random circuits of
+    Clifford gates, T gates and rotations at random angles against default.qubit."""
+    circuit = random_clifford_t_circuit(num_wires, depth=40, seed=seed)
+    word = random_pauli_word(num_wires, seed=300 + seed)
+    hamiltonian_words = [random_pauli_word(num_wires, seed=400 + seed + k) for k in range(3)]
+
+    def qfunc():
+        apply_clifford_t_circuit(circuit)
+        hamiltonian = qp.sum(
+            *(c * pauli_observable(w) for c, w in zip([0.5, -1.3, 0.7], hamiltonian_words))
+        )
+        return (
+            qp.expval(pauli_observable(word)),
+            qp.var(pauli_observable(word)),
+            qp.expval(hamiltonian),
+            qp.var(hamiltonian),
+            qp.probs(wires=range(num_wires)),
+        )
+
+    expected = qp.qnode(qp.device("default.qubit", wires=num_wires))(qfunc)()
+    actual = qp.qjit(qp.qnode(LightningDevice(wires=num_wires))(qfunc), capture=True)()
+    for actual_value, expected_value in zip(actual, expected):
+        assert np.allclose(actual_value, expected_value, atol=1e-10)
+
+
+@requires_catalyst
+@pytest.mark.parametrize("recompression", ["none", "t1", "t2", "auto"])
+@pytest.mark.parametrize("dense_checks", [False, True])
+def test_recompression_options_agree(recompression: str, dense_checks: bool):
+    """Test that every re-compression policy, with and without dense checks, gives
+    the same probabilities."""
+    num_wires = 4
+    circuit = random_clifford_t_circuit(num_wires, depth=40, seed=7)
+
+    def qfunc():
+        apply_clifford_t_circuit(circuit)
+        return qp.probs(wires=range(num_wires))
+
+    expected = qp.qnode(qp.device("default.qubit", wires=num_wires))(qfunc)()
+    device = LightningDevice(
+        wires=num_wires, recompression=recompression, dense_checks=dense_checks
+    )
+    actual = qp.qjit(qp.qnode(device)(qfunc), capture=True)()
+    assert np.allclose(actual, expected, atol=1e-10)
+
+
+def measure_qft_outputs(num_wires: int):
+    """Outputs that compare QFT results."""
+    return (
+        qp.probs(wires=range(num_wires)),
+        qp.expval(qp.X(0) @ qp.Y(2)),
+        qp.expval(qp.X(num_wires - 1)),
+    )
+
+
+@requires_catalyst
+@pytest.mark.parametrize("basis_state", [[0, 0, 0, 0, 0], [1, 0, 1, 1, 0]])
+def test_gate_level_qft_matches_default_qubit(basis_state: list[int]):
+    """Test the QFT at gate level, as PhaseShift and CNOT, on basis states."""
+    num_wires = len(basis_state)
+
+    def prepare_and_transform():
+        for wire, bit in enumerate(basis_state):
+            if bit:
+                qp.PauliX(wire)
+        qp.QFT(wires=range(num_wires))
+
+    ops = gate_level(prepare_and_transform)
+
+    def reference():
+        prepare_and_transform()
+        return measure_qft_outputs(num_wires)
+
+    def gates():
+        apply_ops(ops)
+        return measure_qft_outputs(num_wires)
+
+    expected = qp.qnode(qp.device("default.qubit", wires=num_wires))(reference)()
+    actual = qp.qjit(qp.qnode(LightningDevice(wires=num_wires))(gates), capture=True)()
+    for actual_value, expected_value in zip(actual, expected):
+        assert np.allclose(actual_value, expected_value, atol=1e-10)
+
+
+@requires_catalyst
+def test_gate_level_toffoli_and_grover_match_default_qubit():
+    """Test Toffoli, and a Grover search built from multi-controlled gates, at
+    the Clifford+T gate level."""
+
+    def search():
+        for wire in range(3):
+            qp.Hadamard(wire)
+        for _ in range(2):
+            qp.FlipSign([1, 0, 1], wires=range(3))
+            qp.GroverOperator(wires=range(3))
+        qp.Toffoli(wires=[0, 1, 3])
+
+    ops = gate_level(search)
+    assert any(op.name == "T" for op in ops)
+
+    def reference():
+        search()
+        return qp.probs(wires=range(4))
+
+    def gates():
+        apply_ops(ops)
+        return qp.probs(wires=range(4))
+
+    expected = qp.qnode(qp.device("default.qubit", wires=4))(reference)()
+    actual = qp.qjit(qp.qnode(LightningDevice(wires=4))(gates), capture=True)()
+    assert np.allclose(actual, expected, atol=1e-10)
+
+
+@requires_catalyst
+def test_near_identity_rotations_are_kept():
+    """Test that a rotation near the identity is applied, not snapped to it."""
 
     @qp.qjit(capture=True)
     @qp.qnode(LightningDevice(wires=1))
+    def circuit(angle):
+        qp.RX(angle, wires=0)
+        return qp.expval(qp.Y(0))
+
+    for angle in (1e-4, 1e-9):
+        assert np.isclose(circuit(angle), -np.sin(angle), rtol=1e-9, atol=0)
+
+
+@requires_catalyst
+@pytest.mark.parametrize("seed", [0, 1])
+def test_clifford_t_samples_follow_default_qubit_probabilities(seed: int):
+    """Test that samples of a Clifford+T circuit follow default.qubit's probabilities."""
+    num_wires = 3
+    shots = 20000
+    circuit = random_clifford_t_circuit(num_wires, depth=30, seed=10 + seed)
+
+    def probs():
+        apply_clifford_t_circuit(circuit)
+        return qp.probs(wires=range(num_wires))
+
+    def sample():
+        apply_clifford_t_circuit(circuit)
+        return qp.sample(wires=range(num_wires))
+
+    expected = qp.qnode(qp.device("default.qubit", wires=num_wires))(probs)()
+    samples = qp.qjit(
+        qp.set_shots(qp.qnode(LightningDevice(wires=num_wires))(sample), shots), capture=True
+    )()
+
+    indices = samples.astype(int) @ (2 ** np.arange(num_wires - 1, -1, -1))
+    frequencies = np.bincount(indices, minlength=2**num_wires) / shots
+    sigma = np.sqrt(expected * (1 - expected) / shots)
+    assert np.all(np.abs(frequencies - expected) <= 5 * sigma + 1e-12)
+
+
+@requires_catalyst
+def test_clifford_t_one_shot_mid_circuit_measurements():
+    """Test feed-forward from a measurement of a magic state with
+    mcm_method="one-shot"."""
+    shots = 4000
+
+    @qp.qjit(capture=True)
+    @qp.set_shots(shots)
+    @qp.qnode(LightningDevice(wires=2), mcm_method="one-shot")
     def circuit():
-        gate()
+        qp.RY(1.0, wires=0)
+        qp.T(0)
+        m = qp.measure(0)
+        qp.cond(m, qp.PauliX)(1)
+        return qp.expval(qp.Z(1))
+
+    # The outcome of wire 0 is 1 with probability sin^2(1/2).
+    assert abs(circuit() - np.cos(1.0)) < 5 / np.sqrt(shots)
+
+
+@requires_catalyst
+def test_dense_register_overflow_fails_loudly():
+    """Test that a program whose dense register would pass max_dense_qubits fails with
+    an error that says how to run it instead."""
+
+    @qp.qjit(capture=True)
+    @qp.qnode(LightningDevice(wires=3, max_dense_qubits=2))
+    def circuit():
+        for wire in range(3):
+            qp.Hadamard(wire)
+            qp.T(wire)
         return qp.expval(qp.Z(0))
 
-    with pytest.raises(RuntimeError, match=message):
+    with pytest.raises(RuntimeError, match="dense register of 3 qubits.*lightning.qubit"):
         circuit()
 
 
