@@ -198,7 +198,7 @@ class TestHelpers:
         dev = LightningDevice(wires=2)
         gate_set = dev.capabilities.gate_set(differentiable=True)
         if allow_mcms:
-            gate_set |= {"MidMeasureMP"}
+            gate_set |= {"MidMeasure"}
 
         expected_program.add_transform(no_sampling, name=name)
         expected_program.add_transform(qp.transforms.broadcast_expand)
@@ -853,7 +853,7 @@ class TestExecution:
             target_gates=(
                 device.capabilities.gate_set()
                 if mcm_method == "deferred"
-                else device.capabilities.gate_set() | {"MidMeasureMP"}
+                else device.capabilities.gate_set() | {"MidMeasure"}
             ),
         )
         expected_program.add_transform(
@@ -879,7 +879,7 @@ class TestExecution:
                 target_gates=(
                     device.capabilities.gate_set(differentiable=True)
                     if mcm_method == "deferred"
-                    else device.capabilities.gate_set(differentiable=True) | {"MidMeasureMP"}
+                    else device.capabilities.gate_set(differentiable=True) | {"MidMeasure"}
                 ),
             )
             expected_program.add_transform(
@@ -1174,7 +1174,7 @@ class TestExecution:
         config = dev.setup_execution_config(circuit=tape)
         [new_tape], _ = dev.preprocess_transforms(config)((tape,))
         assert not any(isinstance(w, qp.allocation.DynamicWire) for w in new_tape.wires)
-        assert not any(isinstance(op, qp.measurements.MidMeasureMP) for op in new_tape)
+        assert not any(isinstance(op, qp.ops.MidMeasure) for op in new_tape)
         assert len(new_tape.wires) == 3
 
         res1, res2 = dev.execute(new_tape, config)

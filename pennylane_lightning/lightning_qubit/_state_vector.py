@@ -32,8 +32,7 @@ import numpy as np
 import pennylane as qp
 import scipy as sp
 from numpy.random import Generator
-from pennylane.measurements import MidMeasureMP
-from pennylane.ops import Conditional
+from pennylane.ops import Conditional, MidMeasure
 from pennylane.ops.op_math import Adjoint
 from pennylane.wires import Wires
 
@@ -252,7 +251,7 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
             if isinstance(operation, Conditional):
                 if operation.meas_val.concretize(mid_measurements):
                     self._apply_lightning([operation.base])
-            elif isinstance(operation, MidMeasureMP):
+            elif isinstance(operation, MidMeasure):
                 self._apply_lightning_midmeasure(
                     LightningMeasurements(self).measure_final_state,
                     operation,

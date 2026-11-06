@@ -291,7 +291,7 @@ class LightningKokkos(LightningBase):
         allow_mcms = False
         _stopping_condition = no_mcms_stopping_condition
         if exec_config.mcm_config.mcm_method != "deferred":
-            gate_set |= {"MidMeasureMP"}
+            gate_set |= {"MidMeasure"}
             allow_mcms = True
             _stopping_condition = allow_mcms_stopping_condition
 
