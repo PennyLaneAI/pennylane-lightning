@@ -27,6 +27,7 @@ target_sources(lightning_cliffish_catalyst_tests INTERFACE runner_lightning_clif
 # Define targets
 ################################################################################
 set(TEST_SOURCES    Test_LightningCliffishSimulator.cpp
+                    Test_LightningCliffishDelegated.cpp
 )
 
 add_executable(lightning_cliffish_catalyst_tests_runner ${TEST_SOURCES})

@@ -92,11 +92,13 @@ inline auto fixedGateExpansions() -> const
     std::unordered_map<std::string_view, std::vector<LocalRotation>> & {
     // CNOT = exp(i pi/4 (1 - Z_c)(1 - X_t)), so it is
     // exp(-i pi/4 Z_c) exp(-i pi/4 X_t) exp(i pi/4 Z_c X_t) up to a phase;
-    // CY and CZ follow the same pattern. H = exp(-i pi/4 Y) Z.
+    // CY and CZ follow the same pattern. H = exp(-i pi/4 Y) Z. The device has
+    // no state output, so a global phase is not observable.
     static const std::unordered_map<std::string_view,
                                     std::vector<LocalRotation>>
         expansions{
             {"Identity", {}},
+            {"GlobalPhase", {}},
             {"PauliX", {{"X", 2}}},
             {"PauliY", {{"Y", 2}}},
             {"PauliZ", {{"Z", 2}}},

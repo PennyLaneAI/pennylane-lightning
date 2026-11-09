@@ -19,6 +19,7 @@ schema = 3
 [operators.gates]
 
 Identity               = { properties = [ "invertible" ] }
+GlobalPhase            = { properties = [ "invertible" ] }
 PauliX                 = { properties = [ "invertible" ] }
 PauliY                 = { properties = [ "invertible" ] }
 PauliZ                 = { properties = [ "invertible" ] }
@@ -73,8 +74,9 @@ runtime_code_generation = false
 
 # The methods of handling mid-circuit measurements that the device supports, e.g.,
 # "one-shot", "device", "tree-traversal", etc. An empty list indicates that the device
-# does not support mid-circuit measurements.
-supported_mcm_methods = [ "one-shot" ]
+# does not support mid-circuit measurements. With "device", Catalyst hands feed-forward
+# to the device as data, through the device's "Delegated" extension.
+supported_mcm_methods = [ "device", "one-shot" ]
 
 # Whether the device supports dynamic qubit allocation/deallocation.
 dynamic_qubit_management = false

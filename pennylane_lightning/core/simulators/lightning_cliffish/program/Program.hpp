@@ -58,6 +58,28 @@ enum class OpKind : std::uint8_t {
     Release,
     /// Return one wire to |0>.
     Reset,
+    /// A result that holds params[0] != 0 in every shot.
+    ResultConstant,
+    /// operands[0] XOR operands[1].
+    ResultXor,
+    /// NOT operands[0].
+    ResultNot,
+    /// operands[1] where operands[0] holds, operands[2] elsewhere.
+    ResultSelect,
+    /// The program no longer reads operands[0].
+    ResultRelease,
+    /// Opens a span that implements exp(-i params[0]/2 P), for the Pauli word P
+    /// on the wires; params[1] is the compiler's verdict.
+    GadgetBegin,
+    /// Closes the open gadget span.
+    GadgetEnd,
+};
+
+/// The compiler's verdict on a gadget, as in Catalyst's CatalystGadgetVerdict.
+enum class GadgetVerdict : std::uint8_t {
+    Unchecked = 0,
+    Verified = 1,
+    Mismatch = 2,
 };
 
 /**
@@ -73,8 +95,12 @@ struct Op {
     bool inverse{false};
     std::vector<QubitId> controlled_wires{};
     std::vector<bool> controlled_values{};
-    /// Measurements only: the outcome to keep.
+    /// Measurements only: the outcome to keep, after the sign is applied.
     std::optional<bool> postselect{std::nullopt};
+    /// PauliMeasure only: measure minus the Pauli word.
+    bool negated{false};
+    /// Result ops only: the results they read.
+    std::vector<ResultId> operands{};
     /// The op applies only when this result is true.
     ResultId predicate{result_true};
     /// Measurements only: the result the op defines.
@@ -100,6 +126,13 @@ class Program {
                             "Op acts on a qubit that is not allocated");
             PL_ABORT_IF_NOT(seen.insert(wire).second,
                             "Op acts on the same qubit twice");
+        }
+    }
+
+    void checkResults(const std::vector<ResultId> &results) const {
+        for (auto result : results) {
+            PL_ABORT_IF_NOT(result < next_result_,
+                            "Unknown measurement result");
         }
     }
 
@@ -167,6 +200,49 @@ class Program {
         return result;
     }
 
+    /**
+     * @brief Append an op that combines results.
+     *
+     * @return The result the op defines.
+     */
+    auto appendResultOp(Op op) -> ResultId {
+        const std::size_t arity = op.kind == OpKind::ResultConstant ? 0
+                                  : op.kind == OpKind::ResultNot    ? 1
+                                  : op.kind == OpKind::ResultXor    ? 2
+                                  : op.kind == OpKind::ResultSelect ? 3
+                                                                    : SIZE_MAX;
+        PL_ABORT_IF(arity == SIZE_MAX, "Op is not a result op");
+        PL_ABORT_IF_NOT(op.operands.size() == arity,
+                        "Wrong number of results for a result op");
+        checkResults(op.operands);
+        PL_ABORT_IF(op.kind == OpKind::ResultConstant && op.params.size() != 1,
+                    "A constant result takes its value as a parameter");
+        op.result = next_result_++;
+        const ResultId result = op.result;
+        window_.push_back(std::move(op));
+        return result;
+    }
+
+    /**
+     * @brief Append a marker that defines nothing: a result release or a
+     * gadget bracket.
+     */
+    void appendMarker(Op op) {
+        PL_ABORT_IF_NOT(op.kind == OpKind::ResultRelease ||
+                            op.kind == OpKind::GadgetBegin ||
+                            op.kind == OpKind::GadgetEnd,
+                        "Op is not a marker");
+        checkResults(op.operands);
+        if (op.kind == OpKind::GadgetBegin) {
+            checkWires(op.wires);
+            PL_ABORT_IF(op.pauli_word.size() != op.wires.size() ||
+                            op.params.size() != 2,
+                        "A gadget names its Pauli word, angle and verdict");
+        }
+        op.result = no_result;
+        window_.push_back(std::move(op));
+    }
+
     /// The ops received since the last flush.
     [[nodiscard]] auto window() const -> const std::vector<Op> & {
         return window_;
@@ -182,7 +258,7 @@ class Program {
     /// Number of qubits currently allocated.
     [[nodiscard]] auto numQubits() const -> std::size_t { return live_.size(); }
 
-    /// Whether `result` was defined by a measurement.
+    /// Whether `result` was defined by a measurement or a result op.
     [[nodiscard]] auto isResult(ResultId result) const -> bool {
         return result != result_true && result < next_result_;
     }

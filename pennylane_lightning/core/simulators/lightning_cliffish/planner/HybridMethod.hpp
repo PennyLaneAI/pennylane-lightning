@@ -1010,11 +1010,26 @@ class HybridMethod {
                 plan.emplace_back(MeasureStep{engineWord("Z", op.wires),
                                               op.result, op.postselect});
                 break;
-            case OpKind::PauliMeasure:
+            case OpKind::PauliMeasure: {
+                auto word = engineWord(op.pauli_word, op.wires);
+                if (op.negated) {
+                    word.setLogI(
+                        static_cast<std::uint8_t>((word.logI() + 2) % 4));
+                }
                 plan.emplace_back(
-                    MeasureStep{engineWord(op.pauli_word, op.wires), op.result,
-                                op.postselect});
+                    MeasureStep{std::move(word), op.result, op.postselect});
                 break;
+            }
+            case OpKind::ResultRelease:
+                break;
+            case OpKind::ResultConstant:
+            case OpKind::ResultXor:
+            case OpKind::ResultNot:
+            case OpKind::ResultSelect:
+            case OpKind::GadgetBegin:
+            case OpKind::GadgetEnd:
+                PL_ABORT("lightning.cliffish plans result ops and gadget "
+                         "brackets only on a delegated program");
             }
         }
         return plan;

@@ -17,6 +17,7 @@
 #include <algorithm>
 #include <cmath>
 #include <numeric>
+#include <string_view>
 #include <unordered_set>
 
 #include "Exception.hpp"
@@ -35,6 +36,16 @@ auto toCore(const std::vector<QubitIdType> &wires) -> std::vector<QubitId> {
     std::transform(wires.begin(), wires.end(), result.begin(),
                    [](QubitIdType wire) { return static_cast<QubitId>(wire); });
     return result;
+}
+
+auto parseCollapse(const std::string &kwargs)
+    -> Pennylane::LightningCliffish::Planner::GadgetCollapse {
+    auto args = Catalyst::Runtime::parse_kwargs(kwargs);
+    if (args.contains("gadget_collapse")) {
+        return Pennylane::LightningCliffish::Planner::parseGadgetCollapse(
+            args["gadget_collapse"]);
+    }
+    return Pennylane::LightningCliffish::Planner::GadgetCollapse::Measured;
 }
 
 auto parseOptions(const std::string &kwargs) -> HybridOptions {
@@ -60,7 +71,210 @@ namespace Catalyst::Runtime::Simulator {
 
 LightningCliffishSimulator::LightningCliffishSimulator(
     const std::string &kwargs)
-    : core{parseOptions(kwargs)} {}
+    : core{parseOptions(kwargs), parseCollapse(kwargs)} {
+#ifdef LIGHTNING_CLIFFISH_DEVICE_EXTENSIONS
+    using Self = LightningCliffishSimulator;
+    delegated_table = CatalystDelegatedTable{
+        .header = {.abi_version = 1, .reserved = 0, .self = this},
+        .begin_program =
+            [](void *device, uint32_t mode) {
+                static_cast<Self *>(device)->BeginDelegatedProgram(mode);
+            },
+        .push_predicate =
+            [](void *device, RESULT *condition) {
+                static_cast<Self *>(device)->PushPredicate(condition);
+            },
+        .pop_predicate =
+            [](void *device) { static_cast<Self *>(device)->PopPredicate(); },
+        .result_constant =
+            [](void *device, bool value) {
+                return static_cast<Self *>(device)->ResultConstant(value);
+            },
+        .result_xor =
+            [](void *device, RESULT *a, RESULT *b) {
+                return static_cast<Self *>(device)->ResultXor(a, b);
+            },
+        .result_not =
+            [](void *device, RESULT *a) {
+                return static_cast<Self *>(device)->ResultNot(a);
+            },
+        .result_select =
+            [](void *device, RESULT *condition, RESULT *if_true,
+               RESULT *if_false) {
+                return static_cast<Self *>(device)->ResultSelect(
+                    condition, if_true, if_false);
+            },
+        .release_result =
+            [](void *device, RESULT *result) {
+                static_cast<Self *>(device)->ReleaseResult(result);
+            },
+        .pauli_measure =
+            [](void *device, const char *word, const QubitIdType *wires,
+               size_t num_wires, bool negated, int32_t postselect) {
+                return static_cast<Self *>(device)->SignedPauliMeasure(
+                    word, std::vector<QubitIdType>(wires, wires + num_wires),
+                    negated,
+                    postselect == CATALYST_NO_POSTSELECT
+                        ? std::nullopt
+                        : std::optional<int32_t>{postselect});
+            },
+        // Outcomes reach the host only through measurement processes for now.
+        .result_samples = nullptr,
+    };
+    gadget_table = CatalystGadgetTable{
+        .header = {.abi_version = 1, .reserved = 0, .self = this},
+        .begin_gadget =
+            [](void *device, const char *word, const QubitIdType *wires,
+               size_t num_wires, double theta, uint32_t verdict) {
+                static_cast<Self *>(device)->BeginGadget(
+                    word, std::vector<QubitIdType>(wires, wires + num_wires),
+                    theta, verdict);
+            },
+        .end_gadget =
+            [](void *device) { static_cast<Self *>(device)->EndGadget(); },
+    };
+#endif
+}
+
+#ifdef LIGHTNING_CLIFFISH_DEVICE_EXTENSIONS
+auto LightningCliffishSimulator::QueryInterface(const char *name,
+                                                uint32_t min_version) -> const
+    void * {
+    if (min_version > 1) {
+        return nullptr;
+    }
+    const std::string_view table{name};
+    if (table == "Delegated") {
+        return &delegated_table;
+    }
+    if (table == "Gadget") {
+        return &gadget_table;
+    }
+    return nullptr;
+}
+#endif
+
+auto LightningCliffishSimulator::handle(ResultId result) -> Result {
+    bool &slot = handle_storage.emplace_back(false);
+    handle_results.emplace(&slot, result);
+    return &slot;
+}
+
+auto LightningCliffishSimulator::resultOf(Result handle) const -> ResultId {
+    const auto it = handle_results.find(handle);
+    RT_FAIL_IF(it == handle_results.end(),
+               "lightning.cliffish: unknown result handle on a delegated "
+               "program");
+    return it->second;
+}
+
+auto LightningCliffishSimulator::predicate() const -> ResultId {
+    return predicates.empty()
+               ? Pennylane::LightningCliffish::Program::result_true
+               : predicates.back();
+}
+
+auto LightningCliffishSimulator::measurement(Op op) -> Result {
+    if (core.isDelegated()) {
+        op.predicate = predicate();
+        return handle(core.measure(std::move(op)));
+    }
+    // Without delegated feed-forward, a measurement value is demanded now.
+    const bool outcome = core.value(core.measure(std::move(op)));
+    return outcome ? const_cast<Result>(&GLOBAL_RESULT_TRUE_CONST)
+                   : const_cast<Result>(&GLOBAL_RESULT_FALSE_CONST);
+}
+
+void LightningCliffishSimulator::BeginDelegatedProgram(
+    uint32_t postselect_mode) {
+    RT_FAIL_IF(postselect_mode != 0,
+               "lightning.cliffish supports only postselect_mode='fill-shots' "
+               "on a delegated program");
+    core.beginDelegated();
+    predicates.clear();
+}
+
+void LightningCliffishSimulator::PushPredicate(Result condition) {
+    ResultId conjunction = resultOf(condition);
+    if (!predicates.empty()) {
+        // a AND b is SELECT(a, b, false).
+        const ResultId never =
+            core.combine(Op{.kind = OpKind::ResultConstant, .params = {0.0}});
+        conjunction = core.combine(
+            Op{.kind = OpKind::ResultSelect,
+               .operands = {predicates.back(), conjunction, never}});
+    }
+    predicates.push_back(conjunction);
+}
+
+void LightningCliffishSimulator::PopPredicate() {
+    RT_FAIL_IF(predicates.empty(), "Predicate scopes are unbalanced");
+    predicates.pop_back();
+}
+
+auto LightningCliffishSimulator::ResultConstant(bool value) -> Result {
+    return handle(core.combine(
+        Op{.kind = OpKind::ResultConstant, .params = {value ? 1.0 : 0.0}}));
+}
+
+auto LightningCliffishSimulator::ResultXor(Result a, Result b) -> Result {
+    return handle(core.combine(
+        Op{.kind = OpKind::ResultXor, .operands = {resultOf(a), resultOf(b)}}));
+}
+
+auto LightningCliffishSimulator::ResultNot(Result a) -> Result {
+    return handle(
+        core.combine(Op{.kind = OpKind::ResultNot, .operands = {resultOf(a)}}));
+}
+
+auto LightningCliffishSimulator::ResultSelect(Result condition, Result if_true,
+                                              Result if_false) -> Result {
+    return handle(
+        core.combine(Op{.kind = OpKind::ResultSelect,
+                        .operands = {resultOf(condition), resultOf(if_true),
+                                     resultOf(if_false)}}));
+}
+
+void LightningCliffishSimulator::ReleaseResult(Result result) {
+    core.mark(
+        Op{.kind = OpKind::ResultRelease, .operands = {resultOf(result)}});
+    handle_results.erase(result);
+}
+
+auto LightningCliffishSimulator::SignedPauliMeasure(
+    const std::string &pauli_word, const std::vector<QubitIdType> &wires,
+    bool negated, std::optional<int32_t> postselect) -> Result {
+    Op op{.kind = OpKind::PauliMeasure,
+          .wires = toCore(wires),
+          .pauli_word = pauli_word,
+          .negated = negated};
+    if (postselect.has_value()) {
+        RT_FAIL_IF(*postselect != 0 && *postselect != 1,
+                   "Postselection must be 0 or 1");
+        op.postselect = *postselect == 1;
+    }
+    return measurement(std::move(op));
+}
+
+void LightningCliffishSimulator::BeginGadget(
+    const std::string &pauli_word, const std::vector<QubitIdType> &wires,
+    double theta, uint32_t verdict) {
+    // Only a delegated program sees a gadget whole; elsewhere the span runs as
+    // given.
+    if (core.isDelegated()) {
+        core.mark(Op{.kind = OpKind::GadgetBegin,
+                     .params = {theta, static_cast<double>(verdict)},
+                     .wires = toCore(wires),
+                     .pauli_word = pauli_word,
+                     .predicate = predicate()});
+    }
+}
+
+void LightningCliffishSimulator::EndGadget() {
+    if (core.isDelegated()) {
+        core.mark(Op{.kind = OpKind::GadgetEnd});
+    }
+}
 
 auto LightningCliffishSimulator::observable(ObsIdType key) const
     -> const CoreObservable & {
@@ -102,6 +316,12 @@ auto LightningCliffishSimulator::GetNumQubits() const -> std::size_t {
 
 void LightningCliffishSimulator::SetDeviceShots(std::size_t shots) {
     device_shots = shots;
+    // Catalyst sets the shots when it initializes the device, so a new
+    // execution starts here: it is not delegated until it says so.
+    core.endDelegated();
+    predicates.clear();
+    handle_storage.clear();
+    handle_results.clear();
 }
 
 auto LightningCliffishSimulator::GetDeviceShots() const -> std::size_t {
@@ -132,6 +352,7 @@ void LightningCliffishSimulator::NamedOperation(
         op.kind = OpKind::PauliRot;
         op.pauli_word = optional_params.front();
     }
+    op.predicate = predicate();
     core.append(std::move(op));
 }
 
@@ -305,21 +526,13 @@ auto LightningCliffishSimulator::Measure(QubitIdType wire,
                    "Postselection must be 0 or 1");
         op.postselect = *postselect == 1;
     }
-    // Without delegated feed-forward, a measurement value is demanded now.
-    const bool outcome = core.value(core.measure(std::move(op)));
-    return outcome ? const_cast<Result>(&GLOBAL_RESULT_TRUE_CONST)
-                   : const_cast<Result>(&GLOBAL_RESULT_FALSE_CONST);
+    return measurement(std::move(op));
 }
 
 auto LightningCliffishSimulator::PauliMeasure(
     const std::string &pauli_word, const std::vector<QubitIdType> &wires)
     -> Result {
-    const bool outcome =
-        core.value(core.measure(Op{.kind = OpKind::PauliMeasure,
-                                   .wires = toCore(wires),
-                                   .pauli_word = pauli_word}));
-    return outcome ? const_cast<Result>(&GLOBAL_RESULT_TRUE_CONST)
-                   : const_cast<Result>(&GLOBAL_RESULT_FALSE_CONST);
+    return SignedPauliMeasure(pauli_word, wires, false, std::nullopt);
 }
 
 } // namespace Catalyst::Runtime::Simulator
