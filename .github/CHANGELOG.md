@@ -27,7 +27,7 @@
 
 - The `lightning.tensor` device and its MPS and exact tensor-network backends have been removed,
   along with the `tensor` installation extra and support for building `pennylane-lightning-tensor`.
-  [(#XXXX)](https://github.com/PennyLaneAI/pennylane-lightning/pull/XXXX)
+  [(#1444)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1444)
 
 - Python 3.11 is no longer supported. The minimum required Python version is now 3.12.
   [(#1395)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1395)
