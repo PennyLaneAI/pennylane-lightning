@@ -137,7 +137,7 @@ class TestBasisEmbedding:
         dq = qp.device("default.qubit")
 
         def circuit(feature_vector):
-            qp.BasisEmbedding(features=feature_vector, wires=range(n_qubits))
+            qp.BasisEmbedding(feature_vector, wires=range(n_qubits))
             return qp.state()
 
         X = np.ones(n_qubits)
@@ -663,8 +663,7 @@ class TestQuantumPhaseEstimation:
     @pytest.mark.parametrize("n_qubits", range(2, 12, 2))
     def test_quantumphaseestimation(self, n_qubits):
         phase = 5
-        target_wires = [0]
-        unitary = qp.RX(phase, wires=0).matrix()
+        unitary = qp.RX(phase, wires=0)
         n_estimation_wires = n_qubits - 1
         estimation_wires = range(1, n_estimation_wires + 1)
 
@@ -673,11 +672,10 @@ class TestQuantumPhaseEstimation:
 
         def circuit():
             # Start in the |+> eigenstate of the unitary
-            qp.Hadamard(wires=target_wires)
+            qp.Hadamard(wires=0)
 
             qp.QuantumPhaseEstimation(
                 unitary,
-                target_wires=target_wires,
                 estimation_wires=estimation_wires,
             )
 

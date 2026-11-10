@@ -15,7 +15,9 @@ permissions:
 jobs:
   update-dev-version:
     name: Update version for development branches
-    runs-on: ubuntu-24.04
+    runs-on:  
+      group: 'PennyLaneAI-Static-IP-Runners'
+      labels: ['pl-2-core-gh-runner']   
     steps:
 
       - name: Checkout PennyLane-Lightning main
@@ -39,9 +41,6 @@ jobs:
         name: Install Python
         with:
           python-version: '3.12'
-
-      - name: Install Python Dependencies
-        run: pip install semver
 
       - name: Capture Current Version in Pull Request
         id: old_version

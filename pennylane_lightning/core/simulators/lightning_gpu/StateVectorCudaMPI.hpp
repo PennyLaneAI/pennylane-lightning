@@ -409,14 +409,22 @@ class StateVectorCudaMPI final
         } else if (par_gates_.find(opName) != par_gates_.end()) {
             par_gates_.at(opName)(wires, adjoint, params);
         } else { // No offloadable function call; defer to matrix passing
+            // A caller-supplied matrix is authoritative: apply it directly.
+            // The gate cache is keyed on (opName, params[0]), which is not
+            // unique for ops sent without parameters (e.g. QubitUnitary from
+            // the adjoint-Jacobian serializer, Adjoint(...) wrappers, or
+            // Catalyst's controlled "matrix" ops all map to (opName, 0.0)),
+            // so reading or filling the cache here could apply another op's
+            // matrix.
+            if (!gate_matrix.empty()) {
+                applyDeviceMatrixGate(gate_matrix.data(), ctrls, tgts, adjoint);
+                return;
+            }
             auto &&par =
                 (params.empty()) ? std::vector<Precision>{0.0} : params;
-            if (!gate_cache_.gateExists(opName, par[0]) &&
-                gate_matrix.empty()) {
+            if (!gate_cache_.gateExists(opName, par[0])) {
                 std::string message = "Currently unsupported gate: " + opName;
                 throw LightningException(message);
-            } else if (!gate_cache_.gateExists(opName, par[0])) {
-                gate_cache_.add_gate(opName, par[0], gate_matrix);
             }
             applyDeviceMatrixGate(
                 gate_cache_.get_gate_device_ptr(opName, par[0]), ctrls, tgts,

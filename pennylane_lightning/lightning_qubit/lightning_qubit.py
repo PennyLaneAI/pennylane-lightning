@@ -84,7 +84,7 @@ def stopping_condition(op: Operator, allow_mcms=True) -> bool:
     if isinstance(op, qp.ControlledQubitUnitary):
         return True
     if isinstance(op, qp.PauliRot):
-        word = op._hyperparameters["pauli_word"]  # pylint: disable=protected-access
+        word = op.pauli_word
         # decomposes to IsingXX, etc. for n <= 2
         return reduce(lambda x, y: x + (y != "I"), word, 0) > 2
     if isinstance(op, MidMeasure):
@@ -343,7 +343,11 @@ class LightningQubit(LightningBase):
         pipeline.add_transform(qp.transforms.broadcast_expand)
 
         if exec_config.gradient_method == "adjoint":
-            pipeline += adjoint_transforms(self, allow_mcms)
+            # Decompose to the device gate set, so that e.g. the n-wire ``Prod`` basis changes
+            # from the ``PauliRot`` decomposition are not applied as dense 2^n x 2^n matrices.
+            pipeline += adjoint_transforms(
+                self, allow_mcms, device_stopping_condition=_stopping_condition
+            )
 
         return pipeline
 

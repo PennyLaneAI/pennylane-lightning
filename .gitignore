@@ -18,7 +18,6 @@ build_lightning_*/
 build/
 Build/
 BuildCov/
-BuildGBench/
 BuildTests/
 BuildTidy/
 coverage_html_report/

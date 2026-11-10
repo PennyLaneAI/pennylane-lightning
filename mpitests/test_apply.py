@@ -71,7 +71,11 @@ def apply_operation_gates_qnode_param(tol, dev_mpi, operation, par, wires, seed=
 
     def circuit(*params):
         qp.StatePrep(state_vector, wires=range(num_wires))
-        operation(*params, wires=wires)
+        if wires is not None:
+            operation(*params, wires=wires)
+        else:
+            # NOTE: GlobalPhase doesn't operate on wires
+            operation(*params)
         return qp.state()
 
     cpu_qnode = qp.QNode(circuit, dev_cpu)
@@ -242,7 +246,7 @@ class TestApply:  # pylint: disable=missing-function-docstring,too-many-argument
     @pytest.mark.parametrize("par", [[0.13], [0.2], [0.3]])
     def test_apply_global_phase(self, tol, operation, par, dev_mpi, seed):
         """Test applying the GlobalPhase operation."""
-        wires = range(numQubits)
+        wires = None
 
         apply_operation_gates_qnode_param(tol, dev_mpi, operation, par, wires, seed)
 

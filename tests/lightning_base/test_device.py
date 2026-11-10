@@ -692,8 +692,10 @@ class TestExecution:
         prog = LightningDevice(wires=2).preprocess_transforms(config)
         [new_tape], _ = prog((tape,))
 
+        # qp.ctrl gives CNOT and CY in older PennyLane versions, and Controlled ops in newer ones.
         expected = qp.tape.QuantumScript(
-            [qp.CNOT((0, 1)), qp.CNOT((1, 0)), qp.CY((1, 0))], [qp.probs(wires=0)]
+            [qp.CNOT((0, 1)), qp.ctrl(qp.PauliX(0), 1), qp.ctrl(qp.PauliY(0), 1)],
+            [qp.probs(wires=0)],
         )
         qp.assert_equal(new_tape, expected)
 
