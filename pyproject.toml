@@ -67,7 +67,7 @@ tests = [
     "pytest-xdist>=2.5.0",
     "pytest-split",
     "flaky>=3.7.0", # For pl-device-test
-    "pennylane @ git+https://github.com/PennyLaneAI/pennylane.git@main"
+    "pennylane @ git+https://github.com/PennyLaneAI/pennylane.git@3680de4f8f40c98d1d54762e8a2805596a9c0a92"
 ]
 base = [
     "ninja",
