@@ -38,7 +38,6 @@ dev = [
     "cmake",
     "tomlkit",
     "custatevec-cu12; sys_platform == 'linux'",
-    "cutensornet-cu12; sys_platform == 'linux'",
     "pennylane @ git+https://github.com/PennyLaneAI/pennylane.git@main",
     "pytest>=8.4.1",
     "pytest-benchmark",
@@ -90,7 +89,6 @@ docs = [
     "wheel",
     "tomlkit",
     "custatevec-cu12; sys_platform == 'linux'",
-    "cutensornet-cu12; sys_platform == 'linux'",
     "pennylane @ git+https://github.com/PennyLaneAI/pennylane.git@main",
     "breathe",
     "docutils==0.21.2",
@@ -113,7 +111,6 @@ docs = [
 kokkos = [ "pennylane-lightning-kokkos",]
 amdgpu = [ "pennylane-lightning-amdgpu",]
 gpu = [ "pennylane-lightning-gpu",]
-tensor = [ "pennylane-lightning-tensor",]
 
 [project.urls]
 Homepage = "https://github.com/PennyLaneAI/pennylane-lightning"

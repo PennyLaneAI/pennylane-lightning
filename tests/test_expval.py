@@ -22,7 +22,7 @@ import pennylane as qp
 import pytest
 from conftest import PHI, THETA, VARPHI
 from conftest import LightningDevice as ld
-from conftest import device_name, get_random_matrix, get_random_normalized_state
+from conftest import get_random_matrix, get_random_normalized_state
 
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
@@ -97,10 +97,6 @@ class TestExpval:
         ) / np.sqrt(2)
         assert np.allclose(res, expected, tol)
 
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor does not support qp.Projector()",
-    )
     def test_projector_expectation(self, theta, phi, qubit_device, tol):
         """Test that Projector variance value is correct"""
         n_qubits = 2
@@ -153,30 +149,14 @@ class TestExpval:
 
             circ = qp.QNode(circuit, dev)
             circ_def = qp.QNode(circuit, dev_def)
-            if device_name == "lightning.tensor":
-                if n_wires > 1:
-                    with pytest.raises(
-                        ValueError,
-                        match="The number of Hermitian observables target wires should be 1.",
-                    ):
-                        assert np.allclose(circ(), circ_def(), tol)
-                else:
-                    np.allclose(circ(), circ_def(), rtol=1e-6)
-            else:
-                assert np.allclose(circ(), circ_def(), tol)
+            assert np.allclose(circ(), circ_def(), tol)
 
 
 @pytest.mark.parametrize(
     "diff_method",
     [
         "parameter-shift",
-        pytest.param(
-            "adjoint",
-            marks=pytest.mark.skipif(
-                device_name == "lightning.tensor",
-                reason="lightning.tensor does not support the adjoint method",
-            ),
-        ),
+        "adjoint",
     ],
 )
 class TestExpOperatorArithmetic:

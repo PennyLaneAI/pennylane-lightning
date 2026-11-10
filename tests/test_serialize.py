@@ -55,11 +55,6 @@ elif device_name == "lightning.gpu":
         TensorProdObsC64,
         TensorProdObsC128,
     )
-elif device_name == "lightning.tensor":
-    pytest.skip(
-        "Lightning Tensor serialization is tested separately in tests/lightning_tensor/test_serialize_tensor.py",
-        allow_module_level=True,
-    )
 else:
     from pennylane_lightning.lightning_qubit_ops.observables import (
         HamiltonianC64,
@@ -75,11 +70,12 @@ else:
     )
 
 
-def test_wrong_device_name():
+@pytest.mark.parametrize("invalid_device", ["thunder.qubit", "lightning.tensor"])
+def test_wrong_device_name(invalid_device):
     """Test the device name is not a valid option"""
 
     with pytest.raises(DeviceError, match="The device name"):
-        QuantumScriptSerializer("thunder.qubit")
+        QuantumScriptSerializer(invalid_device)
 
 
 @pytest.mark.parametrize("dtype", ["64", "128"])
