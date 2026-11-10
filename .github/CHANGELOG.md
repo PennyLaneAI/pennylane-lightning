@@ -39,7 +39,7 @@
   `"measured"` fails, `"source"` applies the source rotation and records the substitution, and
   `"off"` runs gadgets as given. A program left with conditional operations after collapse fails
   loudly, since branch-and-merge is not built yet.
-  [(#XXXX)](https://github.com/PennyLaneAI/pennylane-lightning/pull/XXXX)
+  [(#1445)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1445)
 
 <h3>Improvements 🛠</h3>
 
