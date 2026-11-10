@@ -21,14 +21,22 @@
 #include <complex>
 #include <cstddef>
 #include <cstdint>
+#include <deque>
 #include <optional>
 #include <random>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "Core.hpp"
 #include "Observables.hpp"
 #include "QuantumDevice.hpp"
+
+// Catalyst releases from device ABI 1 carry the extension tables.
+#if __has_include("DeviceExtensions.h")
+#include "DeviceExtensions.h"
+#define LIGHTNING_CLIFFISH_DEVICE_EXTENSIONS 1
+#endif
 
 namespace Catalyst::Runtime::Simulator {
 /**
@@ -62,6 +70,28 @@ class LightningCliffishSimulator final
     [[nodiscard]] auto observable(ObsIdType key) const
         -> const CoreObservable &;
 
+    using ResultId = Pennylane::LightningCliffish::Program::ResultId;
+
+    /// Delegated feed-forward: the predicate of each open scope, each the
+    /// conjunction of all scopes up to it.
+    std::vector<ResultId> predicates{};
+    /// One stable address per result handed out as a handle.
+    std::deque<bool> handle_storage{};
+    std::unordered_map<const bool *, ResultId> handle_results{};
+
+    /// The handle for `result`. Its bit is unspecified.
+    auto handle(ResultId result) -> Result;
+    [[nodiscard]] auto resultOf(Result handle) const -> ResultId;
+    /// The predicate new ops carry.
+    [[nodiscard]] auto predicate() const -> ResultId;
+    /// A measurement: a handle on a delegated program, else a value now.
+    auto measurement(Pennylane::LightningCliffish::Program::Op op) -> Result;
+
+#ifdef LIGHTNING_CLIFFISH_DEVICE_EXTENSIONS
+    CatalystDelegatedTable delegated_table{};
+    CatalystGadgetTable gadget_table{};
+#endif
+
     void sampleInto(DataView<double, 2> &samples,
                     const std::vector<QubitIdType> &wires);
     void countsInto(DataView<double, 1> &eigvals, DataView<int64_t, 1> &counts,
@@ -72,7 +102,8 @@ class LightningCliffishSimulator final
   public:
     /**
      * @param kwargs The device's keyword arguments: max_dense_qubits,
-     * recompression ("auto", "none", "t1" or "t2") and dense_checks.
+     * recompression ("auto", "none", "t1" or "t2"), dense_checks and
+     * gadget_collapse ("measured", "source" or "off").
      */
     explicit LightningCliffishSimulator(const std::string &kwargs = "{}");
     ~LightningCliffishSimulator() noexcept = default;
@@ -128,6 +159,36 @@ class LightningCliffishSimulator final
         -> Result override;
     auto PauliMeasure(const std::string &pauli_word,
                       const std::vector<QubitIdType> &wires) -> Result override;
+
+    // Delegated feed-forward and gadget brackets, behind the "Delegated" and
+    // "Gadget" extension tables.
+    void BeginDelegatedProgram(uint32_t postselect_mode);
+    void PushPredicate(Result condition);
+    void PopPredicate();
+    auto ResultConstant(bool value) -> Result;
+    auto ResultXor(Result a, Result b) -> Result;
+    auto ResultNot(Result a) -> Result;
+    auto ResultSelect(Result condition, Result if_true, Result if_false)
+        -> Result;
+    void ReleaseResult(Result result);
+    auto SignedPauliMeasure(const std::string &pauli_word,
+                            const std::vector<QubitIdType> &wires, bool negated,
+                            std::optional<int32_t> postselect) -> Result;
+    void BeginGadget(const std::string &pauli_word,
+                     const std::vector<QubitIdType> &wires, double theta,
+                     uint32_t verdict);
+    void EndGadget();
+
+    /// What gadget collapse did on this device so far.
+    [[nodiscard]] auto gadgetReport() const
+        -> const Pennylane::LightningCliffish::Planner::GadgetReport & {
+        return core.gadgetReport();
+    }
+
+#ifdef LIGHTNING_CLIFFISH_DEVICE_EXTENSIONS
+    auto QueryInterface(const char *name, uint32_t min_version) -> const
+        void * override;
+#endif
 };
 
 } // namespace Catalyst::Runtime::Simulator

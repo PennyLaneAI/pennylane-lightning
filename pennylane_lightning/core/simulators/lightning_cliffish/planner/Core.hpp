@@ -31,6 +31,7 @@
 
 #include "AffineSubspace.hpp"
 #include "Error.hpp"
+#include "GadgetCollapse.hpp"
 #include "HybridMethod.hpp"
 #include "Observables.hpp"
 #include "OutcomeDistribution.hpp"
@@ -51,6 +52,9 @@ class Core {
     Program::Program program_{};
     Planner::HybridMethod method_{};
     Planner::Results results_{};
+    /// Whether the program hands its feed-forward to the device as data.
+    bool delegated_{false};
+    Planner::GadgetCollapser collapser_{};
     std::mt19937 default_gen_{std::random_device{}()};
     /// The device's generator, or null to use default_gen_.
     std::mt19937 *gen_{nullptr};
@@ -98,6 +102,52 @@ class Core {
         return (2.0 * static_cast<double>(plus) - num_shots) / num_shots;
     }
 
+    /**
+     * @brief The device passes on a delegated window, before it is planned:
+     * gadget collapse, then a check that nothing conditional is left.
+     */
+    auto delegatedWindow(std::vector<Program::Op> window)
+        -> std::vector<Program::Op> {
+        using Program::OpKind;
+        window = collapser_.run(std::move(window));
+        std::vector<Program::Op> planned;
+        planned.reserve(window.size());
+        for (auto &op : window) {
+            switch (op.kind) {
+            case OpKind::ResultConstant:
+            case OpKind::ResultXor:
+            case OpKind::ResultNot:
+            case OpKind::ResultSelect:
+            case OpKind::ResultRelease:
+                // With nothing conditional left, no op reads them.
+                continue;
+            case OpKind::Measure:
+            case OpKind::PauliMeasure: {
+                std::string reason =
+                    "a mid-circuit measurement outside a collapsed gadget";
+                if (!collapser_.report().uncollapsed.empty()) {
+                    reason +=
+                        " (" + collapser_.report().uncollapsed.back() + ")";
+                }
+                PL_ABORT("lightning.cliffish cannot run this delegated program "
+                         "yet: it has " +
+                         reason +
+                         ", which needs branch-and-merge. Run it with "
+                         "mcm_method='one-shot' instead.");
+            }
+            default:
+                PL_ABORT_IF(
+                    op.predicate != Program::result_true,
+                    "lightning.cliffish cannot run this delegated "
+                    "program yet: it has a conditional operation outside "
+                    "a collapsed gadget, which needs branch-and-merge. "
+                    "Run it with mcm_method='one-shot' instead.");
+                planned.push_back(std::move(op));
+            }
+        }
+        return planned;
+    }
+
     /// Flush, and run the check that precedes an output.
     void flushForOutput() {
         flush();
@@ -107,7 +157,10 @@ class Core {
   public:
     Core() = default;
 
-    explicit Core(Planner::HybridOptions options) : method_{options} {}
+    explicit Core(
+        Planner::HybridOptions options,
+        Planner::GadgetCollapse collapse = Planner::GadgetCollapse::Measured)
+        : method_{options}, collapser_{collapse} {}
 
     explicit Core(Planner::HybridMethod method) : method_{std::move(method)} {}
 
@@ -115,6 +168,30 @@ class Core {
     [[nodiscard]] auto report() const -> Planner::HybridReport {
         return method_.report();
     }
+
+    /// What gadget collapse did so far.
+    [[nodiscard]] auto gadgetReport() const -> const Planner::GadgetReport & {
+        return collapser_.report();
+    }
+
+    /**
+     * @brief Start a delegated program: measurement values are no longer
+     * demanded, conditions arrive as results, and gadgets collapse.
+     */
+    void beginDelegated() { delegated_ = true; }
+
+    /// End the delegated program, if one is running.
+    void endDelegated() { delegated_ = false; }
+
+    [[nodiscard]] auto isDelegated() const -> bool { return delegated_; }
+
+    /// Append an op that combines results; returns the result it defines.
+    auto combine(Program::Op op) -> Program::ResultId {
+        return program_.appendResultOp(std::move(op));
+    }
+
+    /// Append a result release or a gadget bracket.
+    void mark(Program::Op op) { program_.appendMarker(std::move(op)); }
 
     /**
      * @brief Draw measurement outcomes from `gen`, or from the core's own
@@ -142,7 +219,11 @@ class Core {
      * @brief Simulate every op received so far.
      */
     void flush() {
-        const auto plan = method_.lower(program_.takeWindow());
+        auto window = program_.takeWindow();
+        if (delegated_) {
+            window = delegatedWindow(std::move(window));
+        }
+        const auto plan = method_.lower(window);
         method_.run(plan, generator(), results_);
     }
 

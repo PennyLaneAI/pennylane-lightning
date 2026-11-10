@@ -32,6 +32,15 @@
   `max_dense_qubits` fails with an error that says how to run it instead.
   [(#1439)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1439)
 
+  `lightning.cliffish` now runs PBC programs compiled with `ppm_compilation` or `ppr_to_ppm` at
+  10⁶ shots, with `mcm_method="device"`. Catalyst hands the program's feed-forward to the device
+  as data, and the device applies each gadget that its own check finds exact as one rotation. The
+  device option `gadget_collapse` chooses what happens when a gadget is not its source rotation:
+  `"measured"` fails, `"source"` applies the source rotation and records the substitution, and
+  `"off"` runs gadgets as given. A program left with conditional operations after collapse fails
+  loudly, since branch-and-merge is not built yet.
+  [(#1445)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1445)
+
 <h3>Improvements 🛠</h3>
 
 - Updated the Lightning performance kernel tuning document.

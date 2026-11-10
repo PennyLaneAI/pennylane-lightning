@@ -34,6 +34,18 @@ if device_name != "lightning.cliffish":
 
 requires_catalyst = pytest.mark.skipif(find_spec("catalyst") is None, reason="needs Catalyst")
 
+
+try:
+    import catalyst.passes as catalyst_passes
+except ImportError:
+    catalyst_passes = None
+
+# Catalyst releases with delegated feed-forward also have the gadget check.
+requires_delegation = pytest.mark.skipif(
+    not hasattr(catalyst_passes, "verify_pbc_gadgets"),
+    reason="needs Catalyst with delegated feed-forward",
+)
+
 # Clifford gates for random circuits, with their number of wires.
 CLIFFORD_GATES: list[tuple[Callable, int]] = [
     (qp.Hadamard, 1),
@@ -203,7 +215,7 @@ def test_capabilities():
     assert "Toffoli" not in capabilities.operations
     assert "Hermitian" not in capabilities.observables
     assert "StateMP" not in capabilities.measurement_processes
-    assert capabilities.supported_mcm_methods == ["one-shot"]
+    assert capabilities.supported_mcm_methods == ["device", "one-shot"]
 
 
 @requires_catalyst
@@ -409,12 +421,21 @@ def test_seeded_runs_are_reproducible():
 
 def test_device_kwargs():
     """Test that the device passes its options to the runtime and checks them."""
-    device = LightningDevice(wires=2, max_dense_qubits=10, recompression="t1", dense_checks=False)
+    device = LightningDevice(
+        wires=2,
+        max_dense_qubits=10,
+        recompression="t1",
+        dense_checks=False,
+        gadget_collapse="source",
+    )
     assert device.device_kwargs == {
         "max_dense_qubits": 10,
         "recompression": "t1",
         "dense_checks": False,
+        "gadget_collapse": "source",
     }
+    with pytest.raises(ValueError, match="gadget_collapse must be one of"):
+        LightningDevice(wires=2, gadget_collapse="maybe")
     with pytest.raises(ValueError, match="recompression must be one of"):
         LightningDevice(wires=2, recompression="eager")
     with pytest.raises(ValueError, match="max_dense_qubits must be in"):
@@ -641,3 +662,101 @@ def test_hermitian_observable_is_rejected():
     # Catalyst rejects it while tracing, before the device runs.
     with pytest.raises(Exception):
         circuit()
+
+
+# The Clifford gates Catalyst's to-ppr converts: it has no SWAP or ISWAP.
+PBC_CLIFFORD_GATES = [(gate, n) for gate, n in CLIFFORD_GATES if gate not in (qp.SWAP, qp.ISWAP)]
+
+
+def pbc_program(
+    circuit, measurement, *, decompose_method="pauli-corrected", shots=None, **device_options
+):
+    """The circuit compiled to Pauli product measurements, run with its feed-forward
+    delegated to lightning.cliffish."""
+    device = LightningDevice(wires=len(measurement.wires), **device_options)
+
+    @qp.qjit(capture=True)
+    @catalyst_passes.ppm_compilation(decompose_method=decompose_method, emit_gadgets=True)
+    @qp.qnode(device, shots=shots, mcm_method="device")
+    def program():
+        apply_clifford_t_circuit(circuit)
+        return qp.apply(measurement)
+
+    return program
+
+
+@requires_delegation
+@pytest.mark.parametrize("num_wires", [2, 3, 4])
+@pytest.mark.parametrize("seed", [0, 1, 2])
+def test_pbc_programs_match_default_qubit(num_wires: int, seed: int):
+    """Test that a Clifford+T circuit compiled to PPMs, with its gadgets collapsed by the
+    device, gives the probabilities of the gate-level circuit on default.qubit."""
+    rng = np.random.default_rng(seed)
+    circuit = []
+    for _ in range(24):
+        if rng.random() < 0.25:
+            gate = qp.T if rng.random() < 0.5 else lambda wires: qp.adjoint(qp.T(wires))
+            circuit.append((gate, [int(rng.integers(num_wires))], []))
+            continue
+        gate, num_gate_wires = PBC_CLIFFORD_GATES[int(rng.integers(len(PBC_CLIFFORD_GATES)))]
+        wires = [int(w) for w in rng.choice(num_wires, size=num_gate_wires, replace=False)]
+        circuit.append((gate, wires, []))
+
+    @qp.qnode(qp.device("default.qubit", wires=num_wires))
+    def reference():
+        apply_clifford_t_circuit(circuit)
+        return qp.probs(wires=range(num_wires))
+
+    program = pbc_program(circuit, qp.probs(wires=range(num_wires)))
+    assert np.allclose(program(), reference(), atol=1e-12)
+
+
+@requires_delegation
+@pytest.mark.parametrize("method", ["auto-corrected", "clifford-corrected"])
+def test_pbc_gadget_bugs_are_refused_or_reported(method: str):
+    """Test that the device refuses Catalyst's known wrong pi/8 gadgets by default, and with
+    gadget_collapse="source" applies the source rotations instead."""
+    circuit = [(qp.Hadamard, [0], []), (lambda wires: qp.adjoint(qp.T(wires)), [0], [])]
+    circuit += [(qp.CNOT, [0, 1], []), (qp.T, [1], []), (qp.Hadamard, [1], [])]
+
+    @qp.qnode(qp.device("default.qubit", wires=2))
+    def reference():
+        apply_clifford_t_circuit(circuit)
+        return qp.probs(wires=[0, 1])
+
+    measured = pbc_program(circuit, qp.probs(wires=[0, 1]), decompose_method=method)
+    with pytest.raises(RuntimeError, match="branch-and-merge|different rotation"):
+        measured()
+
+    source = pbc_program(
+        circuit, qp.probs(wires=[0, 1]), decompose_method=method, gadget_collapse="source"
+    )
+    assert np.allclose(source(), reference(), atol=1e-12)
+
+
+@requires_delegation
+def test_pbc_without_collapse_fails_loudly():
+    """Test that gadgets that do not collapse fail with a message saying how to run the
+    program instead, since the device has no branch-and-merge yet."""
+    circuit = [(qp.Hadamard, [0], []), (qp.T, [0], [])]
+    program = pbc_program(circuit, qp.probs(wires=[0]), gadget_collapse="off")
+    with pytest.raises(RuntimeError, match="mcm_method='one-shot'"):
+        program()
+
+
+@requires_delegation
+def test_pbc_samples_at_many_shots():
+    """Test the statistics of a wide PPM-compiled program at 10^5 shots: a GHZ state with a T
+    on every qubit, undone, so that P(q0 = 1) = sin^2(n pi / 8)."""
+    num_wires = 51
+    circuit = [(qp.Hadamard, [0], [])]
+    circuit += [(qp.CNOT, [i, i + 1], []) for i in range(num_wires - 1)]
+    circuit += [(qp.T, [i], []) for i in range(num_wires)]
+    circuit += [(qp.CNOT, [i, i + 1], []) for i in reversed(range(num_wires - 1))]
+    circuit += [(qp.Hadamard, [0], [])]
+    shots = 100_000
+    program = pbc_program(circuit, qp.sample(wires=range(num_wires)), shots=shots)
+    samples = program()
+    exact = np.sin(num_wires * np.pi / 8) ** 2
+    assert samples.shape == (shots, num_wires)
+    assert abs(samples[:, 0].mean() - exact) < 5 * np.sqrt(exact * (1 - exact) / shots)

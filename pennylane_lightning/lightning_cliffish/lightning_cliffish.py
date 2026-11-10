@@ -46,11 +46,17 @@ class LightningCliffish(Device):
             ``"none"``, ``"t1"``, ``"t2"``, or ``"auto"`` to choose by a dry run.
         dense_checks (bool): whether to look for stabilizers of the register during
             the run and before each output, and fold them back into the tableau.
+        gadget_collapse (str): what to do with a compiler-bracketed gadget on a program
+            run with ``mcm_method="device"``. ``"measured"`` applies the rotation the
+            device's own check finds, and fails if it is not the gadget's source
+            rotation; ``"source"`` applies the source rotation and records every
+            substitution; ``"off"`` runs gadgets as given.
     """
 
     config_filepath = Path(__file__).parent / "lightning_cliffish.toml"
 
     _RECOMPRESSION = ("auto", "none", "t1", "t2")
+    _GADGET_COLLAPSE = ("measured", "source", "off")
 
     def __init__(
         self,
@@ -59,7 +65,13 @@ class LightningCliffish(Device):
         max_dense_qubits: int = 24,
         recompression: str = "auto",
         dense_checks: bool = True,
+        gadget_collapse: str = "measured",
     ):
+        if gadget_collapse not in self._GADGET_COLLAPSE:
+            raise ValueError(
+                f"gadget_collapse must be one of {self._GADGET_COLLAPSE}, "
+                f"not {gadget_collapse!r}"
+            )
         if recompression not in self._RECOMPRESSION:
             raise ValueError(
                 f"recompression must be one of {self._RECOMPRESSION}, not {recompression!r}"
@@ -71,6 +83,7 @@ class LightningCliffish(Device):
             "max_dense_qubits": int(max_dense_qubits),
             "recompression": recompression,
             "dense_checks": bool(dense_checks),
+            "gadget_collapse": gadget_collapse,
         }
 
     @property
