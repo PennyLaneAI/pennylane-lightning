@@ -21,8 +21,8 @@ To build Lightning-Qubit from the `sdist` release you can run
     PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
     python -m pip install --verbose pennylane-lightning --no-binary "pennylane_lightning"
 
-where ``${PL_BACKEND}`` can be ``lightning_qubit`` (default), ``lightning_gpu``,  ``lightning_kokkos``, or ``lightning_tensor``.
-If installing Lightning-GPU, Lightning-Tensor, or Lightning-Kokkos, additional dependencies may be required. We recommend referring to the respective guides for `Lightning-GPU installation <https://docs.pennylane.ai/projects/lightning/en/stable/lightning_gpu/installation.html>`_, `Lightning-Tensor installation <https://docs.pennylane.ai/projects/lightning/en/stable/lightning_tensor/installation.html>`_, and `Lightning-Kokkos installation <https://docs.pennylane.ai/projects/lightning/en/stable/lightning_kokkos/installation.html>`_.
+where ``${PL_BACKEND}`` can be ``lightning_qubit`` (default), ``lightning_gpu``, or ``lightning_kokkos``.
+If installing Lightning-GPU or Lightning-Kokkos, additional dependencies may be required. We recommend referring to the respective guides for `Lightning-GPU installation <https://docs.pennylane.ai/projects/lightning/en/stable/lightning_gpu/installation.html>`_ and `Lightning-Kokkos installation <https://docs.pennylane.ai/projects/lightning/en/stable/lightning_kokkos/installation.html>`_.
 
 A C++ compiler such as ``g++``, ``clang++``, or ``MSVC`` supporting C++20 is required.
 On Debian-based systems, this can be installed via ``apt``:
@@ -112,7 +112,6 @@ where ``${PL.DEVICE}`` differs from ``${PL_BACKEND}`` by replacing the underscor
 - ``lightning.qubit`` (default)
 - ``lightning.gpu``
 - ``lightning.kokkos``
-- ``lightning.tensor``
 
 C++ Test
 ^^^^^^^^
