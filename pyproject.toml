@@ -48,7 +48,7 @@ dev = [
     "pytest-split",
     "flaky>=3.7.0", # For pl-device-test
     "pre-commit>=2.19.0",
-    "black==26.3.1",
+    "black==26.10.1",
     "clang-tidy~=20.1",
     "clang-format~=20.1",
     "isort~=7.0.0",
@@ -78,7 +78,7 @@ base = [
     "pytest-xdist>=2.5.0",
     "flaky>=3.7.0", # For pl-device-test
     "pennylane>=0.45",
-    "black==26.3.1",
+    "black==26.10.1",
     "clang-tidy~=20.1",
     "clang-format~=20.1",
     "isort~=7.0.0",
