@@ -22,8 +22,7 @@ import numpy as np
 import pennylane as qp
 from numpy.random import Generator
 from pennylane import BasisState, StatePrep
-from pennylane.measurements import MidMeasureMP
-from pennylane.ops import Controlled
+from pennylane.ops import Controlled, MidMeasure
 from pennylane.tape import QuantumScript
 from pennylane.wires import Wires
 
@@ -163,11 +162,11 @@ class LightningBaseStateVector(ABC):
     def _apply_lightning_midmeasure(
         self,
         measure_final_state: callable,
-        operation: MidMeasureMP,
+        operation: MidMeasure,
         mid_measurements: dict,
         postselect_mode: str,
     ):
-        """Execute a MidMeasureMP operation and return the sample in mid_measurements.
+        """Execute a MidMeasure operation and return the sample in mid_measurements.
 
         Args:
             operation (~pennylane.operation.Operation): mid-circuit measurement
