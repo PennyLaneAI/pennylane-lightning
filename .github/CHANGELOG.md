@@ -103,6 +103,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Updated `pylint` to version 4.1.3 in the `dev` and `base` dependency groups.
+  [(#1443)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1443)
+
 - A deferred-measurement test now builds its expected controlled ops with `qp.ctrl`, so it passes
   whether or not `qp.ctrl` dispatches to `CNOT` and `CY`, which PennyLane no longer does.
   [(#1435)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1435)
@@ -161,6 +164,7 @@ This release contains contributions from (in alphabetical order):
 
 Runor Agbaire,
 Ali Asadi,
+Astral Cai,
 Yushao Chen,
 Marcus Edwards,
 David Ittah,
