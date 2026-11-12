@@ -112,20 +112,6 @@ def enable_disable_plxpr():
     qp.capture.disable()
 
 
-@pytest.fixture(params=[False, True], ids=["graph_disabled", "graph_enabled"])
-def enable_and_disable_graph_decomp(request):
-    """
-    A fixture that parametrizes a test to run twice: once with graph
-    decomposition disabled and once with it enabled.
-
-    It automatically handles the setup (enabling/disabling) before the
-    test runs and the teardown (always disabling) after the test completes.
-    """
-    use_graph_decomp = request.param
-    with qp.decomposition.toggle_graph_ctx(use_graph_decomp):
-        yield
-
-
 class TestHelpers:
     """Unit tests for helper functions"""
 
@@ -793,7 +779,6 @@ class TestExecution:
         processed = device.setup_execution_config(config)
         assert processed.mcm_config.mcm_method == "deferred"
 
-    @pytest.mark.usefixtures("enable_and_disable_graph_decomp")
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
         reason="lightning.tensor device doesn't have support for program capture.",
@@ -824,7 +809,6 @@ class TestExecution:
         # pylint: disable=protected-access
         assert program[0].tape_transform == qp.transforms.decompose._tape_transform
 
-    @pytest.mark.usefixtures("enable_and_disable_graph_decomp")
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
         reason="lightning.tensor does not support adjoint",
@@ -902,7 +886,6 @@ class TestExecution:
         for transform, expected_transform in zip(actual_program, expected_program, strict=True):
             assert transform.tape_transform == expected_transform.tape_transform
 
-    @pytest.mark.usefixtures("enable_and_disable_graph_decomp")
     @pytest.mark.parametrize(
         "op, is_trainable",
         (
@@ -940,7 +923,6 @@ class TestExecution:
         expected_tape = qp.tape.QuantumScript([*decomp, qp.RX(1.23, wires=0)], tape.measurements)
         assert qp.equal(new_tape, expected_tape)
 
-    @pytest.mark.usefixtures("enable_and_disable_graph_decomp")
     @pytest.mark.parametrize(
         "op, decomp_depth",
         [
@@ -1442,7 +1424,6 @@ class TestDerivatives:
         assert len(jac) == 1
         assert qp.math.shape(jac[0]) == (0,)
 
-    @pytest.mark.usefixtures("enable_and_disable_graph_decomp")
     @pytest.mark.parametrize("execute_and_derivatives", [True, False])
     @pytest.mark.parametrize(
         "state_prep, params, wires",
@@ -1867,7 +1848,6 @@ class TestVJP:
         assert len(jac) == 1
         assert qp.math.shape(jac[0]) == (0,)
 
-    @pytest.mark.usefixtures("enable_and_disable_graph_decomp")
     @pytest.mark.parametrize("execute_and_derivatives", [True, False])
     @pytest.mark.parametrize(
         "state_prep, params, wires",
@@ -2052,18 +2032,7 @@ class TestVJP:
 
 
 class TestLightningDeviceGraphModeExclusive:
-    """Tests for LightningDevice features that require graph mode enabled.
-    The legacy decomposition mode should not be able to run these tests.
-
-    NOTE: All tests in this suite will auto-enable graph mode via fixture.
-    """
-
-    @pytest.fixture(autouse=True)
-    def enable_graph_mode_only(self):
-        """Auto-enable graph mode for all tests in this class."""
-        qp.decomposition.enable_graph()
-        yield
-        qp.decomposition.disable_graph()
+    """Tests for LightningDevice graph-based decomposition."""
 
     def test_insufficient_work_wires_causes_fallback(self):
         """Test that if a decomposition requires more work wires than available on lightning device,
