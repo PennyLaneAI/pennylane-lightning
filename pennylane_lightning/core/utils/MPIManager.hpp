@@ -22,6 +22,9 @@
 #include <cstring>
 #include <mpi.h>
 #include <stdexcept>
+#if defined(__linux__)
+#include <dlfcn.h>
+#endif
 #include <string>
 #include <typeindex>
 #include <typeinfo>
@@ -122,7 +125,41 @@ class MPIRuntime {
     auto operator=(MPIRuntime &&) -> MPIRuntime & = delete;
     ~MPIRuntime() = default;
 
+  private:
+    /**
+     * @brief Make the MPI library's symbols visible to the whole process.
+     *
+     * cuStateVec's communicator (custatevecCommunicatorCreate) resolves the
+     * MPI functions and handles from the symbols already loaded in the
+     * process. A Python extension module is loaded with RTLD_LOCAL, so libmpi,
+     * pulled in only as its dependency, stays invisible to that lookup and the
+     * communicator cannot be created. Re-opening the already loaded libmpi
+     * with RTLD_GLOBAL promotes its symbols to the global scope; the handle is
+     * kept for the lifetime of the process. Both attempts pass RTLD_NOLOAD, so
+     * this never brings a second MPI library into the process: if the loaded
+     * one cannot be found, nothing changes.
+     */
+    static void makeMPISymbolsGlobal_() {
+#if defined(__linux__)
+        static void *handle = nullptr;
+        if (handle != nullptr) {
+            return;
+        }
+        Dl_info info;
+        if (dladdr(reinterpret_cast<void *>(&MPI_Init), &info) != 0 &&
+            info.dli_fname != nullptr) {
+            handle =
+                dlopen(info.dli_fname, RTLD_NOW | RTLD_GLOBAL | RTLD_NOLOAD);
+        }
+        if (handle == nullptr) {
+            handle = dlopen("libmpi.so", RTLD_NOW | RTLD_GLOBAL | RTLD_NOLOAD);
+        }
+#endif
+    }
+
+  public:
     void ensureInitialized() {
+        makeMPISymbolsGlobal_();
         int finflag = 0;
         PL_MPI_IS_SUCCESS(MPI_Finalized(&finflag));
         PL_ABORT_IF(finflag,
