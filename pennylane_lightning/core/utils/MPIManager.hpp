@@ -135,7 +135,9 @@ class MPIRuntime {
      * pulled in only as its dependency, stays invisible to that lookup and the
      * communicator cannot be created. Re-opening the already loaded libmpi
      * with RTLD_GLOBAL promotes its symbols to the global scope; the handle is
-     * kept for the lifetime of the process.
+     * kept for the lifetime of the process. Both attempts pass RTLD_NOLOAD, so
+     * this never brings a second MPI library into the process: if the loaded
+     * one cannot be found, nothing changes.
      */
     static void makeMPISymbolsGlobal_() {
 #if defined(__linux__)
@@ -150,7 +152,7 @@ class MPIRuntime {
                 dlopen(info.dli_fname, RTLD_NOW | RTLD_GLOBAL | RTLD_NOLOAD);
         }
         if (handle == nullptr) {
-            handle = dlopen("libmpi.so", RTLD_NOW | RTLD_GLOBAL);
+            handle = dlopen("libmpi.so", RTLD_NOW | RTLD_GLOBAL | RTLD_NOLOAD);
         }
 #endif
     }
