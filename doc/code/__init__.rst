@@ -28,11 +28,6 @@ This section contains the API documentation for the Lightning packages.
    :description: API documentation for the lightning_kokkos package
    :link: ../lightning_kokkos/package.html
 
-.. title-card::
-   :name: lightning_tensor
-   :description: API documentation for the lightning_tensor package
-   :link: ../lightning_tensor/package.html
-
 .. raw:: html
 
         <div style='clear:both'></div>
@@ -44,4 +39,3 @@ This section contains the API documentation for the Lightning packages.
    ../lightning_qubit/package
    ../lightning_gpu/package
    ../lightning_kokkos/package
-   ../lightning_tensor/package

@@ -51,7 +51,7 @@ jobs:
       fail-fast: false
       matrix:
         arch: [x86_64]
-        pl_backend: ["lightning_gpu", "lightning_tensor"]
+        pl_backend: ["lightning_gpu"]
         cuda_version: ["12"]
         cibw_build: ${{ fromJson(needs.set_wheel_build_matrix.outputs.python_version_gpu) }}
         container_img: ["quay.io/pypa/manylinux_2_28_x86_64"]
@@ -91,7 +91,7 @@ jobs:
 
           # Python build settings
           CIBW_BEFORE_BUILD: |
-            python -m pip install ninja cmake setuptools auditwheel~=5.0 custatevec-cu${{ matrix.cuda_version }} cutensornet-cu${{ matrix.cuda_version }}
+            python -m pip install ninja cmake setuptools auditwheel~=5.0 custatevec-cu${{ matrix.cuda_version }}
             dnf clean all -y
             dnf install gcc-toolset-12 dnf-utils -y
             source /opt/rh/gcc-toolset-12/enable -y
@@ -143,7 +143,7 @@ jobs:
     strategy:
       matrix:
         arch: [x86_64]
-        pl_backend: ["lightning_gpu", "lightning_tensor"]
+        pl_backend: ["lightning_gpu"]
         cuda_version: ["12"]
         cibw_build: ${{ fromJson(needs.set_wheel_build_matrix.outputs.python_version_gpu) }}
     runs-on: ubuntu-24.04

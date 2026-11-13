@@ -11,35 +11,31 @@
   <a href="https://github.com/PennyLaneAI/pennylane-lightning/actions/workflows/tests_lkcpu_python.yml">
     <img src="https://img.shields.io/github/actions/workflow/status/PennyLaneAI/pennylane-lightning/tests_lkcpu_python.yml?branch=main&label=LKokkos&style=flat-square" />
   </a>
-  <!-- 04 - Linux x86_64 L-Tensor Python tests (branch) -->
-  <a href="https://github.com/PennyLaneAI/pennylane-lightning/actions/workflows/tests_gpu_python.yml">
-    <img src="https://img.shields.io/github/actions/workflow/status/PennyLaneAI/pennylane-lightning/tests_gpu_python.yml?branch=main&label=LTensor&style=flat-square" />
-  </a>
-  <!-- 05 - Codecov coverage -->
+  <!-- 04 - Codecov coverage -->
   <a href="https://codecov.io/gh/PennyLaneAI/pennylane-lightning">
     <img src="https://img.shields.io/codecov/c/github/PennyLaneAI/pennylane-lightning/main.svg?logo=codecov&style=flat-square" />
   </a>
-  <!-- 06 - CodeFactor Grade -->
+  <!-- 05 - CodeFactor Grade -->
   <a href="https://www.codefactor.io/repository/github/pennylaneai/pennylane-lightning">
     <img src="https://img.shields.io/codefactor/grade/github/PennyLaneAI/pennylane-lightning/main?logo=codefactor&style=flat-square" />
   </a>
-  <!-- 07 - Read the Docs -->
+  <!-- 06 - Read the Docs -->
   <a href="https://docs.pennylane.ai/projects/lightning">
     <img src="https://readthedocs.com/projects/xanaduai-pennylane-lightning/badge/?version=latest&style=flat-square" />
   </a>
-  <!-- 08 - PennyLane Forum -->
+  <!-- 07 - PennyLane Forum -->
   <a href="https://discuss.pennylane.ai">
     <img src="https://img.shields.io/discourse/https/discuss.pennylane.ai/posts.svg?logo=discourse&style=flat-square" />
   </a>
-  <!-- 09 - PyPI - Version -->
+  <!-- 08 - PyPI - Version -->
   <a href="https://pypi.org/project/PennyLane-Lightning">
     <img src="https://img.shields.io/pypi/v/PennyLane-Lightning.svg?style=flat-square" />
   </a>
-  <!-- 10 - PyPI - Python Version -->
+  <!-- 09 - PyPI - Python Version -->
   <a href="https://pypi.org/project/PennyLane-Lightning">
     <img src="https://img.shields.io/pypi/pyversions/PennyLane-Lightning.svg?style=flat-square" />
   </a>
-  <!-- 11 - License -->
+  <!-- 10 - License -->
   <a href="https://www.apache.org/licenses/LICENSE-2.0">
     <img src="https://img.shields.io/pypi/l/PennyLane.svg?logo=apache&style=flat-square" />
   </a>
@@ -54,7 +50,7 @@
     <img src="./doc/_static/readme/pl-lightning-logo-darkmode.png#gh-dark-mode-only" width="700px" onerror="this.style.display='none'" alt=""/>
 </p>
 
-The Lightning plugin ecosystem provides fast state-vector and tensor-network simulators written in C++.
+The Lightning plugin ecosystem provides fast state-vector simulators written in C++.
 
 [PennyLane](https://docs.pennylane.ai) is a cross-platform Python library for quantum machine
 learning, automatic differentiation, and optimization of hybrid quantum-classical computations.
@@ -71,8 +67,6 @@ PennyLane-Lightning high performance simulators include the following backends:
 * ``lightning.amdgpu``: a state-vector simulator specifically for AMD GPUs. This device is an alias of our ``lightning.kokkos`` simulator.
 * ``lightning.gpu``: a state-vector simulator based on the [NVIDIA cuQuantum SDK](https://developer.nvidia.com/cuquantum-sdk).
   It notably implements a distributed state-vector simulator based on [MPI](https://www.mpi-forum.org/docs/).
-* ``lightning.tensor``: a tensor-network simulator based on the [NVIDIA cuQuantum SDK](https://developer.nvidia.com/cuquantum-sdk).
-  The supported methods are Matrix Product State (MPS) and Exact Tensor Network (TN).
 
 If you're not sure which simulator to use, check out our [PennyLane Performance](https://pennylane.ai/performance) page.
 
@@ -90,7 +84,6 @@ The following table summarizes the supported platforms and the primary installat
 | Lightning-AMDGPU       | pip       | source    |           |           |
 | Lightning-GPU          | pip       | pip       |           |           |
 | Lightning-GPU (MPI)    | source    |           |           |           |
-| Lightning-Tensor       | pip       | pip       |           |           |
 
 For Lightning-AMDGPU, pre-built wheels are available for MI300 series GPU for ROCm 7.0 and greater. For older architecture and ROCm versions, please install from source.
 
@@ -168,7 +161,7 @@ by asking a question in the forum.
 
 The Lightning plugins are **free** and **open source**, released under
 the [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0).  
-The Lightning-GPU and Lightning-Tensor plugins make use of the NVIDIA cuQuantum SDK headers to
+The Lightning-GPU plugin makes use of the NVIDIA cuQuantum SDK headers to
 enable the device bindings to PennyLane, which are held to their own respective license.
 
 ## Acknowledgements

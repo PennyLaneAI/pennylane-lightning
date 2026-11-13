@@ -55,7 +55,6 @@ class QuantumScriptSerializer:
     use_csingle (bool): whether to use np.complex64 instead of np.complex128
     use_mpi (bool, optional): If using MPI to accelerate calculation. Defaults to False.
     split_obs (Union[bool, int], optional): If splitting the observables in a list. Defaults to False.
-    tensor_backend (str): If using `lightning.tensor` and select the TensorNetwork backend, mps or exact. Default to ''
 
     """
 
@@ -66,7 +65,6 @@ class QuantumScriptSerializer:
         use_csingle: bool = False,
         use_mpi: bool = False,
         split_obs: bool = False,
-        tensor_backend: str = str(),
     ):
         self.use_csingle = use_csingle
         self.device_name = device_name
@@ -92,29 +90,12 @@ class QuantumScriptSerializer:
                 raise ImportError(
                     f"Pre-compiled binaries for {device_name} are not available."
                 ) from exception
-        elif device_name == "lightning.tensor":
-            try:
-                import pennylane_lightning.lightning_tensor_ops as lightning_ops
-            except ImportError as exception:
-                raise ImportError(
-                    f"Pre-compiled binaries for {device_name} are not available."
-                ) from exception
         else:
             raise DeviceError(f'The device name "{device_name}" is not a valid option.')
 
         self._use_mpi = use_mpi
 
-        if device_name in [
-            "lightning.qubit",
-            "lightning.kokkos",
-            "lightning.amdgpu",
-            "lightning.gpu",
-        ]:
-            assert tensor_backend == str()
-            self._set_lightning_state_bindings(lightning_ops)
-        else:
-            self._tensor_backend = tensor_backend
-            self._set_lightning_tensor_bindings(tensor_backend, lightning_ops)
+        self._set_lightning_state_bindings(lightning_ops)
 
     @property
     def ctype(self):
@@ -131,8 +112,6 @@ class QuantumScriptSerializer:
         """State vector matching ``use_csingle`` precision (and MPI if it is supported)."""
         if self._use_mpi:
             return self.statevector_mpi_c64 if self.use_csingle else self.statevector_mpi_c128
-        if self.device_name == "lightning.tensor":
-            return self.tensornetwork_c64 if self.use_csingle else self.tensornetwork_c128
         return self.statevector_c64 if self.use_csingle else self.statevector_c128
 
     @property
@@ -218,39 +197,6 @@ class QuantumScriptSerializer:
             elif self.device_name == "lightning.kokkos":
                 self._mpi_manager = lightning_ops.MPIManagerKokkos
 
-    def _set_lightning_tensor_bindings(self, tensor_backend, lightning_ops):
-        """Define the variables needed to access the modules from the C++ bindings for tensor network."""
-        if tensor_backend == "mps":
-            self.tensornetwork_c64 = lightning_ops.mpsTensorNetC64
-            self.tensornetwork_c128 = lightning_ops.mpsTensorNetC128
-
-            self.named_obs_c64 = lightning_ops.observables.mpsNamedObsC64
-            self.named_obs_c128 = lightning_ops.observables.mpsNamedObsC128
-            self.hermitian_obs_c64 = lightning_ops.observables.mpsHermitianObsC64
-            self.hermitian_obs_c128 = lightning_ops.observables.mpsHermitianObsC128
-            self.tensor_prod_obs_c64 = lightning_ops.observables.mpsTensorProdObsC64
-            self.tensor_prod_obs_c128 = lightning_ops.observables.mpsTensorProdObsC128
-            self.hamiltonian_c64 = lightning_ops.observables.mpsHamiltonianC64
-            self.hamiltonian_c128 = lightning_ops.observables.mpsHamiltonianC128
-
-        elif tensor_backend == "tn":
-            self.tensornetwork_c64 = lightning_ops.exactTensorNetC64
-            self.tensornetwork_c128 = lightning_ops.exactTensorNetC128
-
-            self.named_obs_c64 = lightning_ops.observables.exactNamedObsC64
-            self.named_obs_c128 = lightning_ops.observables.exactNamedObsC128
-            self.hermitian_obs_c64 = lightning_ops.observables.exactHermitianObsC64
-            self.hermitian_obs_c128 = lightning_ops.observables.exactHermitianObsC128
-            self.tensor_prod_obs_c64 = lightning_ops.observables.exactTensorProdObsC64
-            self.tensor_prod_obs_c128 = lightning_ops.observables.exactTensorProdObsC128
-            self.hamiltonian_c64 = lightning_ops.observables.exactHamiltonianC64
-            self.hamiltonian_c128 = lightning_ops.observables.exactHamiltonianC128
-
-        else:
-            raise ValueError(
-                f"Unsupported method: {tensor_backend}. Supported methods are 'mps' (Matrix Product State) and 'tn' (Exact Tensor Network)."
-            )
-
     def _named_obs(self, observable, wires_map: dict = None):
         """Serializes a Named observable"""
         wires = [wires_map[w] for w in observable.wires] if wires_map else observable.wires.tolist()
@@ -262,8 +208,6 @@ class QuantumScriptSerializer:
         """Serializes a Hermitian observable"""
 
         wires = [wires_map[w] for w in observable.wires] if wires_map else observable.wires.tolist()
-        if self.device_name == "lightning.tensor" and len(wires) > 1:
-            raise ValueError("The number of Hermitian observables target wires should be 1.")
         return self.hermitian_obs(matrix(observable).ravel().astype(self.ctype), wires)
 
     def _tensor_ob(self, observable, wires_map: dict = None):
@@ -388,10 +332,6 @@ class QuantumScriptSerializer:
         if isinstance(observable, OP_MATH_OBS):
             return self._hamiltonian(observable, wires_map)
         if isinstance(observable, SparseHamiltonian):
-            if self.device_name == "lightning.tensor":
-                raise NotImplementedError(
-                    "SparseHamiltonian is not supported on the lightning.tensor device."
-                )
             if self._use_mpi and self.device_name == "lightning.kokkos":
                 raise NotImplementedError(
                     "SparseHamiltonian is not supported on the lightning.kokkos device with MPI."

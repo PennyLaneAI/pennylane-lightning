@@ -25,6 +25,9 @@
 
 <h3>Breaking changes 💔</h3>
 
+- The `lightning.tensor` device has been removed.
+  [(#1410)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1410)
+
 - Python 3.11 is no longer supported. The minimum required Python version is now 3.12.
   [(#1395)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1395)
 
@@ -96,7 +99,7 @@
   as dynamic argument.
   [(#1408)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1408)
 
-- Fixed controlled-gate dispatch in Lightning-Kokkos, Lightning-GPU and Lightning-Tensor to read gate
+- Fixed controlled-gate dispatch in Lightning-Kokkos and Lightning-GPU to read gate
   parameters from the base operation instead of the `Controlled` wrapper, restoring compatibility with
   PennyLane where `Controlled.parameters` now includes the control values.
   [(#1405)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1405)
@@ -105,6 +108,9 @@
   [(#1390)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1390)
 
 <h3>Internal changes ⚙️</h3>
+
+- Updated `pylint` to version 4.1.3 in the `dev` and `base` dependency groups.
+  [(#1443)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1443)
 
 - A deferred-measurement test now builds its expected controlled ops with `qp.ctrl`, so it passes
   whether or not `qp.ctrl` dispatches to `CNOT` and `CY`, which PennyLane no longer does.
@@ -164,6 +170,7 @@ This release contains contributions from (in alphabetical order):
 
 Runor Agbaire,
 Ali Asadi,
+Astral Cai,
 Yushao Chen,
 Marcus Edwards,
 David Ittah,
