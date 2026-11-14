@@ -1,0 +1,130 @@
+name: GPU Simulator
+
+# Optional, non-required check. wheel_linux_x86_64_rocm.yml builds Kokkos
+# with the HIP backend for gfx942 and the lightning_amdgpu wheels, but no job
+# runs Lightning-Kokkos on an AMD GPU. This workflow builds Kokkos (HIP) and
+# the Lightning-Kokkos C++ unit tests for gfx942 and runs them on a simulated
+# AMD Instinct MI300X (https://github.com/pantheongpu/pantheonsim).
+# A simulator cannot reproduce hardware-specific behavior or timing, so it
+# complements real-GPU testing and does not replace it.
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "pennylane_lightning/core/**"
+      - "!pennylane_lightning/core/simulators/lightning_qubit/**"
+      - "!pennylane_lightning/core/simulators/lightning_gpu/**"
+      - "!pennylane_lightning/core/simulators/lightning_tensor/**"
+      - "cmake/**"
+      - "CMakeLists.txt"
+      - ".github/workflows/gpu-sim.yml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lkokkos-hip-cpp:
+    name: C++ tests (Lightning-Kokkos HIP and simulated MI300X)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 300
+    env:
+      # Same Kokkos version as set_wheel_build_matrix.yml and
+      # cmake/support_kokkos.cmake.
+      KOKKOS_VERSION: 5.1.0
+      KOKKOS_INSTALL: ${{ github.workspace }}/Kokkos_install
+      ROCM_PATH: /opt/rocm
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Set up the simulated GPU and ROCm
+        uses: pantheongpu/setup-pantheonsim@656f502ef4782d94d34d8ddd368e333960609639 # v0.1.8
+        with:
+          gpu: amd/mi300x
+          cuda-toolkit: none
+          rocm: "7.0"
+
+      # The action installs only the compiler side of ROCm. find_package(hip)
+      # also needs comgr and the HSA runtime. rocThrust and rocPRIM (used by
+      # Kokkos, as in the wheel build) are header-only; they are unpacked
+      # rather than installed because their packages depend on the real HIP
+      # runtime, which would replace the simulator's.
+      - name: Install ROCm dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y comgr hsa-rocr
+          cd "$RUNNER_TEMP"
+          apt-get download rocthrust-dev rocprim-dev
+          for d in rocthrust-dev*.deb rocprim-dev*.deb; do sudo dpkg-deb -x "$d" /; done
+          rm -f rocthrust-dev*.deb rocprim-dev*.deb
+
+      - name: Install scipy-openblas32
+        run: |
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install scipy-openblas32
+          echo "SCIPY_OPENBLAS_DIR=$("$RUNNER_TEMP/venv/bin/python" -c 'import scipy_openblas32; print(scipy_openblas32.get_lib_dir())')" >> "$GITHUB_ENV"
+
+      - name: Check out Kokkos
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          repository: kokkos/kokkos
+          ref: ${{ env.KOKKOS_VERSION }}
+          path: kokkos-src
+          persist-credentials: false
+
+      # Same options as the Kokkos build in wheel_linux_x86_64_rocm.yml.
+      - name: Build and install Kokkos (HIP + Serial)
+        run: |
+          cmake -S kokkos-src -B kokkos-build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX="${KOKKOS_INSTALL}" \
+            -DCMAKE_CXX_COMPILER="${ROCM_PATH}/bin/hipcc" \
+            -DCMAKE_CXX_STANDARD=20 \
+            -DCMAKE_PREFIX_PATH="${ROCM_PATH}" \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+            -DKokkos_ENABLE_COMPLEX_ALIGN=OFF \
+            -DKokkos_ENABLE_SERIAL=ON \
+            -DKokkos_ENABLE_HIP=ON \
+            -DKokkos_ARCH_AMD_GFX942=ON \
+            -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF
+          cmake --build kokkos-build --parallel 3
+          cmake --install kokkos-build
+
+      # As in tests_lkcuda_cpp.yml, with hipcc and a Release build. Test
+      # discovery is moved to ctest time (PRE_TEST) so that no test binary
+      # runs during the build.
+      - name: Configure Lightning-Kokkos
+        run: |
+          cmake -S . -B Build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_CXX_COMPILER="${ROCM_PATH}/bin/hipcc" \
+            -DCMAKE_PREFIX_PATH="${KOKKOS_INSTALL};${ROCM_PATH}" \
+            -DPL_BACKEND=lightning_kokkos \
+            -DBUILD_TESTS=ON \
+            -DENABLE_PYTHON=OFF \
+            -DENABLE_OPENMP=OFF \
+            -DENABLE_WARNINGS=OFF \
+            -DSCIPY_OPENBLAS="${SCIPY_OPENBLAS_DIR}" \
+            -DCMAKE_CATCH_DISCOVER_TESTS_DISCOVERY_MODE=PRE_TEST
+
+      - name: Build
+        run: cmake --build Build --parallel 3
+
+      - name: Run tests
+        working-directory: Build
+        run: |
+          status=0
+          for runner in *runner; do
+            echo "::group::${runner}"
+            SECONDS=0
+            vgpu run "./${runner}" || status=1
+            echo "${runner}: ${SECONDS} s"
+            echo "::endgroup::"
+          done
+          exit "${status}"
