@@ -44,7 +44,7 @@ jobs:
           persist-credentials: false
 
       - name: Set up the simulated GPU and ROCm
-        uses: pantheongpu/setup-pantheonsim@ab71a07326835be678918901c340d53a83358067 # v0.1.6
+        uses: pantheongpu/setup-pantheonsim@656f502ef4782d94d34d8ddd368e333960609639 # v0.1.8
         with:
           gpu: amd/mi300x
           cuda-toolkit: none
@@ -96,19 +96,6 @@ jobs:
           cmake --build kokkos-build --parallel 3
           cmake --install kokkos-build
 
-      # The shared tests (algorithms, measurements, observables, ...) loop over
-      # TestStateVectorBackends, float first. Some float kernels use a packed
-      # fp32 instruction form that the simulator release used here does not
-      # model (pantheonsim#580, fixed after v0.1.6), which aborts the whole
-      # test binary before the double case runs. Narrow the list to double
-      # for this job only.
-      - name: Restrict the shared tests to double precision
-        run: |
-          f=pennylane_lightning/core/simulators/lightning_kokkos/utils/TestHelpersStateVectors.hpp
-          sed -i 's/TypeList<StateVectorKokkos<float>,/TypeList</' "$f"
-          grep -A1 'using TestStateVectorBackends' "$f"
-          ! grep -A1 'using TestStateVectorBackends' "$f" | grep -q float
-
       # As in tests_lkcuda_cpp.yml, with hipcc and a Release build. Test
       # discovery is moved to ctest time (PRE_TEST) so that no test binary
       # runs during the build.
@@ -129,9 +116,6 @@ jobs:
       - name: Build
         run: cmake --build Build --parallel 3
 
-      # The double-precision test cases only: names containing "float" (the
-      # float variants of the templated tests) are left out, for the same
-      # reason as above.
       - name: Run tests
         working-directory: Build
         run: |
@@ -139,7 +123,7 @@ jobs:
           for runner in *runner; do
             echo "::group::${runner}"
             SECONDS=0
-            vgpu run "./${runner}" "~*float*" || status=1
+            vgpu run "./${runner}" || status=1
             echo "${runner}: ${SECONDS} s"
             echo "::endgroup::"
           done
