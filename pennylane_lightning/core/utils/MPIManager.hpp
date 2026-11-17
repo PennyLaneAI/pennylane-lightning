@@ -22,15 +22,16 @@
 #include <cstring>
 #include <mpi.h>
 #include <stdexcept>
-#if defined(__linux__)
-#include <dlfcn.h>
-#endif
 #include <string>
 #include <typeindex>
 #include <typeinfo>
 #include <unordered_map>
 #include <utility>
 #include <vector>
+
+#if defined(__linux__)
+#include <dlfcn.h>
+#endif
 
 #include "Error.hpp"
 
