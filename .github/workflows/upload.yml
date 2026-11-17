@@ -73,7 +73,7 @@ jobs:
           retention-days: 1
     
   upload:
-    needs: [build-linux-aarch64-cuda, build-linux-x86_64, build-linux-x86_64-cuda, build-linux-aarch64, build-macos-arm64, build-windows-x86_64, build-linux-x86_64_rocm, build-noarch]
+    needs: [build-linux-aarch64-cuda, build-linux-x86_64, build-linux-x86_64-cuda, build-linux-aarch64, build-macos-arm64, build-windows-x86_64, build-linux-x86_64_rocm, build-noarch, build-sdist]
     name: Upload wheels to PyPI
     runs-on: ubuntu-24.04
     environment: release
