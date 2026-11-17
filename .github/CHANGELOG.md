@@ -100,6 +100,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Adding workflow to upload release to PyPI,
+  [(#1452)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1452)
+
 - A deferred-measurement test now builds its expected controlled ops with `qp.ctrl`, so it passes
   whether or not `qp.ctrl` dispatches to `CNOT` and `CY`, which PennyLane no longer does.
   [(#1435)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1435)

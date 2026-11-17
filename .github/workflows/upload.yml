@@ -1,4 +1,4 @@
-name: Upload
+name: Upload to PyPI
 permissions:
   contents: read
 on:
