@@ -7,61 +7,42 @@ on:
     types: [released]
 
 jobs:
-  setup-release:
-    name: Setup the release
-    runs-on:  
-      group: 'PennyLaneAI-Static-IP-Runners'
-      labels: ['pl-2-core-gh-runner'] 
-    steps:        
-      - name: Checkout Lightning repo
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 1
-
   build-linux-aarch64-cuda:
-    needs: setup-release
     uses: ./.github/workflows/wheel_linux_aarch64_cuda.yml
     with:
       skip_upload: true
 
   build-linux-x86_64:
-    needs: setup-release
     uses: ./.github/workflows/wheel_linux_x86_64.yml
     with:
       skip_upload: true
 
   build-linux-x86_64-cuda:
-    needs: setup-release
     uses: ./.github/workflows/wheel_linux_x86_64_cuda.yml
     with:
       skip_upload: true
 
   build-linux-aarch64:
-    needs: setup-release
     uses: ./.github/workflows/wheel_linux_aarch64.yml
     with:
       skip_upload: true
 
   build-macos-arm64:
-    needs: setup-release
     uses: ./.github/workflows/wheel_macos_arm64.yml
     with:
       skip_upload: true
 
   build-windows-x86_64:
-    needs: setup-release
     uses: ./.github/workflows/wheel_win_x86_64.yml
     with:
       skip_upload: true
 
   build-linux-x86_64_rocm:
-    needs: setup-release
     uses: ./.github/workflows/wheel_linux_x86_64_rocm.yml
     with:
       skip_upload: true
   
   build-noarch:
-    needs: setup-release
     uses: ./.github/workflows/wheel_noarch.yml
     with:
       skip_upload: true
@@ -93,7 +74,7 @@ jobs:
     
   upload:
     needs: [build-linux-aarch64-cuda, build-linux-x86_64, build-linux-x86_64-cuda, build-linux-aarch64, build-macos-arm64, build-windows-x86_64, build-linux-x86_64_rocm, build-noarch]
-    name: Upload RC wheels to PyPI
+    name: Upload wheels to PyPI
     runs-on: ubuntu-24.04
     environment: release
     permissions:
@@ -107,11 +88,17 @@ jobs:
           path: dist/
           merge-multiple: true
 
+      - name: Download all sdist artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: "sdist-*"
+          path: dist/
+          merge-multiple: true
+
       - name: List downloaded wheels
         run: |
           echo "=== All wheels ==="
           find dist/ -name "*.whl" | sort
-
+  
       - name: Upload to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
-              
