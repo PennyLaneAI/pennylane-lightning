@@ -1,6 +1,7 @@
 name: Upload to PyPI
 permissions:
   contents: read
+  id-token: write
 on:
   release:
     types: [released]
