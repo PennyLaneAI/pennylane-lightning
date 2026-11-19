@@ -39,11 +39,6 @@ Select the device below for detailed source-installation instructions:
    :description: Example and extra instructions for installing the Lightning Kokkos device on HPC systems
    :link: ../lightning_kokkos/installation_hpc.html
 
-.. title-card::
-   :name: Lightning Tensor
-   :description: Detailed guidelines to installing and testing the Lightning Tensor device
-   :link: ../lightning_tensor/installation.html
-
 .. raw:: html
 
         <div style='clear:both'></div>
@@ -56,4 +51,3 @@ Select the device below for detailed source-installation instructions:
    ../lightning_gpu/installation
    ../lightning_kokkos/installation
    ../lightning_kokkos/installation_hpc
-   ../lightning_tensor/installation

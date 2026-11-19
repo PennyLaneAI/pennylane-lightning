@@ -6,7 +6,7 @@ add_library(lightning_catalyst_core INTERFACE)
 
 target_include_directories(lightning_catalyst_core INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
-if (BUILD_TESTS AND NOT DEFINED PL_TENSOR)
+if (BUILD_TESTS)
     enable_testing()
     add_subdirectory("tests")
 endif()
