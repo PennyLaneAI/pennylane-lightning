@@ -17,10 +17,10 @@ import math
 from typing import Sequence
 
 import numpy as np
-import pennylane as qp
+import pennylane2 as qp
 import pytest
 from conftest import PHI, THETA, LightningDevice, device_name  # tested device
-from pennylane.devices import DefaultQubit, ExecutionConfig
+from pennylane2.devices import DefaultQubit, ExecutionConfig
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)

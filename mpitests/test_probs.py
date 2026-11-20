@@ -14,7 +14,7 @@ Unit tests for probs on :mod:`pennylane_lightning` MPI-enabled devices.
 """
 
 import numpy as np
-import pennylane as qp
+import pennylane2 as qp
 import pytest
 from conftest import device_name
 

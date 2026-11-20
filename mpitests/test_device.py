@@ -17,13 +17,13 @@ Unit tests for device creation on :mod:`pennylane_lightning` MPI-enabled devices
 
 # pylint: disable=protected-access,unused-variable,missing-function-docstring,c-extension-no-member
 
-import pennylane as qp
+import pennylane2 as qp
 import pytest
 from conftest import LightningDevice as ld
 from conftest import device_name
 from mpi4py import MPI
-from pennylane.exceptions import DeviceError
-from pennylane.tape import QuantumScript
+from pennylane2.exceptions import DeviceError
+from pennylane2.tape import QuantumScript
 
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)

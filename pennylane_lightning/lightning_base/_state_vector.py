@@ -19,13 +19,13 @@ from abc import ABC, abstractmethod
 from typing import Union
 
 import numpy as np
-import pennylane as qp
+import pennylane2 as qp
 from numpy.random import Generator
-from pennylane import BasisState, StatePrep
-from pennylane.measurements import MidMeasureMP
-from pennylane.ops import Controlled
-from pennylane.tape import QuantumScript
-from pennylane.wires import Wires
+from pennylane2 import BasisState, StatePrep
+from pennylane2.measurements import MidMeasureMP
+from pennylane2.ops import Controlled
+from pennylane2.tape import QuantumScript
+from pennylane2.wires import Wires
 
 
 class LightningBaseStateVector(ABC):
@@ -113,7 +113,7 @@ class LightningBaseStateVector(ABC):
         """Check if an operation is sparse.
 
         Args:
-            operation (~pennylane.operation.Operation): operation to check
+            operation (~pennylane2.operation.Operation): operation to check
 
         Returns:
             bool: True if the operation is sparse, False otherwise
@@ -152,7 +152,7 @@ class LightningBaseStateVector(ABC):
         """Apply an arbitrary controlled operation to the state tensor.
 
         Args:
-            operation (~pennylane.operation.Operation): controlled operation to apply
+            operation (~pennylane2.operation.Operation): controlled operation to apply
             adjoint (bool): Apply the adjoint of the operation if True
 
         Returns:
@@ -170,7 +170,7 @@ class LightningBaseStateVector(ABC):
         """Execute a MidMeasureMP operation and return the sample in mid_measurements.
 
         Args:
-            operation (~pennylane.operation.Operation): mid-circuit measurement
+            operation (~pennylane2.operation.Operation): mid-circuit measurement
             mid_measurements (None, dict): Dictionary of mid-circuit measurements
             postselect_mode (str): Configuration for handling shots with mid-circuit measurement
                 postselection. Use ``"hw-like"`` to discard invalid shots and ``"fill-shots"`` to
@@ -196,7 +196,7 @@ class LightningBaseStateVector(ABC):
         """Apply a list of operations to the state tensor.
 
         Args:
-            operations (list[~pennylane.operation.Operation]): operations to apply
+            operations (list[~pennylane2.operation.Operation]): operations to apply
             mid_measurements (None, dict): Dictionary of mid-circuit measurements
             postselect_mode (str): Configuration for handling shots with mid-circuit measurement
                 postselection. Use ``"hw-like"`` to discard invalid shots and ``"fill-shots"`` to

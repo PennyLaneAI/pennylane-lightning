@@ -47,7 +47,7 @@ except ImportError as ex:
 
 
 import numpy as np
-from pennylane.tape import QuantumTape
+from pennylane2.tape import QuantumTape
 from scipy.sparse import csr_matrix
 
 # pylint: disable=ungrouped-imports

@@ -16,7 +16,7 @@ Unit tests for the var method of the :mod:`pennylane_lightning.LightningQubit` d
 """
 
 import numpy as np
-import pennylane as qp
+import pennylane2 as qp
 import pytest
 from conftest import PHI, THETA, VARPHI
 from conftest import LightningDevice as ld

@@ -19,12 +19,12 @@ from abc import ABC, abstractmethod
 from typing import Any, List
 
 import numpy as np
-import pennylane as qp
-from pennylane import BasisState, StatePrep
-from pennylane.exceptions import QuantumFunctionError
-from pennylane.measurements import ExpectationMP, MeasurementProcess, StateMP
-from pennylane.operation import Operation
-from pennylane.tape import QuantumTape
+import pennylane2 as qp
+from pennylane2 import BasisState, StatePrep
+from pennylane2.exceptions import QuantumFunctionError
+from pennylane2.measurements import ExpectationMP, MeasurementProcess, StateMP
+from pennylane2.operation import Operation
+from pennylane2.tape import QuantumTape
 
 from pennylane_lightning.lightning_base._serialize import QuantumScriptSerializer
 

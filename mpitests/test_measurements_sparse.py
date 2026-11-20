@@ -18,12 +18,12 @@ Unit tests for sparse measurements on :mod:`pennylane_lightning` MPI-enabled dev
 # pylint: disable=protected-access,too-few-public-methods,unused-import,missing-function-docstring,too-many-arguments,too-many-positional-arguments
 
 import numpy as np
-import pennylane as qp
+import pennylane2 as qp
 import pytest
 from conftest import LightningDevice as ld
 from conftest import device_name
 from mpi4py import MPI
-from pennylane import qchem
+from pennylane2 import qchem
 
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)

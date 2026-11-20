@@ -25,6 +25,10 @@
 
 <h3>Breaking changes 💔</h3>
 
+- Development builds now require `pennylane2>=2.0.0.dev0` and register devices under
+  `pennylane2.plugins`. Use `import pennylane2 as qp` and `pl2-device-test`.
+  Lightning package names and versions are unchanged; these builds do not support Classic PennyLane.
+
 - The `lightning.tensor` device has been removed.
   [(#1410)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1410)
 

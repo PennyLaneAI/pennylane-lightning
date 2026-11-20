@@ -20,9 +20,9 @@ from functools import reduce
 from typing import Any, Callable, List, Union
 
 import numpy as np
-import pennylane as qp
-from pennylane.devices.qubit.sampling import _group_measurements
-from pennylane.measurements import (
+import pennylane2 as qp
+from pennylane2.devices.qubit.sampling import _group_measurements
+from pennylane2.measurements import (
     ClassicalShadowMP,
     ExpectationMP,
     MeasurementProcess,
@@ -33,11 +33,11 @@ from pennylane.measurements import (
     StateMeasurement,
     VarianceMP,
 )
-from pennylane.operation import Operator
-from pennylane.ops import SparseHamiltonian, Sum
-from pennylane.tape import QuantumScript
-from pennylane.typing import Result, TensorLike
-from pennylane.wires import Wires
+from pennylane2.operation import Operator
+from pennylane2.ops import SparseHamiltonian, Sum
+from pennylane2.tape import QuantumScript
+from pennylane2.typing import Result, TensorLike
+from pennylane2.wires import Wires
 
 from pennylane_lightning.lightning_base._serialize import QuantumScriptSerializer
 

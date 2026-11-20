@@ -90,8 +90,8 @@ wheel:
 coverage:
 	@echo "Generating coverage report for $(PL_DEVICE) device:"
 	$(PYTHON) $(TESTRUNNER) $(COVERAGE)
-	pl-device-test --device $(PL_DEVICE) --skip-ops --shots=10000 $(COVERAGE) --cov-append
-	pl-device-test --device $(PL_DEVICE) --shots=None --skip-ops $(COVERAGE) --cov-append
+	pl2-device-test --device $(PL_DEVICE) --skip-ops --shots=10000 $(COVERAGE) --cov-append
+	pl2-device-test --device $(PL_DEVICE) --shots=None --skip-ops $(COVERAGE) --cov-append
 
 coverage-cpp:
 	@echo "Generating cpp coverage report in BuildCov/out for $(PL_BACKEND) backend"
@@ -117,8 +117,8 @@ test-builtin:
 	PL_DEVICE=$(PL_DEVICE) $(PYTHON) -I $(TESTRUNNER)
 
 test-suite:
-	pl-device-test --device $(PL_DEVICE) --skip-ops --shots=10000
-	pl-device-test --device $(PL_DEVICE) --shots=None --skip-ops
+	pl2-device-test --device $(PL_DEVICE) --skip-ops --shots=10000
+	pl2-device-test --device $(PL_DEVICE) --shots=None --skip-ops
 
 test-python-mpi:
 	PL_DEVICE=$(PL_DEVICE_MPI) mpirun -n 2 $(PYTHON) -I  -m pytest mpitests --tb=short

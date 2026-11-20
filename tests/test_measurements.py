@@ -20,12 +20,12 @@ import math
 from typing import Sequence
 
 import numpy as np
-import pennylane as qp
+import pennylane2 as qp
 import pytest
 from conftest import LightningDevice as ld
 from conftest import device_name, lightning_ops, validate_measurements
-from pennylane.exceptions import DeviceError, QuantumFunctionError
-from pennylane.measurements import ExpectationMP, Shots, VarianceMP
+from pennylane2.exceptions import DeviceError, QuantumFunctionError
+from pennylane2.measurements import ExpectationMP, Shots, VarianceMP
 
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)

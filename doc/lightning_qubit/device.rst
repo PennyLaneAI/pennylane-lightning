@@ -8,7 +8,7 @@ A ``lightning.qubit`` device can be loaded using:
 
 .. code-block:: python
 
-    import pennylane as qp
+    import pennylane2 as qp
     dev = qp.device("lightning.qubit", wires=2)
 
 Check out the :doc:`/lightning_qubit/installation` guide for more information.
@@ -25,58 +25,58 @@ Supported operations and observables
 .. autosummary::
     :nosignatures:
 
-    ~pennylane.BasisState
-    ~pennylane.BlockEncode
-    ~pennylane.CNOT
-    ~pennylane.ControlledPhaseShift
-    ~pennylane.ControlledQubitUnitary
-    ~pennylane.CRot
-    ~pennylane.CRX
-    ~pennylane.CRY
-    ~pennylane.CRZ
-    ~pennylane.CSWAP
-    ~pennylane.CY
-    ~pennylane.CZ
-    ~pennylane.DiagonalQubitUnitary
-    ~pennylane.DoubleExcitation
-    ~pennylane.DoubleExcitationMinus
-    ~pennylane.DoubleExcitationPlus
-    ~pennylane.ECR
-    ~pennylane.GlobalPhase
-    ~pennylane.Hadamard
-    ~pennylane.Identity
-    ~pennylane.IsingXX
-    ~pennylane.IsingXY
-    ~pennylane.IsingYY
-    ~pennylane.IsingZZ
-    ~pennylane.ISWAP
-    ~pennylane.MultiControlledX
-    ~pennylane.MultiRZ
-    ~pennylane.OrbitalRotation
-    ~pennylane.PauliX
-    ~pennylane.PauliY
-    ~pennylane.PauliZ
-    ~pennylane.PauliRot
-    ~pennylane.PCPhase
-    ~pennylane.PhaseShift
-    ~pennylane.PSWAP
-    ~pennylane.QubitCarry
-    ~pennylane.QubitSum
-    ~pennylane.QubitUnitary
-    ~pennylane.Rot
-    ~pennylane.RX
-    ~pennylane.RY
-    ~pennylane.RZ
-    ~pennylane.S
-    ~pennylane.SingleExcitation
-    ~pennylane.SingleExcitationMinus
-    ~pennylane.SingleExcitationPlus
-    ~pennylane.SISWAP
-    ~pennylane.SQISW
-    ~pennylane.SWAP
-    ~pennylane.SX
-    ~pennylane.T
-    ~pennylane.Toffoli
+    ~pennylane2.BasisState
+    ~pennylane2.BlockEncode
+    ~pennylane2.CNOT
+    ~pennylane2.ControlledPhaseShift
+    ~pennylane2.ControlledQubitUnitary
+    ~pennylane2.CRot
+    ~pennylane2.CRX
+    ~pennylane2.CRY
+    ~pennylane2.CRZ
+    ~pennylane2.CSWAP
+    ~pennylane2.CY
+    ~pennylane2.CZ
+    ~pennylane2.DiagonalQubitUnitary
+    ~pennylane2.DoubleExcitation
+    ~pennylane2.DoubleExcitationMinus
+    ~pennylane2.DoubleExcitationPlus
+    ~pennylane2.ECR
+    ~pennylane2.GlobalPhase
+    ~pennylane2.Hadamard
+    ~pennylane2.Identity
+    ~pennylane2.IsingXX
+    ~pennylane2.IsingXY
+    ~pennylane2.IsingYY
+    ~pennylane2.IsingZZ
+    ~pennylane2.ISWAP
+    ~pennylane2.MultiControlledX
+    ~pennylane2.MultiRZ
+    ~pennylane2.OrbitalRotation
+    ~pennylane2.PauliX
+    ~pennylane2.PauliY
+    ~pennylane2.PauliZ
+    ~pennylane2.PauliRot
+    ~pennylane2.PCPhase
+    ~pennylane2.PhaseShift
+    ~pennylane2.PSWAP
+    ~pennylane2.QubitCarry
+    ~pennylane2.QubitSum
+    ~pennylane2.QubitUnitary
+    ~pennylane2.Rot
+    ~pennylane2.RX
+    ~pennylane2.RY
+    ~pennylane2.RZ
+    ~pennylane2.S
+    ~pennylane2.SingleExcitation
+    ~pennylane2.SingleExcitationMinus
+    ~pennylane2.SingleExcitationPlus
+    ~pennylane2.SISWAP
+    ~pennylane2.SQISW
+    ~pennylane2.SWAP
+    ~pennylane2.SX
+    ~pennylane2.T
+    ~pennylane2.Toffoli
 
 .. raw:: html
 
@@ -91,19 +91,19 @@ Supported operations and observables
 .. autosummary::
     :nosignatures:
 
-    ~pennylane.Identity
-    ~pennylane.Hadamard
-    ~pennylane.PauliX
-    ~pennylane.PauliY
-    ~pennylane.PauliZ
-    ~pennylane.Projector
-    ~pennylane.Hermitian
-    ~pennylane.Hamiltonian
-    ~pennylane.SparseHamiltonian
-    ~pennylane.ops.op_math.Exp
-    ~pennylane.ops.op_math.Prod
-    ~pennylane.ops.op_math.SProd
-    ~pennylane.ops.op_math.Sum
+    ~pennylane2.Identity
+    ~pennylane2.Hadamard
+    ~pennylane2.PauliX
+    ~pennylane2.PauliY
+    ~pennylane2.PauliZ
+    ~pennylane2.Projector
+    ~pennylane2.Hermitian
+    ~pennylane2.Hamiltonian
+    ~pennylane2.SparseHamiltonian
+    ~pennylane2.ops.op_math.Exp
+    ~pennylane2.ops.op_math.Prod
+    ~pennylane2.ops.op_math.SProd
+    ~pennylane2.ops.op_math.Sum
 
 .. raw:: html
 
@@ -127,7 +127,7 @@ To enable parallel differentiation over observables, ensure the ``OMP_NUM_THREAD
     # Option 2: Before importing packages
     import os
     os.environ["OMP_NUM_THREADS"] = 4
-    import pennylane as qp
+    import pennylane2 as qp
 
 Assuming you request multiple expectation values from a QNode, this should automatically parallelize the computation over the requested number of threads. You should ensure that the number of threads does not exceed the available physical cores on your machine.
 
@@ -138,7 +138,7 @@ If you are computing a large number of expectation values, or if you are using a
     # Before importing packages
     import os
     os.environ["OMP_NUM_THREADS"] = 4
-    import pennylane as qp
+    import pennylane2 as qp
     dev = qp.device("lightning.qubit", wires=2, batch_obs=True)
 
 
@@ -156,7 +156,7 @@ The ``lightning.qubit`` device allows users to use the Markov Chain Monte Carlo 
 
 .. code-block:: python
 
-    import pennylane as qp
+    import pennylane2 as qp
     dev = qp.device("lightning.qubit", wires=2, shots=1000, mcmc=True, kernel_name="Local", num_burnin=100)
 
 By default, ``mcmc=False``, the ``kernel_name`` is ``None`` and ``num_burnin`` is ``0``. The ``Local`` kernel conducts a bit-flip local transition between states. The local kernel generates a random qubit site and then generates a random number to determine  the new bit at that qubit site.
@@ -165,5 +165,5 @@ The ``lightning.qubit`` device also supports a ``"NonZeroRandom"`` kernel. This 
 
 .. code-block:: python
 
-    import pennylane as qp
+    import pennylane2 as qp
     dev = qp.device("lightning.qubit", wires=2, shots=1000, mcmc=True, kernel_name="NonZeroRandom", num_burnin=200)

@@ -1402,7 +1402,7 @@ TEMPLATE_TEST_CASE("LightningGPU::applyPCPhase", "[LightningGPU_Param]", float,
 
 
         ``` python
-        import pennylane as qp
+        import pennylane2 as qp
         import numpy as np
 
         tgts = [1, 2]

@@ -28,26 +28,26 @@ from typing import Callable, List, Optional, Sequence, Tuple, Union
 from warnings import warn
 
 import numpy as np
-import pennylane as qp
+import pennylane2 as qp
 from numpy.random import BitGenerator, Generator, SeedSequence
 from numpy.typing import ArrayLike
-from pennylane.devices import Device, ExecutionConfig, MCMConfig
-from pennylane.devices.capabilities import DeviceCapabilities
-from pennylane.devices.modifiers import simulator_tracking, single_tape_support
-from pennylane.devices.preprocess import (
+from pennylane2.devices import Device, ExecutionConfig, MCMConfig
+from pennylane2.devices.capabilities import DeviceCapabilities
+from pennylane2.devices.modifiers import simulator_tracking, single_tape_support
+from pennylane2.devices.preprocess import (
     decompose,
     no_sampling,
     validate_adjoint_trainable_params,
     validate_measurements,
     validate_observables,
 )
-from pennylane.exceptions import DecompositionUndefinedError, DeviceError
-from pennylane.measurements.expval import ExpectationMP
-from pennylane.measurements.measurements import MeasurementProcess
-from pennylane.operation import Operator
-from pennylane.ops import Conditional, MidMeasure, PauliRot
-from pennylane.tape import QuantumScript, QuantumTape
-from pennylane.typing import Result, ResultBatch
+from pennylane2.exceptions import DecompositionUndefinedError, DeviceError
+from pennylane2.measurements.expval import ExpectationMP
+from pennylane2.measurements.measurements import MeasurementProcess
+from pennylane2.operation import Operator
+from pennylane2.ops import Conditional, MidMeasure, PauliRot
+from pennylane2.tape import QuantumScript, QuantumTape
+from pennylane2.typing import Result, ResultBatch
 
 from pennylane_lightning.core import __version__
 from pennylane_lightning.lightning_base._measurements import LightningBaseMeasurements

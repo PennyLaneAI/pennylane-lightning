@@ -6,6 +6,8 @@ name: Wheel::Linux::x86_64
 # **Who does it impact**: Wheels to be uploaded to PyPI.
 
 env:
+  # Temporary PR #10567 source; update the shared constraint after it merges.
+  PIP_CONSTRAINT: ${{ github.workspace }}/.github/pennylane2-constraints.txt
   GCC_VERSION: 13
 
 on:
@@ -173,7 +175,9 @@ jobs:
             source /opt/rh/gcc-toolset-13/enable -y
             PATH="/opt/rh/gcc-toolset-13/root/usr/bin:$PATH"
 
+          # Temporary PR #10567 constraint, using the container's checkout path.
           CIBW_ENVIRONMENT: |
+            PIP_CONSTRAINT="/project/.github/pennylane2-constraints.txt"
             PATH="/opt/rh/gcc-toolset-13/root/usr/bin:$PATH" CMAKE_ARGS="${{ matrix.pl_backend == 'lightning_qubit' && '-DCMAKE_BUILD_TYPE=Release -DLQ_ENABLE_KERNEL_OMP=ON' || '-DCMAKE_BUILD_TYPE=Release' }}"
 
           CIBW_BEFORE_TEST: |
@@ -186,7 +190,7 @@ jobs:
 
           CIBW_TEST_COMMAND: |
             DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
-            pl-device-test --device=${DEVICENAME} --skip-ops -x --tb=short
+            pl2-device-test --device=${DEVICENAME} --skip-ops -x --tb=short
 
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
 

@@ -15,7 +15,7 @@
 Unit tests for the serialization helper functions.
 """
 
-import pennylane as qp
+import pennylane2 as qp
 import pytest
 from conftest import LightningDevice as ld
 from conftest import device_name

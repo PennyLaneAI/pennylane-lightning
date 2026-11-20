@@ -29,6 +29,8 @@ on:
         default: false
 
 env:
+  # Temporary PR #10567 source; update the shared constraint after it merges.
+  PIP_CONSTRAINT: ${{ github.workspace }}/.github/pennylane2-constraints.txt
   DISTUTILS_USE_SDK: 1
   MSSdk: 1
 
@@ -203,7 +205,7 @@ jobs:
           }
           popd
           $DEVICENAME=(echo ${{ matrix.pl_backend }} | %{$_ -replace "_","."})
-          pl-device-test --device=$DEVICENAME --skip-ops -x --tb=short
+          pl2-device-test --device=$DEVICENAME --skip-ops -x --tb=short
 
       - name: Validate wheels
         run: |
