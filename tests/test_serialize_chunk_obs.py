@@ -35,16 +35,20 @@ class TestSerializeObs:
     @pytest.mark.parametrize("obs_chunk, expected", [(1, 5), (2, 6), (3, 7), (7, 7)])
     def test_chunk_obs(self, use_csingle, obs_chunk, expected):
         """Test chunking of observable array"""
-        with qp.tape.QuantumTape() as tape:
-            qp.expval(
-                0.5 * qp.PauliX(0) @ qp.PauliZ(1)
-                + 0.7 * qp.PauliZ(0) @ qp.PauliX(1)
-                + 1.2 * qp.PauliY(0) @ qp.PauliY(1)
-            )
-            qp.expval(qp.PauliZ(0) @ qp.PauliX(1))
-            qp.expval(qp.PauliY(wires=1))
-            qp.expval(qp.PauliX(0) @ qp.Hermitian([[0, 1], [1, 0]], wires=3) @ qp.Hadamard(2))
-            qp.expval(qp.Hermitian(qp.PauliZ.compute_matrix(), wires=0) @ qp.Identity(1))
+        tape = qp.tape.QuantumScript(
+            [],
+            [
+                qp.expval(
+                    0.5 * qp.PauliX(0) @ qp.PauliZ(1)
+                    + 0.7 * qp.PauliZ(0) @ qp.PauliX(1)
+                    + 1.2 * qp.PauliY(0) @ qp.PauliY(1)
+                ),
+                qp.expval(qp.PauliZ(0) @ qp.PauliX(1)),
+                qp.expval(qp.PauliY(wires=1)),
+                qp.expval(qp.PauliX(0) @ qp.Hermitian([[0, 1], [1, 0]], wires=3) @ qp.Hadamard(2)),
+                qp.expval(qp.Hermitian(qp.PauliZ.compute_matrix(), wires=0) @ qp.Identity(1)),
+            ],
+        )
         s, obs_idx = QuantumScriptSerializer(
             device_name, use_csingle, split_obs=obs_chunk
         ).serialize_observables(tape, self.wires_dict)

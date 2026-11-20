@@ -478,7 +478,7 @@ def test_state_prep(n_targets, tol, seed):
             wires = np.arange(n_targets, dtype=int)
         else:
             wires = rng.permutation(n_wires)[0:n_targets]
-        tape = qp.tape.QuantumTape(
+        tape = qp.tape.QuantumScript(
             [qp.StatePrep(init_state, wires=wires)] + [qp.X(i) for i in range(n_wires)],
             [qp.state()],
         )
