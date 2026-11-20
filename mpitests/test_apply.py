@@ -700,7 +700,7 @@ class TestGenerateSample:
         phi = 0.123
         varphi = -0.543
 
-        @partial(qp.set_shots, shots=2000)
+        @partial(qp.set_shots, shots=10000)
         @qp.qnode(dev_mpi)
         def circuit():
             qp.RX(theta, wires=[0])
@@ -742,7 +742,7 @@ class TestGenerateSample:
         phi = 0.123
         varphi = -0.543
 
-        @partial(qp.set_shots, shots=2000)
+        @partial(qp.set_shots, shots=10000)
         @qp.qnode(dev_mpi)
         def circuit():
             qp.RX(theta, wires=[0])
@@ -769,6 +769,31 @@ class TestGenerateSample:
             - 2 * np.cos(theta) * np.sin(phi) * np.sin(2 * varphi)
         ) / 4
         assert np.allclose(var, expected, atol=tol)
+
+    @pytest.mark.skipif(device_name != "lightning.gpu", reason="Only for LGPU")
+    @pytest.mark.parametrize("c_dtype", [np.complex128, np.complex64])
+    def test_seeded_samples(self, c_dtype, seed):
+        """Test that the samples are reproducible for a given seed, change with the seed,
+        and match the samples of the same device without MPI."""
+        num_wires = 4
+
+        def sample(dev_seed, mpi):
+            dev = qp.device(device_name, wires=num_wires, mpi=mpi, c_dtype=c_dtype, seed=dev_seed)
+
+            @partial(qp.set_shots, shots=1000)
+            @qp.qnode(dev)
+            def circuit():
+                for w in range(num_wires):
+                    qp.Hadamard(w)
+                return qp.sample(wires=range(num_wires))
+
+            return circuit()
+
+        res = sample(seed, mpi=True)
+
+        assert np.array_equal(res, sample(seed, mpi=True))
+        assert not np.array_equal(res, sample(seed + 1, mpi=True))
+        assert np.array_equal(res, sample(seed, mpi=False))
 
 
 class TestTensorVar:
