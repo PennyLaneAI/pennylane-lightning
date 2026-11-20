@@ -114,7 +114,7 @@ template <typename TypeList> void testProbabilities() {
 
         DYNAMIC_SECTION("Looping over different wire configurations - shots"
                         << StateVectorMPIToName<StateVectorT>::name) {
-            std::size_t num_shots = 1000;
+            std::size_t num_shots = 10000;
             auto probabilities = Measurer.probs(num_shots);
             REQUIRE_THAT(expected_prob,
                          Catch::Matchers::Approx(probabilities).margin(5e-2));
@@ -1263,6 +1263,86 @@ template <typename TypeList> void testSamples() {
 TEST_CASE("Samples", "[MeasurementsBase]") {
     if constexpr (BACKEND_FOUND) {
         testSamples<TestStateVectorMPIBackends>();
+    }
+}
+
+template <typename TypeList> void testSeededSamples() {
+    if constexpr (!std::is_same_v<TypeList, void>) {
+        using StateVectorT = typename TypeList::Type;
+        using PrecisionT = typename StateVectorT::PrecisionT;
+        using StateVectorRefT = StateVectorCudaManaged<PrecisionT>;
+
+        // Defining the State Vector that will be measured.
+        auto statevector_data = createNonTrivialState<StateVectorRefT>();
+
+        std::size_t num_qubits = 3;
+
+        MPIManagerGPU mpi_manager(MPI_COMM_WORLD);
+        REQUIRE(mpi_manager.getSize() == 2);
+
+        std::size_t mpi_buffersize = 1;
+
+        std::size_t nGlobalIndexBits =
+            std::bit_width(static_cast<std::size_t>(mpi_manager.getSize())) - 1;
+        std::size_t nLocalIndexBits = num_qubits - nGlobalIndexBits;
+
+        int nDevices = 0;
+        cudaGetDeviceCount(&nDevices);
+        REQUIRE(nDevices >= 2);
+        int deviceId = mpi_manager.getRank() % nDevices;
+        cudaSetDevice(deviceId);
+        DevTag<int> dt_local(deviceId, 0);
+        mpi_manager.Barrier();
+
+        auto sv_data_local = mpi_manager.scatter(statevector_data, 0);
+
+        StateVectorT sv(mpi_manager, dt_local, mpi_buffersize, nGlobalIndexBits,
+                        nLocalIndexBits);
+        sv.CopyHostDataToGpu(sv_data_local.data(), sv_data_local.size(), false);
+        mpi_manager.Barrier();
+
+        // Allocate the single-GPU reference on this rank's device: the
+        // (data, length) constructor would move the current device to 0.
+        StateVectorRefT sv_ref(num_qubits, dt_local);
+        sv_ref.CopyHostDataToGpu(statevector_data.data(),
+                                 statevector_data.size(), false);
+
+        MeasurementsMPI<StateVectorT> Measurer(sv);
+        Measurements<StateVectorRefT> Measurer_ref(sv_ref);
+
+        const std::size_t seed = 37;
+        const std::size_t num_samples = 1000;
+
+        Measurer.setSeed(seed);
+        auto samples = Measurer.generate_samples(num_samples);
+
+        DYNAMIC_SECTION("Same samples as without MPI - "
+                        << StateVectorMPIToName<StateVectorT>::name) {
+            Measurer_ref.setSeed(seed);
+            REQUIRE(samples == Measurer_ref.generate_samples(num_samples));
+        }
+
+        DYNAMIC_SECTION("Same samples for the same seed - "
+                        << StateVectorMPIToName<StateVectorT>::name) {
+            MeasurementsMPI<StateVectorT> Measurer_same_seed(sv);
+            Measurer_same_seed.setSeed(seed);
+            REQUIRE(samples ==
+                    Measurer_same_seed.generate_samples(num_samples));
+        }
+
+        DYNAMIC_SECTION("Different samples for a different seed - "
+                        << StateVectorMPIToName<StateVectorT>::name) {
+            Measurer.setSeed(seed + 1);
+            REQUIRE(samples != Measurer.generate_samples(num_samples));
+        }
+
+        testSeededSamples<typename TypeList::Next>();
+    }
+}
+
+TEST_CASE("Seeded samples", "[MeasurementsBase]") {
+    if constexpr (BACKEND_FOUND) {
+        testSeededSamples<TestStateVectorMPIBackends>();
     }
 }
 
