@@ -46,7 +46,7 @@ from pennylane.measurements.expval import ExpectationMP
 from pennylane.measurements.measurements import MeasurementProcess
 from pennylane.operation import Operator
 from pennylane.ops import Conditional, MidMeasure, PauliRot
-from pennylane.tape import QuantumScript, QuantumTape
+from pennylane.tape import QuantumScript
 from pennylane.typing import Result, ResultBatch
 
 from pennylane_lightning.core import __version__
@@ -56,8 +56,8 @@ from pennylane_lightning.lightning_base._mid_circuit_measure_tree_traversal impo
 )
 
 Result_or_ResultBatch = Union[Result, ResultBatch]
-QuantumTapeBatch = Sequence[QuantumTape]
-QuantumTape_or_Batch = Union[QuantumTape, QuantumTapeBatch]
+QuantumScriptBatch = Sequence[QuantumScript]
+QuantumScript_or_Batch = Union[QuantumScript, QuantumScriptBatch]
 PostprocessingFn = Callable[[ResultBatch], Result_or_ResultBatch]
 
 
@@ -139,10 +139,10 @@ class LightningBase(Device):
         """Allocate the underlying quantum state from the pre-defined wires or a given circuit if applicable. Circuit wires will be mapped to Pennylane ``default.qubit`` standard wire order.
 
         Args:
-            circuit (QuantumTape): The circuit to execute.
+            circuit (QuantumScript): The circuit to execute.
 
         Returns:
-            QuantumTape: The updated circuit with the wires mapped to the standard wire order.
+            QuantumScript: The updated circuit with the wires mapped to the standard wire order.
         """
 
         if self.wires is None:
@@ -164,13 +164,13 @@ class LightningBase(Device):
     @abstractmethod
     def execute(
         self,
-        circuits: QuantumTape_or_Batch,
+        circuits: QuantumScript_or_Batch,
         execution_config: ExecutionConfig | None = None,
     ) -> Result_or_ResultBatch:
         """Execute a circuit or a batch of circuits and turn it into results.
 
         Args:
-            circuits (Union[QuantumTape, Sequence[QuantumTape]]): the quantum circuits to be executed
+            circuits (Union[QuantumScript, Sequence[QuantumScript]]): the quantum circuits to be executed
             execution_config (ExecutionConfig): a data structure with additional information required for execution
 
         Returns:
@@ -189,7 +189,7 @@ class LightningBase(Device):
         """Simulate a single quantum script.
 
         Args:
-            circuit (QuantumTape): The single circuit to simulate
+            circuit (QuantumScript): The single circuit to simulate
             state (Lightning [Device] StateVector): A handle to the underlying Lightning state
             postselect_mode (str): Configuration for handling shots with mid-circuit measurement
                 postselection. Use ``"hw-like"`` to discard invalid shots and ``"fill-shots"`` to
@@ -255,13 +255,13 @@ class LightningBase(Device):
     def supports_derivatives(
         self,
         execution_config: ExecutionConfig | None = None,
-        circuit: Optional[qp.tape.QuantumTape] = None,
+        circuit: Optional[qp.tape.QuantumScript] = None,
     ) -> bool:
         """Check whether or not derivatives are available for a given configuration and circuit.
 
         Args:
             execution_config (ExecutionConfig): An optional configuration of the desired derivative calculation. Default is ``None``.
-            circuit (QuantumTape): An optional circuit to check derivatives support for. Default is ``None``.
+            circuit (QuantumScript): An optional circuit to check derivatives support for. Default is ``None``.
 
         Returns:
             Bool: Whether or not a derivative can be calculated provided the given information
@@ -270,7 +270,7 @@ class LightningBase(Device):
 
     def jacobian(
         self,
-        circuit: QuantumTape,
+        circuit: QuantumScript,
         state,  # Lightning [Device] StateVector
         batch_obs: bool = False,
         wire_map: dict = None,
@@ -278,7 +278,7 @@ class LightningBase(Device):
         """Compute the Jacobian for a single quantum script.
 
         Args:
-            circuit (QuantumTape): The single circuit to simulate
+            circuit (QuantumScript): The single circuit to simulate
             state (Lightning [Device] StateVector): A handle to the underlying Lightning state
             batch_obs (bool): Determine whether we process observables in parallel when
                 computing the jacobian. Default is ``False``.
@@ -310,7 +310,7 @@ class LightningBase(Device):
 
     def simulate_and_jacobian(
         self,
-        circuit: QuantumTape,
+        circuit: QuantumScript,
         state,  # Lightning [Device] StateVector
         batch_obs: bool = False,
         wire_map: dict = None,
@@ -318,7 +318,7 @@ class LightningBase(Device):
         """Simulate a single quantum script and compute its Jacobian.
 
         Args:
-            circuit (QuantumTape): The single circuit to simulate
+            circuit (QuantumScript): The single circuit to simulate
             state (Lightning [Device] StateVector): A handle to the underlying Lightning state
             batch_obs (bool): Determine whether we process observables in parallel when
                 computing the jacobian. Default is ``False``.
@@ -338,7 +338,7 @@ class LightningBase(Device):
 
     def vjp(  # pylint: disable=too-many-arguments, too-many-positional-arguments
         self,
-        circuit: QuantumTape,
+        circuit: QuantumScript,
         cotangents: Tuple[Number],
         state,  # Lightning [Device] StateVector
         batch_obs: bool = False,
@@ -346,7 +346,7 @@ class LightningBase(Device):
     ):
         """Compute the Vector-Jacobian Product (VJP) for a single quantum script.
         Args:
-            circuit (QuantumTape): The single circuit to simulate
+            circuit (QuantumScript): The single circuit to simulate
             cotangents (Tuple[Number, Tuple[Number]]): Gradient-output vector. Must
                 have shape matching the output shape of the corresponding circuit. If
                 the circuit has a single output, ``cotangents`` may be a single number,
@@ -381,7 +381,7 @@ class LightningBase(Device):
 
     def simulate_and_vjp(  # pylint: disable=too-many-arguments, too-many-positional-arguments
         self,
-        circuit: QuantumTape,
+        circuit: QuantumScript,
         cotangents: Tuple[Number],
         state,
         batch_obs: bool = False,
@@ -389,7 +389,7 @@ class LightningBase(Device):
     ) -> Tuple:
         """Simulate a single quantum script and compute its Vector-Jacobian Product (VJP).
         Args:
-            circuit (QuantumTape): The single circuit to simulate
+            circuit (QuantumScript): The single circuit to simulate
             cotangents (Tuple[Number, Tuple[Number]]): Gradient-output vector. Must
                 have shape matching the output shape of the corresponding circuit. If
                 the circuit has a single output, ``cotangents`` may be a single number,
@@ -414,13 +414,13 @@ class LightningBase(Device):
 
     def compute_derivatives(
         self,
-        circuits: QuantumTape_or_Batch,
+        circuits: QuantumScript_or_Batch,
         execution_config: ExecutionConfig | None = None,
     ) -> Tuple:
         """Calculate the jacobian of either a single or a batch of circuits on the device.
 
         Args:
-            circuits (Union[QuantumTape, Sequence[QuantumTape]]): the circuits to calculate derivatives for
+            circuits (Union[QuantumScript, Sequence[QuantumScript]]): the circuits to calculate derivatives for
             execution_config (ExecutionConfig): a data structure with all additional information required for execution. Default is ``None``, which sets the execution config to the default setup.
 
         Returns:
@@ -443,13 +443,13 @@ class LightningBase(Device):
 
     def execute_and_compute_derivatives(
         self,
-        circuits: QuantumTape_or_Batch,
+        circuits: QuantumScript_or_Batch,
         execution_config: ExecutionConfig | None = None,
     ) -> Tuple:
         """Compute the results and jacobians of circuits at the same time.
 
         Args:
-            circuits (Union[QuantumTape, Sequence[QuantumTape]]): the circuits or batch of circuits
+            circuits (Union[QuantumScript, Sequence[QuantumScript]]): the circuits or batch of circuits
             execution_config (ExecutionConfig): a data structure with all additional information required for execution. Default is ``None``, which sets the execution config to the default setup.
 
         Returns:
@@ -473,13 +473,13 @@ class LightningBase(Device):
     def supports_vjp(
         self,
         execution_config: ExecutionConfig | None = None,
-        circuit: Optional[QuantumTape] = None,
+        circuit: Optional[QuantumScript] = None,
     ) -> bool:
         """Whether or not this device defines a custom vector jacobian product.
         ``Lightning[Device]`` will check if supports adjoint differentiation with analytic results.
         Args:
             execution_config (ExecutionConfig): The configuration of the desired derivative calculation
-            circuit (QuantumTape): An optional circuit to check derivatives support for.
+            circuit (QuantumScript): An optional circuit to check derivatives support for.
         Returns:
             Bool: Whether or not a derivative can be calculated provided the given information
         """
@@ -487,14 +487,14 @@ class LightningBase(Device):
 
     def compute_vjp(
         self,
-        circuits: QuantumTape_or_Batch,
+        circuits: QuantumScript_or_Batch,
         cotangents: Tuple[Number],
         execution_config: ExecutionConfig | None = None,
     ) -> Tuple:
         r"""The vector jacobian product used in reverse-mode differentiation. ``Lightning[Device]`` uses the
         adjoint differentiation method to compute the VJP.
         Args:
-            circuits (Union[QuantumTape, Sequence[QuantumTape]]): the circuit or batch of circuits
+            circuits (Union[QuantumScript, Sequence[QuantumScript]]): the circuit or batch of circuits
             cotangents (Tuple[Number, Tuple[Number]]): Gradient-output vector. Must have shape matching the output shape of the
                 corresponding circuit. If the circuit has a single output, ``cotangents`` may be a single number, not an iterable
                 of numbers.
@@ -535,13 +535,13 @@ class LightningBase(Device):
 
     def execute_and_compute_vjp(
         self,
-        circuits: QuantumTape_or_Batch,
+        circuits: QuantumScript_or_Batch,
         cotangents: Tuple[Number],
         execution_config: ExecutionConfig | None = None,
     ) -> Tuple:
         """Calculate both the results and the vector jacobian product used in reverse-mode differentiation.
         Args:
-            circuits (Union[QuantumTape, Sequence[QuantumTape]]): the circuit or batch of circuits to be executed
+            circuits (Union[QuantumScript, Sequence[QuantumScript]]): the circuit or batch of circuits to be executed
             cotangents (Tuple[Number, Tuple[Number]]): Gradient-output vector. Must have shape matching the output shape of the
                 corresponding circuit. If the circuit has a single output, ``cotangents`` may be a single number, not an iterable
                 of numbers.
