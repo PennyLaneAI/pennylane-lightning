@@ -18,8 +18,8 @@ Helper functions for serializing quantum tapes.
 from typing import List, Sequence, Tuple
 
 import numpy as np
-import pennylane as qp
-from pennylane import (
+import pennylane2 as qp
+from pennylane2 import (
     BasisState,
     Hadamard,
     Identity,
@@ -32,10 +32,10 @@ from pennylane import (
     StatePrep,
     matrix,
 )
-from pennylane.exceptions import DeviceError
-from pennylane.math import unwrap
-from pennylane.ops import LinearCombination, Prod, SProd, Sum
-from pennylane.tape import QuantumScript
+from pennylane2.exceptions import DeviceError
+from pennylane2.math import unwrap
+from pennylane2.ops import LinearCombination, Prod, SProd, Sum
+from pennylane2.tape import QuantumScript
 
 NAMED_OBS = (Identity, PauliX, PauliY, PauliZ, Hadamard)
 OP_MATH_OBS = (Prod, SProd, Sum, LinearCombination)
@@ -48,7 +48,7 @@ PAULI_NAME_MAP = {
 
 
 class QuantumScriptSerializer:
-    """Serializer class for `pennylane.tape.QuantumScript` data.
+    """Serializer class for `pennylane2.tape.QuantumScript` data.
 
     Args:
     device_name: device shortname.
@@ -280,7 +280,7 @@ class QuantumScriptSerializer:
         return self.sparse_hamiltonian_obs(data, indices, offsets, wires)
 
     def _pauli_word(self, observable, wires_map: dict = None):
-        """Serialize a :class:`pennylane.pauli.PauliWord` into a Named or Tensor observable."""
+        """Serialize a :class:`pennylane2.pauli.PauliWord` into a Named or Tensor observable."""
 
         def map_wire(wire: int):
             return wires_map[wire] if wires_map else wire
@@ -300,7 +300,7 @@ class QuantumScriptSerializer:
         )
 
     def _pauli_sentence(self, observable, wires_map: dict = None):
-        """Serialize a :class:`pennylane.pauli.PauliSentence` into a Hamiltonian."""
+        """Serialize a :class:`pennylane2.pauli.PauliSentence` into a Hamiltonian."""
         # Trivial Pauli sentences' items is empty, cannot unpack
         if not observable:
             return self.hamiltonian_obs(np.array([0.0]).astype(self.rtype), [self._ob(Identity(0))])
@@ -320,7 +320,7 @@ class QuantumScriptSerializer:
 
     # pylint: disable=protected-access, too-many-return-statements
     def _ob(self, observable, wires_map: dict = None):
-        """Serialize a :class:`pennylane.operation.Operator` into an Observable."""
+        """Serialize a :class:`pennylane2.operation.Operator` into an Observable."""
         if isinstance(observable, NAMED_OBS):
             return self._named_obs(observable, wires_map)
         if observable.pauli_rep is not None:
@@ -349,7 +349,7 @@ class QuantumScriptSerializer:
         Returns:
             list(ObsStructC128 or ObsStructC64): A list of observable objects compatible with
                 the C++ backend. For unsupported observables, the observable matrix is used
-                to create a :class:`~pennylane.Hermitian` to be used for serialization.
+                to create a :class:`~pennylane2.Hermitian` to be used for serialization.
         """
 
         serialized_obs = []

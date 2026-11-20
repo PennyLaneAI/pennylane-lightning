@@ -72,6 +72,9 @@ If you're not sure which simulator to use, check out our [PennyLane Performance]
 
 ## Installation
 
+Development builds require PennyLane2 (`import pennylane2 as qp`).
+Lightning package names and device names remain unchanged.
+
 The following table summarizes the supported platforms and the primary installation mode:
 
 |                        | Linux x86 | Linux ARM | MacOS ARM | Windows   |

@@ -35,8 +35,8 @@ except ImportError as error_import:
     warn(str(error_import), UserWarning)
 
 import numpy as np
-import pennylane as qp
-from pennylane.measurements import MeasurementProcess
+import pennylane2 as qp
+from pennylane2.measurements import MeasurementProcess
 
 # pylint: disable=ungrouped-imports
 from pennylane_lightning.lightning_base._measurements import LightningBaseMeasurements

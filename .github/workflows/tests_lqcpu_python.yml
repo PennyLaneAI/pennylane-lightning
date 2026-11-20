@@ -21,6 +21,12 @@ on:
       - main
 
 env:
+  # Temporary for PR #10567: use its branch instead of the separate main checkout.
+  # Stable/release Lightning uses Classic; latest or unset uses the PennyLane2 branch.
+  USE_PENNYLANE2_BRANCH: ${{ inputs.lightning-version != 'stable' && inputs.lightning-version != 'release' && 'true' || 'false' }}
+  DEVICE_TEST_COMMAND: ${{ (inputs.pennylane-version == 'stable' || inputs.pennylane-version == 'release') && 'pl-device-test' || 'pl2-device-test' }}
+  # pip uses this file to select the PennyLane2 revision.
+  PIP_CONSTRAINT: ${{ inputs.lightning-version != 'stable' && inputs.lightning-version != 'release' && format('{0}/.github/pennylane2-constraints.txt', github.workspace) || '' }}
   TORCH_VERSION: 2.5.1
   COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing -p no:warnings --tb=native"
   GCC_VERSION: 13
@@ -181,17 +187,18 @@ jobs:
           python -m pip install --group tests
           # pyscf is not compatible with numpy 2.4 yet
           python -m pip install openfermionpyscf "numpy<2.4" semantic-version
-          python -m pip install ${{ github.workspace }}/$WHEEL_NAME --no-deps --force-reinstall
+          # Resolve PennyLane2 here while it is temporarily absent from the test group.
+          python -m pip install ${{ github.workspace }}/$WHEEL_NAME
 
       - name: Checkout PennyLane for release or latest build
-        if: inputs.pennylane-version == 'release' || inputs.pennylane-version == 'latest'
+        if: inputs.pennylane-version == 'release' || (inputs.pennylane-version == 'latest' && env.USE_PENNYLANE2_BRANCH == 'false')
         uses: actions/checkout@v4
         with:
           path: pennylane
           repository: PennyLaneAI/pennylane
 
       - name: Switch to latest build of PennyLane
-        if: inputs.pennylane-version == 'latest'
+        if: inputs.pennylane-version == 'latest' && env.USE_PENNYLANE2_BRANCH == 'false'
         run: |
           cd pennylane
           git checkout main
@@ -233,8 +240,8 @@ jobs:
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
           # Remove source files here to ensure pytest collect source coverage from wheel package
           rm -r pennylane_lightning
-          pl-device-test --device ${DEVICENAME} --skip-ops --shots=10000 $COVERAGE_FLAGS --cov-append
-          pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
+          $DEVICE_TEST_COMMAND --device ${DEVICENAME} --skip-ops --shots=10000 $COVERAGE_FLAGS --cov-append
+          $DEVICE_TEST_COMMAND --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
 
       - name: Python packages
         run: pip freeze

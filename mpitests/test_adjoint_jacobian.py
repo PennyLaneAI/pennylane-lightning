@@ -20,17 +20,17 @@ import itertools
 import math
 from functools import partial
 
-import pennylane as qp
+import pennylane2 as qp
 import pytest
 from conftest import LightningDevice as ld
 from conftest import device_name
 from mpi4py import MPI
-from pennylane import QNode
-from pennylane import numpy as np
-from pennylane import qnode
-from pennylane.devices import ExecutionConfig
-from pennylane.exceptions import QuantumFunctionError
-from pennylane.tape import QuantumScript
+from pennylane2 import QNode
+from pennylane2 import numpy as np
+from pennylane2 import qnode
+from pennylane2.devices import ExecutionConfig
+from pennylane2.exceptions import QuantumFunctionError
+from pennylane2.tape import QuantumScript
 from scipy.stats import unitary_group
 
 if not ld._CPP_BINARY_AVAILABLE:

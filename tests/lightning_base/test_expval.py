@@ -19,10 +19,10 @@ import itertools
 
 # pylint: disable=too-many-arguments, redefined-outer-name
 import numpy as np
-import pennylane as qp
+import pennylane2 as qp
 import pytest
 from conftest import PHI, THETA, VARPHI, LightningDevice, device_name, get_hermitian_matrix
-from pennylane.devices import DefaultQubit
+from pennylane2.devices import DefaultQubit
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-access
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)

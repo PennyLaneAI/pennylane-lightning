@@ -33,6 +33,8 @@ concurrency:
   cancel-in-progress: true
 
 env:
+  # Temporary PR #10567 source; update the shared constraint after it merges.
+  PIP_CONSTRAINT: ${{ github.workspace }}/.github/pennylane2-constraints.txt
   GCC_VERSION: 13
 
 permissions:
@@ -170,7 +172,9 @@ jobs:
             source /opt/rh/gcc-toolset-13/enable -y
             PATH="/opt/rh/gcc-toolset-13/root/usr/bin:$PATH"
 
+          # Temporary PR #10567 constraint, using the container's checkout path.
           CIBW_ENVIRONMENT: |
+            PIP_CONSTRAINT="/project/.github/pennylane2-constraints.txt"
             PATH="/opt/rh/gcc-toolset-13/root/usr/bin:$PATH" CMAKE_ARGS="${{ matrix.pl_backend == 'lightning_qubit' && '-DCMAKE_BUILD_TYPE=Release -DLQ_ENABLE_KERNEL_OMP=ON' || '-DCMAKE_BUILD_TYPE=Release' }}"
 
           CIBW_MANYLINUX_AARCH64_IMAGE: manylinux_2_28
@@ -187,11 +191,11 @@ jobs:
 
           CIBW_TEST_COMMAND: |
             DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
-            python -c "import pennylane as qp; print(qp.about())"
-            python -c "import pennylane as qp; dev = qp.device(\"lightning.qubit\", wires=3); print(dev); dev2 = qp.device(\"lightning.kokkos\", wires=5); print(dev2)"
-            which pl-device-test
+            python -c "import pennylane2 as qp; print(qp.about())"
+            python -c "import pennylane2 as qp; dev = qp.device(\"lightning.qubit\", wires=3); print(dev); dev2 = qp.device(\"lightning.kokkos\", wires=5); print(dev2)"
+            which pl2-device-test
             ls
-            pl-device-test --device=${DEVICENAME} --skip-ops -x --tb=short
+            pl2-device-test --device=${DEVICENAME} --skip-ops -x --tb=short
 
         run: python3.12 -m cibuildwheel --output-dir wheelhouse
 

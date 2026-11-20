@@ -123,10 +123,10 @@ if __name__ == "__main__":
     module_name = "pennylane_lightning." + backend + ":Lightning" + module_suffix
 
     # Project entry point.
-    pyproject["project"]["entry-points"]["pennylane.plugins"] = {device_name: module_name}
+    pyproject["project"]["entry-points"]["pennylane2.plugins"] = {device_name: module_name}
 
     dependencies = [
-        "pennylane>=0.45",
+        "pennylane2>=2.0.0.dev0",
         "scipy-openblas32>=0.3.26",
     ]
 

@@ -25,12 +25,14 @@ classifiers = [
     "Programming Language :: Python :: 3.14",
     "Topic :: Scientific/Engineering :: Physics",
 ]
-dependencies = ["pennylane>=0.45", "scipy-openblas32>=0.3.26"]
+dependencies = ["pennylane2>=2.0.0.dev0", "scipy-openblas32>=0.3.26"]
 dynamic = [ "version",]
 [[project.maintainers]]
 name = "Xanadu Quantum Technologies Inc."
 email = "software@xanadu.ai"
 
+# Temporary until pip selects PennyLane2-compatible Lightning: install them together,
+# not through these tool groups, which would otherwise pull released Lightning and Classic.
 [dependency-groups]
 dev = [
     "build",
@@ -38,7 +40,7 @@ dev = [
     "cmake",
     "tomlkit",
     "custatevec-cu12; sys_platform == 'linux'",
-    "pennylane @ git+https://github.com/PennyLaneAI/pennylane.git@main",
+    "scipy-openblas32>=0.3.26",
     "pytest>=8.4.1",
     "pytest-benchmark",
     "pytest-cov>=3.0.0",
@@ -46,7 +48,7 @@ dev = [
     "pytest-rng",
     "pytest-xdist>=2.5.0",
     "pytest-split",
-    "flaky>=3.7.0", # For pl-device-test
+    "flaky>=3.7.0", # For pl2-device-test
     "pre-commit>=2.19.0",
     "black==26.3.1",
     "clang-tidy~=20.1",
@@ -56,6 +58,7 @@ dev = [
     "click==8.2.1"
 ]
 tests = [
+    "scipy-openblas32>=0.3.26",
     "ninja",
     "tomlkit",
     "pytest>=8.4.1",
@@ -65,8 +68,7 @@ tests = [
     "pytest-rng",
     "pytest-xdist>=2.5.0",
     "pytest-split",
-    "flaky>=3.7.0", # For pl-device-test
-    "pennylane @ git+https://github.com/PennyLaneAI/pennylane.git@main"
+    "flaky>=3.7.0", # For pl2-device-test
 ]
 base = [
     "ninja",
@@ -76,8 +78,7 @@ base = [
     "pytest-mock>=3.7.0",
     "pytest-rng",
     "pytest-xdist>=2.5.0",
-    "flaky>=3.7.0", # For pl-device-test
-    "pennylane>=0.45",
+    "flaky>=3.7.0", # For pl2-device-test
     "black==26.3.1",
     "clang-tidy~=20.1",
     "clang-format~=20.1",
@@ -89,7 +90,6 @@ docs = [
     "wheel",
     "tomlkit",
     "custatevec-cu12; sys_platform == 'linux'",
-    "pennylane @ git+https://github.com/PennyLaneAI/pennylane.git@main",
     "breathe",
     "docutils==0.21.2",
     "exhale>=0.3.3",
@@ -115,7 +115,7 @@ gpu = [ "pennylane-lightning-gpu",]
 [project.urls]
 Homepage = "https://github.com/PennyLaneAI/pennylane-lightning"
 
-[project.entry-points."pennylane.plugins"]
+[project.entry-points."pennylane2.plugins"]
 "lightning.qubit" = "pennylane_lightning.lightning_qubit:LightningQubit"
 
 [tool.bandit]

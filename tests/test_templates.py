@@ -17,10 +17,10 @@ Test the correctness of templates with Lightning devices.
 
 import functools
 
-import pennylane as qp
+import pennylane2 as qp
 import pytest
 from conftest import LightningDevice, device_name, get_random_normalized_state
-from pennylane import numpy as np
+from pennylane2 import numpy as np
 
 # pylint: disable=missing-function-docstring, too-few-public-methods
 

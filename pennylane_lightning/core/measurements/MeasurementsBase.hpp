@@ -162,7 +162,7 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
         PrecisionT result{0.0};
 
         if (obs.getObsName().find("SparseHamiltonian") != std::string::npos) {
-            // SparseHamiltonian does not support shot measurement in pennylane.
+            // SparseHamiltonian does not support shot measurement in pennylane2.
             PL_ABORT("SparseHamiltonian observables do not support shot "
                      "measurement.");
         } else if (obs.getObsName().find("Hamiltonian") != std::string::npos) {
@@ -240,7 +240,7 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
         -> PrecisionT {
         PrecisionT result{0.0};
         if (obs.getObsName().find("SparseHamiltonian") != std::string::npos) {
-            // SparseHamiltonian does not support shot measurement in pennylane.
+            // SparseHamiltonian does not support shot measurement in pennylane2.
             PL_ABORT("SparseHamiltonian observables do not support shot "
                      "measurement.");
         } else if (obs.getObsName().find("Hamiltonian") != std::string::npos) {

@@ -1,0 +1,2 @@
+# Temporary for PR #10567; switch to main after the PennyLane2 rename merges.
+pennylane2 @ git+https://github.com/PennyLaneAI/pennylane.git@chore/rename-pennylane-module

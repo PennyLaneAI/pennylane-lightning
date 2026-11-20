@@ -18,13 +18,13 @@ Unit tests for lightning base statevector class
 import math
 
 import numpy as np
-import pennylane as qp
+import pennylane2 as qp
 import pytest
 import scipy as sp
 from conftest import LightningDevice, LightningStateVector, device_name  # tested device
-from pennylane.exceptions import DeviceError
-from pennylane.tape import QuantumScript
-from pennylane.wires import Wires
+from pennylane2.exceptions import DeviceError
+from pennylane2.tape import QuantumScript
+from pennylane2.wires import Wires
 from scipy.sparse import coo_matrix, csc_matrix, csr_matrix
 
 if device_name == "lightning.kokkos":

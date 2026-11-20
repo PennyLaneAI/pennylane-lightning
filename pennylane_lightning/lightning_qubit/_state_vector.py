@@ -29,13 +29,13 @@ except ImportError as ex:
 from typing import Union
 
 import numpy as np
-import pennylane as qp
+import pennylane2 as qp
 import scipy as sp
 from numpy.random import Generator
-from pennylane.measurements import MidMeasureMP
-from pennylane.ops import Conditional
-from pennylane.ops.op_math import Adjoint
-from pennylane.wires import Wires
+from pennylane2.measurements import MidMeasureMP
+from pennylane2.ops import Conditional
+from pennylane2.ops.op_math import Adjoint
+from pennylane2.wires import Wires
 
 # pylint: disable=ungrouped-imports
 from pennylane_lightning.lightning_base._state_vector import LightningBaseStateVector
@@ -146,7 +146,7 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
         """Apply an arbitrary controlled operation to the state tensor.
 
         Args:
-            operation (~pennylane.operation.Operation): controlled operation to apply
+            operation (~pennylane2.operation.Operation): controlled operation to apply
             adjoint (bool): Apply the adjoint of the operation if True
 
         Returns:
@@ -188,7 +188,7 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
         """Apply an arbitrary controlled operation to the state tensor.
 
         Args:
-            operation (~pennylane.operation.Operation): controlled operation to apply
+            operation (~pennylane2.operation.Operation): controlled operation to apply
         Returns:
             None
         """
@@ -223,7 +223,7 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
         """Apply a list of operations to the state tensor.
 
         Args:
-            operations (list[~pennylane.operation.Operation]): operations to apply
+            operations (list[~pennylane2.operation.Operation]): operations to apply
             mid_measurements (None, dict): Dictionary of mid-circuit measurements
             postselect_mode (str): Configuration for handling shots with mid-circuit measurement
                 postselection. Use ``"hw-like"`` to discard invalid shots and ``"fill-shots"`` to

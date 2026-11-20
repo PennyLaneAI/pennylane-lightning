@@ -45,7 +45,7 @@ except ImportError as ex:
     warn(str(ex), UserWarning)
 
 import numpy as np
-from pennylane.tape import QuantumScript
+from pennylane2.tape import QuantumScript
 
 # pylint: disable=ungrouped-imports
 from pennylane_lightning.lightning_base._adjoint_jacobian import LightningBaseAdjointJacobian

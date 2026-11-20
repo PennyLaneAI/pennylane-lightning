@@ -19,14 +19,14 @@ import math
 from functools import partial
 
 import numpy as np
-import pennylane as qp
+import pennylane2 as qp
 import pytest
 from conftest import PHI, THETA
 from conftest import LightningDevice as ld
 from conftest import device_name, get_random_matrix, get_random_normalized_state
-from pennylane.exceptions import DeviceError
-from pennylane.operation import Operation
-from pennylane.wires import Wires
+from pennylane2.exceptions import DeviceError
+from pennylane2.operation import Operation
+from pennylane2.wires import Wires
 
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)

@@ -18,12 +18,12 @@ Tests for the ``vjp`` method.
 import itertools
 import math
 
-import pennylane as qp
+import pennylane2 as qp
 import pytest
 from conftest import LightningDevice as ld
 from conftest import device_name
-from pennylane import numpy as np
-from pennylane.exceptions import QuantumFunctionError
+from pennylane2 import numpy as np
+from pennylane2.exceptions import QuantumFunctionError
 
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)

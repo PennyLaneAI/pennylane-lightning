@@ -23,23 +23,23 @@ from typing import List, Optional, Union
 from warnings import warn
 
 import numpy as np
-import pennylane as qp
+import pennylane2 as qp
 from numpy.random import BitGenerator, Generator, SeedSequence
 from numpy.typing import ArrayLike
-from pennylane.devices import ExecutionConfig
-from pennylane.devices.capabilities import OperatorProperties
-from pennylane.devices.modifiers import simulator_tracking, single_tape_support
-from pennylane.devices.preprocess import (
+from pennylane2.devices import ExecutionConfig
+from pennylane2.devices.capabilities import OperatorProperties
+from pennylane2.devices.modifiers import simulator_tracking, single_tape_support
+from pennylane2.devices.preprocess import (
     decompose,
     device_resolve_dynamic_wires,
     validate_device_wires,
     validate_measurements,
     validate_observables,
 )
-from pennylane.exceptions import DeviceError
-from pennylane.operation import Operator
-from pennylane.ops import MidMeasure
-from pennylane.transforms import defer_measurements, dynamic_one_shot
+from pennylane2.exceptions import DeviceError
+from pennylane2.operation import Operator
+from pennylane2.ops import MidMeasure
+from pennylane2.transforms import defer_measurements, dynamic_one_shot
 
 from pennylane_lightning.lightning_base.lightning_base import (
     LightningBase,

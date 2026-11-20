@@ -88,8 +88,8 @@ RUN python -m build --wheel
 FROM base-runtime AS wheel-lightning-qubit
 ARG PENNYLANE_VERSION
 COPY --from=build-wheel-lightning-qubit /opt/pennylane-lightning/dist/ /
-RUN pip install --force-reinstall --no-cache-dir pennylane_lightning*.whl && rm pennylane_lightning*.whl
-RUN pip install --no-cache-dir git+https://github.com/PennyLaneAI/pennylane.git@${PENNYLANE_VERSION}
+# Install both together until pip selects PennyLane2-compatible Lightning.
+RUN pip install --force-reinstall --no-cache-dir pennylane_lightning*.whl "git+https://github.com/PennyLaneAI/pennylane.git@${PENNYLANE_VERSION}" && rm pennylane_lightning*.whl
 
 # Download Lightning release and build lightning-kokkos backend with Kokkos-OpenMP
 FROM base-build-python AS build-wheel-lightning-kokkos-openmp
@@ -104,8 +104,8 @@ FROM base-runtime AS wheel-lightning-kokkos-openmp
 ARG PENNYLANE_VERSION
 COPY --from=build-wheel-lightning-kokkos-openmp /opt/pennylane-lightning/dist/ /
 COPY --from=build-wheel-lightning-qubit /opt/pennylane-lightning/dist/ /
-RUN pip install --force-reinstall --no-cache-dir pennylane_lightning*.whl && rm pennylane_lightning*.whl
-RUN pip install --no-cache-dir git+https://github.com/PennyLaneAI/pennylane.git@${PENNYLANE_VERSION}
+# Install both together until pip selects PennyLane2-compatible Lightning.
+RUN pip install --force-reinstall --no-cache-dir pennylane_lightning*.whl "git+https://github.com/PennyLaneAI/pennylane.git@${PENNYLANE_VERSION}" && rm pennylane_lightning*.whl
 
 # Install CUDA-12 in build venv image
 FROM base-build-python AS base-build-cuda
@@ -153,8 +153,8 @@ RUN python3 -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 COPY --from=build-wheel-lightning-kokkos-cuda /opt/pennylane-lightning/dist/ /
 COPY --from=build-wheel-lightning-qubit /opt/pennylane-lightning/dist/ /
-RUN pip install --force-reinstall --no-cache-dir pennylane_lightning*.whl && rm pennylane_lightning*.whl
-RUN pip install --no-cache-dir git+https://github.com/PennyLaneAI/pennylane.git@${PENNYLANE_VERSION}
+# Install both together until pip selects PennyLane2-compatible Lightning.
+RUN pip install --force-reinstall --no-cache-dir pennylane_lightning*.whl "git+https://github.com/PennyLaneAI/pennylane.git@${PENNYLANE_VERSION}" && rm pennylane_lightning*.whl
 
 # Download and build Lightning-GPU release
 FROM base-build-cuda AS build-wheel-lightning-gpu
@@ -187,8 +187,8 @@ RUN pip install --no-cache-dir custatevec-cu12
 ENV LD_LIBRARY_PATH="$VIRTUAL_ENV/lib/python3.12/site-packages/cuquantum/lib:$LD_LIBRARY_PATH"
 COPY --from=build-wheel-lightning-gpu /opt/pennylane-lightning/dist/ /
 COPY --from=build-wheel-lightning-qubit /opt/pennylane-lightning/dist/ /
-RUN pip install --no-cache-dir --force-reinstall pennylane_lightning*.whl && rm pennylane_lightning*.whl
-RUN pip install --no-cache-dir git+https://github.com/PennyLaneAI/pennylane.git@${PENNYLANE_VERSION}
+# Install both together until pip selects PennyLane2-compatible Lightning.
+RUN pip install --no-cache-dir --force-reinstall pennylane_lightning*.whl "git+https://github.com/PennyLaneAI/pennylane.git@${PENNYLANE_VERSION}" && rm pennylane_lightning*.whl
 
 # Install ROCm in build venv image
 FROM base-build-python AS base-build-rocm
@@ -239,5 +239,5 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 ENV LD_LIBRARY_PATH="/usr/lib/llvm-14/lib:$LD_LIBRARY_PATH"
 COPY --from=build-wheel-lightning-kokkos-rocm /opt/pennylane-lightning/dist/ /
 COPY --from=build-wheel-lightning-qubit /opt/pennylane-lightning/dist/ /
-RUN pip install --force-reinstall --no-cache-dir pennylane_lightning*.whl && rm pennylane_lightning*.whl
-RUN pip install --no-cache-dir git+https://github.com/PennyLaneAI/pennylane.git@${PENNYLANE_VERSION}
+# Install both together until pip selects PennyLane2-compatible Lightning.
+RUN pip install --force-reinstall --no-cache-dir pennylane_lightning*.whl "git+https://github.com/PennyLaneAI/pennylane.git@${PENNYLANE_VERSION}" && rm pennylane_lightning*.whl

@@ -18,7 +18,7 @@ Tests for ``adjoint_jacobian`` method on Lightning devices.
 import itertools
 import math
 
-import pennylane as qp
+import pennylane2 as qp
 import pytest
 from conftest import LightningDevice as ld
 from conftest import (
@@ -27,10 +27,10 @@ from conftest import (
     get_random_matrix,
     get_random_normalized_state,
 )
-from pennylane import QNode
-from pennylane import numpy as np
-from pennylane import qchem, qnode
-from pennylane.exceptions import QuantumFunctionError
+from pennylane2 import QNode
+from pennylane2 import numpy as np
+from pennylane2 import qchem, qnode
+from pennylane2.exceptions import QuantumFunctionError
 from scipy.stats import unitary_group
 
 I, X, Y, Z = (
