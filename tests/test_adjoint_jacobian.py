@@ -111,18 +111,14 @@ class TestAdjointJacobian:
         """Test if a QuantumFunctionError is raised for a tape with measurements that are not
         expectation values"""
 
-        with qp.tape.QuantumTape() as tape:
-            qp.RX(0.1, wires=0)
-            qp.var(qp.PauliZ(0))
+        tape = qp.tape.QuantumScript([qp.RX(0.1, wires=0)], [qp.var(qp.PauliZ(0))])
 
         method = dev.compute_derivatives
 
         with pytest.raises(QuantumFunctionError, match="Adjoint differentiation method does not"):
             method(tape)
 
-        with qp.tape.QuantumTape() as tape:
-            qp.RX(0.1, wires=0)
-            qp.state()
+        tape = qp.tape.QuantumScript([qp.RX(0.1, wires=0)], [qp.state()])
 
         with pytest.raises(
             QuantumFunctionError,
@@ -146,8 +142,7 @@ class TestAdjointJacobian:
     def test_empty_measurements(self, dev):
         """Tests if an empty array is returned when the measurements of the tape is empty."""
 
-        with qp.tape.QuantumTape() as tape:
-            qp.RX(0.4, wires=[0])
+        tape = qp.tape.QuantumScript([qp.RX(0.4, wires=[0])], [])
 
         method = dev.compute_derivatives
         jac = method(tape)
@@ -157,9 +152,9 @@ class TestAdjointJacobian:
         """Test if a QuantumFunctionError is raised for an unsupported operation, i.e.,
         multi-parameter operations that are not qp.Rot"""
 
-        with qp.tape.QuantumTape() as tape:
-            qp.CRot(0.1, 0.2, 0.3, wires=[0, 1])
-            qp.expval(qp.PauliZ(0))
+        tape = qp.tape.QuantumScript(
+            [qp.CRot(0.1, 0.2, 0.3, wires=[0, 1])], [qp.expval(qp.PauliZ(0))]
+        )
 
         with pytest.raises(
             RuntimeError,
@@ -197,10 +192,13 @@ class TestAdjointJacobian:
         correct."""
         params = np.array([theta, theta**3, np.sqrt(2) * theta])
 
-        with qp.tape.QuantumTape() as tape:
-            qp.StatePrep(np.array([1.0, -1.0], requires_grad=False) / np.sqrt(2), wires=0)
-            qp.Rot(*params, wires=[0])
-            qp.expval(qp.PauliZ(0))
+        tape = qp.tape.QuantumScript(
+            [
+                qp.StatePrep(np.array([1.0, -1.0], requires_grad=False) / np.sqrt(2), wires=0),
+                qp.Rot(*params, wires=[0]),
+            ],
+            [qp.expval(qp.PauliZ(0))],
+        )
 
         tape.trainable_params = {1, 2, 3}
 
@@ -223,13 +221,13 @@ class TestAdjointJacobian:
         init_state = np.zeros(2**n_qubits)
         init_state[-2::] = np.array([1.0 / np.sqrt(2), 1.0 / np.sqrt(2)], requires_grad=False)
 
-        with qp.tape.QuantumTape() as tape:
-            qp.StatePrep(init_state, wires=range(n_qubits))
-            if n_qubits == 1:
-                qp.PhaseShift(par, wires=0)
-            else:
-                qp.ctrl(qp.PhaseShift(par, wires=n_qubits - 1), range(0, n_qubits - 1))
-            qp.expval(qp.PauliY(n_qubits - 1))
+        phase_shift = qp.PhaseShift(par, wires=n_qubits - 1)
+        if n_qubits > 1:
+            phase_shift = qp.ctrl(phase_shift, range(n_qubits - 1))
+        tape = qp.tape.QuantumScript(
+            [qp.StatePrep(init_state, wires=range(n_qubits)), phase_shift],
+            [qp.expval(qp.PauliY(n_qubits - 1))],
+        )
 
         tape.trainable_params = {1}
 
@@ -243,9 +241,7 @@ class TestAdjointJacobian:
     @pytest.mark.parametrize("par", [1, -2, 1.623, -0.051, 0])  # integers, floats, zero
     def test_ry_gradient(self, par, tol, dev):
         """Test that the gradient of the RY gate matches the exact analytic formula."""
-        with qp.tape.QuantumTape() as tape:
-            qp.RY(par, wires=[0])
-            qp.expval(qp.PauliX(0))
+        tape = qp.tape.QuantumScript([qp.RY(par, wires=[0])], [qp.expval(qp.PauliX(0))])
 
         tape.trainable_params = {0}
 
@@ -261,9 +257,7 @@ class TestAdjointJacobian:
         """Test that the gradient of the RX gate matches the known formula."""
         a = 0.7418
 
-        with qp.tape.QuantumTape() as tape:
-            qp.RX(a, wires=0)
-            qp.expval(qp.PauliZ(0))
+        tape = qp.tape.QuantumScript([qp.RX(a, wires=0)], [qp.expval(qp.PauliZ(0))])
 
         # circuit jacobians
         method = dev.compute_derivatives
@@ -275,13 +269,10 @@ class TestAdjointJacobian:
         """Tests that the gradient of multiple RX gates in a circuit yields the correct result."""
         params = np.array([np.pi, np.pi / 2, np.pi / 3])
 
-        with qp.tape.QuantumTape() as tape:
-            qp.RX(params[0], wires=0)
-            qp.RX(params[1], wires=1)
-            qp.RX(params[2], wires=2)
-
-            for idx in range(3):
-                qp.expval(qp.PauliZ(idx))
+        tape = qp.tape.QuantumScript(
+            [qp.RX(params[0], wires=0), qp.RX(params[1], wires=1), qp.RX(params[2], wires=2)],
+            [qp.expval(qp.PauliZ(idx)) for idx in range(3)],
+        )
 
         # circuit jacobians
         method = dev.compute_derivatives
@@ -295,13 +286,10 @@ class TestAdjointJacobian:
         """
         params = np.array([np.pi, np.pi / 2, np.pi / 3])
 
-        with qp.tape.QuantumTape() as tape:
-            qp.RX(params[0], wires=0)
-            qp.RX(params[1], wires=1)
-            qp.RX(params[2], wires=2)
-
-            for idx in range(3):
-                qp.expval(qp.Hermitian([[1, 0], [0, -1]], wires=[idx]))
+        tape = qp.tape.QuantumScript(
+            [qp.RX(params[0], wires=0), qp.RX(params[1], wires=1), qp.RX(params[2], wires=2)],
+            [qp.expval(qp.Hermitian([[1, 0], [0, -1]], wires=[idx])) for idx in range(3)],
+        )
 
         tape.trainable_params = {0, 1, 2}
         # circuit jacobians
@@ -320,16 +308,16 @@ class TestAdjointJacobian:
         """
         params = np.array([np.pi / 3, np.pi / 4, np.pi / 5])
 
-        with qp.tape.QuantumTape() as tape:
-            qp.RX(params[0], wires=0)
-            qp.RX(params[1], wires=1)
-            qp.RX(params[2], wires=2)
-
-            qp.expval(
-                qp.Hermitian(
-                    [[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]], wires=[0, 2]
+        tape = qp.tape.QuantumScript(
+            [qp.RX(params[0], wires=0), qp.RX(params[1], wires=1), qp.RX(params[2], wires=2)],
+            [
+                qp.expval(
+                    qp.Hermitian(
+                        [[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]], wires=[0, 2]
+                    )
                 )
-            )
+            ],
+        )
 
         tape.trainable_params = {0, 1, 2}
         method = dev.compute_derivatives
@@ -361,12 +349,10 @@ class TestAdjointJacobian:
             ],
         )
 
-        with qp.tape.QuantumTape() as tape:
-            qp.RX(params[0], wires=0)
-            qp.RX(params[1], wires=1)
-            qp.RX(params[2], wires=2)
-
-            qp.expval(ham)
+        tape = qp.tape.QuantumScript(
+            [qp.RX(params[0], wires=0), qp.RX(params[1], wires=1), qp.RX(params[2], wires=2)],
+            [qp.expval(ham)],
+        )
 
         tape.trainable_params = {0, 1, 2}
         method = dev.compute_derivatives
@@ -401,20 +387,19 @@ class TestAdjointJacobian:
         """Tests that the gradients of circuits match between the finite difference and device
         methods."""
         # op.num_wires and op.num_params must be initialized a priori
-        with qp.tape.QuantumTape() as tape:
-            qp.Hadamard(wires=0)
-            qp.RX(0.543, wires=0)
-            qp.CNOT(wires=[0, 1])
-
-            op
-
-            qp.Rot(1.3, -2.3, 0.5, wires=[0])
-            qp.RZ(-0.5, wires=0)
-            qp.adjoint(qp.RY(0.5, wires=1))
-            qp.CNOT(wires=[0, 1])
-
-            qp.expval(obs(wires=0))
-            qp.expval(qp.PauliZ(wires=1))
+        tape = qp.tape.QuantumScript(
+            [
+                qp.Hadamard(wires=0),
+                qp.RX(0.543, wires=0),
+                qp.CNOT(wires=[0, 1]),
+                op,
+                qp.Rot(1.3, -2.3, 0.5, wires=[0]),
+                qp.RZ(-0.5, wires=0),
+                qp.adjoint(qp.RY(0.5, wires=1)),
+                qp.CNOT(wires=[0, 1]),
+            ],
+            [qp.expval(obs(wires=0)), qp.expval(qp.PauliZ(wires=1))],
+        )
 
         tape.trainable_params = set(range(1, 1 + op.num_params))
 
@@ -442,21 +427,25 @@ class TestAdjointJacobian:
         """Tests that the gradients of circuits match between the finite difference and device
         methods."""
         # op.num_wires and op.num_params must be initialized a priori
-        with qp.tape.QuantumTape() as tape:
-            qp.Hadamard(wires=0)
-            qp.RX(0.543, wires=0)
-            qp.CNOT(wires=[0, 1])
-
-            op.queue()
-
-            qp.Rot(1.3, -2.3, 0.5, wires=[0])
-            qp.RZ(-0.5, wires=0)
-            qp.adjoint(qp.RY(0.5, wires=1))
-            qp.CNOT(wires=[0, 1])
-
-            qp.expval(
-                qp.Hermitian([[0, 0, 1, 1], [0, 1, 2, 1], [1, 2, 1, 0], [1, 1, 0, 0]], wires=[0, 1])
-            )
+        tape = qp.tape.QuantumScript(
+            [
+                qp.Hadamard(wires=0),
+                qp.RX(0.543, wires=0),
+                qp.CNOT(wires=[0, 1]),
+                op,
+                qp.Rot(1.3, -2.3, 0.5, wires=[0]),
+                qp.RZ(-0.5, wires=0),
+                qp.adjoint(qp.RY(0.5, wires=1)),
+                qp.CNOT(wires=[0, 1]),
+            ],
+            [
+                qp.expval(
+                    qp.Hermitian(
+                        [[0, 0, 1, 1], [0, 1, 2, 1], [1, 2, 1, 0], [1, 1, 0, 0]], wires=[0, 1]
+                    )
+                )
+            ],
+        )
 
         tape.trainable_params = set(range(1, 1 + op.num_params))
 
@@ -553,9 +542,7 @@ class TestAdjointJacobian:
     )
     def test_state_return_type(self, dev):
         """Tests raise an exception when the return type is State"""
-        with qp.tape.QuantumTape() as tape:
-            qp.RX(0.4, wires=[0])
-            qp.state()
+        tape = qp.tape.QuantumScript([qp.RX(0.4, wires=[0])], [qp.state()])
 
         tape.trainable_params = {0}
         method = dev.compute_derivatives

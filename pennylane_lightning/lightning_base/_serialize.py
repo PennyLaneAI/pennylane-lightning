@@ -35,7 +35,7 @@ from pennylane2 import (
 from pennylane2.exceptions import DeviceError
 from pennylane2.math import unwrap
 from pennylane2.ops import LinearCombination, Prod, SProd, Sum
-from pennylane2.tape import QuantumTape
+from pennylane2.tape import QuantumScript
 
 NAMED_OBS = (Identity, PauliX, PauliY, PauliZ, Hadamard)
 OP_MATH_OBS = (Prod, SProd, Sum, LinearCombination)
@@ -339,11 +339,11 @@ class QuantumScriptSerializer:
             return self._sparse_hamiltonian(observable, wires_map)
         return self._hermitian_ob(observable, wires_map)
 
-    def serialize_observables(self, tape: QuantumTape, wires_map: dict = None) -> List:
+    def serialize_observables(self, tape: QuantumScript, wires_map: dict = None) -> List:
         """Serializes the observables of an input tape.
 
         Args:
-            tape (QuantumTape): the input quantum tape
+            tape (QuantumScript): the input quantum tape
             wires_map (dict): a dictionary mapping input wires to the device's backend wires
 
         Returns:
@@ -365,7 +365,7 @@ class QuantumScriptSerializer:
                 obs_indices.append(i)
         return serialized_obs, obs_indices
 
-    def serialize_ops(self, tape: QuantumTape, wires_map: dict = None) -> Tuple[
+    def serialize_ops(self, tape: QuantumScript, wires_map: dict = None) -> Tuple[
         List[List[str]],
         List[np.ndarray],
         List[List[int]],
@@ -379,7 +379,7 @@ class QuantumScriptSerializer:
         The state preparation operations are not included.
 
         Args:
-            tape (QuantumTape): the input quantum tape
+            tape (QuantumScript): the input quantum tape
             wires_map (dict): a dictionary mapping input wires to the device's backend wires
 
         Returns:

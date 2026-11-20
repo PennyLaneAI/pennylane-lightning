@@ -42,23 +42,19 @@ class TestVectorJacobianProduct:
         """Tests provides correct answer when provided multiple measurements."""
         x, y, z = [0.5, 0.3, -0.7]
 
-        with qp.tape.QuantumTape() as tape1:
-            qp.RX(0.4, wires=[0])
-            qp.Rot(x, y, z, wires=[0])
-            qp.RY(-0.2, wires=[0])
-            qp.expval(qp.PauliX(0))
-            qp.expval(qp.PauliY(1))
-            qp.expval(qp.PauliZ(1))
+        tape1 = qp.tape.QuantumScript(
+            [qp.RX(0.4, wires=[0]), qp.Rot(x, y, z, wires=[0]), qp.RY(-0.2, wires=[0])],
+            [qp.expval(qp.PauliX(0)), qp.expval(qp.PauliY(1)), qp.expval(qp.PauliZ(1))],
+        )
 
         dy = np.array([1.0, 2.0, 3.0])
         tape1.trainable_params = {1, 2, 3}
 
-        with qp.tape.QuantumTape() as tape2:
-            ham = qp.Hamiltonian(dy, [qp.PauliX(0), qp.PauliY(1), qp.PauliY(1)])
-            qp.RX(0.4, wires=[0])
-            qp.Rot(x, y, z, wires=[0])
-            qp.RY(-0.2, wires=[0])
-            qp.expval(ham)
+        ham = qp.Hamiltonian(dy, [qp.PauliX(0), qp.PauliY(1), qp.PauliY(1)])
+        tape2 = qp.tape.QuantumScript(
+            [qp.RX(0.4, wires=[0]), qp.Rot(x, y, z, wires=[0]), qp.RY(-0.2, wires=[0])],
+            [qp.expval(ham)],
+        )
 
         tape2.trainable_params = {1, 2, 3}
 
@@ -71,13 +67,10 @@ class TestVectorJacobianProduct:
         """Tests raise an exception when dy is incorrect"""
         x, y, z = [0.5, 0.3, -0.7]
 
-        with qp.tape.QuantumTape() as tape1:
-            qp.RX(0.4, wires=[0])
-            qp.Rot(x, y, z, wires=[0])
-            qp.RY(-0.2, wires=[0])
-            qp.expval(qp.PauliX(0))
-            qp.expval(qp.PauliY(1))
-            qp.expval(qp.PauliZ(1))
+        tape1 = qp.tape.QuantumScript(
+            [qp.RX(0.4, wires=[0]), qp.Rot(x, y, z, wires=[0]), qp.RY(-0.2, wires=[0])],
+            [qp.expval(qp.PauliX(0)), qp.expval(qp.PauliY(1)), qp.expval(qp.PauliZ(1))],
+        )
 
         dy1 = np.array([1.0, 2.0])
         dy2 = np.array([1.0 + 3.0j, 0.3 + 2.0j, 0.5 + 0.1j])
@@ -96,9 +89,7 @@ class TestVectorJacobianProduct:
     def test_not_expval(self, dev):
         """Test if a QuantumFunctionError is raised for a tape with measurements that are not
         expectation values"""
-        with qp.tape.QuantumTape() as tape:
-            qp.RX(0.1, wires=0)
-            qp.var(qp.PauliZ(0))
+        tape = qp.tape.QuantumScript([qp.RX(0.1, wires=0)], [qp.var(qp.PauliZ(0))])
 
         dy = np.array([1.0])
 
@@ -122,9 +113,9 @@ class TestVectorJacobianProduct:
         """Test if a QuantumFunctionError is raised for an unsupported operation, i.e.,
         multi-parameter operations that are not qp.Rot"""
 
-        with qp.tape.QuantumTape() as tape:
-            qp.CRot(0.1, 0.2, 0.3, wires=[0, 1])
-            qp.expval(qp.PauliZ(0))
+        tape = qp.tape.QuantumScript(
+            [qp.CRot(0.1, 0.2, 0.3, wires=[0, 1])], [qp.expval(qp.PauliZ(0))]
+        )
 
         dy = np.array([1.0])
 
@@ -139,9 +130,9 @@ class TestVectorJacobianProduct:
         dy = np.array([0.8])
 
         for x in np.linspace(-2 * math.pi, 2 * math.pi, 7):
-            with qp.tape.QuantumTape() as tape:
-                qp.RY(x, wires=(0,))
-                qp.expval(qp.Hermitian(obs, wires=(0,)))
+            tape = qp.tape.QuantumScript(
+                [qp.RY(x, wires=(0,))], [qp.expval(qp.Hermitian(obs, wires=(0,)))]
+            )
 
             tape.trainable_params = {0}
             vjp = dev.compute_vjp(tape, dy)
@@ -152,9 +143,10 @@ class TestVectorJacobianProduct:
         dy = np.array([0.8])
 
         for x in np.linspace(-2 * math.pi, 2 * math.pi, 7):
-            with qp.tape.QuantumTape() as tape:
-                qp.RY(x, wires=(0,))
-                qp.expval(qp.Hermitian(obs, wires=(0,)) @ qp.PauliZ(wires=1))
+            tape = qp.tape.QuantumScript(
+                [qp.RY(x, wires=(0,))],
+                [qp.expval(qp.Hermitian(obs, wires=(0,)) @ qp.PauliZ(wires=1))],
+            )
 
             tape.trainable_params = {0}
             vjp = dev.compute_vjp(tape, dy)
@@ -164,10 +156,9 @@ class TestVectorJacobianProduct:
         """A tape with no trainable parameters will simply return None"""
         x = 0.4
 
-        with qp.tape.QuantumTape() as tape:
-            qp.RX(x, wires=0)
-            qp.CNOT(wires=[0, 1])
-            qp.expval(qp.PauliZ(0))
+        tape = qp.tape.QuantumScript(
+            [qp.RX(x, wires=0), qp.CNOT(wires=[0, 1])], [qp.expval(qp.PauliZ(0))]
+        )
 
         tape.trainable_params = {}
         dy = np.array([1.0])
@@ -181,11 +172,9 @@ class TestVectorJacobianProduct:
         x = 0.4
         y = 0.6
 
-        with qp.tape.QuantumTape() as tape:
-            qp.RX(x, wires=0)
-            qp.RX(y, wires=0)
-            qp.CNOT(wires=[0, 1])
-            qp.expval(qp.PauliZ(0))
+        tape = qp.tape.QuantumScript(
+            [qp.RX(x, wires=0), qp.RX(y, wires=0), qp.CNOT(wires=[0, 1])], [qp.expval(qp.PauliZ(0))]
+        )
 
         tape.trainable_params = {0, 1}
         dy = np.array([0.0])
@@ -200,11 +189,10 @@ class TestVectorJacobianProduct:
         x = 0.543
         y = -0.654
 
-        with qp.tape.QuantumTape() as tape:
-            qp.RX(x, wires=[0])
-            qp.RY(y, wires=[1])
-            qp.CNOT(wires=[0, 1])
-            qp.expval(qp.PauliZ(0) @ qp.PauliX(1))
+        tape = qp.tape.QuantumScript(
+            [qp.RX(x, wires=[0]), qp.RY(y, wires=[1]), qp.CNOT(wires=[0, 1])],
+            [qp.expval(qp.PauliZ(0) @ qp.PauliX(1))],
+        )
 
         tape.trainable_params = {0, 1}
         dy = np.array([1.0])
@@ -220,12 +208,10 @@ class TestVectorJacobianProduct:
         x = 0.543
         y = -0.654
 
-        with qp.tape.QuantumTape() as tape:
-            qp.RX(x, wires=[0])
-            qp.RY(y, wires=[1])
-            qp.CNOT(wires=[0, 1])
-            qp.expval(qp.PauliZ(0))
-            qp.expval(qp.PauliX(1))
+        tape = qp.tape.QuantumScript(
+            [qp.RX(x, wires=[0]), qp.RY(y, wires=[1]), qp.CNOT(wires=[0, 1])],
+            [qp.expval(qp.PauliZ(0)), qp.expval(qp.PauliX(1))],
+        )
 
         tape.trainable_params = {0, 1}
         dy = np.array([1.0, 2.0])
@@ -241,12 +227,10 @@ class TestVectorJacobianProduct:
         x = 0.543
         y = -0.654
 
-        with qp.tape.QuantumTape() as tape:
-            qp.RX(x, wires=[0])
-            qp.RY(y, wires=[1])
-            qp.CNOT(wires=[0, 1])
-            qp.expval(qp.PauliZ(0))
-            qp.probs(wires=[0, 1])
+        tape = qp.tape.QuantumScript(
+            [qp.RX(x, wires=[0]), qp.RY(y, wires=[1]), qp.CNOT(wires=[0, 1])],
+            [qp.expval(qp.PauliZ(0)), qp.probs(wires=[0, 1])],
+        )
 
         tape.trainable_params = {0, 1}
         dy = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
@@ -297,16 +281,14 @@ class TestBatchVectorJacobianProduct:
 
     def test_one_tape_no_trainable_parameters_1(self, dev):
         """A tape with no trainable parameters will simply return None"""
-        with qp.tape.QuantumTape() as tape1:
-            qp.RX(0.4, wires=0)
-            qp.CNOT(wires=[0, 1])
-            qp.expval(qp.PauliZ(0))
+        tape1 = qp.tape.QuantumScript(
+            [qp.RX(0.4, wires=0), qp.CNOT(wires=[0, 1])], [qp.expval(qp.PauliZ(0))]
+        )
 
-        with qp.tape.QuantumTape() as tape2:
-            qp.RX(0.4, wires=0)
-            qp.RX(0.6, wires=0)
-            qp.CNOT(wires=[0, 1])
-            qp.expval(qp.PauliZ(0))
+        tape2 = qp.tape.QuantumScript(
+            [qp.RX(0.4, wires=0), qp.RX(0.6, wires=0), qp.CNOT(wires=[0, 1])],
+            [qp.expval(qp.PauliZ(0))],
+        )
 
         tape1.trainable_params = {}
         tape2.trainable_params = {0, 1}
@@ -321,16 +303,14 @@ class TestBatchVectorJacobianProduct:
 
     def test_all_tapes_no_trainable_parameters_2(self, dev):
         """If all tapes have no trainable parameters all outputs will be None"""
-        with qp.tape.QuantumTape() as tape1:
-            qp.RX(0.4, wires=0)
-            qp.CNOT(wires=[0, 1])
-            qp.expval(qp.PauliZ(0))
+        tape1 = qp.tape.QuantumScript(
+            [qp.RX(0.4, wires=0), qp.CNOT(wires=[0, 1])], [qp.expval(qp.PauliZ(0))]
+        )
 
-        with qp.tape.QuantumTape() as tape2:
-            qp.RX(0.4, wires=0)
-            qp.RX(0.6, wires=0)
-            qp.CNOT(wires=[0, 1])
-            qp.expval(qp.PauliZ(0))
+        tape2 = qp.tape.QuantumScript(
+            [qp.RX(0.4, wires=0), qp.RX(0.6, wires=0), qp.CNOT(wires=[0, 1])],
+            [qp.expval(qp.PauliZ(0))],
+        )
 
         tape1.trainable_params = set()
         tape2.trainable_params = set()
@@ -345,16 +325,14 @@ class TestBatchVectorJacobianProduct:
 
     def test_zero_dy(self, dev):
         """A zero dy vector will return no tapes and a zero matrix"""
-        with qp.tape.QuantumTape() as tape1:
-            qp.RX(0.4, wires=0)
-            qp.CNOT(wires=[0, 1])
-            qp.expval(qp.PauliZ(0))
+        tape1 = qp.tape.QuantumScript(
+            [qp.RX(0.4, wires=0), qp.CNOT(wires=[0, 1])], [qp.expval(qp.PauliZ(0))]
+        )
 
-        with qp.tape.QuantumTape() as tape2:
-            qp.RX(0.4, wires=0)
-            qp.RX(0.6, wires=0)
-            qp.CNOT(wires=[0, 1])
-            qp.expval(qp.PauliZ(0))
+        tape2 = qp.tape.QuantumScript(
+            [qp.RX(0.4, wires=0), qp.RX(0.6, wires=0), qp.CNOT(wires=[0, 1])],
+            [qp.expval(qp.PauliZ(0))],
+        )
 
         tape1.trainable_params = {0}
         tape2.trainable_params = {0, 1}

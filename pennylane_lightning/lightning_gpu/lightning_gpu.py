@@ -48,7 +48,7 @@ from pennylane2.transforms import defer_measurements, dynamic_one_shot
 
 from pennylane_lightning.lightning_base.lightning_base import (
     LightningBase,
-    QuantumTape_or_Batch,
+    QuantumScript_or_Batch,
     Result_or_ResultBatch,
     adjoint_transforms,
     resolve_mcm_method,
@@ -292,7 +292,7 @@ class LightningGPU(LightningBase):
                 parameters needed to fully describe the execution.
 
         Returns:
-            qp.CompilePipeline: A transform program that when called returns :class:`~.QuantumTape`'s that the
+            qp.CompilePipeline: A transform program that when called returns :class:`~.QuantumScript`'s that the
             device can natively execute as well as a postprocessing function to be called after execution.
 
         This device:
@@ -368,13 +368,13 @@ class LightningGPU(LightningBase):
     # pylint: disable=unused-argument
     def execute(
         self,
-        circuits: QuantumTape_or_Batch,
+        circuits: QuantumScript_or_Batch,
         execution_config: ExecutionConfig | None = None,
     ) -> Result_or_ResultBatch:
         """Execute a circuit or a batch of circuits and turn it into results.
 
         Args:
-            circuits (Union[QuantumTape, Sequence[QuantumTape]]): the quantum circuits to be executed
+            circuits (Union[QuantumScript, Sequence[QuantumScript]]): the quantum circuits to be executed
             execution_config (ExecutionConfig): a datastructure with additional information required for execution
 
         Returns:
@@ -401,7 +401,7 @@ class LightningGPU(LightningBase):
     def supports_derivatives(
         self,
         execution_config: ExecutionConfig | None = None,
-        circuit: Optional[qp.tape.QuantumTape] = None,
+        circuit: Optional[qp.tape.QuantumScript] = None,
     ) -> bool:
         """Check whether or not derivatives are available for a given configuration and circuit.
 
@@ -409,7 +409,7 @@ class LightningGPU(LightningBase):
 
         Args:
             execution_config (ExecutionConfig): The configuration of the desired derivative calculation
-            circuit (QuantumTape): An optional circuit to check derivatives support for.
+            circuit (QuantumScript): An optional circuit to check derivatives support for.
 
         Returns:
             Bool: Whether or not a derivative can be calculated provided the given information

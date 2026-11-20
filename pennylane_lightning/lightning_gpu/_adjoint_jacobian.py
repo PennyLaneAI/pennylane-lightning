@@ -47,7 +47,7 @@ except ImportError as ex:
 
 
 import numpy as np
-from pennylane2.tape import QuantumTape
+from pennylane2.tape import QuantumScript
 from scipy.sparse import csr_matrix
 
 # pylint: disable=ungrouped-imports
@@ -117,7 +117,7 @@ class LightningGPUAdjointJacobian(LightningBaseAdjointJacobian):
         )
         return jacobian_lightning, create_ops_list_lightning
 
-    def calculate_jacobian(self, tape: QuantumTape):
+    def calculate_jacobian(self, tape: QuantumScript):
         """Computes the Jacobian with the adjoint method.
 
         .. code-block:: python
@@ -127,7 +127,7 @@ class LightningGPUAdjointJacobian(LightningBaseAdjointJacobian):
             jacobian = LightningGPUAdjointJacobian(statevector).calculate_jacobian(tape)
 
         Args:
-            tape (QuantumTape): Operations and measurements that represent instructions for execution on Lightning.
+            tape (QuantumScript): Operations and measurements that represent instructions for execution on Lightning.
 
         Returns:
             The Jacobian of a tape.
