@@ -41,7 +41,7 @@ macro(findMPI_LG external_libs)
             endif()
         endif()
 
-        target_link_libraries(${external_libs} INTERFACE MPI::MPI_CXX)
+        target_link_libraries(${external_libs} INTERFACE MPI::MPI_CXX ${CMAKE_DL_LIBS})
     endif()
 endmacro()
 
