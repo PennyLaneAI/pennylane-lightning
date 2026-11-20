@@ -1,0 +1,104 @@
+name: Upload to PyPI
+permissions:
+  contents: read
+  id-token: write
+on:
+  release:
+    types: [released]
+
+jobs:
+  build-linux-aarch64-cuda:
+    uses: ./.github/workflows/wheel_linux_aarch64_cuda.yml
+    with:
+      skip_upload: true
+
+  build-linux-x86_64:
+    uses: ./.github/workflows/wheel_linux_x86_64.yml
+    with:
+      skip_upload: true
+
+  build-linux-x86_64-cuda:
+    uses: ./.github/workflows/wheel_linux_x86_64_cuda.yml
+    with:
+      skip_upload: true
+
+  build-linux-aarch64:
+    uses: ./.github/workflows/wheel_linux_aarch64.yml
+    with:
+      skip_upload: true
+
+  build-macos-arm64:
+    uses: ./.github/workflows/wheel_macos_arm64.yml
+    with:
+      skip_upload: true
+
+  build-windows-x86_64:
+    uses: ./.github/workflows/wheel_win_x86_64.yml
+    with:
+      skip_upload: true
+
+  build-linux-x86_64_rocm:
+    uses: ./.github/workflows/wheel_linux_x86_64_rocm.yml
+    with:
+      skip_upload: true
+  
+  build-noarch:
+    uses: ./.github/workflows/wheel_noarch.yml
+    with:
+      skip_upload: true
+      
+  build-sdist:
+    strategy:
+      matrix:
+        pl_backend: ["lightning_qubit", "lightning_gpu", "lightning_kokkos", "lightning_amdgpu"]
+    name: sdist - ${{ matrix.pl_backend }}
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build sdist
+        run: |
+          python -m pip install build tomlkit
+          PL_BACKEND="${{ matrix.pl_backend }}" python scripts/configure_pyproject_toml.py
+          python -m build --sdist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sdist-${{ matrix.pl_backend }}
+          path: dist/*.tar.gz
+          retention-days: 1
+    
+  upload:
+    needs: [build-linux-aarch64-cuda, build-linux-x86_64, build-linux-x86_64-cuda, build-linux-aarch64, build-macos-arm64, build-windows-x86_64, build-linux-x86_64_rocm, build-noarch, build-sdist]
+    name: Upload wheels to PyPI
+    runs-on: ubuntu-24.04
+    environment: release
+    permissions:
+      id-token: write
+
+    steps:
+      - name: Download all wheel artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: "*-wheels-*"
+          path: dist/
+          merge-multiple: true
+
+      - name: Download all sdist artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: "sdist-*"
+          path: dist/
+          merge-multiple: true
+
+      - name: List downloaded wheels
+        run: |
+          echo "=== All wheels ==="
+          find dist/ -name "*.whl" | sort
+  
+      - name: Upload to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1

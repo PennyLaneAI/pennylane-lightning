@@ -109,6 +109,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Adding workflow to upload release to PyPI,
+  [(#1452)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1452)
+
 - Updated `pylint` to version 4.1.3 in the `dev` and `base` dependency groups.
   [(#1443)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1443)
 
