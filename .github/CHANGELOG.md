@@ -47,7 +47,7 @@
 - Fixed sampling in Lightning-GPU with MPI, which ignored the seed and returned the same shots, sorted
   by basis state, on every execution. Samples are now drawn from the seeded random number generator and,
   for a given seed, match those of Lightning-GPU without MPI.
-  [(#XXXX)](https://github.com/PennyLaneAI/pennylane-lightning/pull/XXXX)
+  [(#1454)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1454)
 
 - Lightning-GPU with `mpi=True` no longer fails with "MPI communicator creation failed" when
   the extension module was loaded with `RTLD_LOCAL` (the default for Python): `MPIRuntime` now
