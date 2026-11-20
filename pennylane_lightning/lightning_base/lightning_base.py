@@ -46,7 +46,7 @@ from pennylane.measurements.expval import ExpectationMP
 from pennylane.measurements.measurements import MeasurementProcess
 from pennylane.operation import Operator
 from pennylane.ops import Conditional, MidMeasure, PauliRot
-from pennylane.tape import QuantumScript, QuantumScript
+from pennylane.tape import QuantumScript
 from pennylane.typing import Result, ResultBatch
 
 from pennylane_lightning.core import __version__
