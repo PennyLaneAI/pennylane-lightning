@@ -951,20 +951,33 @@ class StateVectorKokkosMPI final
     void matchGlobalWiresAndIndex(
         const std::vector<std::size_t> &global_wires_target,
         const std::vector<std::size_t> &mpi_rank_to_global_index_map_target) {
-        std::size_t my_global_index =
-            getGlobalIndexFromMPIRank(mpi_manager_.getRank());
-        std::size_t dest_global_index = 0;
-        for (std::size_t i = 0; i < global_wires_.size(); ++i) {
-            std::size_t dest_global_wire_index = getElementIndexInVector(
-                global_wires_target,
-                global_wires_[global_wires_.size() - i - 1]);
-            dest_global_index |=
-                (((my_global_index >> i) & 1)
-                 << getRevWireIndex(global_wires_, dest_global_wire_index));
-        }
 
-        std::size_t dest_mpi_rank = getElementIndexInVector(
-            mpi_rank_to_global_index_map_target, dest_global_index);
+        auto dest_rank_of = [&](std::size_t global_index) {
+            std::size_t dest_global_index = 0;
+            for (std::size_t i = 0; i < global_wires_.size(); ++i) {
+                std::size_t dest_global_wire_index = getElementIndexInVector(
+                    global_wires_target,
+                    global_wires_[global_wires_.size() - i - 1]);
+                dest_global_index |=
+                    (((global_index >> i) & 1)
+                     << getRevWireIndex(global_wires_, dest_global_wire_index));
+            }
+            return getElementIndexInVector(mpi_rank_to_global_index_map_target,
+                                           dest_global_index);
+        };
+
+        const std::size_t my_rank = mpi_manager_.getRank();
+        const std::size_t my_global_index = getGlobalIndexFromMPIRank(my_rank);
+
+        const std::size_t dest_mpi_rank = dest_rank_of(my_global_index);
+
+        std::size_t src_mpi_rank = dest_mpi_rank;
+        for (std::size_t r = 0; r < mpi_manager_.getSize(); ++r) {
+            if (dest_rank_of(getGlobalIndexFromMPIRank(r)) == my_rank) {
+                src_mpi_rank = r;
+                break;
+            }
+        }
 
         const std::size_t total_size = exp2(getNumLocalWires());
         // Each MPI_Sendrecv count must fit in a 32-bit int, so clamp the chunk
@@ -988,7 +1001,7 @@ class StateVectorKokkosMPI final
                 });
             Kokkos::fence();
             // SENDRECV
-            sendrecvBuffers(dest_mpi_rank, dest_mpi_rank, csize, 0);
+            sendrecvBuffers(dest_mpi_rank, src_mpi_rank, csize, 0);
             // COPY FROM BUFFER
             Kokkos::parallel_for(
                 "copy_recvbuf", RangePolicy<KokkosExecSpace>(0, csize),
