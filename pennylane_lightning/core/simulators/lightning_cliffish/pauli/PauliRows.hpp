@@ -56,6 +56,9 @@ inline void ensureKokkosInitialized() {
 /**
  * @brief Pauli words on a common number of qubits, one word per row.
  *
+ * Each row stores one complete Pauli operator, including its global phase,
+ * across all qubits. For example, +XYZI is one row on four qubits.
+ * 
  * Rows are generator-major: the x and z bits of a row are contiguous, so a
  * row operation streams through memory. The phase exponent of each row is
  * stored separately.
