@@ -29,7 +29,8 @@ from pennylane_lightning.lightning_base.lightning_base import LightningBase
 class LightningCliffish(Device):
     """PennyLane Lightning Cliffish device.
 
-    A near-Clifford simulator for programs of about a thousand qubits. The simulator
+    A near-Clifford simulator intended for Clifford-dominated circuits whose qubit
+    counts make full state-vector simulation impractical. The simulator
     is a Catalyst device library; this class only tells PennyLane and Catalyst where
     to find it and what it supports. The device runs only under
     ``qp.qjit(capture=True)``.
