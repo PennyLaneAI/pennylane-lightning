@@ -54,7 +54,7 @@ TEST_CASE("PauliRows round trips words", "[PauliRows]") {
         std::vector<PauliWord> words;
         for (std::size_t row = 0; row < 4; row++) {
             auto word = randomWord(num_qubits, gen);
-            word.setLogI(static_cast<std::uint8_t>(row));
+            word.setPhaseExponent(static_cast<std::uint8_t>(row));
             rows.setRow(row, word);
             words.push_back(word);
         }
@@ -70,7 +70,7 @@ TEST_CASE("PauliRows::multiplyRow matches PauliWord products", "[PauliRows]") {
         for (int trial = 0; trial < 10; trial++) {
             auto target = randomWord(num_qubits, gen);
             auto source = randomWord(num_qubits, gen);
-            source.setLogI(2);
+            source.setPhaseExponent(2);
 
             PauliRows<> rows(2, num_qubits);
             rows.setRow(0, target);

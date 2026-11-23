@@ -63,15 +63,15 @@ auto randomWord(std::size_t num_qubits, std::mt19937 &gen) -> std::string {
  */
 auto referenceProduct(const std::string &a, const std::string &b)
     -> std::string {
-    int log_i = 0;
+    int phase_exponent = 0;
     std::string word;
     for (std::size_t q = 0; q < a.size(); q++) {
         const auto [phase, pauli] = referenceProduct(a[q], b[q]);
-        log_i += phase;
+        phase_exponent += phase;
         word += pauli;
     }
     static constexpr std::array<const char *, 4> phases{"+", "+i", "-", "-i"};
-    return phases[log_i % 4] + word;
+    return phases[phase_exponent % 4] + word;
 }
 
 auto referenceAnticommutes(const std::string &a, const std::string &b) -> bool {
