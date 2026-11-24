@@ -41,12 +41,12 @@ jobs:
     uses: ./.github/workflows/wheel_linux_x86_64_rocm.yml
     with:
       skip_upload: true
-  
+
   build-noarch:
     uses: ./.github/workflows/wheel_noarch.yml
     with:
       skip_upload: true
-      
+
   build-sdist:
     strategy:
       matrix:
@@ -71,7 +71,7 @@ jobs:
           name: sdist-${{ matrix.pl_backend }}
           path: dist/*.tar.gz
           retention-days: 1
-    
+
   upload:
     needs: [build-linux-aarch64-cuda, build-linux-x86_64, build-linux-x86_64-cuda, build-linux-aarch64, build-macos-arm64, build-windows-x86_64, build-linux-x86_64_rocm, build-noarch, build-sdist]
     name: Upload wheels to PyPI
@@ -102,3 +102,5 @@ jobs:
   
       - name: Upload to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          skip-existing: true
