@@ -982,6 +982,60 @@ TEMPLATE_TEST_CASE("reorderAllWires", "[LKMPI]", double, float) {
     }
 }
 
+TEMPLATE_TEST_CASE("getGlobalWireTransferRanks", "[LKMPI]", double, float) {
+    const std::size_t num_qubits = 6;
+    MPIManagerKokkos mpi_manager(MPI_COMM_WORLD);
+    REQUIRE(mpi_manager.getSize() == 4);
+    const std::size_t rank = mpi_manager.getRank();
+    StateVectorKokkosMPI<TestType> sv(mpi_manager, num_qubits);
+
+    SECTION("Self-transfers") {
+        const auto [dest, src] =
+            sv.getGlobalWireTransferRanks({0, 1}, {0, 1, 2, 3});
+        CHECK(dest == rank);
+        CHECK(src == rank);
+    }
+
+    SECTION("Pairwise swaps") {
+        const auto [dest, src] =
+            sv.getGlobalWireTransferRanks({1, 0}, {0, 1, 2, 3});
+        const std::vector<std::size_t> partners{0, 2, 1, 3};
+        CHECK(dest == partners[rank]);
+        CHECK(src == partners[rank]);
+    }
+
+    SECTION("Three-rank cycle with a self-transfer") {
+        const auto [dest, src] =
+            sv.getGlobalWireTransferRanks({0, 1}, {2, 0, 1, 3});
+        // 0 -> 1 -> 2 -> 0, while rank 3 transfers to itself.
+        // The power-of-two requirement applies to the communicator size (four
+        // ranks), not individual cycle lengths. This checks a non-pairwise
+        // cycle alongside a self-transfer.
+        const std::vector<std::size_t> destinations{1, 2, 0, 3};
+        const std::vector<std::size_t> sources{2, 0, 1, 3};
+        CHECK(dest == destinations[rank]);
+        CHECK(src == sources[rank]);
+    }
+
+    SECTION("Four-rank cycle from issue #1449") {
+        sv.applyOperation("RY", {0}, false, {0.6});
+        sv.applyOperation("RY", {1}, false, {1.2});
+        sv.applyOperation("PauliX", {0});
+        sv.reorderGlobalLocalWires();
+
+        // Test the rank selection before the blocking redistribution in
+        // reorderAllWires: 0 -> 2 -> 3 -> 1 -> 0. The preparation above only
+        // uses pairwise transfers, so the old receive-from-destination bug
+        // fails these assertions rather than deadlocking the test runner.
+        const auto [dest, src] =
+            sv.getGlobalWireTransferRanks({0, 1}, {0, 1, 2, 3});
+        const std::vector<std::size_t> destinations{2, 0, 3, 1};
+        const std::vector<std::size_t> sources{1, 3, 0, 2};
+        CHECK(dest == destinations[rank]);
+        CHECK(src == sources[rank]);
+    }
+}
+
 TEMPLATE_TEST_CASE("Match global wires", "[LKMPI]", double, float) {
     const std::size_t num_qubits = 5;
 
