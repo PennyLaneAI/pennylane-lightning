@@ -180,6 +180,7 @@ Ali Asadi,
 Astral Cai,
 Yushao Chen,
 Marcus Edwards,
+Ali Farazdaghi
 David Ittah,
 Jeffrey Kam,
 Mehmet Niyazi Kayi,
@@ -187,8 +188,7 @@ Joseph Lee,
 Andrija Paurevic,
 Chen Shoval,
 David Wierichs,
-Jake Zaia,
-Ali Farazdaghi
+Jake Zaia
 
 ---
 
