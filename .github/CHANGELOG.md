@@ -187,7 +187,8 @@ Joseph Lee,
 Andrija Paurevic,
 Chen Shoval,
 David Wierichs,
-Jake Zaia
+Jake Zaia,
+Ali Farazdaghi
 
 ---
 
