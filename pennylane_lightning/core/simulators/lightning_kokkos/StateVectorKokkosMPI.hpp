@@ -23,6 +23,7 @@
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 #include <Kokkos_Core.hpp>
@@ -948,10 +949,18 @@ class StateVectorKokkosMPI final
                                  other_mpi_rank_to_global_index_map);
     }
 
-    void matchGlobalWiresAndIndex(
+    /**
+     * @brief Compute the ranks for global-wire redistribution without
+     * communicating or modifying the state vector.
+     *
+     * @param global_wires_target Target global-wire order.
+     * @param mpi_rank_to_global_index_map_target Target rank-to-index map.
+     * @return Destination and source MPI ranks, in that order.
+     */
+    std::pair<std::size_t, std::size_t> getGlobalWireTransferRanks(
         const std::vector<std::size_t> &global_wires_target,
-        const std::vector<std::size_t> &mpi_rank_to_global_index_map_target) {
-
+        const std::vector<std::size_t> &mpi_rank_to_global_index_map_target)
+        const {
         auto dest_rank_of = [&](std::size_t global_index) {
             std::size_t dest_global_index = 0;
             for (std::size_t i = 0; i < global_wires_.size(); ++i) {
@@ -978,6 +987,14 @@ class StateVectorKokkosMPI final
                 break;
             }
         }
+        return {dest_mpi_rank, src_mpi_rank};
+    }
+
+    void matchGlobalWiresAndIndex(
+        const std::vector<std::size_t> &global_wires_target,
+        const std::vector<std::size_t> &mpi_rank_to_global_index_map_target) {
+        const auto [dest_mpi_rank, src_mpi_rank] = getGlobalWireTransferRanks(
+            global_wires_target, mpi_rank_to_global_index_map_target);
 
         const std::size_t total_size = exp2(getNumLocalWires());
         // Each MPI_Sendrecv count must fit in a 32-bit int, so clamp the chunk
