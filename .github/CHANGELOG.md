@@ -44,6 +44,10 @@
 
 <h3>Bug fixes 🐛</h3>
 
+- Fixed an MPI deadlock in Lightning-Kokkos by selecting the correct receive source for 
+  state-vector transfers in permutation cycles involving more than two ranks.
+  [(#1453)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1453)
+
 - Lightning-GPU with `mpi=True` no longer fails with "MPI communicator creation failed" when
   the extension module was loaded with `RTLD_LOCAL` (the default for Python): `MPIRuntime` now
   promotes the loaded MPI library's symbols to the global scope, which cuStateVec's communicator
@@ -177,6 +181,7 @@ Ali Asadi,
 Astral Cai,
 Yushao Chen,
 Marcus Edwards,
+Ali Farazdaghi
 David Ittah,
 Jeffrey Kam,
 Mehmet Niyazi Kayi,
