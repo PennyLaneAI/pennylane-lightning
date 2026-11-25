@@ -44,6 +44,12 @@
 
 <h3>Bug fixes 🐛</h3>
 
+- Lightning-GPU with `mpi=True` no longer fails with "MPI communicator creation failed" when
+  the extension module was loaded with `RTLD_LOCAL` (the default for Python): `MPIRuntime` now
+  promotes the loaded MPI library's symbols to the global scope, which cuStateVec's communicator
+  needs to resolve them.
+  [(#1440)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1440)
+
 - Fixed multi-qubit `PauliMeasure` in the Lightning-Kokkos simulator, which measured every
   wire of the Pauli word and returned the logical AND of the outcomes. It now measures only the
   parity of the Pauli word, as Lightning-Qubit and Lightning-GPU do.
@@ -103,6 +109,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Updated `pylint` to version 4.1.3 in the `dev` and `base` dependency groups.
+  [(#1443)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1443)
+
 - A deferred-measurement test now builds its expected controlled ops with `qp.ctrl`, so it passes
   whether or not `qp.ctrl` dispatches to `CNOT` and `CY`, which PennyLane no longer does.
   [(#1435)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1435)
@@ -161,10 +170,12 @@ This release contains contributions from (in alphabetical order):
 
 Runor Agbaire,
 Ali Asadi,
+Astral Cai,
 Yushao Chen,
 Marcus Edwards,
 David Ittah,
 Jeffrey Kam,
+Mehmet Niyazi Kayi,
 Joseph Lee,
 Andrija Paurevic,
 Chen Shoval,
