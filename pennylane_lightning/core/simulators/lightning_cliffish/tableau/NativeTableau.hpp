@@ -156,6 +156,12 @@ class NativeTableau final : public TableauEngine {
         return Pauli::phaseExponentMod4(count + phases);
     }
 
+    /**
+     * @brief Apply the loaded Clifford rotation to all tableau generators.
+     *
+     * Rows commuting with the loaded Pauli P are unchanged. Anticommuting
+     * rows R become -i P R, -R, or +i P R for one, two, or three quarter turns.
+     */
     void applyRotation(std::uint8_t quarter_turns) {
         PL_ABORT_IF_NOT(quarter_turns >= 1 && quarter_turns <= 3,
                         "A rotation must have 1, 2 or 3 quarter turns");
@@ -198,6 +204,16 @@ class NativeTableau final : public TableauEngine {
             });
     }
 
+    /**
+     * @brief Measure the loaded Pauli and update the tableau.
+     *
+     * If every stabilizer commutes with the Pauli, its outcome is determined
+     * by the stabilizer-product sign. Otherwise, choose an outcome and replace
+     * a pivot stabilizer with the measured Pauli carrying that outcome's sign.
+     *
+     * A supplied outcome postselects that branch; an impossible outcome is
+     * rejected. False denotes eigenvalue +1, and true denotes eigenvalue -1.
+     */
     auto applyMeasurement(std::optional<bool> forced_outcome, std::mt19937 &gen)
         -> bool {
         const std::size_t num_qubits = num_qubits_;
@@ -311,6 +327,12 @@ class NativeTableau final : public TableauEngine {
         return num_qubits_;
     }
 
+    /**
+     * @brief Append qubits in |0>, preserving the existing state.
+     *
+     * Copy the existing generators into the wider tableau and initialize
+     * each new destabilizer/stabilizer pair to X_i/Z_i.
+     */
     void addQubits(std::size_t count) override {
         if (count == 0) {
             return;
@@ -344,6 +366,12 @@ class NativeTableau final : public TableauEngine {
         initializeRows(old_num_qubits);
     }
 
+    /**
+     * @brief Apply the block in order and return its measurement outcomes.
+     *
+     * Rotations update the generators. Measurements also produce an outcome,
+     * appended to the returned vector in measurement order.
+     */
     auto applyBlock(const EngineBlock &block, std::mt19937 &gen)
         -> std::vector<bool> override {
         std::vector<bool> outcomes;
@@ -358,6 +386,13 @@ class NativeTableau final : public TableauEngine {
         return outcomes;
     }
 
+    /**
+     * @brief Compute a Hermitian Pauli expectation without changing the state.
+     *
+     * Anticommutation with any stabilizer gives zero expectation. Otherwise,
+     * compare the Pauli's phase with the corresponding stabilizer product
+     * to distinguish expectation +1 from -1.
+     */
     [[nodiscard]] auto expectation(const PauliWord &pauli) const
         -> int override {
         loadOp(pauli);
@@ -377,6 +412,14 @@ class NativeTableau final : public TableauEngine {
                                                                          : -1;
     }
 
+    /**
+     * @brief Express a Pauli in the current tableau's reference frame.
+     *
+     * Commutation with the stabilizers and destabilizers identifies the
+     * generator factors. Replace those factors with the reference X_i/Z_i
+     * operators and account for their multiplication phase to obtain
+     * C^dagger P C.
+     */
     [[nodiscard]] auto pullBack(const PauliWord &pauli) const
         -> PauliWord override {
         loadOp(pauli);
@@ -444,6 +487,14 @@ class NativeTableau final : public TableauEngine {
         return pulled;
     }
 
+    /**
+     * @brief Find the allowed computational-basis outcomes on selected qubits.
+     *
+     * Eliminate the stabilizers' X components to obtain Z-type generators.
+     * Their signs impose binary parity constraints on the outcomes. Solve
+     * those constraints and project the solution space onto the selected
+     * qubits. The original tableau is unchanged.
+     */
     [[nodiscard]] auto
     computationalSupport(const std::vector<std::size_t> &qubits) const
         -> GF2::AffineSubspace override {
@@ -507,6 +558,9 @@ class NativeTableau final : public TableauEngine {
         return support->project(qubits);
     }
 
+    /**
+     * @brief Create an independent copy of the state using separate storage.
+     */
     [[nodiscard]] auto clone() const
         -> std::unique_ptr<TableauEngine> override {
         auto copy = std::make_unique<NativeTableau>(num_qubits_);
