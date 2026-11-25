@@ -17,6 +17,8 @@
 #include <cstddef>
 #include <random>
 #include <string>
+#include <type_traits>
+#include <utility>
 #include <vector>
 
 #include <catch2/catch_test_macros.hpp>
@@ -30,6 +32,11 @@ using namespace Pennylane::LightningCliffish;
 using namespace Pennylane::LightningCliffish::Testing;
 using Tableau::EngineOp;
 using Tableau::NativeTableau;
+
+static_assert(!std::is_copy_constructible_v<NativeTableau<>>);
+static_assert(!std::is_copy_assignable_v<NativeTableau<>>);
+static_assert(std::is_move_constructible_v<NativeTableau<>>);
+static_assert(std::is_move_assignable_v<NativeTableau<>>);
 
 /**
  * @brief Expectation values of the tableau and the dense state agree on
@@ -318,6 +325,34 @@ TEST_CASE("NativeTableau samples are possible outcomes on many qubits",
                 singleQubitPauli(num_qubits, q, 'Z'), samples.bit(shot, q)));
         }
         REQUIRE_NOTHROW(copy->applyBlock(block, gen));
+    }
+}
+
+TEST_CASE("NativeTableau moves preserve its state", "[NativeTableau]") {
+    std::mt19937 gen{24};
+    NativeTableau<> tableau(3);
+    State state = zeroState(3);
+    applyRandomRotations(tableau, state, 20, gen);
+
+    auto check_moved = [&](NativeTableau<> &moved) {
+        REQUIRE(moved.numQubits() == 3);
+        requireSameState(moved, state, gen);
+
+        const auto pauli = randomPauli(3, gen);
+        moved.applyBlock({EngineOp::rotation(pauli, 1)}, gen);
+        state = rotate(state, pauli, 1);
+        requireSameState(moved, state, gen);
+    };
+
+    SECTION("move construction") {
+        NativeTableau<> moved(std::move(tableau));
+        check_moved(moved);
+    }
+
+    SECTION("move assignment replaces an existing state") {
+        NativeTableau<> moved(1);
+        moved = std::move(tableau);
+        check_moved(moved);
     }
 }
 

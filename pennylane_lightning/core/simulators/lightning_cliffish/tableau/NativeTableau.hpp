@@ -317,6 +317,13 @@ class NativeTableau final : public TableauEngine {
         initializeRows(0);
     }
 
+    // Use clone() for an independent state copy; copying Views shares storage.
+    NativeTableau(const NativeTableau &) = delete;
+    auto operator=(const NativeTableau &) -> NativeTableau & = delete;
+
+    NativeTableau(NativeTableau &&) = default;
+    auto operator=(NativeTableau &&) -> NativeTableau & = default;
+
     [[nodiscard]] auto name() const -> std::string override { return "native"; }
 
     [[nodiscard]] auto capabilities() const -> Capabilities override {
