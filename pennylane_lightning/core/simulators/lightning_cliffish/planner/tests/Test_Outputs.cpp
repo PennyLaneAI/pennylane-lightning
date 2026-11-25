@@ -55,7 +55,7 @@ auto randomObservable(std::size_t num_qubits, std::size_t num_terms,
     Observable observable;
     for (std::size_t t = 0; t < num_terms; t++) {
         auto pauli = randomPauli(num_qubits, gen);
-        pauli.setLogI(0);
+        pauli.setPhaseExponent(0);
         observable.push_back(PauliTerm{coefficient(gen),
                                        pauli.toString().substr(1),
                                        allWires(num_qubits)});

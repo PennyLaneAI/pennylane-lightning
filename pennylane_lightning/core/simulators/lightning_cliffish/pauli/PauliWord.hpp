@@ -31,7 +31,7 @@
 namespace Pennylane::LightningCliffish::Pauli {
 
 /**
- * @brief A Pauli word i^log_i P on a fixed number of qubits.
+ * @brief A Pauli word i^phase_exponent P on a fixed number of qubits.
  *
  * Character q of a string form is the Pauli on qubit q.
  */
@@ -40,7 +40,7 @@ class PauliWord {
     std::size_t num_qubits_;
     std::vector<Word> x_;
     std::vector<Word> z_;
-    std::uint8_t log_i_{0};
+    std::uint8_t phase_exponent_{0};
 
   public:
     /**
@@ -56,15 +56,15 @@ class PauliWord {
      * An optional leading "+", "-", "i" or "-i" sets the phase.
      */
     static auto fromString(std::string_view word) -> PauliWord {
-        std::uint8_t log_i = 0;
+        std::uint8_t phase_exponent = 0;
         if (word.starts_with("-i")) {
-            log_i = 3;
+            phase_exponent = 3;
             word.remove_prefix(2);
         } else if (word.starts_with("+i") || word.starts_with("i")) {
-            log_i = 1;
+            phase_exponent = 1;
             word.remove_prefix(word.front() == '+' ? 2 : 1);
         } else if (word.starts_with("-")) {
-            log_i = 2;
+            phase_exponent = 2;
             word.remove_prefix(1);
         } else if (word.starts_with("+")) {
             word.remove_prefix(1);
@@ -74,7 +74,7 @@ class PauliWord {
         for (std::size_t qubit = 0; qubit < word.size(); qubit++) {
             pauli.set(qubit, word[qubit]);
         }
-        pauli.log_i_ = log_i;
+        pauli.phase_exponent_ = phase_exponent;
         return pauli;
     }
 
@@ -87,12 +87,18 @@ class PauliWord {
     [[nodiscard]] auto x() -> Word * { return x_.data(); }
     [[nodiscard]] auto z() -> Word * { return z_.data(); }
 
-    /// Phase exponent: the word is i^logI() times its bare Pauli.
-    [[nodiscard]] auto logI() const -> std::uint8_t { return log_i_; }
-    void setLogI(std::uint8_t log_i) { log_i_ = log_i % 4; }
+    /// Phase exponent: the word is i^phaseExponent() times its bare Pauli.
+    [[nodiscard]] auto phaseExponent() const -> std::uint8_t {
+        return phase_exponent_;
+    }
+    void setPhaseExponent(std::uint8_t phase_exponent) {
+        phase_exponent_ = phase_exponent % 4;
+    }
 
     /// A Pauli word is Hermitian when its phase is +1 or -1.
-    [[nodiscard]] auto isHermitian() const -> bool { return log_i_ % 2 == 0; }
+    [[nodiscard]] auto isHermitian() const -> bool {
+        return phase_exponent_ % 2 == 0;
+    }
 
     /**
      * @brief The Pauli on `qubit`: one of 'I', 'X', 'Y' and 'Z'.
@@ -143,7 +149,8 @@ class PauliWord {
                         "Pauli words act on different numbers of qubits");
         const int count = multiplyInPlace(x_.data(), z_.data(), other.x_.data(),
                                           other.z_.data(), x_.size());
-        log_i_ = logIMod4(log_i_ + other.log_i_ + count);
+        phase_exponent_ =
+            phaseExponentMod4(phase_exponent_ + other.phase_exponent_ + count);
         return *this;
     }
 
@@ -160,7 +167,7 @@ class PauliWord {
      */
     [[nodiscard]] auto toString() const -> std::string {
         static constexpr const char *phases[] = {"+", "+i", "-", "-i"};
-        std::string word{phases[log_i_]};
+        std::string word{phases[phase_exponent_]};
         for (std::size_t qubit = 0; qubit < num_qubits_; qubit++) {
             word += get(qubit);
         }

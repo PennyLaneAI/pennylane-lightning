@@ -48,7 +48,8 @@ inline auto applyPauli(const State &state, const PauliWord &pauli) -> State {
     const std::size_t num_qubits = pauli.numQubits();
     State result(state.size(), 0.0);
     for (std::size_t index = 0; index < state.size(); index++) {
-        std::complex<double> amplitude = state[index] * phases[pauli.logI()];
+        std::complex<double> amplitude =
+            state[index] * phases[pauli.phaseExponent()];
         std::size_t target = index;
         for (std::size_t q = 0; q < num_qubits; q++) {
             const bool bit = (index >> q) & 1U;
@@ -160,7 +161,7 @@ inline auto randomPauli(std::size_t num_qubits, std::mt19937 &gen)
         }
     } while (word.find_first_not_of('I') == std::string::npos);
     auto pauli = PauliWord::fromString(word);
-    pauli.setLogI(std::bernoulli_distribution(0.5)(gen) ? 2 : 0);
+    pauli.setPhaseExponent(std::bernoulli_distribution(0.5)(gen) ? 2 : 0);
     return pauli;
 }
 

@@ -156,7 +156,7 @@ TEST_CASE("Core matches a dense state on random Clifford circuits", "[Core]") {
 
             for (int check = 0; check < 30; check++) {
                 auto pauli = randomPauli(num_qubits, gen);
-                pauli.setLogI(0);
+                pauli.setPhaseExponent(0);
                 const std::string word = pauli.toString().substr(1);
                 INFO("Pauli word " << word);
                 CHECK(std::abs(core.expectation(word, allWires(num_qubits)) -

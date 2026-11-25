@@ -84,7 +84,10 @@ class CMakeBuild(build_ext):
         # for editable installs is the Catalyst device library itself.
         if backend == "lightning_cliffish":
             shared_lib_ext = {"Linux": ".so", "Darwin": ".dylib"}[platform.system()]
-            return f"lib{backend}_catalyst{shared_lib_ext}"
+            return os.path.join(
+                *fullname.split(".")[:-1],
+                f"lib{backend}_catalyst{shared_lib_ext}",
+            )
         return super().get_ext_filename(fullname)
 
     def build_extension(self, ext: CMakeExtension):

@@ -117,11 +117,11 @@ class NativeTableau final : public TableauEngine {
      * When the op commutes with every stabilizer, this product is plus or
      * minus the op, and the two phases give its sign.
      */
-    [[nodiscard]] auto stabilizerProductLogI() const -> std::uint8_t {
+    [[nodiscard]] auto stabilizerProductPhaseExponent() const -> std::uint8_t {
         const auto flags = anticommutingWithOp(0, num_qubits_);
         auto x = rows_.x();
         auto z = rows_.z();
-        auto log_i = rows_.logI();
+        auto phase_exponent = rows_.phaseExponent();
         const std::size_t num_qubits = num_qubits_;
 
         int count = 0;
@@ -148,12 +148,12 @@ class NativeTableau final : public TableauEngine {
             "NativeTableau::stabilizerProductPhases", Policy(0, num_qubits),
             KOKKOS_LAMBDA(std::size_t i, int &local_phases) {
                 if (flags(i)) {
-                    local_phases += log_i(num_qubits + i);
+                    local_phases += phase_exponent(num_qubits + i);
                 }
             },
             phases);
 
-        return Pauli::logIMod4(count + phases);
+        return Pauli::phaseExponentMod4(count + phases);
     }
 
     void applyRotation(std::uint8_t quarter_turns) {
@@ -162,16 +162,16 @@ class NativeTableau final : public TableauEngine {
 
         Word *x = rows_.x().data();
         Word *z = rows_.z().data();
-        auto log_i = rows_.logI();
+        auto phase_exponent = rows_.phaseExponent();
         const Word *op_x = op_.x().data();
         const Word *op_z = op_.z().data();
-        auto op_log_i = op_.logI();
+        auto op_phase_exponent = op_.phaseExponent();
         const std::size_t stride = rows_.x().stride(0);
         const std::size_t num_words = rows_.numWords();
 
         // A row R that anticommutes with P maps to -R for a half turn, and to
         // -/+ i P R for one or three quarter turns.
-        const int turn_log_i = (quarter_turns == 1) ? 3 : 1;
+        const int turn_phase_exponent = (quarter_turns == 1) ? 3 : 1;
         Kokkos::parallel_for(
             "NativeTableau::applyRotation", Policy(0, rows_.numRows()),
             KOKKOS_LAMBDA(std::size_t row) {
@@ -181,7 +181,8 @@ class NativeTableau final : public TableauEngine {
                     return;
                 }
                 if (quarter_turns == 2) {
-                    log_i(row) = Pauli::logIMod4(log_i(row) + 2);
+                    phase_exponent(row) =
+                        Pauli::phaseExponentMod4(phase_exponent(row) + 2);
                     return;
                 }
                 int count = 0;
@@ -191,8 +192,9 @@ class NativeTableau final : public TableauEngine {
                     row_x[w] ^= op_x[w];
                     row_z[w] ^= op_z[w];
                 }
-                log_i(row) = Pauli::logIMod4(log_i(row) + op_log_i(0) + count +
-                                             turn_log_i);
+                phase_exponent(row) = Pauli::phaseExponentMod4(
+                    phase_exponent(row) + op_phase_exponent(0) + count +
+                    turn_phase_exponent);
             });
     }
 
@@ -214,10 +216,12 @@ class NativeTableau final : public TableauEngine {
 
         if (pivot >= num_qubits) {
             // Deterministic: the op is plus or minus a product of stabilizers.
-            const std::uint8_t product_log_i = stabilizerProductLogI();
-            std::uint8_t op_log_i = 0;
-            Kokkos::deep_copy(op_log_i, Kokkos::subview(op_.logI(), 0));
-            const bool outcome = product_log_i != op_log_i;
+            const std::uint8_t product_phase_exponent =
+                stabilizerProductPhaseExponent();
+            std::uint8_t op_phase_exponent = 0;
+            Kokkos::deep_copy(op_phase_exponent,
+                              Kokkos::subview(op_.phaseExponent(), 0));
+            const bool outcome = product_phase_exponent != op_phase_exponent;
             PL_ABORT_IF(forced_outcome.has_value() &&
                             *forced_outcome != outcome,
                         "Cannot project onto a measurement outcome with zero "
@@ -231,10 +235,10 @@ class NativeTableau final : public TableauEngine {
 
         Word *x = rows_.x().data();
         Word *z = rows_.z().data();
-        auto log_i = rows_.logI();
+        auto phase_exponent = rows_.phaseExponent();
         const Word *op_x = op_.x().data();
         const Word *op_z = op_.z().data();
-        auto op_log_i = op_.logI();
+        auto op_phase_exponent = op_.phaseExponent();
         const std::size_t stride = rows_.x().stride(0);
         const std::size_t num_words = rows_.numWords();
         const std::size_t pivot_row = num_qubits + pivot;
@@ -254,13 +258,13 @@ class NativeTableau final : public TableauEngine {
                 const int count =
                     Pauli::multiplyInPlace(row_x, row_z, x + pivot_row * stride,
                                            z + pivot_row * stride, num_words);
-                log_i(row) =
-                    Pauli::logIMod4(log_i(row) + log_i(pivot_row) + count);
+                phase_exponent(row) = Pauli::phaseExponentMod4(
+                    phase_exponent(row) + phase_exponent(pivot_row) + count);
             });
 
         // The pivot stabilizer becomes its destabilizer, and the measured
         // word, with the outcome's sign, becomes the stabilizer.
-        const int outcome_log_i = outcome ? 2 : 0;
+        const int outcome_phase_exponent = outcome ? 2 : 0;
         Kokkos::parallel_for(
             "NativeTableau::measurementPivotRows", Policy(0, num_words),
             KOKKOS_LAMBDA(std::size_t w) {
@@ -269,9 +273,9 @@ class NativeTableau final : public TableauEngine {
                 x[pivot_row * stride + w] = op_x[w];
                 z[pivot_row * stride + w] = op_z[w];
                 if (w == 0) {
-                    log_i(pivot) = log_i(pivot_row);
-                    log_i(pivot_row) =
-                        Pauli::logIMod4(op_log_i(0) + outcome_log_i);
+                    phase_exponent(pivot) = phase_exponent(pivot_row);
+                    phase_exponent(pivot_row) = Pauli::phaseExponentMod4(
+                        op_phase_exponent(0) + outcome_phase_exponent);
                 }
             });
         // A zero-word tableau has no word to carry the phase update.
@@ -279,9 +283,9 @@ class NativeTableau final : public TableauEngine {
             Kokkos::parallel_for(
                 "NativeTableau::measurementPivotPhases", Policy(0, 1),
                 KOKKOS_LAMBDA(std::size_t) {
-                    log_i(pivot) = log_i(pivot_row);
-                    log_i(pivot_row) =
-                        Pauli::logIMod4(op_log_i(0) + outcome_log_i);
+                    phase_exponent(pivot) = phase_exponent(pivot_row);
+                    phase_exponent(pivot_row) = Pauli::phaseExponentMod4(
+                        op_phase_exponent(0) + outcome_phase_exponent);
                 });
         }
         return outcome;
@@ -317,10 +321,10 @@ class NativeTableau final : public TableauEngine {
 
         auto old_x = rows_.x();
         auto old_z = rows_.z();
-        auto old_log_i = rows_.logI();
+        auto old_phase_exponent = rows_.phaseExponent();
         auto new_x = next.x();
         auto new_z = next.z();
-        auto new_log_i = next.logI();
+        auto new_phase_exponent = next.phaseExponent();
         const std::size_t old_num_words = rows_.numWords();
         Kokkos::parallel_for(
             "NativeTableau::addQubits", Policy(0, 2 * old_num_qubits),
@@ -331,7 +335,7 @@ class NativeTableau final : public TableauEngine {
                     new_x(new_row, w) = old_x(row, w);
                     new_z(new_row, w) = old_z(row, w);
                 }
-                new_log_i(new_row) = old_log_i(row);
+                new_phase_exponent(new_row) = old_phase_exponent(row);
             });
 
         rows_ = next;
@@ -369,7 +373,8 @@ class NativeTableau final : public TableauEngine {
         if (anticommuting > 0) {
             return 0;
         }
-        return stabilizerProductLogI() == pauli.logI() ? 1 : -1;
+        return stabilizerProductPhaseExponent() == pauli.phaseExponent() ? 1
+                                                                         : -1;
     }
 
     [[nodiscard]] auto pullBack(const PauliWord &pauli) const
@@ -383,7 +388,7 @@ class NativeTableau final : public TableauEngine {
             anticommutingWithOp(num_qubits, num_qubits);
         auto x = rows_.x();
         auto z = rows_.z();
-        auto log_i = rows_.logI();
+        auto phase_exponent = rows_.phaseExponent();
 
         int count = 0;
         Kokkos::parallel_reduce(
@@ -413,12 +418,13 @@ class NativeTableau final : public TableauEngine {
         Kokkos::parallel_reduce(
             "NativeTableau::pullBackPhases", Policy(0, num_qubits),
             KOKKOS_LAMBDA(std::size_t i, int &local_phases) {
-                local_phases += stabilizer_flags(i) ? log_i(i) : 0;
+                local_phases += stabilizer_flags(i) ? phase_exponent(i) : 0;
                 local_phases +=
-                    destabilizer_flags(i) ? log_i(num_qubits + i) : 0;
+                    destabilizer_flags(i) ? phase_exponent(num_qubits + i) : 0;
             },
             phases);
-        const std::uint8_t product_log_i = Pauli::logIMod4(count + phases);
+        const std::uint8_t product_phase_exponent =
+            Pauli::phaseExponentMod4(count + phases);
 
         const auto host_a = Kokkos::create_mirror_view_and_copy(
             Kokkos::HostSpace{}, stabilizer_flags);
@@ -433,8 +439,8 @@ class NativeTableau final : public TableauEngine {
             Pauli::setBit(pulled.z(), i, host_b(i));
             xz_pairs += (host_a(i) && host_b(i)) ? 1 : 0;
         }
-        pulled.setLogI(
-            Pauli::logIMod4(pauli.logI() - product_log_i + 3 * xz_pairs));
+        pulled.setPhaseExponent(Pauli::phaseExponentMod4(
+            pauli.phaseExponent() - product_phase_exponent + 3 * xz_pairs));
         return pulled;
     }
 
@@ -449,8 +455,8 @@ class NativeTableau final : public TableauEngine {
             Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, rows_.x());
         const auto host_z =
             Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, rows_.z());
-        const auto host_log_i = Kokkos::create_mirror_view_and_copy(
-            Kokkos::HostSpace{}, rows_.logI());
+        const auto host_phase_exponent = Kokkos::create_mirror_view_and_copy(
+            Kokkos::HostSpace{}, rows_.phaseExponent());
 
         std::vector<PauliWord> stabilizers;
         stabilizers.reserve(num_qubits);
@@ -460,7 +466,7 @@ class NativeTableau final : public TableauEngine {
                 stabilizer.x()[w] = host_x(num_qubits + i, w);
                 stabilizer.z()[w] = host_z(num_qubits + i, w);
             }
-            stabilizer.setLogI(host_log_i(num_qubits + i));
+            stabilizer.setPhaseExponent(host_phase_exponent(num_qubits + i));
             stabilizers.push_back(std::move(stabilizer));
         }
 
@@ -492,7 +498,7 @@ class NativeTableau final : public TableauEngine {
         for (std::size_t i = rank; i < num_qubits; i++) {
             const Word *z = stabilizers[i].z();
             constraints.emplace_back(z, z + bit_words);
-            parities.push_back(stabilizers[i].logI() == 2);
+            parities.push_back(stabilizers[i].phaseExponent() == 2);
         }
         const auto support = GF2::AffineSubspace::solve(
             num_qubits, std::move(constraints), std::move(parities));
@@ -506,7 +512,7 @@ class NativeTableau final : public TableauEngine {
         auto copy = std::make_unique<NativeTableau>(num_qubits_);
         Kokkos::deep_copy(copy->rows_.x(), rows_.x());
         Kokkos::deep_copy(copy->rows_.z(), rows_.z());
-        Kokkos::deep_copy(copy->rows_.logI(), rows_.logI());
+        Kokkos::deep_copy(copy->rows_.phaseExponent(), rows_.phaseExponent());
         return copy;
     }
 };

@@ -18,9 +18,9 @@
  * component.
  *
  * A Pauli word on n qubits is stored as two bit vectors, x and z, packed into
- * 64-bit words, plus a phase i^log_i. Qubit q is bit q % 64 of word q / 64.
- * The single-qubit Pauli at q is I, X, Z or Y for (x, z) = (0, 0), (1, 0),
- * (0, 1) or (1, 1); Y is the Hermitian Y, not XZ.
+ * 64-bit words, plus a phase i^phase_exponent. Qubit q is bit q % 64 of word q
+ * / 64. The single-qubit Pauli at q is I, X, Z or Y for (x, z) = (0, 0), (1,
+ * 0), (0, 1) or (1, 1); Y is the Hermitian Y, not XZ.
  *
  * Every function here works on raw word pointers, so it runs on the host and
  * inside Kokkos kernels alike.
@@ -99,7 +99,8 @@ KOKKOS_INLINE_FUNCTION auto productPhaseWord(Word x_a, Word z_a, Word x_b,
 /**
  * @brief Reduce a signed count of factors of i to an exponent in [0, 4).
  */
-KOKKOS_INLINE_FUNCTION constexpr auto logIMod4(int count) -> std::uint8_t {
+KOKKOS_INLINE_FUNCTION constexpr auto phaseExponentMod4(int count)
+    -> std::uint8_t {
     return static_cast<std::uint8_t>(((count % 4) + 4) % 4);
 }
 

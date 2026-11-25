@@ -56,6 +56,8 @@ inline void ensureKokkosInitialized() {
 /**
  * @brief Pauli words on a common number of qubits, one word per row.
  *
+ * Each row stores one complete Pauli operator, including its global phase,
+ * across all qubits. For example, +XYZI is one row on four qubits.
  * Rows are generator-major: the x and z bits of a row are contiguous, so a
  * row operation streams through memory. The phase exponent of each row is
  * stored separately.
@@ -74,7 +76,7 @@ template <class ExecSpace = Kokkos::DefaultExecutionSpace> class PauliRows {
     std::size_t num_words_;
     WordsView x_;
     WordsView z_;
-    PhasesView log_i_;
+    PhasesView phase_exponent_;
 
   public:
     /**
@@ -86,7 +88,7 @@ template <class ExecSpace = Kokkos::DefaultExecutionSpace> class PauliRows {
         ensureKokkosInitialized();
         x_ = WordsView("pauli_rows_x", num_rows_, num_words_);
         z_ = WordsView("pauli_rows_z", num_rows_, num_words_);
-        log_i_ = PhasesView("pauli_rows_log_i", num_rows_);
+        phase_exponent_ = PhasesView("pauli_rows_phase_exponent", num_rows_);
     }
 
     [[nodiscard]] auto numRows() const -> std::size_t { return num_rows_; }
@@ -95,7 +97,9 @@ template <class ExecSpace = Kokkos::DefaultExecutionSpace> class PauliRows {
 
     [[nodiscard]] auto x() const -> WordsView { return x_; }
     [[nodiscard]] auto z() const -> WordsView { return z_; }
-    [[nodiscard]] auto logI() const -> PhasesView { return log_i_; }
+    [[nodiscard]] auto phaseExponent() const -> PhasesView {
+        return phase_exponent_;
+    }
 
     /**
      * @brief Copy `word` into row `row`.
@@ -111,7 +115,8 @@ template <class ExecSpace = Kokkos::DefaultExecutionSpace> class PauliRows {
                           HostWords(word.x(), num_words_));
         Kokkos::deep_copy(Kokkos::subview(z_, row, Kokkos::ALL),
                           HostWords(word.z(), num_words_));
-        Kokkos::deep_copy(Kokkos::subview(log_i_, row), word.logI());
+        Kokkos::deep_copy(Kokkos::subview(phase_exponent_, row),
+                          word.phaseExponent());
     }
 
     /**
@@ -127,9 +132,10 @@ template <class ExecSpace = Kokkos::DefaultExecutionSpace> class PauliRows {
                           Kokkos::subview(x_, row, Kokkos::ALL));
         Kokkos::deep_copy(HostWords(word.z(), num_words_),
                           Kokkos::subview(z_, row, Kokkos::ALL));
-        std::uint8_t log_i = 0;
-        Kokkos::deep_copy(log_i, Kokkos::subview(log_i_, row));
-        word.setLogI(log_i);
+        std::uint8_t phase_exponent = 0;
+        Kokkos::deep_copy(phase_exponent,
+                          Kokkos::subview(phase_exponent_, row));
+        word.setPhaseExponent(phase_exponent);
         return word;
     }
 
@@ -143,7 +149,7 @@ template <class ExecSpace = Kokkos::DefaultExecutionSpace> class PauliRows {
 
         auto x = x_;
         auto z = z_;
-        auto log_i = log_i_;
+        auto phase_exponent = phase_exponent_;
         int count = 0;
         Kokkos::parallel_reduce(
             "PauliRows::multiplyRow",
@@ -158,7 +164,8 @@ template <class ExecSpace = Kokkos::DefaultExecutionSpace> class PauliRows {
         Kokkos::parallel_for(
             "PauliRows::multiplyRowPhase", Kokkos::RangePolicy<ExecSpace>(0, 1),
             KOKKOS_LAMBDA(std::size_t) {
-                log_i(target) = logIMod4(log_i(target) + log_i(source) + count);
+                phase_exponent(target) = phaseExponentMod4(
+                    phase_exponent(target) + phase_exponent(source) + count);
             });
     }
 
