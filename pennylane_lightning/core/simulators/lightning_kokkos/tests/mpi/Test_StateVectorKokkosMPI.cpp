@@ -1024,9 +1024,7 @@ TEMPLATE_TEST_CASE("getGlobalWireTransferRanks", "[LKMPI]", double, float) {
         sv.reorderGlobalLocalWires();
 
         // Test the rank selection before the blocking redistribution in
-        // reorderAllWires: 0 -> 2 -> 3 -> 1 -> 0. The preparation above only
-        // uses pairwise transfers, so the old receive-from-destination bug
-        // fails these assertions rather than deadlocking the test runner.
+        // reorderAllWires: 0 -> 2 -> 3 -> 1 -> 0.
         const auto [dest, src] =
             sv.getGlobalWireTransferRanks({0, 1}, {0, 1, 2, 3});
         const std::vector<std::size_t> destinations{2, 0, 3, 1};
