@@ -163,16 +163,16 @@ else
 	if [ "$(PL_BACKEND)" = "lightning_gpu" ]; then \
 		for file in ./BuildTests/*_test_runner_mpi; do \
 			echo "Running $$file"; \
-			mpirun -np 2 $$file --order decl ; \
+			mpirun -np 2 $$file --order decl || exit $$?; \
 		done ; \
 	elif [ "$(PL_BACKEND)" = "lightning_kokkos" ]; then \
 		for file in ./BuildTests/lightning_kokkos*test_runner_mpi; do \
 			echo "Running $$file"; \
-			mpirun -np 4 $$file --order decl ; \
+			mpirun -np 4 $$file --order decl || exit $$?; \
 		done ; \
 		for file in ./BuildTests/utils_test_runner_mpi; do \
 			echo "Running $$file"; \
-			mpirun -np 2 $$file --order decl ; \
+			mpirun -np 2 $$file --order decl || exit $$?; \
 		done; \
 	fi
 endif
