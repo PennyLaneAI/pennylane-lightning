@@ -96,7 +96,6 @@ class TestExpval:
 
         assert np.allclose(1.0, result, tol)
 
-
     @pytest.mark.parametrize(
         "Obs, Op, expected_fn",
         [
