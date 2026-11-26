@@ -8,7 +8,7 @@ A ``lightning.gpu`` device can be loaded using:
 
 .. code-block:: python
 
-    import pennylane as qp
+    import pennylane2 as qp
     dev = qp.device("lightning.gpu", wires=2)
 
 If the NVIDIA cuQuantum libraries are available, the above device will allow all operations to be performed on a CUDA capable GPU of generation SM 7.0 (Volta) and greater. If the libraries are not correctly installed, or available on path, the device will raise an error.
@@ -36,58 +36,58 @@ Supported operations and observables
 .. autosummary::
     :nosignatures:
 
-    ~pennylane.BasisState
-    ~pennylane.BlockEncode
-    ~pennylane.CNOT
-    ~pennylane.ControlledPhaseShift
-    ~pennylane.ControlledQubitUnitary
-    ~pennylane.CRot
-    ~pennylane.CRX
-    ~pennylane.CRY
-    ~pennylane.CRZ
-    ~pennylane.CSWAP
-    ~pennylane.CY
-    ~pennylane.CZ
-    ~pennylane.DiagonalQubitUnitary
-    ~pennylane.DoubleExcitation
-    ~pennylane.DoubleExcitationMinus
-    ~pennylane.DoubleExcitationPlus
-    ~pennylane.ECR
-    ~pennylane.GlobalPhase
-    ~pennylane.Hadamard
-    ~pennylane.Identity
-    ~pennylane.IsingXX
-    ~pennylane.IsingXY
-    ~pennylane.IsingYY
-    ~pennylane.IsingZZ
-    ~pennylane.ISWAP
-    ~pennylane.MultiControlledX
-    ~pennylane.MultiRZ
-    ~pennylane.OrbitalRotation
-    ~pennylane.PauliX
-    ~pennylane.PauliY
-    ~pennylane.PauliZ
-    ~pennylane.PauliRot
-    ~pennylane.PCPhase
-    ~pennylane.PhaseShift
-    ~pennylane.PSWAP
-    ~pennylane.QubitCarry
-    ~pennylane.QubitSum
-    ~pennylane.QubitUnitary
-    ~pennylane.Rot
-    ~pennylane.RX
-    ~pennylane.RY
-    ~pennylane.RZ
-    ~pennylane.S
-    ~pennylane.SingleExcitation
-    ~pennylane.SingleExcitationMinus
-    ~pennylane.SingleExcitationPlus
-    ~pennylane.SISWAP
-    ~pennylane.SQISW
-    ~pennylane.SWAP
-    ~pennylane.SX
-    ~pennylane.T
-    ~pennylane.Toffoli
+    ~pennylane2.BasisState
+    ~pennylane2.BlockEncode
+    ~pennylane2.CNOT
+    ~pennylane2.ControlledPhaseShift
+    ~pennylane2.ControlledQubitUnitary
+    ~pennylane2.CRot
+    ~pennylane2.CRX
+    ~pennylane2.CRY
+    ~pennylane2.CRZ
+    ~pennylane2.CSWAP
+    ~pennylane2.CY
+    ~pennylane2.CZ
+    ~pennylane2.DiagonalQubitUnitary
+    ~pennylane2.DoubleExcitation
+    ~pennylane2.DoubleExcitationMinus
+    ~pennylane2.DoubleExcitationPlus
+    ~pennylane2.ECR
+    ~pennylane2.GlobalPhase
+    ~pennylane2.Hadamard
+    ~pennylane2.Identity
+    ~pennylane2.IsingXX
+    ~pennylane2.IsingXY
+    ~pennylane2.IsingYY
+    ~pennylane2.IsingZZ
+    ~pennylane2.ISWAP
+    ~pennylane2.MultiControlledX
+    ~pennylane2.MultiRZ
+    ~pennylane2.OrbitalRotation
+    ~pennylane2.PauliX
+    ~pennylane2.PauliY
+    ~pennylane2.PauliZ
+    ~pennylane2.PauliRot
+    ~pennylane2.PCPhase
+    ~pennylane2.PhaseShift
+    ~pennylane2.PSWAP
+    ~pennylane2.QubitCarry
+    ~pennylane2.QubitSum
+    ~pennylane2.QubitUnitary
+    ~pennylane2.Rot
+    ~pennylane2.RX
+    ~pennylane2.RY
+    ~pennylane2.RZ
+    ~pennylane2.S
+    ~pennylane2.SingleExcitation
+    ~pennylane2.SingleExcitationMinus
+    ~pennylane2.SingleExcitationPlus
+    ~pennylane2.SISWAP
+    ~pennylane2.SQISW
+    ~pennylane2.SWAP
+    ~pennylane2.SX
+    ~pennylane2.T
+    ~pennylane2.Toffoli
 
 .. raw:: html
 
@@ -102,19 +102,19 @@ Supported operations and observables
 .. autosummary::
     :nosignatures:
 
-    ~pennylane.Identity
-    ~pennylane.Hadamard
-    ~pennylane.PauliX
-    ~pennylane.PauliY
-    ~pennylane.PauliZ
-    ~pennylane.Projector
-    ~pennylane.Hermitian
-    ~pennylane.Hamiltonian
-    ~pennylane.SparseHamiltonian
-    ~pennylane.ops.op_math.Exp
-    ~pennylane.ops.op_math.Prod
-    ~pennylane.ops.op_math.SProd
-    ~pennylane.ops.op_math.Sum
+    ~pennylane2.Identity
+    ~pennylane2.Hadamard
+    ~pennylane2.PauliX
+    ~pennylane2.PauliY
+    ~pennylane2.PauliZ
+    ~pennylane2.Projector
+    ~pennylane2.Hermitian
+    ~pennylane2.Hamiltonian
+    ~pennylane2.SparseHamiltonian
+    ~pennylane2.ops.op_math.Exp
+    ~pennylane2.ops.op_math.Prod
+    ~pennylane2.ops.op_math.SProd
+    ~pennylane2.ops.op_math.Sum
 
 .. raw:: html
 
@@ -130,7 +130,7 @@ If you are computing a large number of expectation values, or if you are using a
 
 .. code-block:: python
 
-    import pennylane as qp
+    import pennylane2 as qp
     dev = qp.device("lightning.gpu", wires=20, batch_obs=True)
 
 With the above, each GPU will see at most ``ceil(m/n)`` observables to process, reducing the preallocated memory footprint.
@@ -139,7 +139,7 @@ Additionally, there can be situations where even with the above distribution, an
 
 .. code-block:: python
 
-    import pennylane as qp
+    import pennylane2 as qp
     dev = qp.device("lightning.gpu", wires=27, batch_obs=1)
 
 Each problem is unique, so it can often be best to choose the default behaviour up-front, and tune with the above only if necessary.
@@ -155,7 +155,7 @@ With ``lightning.gpu`` installed with MPI support, this can be enabled in Pennyl
 .. code-block:: python
 
     from mpi4py import MPI
-    import pennylane as qp
+    import pennylane2 as qp
     dev = qp.device('lightning.gpu', wires=8, mpi=True)
     @qp.qnode(dev)
     def circuit_mpi():
@@ -178,7 +178,7 @@ The workflow for collecting local state vector (using the ``qp.state()`` method)
 .. code-block:: python
 
     from mpi4py import MPI
-    import pennylane as qp
+    import pennylane2 as qp
     comm = MPI.COMM_WORLD
     rank = comm.Get_rank()
     dev = qp.device('lightning.gpu', wires=8, mpi=True)
@@ -197,7 +197,7 @@ The workflow for collecting local probability (using the ``qp.prob()`` method) t
 .. code-block:: python
 
     from mpi4py import MPI
-    import pennylane as qp
+    import pennylane2 as qp
     import numpy as np
 
     comm = MPI.COMM_WORLD
@@ -234,7 +234,7 @@ Furthermore, users can optimize the performance of their applications by allocat
 .. code-block:: python
 
     from mpi4py import MPI
-    import pennylane as qp
+    import pennylane2 as qp
     n = 8
     dev = qp.device("lightning.gpu", wires=20, mpi=True, mpi_buf_size=n)
 
@@ -253,8 +253,8 @@ The workflow for the default adjoint method with MPI support is as follows:
 .. code-block:: python
 
     from mpi4py import MPI
-    import pennylane as qp
-    from pennylane import numpy as np
+    import pennylane2 as qp
+    from pennylane2 import numpy as np
 
     comm = MPI.COMM_WORLD
     rank = comm.Get_rank()

@@ -29,6 +29,8 @@ on:
         default: false
 
 env:
+  # Temporary PR #10567 source; update the shared constraint after it merges.
+  PIP_CONSTRAINT: ${{ github.workspace }}/.github/pennylane2-constraints.txt
   MACOSX_DEPLOYMENT_TARGET: 15.0
 
 concurrency:
@@ -103,7 +105,7 @@ jobs:
             fi
           CIBW_TEST_COMMAND: |
             DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
-            pl-device-test --device=${DEVICENAME} --skip-ops -x --tb=short
+            pl2-device-test --device=${DEVICENAME} --skip-ops -x --tb=short
 
           CIBW_BUILD_VERBOSITY: 3
 

@@ -16,12 +16,12 @@ Tests for process and execute (variance calculation).
 """
 
 import numpy as np
-import pennylane as qp
+import pennylane2 as qp
 
 # pylint: disable=too-many-arguments, redefined-outer-name
 import pytest
 from conftest import PHI, THETA, VARPHI, LightningDevice, device_name
-from pennylane.tape import QuantumScript
+from pennylane2.tape import QuantumScript
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-access
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)

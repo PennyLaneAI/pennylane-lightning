@@ -17,7 +17,7 @@ import math
 from typing import Sequence
 
 import numpy as np
-import pennylane as qp
+import pennylane2 as qp
 import pytest
 from conftest import (  # tested device
     PHI,
@@ -34,8 +34,8 @@ from conftest import (  # tested device
     validate_others,
     validate_samples,
 )
-from pennylane.devices import DefaultQubit
-from pennylane.measurements import VarianceMP
+from pennylane2.devices import DefaultQubit
+from pennylane2.measurements import VarianceMP
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)

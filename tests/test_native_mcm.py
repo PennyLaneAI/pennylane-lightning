@@ -17,7 +17,7 @@ from functools import partial
 from typing import Sequence
 
 import numpy as np
-import pennylane as qp
+import pennylane2 as qp
 import pytest
 from conftest import (
     LightningDevice,
@@ -27,7 +27,7 @@ from conftest import (
     validate_others,
     validate_samples,
 )
-from pennylane.exceptions import DeviceError
+from pennylane2.exceptions import DeviceError
 
 if device_name not in ("lightning.qubit", "lightning.kokkos", "lightning.amdgpu", "lightning.gpu"):
     pytest.skip("Native MCM not supported. Skipping.", allow_module_level=True)

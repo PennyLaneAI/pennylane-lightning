@@ -20,10 +20,10 @@ Pytest configuration file for PennyLane-Lightning MPI test suite.
 import itertools
 import os
 
-import pennylane as qp
+import pennylane2 as qp
 import pytest
-from pennylane import numpy as np
-from pennylane.exceptions import DeviceError
+from pennylane2 import numpy as np
+from pennylane2.exceptions import DeviceError
 
 import pennylane_lightning
 

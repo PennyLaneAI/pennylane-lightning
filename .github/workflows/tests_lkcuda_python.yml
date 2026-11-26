@@ -29,6 +29,12 @@ on:
       - main
 
 env:
+  # Temporary for PR #10567: use its branch instead of the separate main checkout.
+  # Stable/release Lightning uses Classic; latest or unset uses the PennyLane2 branch.
+  USE_PENNYLANE2_BRANCH: ${{ inputs.lightning-version != 'stable' && inputs.lightning-version != 'release' && 'true' || 'false' }}
+  DEVICE_TEST_COMMAND: ${{ (inputs.pennylane-version == 'stable' || inputs.pennylane-version == 'release') && 'pl-device-test' || 'pl2-device-test' }}
+  # pip uses this file to select the PennyLane2 revision.
+  PIP_CONSTRAINT: ${{ inputs.lightning-version != 'stable' && inputs.lightning-version != 'release' && format('{0}/main/.github/pennylane2-constraints.txt', github.workspace) || '' }}
   GCC_VERSION: 13
   CI_CUDA_ARCH: 86
   TORCH_VERSION: 2.5.1
@@ -220,14 +226,14 @@ jobs:
           python -m pip install openfermionpyscf "numpy<2.4"
 
       - name: Checkout PennyLane for release or latest build
-        if: inputs.pennylane-version == 'release' || inputs.pennylane-version == 'latest'
+        if: inputs.pennylane-version == 'release' || (inputs.pennylane-version == 'latest' && env.USE_PENNYLANE2_BRANCH == 'false')
         uses: actions/checkout@v4
         with:
           path: pennylane
           repository: PennyLaneAI/pennylane
 
       - name: Switch to latest build of PennyLane
-        if: inputs.pennylane-version == 'latest'
+        if: inputs.pennylane-version == 'latest' && env.USE_PENNYLANE2_BRANCH == 'false'
         run: |
           cd pennylane
           git checkout main
@@ -291,8 +297,8 @@ jobs:
           OMP_PROC_BIND: false
         run: |
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
-          pl-device-test --device ${DEVICENAME} --skip-ops --shots=10000 $COVERAGE_FLAGS --cov-append
-          pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
+          $DEVICE_TEST_COMMAND --device ${DEVICENAME} --skip-ops --shots=10000 $COVERAGE_FLAGS --cov-append
+          $DEVICE_TEST_COMMAND --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
 
       - name: Run PennyLane-Lightning unit tests
         if: ${{ matrix.pl_backend != 'all' }}
@@ -320,8 +326,8 @@ jobs:
         run: |
           cd main/
           for device in lightning.qubit lightning.kokkos; do
-            pl-device-test --device ${device} --skip-ops --shots=10000 $COVERAGE_FLAGS --cov-append
-            pl-device-test --device ${device} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
+            $DEVICE_TEST_COMMAND --device ${device} --skip-ops --shots=10000 $COVERAGE_FLAGS --cov-append
+            $DEVICE_TEST_COMMAND --device ${device} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
           done
 
       - name: Move coverage file

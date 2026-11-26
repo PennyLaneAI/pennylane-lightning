@@ -22,9 +22,9 @@ from functools import reduce
 from typing import Sequence
 
 import numpy as np
-import pennylane as qp
+import pennylane2 as qp
 import pytest
-from pennylane.exceptions import DeviceError
+from pennylane2.exceptions import DeviceError
 from scipy.sparse import csr_matrix, random_array
 
 import pennylane_lightning

@@ -21,7 +21,7 @@ from dataclasses import replace
 from functools import partial
 
 import numpy as np
-import pennylane as qp
+import pennylane2 as qp
 import pytest
 from conftest import (
     PHI,
@@ -33,8 +33,8 @@ from conftest import (
     LightningStateVector,
     device_name,
 )
-from pennylane.devices import DefaultQubit, ExecutionConfig, MCMConfig
-from pennylane.devices.preprocess import (
+from pennylane2.devices import DefaultQubit, ExecutionConfig, MCMConfig
+from pennylane2.devices.preprocess import (
     decompose,
     device_resolve_dynamic_wires,
     no_sampling,
@@ -43,9 +43,9 @@ from pennylane.devices.preprocess import (
     validate_measurements,
     validate_observables,
 )
-from pennylane.exceptions import DeviceError, QuantumFunctionError
-from pennylane.tape import QuantumScript
-from pennylane.transforms import defer_measurements, dynamic_one_shot
+from pennylane2.exceptions import DeviceError, QuantumFunctionError
+from pennylane2.tape import QuantumScript
+from pennylane2.transforms import defer_measurements, dynamic_one_shot
 
 from pennylane_lightning.lightning_base.lightning_base import (
     _adjoint_measurement,

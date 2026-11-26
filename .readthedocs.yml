@@ -3,11 +3,6 @@ version: 2
 sphinx:
   configuration: doc/conf.py
 
-python:
-  install:
-    - method: pip
-      path: .
-
 build:
   os: ubuntu-24.04
   tools:
@@ -16,7 +11,9 @@ build:
     - graphviz
   jobs:
     post_install:
-      - pip install --group docs
+      # Install both together until pip selects PennyLane2-compatible Lightning.
+      # Temporary PR #10567 source; update the shared constraint after it merges.
+      - SKIP_COMPILATION=True python -m pip install . --group docs -c .github/pennylane2-constraints.txt
       - PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py && SKIP_COMPILATION=True python -m build
       - rm -rf ./build && PL_BACKEND="lightning_gpu" python scripts/configure_pyproject_toml.py && SKIP_COMPILATION=True python -m build
       - rm -rf ./build && PL_BACKEND="lightning_amdgpu" python scripts/configure_pyproject_toml.py && SKIP_COMPILATION=True python -m build

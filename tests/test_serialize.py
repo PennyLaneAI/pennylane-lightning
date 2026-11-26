@@ -16,10 +16,10 @@ Unit tests for the serialization helper functions.
 """
 
 import numpy as np
-import pennylane as qp
+import pennylane2 as qp
 import pytest
 from conftest import LightningDevice, compare_serialized_ops, device_name
-from pennylane.exceptions import DeviceError
+from pennylane2.exceptions import DeviceError
 
 from pennylane_lightning.lightning_base._serialize import (
     QuantumScriptSerializer,

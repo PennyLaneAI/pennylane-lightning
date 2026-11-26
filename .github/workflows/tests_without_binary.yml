@@ -23,6 +23,11 @@ on:
       - main
 
 env:
+  # Temporary for PR #10567: use its branch instead of the separate main checkout.
+  # Stable/release Lightning uses Classic; latest or unset uses the PennyLane2 branch.
+  USE_PENNYLANE2_BRANCH: ${{ inputs.lightning-version != 'stable' && inputs.lightning-version != 'release' && 'true' || 'false' }}
+  # pip uses this file to select the PennyLane2 revision.
+  PIP_CONSTRAINT: ${{ inputs.lightning-version != 'stable' && inputs.lightning-version != 'release' && format('{0}/.github/pennylane2-constraints.txt', github.workspace) || '' }}
   COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:./coverage.xml -p no:warnings --tb=native"
 
 concurrency:
@@ -80,14 +85,14 @@ jobs:
           python -m pip install --group tests
 
       - name: Checkout PennyLane for release or latest build
-        if: inputs.pennylane-version == 'release' || inputs.pennylane-version == 'latest'
+        if: inputs.pennylane-version == 'release' || (inputs.pennylane-version == 'latest' && env.USE_PENNYLANE2_BRANCH == 'false')
         uses: actions/checkout@v4
         with:
           path: pennylane
           repository: PennyLaneAI/pennylane
 
       - name: Switch to latest build of PennyLane
-        if: inputs.pennylane-version == 'latest'
+        if: inputs.pennylane-version == 'latest' && env.USE_PENNYLANE2_BRANCH == 'false'
         run: |
           cd pennylane
           git checkout main

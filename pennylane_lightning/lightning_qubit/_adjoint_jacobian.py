@@ -33,7 +33,7 @@ except ImportError as ex:
 from os import getenv
 
 import numpy as np
-from pennylane.tape import QuantumScript
+from pennylane2.tape import QuantumScript
 from scipy.sparse import csr_matrix
 
 # pylint: disable=ungrouped-imports

@@ -20,11 +20,11 @@ import itertools
 from functools import partial
 
 import numpy as np
-import pennylane as qp
+import pennylane2 as qp
 import pytest
 from conftest import TOL_STOCHASTIC, device_name, fixture_params
 from mpi4py import MPI
-from pennylane import numpy as pnp
+from pennylane2 import numpy as pnp
 from scipy.stats import unitary_group
 
 numQubits = 8

@@ -45,10 +45,10 @@ You can test PennyLane and the `lightning-qubit` plugin, for example, with
 
 ```shell
 pip install pytest pytest-mock flaky
-pl-device-test --device default.qubit
-pl-device-test --device default.qubit --shots 10000
-pl-device-test --device lightning.qubit
-pl-device-test --device lightning.qubit --shots 10000
+pl2-device-test --device default.qubit
+pl2-device-test --device default.qubit --shots 10000
+pl2-device-test --device lightning.qubit
+pl2-device-test --device lightning.qubit --shots 10000
 ```
 
 ## Build

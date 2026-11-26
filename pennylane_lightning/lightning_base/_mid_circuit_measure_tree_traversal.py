@@ -18,8 +18,8 @@ This module implements a tree traversal algorithm for simulating quantum circuit
 """
 
 import numpy as np
-import pennylane as qp
-from pennylane.devices.qubit.simulate import (
+import pennylane2 as qp
+from pennylane2.devices.qubit.simulate import (
     TreeTraversalStack,
     combine_measurements,
     counts_to_probs,
@@ -31,9 +31,9 @@ from pennylane.devices.qubit.simulate import (
     update_mcm_samples,
     variance_transform,
 )
-from pennylane.measurements import MidMeasureMP, find_post_processed_mcms
-from pennylane.tape import QuantumScript
-from pennylane.typing import Result
+from pennylane2.measurements import MidMeasureMP, find_post_processed_mcms
+from pennylane2.tape import QuantumScript
+from pennylane2.typing import Result
 
 from pennylane_lightning.lightning_base._measurements import LightningBaseMeasurements
 from pennylane_lightning.lightning_base._state_vector import LightningBaseStateVector
