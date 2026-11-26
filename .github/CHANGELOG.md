@@ -109,6 +109,10 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Fixed a flaky mid-circuit measurement test by including all outcomes in count dictionaries
+  and comparing their complete key sets.
+  [(#1459)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1459)
+
 - Updates tests to get rid of use of non-positive-integer wires.
   [(#1460)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1460)
 
