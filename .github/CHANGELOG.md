@@ -109,6 +109,8 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Updates tests to get rid of use of non-positive-integer wires.
+
 - Updated `pylint` to version 4.1.3 in the `dev` and `base` dependency groups.
   [(#1443)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1443)
 
