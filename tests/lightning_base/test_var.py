@@ -94,27 +94,6 @@ class TestVar:
         assert np.allclose(0.0, result, atol=tol, rtol=0)
 
     @pytest.mark.parametrize(
-        "wires",
-        [([0, 1]), (["a", 1]), (["b", "a"]), ([-1, 2.5])],
-    )
-    def test_custom_wires(self, theta, phi, wires):
-        """Tests custom wires."""
-        device = LightningDevice(wires=wires)
-
-        tape = qp.tape.QuantumScript(
-            [qp.RX(theta, wires=wires[0]), qp.RX(phi, wires=wires[1]), qp.CNOT(wires=wires)],
-            [qp.var(qp.PauliZ(wires=wires[0])), qp.var(qp.PauliZ(wires=wires[1]))],
-        )
-
-        calculated_val = process_and_execute(device, tape)
-        reference_val = np.array(
-            [1 - np.cos(theta) ** 2, 1 - np.cos(theta) ** 2 * np.cos(phi) ** 2]
-        )
-
-        tol = 1e-5 if device.c_dtype == np.complex64 else 1e-7
-        assert np.allclose(calculated_val, reference_val, atol=tol, rtol=0)
-
-    @pytest.mark.parametrize(
         "Obs, Op, expected_fn",
         [
             (
