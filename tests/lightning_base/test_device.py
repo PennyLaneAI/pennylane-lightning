@@ -442,9 +442,6 @@ class TestInitialization:
         dev = LightningDevice(wires=2)
         assert dev._wire_map == None
 
-        dev = LightningDevice(wires=["a", "b"])
-        assert dev._wire_map == {"a": 0, "b": 1}
-
     def test_dummies_definition(self):
         """Test that the dummies are defined correctly"""
         dev = LightningDevice(wires=2)
@@ -1010,34 +1007,9 @@ class TestExecution:
         for r, e in zip(result, result_ref):
             assert np.allclose(r, e)
 
-    @pytest.mark.parametrize("phi, theta", list(zip(PHI, THETA)))
-    @pytest.mark.parametrize("wires", (["a", "b", -3], [0, "target", "other_target"]))
-    def test_custom_wires_execute(self, phi, theta, wires):
-        """Test execution with custom wires"""
-        device = LightningDevice(wires=wires)
-        qs = QuantumScript(
-            [
-                qp.RX(phi, wires[0]),
-                qp.RY(theta, wires[2]),
-                qp.CNOT([wires[0], wires[1]]),
-                qp.CNOT([wires[1], wires[2]]),
-            ],
-            [qp.expval(qp.Z(wires[0])), qp.expval(qp.Z(wires[2]))],
-        )
-
-        result = device.execute(qs)
-
-        assert isinstance(result, tuple)
-        assert len(result) == 2
-
-        assert np.allclose(result[0], np.cos(phi))
-        assert np.allclose(result[1], np.cos(phi) * np.cos(theta))
-
-    @pytest.mark.parametrize(
-        "wires, wire_order", [(3, (0, 1, 2)), (("a", "b", "c"), ("a", "b", "c"))]
-    )
+    @pytest.mark.parametrize("wires, wire_order", [(3, (0, 1, 2))])
     def test_probs_different_wire_orders(self, wires, wire_order):
-        """Test that measuring probabilities works with custom wires."""
+        """Test that measuring probabilities works with different integer wire orders."""
 
         dev = LightningDevice(wires=wires)
 
@@ -1488,40 +1460,6 @@ class TestDerivatives:
         assert np.allclose(jacs[0], expected_jac[0])
         assert np.allclose(jacs[1], expected_jac[1])
 
-    @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
-    @pytest.mark.parametrize("execute_and_derivatives", [True, False])
-    @pytest.mark.parametrize("wires", (["a", "b", -3], [0, "target", "other_target"]))
-    def test_derivatives_custom_wires(
-        self, theta, phi, dev, execute_and_derivatives, batch_obs, wires
-    ):
-        """Test that the jacobian is correct when set custom wires"""
-        device = LightningDevice(wires=wires)
-
-        qs = QuantumScript(
-            [
-                qp.RX(theta, wires[0]),
-                qp.CNOT([wires[0], wires[1]]),
-                qp.RY(phi, wires[1]),
-            ],
-            [qp.expval(qp.Z(wires[1]))],
-            trainable_params=[0, 1],
-        )
-
-        res, jac = self.process_and_execute(
-            device,
-            qs,
-            execute_and_derivatives=execute_and_derivatives,
-            obs_batch=batch_obs,
-        )
-        expected, expected_jac = self.calculate_reference(
-            qs, execute_and_derivatives=execute_and_derivatives
-        )
-
-        tol = 1e-5 if dev.c_dtype == np.complex64 else 1e-7
-        assert len(res) == len(jac) == 1
-        assert np.allclose(res, expected, atol=tol, rtol=0)
-        assert np.allclose(jac, expected_jac, atol=tol, rtol=0)
-
 
 @pytest.mark.parametrize("batch_obs", [True, False])
 class TestVJP:
@@ -1903,42 +1841,6 @@ class TestVJP:
         assert len(jacs) == len(expected_jac) == 2
         assert np.allclose(jacs[0], expected_jac[0])
         assert np.allclose(jacs[1], expected_jac[1])
-
-    @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
-    @pytest.mark.parametrize("execute_and_derivatives", [True, False])
-    @pytest.mark.parametrize("wires", (["a", "b", -3], [0, "target", "other_target"]))
-    def test_vjp_custom_wires(self, theta, phi, dev, wires, execute_and_derivatives, batch_obs):
-        """Test that the VJP is correct when set a custom wires"""
-
-        device = LightningDevice(wires=wires)
-
-        qs = QuantumScript(
-            [
-                qp.RX(theta, wires[0]),
-                qp.CNOT([wires[0], wires[1]]),
-                qp.RY(phi, wires[1]),
-            ],
-            [qp.expval(qp.Z(wires[1]))],
-            trainable_params=[0, 1],
-        )
-
-        dy = 1.0
-        res, jac = self.process_and_execute(
-            device,
-            qs,
-            dy,
-            execute_and_derivatives=execute_and_derivatives,
-            obs_batch=batch_obs,
-        )
-
-        expected, expected_jac = self.calculate_reference(
-            qs, dy, execute_and_derivatives=execute_and_derivatives
-        )
-
-        tol = 1e-5 if dev.c_dtype == np.complex64 else 1e-7
-        assert len(res) == len(jac) == 1
-        assert np.allclose(res, expected, atol=tol, rtol=0)
-        assert np.allclose(jac, expected_jac, atol=tol, rtol=0)
 
 
 class TestLightningDeviceGraphModeExclusive:

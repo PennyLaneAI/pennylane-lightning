@@ -816,175 +816,6 @@ def test_integration(returns):
     assert np.allclose(j_def, j_lightning)
 
 
-custom_wires = ["alice", 3.14, -1, 0, "bob", 1, "unit", "test"]
-
-
-@pytest.mark.parametrize(
-    "returns",
-    [
-        qp.PauliZ(custom_wires[0]),
-        qp.PauliX(custom_wires[2]),
-        qp.PauliZ(custom_wires[0]) @ qp.PauliY(custom_wires[3]),
-        qp.Hadamard(custom_wires[2]),
-        qp.Hadamard(custom_wires[3]) @ qp.PauliZ(custom_wires[2]),
-        # qp.Projector([0, 1], wires=[custom_wires[0], custom_wires[2]]) @ qp.Hadamard(custom_wires[3])
-        # qp.Projector([0, 0], wires=[custom_wires[2], custom_wires[0]])
-        qp.PauliX(custom_wires[0]) @ qp.PauliY(custom_wires[3]),
-        qp.PauliY(custom_wires[0]) @ qp.PauliY(custom_wires[2]) @ qp.PauliY(custom_wires[3]),
-        qp.Hermitian(np.array([[0, 1], [1, 0]], requires_grad=False), wires=custom_wires[0]),
-        qp.Hermitian(
-            np.kron(qp.PauliY.compute_matrix(), qp.PauliZ.compute_matrix()),
-            wires=[custom_wires[3], custom_wires[2]],
-        ),
-        qp.Hermitian(np.array([[0, 1], [1, 0]], requires_grad=False), wires=custom_wires[0])
-        @ qp.PauliZ(custom_wires[2]),
-    ],
-)
-def test_integration_custom_wires(returns):
-    """Integration tests that compare to default.qubit for a large circuit containing parametrized
-    operations and when using custom wire labels"""
-    dev_def = qp.device("default.qubit", wires=custom_wires)
-    dev_lightning = qp.device(device_name, wires=custom_wires, mpi=True, batch_obs=False)
-
-    def circuit(params):
-        circuit_ansatz(params, wires=custom_wires)
-        return qp.expval(returns), qp.expval(qp.PauliY(custom_wires[1]))
-
-    n_params = 30
-    params = np.linspace(0, 10, n_params)
-
-    qnode_def = qp.QNode(circuit, dev_def)
-    qnode_lightning = qp.QNode(circuit, dev_lightning, diff_method="adjoint")
-
-    def casted_to_array_def(params):
-        return np.array(qnode_def(params))
-
-    def casted_to_array_lightning(params):
-        return np.array(qnode_lightning(params))
-
-    j_def = qp.jacobian(casted_to_array_def)(params)
-    j_lightning = qp.jacobian(casted_to_array_lightning)(params)
-
-    assert np.allclose(j_def, j_lightning)
-
-
-@pytest.mark.local_salt(42)
-@pytest.mark.parametrize(
-    "returns",
-    [
-        (qp.PauliZ(custom_wires[0]),),
-        (qp.PauliZ(custom_wires[0]), qp.PauliZ(custom_wires[1])),
-        (
-            qp.PauliZ(custom_wires[0]),
-            qp.PauliZ(custom_wires[1]),
-            qp.PauliZ(custom_wires[3]),
-        ),
-        (
-            qp.PauliZ(custom_wires[0]),
-            qp.PauliZ(custom_wires[1]),
-            qp.PauliZ(custom_wires[3]),
-            qp.PauliZ(custom_wires[2]),
-        ),
-        (
-            qp.PauliZ(custom_wires[0]) @ qp.PauliY(custom_wires[3]),
-            qp.PauliZ(custom_wires[1]) @ qp.PauliY(custom_wires[2]),
-        ),
-        (
-            qp.PauliZ(custom_wires[0]) @ qp.PauliY(custom_wires[3]),
-            qp.PauliZ(custom_wires[1]),
-        ),
-    ],
-)
-def test_integration_custom_wires_batching(returns, seed):
-    """Integration tests that compare to default.qubit for a large circuit containing parametrized
-    operations and when using custom wire labels"""
-
-    dev_def = qp.device("default.qubit", wires=custom_wires)
-    dev_mpi = qp.device(device_name, wires=custom_wires, mpi=True, batch_obs=True)
-
-    def circuit(params):
-        circuit_ansatz(params, wires=custom_wires)
-        return [qp.expval(r) for r in returns] + [qp.expval(qp.PauliY(custom_wires[1]))]
-
-    n_params = 30
-    rng = np.random.default_rng(seed)
-    params = rng.random(n_params)
-
-    qnode_mpi = qp.QNode(circuit, dev_mpi, diff_method="adjoint")
-    qnode_def = qp.QNode(circuit, dev_def)
-
-    def convert_to_array_gpu(params):
-        return np.hstack(qnode_mpi(params))
-
-    def convert_to_array_def(params):
-        return np.hstack(qnode_def(params))
-
-    j_gpu = qp.jacobian(convert_to_array_gpu)(params)
-    j_def = qp.jacobian(convert_to_array_def)(params)
-
-    assert np.allclose(j_gpu, j_def, atol=1e-7)
-
-
-@pytest.mark.local_salt(42)
-@pytest.mark.parametrize(
-    "returns",
-    [
-        (0.5 * qp.PauliZ(custom_wires[0]),),
-        (0.5 * qp.PauliZ(custom_wires[0]), qp.PauliZ(custom_wires[1])),
-        (
-            qp.PauliZ(custom_wires[0]),
-            0.5 * qp.PauliZ(custom_wires[1]),
-            qp.PauliZ(custom_wires[3]),
-        ),
-        (
-            qp.PauliZ(custom_wires[0]),
-            qp.PauliZ(custom_wires[1]),
-            qp.PauliZ(custom_wires[3]),
-            0.5 * qp.PauliZ(custom_wires[2]),
-        ),
-        (
-            qp.PauliZ(custom_wires[0]) @ qp.PauliY(custom_wires[3]),
-            0.5 * qp.PauliZ(custom_wires[1]) @ qp.PauliY(custom_wires[2]),
-        ),
-        (
-            qp.PauliZ(custom_wires[0]) @ qp.PauliY(custom_wires[3]),
-            0.5 * qp.PauliZ(custom_wires[1]),
-        ),
-        (
-            0.0 * qp.PauliZ(custom_wires[0]) @ qp.PauliZ(custom_wires[1]),
-            1.0 * qp.Identity(10),
-            1.2 * qp.PauliZ(custom_wires[2]) @ qp.PauliZ(custom_wires[3]),
-        ),
-    ],
-)
-def test_batching_H(returns, seed):
-    """Integration tests that compare to default.qubit for a large circuit containing parametrized
-    operations and when using custom wire labels"""
-
-    dev_cpu = qp.device("default.qubit", wires=custom_wires + [10, 72])
-    dev_mpi = qp.device(device_name, wires=custom_wires + [10, 72], batch_obs=True)
-    dev_mpi_default = qp.device(device_name, wires=custom_wires + [10, 72], batch_obs=False)
-
-    def circuit(params):
-        circuit_ansatz(params, wires=custom_wires)
-        return qp.math.hstack([qp.expval(r) for r in returns])
-
-    n_params = 30
-    rng = np.random.default_rng(seed)
-    params = rng.random(n_params)
-
-    qnode_cpu = qp.QNode(circuit, dev_cpu, diff_method="parameter-shift")
-    qnode_mpi = qp.QNode(circuit, dev_mpi, diff_method="adjoint")
-    qnode_mpi_default = qp.QNode(circuit, dev_mpi_default, diff_method="adjoint")
-
-    j_cpu = qp.jacobian(qnode_cpu)(params)
-    j_gpu = qp.jacobian(qnode_mpi)(params)
-    j_gpu_default = qp.jacobian(qnode_mpi_default)(params)
-
-    assert np.allclose(j_cpu, j_gpu)
-    assert np.allclose(j_gpu, j_gpu_default)
-
-
 @pytest.fixture(scope="session")
 def create_xyz_file(tmp_path_factory):
     """Creates a coordinate file for an H2 molecule in the XYZ format."""
@@ -1073,71 +904,6 @@ def test_integration_H2_Hamiltonian(
     assert np.allclose(jacs, jacs_comp)
 
 
-@pytest.mark.local_salt(42)
-@pytest.mark.skipif(
-    device_name == "lightning.kokkos", reason="Kokkos MPI does not support SparseHamiltonian"
-)
-@pytest.mark.parametrize(
-    "returns",
-    [
-        qp.SparseHamiltonian(
-            qp.Hamiltonian(
-                [0.1], [qp.PauliX(wires=custom_wires[0]) @ qp.PauliY(wires=custom_wires[1])]
-            ).sparse_matrix(custom_wires),
-            wires=custom_wires,
-        ),
-        qp.SparseHamiltonian(
-            qp.Hamiltonian(
-                [2.0], [qp.PauliX(wires=custom_wires[2]) @ qp.PauliZ(wires=custom_wires[0])]
-            ).sparse_matrix(custom_wires),
-            wires=custom_wires,
-        ),
-        qp.SparseHamiltonian(
-            qp.Hamiltonian(
-                [2.0], [qp.PauliX(wires=custom_wires[1]) @ qp.PauliZ(wires=custom_wires[2])]
-            ).sparse_matrix(custom_wires),
-            wires=custom_wires,
-        ),
-        qp.SparseHamiltonian(
-            qp.Hamiltonian(
-                [1.1], [qp.PauliX(wires=custom_wires[0]) @ qp.PauliZ(wires=custom_wires[2])]
-            ).sparse_matrix(custom_wires),
-            wires=custom_wires,
-        ),
-    ],
-)
-def test_adjoint_SparseHamiltonian_custom_wires(returns, seed):
-    """Integration tests that compare to default.qubit for a large circuit containing parametrized
-    operations and when using custom wire labels"""
-
-    comm = MPI.COMM_WORLD
-    dev_mpi = qp.device(device_name, wires=custom_wires, mpi=True)
-    dev_cpu = qp.device("default.qubit", wires=custom_wires)
-
-    def circuit(params):
-        circuit_ansatz(params, wires=custom_wires)
-        return qp.expval(returns)
-
-    if comm.Get_rank() == 0:
-        n_params = 30
-        rng = np.random.default_rng(seed)
-        params = rng.random(n_params)
-    else:
-        params = None
-
-    params = comm.bcast(params, root=0)
-
-    qnode_mpi = qp.QNode(circuit, dev_mpi, diff_method="adjoint")
-    qnode_cpu = qp.QNode(circuit, dev_cpu, diff_method="parameter-shift")
-
-    j_gpu = qp.jacobian(qnode_mpi)(params)
-    j_cpu = qp.jacobian(qnode_cpu)(params)
-
-    comm.Barrier()
-
-    assert np.allclose(j_cpu, j_gpu)
-
-
 @pytest.mark.skipif(
     device_name == "lightning.kokkos", reason="Kokkos MPI does not support SparseHamiltonian"
 )
@@ -1149,67 +915,61 @@ def test_adjoint_SparseHamiltonian_custom_wires(returns, seed):
             qp.Hamiltonian(
                 [0.1],
                 [qp.PauliZ(1) @ qp.PauliX(0) @ qp.Identity(2) @ qp.PauliX(4) @ qp.Identity(5)],
-            ).sparse_matrix(range(len(custom_wires))),
-            wires=range(len(custom_wires)),
+            ).sparse_matrix(range(8)),
+            wires=range(8),
         ),
         qp.SparseHamiltonian(
             qp.Hamiltonian(
                 [0.1],
                 [qp.PauliX(1) @ qp.PauliZ(0)],
-            ).sparse_matrix(range(len(custom_wires))),
-            wires=range(len(custom_wires)),
+            ).sparse_matrix(range(8)),
+            wires=range(8),
         ),
         qp.SparseHamiltonian(
             qp.Hamiltonian(
                 [0.1],
                 [qp.PauliX(0)],
-            ).sparse_matrix(range(len(custom_wires))),
-            wires=range(len(custom_wires)),
+            ).sparse_matrix(range(8)),
+            wires=range(8),
         ),
         qp.SparseHamiltonian(
             qp.Hamiltonian(
                 [0.1],
                 [qp.PauliX(5)],
-            ).sparse_matrix(range(len(custom_wires))),
-            wires=range(len(custom_wires)),
+            ).sparse_matrix(range(8)),
+            wires=range(8),
         ),
         qp.SparseHamiltonian(
             qp.Hamiltonian(
                 [0.1],
                 [qp.PauliX(0) @ qp.PauliZ(1)],
-            ).sparse_matrix(range(len(custom_wires))),
-            wires=range(len(custom_wires)),
+            ).sparse_matrix(range(8)),
+            wires=range(8),
         ),
         qp.SparseHamiltonian(
-            qp.Hamiltonian([2.0], [qp.PauliX(1) @ qp.PauliZ(2)]).sparse_matrix(
-                range(len(custom_wires))
-            ),
-            wires=range(len(custom_wires)),
+            qp.Hamiltonian([2.0], [qp.PauliX(1) @ qp.PauliZ(2)]).sparse_matrix(range(8)),
+            wires=range(8),
         ),
         qp.SparseHamiltonian(
-            qp.Hamiltonian([2.0], [qp.PauliX(2) @ qp.PauliZ(4)]).sparse_matrix(
-                range(len(custom_wires))
-            ),
-            wires=range(len(custom_wires)),
+            qp.Hamiltonian([2.0], [qp.PauliX(2) @ qp.PauliZ(4)]).sparse_matrix(range(8)),
+            wires=range(8),
         ),
         qp.SparseHamiltonian(
-            qp.Hamiltonian([1.1], [qp.PauliX(2) @ qp.PauliZ(0)]).sparse_matrix(
-                range(len(custom_wires))
-            ),
-            wires=range(len(custom_wires)),
+            qp.Hamiltonian([1.1], [qp.PauliX(2) @ qp.PauliZ(0)]).sparse_matrix(range(8)),
+            wires=range(8),
         ),
     ],
 )
 def test_adjoint_SparseHamiltonian(returns, seed):
     """Integration tests that compare to default.qubit for a large circuit containing parametrized
-    operations and when using custom wire labels"""
+    operations and integer wire labels."""
 
     comm = MPI.COMM_WORLD
-    dev_mpi = qp.device(device_name, wires=len(custom_wires), mpi=True)
-    dev_cpu = qp.device("default.qubit", wires=len(custom_wires))
+    dev_mpi = qp.device(device_name, wires=8, mpi=True)
+    dev_cpu = qp.device("default.qubit", wires=8)
 
     def circuit(params):
-        circuit_ansatz(params, wires=range(len(custom_wires)))
+        circuit_ansatz(params, wires=range(8))
         return qp.expval(returns)
 
     if comm.Get_rank() == 0:

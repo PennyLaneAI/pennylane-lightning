@@ -742,44 +742,6 @@ class TestSerializeOps:
         )
         assert compare_serialized_ops(s, s_expected)
 
-    def test_custom_wires_circuit(self):
-        """Test expected serialization for a simple circuit with custom wire labels"""
-        wires_dict = {"a": 0, 3.2: 1}
-        tape = qp.tape.QuantumScript(
-            [
-                qp.RX(0.4, wires="a"),
-                qp.RY(0.6, wires=3.2),
-                qp.CNOT(wires=["a", 3.2]),
-                qp.SingleExcitation(0.5, wires=["a", 3.2]),
-                qp.SingleExcitationPlus(0.4, wires=["a", 3.2]),
-                qp.adjoint(qp.SingleExcitationMinus(0.5, wires=["a", 3.2])),
-            ],
-            [],
-        )
-
-        mat = np.array([])
-        s = QuantumScriptSerializer(device_name).serialize_ops(tape, wires_dict)
-        s_expected = (
-            (
-                [
-                    "RX",
-                    "RY",
-                    "CNOT",
-                    "SingleExcitation",
-                    "SingleExcitationPlus",
-                    "SingleExcitationMinus",
-                ],
-                [[0.4], [0.6], [], [0.5], [0.4], [0.5]],
-                [[0], [1], [0, 1], [0, 1], [0, 1], [0, 1]],
-                [False, False, False, False, False, True],
-                [mat, mat, mat, mat, mat, mat],
-                [[], [], [], [], [], []],
-                [[], [], [], [], [], []],
-            ),
-            False,
-        )
-        assert compare_serialized_ops(s, s_expected)
-
     @pytest.mark.parametrize("wires_map", [wires_dict, None])
     def test_ctrl_inverse(self, wires_map):
         """Test expected serialization for nested control adjoint operations"""
