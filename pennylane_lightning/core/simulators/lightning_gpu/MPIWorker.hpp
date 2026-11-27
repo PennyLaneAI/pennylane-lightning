@@ -183,8 +183,11 @@ make_shared_mpi_worker(custatevecHandle_t handle, MPIManagerGPU &mpi_manager,
         auto py_err = custatevecCommunicatorCreate(
             handle, &communicator, communicatorType, "libmpi.so");
         PL_ABORT_IF_NOT(py_err == CUSTATEVEC_STATUS_SUCCESS,
-                        "MPI communicator creation failed. Please add "
-                        "'/path/to/libmpi.so' to LD_LIBRARY_PATH.");
+                        "MPI communicator creation failed. cuStateVec needs "
+                        "the MPI library's symbols in the process: add "
+                        "'/path/to/libmpi.so' to LD_LIBRARY_PATH, or, if it is "
+                        "already loaded, make it global (LD_PRELOAD it, or "
+                        "dlopen it with RTLD_GLOBAL before importing).");
     }
     // LCOV_EXCL_STOP
     mpi_manager.Barrier();

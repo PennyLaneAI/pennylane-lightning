@@ -97,26 +97,6 @@ class TestExpval:
         assert np.allclose(1.0, result, tol)
 
     @pytest.mark.parametrize(
-        "wires",
-        [([0, 1]), (["a", 1]), (["b", "a"]), ([-1, 2.5])],
-    )
-    def test_custom_wires(self, theta, phi, tol, wires):
-        """Tests custom wires."""
-        dev = LightningDevice(wires=wires)
-
-        tape = qp.tape.QuantumScript(
-            [qp.RX(theta, wires=wires[0]), qp.RX(phi, wires=wires[1]), qp.CNOT(wires=wires)],
-            [qp.expval(qp.PauliZ(wires=wires[0])), qp.expval(qp.PauliZ(wires=wires[1]))],
-        )
-
-        calculated_val = process_and_execute(dev, tape)
-        reference_val = np.array([np.cos(theta), np.cos(theta) * np.cos(phi)])
-
-        tol = 1e-5 if dev.c_dtype == np.complex64 else 1e-7
-
-        assert np.allclose(calculated_val, reference_val, tol)
-
-    @pytest.mark.parametrize(
         "Obs, Op, expected_fn",
         [
             (
@@ -162,13 +142,10 @@ class TestExpval:
     def test_hermitian_expectation(self, theta, phi, tol, dev):
         """Tests an Hermitian operator."""
 
-        with qp.tape.QuantumTape() as tape:
-            qp.RX(theta, wires=0)
-            qp.RX(phi, wires=1)
-            qp.RX(theta + phi, wires=2)
-
-            for idx in range(3):
-                qp.expval(qp.Hermitian([[1, 0], [0, -1]], wires=[idx]))
+        tape = qp.tape.QuantumScript(
+            [qp.RX(theta, wires=0), qp.RX(phi, wires=1), qp.RX(theta + phi, wires=2)],
+            [qp.expval(qp.Hermitian([[1, 0], [0, -1]], wires=[idx])) for idx in range(3)],
+        )
 
         calculated_val = process_and_execute(dev, tape)
         reference_val = calculate_reference(tape)
@@ -192,10 +169,6 @@ class TestExpval:
     @pytest.mark.parametrize("dtype", [np.complex64, np.complex128])
     def test_hermitian_arbitrary_size_expectation(self, dtype, theta, phi, n_op_wires, wires, tol):
         """Tests the expectation value of an arbitrary size Hermitian matrix."""
-        if device_name == "lightning.tensor" and n_op_wires > 1:
-            pytest.skip(
-                "lightning.tensor does not support Hermitian matrices with n_op_wires not equal to 1"
-            )
         n_qubits = 8
         dev = LightningDevice(wires=n_qubits, c_dtype=dtype)
 
@@ -232,22 +205,16 @@ class TestExpval:
             ],
         )
 
-        with qp.tape.QuantumTape() as tape:
-            qp.RX(theta, wires=0)
-            qp.RX(phi, wires=1)
-            qp.RX(theta + phi, wires=2)
-
-            qp.expval(ham)
+        tape = qp.tape.QuantumScript(
+            [qp.RX(theta, wires=0), qp.RX(phi, wires=1), qp.RX(theta + phi, wires=2)],
+            [qp.expval(ham)],
+        )
 
         calculated_val = process_and_execute(dev, tape)
         reference_val = calculate_reference(tape)
 
         assert np.allclose(calculated_val, reference_val, tol)
 
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor does not support sparse Hamiltonians",
-    )
     def test_sparse_hamiltonian_expectation(self, theta, phi, tol, dev):
         """Tests a Hamiltonian."""
 
@@ -264,11 +231,7 @@ class TestExpval:
             wires=[0, 1],
         )
 
-        with qp.tape.QuantumTape() as tape:
-            qp.RX(theta, wires=0)
-            qp.RX(phi, wires=1)
-
-            qp.expval(ham)
+        tape = qp.tape.QuantumScript([qp.RX(theta, wires=0), qp.RX(phi, wires=1)], [qp.expval(ham)])
 
         calculated_val = process_and_execute(dev, tape)
         reference_val = calculate_reference(tape)
@@ -333,13 +296,16 @@ class TestTensorExpval:
     def test_PauliX_PauliY(self, theta, phi, varphi, dev, tol):
         """Tests a tensor product involving PauliX and PauliY."""
 
-        with qp.tape.QuantumTape() as tape:
-            qp.RX(theta, wires=[0])
-            qp.RX(phi, wires=[1])
-            qp.RX(varphi, wires=[2])
-            qp.CNOT(wires=[0, 1])
-            qp.CNOT(wires=[1, 2])
-            qp.expval(qp.PauliX(0) @ qp.PauliY(2))
+        tape = qp.tape.QuantumScript(
+            [
+                qp.RX(theta, wires=[0]),
+                qp.RX(phi, wires=[1]),
+                qp.RX(varphi, wires=[2]),
+                qp.CNOT(wires=[0, 1]),
+                qp.CNOT(wires=[1, 2]),
+            ],
+            [qp.expval(qp.PauliX(0) @ qp.PauliY(2))],
+        )
 
         calculated_val = process_and_execute(dev, tape)
         reference_val = calculate_reference(tape)
@@ -351,14 +317,17 @@ class TestTensorExpval:
     def test_PauliZ_identity(self, theta, phi, varphi, dev, tol):
         """Tests a tensor product involving PauliZ and Identity."""
 
-        with qp.tape.QuantumTape() as tape:
-            qp.Identity(wires=[0])
-            qp.RX(theta, wires=[0])
-            qp.RX(phi, wires=[1])
-            qp.RX(varphi, wires=[2])
-            qp.CNOT(wires=[0, 1])
-            qp.CNOT(wires=[1, 2])
-            qp.expval(qp.PauliZ(0) @ qp.Identity(1) @ qp.PauliZ(2))
+        tape = qp.tape.QuantumScript(
+            [
+                qp.Identity(wires=[0]),
+                qp.RX(theta, wires=[0]),
+                qp.RX(phi, wires=[1]),
+                qp.RX(varphi, wires=[2]),
+                qp.CNOT(wires=[0, 1]),
+                qp.CNOT(wires=[1, 2]),
+            ],
+            [qp.expval(qp.PauliZ(0) @ qp.Identity(1) @ qp.PauliZ(2))],
+        )
 
         calculated_val = process_and_execute(dev, tape)
         reference_val = calculate_reference(tape)
@@ -370,13 +339,16 @@ class TestTensorExpval:
     def test_PauliZ_hadamard_PauliY(self, theta, phi, varphi, dev, tol):
         """Tests a tensor product involving PauliY, PauliZ and Hadamard."""
 
-        with qp.tape.QuantumTape() as tape:
-            qp.RX(theta, wires=[0])
-            qp.RX(phi, wires=[1])
-            qp.RX(varphi, wires=[2])
-            qp.CNOT(wires=[0, 1])
-            qp.CNOT(wires=[1, 2])
-            qp.expval(qp.PauliZ(0) @ qp.Hadamard(1) @ qp.PauliY(2))
+        tape = qp.tape.QuantumScript(
+            [
+                qp.RX(theta, wires=[0]),
+                qp.RX(phi, wires=[1]),
+                qp.RX(varphi, wires=[2]),
+                qp.CNOT(wires=[0, 1]),
+                qp.CNOT(wires=[1, 2]),
+            ],
+            [qp.expval(qp.PauliZ(0) @ qp.Hadamard(1) @ qp.PauliY(2))],
+        )
 
         calculated_val = process_and_execute(dev, tape)
         reference_val = calculate_reference(tape)

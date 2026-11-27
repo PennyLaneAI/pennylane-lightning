@@ -36,10 +36,6 @@ if device_name == "lightning.kokkos":
 if device_name == "lightning.gpu":
     from pennylane_lightning.lightning_gpu._mpi_handler import MPIHandler
 
-if device_name == "lightning.tensor":
-    pytest.skip("Skipping tests for the LightningTensor class.", allow_module_level=True)
-
-
 if not LightningDevice._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 

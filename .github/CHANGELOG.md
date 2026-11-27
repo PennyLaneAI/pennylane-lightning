@@ -39,6 +39,9 @@
 
 <h3>Breaking changes 💔</h3>
 
+- The `lightning.tensor` device has been removed.
+  [(#1410)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1410)
+
 - Python 3.11 is no longer supported. The minimum required Python version is now 3.12.
   [(#1395)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1395)
 
@@ -54,6 +57,12 @@
   [(#1409)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1409)
 
 <h3>Bug fixes 🐛</h3>
+
+- Lightning-GPU with `mpi=True` no longer fails with "MPI communicator creation failed" when
+  the extension module was loaded with `RTLD_LOCAL` (the default for Python): `MPIRuntime` now
+  promotes the loaded MPI library's symbols to the global scope, which cuStateVec's communicator
+  needs to resolve them.
+  [(#1440)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1440)
 
 - Fixed multi-qubit `PauliMeasure` in the Lightning-Kokkos simulator, which measured every
   wire of the Pauli word and returned the logical AND of the outcomes. It now measures only the
@@ -104,7 +113,7 @@
   as dynamic argument.
   [(#1408)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1408)
 
-- Fixed controlled-gate dispatch in Lightning-Kokkos, Lightning-GPU and Lightning-Tensor to read gate
+- Fixed controlled-gate dispatch in Lightning-Kokkos and Lightning-GPU to read gate
   parameters from the base operation instead of the `Controlled` wrapper, restoring compatibility with
   PennyLane where `Controlled.parameters` now includes the control values.
   [(#1405)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1405)
@@ -113,6 +122,20 @@
   [(#1390)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1390)
 
 <h3>Internal changes ⚙️</h3>
+
+- Fixed a flaky mid-circuit measurement test by including all outcomes in count dictionaries
+  and comparing their complete key sets.
+  [(#1459)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1459)
+
+- Updates tests to get rid of use of non-positive-integer wires.
+  [(#1460)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1460)
+
+- Updated the shared test helper to read operator wire counts from `wire_argnames` and
+  `arg_specs` after PennyLane removed `Operator2.wire_sizes`.
+  [(#1458)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1458)
+
+- Updated `pylint` to version 4.1.3 in the `dev` and `base` dependency groups.
+  [(#1443)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1443)
 
 - A deferred-measurement test now builds its expected controlled ops with `qp.ctrl`, so it passes
   whether or not `qp.ctrl` dispatches to `CNOT` and `CY`, which PennyLane no longer does.
@@ -172,10 +195,12 @@ This release contains contributions from (in alphabetical order):
 
 Runor Agbaire,
 Ali Asadi,
+Astral Cai,
 Yushao Chen,
 Marcus Edwards,
 David Ittah,
 Jeffrey Kam,
+Mehmet Niyazi Kayi,
 Joseph Lee,
 Andrija Paurevic,
 Chen Shoval,

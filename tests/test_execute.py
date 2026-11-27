@@ -57,16 +57,14 @@ class TestQChem:
 
         hf_state = qp.qchem.hf_state(mol.n_electrons, qubits)
 
-        with qp.tape.QuantumTape() as tape:
-            qp.BasisState(hf_state, wires=range(qubits))
+        operations = [qp.BasisState(hf_state, wires=range(qubits))]
+        for i, excitation in enumerate(excitations):
+            if len(excitation) == 4:
+                operations.append(qp.DoubleExcitation(params[i], wires=excitation))
+            elif len(excitation) == 2:
+                operations.append(qp.SingleExcitation(params[i], wires=excitation))
 
-            for i, excitation in enumerate(excitations):
-                if len(excitation) == 4:
-                    qp.DoubleExcitation(params[i], wires=excitation)
-                elif len(excitation) == 2:
-                    qp.SingleExcitation(params[i], wires=excitation)
-
-            qp.expval(H)
+        tape = qp.tape.QuantumScript(operations, [qp.expval(H)])
 
         num_params = len(excitations)
         tape.trainable_params = np.linspace(1, num_params, num_params, dtype=int).tolist()

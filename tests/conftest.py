@@ -77,11 +77,14 @@ VARPHI = np.linspace(0.02, 1, 3)
 def get_operation_num_wires(operation):
     """Return the minimum wire count needed to instantiate an operation class."""
     if issubclass(operation, qp.core.Operator2):
-        if not operation.wire_sizes:
+        if not operation.wire_argnames:
             # NOTE: Operators like GlobalPhase do not act on any wires
             return 0
-        # A size of "None" means any number of wires, so one is the minimum
-        return operation.wire_sizes[0] or 1
+        wire_name = operation.wire_argnames[0]
+        spec = (operation.arg_specs or {}).get(wire_name)
+        if spec is not None and getattr(spec, "shape_fixed", False):
+            return len(spec)
+        return 1
 
     num_wires = getattr(operation, "num_wires", None)
     return max(num_wires, 1) if num_wires else 1
@@ -113,7 +116,6 @@ supported_devices = {
     "lightning.kokkos",
     "lightning.amdgpu",
     "lightning.gpu",
-    "lightning.tensor",
     "lightning.cliffish",
 }
 
@@ -122,8 +124,8 @@ def get_device():
     """Return the pennylane lightning device.
 
     The device is ``lightning.qubit`` by default. Allowed values are:
-    "lightning.qubit", "lightning.kokkos", "lightning.amdgpu", "lightning.gpu", "lightning.tensor",
-    and "lightning.cliffish".
+    "lightning.qubit", "lightning.kokkos", "lightning.amdgpu", "lightning.gpu", and
+    "lightning.cliffish".
     If the environment variable ``PL_DEVICE`` is defined, its value is used.
     """
     device = os.environ.get("PL_DEVICE", default_device)
@@ -153,21 +155,7 @@ lightning_ops = None
 # Define nanobind module name based on current device
 nanobind_module_name = f"pennylane_lightning.{device_module_name}_ops"
 
-# Handle lightning.tensor separately since it has different class structure
-if device_name == "lightning.tensor":
-    from pennylane_lightning.lightning_tensor import LightningTensor as LightningDevice
-    from pennylane_lightning.lightning_tensor._measurements import (
-        LightningTensorMeasurements as LightningMeasurements,
-    )
-    from pennylane_lightning.lightning_tensor._tensornet import (
-        LightningTensorNet as LightningStateVector,
-    )
-
-    LightningAdjointJacobian = None
-
-    if hasattr(pennylane_lightning, "lightning_tensor_ops"):
-        import pennylane_lightning.lightning_tensor_ops as lightning_ops
-elif device_name == "lightning.cliffish":
+if device_name == "lightning.cliffish":
     # lightning.cliffish has no state vector and runs only through Catalyst
     from pennylane_lightning.lightning_cliffish import LightningCliffish as LightningDevice
 
@@ -228,12 +216,7 @@ else:
 )
 def qubit_device(request):
     def _device(wires, shots=None, seed=None):
-        if device_name == "lightning.tensor":
-            return qp.device(device_name, wires=wires, shots=shots, c_dtype=request.param)
-        else:
-            return qp.device(
-                device_name, wires=wires, shots=shots, c_dtype=request.param, seed=seed
-            )
+        return qp.device(device_name, wires=wires, shots=shots, c_dtype=request.param, seed=seed)
 
     return _device
 
@@ -241,22 +224,10 @@ def qubit_device(request):
 # General LightningStateVector fixture, for any number of wires.
 @pytest.fixture(
     scope="function",
-    params=(
-        [np.complex64, np.complex128]
-        if device_name != "lightning.tensor"
-        else [
-            [c_dtype, method]
-            for c_dtype in [np.complex64, np.complex128]
-            for method in ["mps", "tn"]
-        ]
-    ),
+    params=[np.complex64, np.complex128],
 )
 def lightning_sv(request):
     def _statevector(num_wires, seed=None):
-        if device_name == "lightning.tensor":
-            return LightningStateVector(
-                num_wires=num_wires, c_dtype=request.param[0], method=request.param[1]
-            )
         if seed:
             rng = np.random.default_rng(seed)
             return LightningStateVector(num_wires=num_wires, dtype=request.param, rng=rng)

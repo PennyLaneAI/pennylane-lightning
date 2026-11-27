@@ -139,7 +139,6 @@ test_pennylane_version(){
         "lightning.gpu"
         "lightning.kokkos"
         "lightning.amdgpu"
-        "lightning.tensor"
     )
 
     while IFS= read -r line; do
@@ -392,7 +391,7 @@ test_install_lightning(){
 
     # Test installation of lightning default backends
     pip install --group dev
-    for backend in qubit gpu kokkos amdgpu tensor; do
+    for backend in qubit gpu kokkos amdgpu; do
         PL_BACKEND=lightning_${backend} python ${ROOT_DIR}/scripts/configure_pyproject_toml.py
         PL_BACKEND=lightning_${backend} python -m pip install . -v
     done
@@ -543,7 +542,7 @@ create_sdist(){
 
     mkdir -p ${ROOT_DIR}/Release_Assets
 
-    for backend in qubit gpu kokkos amdgpu tensor; do
+    for backend in qubit gpu kokkos amdgpu; do
         PL_BACKEND=lightning_${backend} python ${ROOT_DIR}/scripts/configure_pyproject_toml.py
         python setup.py sdist
     done
