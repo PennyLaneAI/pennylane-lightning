@@ -25,6 +25,7 @@
 #include <cuda.h>
 #include <cusparse.h>
 #include <custatevec.h> // custatevecApplyMatrix
+#include <numeric>
 #include <random>
 #include <type_traits>
 #include <unordered_map>
@@ -285,12 +286,25 @@ class MeasurementsMPI final
         std::vector<custatevecIndex_t> globalBitStrings(num_samples);
 
         if (mpi_manager_.getRank() == 0) {
+            this->setSeed(this->_deviceseed);
+            std::uniform_real_distribution<PrecisionT> dis(0.0, 1.0);
             for (std::size_t n = 0; n < num_samples; n++) {
-                rand_nums[n] = (n + 1.0) / (num_samples + 2.0);
+                rand_nums[n] = dis(this->_rng);
             }
         }
 
         mpi_manager_.Bcast<double>(rand_nums, 0);
+
+        // Each rank samples the contiguous range of rand_nums that falls in
+        // its share of the norm (see std::lower_bound below), so the numbers
+        // must be sorted. order[i] is the draw index of the i-th smallest one.
+        std::vector<std::size_t> order(num_samples);
+        std::iota(order.begin(), order.end(), 0);
+        std::stable_sort(order.begin(), order.end(),
+                         [&](std::size_t a, std::size_t b) {
+                             return rand_nums[a] < rand_nums[b];
+                         });
+        std::sort(rand_nums.begin(), rand_nums.end());
 
         custatevecSamplerDescriptor_t sampler;
 
@@ -398,7 +412,7 @@ class MeasurementsMPI final
 
         for (std::size_t i = 0; i < num_samples; i++) {
             for (std::size_t j = 0; j < bitStringLen; j++) {
-                samples[i * bitStringLen + (bitStringLen - 1 - j)] =
+                samples[order[i] * bitStringLen + (bitStringLen - 1 - j)] =
                     (globalBitStrings[i] >> j) & 1U;
             }
         }
