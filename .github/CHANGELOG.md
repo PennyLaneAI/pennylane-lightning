@@ -9,6 +9,13 @@
   not simulate yet: every operation fails with an error.
   [(#1433)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1433)
 
+  The `lightning.cliffish` simulator core: an Aaronson-Gottesman tableau engine on Kokkos, the
+  buffered program of ops as received, and a planner that expands Clifford gates into Pauli
+  rotations and runs them on the tableau. The core samples shots, counts outcomes, gives exact
+  probabilities, and gives exact or shot-based expectation values and variances of Pauli sums.
+  Non-Clifford operations fail with an error. The Catalyst device does not use the core yet.
+  [(#1436)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1436)
+
 <h3>Improvements 🛠</h3>
 
 - Updated the Lightning performance kernel tuning document.

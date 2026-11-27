@@ -26,7 +26,8 @@ target_sources(lightning_cliffish_pauli_tests INTERFACE runner_lightning_cliffis
 ################################################################################
 # Define targets
 ################################################################################
-set(TEST_SOURCES    Test_PauliWord.cpp
+set(TEST_SOURCES    Test_AffineSubspace.cpp
+                    Test_PauliWord.cpp
                     Test_PauliRows.cpp
 )
 

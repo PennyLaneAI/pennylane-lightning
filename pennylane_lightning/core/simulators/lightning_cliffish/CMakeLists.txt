@@ -21,11 +21,21 @@ add_library(lightning_cliffish INTERFACE)
 target_compile_options(lightning_compile_options INTERFACE "-D_ENABLE_PLCLIFFISH=1")
 
 add_subdirectory(pauli)
+add_subdirectory(tableau)
+add_subdirectory(program)
+add_subdirectory(planner)
+
+if (BUILD_TESTS)
+    add_subdirectory(testing)
+endif()
 
 target_link_libraries(lightning_cliffish INTERFACE lightning_compile_options
                                                    lightning_external_libs
                                                    lightning_utils
                                                    lightning_cliffish_pauli
+                                                   lightning_cliffish_tableau
+                                                   lightning_cliffish_program
+                                                   lightning_cliffish_planner
                                                    )
 
 target_include_directories(lightning_cliffish INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
