@@ -1,0 +1,89 @@
+name: Testing::x86_64::LCliffish::CPP
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+    paths:
+      - .github/workflows/tests_lccpu.yml
+      - pennylane_lightning/core/simulators/lightning_cliffish/**
+      - pennylane_lightning/core/catalyst/**
+      - pennylane_lightning/core/utils/**
+      - CMakeLists.txt
+      - cmake/**
+
+  push:
+    branches:
+      - main
+
+env:
+  GCC_VERSION: 13
+
+concurrency:
+  group: tests_lccpu_cpp-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  cpptests:
+    timeout-minutes: 30
+    name: C++ Tests (lightning_cliffish)
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+
+    steps:
+      - uses: actions/setup-python@v5
+        name: Install Python
+        with:
+          python-version: '3.12'
+
+      - name: Checkout PennyLane-Lightning
+        uses: actions/checkout@v4
+
+      - name: Checkout Catalyst
+        uses: actions/checkout@v4
+        with:
+          repository: PennyLaneAI/catalyst
+          path: ${{ github.workspace }}/catalyst
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION g++-$GCC_VERSION ninja-build
+
+      - name: Build and run unit tests
+        run: |
+          cmake . -BBuild -G Ninja \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DBUILD_TESTS=ON \
+            -DENABLE_PYTHON=OFF \
+            -DENABLE_SCIPY_OPENBLAS=OFF \
+            -DPL_BACKEND=lightning_cliffish \
+            -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
+            -DLIGHTNING_CATALYST_SRC_PATH=${{ github.workspace }}/catalyst
+
+          cmake --build ./Build
+
+          cd ./Build
+          mkdir -p ./tests/results
+          test_status=0
+          for file in *runner ; do
+            ./$file --reporter junit --out ./tests/results/report_$file.xml && echo "Test $file Success!" || { cat ./tests/results/report_$file.xml; test_status=1; };
+          done;
+          if [ $test_status -ne 0 ]; then
+            echo "Tests failed. Exiting with error code."
+            exit 1
+          fi
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ubuntu-tests-reports-${{ github.job }}-lightning_cliffish
+          retention-days: 1
+          include-hidden-files: true
+          path: |
+            ./Build/tests/results/
+          if-no-files-found: error

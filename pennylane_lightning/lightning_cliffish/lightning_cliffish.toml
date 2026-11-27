@@ -1,0 +1,34 @@
+schema = 3
+
+# lightning.cliffish runs only under qp.qjit(capture=True). Catalyst does not
+# check operations against this file under capture, so it must list exactly
+# what the runtime supports. Each operation and measurement process is added
+# here when the runtime gains it.
+
+[operators.gates]
+
+[operators.observables]
+
+[measurement_processes]
+
+[compilation]
+
+# Whether the device is compatible with qjit.
+qjit_compatible = true
+
+# Whether the device requires run time generation of the quantum circuit.
+runtime_code_generation = false
+
+# The methods of handling mid-circuit measurements that the device supports, e.g.,
+# "one-shot", "device", "tree-traversal", etc. An empty list indicates that the device
+# does not support mid-circuit measurements.
+supported_mcm_methods = [ ]
+
+# Whether the device supports dynamic qubit allocation/deallocation.
+dynamic_qubit_management = false
+
+# Whether simultaneous measurements of non-commuting observables is supported.
+non_commuting_observables = false
+
+# Whether the device supports initial state preparation.
+initial_state_prep = false

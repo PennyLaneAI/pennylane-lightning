@@ -116,6 +116,7 @@ supported_devices = {
     "lightning.kokkos",
     "lightning.amdgpu",
     "lightning.gpu",
+    "lightning.cliffish",
 }
 
 
@@ -123,7 +124,8 @@ def get_device():
     """Return the pennylane lightning device.
 
     The device is ``lightning.qubit`` by default. Allowed values are:
-    "lightning.qubit", "lightning.kokkos", "lightning.amdgpu", and "lightning.gpu".
+    "lightning.qubit", "lightning.kokkos", "lightning.amdgpu", "lightning.gpu", and
+    "lightning.cliffish".
     If the environment variable ``PL_DEVICE`` is defined, its value is used.
     """
     device = os.environ.get("PL_DEVICE", default_device)
@@ -153,50 +155,58 @@ lightning_ops = None
 # Define nanobind module name based on current device
 nanobind_module_name = f"pennylane_lightning.{device_module_name}_ops"
 
-# General case for lightning.qubit, lightning.kokkos, and lightning.gpu
-# Capitalize device name for class names
-backend_cap = device_name.split(".")[1].capitalize()
-if device_name == "lightning.gpu":
-    backend_cap = "GPU"  # Special case for GPU (uppercase)
-if device_name == "lightning.qubit":
-    backend_cap = ""  # Special case for LightningQubit (default)
-if device_name == "lightning.amdgpu":
-    backend_cap = "Kokkos"
+if device_name == "lightning.cliffish":
+    # lightning.cliffish has no state vector and runs only through Catalyst
+    from pennylane_lightning.lightning_cliffish import LightningCliffish as LightningDevice
 
-# Import main device class
-module_path = f"pennylane_lightning.{device_module_name}"
-
-if device_name == "lightning.amdgpu":
-    device_class = "LightningAmdgpu"
-    helper_module_path = "pennylane_lightning.lightning_kokkos"
+    LightningAdjointJacobian = None
+    LightningMeasurements = None
+    LightningStateVector = None
 else:
-    device_class = (
-        f"LightningQubit" if device_name == "lightning.qubit" else f"Lightning{backend_cap}"
-    )  # Special case for LightningQubit (default)
-    helper_module_path = module_path
+    # General case for lightning.qubit, lightning.kokkos, and lightning.gpu
+    # Capitalize device name for class names
+    backend_cap = device_name.split(".")[1].capitalize()
+    if device_name == "lightning.gpu":
+        backend_cap = "GPU"  # Special case for GPU (uppercase)
+    if device_name == "lightning.qubit":
+        backend_cap = ""  # Special case for LightningQubit (default)
+    if device_name == "lightning.amdgpu":
+        backend_cap = "Kokkos"
 
-module = importlib.import_module(module_path)
-LightningDevice = getattr(module, device_class)
+    # Import main device class
+    module_path = f"pennylane_lightning.{device_module_name}"
 
-# Import adjoint jacobian class
-adjoint_module = importlib.import_module(f"{helper_module_path}._adjoint_jacobian")
-LightningAdjointJacobian = getattr(adjoint_module, f"Lightning{backend_cap}AdjointJacobian")
+    if device_name == "lightning.amdgpu":
+        device_class = "LightningAmdgpu"
+        helper_module_path = "pennylane_lightning.lightning_kokkos"
+    else:
+        device_class = (
+            f"LightningQubit" if device_name == "lightning.qubit" else f"Lightning{backend_cap}"
+        )  # Special case for LightningQubit (default)
+        helper_module_path = module_path
 
-# Import measurements class
-measurements_module = importlib.import_module(f"{helper_module_path}._measurements")
-LightningMeasurements = getattr(measurements_module, f"Lightning{backend_cap}Measurements")
+    module = importlib.import_module(module_path)
+    LightningDevice = getattr(module, device_class)
 
-# Import state vector class
-state_vector_module = importlib.import_module(f"{helper_module_path}._state_vector")
-LightningStateVector = getattr(state_vector_module, f"Lightning{backend_cap}StateVector")
+    # Import adjoint jacobian class
+    adjoint_module = importlib.import_module(f"{helper_module_path}._adjoint_jacobian")
+    LightningAdjointJacobian = getattr(adjoint_module, f"Lightning{backend_cap}AdjointJacobian")
 
-# Try to import ops module
-ops_module_path = f"pennylane_lightning.{device_module_name}_ops"
-print(ops_module_path)
-if hasattr(pennylane_lightning, f"{device_module_name}_ops"):
-    lightning_ops = importlib.import_module(ops_module_path)
-else:
-    print("no ops")
+    # Import measurements class
+    measurements_module = importlib.import_module(f"{helper_module_path}._measurements")
+    LightningMeasurements = getattr(measurements_module, f"Lightning{backend_cap}Measurements")
+
+    # Import state vector class
+    state_vector_module = importlib.import_module(f"{helper_module_path}._state_vector")
+    LightningStateVector = getattr(state_vector_module, f"Lightning{backend_cap}StateVector")
+
+    # Try to import ops module
+    ops_module_path = f"pennylane_lightning.{device_module_name}_ops"
+    print(ops_module_path)
+    if hasattr(pennylane_lightning, f"{device_module_name}_ops"):
+        lightning_ops = importlib.import_module(ops_module_path)
+    else:
+        print("no ops")
 
 
 # General qubit_device fixture, for any number of wires.
