@@ -274,7 +274,12 @@ struct Samples {
 };
 
 /**
- * @brief SplitMix64: one step of a counter-based generator.
+ * @brief SplitMix64 (Vigna 2015): one step of a 64-bit counter-based PRNG.
+ *
+ * Advances `state` by the golden-ratio Weyl constant (2^64 / phi) and mixes
+ * the result with Stafford's Mix13 finalizer. Having a single 64-bit word of
+ * state allows each shot in a Kokkos kernel to draw from its own independent
+ * stream, unlike `std::mt19937`.
  */
 KOKKOS_INLINE_FUNCTION auto splitMix64(std::uint64_t &state) -> std::uint64_t {
     state += 0x9E3779B97F4A7C15ULL;
