@@ -103,7 +103,7 @@ class AdjointJacobianMPI final
      * @brief Batches the adjoint_jacobian method over the available GPUs.
      *
      * @param jac Preallocated vector for Jacobian data results.
-     * @param jd JacobianData represents the QuantumTape to differentiate.
+     * @param jd JacobianData represents the QuantumScript to differentiate.
      * @param apply_operations Indicate whether to apply operations to psi prior
      * to calculation.
      */
@@ -221,7 +221,7 @@ class AdjointJacobianMPI final
      * generator defined for this gate.
      *
      * @param jac Preallocated vector for Jacobian data results.
-     * @param jd JacobianData represents the QuantumTape to differentiate.
+     * @param jd JacobianData represents the QuantumScript to differentiate.
      * @param ref_data Reference to a `%StateVectorT` object.
      * @param apply_operations Indicate whether to apply operations to psi prior
      * to calculation.

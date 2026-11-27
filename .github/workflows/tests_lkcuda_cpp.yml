@@ -20,7 +20,6 @@ on:
       - pennylane_lightning/core/**
       - '!pennylane_lightning/core/simulators/lightning_gpu/**'
       - '!pennylane_lightning/core/simulators/lightning_qubit/**'
-      - '!pennylane_lightning/core/simulators/lightning_tensor/**'
   push:
     branches:
       - main

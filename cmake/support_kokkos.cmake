@@ -101,6 +101,6 @@ macro(findMPI_LK external_libs)
             target_link_options(${external_libs} INTERFACE ${MPI_EXTRA_FLAGS_LIST})
         endif()
 
-        target_link_libraries(${external_libs} INTERFACE MPI::MPI_CXX)
+        target_link_libraries(${external_libs} INTERFACE MPI::MPI_CXX ${CMAKE_DL_LIBS})
     endif()
 endmacro()
