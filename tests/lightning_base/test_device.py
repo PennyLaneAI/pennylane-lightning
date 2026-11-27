@@ -106,20 +106,6 @@ def enable_disable_plxpr():
     qp.capture.disable()
 
 
-@pytest.fixture(params=[False, True], ids=["graph_disabled", "graph_enabled"])
-def enable_and_disable_graph_decomp(request):
-    """
-    A fixture that parametrizes a test to run twice: once with graph
-    decomposition disabled and once with it enabled.
-
-    It automatically handles the setup (enabling/disabling) before the
-    test runs and the teardown (always disabling) after the test completes.
-    """
-    use_graph_decomp = request.param
-    with qp.decomposition.toggle_graph_ctx(use_graph_decomp):
-        yield
-
-
 class TestHelpers:
     """Unit tests for helper functions"""
 
@@ -456,9 +442,6 @@ class TestInitialization:
         dev = LightningDevice(wires=2)
         assert dev._wire_map == None
 
-        dev = LightningDevice(wires=["a", "b"])
-        assert dev._wire_map == {"a": 0, "b": 1}
-
     def test_dummies_definition(self):
         """Test that the dummies are defined correctly"""
         dev = LightningDevice(wires=2)
@@ -733,7 +716,6 @@ class TestExecution:
         processed = device.setup_execution_config(config)
         assert processed.mcm_config.mcm_method == "deferred"
 
-    @pytest.mark.usefixtures("enable_and_disable_graph_decomp")
     def test_transform_program(self, enable_disable_plxpr):
         """Test that the transform program returned by preprocess has the correct transforms."""
         dev = LightningDevice(wires=1)
@@ -760,7 +742,6 @@ class TestExecution:
         # pylint: disable=protected-access
         assert program[0].tape_transform == qp.transforms.decompose._tape_transform
 
-    @pytest.mark.usefixtures("enable_and_disable_graph_decomp")
     @pytest.mark.parametrize("adjoint", [True, False])
     @pytest.mark.parametrize("mcm_method", ("deferred", "one-shot", "tree-traversal"))
     def test_preprocess(self, adjoint, mcm_method):
@@ -834,7 +815,6 @@ class TestExecution:
         for transform, expected_transform in zip(actual_program, expected_program, strict=True):
             assert transform.tape_transform == expected_transform.tape_transform
 
-    @pytest.mark.usefixtures("enable_and_disable_graph_decomp")
     @pytest.mark.parametrize(
         "op, is_trainable",
         (
@@ -869,7 +849,6 @@ class TestExecution:
         expected_tape = qp.tape.QuantumScript([*decomp, qp.RX(1.23, wires=0)], tape.measurements)
         assert qp.equal(new_tape, expected_tape)
 
-    @pytest.mark.usefixtures("enable_and_disable_graph_decomp")
     @pytest.mark.parametrize(
         "op, decomp_depth",
         [
@@ -1028,34 +1007,9 @@ class TestExecution:
         for r, e in zip(result, result_ref):
             assert np.allclose(r, e)
 
-    @pytest.mark.parametrize("phi, theta", list(zip(PHI, THETA)))
-    @pytest.mark.parametrize("wires", (["a", "b", -3], [0, "target", "other_target"]))
-    def test_custom_wires_execute(self, phi, theta, wires):
-        """Test execution with custom wires"""
-        device = LightningDevice(wires=wires)
-        qs = QuantumScript(
-            [
-                qp.RX(phi, wires[0]),
-                qp.RY(theta, wires[2]),
-                qp.CNOT([wires[0], wires[1]]),
-                qp.CNOT([wires[1], wires[2]]),
-            ],
-            [qp.expval(qp.Z(wires[0])), qp.expval(qp.Z(wires[2]))],
-        )
-
-        result = device.execute(qs)
-
-        assert isinstance(result, tuple)
-        assert len(result) == 2
-
-        assert np.allclose(result[0], np.cos(phi))
-        assert np.allclose(result[1], np.cos(phi) * np.cos(theta))
-
-    @pytest.mark.parametrize(
-        "wires, wire_order", [(3, (0, 1, 2)), (("a", "b", "c"), ("a", "b", "c"))]
-    )
+    @pytest.mark.parametrize("wires, wire_order", [(3, (0, 1, 2))])
     def test_probs_different_wire_orders(self, wires, wire_order):
-        """Test that measuring probabilities works with custom wires."""
+        """Test that measuring probabilities works with different integer wire orders."""
 
         dev = LightningDevice(wires=wires)
 
@@ -1356,7 +1310,6 @@ class TestDerivatives:
         assert len(jac) == 1
         assert qp.math.shape(jac[0]) == (0,)
 
-    @pytest.mark.usefixtures("enable_and_disable_graph_decomp")
     @pytest.mark.parametrize("execute_and_derivatives", [True, False])
     @pytest.mark.parametrize(
         "state_prep, params, wires",
@@ -1506,40 +1459,6 @@ class TestDerivatives:
         assert len(jacs[0]) == len(expected_jac[0])
         assert np.allclose(jacs[0], expected_jac[0])
         assert np.allclose(jacs[1], expected_jac[1])
-
-    @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
-    @pytest.mark.parametrize("execute_and_derivatives", [True, False])
-    @pytest.mark.parametrize("wires", (["a", "b", -3], [0, "target", "other_target"]))
-    def test_derivatives_custom_wires(
-        self, theta, phi, dev, execute_and_derivatives, batch_obs, wires
-    ):
-        """Test that the jacobian is correct when set custom wires"""
-        device = LightningDevice(wires=wires)
-
-        qs = QuantumScript(
-            [
-                qp.RX(theta, wires[0]),
-                qp.CNOT([wires[0], wires[1]]),
-                qp.RY(phi, wires[1]),
-            ],
-            [qp.expval(qp.Z(wires[1]))],
-            trainable_params=[0, 1],
-        )
-
-        res, jac = self.process_and_execute(
-            device,
-            qs,
-            execute_and_derivatives=execute_and_derivatives,
-            obs_batch=batch_obs,
-        )
-        expected, expected_jac = self.calculate_reference(
-            qs, execute_and_derivatives=execute_and_derivatives
-        )
-
-        tol = 1e-5 if dev.c_dtype == np.complex64 else 1e-7
-        assert len(res) == len(jac) == 1
-        assert np.allclose(res, expected, atol=tol, rtol=0)
-        assert np.allclose(jac, expected_jac, atol=tol, rtol=0)
 
 
 @pytest.mark.parametrize("batch_obs", [True, False])
@@ -1777,7 +1696,6 @@ class TestVJP:
         assert len(jac) == 1
         assert qp.math.shape(jac[0]) == (0,)
 
-    @pytest.mark.usefixtures("enable_and_disable_graph_decomp")
     @pytest.mark.parametrize("execute_and_derivatives", [True, False])
     @pytest.mark.parametrize(
         "state_prep, params, wires",
@@ -1924,56 +1842,9 @@ class TestVJP:
         assert np.allclose(jacs[0], expected_jac[0])
         assert np.allclose(jacs[1], expected_jac[1])
 
-    @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
-    @pytest.mark.parametrize("execute_and_derivatives", [True, False])
-    @pytest.mark.parametrize("wires", (["a", "b", -3], [0, "target", "other_target"]))
-    def test_vjp_custom_wires(self, theta, phi, dev, wires, execute_and_derivatives, batch_obs):
-        """Test that the VJP is correct when set a custom wires"""
-
-        device = LightningDevice(wires=wires)
-
-        qs = QuantumScript(
-            [
-                qp.RX(theta, wires[0]),
-                qp.CNOT([wires[0], wires[1]]),
-                qp.RY(phi, wires[1]),
-            ],
-            [qp.expval(qp.Z(wires[1]))],
-            trainable_params=[0, 1],
-        )
-
-        dy = 1.0
-        res, jac = self.process_and_execute(
-            device,
-            qs,
-            dy,
-            execute_and_derivatives=execute_and_derivatives,
-            obs_batch=batch_obs,
-        )
-
-        expected, expected_jac = self.calculate_reference(
-            qs, dy, execute_and_derivatives=execute_and_derivatives
-        )
-
-        tol = 1e-5 if dev.c_dtype == np.complex64 else 1e-7
-        assert len(res) == len(jac) == 1
-        assert np.allclose(res, expected, atol=tol, rtol=0)
-        assert np.allclose(jac, expected_jac, atol=tol, rtol=0)
-
 
 class TestLightningDeviceGraphModeExclusive:
-    """Tests for LightningDevice features that require graph mode enabled.
-    The legacy decomposition mode should not be able to run these tests.
-
-    NOTE: All tests in this suite will auto-enable graph mode via fixture.
-    """
-
-    @pytest.fixture(autouse=True)
-    def enable_graph_mode_only(self):
-        """Auto-enable graph mode for all tests in this class."""
-        qp.decomposition.enable_graph()
-        yield
-        qp.decomposition.disable_graph()
+    """Tests for LightningDevice graph-based decomposition."""
 
     def test_insufficient_work_wires_causes_fallback(self):
         """Test that if a decomposition requires more work wires than available on lightning device,

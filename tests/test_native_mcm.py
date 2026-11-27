@@ -629,12 +629,11 @@ class TestExecutionMCM:
             qp.RX(0.5 * x, 1)
             m1 = qp.measure(1)
             qp.cond((m0 + m1) == 2, qp.RY)(2.0 * x, 0)
-            return qp.counts(op=mcm_f(m0, m1))
+            return qp.counts(op=mcm_f(m0, m1), all_outcomes=True)
 
         results1 = qp.QNode(func, dev, mcm_method=mcm_method)(param)
         results2 = qp.QNode(func, dq, mcm_method="deferred")(param)
-        for r1, r2 in zip(results1.keys(), results2.keys()):
-            assert r1 == r2
+        assert results1.keys() == results2.keys()
 
     @pytest.mark.parametrize("shots", [40, [40, 40]])
     @pytest.mark.parametrize("postselect", [None, 0, 1])

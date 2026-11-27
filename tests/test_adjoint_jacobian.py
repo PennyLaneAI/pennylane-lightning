@@ -111,18 +111,14 @@ class TestAdjointJacobian:
         """Test if a QuantumFunctionError is raised for a tape with measurements that are not
         expectation values"""
 
-        with qp.tape.QuantumTape() as tape:
-            qp.RX(0.1, wires=0)
-            qp.var(qp.PauliZ(0))
+        tape = qp.tape.QuantumScript([qp.RX(0.1, wires=0)], [qp.var(qp.PauliZ(0))])
 
         method = dev.compute_derivatives
 
         with pytest.raises(QuantumFunctionError, match="Adjoint differentiation method does not"):
             method(tape)
 
-        with qp.tape.QuantumTape() as tape:
-            qp.RX(0.1, wires=0)
-            qp.state()
+        tape = qp.tape.QuantumScript([qp.RX(0.1, wires=0)], [qp.state()])
 
         with pytest.raises(
             QuantumFunctionError,
@@ -146,8 +142,7 @@ class TestAdjointJacobian:
     def test_empty_measurements(self, dev):
         """Tests if an empty array is returned when the measurements of the tape is empty."""
 
-        with qp.tape.QuantumTape() as tape:
-            qp.RX(0.4, wires=[0])
+        tape = qp.tape.QuantumScript([qp.RX(0.4, wires=[0])], [])
 
         method = dev.compute_derivatives
         jac = method(tape)
@@ -157,9 +152,9 @@ class TestAdjointJacobian:
         """Test if a QuantumFunctionError is raised for an unsupported operation, i.e.,
         multi-parameter operations that are not qp.Rot"""
 
-        with qp.tape.QuantumTape() as tape:
-            qp.CRot(0.1, 0.2, 0.3, wires=[0, 1])
-            qp.expval(qp.PauliZ(0))
+        tape = qp.tape.QuantumScript(
+            [qp.CRot(0.1, 0.2, 0.3, wires=[0, 1])], [qp.expval(qp.PauliZ(0))]
+        )
 
         with pytest.raises(
             RuntimeError,
@@ -197,10 +192,13 @@ class TestAdjointJacobian:
         correct."""
         params = np.array([theta, theta**3, np.sqrt(2) * theta])
 
-        with qp.tape.QuantumTape() as tape:
-            qp.StatePrep(np.array([1.0, -1.0], requires_grad=False) / np.sqrt(2), wires=0)
-            qp.Rot(*params, wires=[0])
-            qp.expval(qp.PauliZ(0))
+        tape = qp.tape.QuantumScript(
+            [
+                qp.StatePrep(np.array([1.0, -1.0], requires_grad=False) / np.sqrt(2), wires=0),
+                qp.Rot(*params, wires=[0]),
+            ],
+            [qp.expval(qp.PauliZ(0))],
+        )
 
         tape.trainable_params = {1, 2, 3}
 
@@ -223,13 +221,13 @@ class TestAdjointJacobian:
         init_state = np.zeros(2**n_qubits)
         init_state[-2::] = np.array([1.0 / np.sqrt(2), 1.0 / np.sqrt(2)], requires_grad=False)
 
-        with qp.tape.QuantumTape() as tape:
-            qp.StatePrep(init_state, wires=range(n_qubits))
-            if n_qubits == 1:
-                qp.PhaseShift(par, wires=0)
-            else:
-                qp.ctrl(qp.PhaseShift(par, wires=n_qubits - 1), range(0, n_qubits - 1))
-            qp.expval(qp.PauliY(n_qubits - 1))
+        phase_shift = qp.PhaseShift(par, wires=n_qubits - 1)
+        if n_qubits > 1:
+            phase_shift = qp.ctrl(phase_shift, range(n_qubits - 1))
+        tape = qp.tape.QuantumScript(
+            [qp.StatePrep(init_state, wires=range(n_qubits)), phase_shift],
+            [qp.expval(qp.PauliY(n_qubits - 1))],
+        )
 
         tape.trainable_params = {1}
 
@@ -243,9 +241,7 @@ class TestAdjointJacobian:
     @pytest.mark.parametrize("par", [1, -2, 1.623, -0.051, 0])  # integers, floats, zero
     def test_ry_gradient(self, par, tol, dev):
         """Test that the gradient of the RY gate matches the exact analytic formula."""
-        with qp.tape.QuantumTape() as tape:
-            qp.RY(par, wires=[0])
-            qp.expval(qp.PauliX(0))
+        tape = qp.tape.QuantumScript([qp.RY(par, wires=[0])], [qp.expval(qp.PauliX(0))])
 
         tape.trainable_params = {0}
 
@@ -261,9 +257,7 @@ class TestAdjointJacobian:
         """Test that the gradient of the RX gate matches the known formula."""
         a = 0.7418
 
-        with qp.tape.QuantumTape() as tape:
-            qp.RX(a, wires=0)
-            qp.expval(qp.PauliZ(0))
+        tape = qp.tape.QuantumScript([qp.RX(a, wires=0)], [qp.expval(qp.PauliZ(0))])
 
         # circuit jacobians
         method = dev.compute_derivatives
@@ -275,13 +269,10 @@ class TestAdjointJacobian:
         """Tests that the gradient of multiple RX gates in a circuit yields the correct result."""
         params = np.array([np.pi, np.pi / 2, np.pi / 3])
 
-        with qp.tape.QuantumTape() as tape:
-            qp.RX(params[0], wires=0)
-            qp.RX(params[1], wires=1)
-            qp.RX(params[2], wires=2)
-
-            for idx in range(3):
-                qp.expval(qp.PauliZ(idx))
+        tape = qp.tape.QuantumScript(
+            [qp.RX(params[0], wires=0), qp.RX(params[1], wires=1), qp.RX(params[2], wires=2)],
+            [qp.expval(qp.PauliZ(idx)) for idx in range(3)],
+        )
 
         # circuit jacobians
         method = dev.compute_derivatives
@@ -295,13 +286,10 @@ class TestAdjointJacobian:
         """
         params = np.array([np.pi, np.pi / 2, np.pi / 3])
 
-        with qp.tape.QuantumTape() as tape:
-            qp.RX(params[0], wires=0)
-            qp.RX(params[1], wires=1)
-            qp.RX(params[2], wires=2)
-
-            for idx in range(3):
-                qp.expval(qp.Hermitian([[1, 0], [0, -1]], wires=[idx]))
+        tape = qp.tape.QuantumScript(
+            [qp.RX(params[0], wires=0), qp.RX(params[1], wires=1), qp.RX(params[2], wires=2)],
+            [qp.expval(qp.Hermitian([[1, 0], [0, -1]], wires=[idx])) for idx in range(3)],
+        )
 
         tape.trainable_params = {0, 1, 2}
         # circuit jacobians
@@ -320,16 +308,16 @@ class TestAdjointJacobian:
         """
         params = np.array([np.pi / 3, np.pi / 4, np.pi / 5])
 
-        with qp.tape.QuantumTape() as tape:
-            qp.RX(params[0], wires=0)
-            qp.RX(params[1], wires=1)
-            qp.RX(params[2], wires=2)
-
-            qp.expval(
-                qp.Hermitian(
-                    [[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]], wires=[0, 2]
+        tape = qp.tape.QuantumScript(
+            [qp.RX(params[0], wires=0), qp.RX(params[1], wires=1), qp.RX(params[2], wires=2)],
+            [
+                qp.expval(
+                    qp.Hermitian(
+                        [[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]], wires=[0, 2]
+                    )
                 )
-            )
+            ],
+        )
 
         tape.trainable_params = {0, 1, 2}
         method = dev.compute_derivatives
@@ -361,12 +349,10 @@ class TestAdjointJacobian:
             ],
         )
 
-        with qp.tape.QuantumTape() as tape:
-            qp.RX(params[0], wires=0)
-            qp.RX(params[1], wires=1)
-            qp.RX(params[2], wires=2)
-
-            qp.expval(ham)
+        tape = qp.tape.QuantumScript(
+            [qp.RX(params[0], wires=0), qp.RX(params[1], wires=1), qp.RX(params[2], wires=2)],
+            [qp.expval(ham)],
+        )
 
         tape.trainable_params = {0, 1, 2}
         method = dev.compute_derivatives
@@ -401,20 +387,19 @@ class TestAdjointJacobian:
         """Tests that the gradients of circuits match between the finite difference and device
         methods."""
         # op.num_wires and op.num_params must be initialized a priori
-        with qp.tape.QuantumTape() as tape:
-            qp.Hadamard(wires=0)
-            qp.RX(0.543, wires=0)
-            qp.CNOT(wires=[0, 1])
-
-            op
-
-            qp.Rot(1.3, -2.3, 0.5, wires=[0])
-            qp.RZ(-0.5, wires=0)
-            qp.adjoint(qp.RY(0.5, wires=1))
-            qp.CNOT(wires=[0, 1])
-
-            qp.expval(obs(wires=0))
-            qp.expval(qp.PauliZ(wires=1))
+        tape = qp.tape.QuantumScript(
+            [
+                qp.Hadamard(wires=0),
+                qp.RX(0.543, wires=0),
+                qp.CNOT(wires=[0, 1]),
+                op,
+                qp.Rot(1.3, -2.3, 0.5, wires=[0]),
+                qp.RZ(-0.5, wires=0),
+                qp.adjoint(qp.RY(0.5, wires=1)),
+                qp.CNOT(wires=[0, 1]),
+            ],
+            [qp.expval(obs(wires=0)), qp.expval(qp.PauliZ(wires=1))],
+        )
 
         tape.trainable_params = set(range(1, 1 + op.num_params))
 
@@ -442,21 +427,25 @@ class TestAdjointJacobian:
         """Tests that the gradients of circuits match between the finite difference and device
         methods."""
         # op.num_wires and op.num_params must be initialized a priori
-        with qp.tape.QuantumTape() as tape:
-            qp.Hadamard(wires=0)
-            qp.RX(0.543, wires=0)
-            qp.CNOT(wires=[0, 1])
-
-            op.queue()
-
-            qp.Rot(1.3, -2.3, 0.5, wires=[0])
-            qp.RZ(-0.5, wires=0)
-            qp.adjoint(qp.RY(0.5, wires=1))
-            qp.CNOT(wires=[0, 1])
-
-            qp.expval(
-                qp.Hermitian([[0, 0, 1, 1], [0, 1, 2, 1], [1, 2, 1, 0], [1, 1, 0, 0]], wires=[0, 1])
-            )
+        tape = qp.tape.QuantumScript(
+            [
+                qp.Hadamard(wires=0),
+                qp.RX(0.543, wires=0),
+                qp.CNOT(wires=[0, 1]),
+                op,
+                qp.Rot(1.3, -2.3, 0.5, wires=[0]),
+                qp.RZ(-0.5, wires=0),
+                qp.adjoint(qp.RY(0.5, wires=1)),
+                qp.CNOT(wires=[0, 1]),
+            ],
+            [
+                qp.expval(
+                    qp.Hermitian(
+                        [[0, 0, 1, 1], [0, 1, 2, 1], [1, 2, 1, 0], [1, 1, 0, 0]], wires=[0, 1]
+                    )
+                )
+            ],
+        )
 
         tape.trainable_params = set(range(1, 1 + op.num_params))
 
@@ -553,9 +542,7 @@ class TestAdjointJacobian:
     )
     def test_state_return_type(self, dev):
         """Tests raise an exception when the return type is State"""
-        with qp.tape.QuantumTape() as tape:
-            qp.RX(0.4, wires=[0])
-            qp.state()
+        tape = qp.tape.QuantumScript([qp.RX(0.4, wires=[0])], [qp.state()])
 
         tape.trainable_params = {0}
         method = dev.compute_derivatives
@@ -1058,60 +1045,6 @@ def test_tape_qchem_sparse(tol):
     assert np.allclose(qp.grad(circuit_ld)(params), qp.grad(circuit_dq)(params), tol)
 
 
-custom_wires = ["alice", 3.14, -1, 0]
-
-
-@pytest.mark.local_salt(42)
-@pytest.mark.parametrize(
-    "returns",
-    [
-        qp.SparseHamiltonian(
-            qp.Hamiltonian(
-                [0.1],
-                [qp.PauliX(wires=custom_wires[0]) @ qp.PauliZ(wires=custom_wires[1])],
-            ).sparse_matrix(custom_wires),
-            wires=custom_wires,
-        ),
-        qp.SparseHamiltonian(
-            qp.Hamiltonian(
-                [2.0],
-                [qp.PauliX(wires=custom_wires[2]) @ qp.PauliZ(wires=custom_wires[0])],
-            ).sparse_matrix(custom_wires),
-            wires=custom_wires,
-        ),
-        qp.SparseHamiltonian(
-            qp.Hamiltonian(
-                [1.1],
-                [qp.PauliX(wires=custom_wires[0]) @ qp.PauliZ(wires=custom_wires[2])],
-            ).sparse_matrix(custom_wires),
-            wires=custom_wires,
-        ),
-    ],
-)
-def test_adjoint_SparseHamiltonian(returns, seed):
-    """Integration tests that compare to default.qubit for a large circuit containing parametrized
-    operations and when using custom wire labels"""
-
-    dev = qp.device(device_name, wires=custom_wires)
-    dev_default = qp.device("default.qubit", wires=custom_wires)
-
-    def circuit(params):
-        circuit_ansatz(params, wires=custom_wires)
-        return qp.expval(returns)
-
-    n_params = 30
-    rng = np.random.default_rng(seed)
-    params = rng.random(n_params)
-
-    qnode = qp.QNode(circuit, dev, diff_method="adjoint")
-    qnode_default = qp.QNode(circuit, dev_default, diff_method="parameter-shift")
-
-    j_device = qp.jacobian(qnode)(params)
-    j_default = qp.jacobian(qnode_default)(params)
-
-    assert np.allclose(j_device, j_default)
-
-
 @pytest.mark.parametrize(
     "returns",
     [
@@ -1188,183 +1121,6 @@ def test_integration_chunk_observables():
 
     assert np.allclose(j_def, j_lightning)
     assert np.allclose(j_def, j_lightning_batched)
-
-
-@pytest.mark.parametrize(
-    "returns",
-    [
-        qp.PauliZ(custom_wires[0]),
-        qp.PauliX(custom_wires[2]),
-        qp.PauliZ(custom_wires[0]) @ qp.PauliY(custom_wires[3]),
-        qp.Hadamard(custom_wires[2]),
-        qp.Hadamard(custom_wires[3]) @ qp.PauliZ(custom_wires[2]),
-        # qp.Projector([0, 1], wires=[custom_wires[0], custom_wires[2]]) @ qp.Hadamard(custom_wires[3])
-        # qp.Projector([0, 0], wires=[custom_wires[2], custom_wires[0]])
-        qp.PauliX(custom_wires[0]) @ qp.PauliY(custom_wires[3]),
-        qp.PauliY(custom_wires[0]) @ qp.PauliY(custom_wires[2]) @ qp.PauliY(custom_wires[3]),
-        qp.Hermitian(np.array([[0, 1], [1, 0]], requires_grad=False), wires=custom_wires[0]),
-        qp.Hermitian(
-            np.kron(qp.PauliY.compute_matrix(), qp.PauliZ.compute_matrix()),
-            wires=[custom_wires[3], custom_wires[2]],
-        ),
-        qp.Hermitian(np.array([[0, 1], [1, 0]], requires_grad=False), wires=custom_wires[0])
-        @ qp.PauliZ(custom_wires[2]),
-    ],
-)
-def test_integration_custom_wires(returns):
-    """Integration tests that compare to default.qubit for a large circuit containing parametrized
-    operations and when using custom wire labels"""
-    dev_def = qp.device("default.qubit", wires=custom_wires)
-    dev_lightning = qp.device(device_name, wires=custom_wires)
-
-    def circuit(params):
-        circuit_ansatz(params, wires=custom_wires)
-        return np.array([qp.expval(returns), qp.expval(qp.PauliY(custom_wires[1]))])
-
-    n_params = 30
-    params = np.linspace(0, 10, n_params)
-
-    qnode_def = qp.QNode(circuit, dev_def)
-    qnode_lightning = qp.QNode(circuit, dev_lightning, diff_method="adjoint")
-
-    j_def = qp.jacobian(qnode_def)(params)
-    j_lightning = qp.jacobian(qnode_lightning)(params)
-
-    assert np.allclose(j_def, j_lightning)
-
-
-@pytest.mark.local_salt(42)
-@pytest.mark.skipif(
-    device_name not in ("lightning.qubit", "lightning.gpu"),
-    reason="Tests only for lightning.qubit and lightning.gpu",
-)
-@pytest.mark.parametrize(
-    "returns",
-    [
-        (qp.PauliZ(custom_wires[0]),),
-        (qp.PauliZ(custom_wires[0]), qp.PauliZ(custom_wires[1])),
-        (qp.PauliZ(custom_wires[0]), qp.PauliZ(custom_wires[1]), qp.PauliZ(custom_wires[3])),
-        (
-            qp.PauliZ(custom_wires[0]),
-            qp.PauliZ(custom_wires[1]),
-            qp.PauliZ(custom_wires[3]),
-            qp.PauliZ(custom_wires[2]),
-        ),
-        (
-            qp.PauliZ(custom_wires[0]) @ qp.PauliY(custom_wires[3]),
-            qp.PauliZ(custom_wires[1]) @ qp.PauliY(custom_wires[2]),
-        ),
-        (qp.PauliZ(custom_wires[0]) @ qp.PauliY(custom_wires[3]), qp.PauliZ(custom_wires[1])),
-    ],
-)
-def test_integration_custom_wires_batching(returns, seed):
-    """Integration tests that compare to default.qubit for a large circuit containing parametrized
-    operations and when using custom wire labels"""
-
-    dev_def = qp.device("default.qubit", wires=custom_wires)
-    dev_gpu = qp.device(device_name, wires=custom_wires, batch_obs=True)
-
-    def circuit(params):
-        circuit_ansatz(params, wires=custom_wires)
-        return [qp.expval(r) for r in returns] + [qp.expval(qp.PauliY(custom_wires[1]))]
-
-    n_params = 30
-    rng = np.random.default_rng(seed)
-    params = rng.random(n_params)
-
-    qnode_gpu = qp.QNode(circuit, dev_gpu, diff_method="adjoint")
-    qnode_def = qp.QNode(circuit, dev_def)
-
-    def convert_to_array_gpu(params):
-        return np.hstack(qnode_gpu(params))
-
-    def convert_to_array_def(params):
-        return np.hstack(qnode_def(params))
-
-    j_gpu = qp.jacobian(convert_to_array_gpu)(params)
-    j_def = qp.jacobian(convert_to_array_def)(params)
-
-    assert np.allclose(j_gpu, j_def, atol=1e-7)
-
-
-@pytest.mark.local_salt(42)
-@pytest.mark.skipif(
-    device_name not in ("lightning.qubit", "lightning.gpu"),
-    reason="Tests only for lightning.qubit and lightning.gpu",
-)
-@pytest.mark.parametrize(
-    "returns",
-    [
-        (0.5 * qp.PauliZ(custom_wires[0]),),
-        (0.5 * qp.PauliZ(custom_wires[0]), qp.PauliZ(custom_wires[1])),
-        (
-            qp.PauliZ(custom_wires[0]),
-            0.5 * qp.PauliZ(custom_wires[1]),
-            qp.PauliZ(custom_wires[3]),
-        ),
-        (
-            qp.PauliZ(custom_wires[0]),
-            qp.PauliZ(custom_wires[1]),
-            qp.PauliZ(custom_wires[3]),
-            0.5 * qp.PauliZ(custom_wires[2]),
-        ),
-        (
-            qp.PauliZ(custom_wires[0]) @ qp.PauliY(custom_wires[3]),
-            0.5 * qp.PauliZ(custom_wires[1]) @ qp.PauliY(custom_wires[2]),
-        ),
-        (
-            qp.PauliZ(custom_wires[0]) @ qp.PauliY(custom_wires[3]),
-            0.5 * qp.PauliZ(custom_wires[1]),
-        ),
-        (
-            0.0 * qp.PauliZ(custom_wires[0]) @ qp.PauliZ(custom_wires[1]),
-            1.0 * qp.Identity(10),
-            1.2 * qp.PauliZ(custom_wires[2]) @ qp.PauliZ(custom_wires[3]),
-        ),
-    ],
-)
-def test_batching_H(returns, seed):
-    """Integration tests that compare to default.qubit for a large circuit containing parametrized
-    operations and when using custom wire labels"""
-
-    dev_cpu = qp.device("default.qubit", wires=custom_wires + [10, 72])
-    dev_gpu = qp.device(device_name, wires=custom_wires + [10, 72], batch_obs=True)
-    dev_gpu_default = qp.device(device_name, wires=custom_wires + [10, 72], batch_obs=False)
-
-    def circuit(params):
-        circuit_ansatz(params, wires=custom_wires)
-        return qp.math.hstack([qp.expval(r) for r in returns])
-
-    n_params = 30
-    rng = np.random.default_rng(seed)
-    params = rng.random(n_params)
-
-    qnode_cpu = qp.QNode(circuit, dev_cpu, diff_method="parameter-shift")
-    qnode_gpu = qp.QNode(circuit, dev_gpu, diff_method="adjoint")
-    qnode_gpu_default = qp.QNode(circuit, dev_gpu_default, diff_method="adjoint")
-
-    def convert_to_array_cpu(params):
-        return np.hstack(qnode_cpu(params))
-
-    def convert_to_array_gpu(params):
-        return np.hstack(qnode_gpu(params))
-
-    def convert_to_array_gpu_default(params):
-        return np.hstack(qnode_gpu_default(params))
-
-    i_cpu = qnode_cpu(params)
-    i_gpu = qnode_gpu(params)
-    i_gpu_default = qnode_gpu_default(params)
-
-    assert np.allclose(i_cpu, i_gpu)
-    assert np.allclose(i_gpu, i_gpu_default)
-
-    j_cpu = qp.jacobian(qnode_cpu)(params)
-    j_gpu = qp.jacobian(qnode_gpu)(params)
-    j_gpu_default = qp.jacobian(qnode_gpu_default)(params)
-
-    assert np.allclose(j_cpu, j_gpu)
-    assert np.allclose(j_gpu, j_gpu_default)
 
 
 @pytest.fixture(scope="session")

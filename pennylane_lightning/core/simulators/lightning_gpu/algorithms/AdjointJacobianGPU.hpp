@@ -116,7 +116,7 @@ class AdjointJacobian final
      * contention and state access issues.
      *
      * @param jac Preallocated vector for Jacobian data results.
-     * @param jd JacobianData represents the QuantumTape to differentiate.
+     * @param jd JacobianData represents the QuantumScript to differentiate.
      * @param apply_operations Indicate whether to apply operations to psi prior
      * to calculation.
      */
@@ -231,7 +231,7 @@ class AdjointJacobian final
      * generator defined for this gate.
      *
      * @param jac Preallocated vector for Jacobian data results.
-     * @param jd JacobianData represents the QuantumTape to differentiate.
+     * @param jd JacobianData represents the QuantumScript to differentiate.
      * @param apply_operations Indicate whether to apply operations to psi prior
      * to calculation.
      * @param dev_tag Device tag represents the device id and stream id.

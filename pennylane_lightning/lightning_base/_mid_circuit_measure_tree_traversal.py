@@ -55,7 +55,7 @@ def mcm_tree_traversal(
     at a leaf at once and stops exploring more branches when a single shot is allocated to a sub-tree.
 
     Args:
-        circuit (QuantumTape): The single circuit to simulate
+        circuit (QuantumScript): The single circuit to simulate
         lightning_state (LightningBaseStateVector): The state vector.
         lightning_measurement (LightningBaseMeasurements): The measurement class used to perform measurements
         postselect_mode (str): Configuration for shots with mid-circuit measurement

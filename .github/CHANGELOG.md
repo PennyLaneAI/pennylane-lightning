@@ -114,6 +114,17 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Fixed a flaky mid-circuit measurement test by including all outcomes in count dictionaries
+  and comparing their complete key sets.
+  [(#1459)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1459)
+
+- Updates tests to get rid of use of non-positive-integer wires.
+  [(#1460)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1460)
+
+- Updated the shared test helper to read operator wire counts from `wire_argnames` and
+  `arg_specs` after PennyLane removed `Operator2.wire_sizes`.
+  [(#1458)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1458)
+
 - Updated `pylint` to version 4.1.3 in the `dev` and `base` dependency groups.
   [(#1443)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1443)
 

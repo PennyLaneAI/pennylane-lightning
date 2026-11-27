@@ -253,7 +253,7 @@ template <class StateVectorT> class OpsData {
 };
 
 /**
- * @brief Represent the serialized data of a QuantumTape to differentiate
+ * @brief Represent the serialized data of a QuantumScript to differentiate
  *
  * @tparam StateVectorT
  */

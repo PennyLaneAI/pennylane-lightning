@@ -24,7 +24,7 @@ from pennylane import BasisState, StatePrep
 from pennylane.exceptions import QuantumFunctionError
 from pennylane.measurements import ExpectationMP, MeasurementProcess, StateMP
 from pennylane.operation import Operation
-from pennylane.tape import QuantumTape
+from pennylane.tape import QuantumScript
 
 from pennylane_lightning.lightning_base._serialize import QuantumScriptSerializer
 
@@ -96,13 +96,13 @@ class LightningBaseAdjointJacobian(ABC):
         return "expval"
 
     def _process_jacobian_tape(
-        self, tape: QuantumTape, split_obs: bool = False, use_mpi: bool = False
+        self, tape: QuantumScript, split_obs: bool = False, use_mpi: bool = False
     ):
         """Process a tape, serializing and building a dictionary proper for
         the adjoint Jacobian calculation in the C++ layer.
 
         Args:
-            tape (QuantumTape): Operations and measurements that represent instructions for execution on Lightning.
+            tape (QuantumScript): Operations and measurements that represent instructions for execution on Lightning.
             split_obs (bool, optional): If splitting the observables in a list. Defaults to False.
             use_mpi (bool, optional): If distributing computation with MPI. Defaults to False.
 
@@ -188,7 +188,7 @@ class LightningBaseAdjointJacobian(ABC):
         # must be 2-dimensional
         return tuple(tuple(np.array(j_) for j_ in j) for j in jac)
 
-    def _handle_raises(self, tape: QuantumTape, is_jacobian: bool, grad_vec=None):
+    def _handle_raises(self, tape: QuantumScript, is_jacobian: bool, grad_vec=None):
         """Handle the raises related with the tape for computing the Jacobian with the adjoint method or the vector-Jacobian products."""
 
         if tape.shots:
@@ -229,7 +229,7 @@ class LightningBaseAdjointJacobian(ABC):
         return False
 
     @abstractmethod
-    def calculate_jacobian(self, tape: QuantumTape):
+    def calculate_jacobian(self, tape: QuantumScript):
         """Computes the Jacobian with the adjoint method.
 
         .. code-block:: python
@@ -239,14 +239,14 @@ class LightningBaseAdjointJacobian(ABC):
             jacobian =  Lightning [Device] AdjointJacobian(statevector).calculate_jacobian(tape)
 
         Args:
-            tape (QuantumTape): Operations and measurements that represent instructions for execution on Lightning.
+            tape (QuantumScript): Operations and measurements that represent instructions for execution on Lightning.
 
         Returns:
             The Jacobian of a tape.
         """
 
     # pylint: disable=inconsistent-return-statements
-    def calculate_vjp(self, tape: QuantumTape, grad_vec):
+    def calculate_vjp(self, tape: QuantumScript, grad_vec):
         """Compute the vector-Jacobian products of a tape.
 
         .. code-block:: python
@@ -264,7 +264,7 @@ class LightningBaseAdjointJacobian(ABC):
         Here, :math:`dy` is the workflow cotangent (grad_vec), and :math:`J` the Jacobian.
 
         Args:
-            tape (QuantumTape): Operations and measurements that represent instructions for execution on Lightning.
+            tape (QuantumScript): Operations and measurements that represent instructions for execution on Lightning.
             grad_vec (tensor_like): Gradient-output vector, also called `dy` or cotangent. Must have shape matching the output
                 shape of the corresponding tape, i.e. number of measurements if the return type is expectation.
 
