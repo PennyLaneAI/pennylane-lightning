@@ -109,6 +109,9 @@
 
 <h3>Internal changes ⚙️</h3>
 
+- Adding workflow to upload release to PyPI,
+  [(#1452)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1452)
+
 - Fixed a flaky mid-circuit measurement test by including all outcomes in count dictionaries
   and comparing their complete key sets.
   [(#1459)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1459)

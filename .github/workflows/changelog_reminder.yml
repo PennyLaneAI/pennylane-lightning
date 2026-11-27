@@ -10,7 +10,9 @@ permissions:
 jobs:
   remind:
     name: Changelog Reminder
-    runs-on: ubuntu-24.04
+    runs-on:  
+      group: 'PennyLaneAI-Static-IP-Runners'
+      labels: ['pl-2-core-gh-runner']   
     steps:
     - uses: actions/checkout@master
     - name: Changelog Reminder
